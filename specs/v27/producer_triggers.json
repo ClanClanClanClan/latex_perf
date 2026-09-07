@@ -3556,10 +3556,10 @@
     "pilot": false
    },
    {
-    "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c7573657061636b6167657b626f6f6b746162737d0a25205c746f7072756c650a",
+    "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a25205c746f7072756c650a",
     "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a25205c746f7072756c650a",
-    "kind": "mutate",
-    "note": "commented \\toprule: detection scans raw ",
+    "kind": "preserve",
+    "note": "commented \\toprule: detection is exempt-",
     "pilot": false
    }
   ]

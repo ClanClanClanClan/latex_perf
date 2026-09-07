@@ -61,6 +61,14 @@ LOAD_BEARING = [
     "proofs/InvalidationSound.v",
     "proofs/DependencyInvalidation.v",
     "proofs/ProjectSemantics.v",
+    # OPEN-055: the capstone files were outside this gate, exactly as they
+    # were outside check_unused_hypotheses.py (OPEN-054). Two gates, one
+    # blind spot.
+    "proofs/CompileProgress.v",
+    "proofs/PdflatexModel.v",
+    "proofs/CompileGuaranteeBridge.v",
+    "proofs/CompileWellFormed.v",
+    "proofs/LexerFaithfulStep.v",
 ]
 
 # Tactic tokens that almost always imply non-trivial proof content.
@@ -175,6 +183,53 @@ def is_hypothesis_restatement(body: str) -> bool:
     return True
 
 
+# ── OPEN-055: convertible-iff tautologies ─────────────────────────────
+#
+# `gates_pass_iff` stated `all_static_gates_pass p pf <-> <that same
+# conjunction>` and was proved `split; intros H; exact H` in both directions.
+# It shipped for months under a header calling it "load-bearing, with
+# substantive content", and THIS GATE MISSED IT TWICE OVER: CompileProgress.v
+# was not in LOAD_BEARING, and even once added, `is_hypothesis_restatement`
+# exits early on bullets ("always substantive") and on `split` being in
+# SUBSTANTIVE_TOKENS — which is precisely how one proves an X <-> X iff.
+#
+# This arm is deliberately narrow: an `<->` STATEMENT whose proof consists of
+# nothing but intros / split / bullets / exact / assumption. A sweep of all 63
+# proof files found exactly ONE such theorem, so the pattern does not
+# false-positive on this codebase.
+_STMT_RE = re.compile(
+    r"^\s*(?:Lemma|Theorem|Corollary|Proposition)\s+([A-Za-z_][\w']*)\s*:"
+    r"(.*?)(?=^\s*Proof\.)", re.S | re.M)
+_PROOF_RE = re.compile(
+    r"^\s*Proof\.(.*?)(?:Qed\.|Defined\.|Admitted\.)", re.S | re.M)
+# A tactic HEAD is the first word of a tactic: at the start, or after `.`,
+# `;`, or a bullet. Matching bare words instead would treat bound variables
+# like `pf` as tactics — that mistake made an earlier version of this check
+# report zero on a file containing the very theorem it was written for.
+_HEAD_RE = re.compile(r"(?:^|[.;]|\s[-+*]\s)\s*([a-zA-Z_][\w']*)")
+_TRIVIAL_HEADS = {"intros", "intro", "split", "exact", "assumption",
+                  "reflexivity"}
+
+
+def find_convertible_iffs(text: str) -> list[tuple[int, str]]:
+    """Flag `X <-> X` statements proved only by intros/split/exact."""
+    out: list[tuple[int, str]] = []
+    for m in _STMT_RE.finditer(text):
+        stmt = strip_comments(m.group(2))
+        if "<->" not in stmt:
+            continue
+        pm = _PROOF_RE.search(text, m.end())
+        if pm is None:
+            continue
+        body = strip_comments(pm.group(1))
+        if "ANTI-TAUT-OK" in body:
+            continue
+        heads = set(_HEAD_RE.findall(body))
+        if heads and heads <= _TRIVIAL_HEADS:
+            out.append((text[: m.start()].count("\n") + 1, m.group(1)))
+    return out
+
+
 def check_file(path: Path) -> list[tuple[int, str]]:
     text = path.read_text(encoding="utf-8")
     blocks = extract_proof_blocks(text)
@@ -199,6 +254,16 @@ def main() -> int:
             missing_files.append(rel)
             continue
         files_scanned += 1
+        for line_no, name in find_convertible_iffs(
+                path.read_text(encoding="utf-8")):
+            any_flagged = True
+            print(
+                f"[proof-substance] FAIL: {rel}:{line_no}: {name} is an "
+                f"`X <-> X` restatement — its two sides are convertible and "
+                f"the proof is only intros/split/exact. Delete it, or restate "
+                f"it over a non-definitional aggregate (OPEN-055).",
+                file=sys.stderr,
+            )
         for line_no, body in check_file(path):
             any_flagged = True
             preview = body[:140].replace("\n", " ")

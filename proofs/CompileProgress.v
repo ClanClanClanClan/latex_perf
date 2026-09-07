@@ -85,16 +85,22 @@ Section Compile_progress.
     T0_accepts p /\ T1_admissible p /\ T2_closed p /\
     T3_compatible p pf /\ T4_coherent p /\ T5_safe p.
 
-  Lemma gates_pass_iff :
-    forall p pf,
-      all_static_gates_pass p pf <->
-      T0_accepts p /\ T1_admissible p /\ T2_closed p /\
-      T3_compatible p pf /\ T4_coherent p /\ T5_safe p.
-  Proof.
-    intros p pf. split.
-    - intros H. exact H.
-    - intros H. exact H.
-  Qed.
+  (* OPEN-055: [gates_pass_iff] was DELETED here, not weakened.
+
+     It stated [all_static_gates_pass p pf <-> T0 /\ T1 /\ T2 /\ T3 /\ T4 /\ T5]
+     — but [all_static_gates_pass] is DEFINITIONALLY that conjunction (see just
+     above), so the two sides are the same term and the proof was
+     [split; intros H; exact H] in both directions. It asserted nothing, while
+     sitting under a header reading "Supporting lemmas (load-bearing, with
+     substantive content)". Nothing in the repo referenced it.
+
+     A sweep of all 63 proof files found it to be the ONLY instance of the
+     shape, so this is an isolated removal rather than a class. The gate that
+     should have caught it, [check_proof_substance.py], missed it twice over:
+     [CompileProgress.v] was not in its LOAD_BEARING list, and even once added
+     it passed, because bullets are treated as "always substantive" and [split]
+     is in SUBSTANTIVE_TOKENS — which is exactly how one proves an X <-> X
+     iff. Both gaps are closed in the same commit. *)
 
   (** Packaged form of the main theorem, taking a single conjoined
       hypothesis. This is a genuine content-bearing move: it shows the

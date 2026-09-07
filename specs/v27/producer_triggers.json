@@ -6696,53 +6696,60 @@
   "TYPO-028": {
     "variants": [
       {
-        "expected_hex": "5c5b785c5d0a",
-        "hex": "24247824240a",
-        "kind": "mutate",
-        "note": "base ($$..$$ -> \\[..\\])",
-        "pilot": false
-      },
-      {
-        "expected_hex": "615c5b785c5d620a",
-        "hex": "612424782424620a",
-        "kind": "mutate",
-        "note": "letter-adjacent (\\[ / \\] are control sym",
-        "pilot": false
-      },
-      {
-        "expected_hex": "5c5b5c5d0a",
-        "hex": "242424240a",
-        "kind": "mutate",
-        "note": "empty display ($$$$ -> \\[\\])",
-        "pilot": false
-      },
-      {
-        "expected_hex": "5c5be6bca25c5d0a",
-        "hex": "2424e6bca224240a",
-        "kind": "mutate",
-        "note": "CJK-adjacent",
-        "pilot": false
-      },
-      {
-        "expected_hex": "5c5b615c5d205c5b625c5d0a",
-        "hex": "24246124242024246224240a",
-        "kind": "mutate",
-        "note": "doubled (two pairs)",
-        "pilot": false
-      },
-      {
-        "expected_hex": "252024247824240a",
-        "hex": "252024247824240a",
         "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: $$..$$ untouched",
+        "hex": "6265666f726520242420582024242061667465720a",
+        "expected_hex": "6265666f726520242420582024242061667465720a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: two pairs untouched",
+        "hex": "242461242420616e642024246224240a",
+        "expected_hex": "242461242420616e642024246224240a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: empty display untouched",
+        "hex": "7824242424790a",
+        "expected_hex": "7824242424790a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: CJK-adjacent untouched",
+        "hex": "e6bca220242461242420e6bca20a",
+        "expected_hex": "e6bca220242461242420e6bca20a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 THE FATAL SHAPE: adjacent inline math, rc 0 -> 1",
+        "hex": "416c696365245e7b317d24245e5c617374242c20426f62245e7b327d24245e5c617374242c204361726f6c245e7b337d242e0a",
+        "expected_hex": "416c696365245e7b317d24245e5c617374242c20426f62245e7b327d24245e5c617374242c204361726f6c245e7b337d242e0a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "escaped \\$$ is not a delimiter",
+        "hex": "6c69746572616c5c24242076616c75650a",
+        "expected_hex": "6c69746572616c5c24242076616c75650a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
         "note": "in-comment (vcu-filtered)",
-        "pilot": false
+        "hex": "252024246124240a",
+        "expected_hex": "252024246124240a"
       },
       {
-        "expected_hex": "5c766572627c24247824247c0a",
-        "hex": "5c766572627c24247824247c0a",
         "kind": "preserve",
+        "pilot": false,
         "note": "in-verbatim",
-        "pilot": false
+        "hex": "5c766572627c24246124247c0a",
+        "expected_hex": "5c766572627c24246124247c0a"
       }
     ]
   },

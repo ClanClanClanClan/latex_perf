@@ -8,8 +8,14 @@
 (*                                                                      *)
 (*    model_fatal p pf  <->  ch_edge p \/ ch_decl p pf \/ ch_body p pf   *)
 (*                                                                      *)
-(*  i.e. the model has EXACTLY THREE fatal channels, and nothing else    *)
-(*  a document contains can make it say "does not compile".              *)
+(*  i.e. the MODEL has EXACTLY THREE fatal channels.                     *)
+(*                                                                      *)
+(*  READ THAT PRECISELY. It says nothing else in the MODEL'S IMAGE of a  *)
+(*  project can make it refuse; it does NOT say "nothing else a document *)
+(*  contains", because what a document contains reaches the model only   *)
+(*  through the OCaml encoder, which is outside Coq. A real feature the  *)
+(*  encoder never turns into a token or an edge is invisible here, and   *)
+(*  this theorem is silent about it.                                     *)
 (*                                                                      *)
 (*  Compile:                                                            *)
 (*    coqc -R <repo>/_build/default/proofs LaTeXPerfectionist \         *)
@@ -59,7 +65,12 @@ Definition ch_edge (p : pdflatex_project) : Prop :=
               /\ (~ node_known (proj_graph p) u \/ ~ node_known (proj_graph p) v).
 
 (* CHANNEL 2 (T3a, a PROFILE-declared feature the engine lacks). *)
-Definition ch_decl (p : pdflatex_project) (pf : pdflatex_profile) : Prop :=
+(* [p] is deliberately unused: a PROFILE-declared feature is a property of the
+   profile alone. The parameter is kept so all three channels share the shape
+   [project -> profile -> Prop] and the §1b disjunction reads uniformly.
+   Recorded because "a channel of the project that is not a function of the
+   project" is a fair thing for a reader to trip over. *)
+Definition ch_decl (_p : pdflatex_project) (pf : pdflatex_profile) : Prop :=
   exists f, In f pf.(prof_features) /\ compatible f pf.(prof_engine) = false.
 
 (* CHANNEL 3 (T3b, a DOCUMENT-required feature the engine lacks). *)
@@ -548,6 +559,17 @@ Qed.
 (*  fatal-freeness.  Root cause: edge_tokens_no_fatal (PdflatexModel.v) *)
 (*  opens `intros g [Hedges _]`, discarding the acyclicity half; so     *)
 (*  acyclicity is dead weight in the whole capstone.                    *)
+(*                                                                      *)
+(*  THAT IS A MODEL DEFECT, NOT AN ACHIEVEMENT, and the theorem name    *)
+(*  [acyclicity_is_not_a_fatal_channel] must NOT be read as "cycles do  *)
+(*  not matter". The witness below is a node with an edge to ITSELF --  *)
+(*  a .tex file that \inputs itself -- and REAL pdflatex does not build *)
+(*  it; it recurses until "TeX capacity exceeded". So the separation is *)
+(*  genuine (the model really does ignore acyclicity) AND it is a place *)
+(*  where the model is WEAKER than the engine: it certifies a project   *)
+(*  the engine would refuse. The honest reading is that T2 carries a    *)
+(*  conjunct the fatality proof never consumes, and closing that gap    *)
+(*  means giving cycles a fatal channel, not deleting T2.               *)
 (*                                                                      *)
 (*  [project_well_typed] is by definition [pdflatex_T2_closed]; both    *)
 (*  phrasings are stated so neither can be read as a weaker claim.      *)

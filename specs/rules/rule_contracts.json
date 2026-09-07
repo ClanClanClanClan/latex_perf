@@ -10370,7 +10370,8 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": true
+      "produces_fix": false,
+      "fix_status_reason": "WITHDRAWN in v27.1.66 (OPEN-076): the producer collected unescaped `$$` offsets with NO math-mode tracking and then paired them BLINDLY BY POSITION, so the closing `$` of one inline segment plus the opening `$` of the next read as a display delimiter, and one spurious pair inverted open/close for every later pair IN THE FILE. MEASURED at the pin: an author block `Alice$^{1}$$^\\ast$, Bob$^{2}$$^\\ast$` goes rc 0 -> 1, '! LaTeX Error: Bad math environment delimiter'. It rewrote ~34% of sampled real papers. A correct predicate needs a real left-to-right dollar-mode scanner, which is a rewrite rather than a guard; until it exists no local test on a single `$$` can distinguish an inline juxtaposition from a display delimiter."
     },
     {
       "rule_id": "TYPO-029",

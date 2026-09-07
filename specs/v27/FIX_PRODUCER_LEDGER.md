@@ -12,15 +12,15 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 165 (~25%)
+- **Shipped**: 164 (~24%)
 - **Pending**: 489
-- **Deferred**: 6 (NLP-required)
+- **Deferred**: 7 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, guard-gated           | 466 | 165 | 301 |
+| **A**  | Mechanical, guard-gated           | 466 | 164 | 302 |
 | **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 83 | 0 | 83 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -103,7 +103,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | TH | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | TIKZ | 10 | 1 | 9 | 0 | 10 | 0 | 0 | 0 |
 | TR | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
-| TYPO | 63 | 45 | 13 | 5 | 59 | 4 | 0 | 0 |
+| TYPO | 63 | 44 | 13 | 6 | 59 | 4 | 0 | 0 |
 | VERB | 17 | 1 | 16 | 0 | 17 | 0 | 0 | 0 |
 | ZH | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 
@@ -716,7 +716,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `TYPO-025` | TYPO | **A** | confirmed | shipped in v26.3.1 |
 | `TYPO-026` | TYPO | **A** | confirmed | shipped in v26.3.1 |
 | `TYPO-027` | TYPO | **A** | confirmed | shipped in v26.3.0 |
-| `TYPO-028` | TYPO | **A** | confirmed | shipped in v27.0.20 |
+| `TYPO-028` | TYPO | **A** | confirmed | **withdrawn** in v27.1.66 (OPEN-076) |
 | `TYPO-029` | TYPO | **A** | confirmed | shipped in v27.0.12 |
 | `TYPO-030` | TYPO | **B** | confirmed | deferred (NLP) |
 | `TYPO-031` | TYPO | **B** | confirmed | deferred (NLP) |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 165 of 466 Bucket A
+  **TRACKING** — 164 of 466 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

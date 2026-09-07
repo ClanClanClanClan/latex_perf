@@ -1226,64 +1226,41 @@ let () =
         (List.length edits = 2 && apply_all src edits = "x$ $y")
         (tag ^ ": space between delimiters -> normal path, $ $ output"));
 
-  (* v27.0.20: TYPO-028 fix producer ($$..$$ -> \[..\] pair-matching,
-     escape-aware). *)
-  run "TYPO-028 fix: $$ X $$ becomes \\[ X \\]" (fun tag ->
-      let src = "before $$ X $$ after" in
-      let edits = fix_edits "TYPO-028" src in
+  (* OPEN-076: the TYPO-028 fix producer was WITHDRAWN in v27.1.66. It paired
+     unescaped `$$` offsets BLINDLY BY POSITION with no math-mode tracking, so
+     the closing `$` of one inline segment plus the opening `$` of the next read
+     as a display delimiter -- and because the pairing is positional, one
+     spurious pair inverted open/close for every later pair in the file.
+     MEASURED at the pin: `Alice$^{1}$$^\\ast$, Bob$^{2}$$^\\ast$, Carol$^{3}$.`
+     compiles (rc 0) and became `Alice$^{1}\\[^\\ast$, Bob$^{2}\\]^\\ast$, ...`
+     -> "! LaTeX Error: Bad math environment delimiter." The tests that PINNED
+     the rewriting are replaced by their inverses. *)
+  run "TYPO-028 emits no fix (OPEN-076)" (fun tag ->
       expect
-        (List.length edits = 2 && apply_all src edits = "before \\[ X \\] after")
-        (tag ^ ": pair converted to \\[..\\]"));
-
-  run "TYPO-028 fix: two disjoint pairs produce 4 edits" (fun tag ->
+        (fix_edits "TYPO-028" "before $$ X $$ after" = [])
+        (tag ^ ": no display-delimiter rewrite"));
+  run "TYPO-028 leaves adjacent inline math alone (OPEN-076)" (fun tag ->
+      (* The author/affiliation shape that used to become fatal. *)
+      let src = "Alice$^{1}$$^\\ast$, Bob$^{2}$$^\\ast$, Carol$^{3}$." in
+      expect
+        (apply_all src (fix_edits "TYPO-028" src) = src)
+        (tag ^ ": byte-identical"));
+  run "TYPO-028 leaves genuine $$ display math alone (OPEN-076)" (fun tag ->
       let src = "$$a$$ and $$b$$" in
-      let edits = fix_edits "TYPO-028" src in
       expect
-        (List.length edits = 4 && apply_all src edits = "\\[a\\] and \\[b\\]")
-        (tag ^ ": two pairs each converted"));
-
-  run "TYPO-028 fix: $$$$ (empty display math) -> \\[\\]" (fun tag ->
-      (* 4 consecutive $: non-overlapping offsets [0, 2]. Pair (0, 2). Fix emits
-         \\[ at [0,2) and \\] at [2,4). Result: \\[\\] = empty display math.
-         Valid LaTeX. *)
-      let src = "x$$$$y" in
-      let edits = fix_edits "TYPO-028" src in
-      expect
-        (List.length edits = 2 && apply_all src edits = "x\\[\\]y")
-        (tag ^ ": empty display math converted, no corruption"));
-
+        (apply_all src (fix_edits "TYPO-028" src) = src)
+        (tag ^ ": byte-identical"));
+  run "TYPO-028 still DIAGNOSES genuine $$ (positive control)" (fun tag ->
+      expect (fires "TYPO-028" "before $$ X $$ after") (tag ^ ": still fires"));
   run "TYPO-028 does not fire on clean source" (fun tag ->
       expect
         (does_not_fire "TYPO-028" "no display math here")
         (tag ^ ": no $$, no fire"));
-
-  run "TYPO-028 fix: skips \\$$ (escaped $, round-1 audit)" (fun tag ->
-      (* `\$$` parses as `\$` (escaped dollar) + `$` (open inline math), NOT a
-         display-math delimiter. The substring `$$` at the position after `\`
-         would naively match, but the escape guard skips it (odd prior backslash
-         count -> escaped). *)
-      let src = "literal\\$$ value" in
+  run "TYPO-028 does not fire on an escaped \\$$ (OPEN-076 keeps the guard)"
+    (fun tag ->
       expect
-        (does_not_fire "TYPO-028" src)
-        (tag ^ ": \\$$ correctly identified as escaped, no fire"));
-
-  run "TYPO-028 fix: \\\\$$ (line break + $$, round-1 audit)" (fun tag ->
-      (* `\\\\$$` in OCaml literal = `\\$$` in source: `\\` (line break) + `$$`
-         (real display math delimiter). Even count of prior backslashes (2)
-         means unescaped -> match fires. *)
-      let src = "x\\\\$$ a $$y" in
-      let edits = fix_edits "TYPO-028" src in
-      expect
-        (List.length edits = 2 && apply_all src edits = "x\\\\\\[ a \\]y")
-        (tag ^ ": even-count backslashes -> real $$, fix applies"));
-
-  run "TYPO-028 fix: odd $$$ (3 chars) only counts but doesn't fix" (fun tag ->
-      (* 3 consecutive $: count_substring overlap = 2, count = 2/2 = 1 (rule
-         still warns); find_all_non_overlapping = 1 offset; pairs = []; no fix
-         emitted. *)
-      let src = "x$$$y" in
-      let edits = fix_edits "TYPO-028" src in
-      expect (List.length edits = 0) (tag ^ ": odd run -> no pair, no fix"));
+        (does_not_fire "TYPO-028" "literal\\$$ value")
+        (tag ^ ": escaped dollar not a delimiter"));
 
   (* v27.0.21: TYPO-012 fix producer (digit + apostrophe -> digit + ^\prime,
      math-only fix). *)

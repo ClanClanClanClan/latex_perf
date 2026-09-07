@@ -82,9 +82,12 @@ CAPSTONES = [
         "LaTeXPerfectionist.PdflatexFatalChannels",
         "D1: model_fatal holds IFF one of exactly three syntactic channels does. "
         "This is the ONLY-IF half PdflatexModel.v lacks -- it is what licenses "
-        "saying the three channels are EXHAUSTIVE, i.e. that nothing else a "
-        "document contains can make the model refuse it. If it ever rests on an "
-        "axiom, every completeness claim built on it is void.",
+        "saying the three channels are EXHAUSTIVE *within the model's image of a "
+        "project*. It does NOT say 'nothing else a document contains': what a "
+        "document contains reaches the model only through the OCaml encoder, "
+        "which is outside Coq, so a feature the encoder never turns into a token "
+        "or an edge is invisible to this theorem. If it ever rests on an axiom, "
+        "every completeness claim built on it is void.",
     ),
     (
         "BodyTokenFrontEnd.compile_safe_of_source",

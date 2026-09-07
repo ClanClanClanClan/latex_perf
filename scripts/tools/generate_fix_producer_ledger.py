@@ -73,7 +73,6 @@ SHIPPED_VERSIONS = {
     "TYPO-049": "v27.0.17",
     "TYPO-017": "v27.0.18",
     "TYPO-046": "v27.0.19",
-    "TYPO-028": "v27.0.20",
     "TYPO-012": "v27.0.21",
     "ENC-007": "v27.0.22",
     "ENC-017": "v27.0.23",
@@ -233,6 +232,7 @@ def discover_all_rules() -> list[str]:
 WITHDRAWN: dict[str, str] = {
     "HI-001": "v27.1.65 (OPEN-064)",
     "TYPO-038": "v27.1.66 (OPEN-075)",
+    "TYPO-028": "v27.1.66 (OPEN-076)",
 }
 
 

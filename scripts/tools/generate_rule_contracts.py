@@ -50,6 +50,19 @@ SHIPPED_FIX_PRODUCERS: set[str] = set(SHIPPED_VERSIONS.keys())
 #      corrupt valid input if naively fix-produced; deferred until the
 #      detection scope is narrowed.
 FIX_PRODUCER_DEFERRED: dict[str, str] = {
+    "TYPO-028": (
+        "WITHDRAWN in v27.1.66 (OPEN-076): the producer collected unescaped "
+        "`$$` offsets with NO math-mode tracking and then paired them BLINDLY "
+        "BY POSITION, so the closing `$` of one inline segment plus the opening "
+        "`$` of the next read as a display delimiter, and one spurious pair "
+        "inverted open/close for every later pair IN THE FILE. MEASURED at the "
+        "pin: an author block `Alice$^{1}$$^\\ast$, Bob$^{2}$$^\\ast$` goes "
+        "rc 0 -> 1, '! LaTeX Error: Bad math environment delimiter'. It rewrote "
+        "~34% of sampled real papers. A correct predicate needs a real "
+        "left-to-right dollar-mode scanner, which is a rewrite rather than a "
+        "guard; until it exists no local test on a single `$$` can distinguish "
+        "an inline juxtaposition from a display delimiter."
+    ),
     "TYPO-038": (
         "WITHDRAWN in v27.1.66 (OPEN-075): the producer emitted \\href into "
         "documents that never load hyperref -- MEASURED rc 0 -> 1, "

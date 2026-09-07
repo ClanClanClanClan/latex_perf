@@ -24,8 +24,16 @@ let feature_compatible (feature : Project_model.declared_feature)
   (* UTF8_inputenc works everywhere except ptex_uptex (uses its own enc) *)
   | UTF8_inputenc, Ptex_uptex -> false
   | UTF8_inputenc, _ -> true
-  (* UTF8_direct requires xe/lua *)
-  | UTF8_direct, (Xelatex | Lualatex) -> true
+  (* UTF8_direct: xe/lua, AND pdflatex -- pdfTeX has defaulted to UTF-8 INPUT
+     DECODING since TeX Live 2018, so raw UTF-8 with no inputenc compiles.
+     MEASURED at the pin (pdfTeX 3.141592653-2.6-1.40.29): rc 0, and pdftotext
+     recovers the accented text. This row said `false` and the engine
+     contradicted it. ⚠ DECODING, not REPERTOIRE: pdflatex accepts UTF-8 BYTES,
+     not every CHARACTER. Measured at the same pin, a Cyrillic body dies rc 1
+     with "! LaTeX Error: Unicode character (U+041F)". Repertoire failures are
+     carried by Japanese_cjk / has_raw_cjk, not by this row. Kept false for
+     Ptex_uptex, which was not measured. *)
+  | UTF8_direct, (Xelatex | Lualatex | Pdflatex) -> true
   | UTF8_direct, _ -> false
   (* Unicode math requires unicode-aware engine *)
   | Unicode_math, (Xelatex | Lualatex) -> true
@@ -36,8 +44,17 @@ let feature_compatible (feature : Project_model.declared_feature)
   (* Lua scripting: only lualatex *)
   | Lua_scripting, Lualatex -> true
   | Lua_scripting, _ -> false
-  (* Japanese CJK: only ptex_uptex in v26.2 scope *)
-  | Japanese_cjk, Ptex_uptex -> true
+  (* Japanese CJK. The "only ptex_uptex in v26.2 scope" note that used to sit
+     here was a SCOPE limitation, not a fact about LaTeX, and in
+     BuildProfileSound.v it had hardened into a Qed'd theorem NAME
+     (japanese_cjk_requires_ptex) carrying no scope qualifier. MEASURED at the
+     pin: xeCJK + Japanese under xelatex exits 0 (3,680-byte PDF); luatexja +
+     Japanese under lualatex exits 0 (4,936-byte PDF). The Lualatex row was also
+     SELF-CONTRADICTORY -- detect_body_features infers Japanese_cjk FROM
+     luatexja, a LuaLaTeX-only package, and this table then refused it ON
+     LuaLaTeX. Pdflatex stays false: it needs CJKutf8-style support, and xeCJK
+     (what our own CJK-004 producer injected) ABORTS under pdflatex. *)
+  | Japanese_cjk, (Ptex_uptex | Xelatex | Lualatex) -> true
   | Japanese_cjk, _ -> false
   (* Everything else is universally supported in v26.2 *)
   | _, _ -> true

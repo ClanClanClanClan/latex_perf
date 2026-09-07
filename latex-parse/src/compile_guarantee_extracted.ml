@@ -124,7 +124,7 @@ let compatible f e =
       | Ptex_uptex -> false)
   | UTF8_direct -> (
       match e with
-      | Pdflatex -> false
+      | Pdflatex -> true
       | Xelatex -> true
       | Lualatex -> true
       | Ptex_uptex -> false)
@@ -149,8 +149,8 @@ let compatible f e =
   | Japanese_cjk -> (
       match e with
       | Pdflatex -> false
-      | Xelatex -> false
-      | Lualatex -> false
+      | Xelatex -> true
+      | Lualatex -> true
       | Ptex_uptex -> true)
   | Bibtex -> true
   | Biber -> true

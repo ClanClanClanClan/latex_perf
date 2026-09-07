@@ -32,11 +32,27 @@ Definition engine_eqb (a b : engine) : bool :=
 
 (** ── Declared features ───────────────────────────────────────────── *)
 
-(** Matches the OCaml [Project_model.declared_feature] sum. Adding a
-    constructor here requires updating the [compatible] table below —
-    the [completeness] theorem at the end checks that every engine is
-    compatible with at least one feature, ensuring the table isn't
-    vacuously false. *)
+(** Corresponds to the OCaml [Compile_evidence.feature] sum, and that
+    correspondence is the one that matters: [compile_evidence.ml] does NOT
+    re-implement the table, it calls the EXTRACTED [Ext.compatible], so the
+    shipped T3 verdict really is this function.
+
+    ⚠ This docstring used to say "Matches the OCaml
+    [Project_model.declared_feature] sum". It does not, in either direction:
+    that type has 16 constructors to this one's 8, and this type declares
+    [Biber], which does not exist in project_model.ml at all. The docstring
+    pointed an auditor at a type it does not correspond to, and away from the
+    one place the correspondence is real.
+
+    ⚠ A SECOND hand-written copy of this table lives in compile_contract.ml
+    (feature_compatible, used by t3_check), whose own comment sources it from a
+    THIRD artefact, specs/v26/compilation_profiles.yaml. Nothing checks any of
+    the three against each other. Any row changed here must be changed there in
+    the same commit until that gate exists.
+
+    Adding a constructor here requires updating the [compatible] table below;
+    [every_engine_has_compatible_feature] checks that every engine admits at
+    least one feature, so the table cannot be vacuously false. *)
 Inductive feature : Type :=
   | UTF8_inputenc
   | UTF8_direct
@@ -55,6 +71,21 @@ Definition compatible (f : feature) (e : engine) : bool :=
   | UTF8_inputenc, _ => true
   | UTF8_direct, Xelatex => true
   | UTF8_direct, Lualatex => true
+  (* pdfTeX has defaulted to UTF-8 INPUT DECODING since TeX Live 2018, so
+     direct UTF-8 source with no [inputenc] compiles under pdflatex. MEASURED
+     at the pin (pdfTeX 3.141592653-2.6-1.40.29): rc 0, and pdftotext recovers
+     the accented text. This row used to say [false] -- a statement the engine
+     contradicts.
+
+     ⚠ SCOPE, and it is narrow: this row is about DECODING, not REPERTOIRE.
+     pdflatex accepts UTF-8 BYTES; it does not accept every CHARACTER. MEASURED
+     at the same pin, same flags: a body of "Cafe naive ... eauss" renders (rc
+     0), while a Cyrillic body dies rc 1 with
+     "! LaTeX Error: Unicode character P (U+041F)". Do NOT read this row as
+     licensing Cyrillic or Greek under pdflatex. Repertoire failures are carried
+     by OTHER channels -- [Japanese_cjk] plus the has_raw_cjk detector -- not by
+     this one. *)
+  | UTF8_direct, Pdflatex => true
   | UTF8_direct, _ => false
   | Unicode_math, Xelatex => true
   | Unicode_math, Lualatex => true
@@ -65,6 +96,17 @@ Definition compatible (f : feature) (e : engine) : bool :=
   | Lua_scripting, Lualatex => true
   | Lua_scripting, _ => false
   | Japanese_cjk, Ptex_uptex => true
+  (* MEASURED at the pin: xeCJK + Japanese body under xelatex exits 0 (3,680-byte
+     PDF); luatexja + Japanese body under lualatex exits 0 (4,936-byte PDF).
+     The Lualatex row was also SELF-CONTRADICTORY: detect_body_features infers
+     Japanese_cjk FROM luatexja, a package that exists only for LuaLaTeX, and
+     the table then declared that feature inadmissible ON LuaLaTeX. *)
+  | Japanese_cjk, Xelatex => true
+  | Japanese_cjk, Lualatex => true
+  (* Left false, deliberately and unmeasured-in-this-pass: Japanese under
+     pdflatex needs CJKutf8-style support rather than a Unicode engine, and
+     xeCJK -- what our own CJK-004 producer used to inject -- ABORTS under
+     pdflatex. Only the two rows above were measured, so only those change. *)
   | Japanese_cjk, _ => false
   | Bibtex, _ => true
   | Biber, _ => true
@@ -154,12 +196,34 @@ Proof.
   intros e Hne. destruct e; simpl; try reflexivity. exfalso. apply Hne. reflexivity.
 Qed.
 
-Theorem japanese_cjk_requires_ptex :
-  forall e,
-    e <> Ptex_uptex ->
-    compatible Japanese_cjk e = false.
+(** [japanese_cjk_requires_ptex] was DELETED here, and its deletion is the
+    point of this note.
+
+    It said [forall e, e <> Ptex_uptex -> compatible Japanese_cjk e = false] and
+    it was Qed-closed, so it READ as a fact about Japanese typesetting. It was
+    a fact about this TABLE, and the table was wrong: xeCJK under xelatex and
+    luatexja under lualatex both compile Japanese at the pinned engine
+    (MEASURED). Its source was a v26.2 SCOPE note -- "Japanese CJK: only
+    ptex_uptex in v26.2 scope" -- that hardened into a theorem NAME carrying no
+    scope qualifier. Once the table is corrected the statement is false, which
+    is exactly why it could not simply be re-proved.
+
+    What survives is the weaker, true, and honestly-named claim below. *)
+
+Theorem japanese_cjk_rejected_on_pdflatex :
+  compatible Japanese_cjk Pdflatex = false.
+Proof. reflexivity. Qed.
+
+(** The positive direction, so the row change cannot be read as "we stopped
+    checking Japanese": the feature is admitted by exactly the three engines
+    that really typeset it, and refused by pdflatex. *)
+Theorem japanese_cjk_admitted_iff_not_pdflatex :
+  forall e, compatible Japanese_cjk e = true <-> e <> Pdflatex.
 Proof.
-  intros e Hne. destruct e; simpl; try reflexivity. exfalso. apply Hne. reflexivity.
+  intros e. split.
+  - intros H Heq. subst. discriminate.
+  - intros Hne. destruct e; try reflexivity.
+    exfalso. apply Hne. reflexivity.
 Qed.
 
 (** ── Theorem 7: completeness — every engine supports at least one

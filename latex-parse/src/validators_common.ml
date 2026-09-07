@@ -1169,7 +1169,25 @@ let comment_semantics_breaker (s : string) : bool =
   || has "\\newtcblisting"
   || has "\\NewTCBListing"
   || has "\\newminted"
-  || has "\\endverbatim"
+  (* OPEN-073: CONTROL WORD, not substring. As `has "\\endverbatim"` this
+     matched `\\endverbatimwrite` -- a different macro, from the verbatimwrite
+     package -- and firing here DISABLES COMMENT BLANKING for the whole
+     document, which is the over-rejection direction for every comment-aware
+     check. MEASURED over the 2,961-paper corpus: 18 files contain the
+     substring, only 1 has a real `\\endverbatim` control word, so 17 of 18
+     (94%) were false fires, all of them `\\endverbatimwrite`. ORACLE-CONFIRMED
+     cost: 2507.09512v1/sample-1col.tex compiles at the pin (rc 0,
+     1,531,848-byte PDF) and the CLI returned NOT-READY `japanese_cjk`, on CJK
+     that exists only inside a `%` comment on line 274 -- because its
+     ceurart.cls carries `\\endverbatimwrite`. This is the same defect the
+     `has_cmd` helper was introduced to prevent; its own docstring records the
+     earlier round of false-fires on longer fancyvrb words. ⚠ The other
+     substring arms are LEFT AS SUBSTRINGS, and that is measured, not lazy: none
+     of them has a single longer-word occurrence anywhere in the corpus, and
+     `\\newminted` is deliberately a prefix match because `\\newmintedfile` /
+     `\\newmintinline` are real commands that must also fire (its own docstring
+     says so). *)
+  || has_cmd "endverbatim"
   || has "\\DefineShortVerb"
   || has "\\MakeShortVerb"
   || has "\\lstMakeShortInline"

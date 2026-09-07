@@ -676,24 +676,28 @@ Proof. vm_compute. reflexivity. Qed.
 
 (* --- 4.1  the model's ENTIRE feature-fatal vocabulary under pdflatex -
 
-   ⚠ MODEL vs REALITY — read the theorem as a statement about the
-   [compatible] TABLE, not about the pdfTeX binary.  It is a complete
-   description of what the MODEL treats as feature-fatal, and on one entry
-   the model is known to DIVERGE from the engine: the table marks
-   [UTF8_direct] incompatible with [Pdflatex], but pdfTeX >= TeX Live 2018
-   compiles direct UTF-8 input with no [inputenc] at all, because UTF-8 is
-   its default input encoding.  So a project the model calls fatal through
-   that entry would, in reality, build.
+   ⚠ Read the theorem as a statement about the [compatible] TABLE, not about
+   the pdfTeX binary.  It is a complete description of what the MODEL treats
+   as feature-fatal under pdflatex.
 
-   The divergence is LATENT, not live: no detector in the OCaml front end
-   currently emits [BT_needs_feature UTF8_direct], so no real document
-   reaches this entry today.  It is recorded here rather than silently
-   corrected because [compatible] is a HAND-WRITTEN MIRROR of
-   compile_contract.ml that no gate checks in either direction — changing
-   the Coq table alone would deepen the divergence rather than close it. *)
+   HISTORY, kept because it is the reason this list is four entries and not
+   five.  [UTF8_direct] used to appear here: the table marked it incompatible
+   with [Pdflatex], and this note recorded that as a known MODEL-vs-REALITY
+   divergence, latent because no detector emits [BT_needs_feature UTF8_direct].
+   The divergence is now CLOSED rather than merely recorded — pdfTeX has
+   defaulted to UTF-8 input since TeX Live 2018, MEASURED at the pin (rc 0, and
+   pdftotext recovers the accented text), so the row was corrected in
+   BuildProfileSound.v together with its two hand mirrors
+   (compile_contract.feature_compatible and
+   specs/v26/compilation_profiles.yaml).
+
+   ⚠ THIS THEOREM IS WHAT CAUGHT THE CHANGE.  Correcting the table made the
+   old five-element statement FALSE, and the [intuition congruence] proof
+   failed on the next build, which is precisely the value of stating a
+   vocabulary as a biconditional instead of a comment. *)
 Theorem pdflatex_body_fatal_vocabulary :
   forall f, compatible f Pdflatex = false
-            <-> In f [UTF8_direct; Unicode_math; Opentype_fonts;
+            <-> In f [Unicode_math; Opentype_fonts;
                       Lua_scripting; Japanese_cjk].
 Proof. intros f. destruct f; simpl; intuition congruence. Qed.
 

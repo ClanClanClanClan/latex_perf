@@ -46,6 +46,23 @@ let require_documentclass : rule =
     in
     if pilot_mode then None
     else if contains_substring s "\\documentclass" then None
+    else if not (contains_substring s "\\begin{document}") then
+      (* OPEN-071. A file with neither \documentclass NOR \begin{document} is an
+         \input FRAGMENT, not a broken root -- a fragment having no preamble is
+         the entire point of a fragment. This rule used to fire on every one of
+         them and INSERT \documentclass{article} at byte 0, which is how a user
+         running the tool across their project destroys it: the parent then hits
+         `! LaTeX Error: Two \documentclass or \documentstyle commands.` or `!
+         LaTeX Error: Can be used only in preamble.` MEASURED over 40
+         deterministically-sampled real arXiv papers, of which 30 compile at the
+         pin: the default --apply-fixes broke 19, and 11 of those 19 failed with
+         exactly those two errors -- the single largest cause, ahead of every
+         other producer.
+
+         A genuine broken root still fires: a file WITH \begin{document} but
+         WITHOUT \documentclass really is missing its preamble, and pdflatex
+         really does refuse it. That is the case this rule is for. *)
+      None
     else
       (* v26.3 §3 item A: BOM-aware insertion. If the source begins with a UTF-8
          BOM (EF BB BF, 3 bytes), insert AFTER it so the BOM stays at byte 0 of

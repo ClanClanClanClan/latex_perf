@@ -69,7 +69,26 @@ let control_symbol_ranges (src : string) : (int * int) list =
    is deliberately over-wide: typographic fixes inside a picture have no value
    and real risk. Note tikzpicture is NOT in Validators_common's verbatim env
    list, so nothing else was covering this. *)
-let picture_envs = [ "tikzpicture"; "pgfpicture" ]
+(* OPEN-069: [tikzcd] was missing, and its absence was measured corruption.
+   Region 2 was built from the good_tikz_simple fixture, which uses
+   [tikzpicture]; [tikzcd] -- the standard commutative-diagram environment,
+   whose \arrow[...] bodies are pure pgfkeys and which sits INSIDE math mode,
+   exactly where the math fix producers are licensed to write -- was never
+   added.
+
+   MEASURED at the pin: `\arrow[r, shorten <=5pt]` inside a tikzcd is rewritten
+   to `shorten \le 5pt` by MATH-044. `shorten <` is a pgfkeys KEY NAME and
+   `=5pt` its value; `shorten \le 5pt` is not a key. pdflatex goes rc 0 -> 1, `!
+   Missing \endcsname inserted.`, while --compile-check says READY BEFORE AND
+   AFTER -- so no post-fix verdict check can catch it, the damage has to be
+   prevented. 9 files across 7 distinct arXiv papers in the 2,961-paper corpus
+   carry the exact construct; 222 files use tikzcd and 55 contain `shorten <=`.
+   The identical construct inside \begin{tikzpicture} was already left alone,
+   which is what localises the defect to this list rather than to region 2.
+
+   [circuitikz] is added on the same reasoning -- a pgfkeys body under a
+   different environment name -- before it costs a document too. *)
+let picture_envs = [ "tikzpicture"; "pgfpicture"; "tikzcd"; "circuitikz" ]
 
 let find_all (hay : string) (needle : string) : int list =
   let nh = String.length hay and nn = String.length needle in

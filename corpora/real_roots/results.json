@@ -323,7 +323,6 @@
    "cli_rc": 1,
    "cli_verdict": "NOT-READY",
    "cli_reasons": [
-    "T2",
     "T3"
    ],
    "pdflatex_rc": 1,
@@ -3447,6 +3446,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "fb63f2007a6df27081d48ba28c29d7ae829b0d8f",
+ "measured_at_sha": "a1e5a65be6337b12c2e1e85c80ab0adf4c7f3fbc",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

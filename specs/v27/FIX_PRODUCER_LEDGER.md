@@ -12,15 +12,15 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 166 (~25%)
+- **Shipped**: 165 (~25%)
 - **Pending**: 489
-- **Deferred**: 5 (NLP-required)
+- **Deferred**: 6 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, guard-gated           | 466 | 166 | 300 |
+| **A**  | Mechanical, guard-gated           | 466 | 165 | 301 |
 | **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 83 | 0 | 83 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -103,7 +103,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | TH | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | TIKZ | 10 | 1 | 9 | 0 | 10 | 0 | 0 | 0 |
 | TR | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
-| TYPO | 63 | 46 | 13 | 4 | 59 | 4 | 0 | 0 |
+| TYPO | 63 | 45 | 13 | 5 | 59 | 4 | 0 | 0 |
 | VERB | 17 | 1 | 16 | 0 | 17 | 0 | 0 | 0 |
 | ZH | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 
@@ -726,7 +726,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `TYPO-035` | TYPO | **A** | confirmed | shipped in v26.3.0 |
 | `TYPO-036` | TYPO | **A** | tentative | pending |
 | `TYPO-037` | TYPO | **A** | confirmed | shipped in v26.3.0 |
-| `TYPO-038` | TYPO | **A** | confirmed | shipped in v27.0.9 |
+| `TYPO-038` | TYPO | **A** | confirmed | **withdrawn** in v27.1.66 (OPEN-075) |
 | `TYPO-039` | TYPO | **A** | confirmed | shipped in v27.0.13 |
 | `TYPO-040` | TYPO | **A** | tentative | pending |
 | `TYPO-041` | TYPO | **A** | tentative | pending |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 166 of 466 Bucket A
+  **TRACKING** — 165 of 466 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

@@ -454,7 +454,11 @@
   default_severity: Info
   maturity: Implemented
   owner: "@lint-team"
-  fix: wrap_href
+  # OPEN-075: was `wrap_href`. The producer was WITHDRAWN in v27.1.66 --
+  # it emitted \href into documents that never load hyperref (MEASURED rc 0 -> 1)
+  # and re-wrapped addresses already inside semantic e-mail slots. A rule that
+  # ships no remedy takes null; see fix_status_reason in rule_contracts.yaml.
+  fix: null
 
 - id: "TYPO-039"
   description: "URL split across lines without \\url{}"

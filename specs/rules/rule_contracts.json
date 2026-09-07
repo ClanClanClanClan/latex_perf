@@ -10535,7 +10535,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": true
+      "produces_fix": false,
+      "fix_status_reason": "WITHDRAWN in v27.1.66 (OPEN-075): the producer emitted \\href into documents that never load hyperref -- MEASURED rc 0 -> 1, '! Undefined control sequence' -- and whether hyperref is loaded is a PROJECT property (parent file / .cls / .sty) not readable from the single file the rule sees, the same whole-project blindness as STRUCT-001. It also wrapped addresses already sitting in a semantic e-mail/URL slot (revtex \\email, \\url, \\thanks), re-expanding them through \\hyper@normalise into '! TeX capacity exceeded'. That slot set is class-specific and open-ended. It rewrote 78% of sampled real papers and was the sole cause of 5 of 15 compile breaks. Severity is Info and the benefit cosmetic, so no safe remedy exists."
     },
     {
       "rule_id": "TYPO-039",

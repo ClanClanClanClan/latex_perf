@@ -64,7 +64,6 @@ SHIPPED_VERSIONS = {
     "TYPO-004": "v27.0.6",
     "TYPO-005": "v27.0.7",
     "TYPO-001": "v27.0.8",
-    "TYPO-038": "v27.0.9",
     "TYPO-034": "v27.0.11",
     "TYPO-029": "v27.0.12",
     "TYPO-039": "v27.0.13",
@@ -233,6 +232,7 @@ def discover_all_rules() -> list[str]:
 # until the rule's own predicate is corrected first.
 WITHDRAWN: dict[str, str] = {
     "HI-001": "v27.1.65 (OPEN-064)",
+    "TYPO-038": "v27.1.66 (OPEN-075)",
 }
 
 

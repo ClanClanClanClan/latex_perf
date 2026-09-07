@@ -635,73 +635,35 @@ let () =
         && out = "\xe2\x80\x9ca\xe2\x80\x9db\xe2\x80\x9cc")
         (tag ^ ": alternation despite mismatch"));
 
-  (* v27.0.9 batch: TYPO-038 fix producer (email -> href, math-aware). *)
-  run "TYPO-038 fix: bare email becomes \\href{mailto:...}{...}" (fun tag ->
+  (* OPEN-075: the TYPO-038 fix producer was WITHDRAWN in v27.1.66. It emitted
+     \\href into documents that never load hyperref -- MEASURED at the pin, rc 0
+     -> 1 with "! Undefined control sequence" -- and re-wrapped addresses
+     already sitting in a semantic e-mail slot into "! TeX capacity exceeded".
+     The five tests that PINNED the wrapping behaviour are replaced by their
+     inverses; the DIAGNOSTIC tests are kept unchanged as the positive
+     control. *)
+  run "TYPO-038 emits no fix (OPEN-075)" (fun tag ->
       let src = "Contact: alice@example.com for more." in
-      let edits = fix_edits "TYPO-038" src in
+      expect (fix_edits "TYPO-038" src = []) (tag ^ ": no href wrapping"));
+  run "TYPO-038 leaves a bare email byte-identical (OPEN-075)" (fun tag ->
+      let src = "Contact: alice@example.com for more." in
       expect
-        (List.length edits = 1
-        && apply_all src edits
-           = "Contact: \\href{mailto:alice@example.com}{alice@example.com} for \
-              more.")
-        (tag ^ ": email wrapped with mailto href"));
-
-  run "TYPO-038 fix: two emails get two wraps" (fun tag ->
-      let src = "Email a@b.io or c@d.org now." in
-      let edits = fix_edits "TYPO-038" src in
+        (apply_all src (fix_edits "TYPO-038" src) = src)
+        (tag ^ ": byte-identical"));
+  run "TYPO-038 leaves an email in a semantic slot alone (OPEN-075)" (fun tag ->
+      (* The revtex shape that re-expanded through \\hyper@normalise. *)
+      let src = "\\email[C. M. O. Pereira - ]{carlos.mop@example.br}" in
       expect
-        (List.length edits = 2
-        && apply_all src edits
-           = "Email \\href{mailto:a@b.io}{a@b.io} or \
-              \\href{mailto:c@d.org}{c@d.org} now.")
-        (tag ^ ": two distinct emails, two non-overlapping wraps"));
-
+        (apply_all src (fix_edits "TYPO-038" src) = src)
+        (tag ^ ": semantic slot untouched"));
+  run "TYPO-038 still DIAGNOSES (positive control)" (fun tag ->
+      expect
+        (fires "TYPO-038" "Contact: alice@example.com now")
+        (tag ^ ": fires"));
   run "TYPO-038 does not fire on clean source" (fun tag ->
       expect
         (does_not_fire "TYPO-038" "Already wrapped: \\href{mailto:x@y.z}{x@y.z}")
-        (tag ^ ": pre-wrapped email shouldn't fire"));
-
-  run "TYPO-038 fix: math + wrapped + plain integration" (fun tag ->
-      (* Restored from v27.0.9 round-1 audit (commit 1026e1b) which the
-         squash-merge of PR #340 dropped per
-         feedback_squash_merge_drops_late_commits.md. *)
-      let src =
-        "Plain a@b.io, math $x@y.com$ and \\href{mailto:c@d.org}{c@d.org}."
-      in
-      let edits = fix_edits "TYPO-038" src in
-      let out = apply_all src edits in
-      expect
-        (List.length edits = 1
-        && out
-           = "Plain \\href{mailto:a@b.io}{a@b.io}, math $x@y.com$ and \
-              \\href{mailto:c@d.org}{c@d.org}.")
-        (tag ^ ": only plain email wrapped; math + wrapped preserved"));
-
-  run "TYPO-038 fix: literal mailto: text is NOT skipped (round-1 audit fix)"
-    (fun tag ->
-      (* Pre-v27.0.10 prefix-byte check treated any email preceded by literal
-         `mailto:` as wrapped, even in plain text. v27.0.10 uses
-         find_href_mailto_ranges so only emails inside real
-         \\href{mailto:...}{...} constructs are skipped. *)
-      let src = "Send to mailto:alice@x.com today" in
-      let edits = fix_edits "TYPO-038" src in
-      let out = apply_all src edits in
-      expect
-        (List.length edits = 1
-        && out = "Send to mailto:\\href{mailto:alice@x.com}{alice@x.com} today"
-        )
-        (tag ^ ": email after literal mailto: text gets wrapped"));
-
-  run "TYPO-038 fix: non-href two-arg command does NOT mask email" (fun tag ->
-      (* Pre-v27.0.10 prefix-byte check treated any email preceded by `}{` as
-         wrapped. v27.0.10 only skips inside real \\href{mailto:...}{...}. *)
-      let src = "\\textbf{label}{a@b.io}" in
-      let edits = fix_edits "TYPO-038" src in
-      let out = apply_all src edits in
-      expect
-        (List.length edits = 1
-        && out = "\\textbf{label}{\\href{mailto:a@b.io}{a@b.io}}")
-        (tag ^ ": non-href command does not mask"));
+        (tag ^ ": pre-wrapped email not counted"));
 
   (* v27.0.11 batch: TYPO-034 fix producer (delete spurious space before
      \\footnote, math-aware). *)

@@ -59,7 +59,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-MIN_MUTATIONS = 11
+MIN_MUTATIONS = 12
 
 REPO = Path(__file__).resolve().parent.parent.parent
 PY = sys.executable
@@ -142,6 +142,32 @@ def append_discarding_proof(text: str) -> str:
     """
     return text + ("\nLemma killtest_discard : forall (a b : nat), True.\n"
                    "Proof. intros _ _. exact I. Qed.\n")
+
+
+def reinsert_gates_pass_iff(text: str) -> str:
+    """OPEN-055. Put back the `X <-> X` tautology this gate now catches.
+
+    all_static_gates_pass is DEFINITIONALLY the conjunction on the right, so
+    the statement is X <-> X and the proof is split; intros H; exact H. It
+    shipped for months because CompileProgress.v was outside the gate's
+    LOAD_BEARING list AND because bullets and `split` both short-circuit
+    is_hypothesis_restatement.
+    """
+    marker = "  (* OPEN-055: [gates_pass_iff] was DELETED here"
+    assert marker in text, "OPEN-055 marker gone; update registry"
+    taut = (
+        "  Lemma gates_pass_iff :\n"
+        "    forall p pf,\n"
+        "      all_static_gates_pass p pf <->\n"
+        "      T0_accepts p /\\ T1_admissible p /\\ T2_closed p /\\\n"
+        "      T3_compatible p pf /\\ T4_coherent p /\\ T5_safe p.\n"
+        "  Proof.\n"
+        "    intros p pf. split.\n"
+        "    - intros H. exact H.\n"
+        "    - intros H. exact H.\n"
+        "  Qed.\n\n")
+    i = text.index(marker)
+    return text[:i] + taut + text[i:]
 
 
 def restrand_ungraded_row(text: str) -> str:
@@ -233,6 +259,19 @@ REGISTRY = [
                      r"specs/rules/README.md says Draft",
                      old="  - Draft: 529",
                      new="  - Draft: 619"),
+        ]),
+    GateTest(
+        "check_proof_substance",
+        [PY, f"{TOOLS}/check_proof_substance.py"],
+        "pure",
+        [
+            # OPEN-055: an `X <-> X` iff proved by split/intros/exact. The
+            # regex names the new arm's wording specifically so the older
+            # hypothesis-restatement arm cannot supply a false kill.
+            Mutation("X <-> X tautology reinserted (OPEN-055)",
+                     "proofs/CompileProgress.v",
+                     r"is an `X <-> X` restatement",
+                     transform=reinsert_gates_pass_iff),
         ]),
     GateTest(
         "check_project_state", [PY, f"{TOOLS}/check_project_state.py"],
@@ -339,7 +378,13 @@ def check_spec_drift_coverage() -> list[str]:
     """
     sd = (REPO / ".github/workflows/spec-drift.yml").read_text()
     ci = (REPO / ".github/workflows/ci.yml").read_text()
-    invoked = set(re.findall(r"(check_[a-z_]+\.py)", sd + ci))
+    # OPEN-055: proof.yml hosts the REQUIRED `proof-ci` context and runs
+    # check_proof_substance.py, but this coverage check only knew about
+    # spec-drift.yml and ci.yml — so a gate wired into required CI still read
+    # as "running nowhere". Same blind-spot shape as the gate it guards.
+    pf_path = REPO / ".github/workflows/proof.yml"
+    pf = pf_path.read_text() if pf_path.is_file() else ""
+    invoked = set(re.findall(r"(check_[a-z_]+\.py)", sd + ci + pf))
     covered = {Path(g.cmd[-1]).name for g in REGISTRY}
     problems = []
     for name in sorted(set(re.findall(r"(check_[a-z_]+\.py)", sd))):

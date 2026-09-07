@@ -1456,6 +1456,30 @@ let find_exempt_ranges (s : string) : (int * int) list =
     (Alias of the generic point-in-ranges test [is_in_math_range].) *)
 let is_in_exempt_range = is_in_math_range
 
+(** [blank_exempt s] — length-preserving copy of [s] with every exempt range
+    (verbatim / comment / url / math) space-filled, newlines kept.
+
+    OPEN-066. For a fix producer that READS a trigger anywhere in the source and
+    writes somewhere ELSE — the [mk_usepackage_insert] family — the exempt layer
+    is no protection at all: [mk_result_with_fix_exempt] drops edits that LAND
+    in a protected range, but these edits land in the preamble. CJK-004 saw CJK
+    inside a comment and injected [\usepackage{xeCJK}], which aborts under
+    pdflatex; measured on 10 of 191 real roots.
+
+    Detect on [blank_exempt s]; insert using the ORIGINAL [s], because the edit
+    offset must index the real bytes. That is the same split REF-011 documents. *)
+let blank_exempt (s : string) : string =
+  let b = Bytes.of_string s in
+  let n = Bytes.length b in
+  List.iter
+    (fun (a, z) ->
+      let z = min z n in
+      for i = max 0 a to z - 1 do
+        if Bytes.get b i <> '\n' then Bytes.set b i ' '
+      done)
+    (find_exempt_ranges s);
+  Bytes.to_string b
+
 (** [mk_result_with_fix_exempt ~id ~severity ~message ~count ~src ~fix] —
     exempt-aware constructor for character/whitespace fix producers. Drops every
     edit in [fix] whose start offset falls inside a verbatim / inline \verb /

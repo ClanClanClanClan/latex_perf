@@ -65,6 +65,17 @@ BATTERY = (
     # these (CHEM-005/MATH-046/SCRIPT-006 leaked before vcu_exempt). Must stay
     # byte-identical inside verbatim/comment/url.
     b"chemarr $a->b$ ldotsrel $a,\\ldots,b$ deg $5\xc2\xb0$ middot $a\xc2\xb7b$ le $a<=b$ "
+    # OPEN-066 — the INSERT-USEPACKAGE family. These five read a trigger
+    # ANYWHERE in the source and inject a \usepackage line into the preamble,
+    # so they are invisible to the in-region arm above: the region comes back
+    # byte-identical while the PREAMBLE grows. CJK-004 shipped this way and
+    # turned compiling papers into ones pdflatex refuses to build (xeCJK aborts
+    # under pdflatex) on 5.2% of real roots.
+    #
+    # ⚠ The battery had CJK PUNCTUATION (U+FF0C/U+3000/U+3001/U+30FB) but no Han
+    # IDEOGRAPH, which is what CJK-004 actually keys on — so the family was
+    # untestable here until this line. Keep the ideograph.
+    b"han\xe6\xbc\xa2 ruby\\ruby{a}{b} toprule\\toprule enquote\\enquote{q} autoref\\autoref{x} "
 )
 
 # Each protected region: (name, prefix_before_battery, suffix_after_battery).
@@ -172,6 +183,68 @@ def check(binp: str, env, label: str, violations: list) -> None:
             )
 
 
+def check_no_outside_edit(binp: str, env, label: str, violations: list) -> None:
+    r"""OPEN-066: a protected region must not TRIGGER an edit outside itself.
+
+    [check] above asks "were the bytes INSIDE the region preserved?". That is
+    the v27.1.4 class — a character producer rewriting in place. It cannot see
+    the class found on 2026-09-07, where a producer READS evidence from inside a
+    protected region and writes somewhere else entirely:
+
+      CJK-004 saw CJK inside \begin{verbatim} and inserted
+      \usepackage{xeCJK} into the PREAMBLE. The verbatim block came back
+      byte-identical, so [check] passed — while the document went from
+      pdflatex rc 0 to rc 1, because xeCJK aborts under pdflatex. Measured on
+      real roots: 10 of 191 (5.2%), every one of them a comment or verbatim.
+
+    This arm plants the battery in ONE region at a time and asserts that
+    everything OUTSIDE that region is byte-identical. Per-region rather than
+    one torture document, so a violation names the region that caused it.
+
+    The one sanctioned in-region transform (VERB-002 tab expansion) is
+    irrelevant here: it happens inside the region, and this arm only looks
+    outside.
+    """
+    # SCOPE, deliberately: the AUTHOR-VERBATIM regions and comments only.
+    #
+    # Those are content TeX either never processes (a % comment) or reproduces
+    # literally (verbatim/lstlisting/\verb) — plus \url targets, which are not
+    # prose. A trigger there is not evidence about the document, so an edit
+    # caused by it is always wrong.
+    #
+    # The three ARGUMENT regions (include-filename, package-spec, xref-key) are
+    # deliberately NOT covered, and that is a judgement about TeX, not a
+    # convenience: those bytes ARE processed. Measured — a battery planted in
+    # \label{...} injects all five packages, and for hyperref that is even
+    # defensible: \autoref inside a label key really does expand, and really is
+    # undefined without hyperref. They are guarded one layer later by Fix_guard,
+    # against edits LANDING there, which is a different invariant.
+    OUTSIDE_SCOPE = {"verbatim-env", "lstlisting", "inline-verb", "comment", "url"}
+    for name, pre, suf in REGIONS:
+        if name not in OUTSIDE_SCOPE:
+            continue
+        src = b"\\documentclass{article}\n" + pre + BATTERY + suf
+        out = apply_fixes(binp, src, env)
+        sa, sb = pre.split()[-1], suf.split()[0]
+        i_s, j_s = src.find(sa), src.find(sb, src.find(sa))
+        i_o, j_o = out.find(sa), out.find(sb, out.find(sa))
+        if min(i_s, j_s, i_o, j_o) < 0:
+            violations.append(
+                f"[{label}] {name}: sentinels missing — cannot judge "
+                f"outside-region edits")
+            continue
+        before_src, after_src = src[:i_s], src[j_s:]
+        before_out, after_out = out[:i_o], out[j_o:]
+        if before_src != before_out or after_src != after_out:
+            violations.append(
+                f"[{label}] {name}: a fix fired OUTSIDE the region, triggered "
+                f"by evidence that exists only INSIDE it (OPEN-066).\n"
+                f"      before-region: {before_src!r}\n"
+                f"              ->     {before_out!r}\n"
+                f"      after-region : {after_src!r}\n"
+                f"              ->     {after_out!r}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=".")
@@ -192,6 +265,10 @@ def main() -> int:
     default.pop("L0_VALIDATORS", None)
     check(binp, pilot, "pilot", violations)
     check(binp, default, "default", violations)
+    # OPEN-066: the same regions, asked the OTHER question — did anything
+    # outside them change because of what is inside them?
+    check_no_outside_edit(binp, pilot, "pilot/outside", violations)
+    check_no_outside_edit(binp, default, "default/outside", violations)
 
     if violations:
         print(

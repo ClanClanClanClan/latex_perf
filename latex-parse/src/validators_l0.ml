@@ -6544,7 +6544,10 @@ let r_l3_010 : rule =
 (* REF-011: \autoref used without hyperref/cleveref loaded *)
 let r_ref_011 : rule =
   let run s =
-    let has_autoref = count_substring s "\\autoref" > 0 in
+    (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
+       offsets. *)
+    let sx = blank_exempt s in
+    let has_autoref = count_substring sx "\\autoref" > 0 in
     let has_hyperref =
       count_substring s "\\usepackage{hyperref}" > 0
       || count_substring s "\\usepackage[" > 0
@@ -6555,7 +6558,7 @@ let r_ref_011 : rule =
       || count_substring s "cleveref" > 0
     in
     if has_autoref && (not has_hyperref) && not has_cleveref then
-      let count = count_substring s "\\autoref" in
+      let count = count_substring sx "\\autoref" in
       let message = {|\autoref used without hyperref/cleveref loaded|} in
       (* Fix: insert \usepackage{hyperref} right after \documentclass. The
          detector only fires when NEITHER hyperref NOR cleveref is present, so

@@ -700,11 +700,14 @@ let r_cjk_004 : rule =
 let r_cjk_006 : rule =
   let re_ruby = Re_compat.regexp_string "\\ruby{" in
   let run s =
+    (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
+       offsets. *)
+    let sx = blank_exempt s in
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _mr, _ = Re_compat.search_forward re_ruby s !i in
+         let _mr, _ = Re_compat.search_forward re_ruby sx !i in
          incr cnt;
          i := Re_compat.match_end _mr
        done
@@ -1551,20 +1554,23 @@ let r_pkg_011 : rule =
   let re_midrule = Re_compat.regexp_string "\\midrule" in
   let re_bottomrule = Re_compat.regexp_string "\\bottomrule" in
   let run s =
+    (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
+       offsets. *)
+    let sx = blank_exempt s in
     let uses_booktabs_cmds =
       (try
-         let _mr, _ = Re_compat.search_forward re_toprule s 0 in
+         let _mr, _ = Re_compat.search_forward re_toprule sx 0 in
          ignore _mr;
          true
        with Not_found -> false)
       ||
       try
-        let _mr, _ = Re_compat.search_forward re_midrule s 0 in
+        let _mr, _ = Re_compat.search_forward re_midrule sx 0 in
         ignore _mr;
         true
       with Not_found -> (
         try
-          let _mr, _ = Re_compat.search_forward re_bottomrule s 0 in
+          let _mr, _ = Re_compat.search_forward re_bottomrule sx 0 in
           ignore _mr;
           true
         with Not_found -> false)
@@ -1594,9 +1600,12 @@ let r_pkg_011 : rule =
 let r_pkg_012 : rule =
   let re = Re_compat.regexp_string "\\enquote{" in
   let run s =
+    (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
+       offsets. *)
+    let sx = blank_exempt s in
     let has_enquote =
       try
-        let _mr, _ = Re_compat.search_forward re s 0 in
+        let _mr, _ = Re_compat.search_forward re sx 0 in
         ignore _mr;
         true
       with Not_found -> false

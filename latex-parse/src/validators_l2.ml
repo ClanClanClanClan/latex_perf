@@ -635,6 +635,21 @@ let r_cjk_004 : rule =
     (* Check if CJK characters present (U+4E00..U+9FFF, U+3400..U+4DBF) *)
     let has_cjk = ref false in
     let len = String.length s in
+    (* ⚠ The trigger MUST ignore CJK inside comments, verbatim and URLs. Without
+       this guard CJK-004 injected \usepackage{xeCJK} because a Chinese author
+       wrote section-separator comments in Chinese — and xeCJK aborts under
+       pdflatex ("Critical Package xeCJK Error: The xeCJK package requires XeTeX
+       to function"), so the DEFAULT --apply-fixes path turned a COMPILING
+       document into one pdflatex refuses to build. Measured on real roots: 10
+       of 191 (5.2%) gained the package, and in ALL TEN every CJK ideograph lay
+       inside a comment or a verbatim/lstlisting/minted body — zero warranted
+       injections.
+
+       The offsets for the edit still come from the ORIGINAL [s]
+       (mk_usepackage_insert searches [s]); only the DETECTION is exempt-aware,
+       which is the same split REF-011 documents. *)
+    let exempt = find_exempt_ranges s in
+    let live i = not (is_in_exempt_range exempt i) in
     let i = ref 0 in
     while !i < len - 2 && not !has_cjk do
       let b0 = Char.code (String.unsafe_get s !i) in
@@ -643,13 +658,13 @@ let r_cjk_004 : rule =
         (* also U+3400..U+4DBF = E3 90 80..E4 B6 BF *)
         let b1 = Char.code (String.unsafe_get s (!i + 1)) in
         let b2 = Char.code (String.unsafe_get s (!i + 2)) in
-        if b1 >= 0x80 && b1 <= 0xbf && b2 >= 0x80 && b2 <= 0xbf then
+        if b1 >= 0x80 && b1 <= 0xbf && b2 >= 0x80 && b2 <= 0xbf && live !i then
           has_cjk := true;
         i := !i + 3)
       else if b0 = 0xe3 then (
         let b1 = Char.code (String.unsafe_get s (!i + 1)) in
         let b2 = Char.code (String.unsafe_get s (!i + 2)) in
-        if b1 >= 0x90 && b2 >= 0x80 then has_cjk := true;
+        if b1 >= 0x90 && b2 >= 0x80 && live !i then has_cjk := true;
         i := !i + 3)
       else if b0 >= 0x80 then
         (* skip other multi-byte *)

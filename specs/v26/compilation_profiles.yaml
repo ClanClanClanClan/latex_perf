@@ -20,6 +20,13 @@ profiles:
     output_format: pdf
     supported_features:
       - utf8_inputenc            # \usepackage[utf8]{inputenc}
+      # pdfTeX has defaulted to UTF-8 input since TeX Live 2018, so raw UTF-8
+      # with no inputenc compiles. MEASURED at the pinned oracle
+      # (pdfTeX 3.141592653-2.6-1.40.29): rc 0, pdftotext recovers the accented
+      # text. This list was SILENT on utf8_direct and the code read that silence
+      # as "incompatible" (compile_contract.feature_compatible /
+      # BuildProfileSound.compatible both said false).
+      - utf8_direct              # native UTF-8 since TL2018; no inputenc needed
       - babel_standard           # standard babel languages
       - amsmath
       - hyperref
@@ -59,6 +66,9 @@ profiles:
     supported_features:
       - utf8_direct                # no inputenc required; native UTF-8
       - opentype_fonts
+      # MEASURED at the pin: xeCJK + Japanese body under xelatex exits 0
+      # (3,680-byte PDF). This list was silent and the code read that as false.
+      - japanese_cjk               # via xeCJK
       - babel_standard
       - polyglossia
       - unicode_math
@@ -85,6 +95,11 @@ profiles:
       - utf8_direct
       - opentype_fonts
       - lua_scripting
+      # MEASURED at the pin: luatexja + Japanese body under lualatex exits 0
+      # (4,936-byte PDF). Marking this unsupported was SELF-CONTRADICTORY:
+      # detect_body_features infers japanese_cjk FROM luatexja, a package that
+      # exists only for LuaLaTeX.
+      - japanese_cjk               # via luatexja
       - babel_standard
       - polyglossia
       - unicode_math

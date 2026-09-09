@@ -6696,53 +6696,60 @@
   "TYPO-028": {
     "variants": [
       {
-        "expected_hex": "5c5b785c5d0a",
-        "hex": "24247824240a",
-        "kind": "mutate",
-        "note": "base ($$..$$ -> \\[..\\])",
-        "pilot": false
-      },
-      {
-        "expected_hex": "615c5b785c5d620a",
-        "hex": "612424782424620a",
-        "kind": "mutate",
-        "note": "letter-adjacent (\\[ / \\] are control sym",
-        "pilot": false
-      },
-      {
-        "expected_hex": "5c5b5c5d0a",
-        "hex": "242424240a",
-        "kind": "mutate",
-        "note": "empty display ($$$$ -> \\[\\])",
-        "pilot": false
-      },
-      {
-        "expected_hex": "5c5be6bca25c5d0a",
-        "hex": "2424e6bca224240a",
-        "kind": "mutate",
-        "note": "CJK-adjacent",
-        "pilot": false
-      },
-      {
-        "expected_hex": "5c5b615c5d205c5b625c5d0a",
-        "hex": "24246124242024246224240a",
-        "kind": "mutate",
-        "note": "doubled (two pairs)",
-        "pilot": false
-      },
-      {
-        "expected_hex": "252024247824240a",
-        "hex": "252024247824240a",
         "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: $$..$$ untouched",
+        "hex": "6265666f726520242420582024242061667465720a",
+        "expected_hex": "6265666f726520242420582024242061667465720a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: two pairs untouched",
+        "hex": "242461242420616e642024246224240a",
+        "expected_hex": "242461242420616e642024246224240a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: empty display untouched",
+        "hex": "7824242424790a",
+        "expected_hex": "7824242424790a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 withdrawn: CJK-adjacent untouched",
+        "hex": "e6bca220242461242420e6bca20a",
+        "expected_hex": "e6bca220242461242420e6bca20a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-076 THE FATAL SHAPE: adjacent inline math, rc 0 -> 1",
+        "hex": "416c696365245e7b317d24245e5c617374242c20426f62245e7b327d24245e5c617374242c204361726f6c245e7b337d242e0a",
+        "expected_hex": "416c696365245e7b317d24245e5c617374242c20426f62245e7b327d24245e5c617374242c204361726f6c245e7b337d242e0a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "escaped \\$$ is not a delimiter",
+        "hex": "6c69746572616c5c24242076616c75650a",
+        "expected_hex": "6c69746572616c5c24242076616c75650a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
         "note": "in-comment (vcu-filtered)",
-        "pilot": false
+        "hex": "252024246124240a",
+        "expected_hex": "252024246124240a"
       },
       {
-        "expected_hex": "5c766572627c24247824247c0a",
-        "hex": "5c766572627c24247824247c0a",
         "kind": "preserve",
+        "pilot": false,
         "note": "in-verbatim",
-        "pilot": false
+        "hex": "5c766572627c24246124247c0a",
+        "expected_hex": "5c766572627c24246124247c0a"
       }
     ]
   },
@@ -7018,74 +7025,88 @@
   "TYPO-038": {
     "variants": [
       {
-        "expected_hex": "6d61696c205c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d20686572650a",
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-075 withdrawn: bare email untouched",
         "hex": "6d61696c206140622e636f6d20686572650a",
-        "kind": "mutate",
-        "note": "base — wrap email in \\\\href{mailto:..}{.",
-        "pilot": false
+        "expected_hex": "6d61696c206140622e636f6d20686572650a"
       },
       {
-        "expected_hex": "5c687265667b6d61696c746f3a6140622e636f6d787d7b6140622e636f6d787d0a",
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-075 withdrawn: letter-adjacent TLD untouched",
         "hex": "6140622e636f6d780a",
-        "kind": "mutate",
-        "note": "letter-adjacent (greedy TLD absorbs trai",
-        "pilot": false
+        "expected_hex": "6140622e636f6d780a"
       },
       {
-        "expected_hex": "e6bca2205c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d20e6bca20a",
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-075 withdrawn: CJK-adjacent untouched",
         "hex": "e6bca2206140622e636f6d20e6bca20a",
-        "kind": "mutate",
-        "note": "CJK-adjacent (email boundaries stay ASCI",
-        "pilot": false
+        "expected_hex": "e6bca2206140622e636f6d20e6bca20a"
       },
       {
-        "expected_hex": "5c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d205c687265667b6d61696c746f3a6340642e6f72677d7b6340642e6f72677d0a",
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-075 withdrawn: two emails untouched",
         "hex": "6140622e636f6d206340642e6f72670a",
-        "kind": "mutate",
-        "note": "doubled (two emails)",
-        "pilot": false
+        "expected_hex": "6140622e636f6d206340642e6f72670a"
       },
       {
-        "expected_hex": "656e64205c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d",
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-075 withdrawn: EOF untouched",
         "hex": "656e64206140622e636f6d",
-        "kind": "mutate",
-        "note": "EOF",
-        "pilot": false
+        "expected_hex": "656e64206140622e636f6d"
       },
       {
-        "expected_hex": "5c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d0a",
-        "hex": "5c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d0a",
         "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-075 no hyperref: emitting \\href here was rc 0 -> 1",
+        "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c626567696e7b646f63756d656e747d0a436f6e74616374206140622e636f6d0a5c656e647b646f63756d656e747d0a",
+        "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c626567696e7b646f63756d656e747d0a436f6e74616374206140622e636f6d0a5c656e647b646f63756d656e747d0a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
+        "note": "OPEN-075 semantic slot: \\email re-expanded via hyper@normalise",
+        "hex": "5c656d61696c5b432e204d2e204f2e2050657265697261202d205d7b6361726c6f732e6d6f70406578616d706c652e62727d0a",
+        "expected_hex": "5c656d61696c5b432e204d2e204f2e2050657265697261202d205d7b6361726c6f732e6d6f70406578616d706c652e62727d0a"
+      },
+      {
+        "kind": "preserve",
+        "pilot": false,
         "note": "already-wrapped: find_href_mailto_ranges",
-        "pilot": false
+        "hex": "5c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d0a",
+        "expected_hex": "5c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d0a"
       },
       {
-        "expected_hex": "25206140622e636f6d0a",
-        "hex": "25206140622e636f6d0a",
         "kind": "preserve",
+        "pilot": false,
         "note": "in-comment (exempt)",
-        "pilot": false
+        "hex": "25206140622e636f6d0a",
+        "expected_hex": "25206140622e636f6d0a"
       },
       {
-        "expected_hex": "5c766572627c6140622e636f6d7c0a",
-        "hex": "5c766572627c6140622e636f6d7c0a",
         "kind": "preserve",
+        "pilot": false,
         "note": "in-verbatim (exempt)",
-        "pilot": false
+        "hex": "5c766572627c6140622e636f6d7c0a",
+        "expected_hex": "5c766572627c6140622e636f6d7c0a"
       },
       {
-        "expected_hex": "246140622e636f6d240a",
-        "hex": "246140622e636f6d240a",
         "kind": "preserve",
+        "pilot": false,
         "note": "in-math (exempt)",
-        "pilot": false
+        "hex": "246140622e636f6d240a",
+        "expected_hex": "246140622e636f6d240a"
       },
       {
-        "expected_hex": "5c75726c7b6140622e636f6d7d0a",
-        "hex": "5c75726c7b6140622e636f6d7d0a",
         "kind": "preserve",
+        "pilot": false,
         "note": "in-url (exempt)",
-        "pilot": false
+        "hex": "5c75726c7b6140622e636f6d7d0a",
+        "expected_hex": "5c75726c7b6140622e636f6d7d0a"
       }
     ]
   },

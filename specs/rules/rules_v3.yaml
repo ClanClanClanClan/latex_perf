@@ -374,7 +374,11 @@
   default_severity: Error
   maturity: Implemented
   owner: "@math-rules"
-  fix: replace_with_equation
+  # OPEN-076: was `replace_with_equation`. WITHDRAWN in v27.1.66 -- the producer
+  # paired `$$` offsets positionally with no math-mode tracking, so adjacent
+  # inline math was rewritten to \[ \] and one bad pair inverted every later
+  # delimiter. See fix_status_reason in rule_contracts.yaml.
+  fix: null
 
 - id: "TYPO-029"
   description: "Non‑breaking space after \\ref missing"
@@ -454,7 +458,11 @@
   default_severity: Info
   maturity: Implemented
   owner: "@lint-team"
-  fix: wrap_href
+  # OPEN-075: was `wrap_href`. The producer was WITHDRAWN in v27.1.66 --
+  # it emitted \href into documents that never load hyperref (MEASURED rc 0 -> 1)
+  # and re-wrapped addresses already inside semantic e-mail slots. A rule that
+  # ships no remedy takes null; see fix_status_reason in rule_contracts.yaml.
+  fix: null
 
 - id: "TYPO-039"
   description: "URL split across lines without \\url{}"

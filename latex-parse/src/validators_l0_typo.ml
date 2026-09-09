@@ -1345,22 +1345,11 @@ let r_typo_027 : rule =
    views agree on 1 pair. *)
 let r_typo_028 : rule =
   let needle = "$$" in
-  let nlen = 2 in
-  let is_escaped s pos =
-    let n = ref 0 in
-    let i = ref (pos - 1) in
-    while !i >= 0 && s.[!i] = '\\' do
-      incr n;
-      decr i
-    done;
-    !n mod 2 = 1
-  in
-  let unescaped_offsets s =
-    List.filter
-      (fun off -> not (is_escaped s off))
-      (find_all_non_overlapping s needle)
-  in
-  let rec pairs = function a :: b :: rest -> (a, b) :: pairs rest | _ -> [] in
+  (* OPEN-076: [nlen] / [is_escaped] / [unescaped_offsets] / [pairs] were the
+     fix producer's machinery and are gone with it. [pairs] in particular --
+     `function a :: b :: rest -> (a, b) :: pairs rest` -- is the positional
+     blind-pairing that made one spurious `$$` invert every later delimiter in
+     the file. Do not reintroduce them without a real dollar-mode scanner. *)
   (* P3 context-aware (token-aware variant): this rule operates ON the `$$`
      delimiters, so it needs a verbatim/comment/url-only exemption — NOT the
      full exempt set (which treats `$$…$$` as a math range and would suppress
@@ -1370,31 +1359,36 @@ let r_typo_028 : rule =
     let vcu = find_verbatim_comment_url_ranges s in
     let cnt = count_in_text vcu s needle / 2 in
     if cnt > 0 then
-      let non_vcu_offsets =
-        List.filter
-          (fun off -> not (is_in_exempt_range vcu off))
-          (unescaped_offsets s)
-      in
-      let pair_offsets = pairs non_vcu_offsets in
-      let fix =
-        List.concat_map
-          (fun (open_off, close_off) ->
-            [
-              Cst_edit.replace ~start_offset:open_off
-                ~end_offset:(open_off + nlen) "\\[";
-              Cst_edit.replace ~start_offset:close_off
-                ~end_offset:(close_off + nlen) "\\]";
-            ])
-          pair_offsets
-      in
-      if fix = [] then
-        Some
-          (mk_result ~id:"TYPO-028" ~severity:Error
-             ~message:{|Use of ``$$'' display math delimiter|} ~count:cnt)
-      else
-        Some
-          (mk_result_with_fix ~id:"TYPO-028" ~severity:Error
-             ~message:{|Use of ``$$'' display math delimiter|} ~count:cnt ~fix)
+      (* OPEN-076: the fix producer is WITHDRAWN.
+
+         [unescaped_offsets] collects every unescaped 2-byte [$$] with NO
+         MATH-MODE TRACKING, and [pairs] then paired them BLINDLY BY POSITION
+         ([a :: b :: rest -> (a, b) :: pairs rest]). Two things follow, and the
+         second is why no guard can rescue it.
+
+         (1) The CLOSING [$] of one inline segment plus the OPENING [$] of the
+         next reads as a display delimiter. [$^{1}$$^\ast$] -- an author /
+         affiliation block, which is where adjacent inline math actually lives
+         -- is not display math at all.
+
+         (2) Because the pairing is positional, ONE spurious [$$] inverts
+         open/close for EVERY LATER PAIR IN THE FILE. The damage is unbounded
+         and can span unrelated paragraphs.
+
+         MEASURED at the pin: [Alice$^{1}$$^\ast$, Bob$^{2}$$^\ast$,
+         Carol$^{3}$.] compiles (rc 0); after --apply-fixes it is
+         [Alice$^{1}\[^\ast$, Bob$^{2}\]^\ast$, ...] and pdflatex dies "! LaTeX
+         Error: Bad math environment delimiter." The rule rewrote ~34% of
+         sampled real papers.
+
+         A correct predicate needs a real left-to-right dollar-mode scanner
+         deciding at each [$] run whether it is an inline toggle or a display
+         toggle. That is a rewrite, not a guard: until it exists no local test
+         on a single [$$] can tell the two apart. The DIAGNOSTIC is unchanged
+         and still counts [$$] occurrences. *)
+      Some
+        (mk_result ~id:"TYPO-028" ~severity:Error
+           ~message:{|Use of ``$$'' display math delimiter|} ~count:cnt)
     else None
   in
   { id = "TYPO-028"; run; languages = [] }
@@ -1778,13 +1772,6 @@ let r_typo_038 : rule =
         outside_exempt start_offset && outside_href start_offset)
       matches
   in
-  let mk_fix_edits s =
-    List.map
-      (fun (start_offset, end_offset, email) ->
-        Cst_edit.replace ~start_offset ~end_offset
-          ("\\href{mailto:" ^ email ^ "}{" ^ email ^ "}"))
-      (unwrapped_matches s)
-  in
   let run s =
     (* v27.0.9 semantic shift: count is based on UNWRAPPED non-math matches (the
        rule's intent is "emails NOT in href"). Pre-v27.0.9 counted all email
@@ -1792,10 +1779,35 @@ let r_typo_038 : rule =
        already-correct documents. *)
     let cnt = List.length (unwrapped_matches s) in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
+      (* OPEN-075: the fix producer is WITHDRAWN. Two independent MEASURED
+         defects, each fatal on its own.
+
+         (1) It emitted \href into documents that never load hyperref. MEASURED
+         at the pin: `Contact alice@example.com` in a bare article becomes
+         `\href{mailto:...}{...}` and pdflatex goes rc 0 -> 1, "! Undefined
+         control sequence." This is the exact INVERSE of CJK-004 -- a fix that
+         INTRODUCES a package dependency instead of one that reads a dead
+         trigger. Whether hyperref is loaded is a PROJECT property (a parent
+         file, a .cls, a .sty) and is not readable from the single file this
+         rule sees: the same whole-project blindness that made STRUCT-001 inject
+         a preamble into \input fragments.
+
+         (2) It wrapped addresses ALREADY sitting in a semantic e-mail/URL slot,
+         re-expanding them through \hyper@normalise. Real bytes from a corpus
+         paper: `\email[...]{carlos.mop@...}` became
+         `\email[...]{\href{mailto:...}{...}}` -> "! TeX capacity exceeded,
+         sorry [input stack size=10000]". The set of URL-valued argument slots
+         (\email, \url, \thanks, \altaffiliation, \correspondingauthor, ...) is
+         class-specific and open-ended.
+
+         Measured blast radius: it rewrote 78% of sampled real papers and was
+         the sole cause of 5, and a contributing cause of 8, of the 15 compile
+         breaks in a 37-paper differential. Severity is Info and the benefit is
+         cosmetic, so a remedy that cannot be made safe is no remedy: the HI-001
+         / SPC-018 precedent. The DIAGNOSTIC is unchanged. *)
       Some
-        (mk_result_with_fix ~id:"TYPO-038" ~severity:Info
-           ~message:{|E‑mail address not in \href|} ~count:cnt ~fix)
+        (mk_result ~id:"TYPO-038" ~severity:Info
+           ~message:{|E‑mail address not in \href|} ~count:cnt)
     else None
   in
   { id = "TYPO-038"; run; languages = [] }

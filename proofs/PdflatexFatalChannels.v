@@ -8,8 +8,14 @@
 (*                                                                      *)
 (*    model_fatal p pf  <->  ch_edge p \/ ch_decl p pf \/ ch_body p pf   *)
 (*                                                                      *)
-(*  i.e. the model has EXACTLY THREE fatal channels, and nothing else    *)
-(*  a document contains can make it say "does not compile".              *)
+(*  i.e. the MODEL has EXACTLY THREE fatal channels.                     *)
+(*                                                                      *)
+(*  READ THAT PRECISELY. It says nothing else in the MODEL'S IMAGE of a  *)
+(*  project can make it refuse; it does NOT say "nothing else a document *)
+(*  contains", because what a document contains reaches the model only   *)
+(*  through the OCaml encoder, which is outside Coq. A real feature the  *)
+(*  encoder never turns into a token or an edge is invisible here, and   *)
+(*  this theorem is silent about it.                                     *)
 (*                                                                      *)
 (*  Compile:                                                            *)
 (*    coqc -R <repo>/_build/default/proofs LaTeXPerfectionist \         *)
@@ -59,7 +65,12 @@ Definition ch_edge (p : pdflatex_project) : Prop :=
               /\ (~ node_known (proj_graph p) u \/ ~ node_known (proj_graph p) v).
 
 (* CHANNEL 2 (T3a, a PROFILE-declared feature the engine lacks). *)
-Definition ch_decl (p : pdflatex_project) (pf : pdflatex_profile) : Prop :=
+(* [p] is deliberately unused: a PROFILE-declared feature is a property of the
+   profile alone. The parameter is kept so all three channels share the shape
+   [project -> profile -> Prop] and the §1b disjunction reads uniformly.
+   Recorded because "a channel of the project that is not a function of the
+   project" is a fair thing for a reader to trip over. *)
+Definition ch_decl (_p : pdflatex_project) (pf : pdflatex_profile) : Prop :=
   exists f, In f pf.(prof_features) /\ compatible f pf.(prof_engine) = false.
 
 (* CHANNEL 3 (T3b, a DOCUMENT-required feature the engine lacks). *)
@@ -549,6 +560,17 @@ Qed.
 (*  opens `intros g [Hedges _]`, discarding the acyclicity half; so     *)
 (*  acyclicity is dead weight in the whole capstone.                    *)
 (*                                                                      *)
+(*  THAT IS A MODEL DEFECT, NOT AN ACHIEVEMENT, and the theorem name    *)
+(*  [acyclicity_is_not_a_fatal_channel] must NOT be read as "cycles do  *)
+(*  not matter". The witness below is a node with an edge to ITSELF --  *)
+(*  a .tex file that \inputs itself -- and REAL pdflatex does not build *)
+(*  it; it recurses until "TeX capacity exceeded". So the separation is *)
+(*  genuine (the model really does ignore acyclicity) AND it is a place *)
+(*  where the model is WEAKER than the engine: it certifies a project   *)
+(*  the engine would refuse. The honest reading is that T2 carries a    *)
+(*  conjunct the fatality proof never consumes, and closing that gap    *)
+(*  means giving cycles a fatal channel, not deleting T2.               *)
+(*                                                                      *)
 (*  [project_well_typed] is by definition [pdflatex_T2_closed]; both    *)
 (*  phrasings are stated so neither can be read as a weaker claim.      *)
 (* ==================================================================== *)
@@ -676,24 +698,28 @@ Proof. vm_compute. reflexivity. Qed.
 
 (* --- 4.1  the model's ENTIRE feature-fatal vocabulary under pdflatex -
 
-   ⚠ MODEL vs REALITY — read the theorem as a statement about the
-   [compatible] TABLE, not about the pdfTeX binary.  It is a complete
-   description of what the MODEL treats as feature-fatal, and on one entry
-   the model is known to DIVERGE from the engine: the table marks
-   [UTF8_direct] incompatible with [Pdflatex], but pdfTeX >= TeX Live 2018
-   compiles direct UTF-8 input with no [inputenc] at all, because UTF-8 is
-   its default input encoding.  So a project the model calls fatal through
-   that entry would, in reality, build.
+   ⚠ Read the theorem as a statement about the [compatible] TABLE, not about
+   the pdfTeX binary.  It is a complete description of what the MODEL treats
+   as feature-fatal under pdflatex.
 
-   The divergence is LATENT, not live: no detector in the OCaml front end
-   currently emits [BT_needs_feature UTF8_direct], so no real document
-   reaches this entry today.  It is recorded here rather than silently
-   corrected because [compatible] is a HAND-WRITTEN MIRROR of
-   compile_contract.ml that no gate checks in either direction — changing
-   the Coq table alone would deepen the divergence rather than close it. *)
+   HISTORY, kept because it is the reason this list is four entries and not
+   five.  [UTF8_direct] used to appear here: the table marked it incompatible
+   with [Pdflatex], and this note recorded that as a known MODEL-vs-REALITY
+   divergence, latent because no detector emits [BT_needs_feature UTF8_direct].
+   The divergence is now CLOSED rather than merely recorded — pdfTeX has
+   defaulted to UTF-8 input since TeX Live 2018, MEASURED at the pin (rc 0, and
+   pdftotext recovers the accented text), so the row was corrected in
+   BuildProfileSound.v together with its two hand mirrors
+   (compile_contract.feature_compatible and
+   specs/v26/compilation_profiles.yaml).
+
+   ⚠ THIS THEOREM IS WHAT CAUGHT THE CHANGE.  Correcting the table made the
+   old five-element statement FALSE, and the [intuition congruence] proof
+   failed on the next build, which is precisely the value of stating a
+   vocabulary as a biconditional instead of a comment. *)
 Theorem pdflatex_body_fatal_vocabulary :
   forall f, compatible f Pdflatex = false
-            <-> In f [UTF8_direct; Unicode_math; Opentype_fonts;
+            <-> In f [Unicode_math; Opentype_fonts;
                       Lua_scripting; Japanese_cjk].
 Proof. intros f. destruct f; simpl; intuition congruence. Qed.
 

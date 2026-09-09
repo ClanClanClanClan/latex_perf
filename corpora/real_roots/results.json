@@ -322,9 +322,7 @@
    "size_bucket": "10-100KB",
    "cli_rc": 1,
    "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l.",
    "pdflatex_verdict": "FAILS",
@@ -3446,6 +3444,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "a1e5a65be6337b12c2e1e85c80ab0adf4c7f3fbc",
+ "measured_at_sha": "4ce4f2b1ba9c5ce302ba84373946eee6551d6e4a",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

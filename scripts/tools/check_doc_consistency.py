@@ -23,6 +23,7 @@ number must agree with the artefact.
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
@@ -83,22 +84,53 @@ def inv_rule_maturity():
 
 
 def inv_no_handwritten_position():
-    """PROJECT_STATE prose must not restate the real-paper matrix."""
+    r"""PROJECT_STATE prose must not restate ANY measured quantity.
+
+    OPEN-078 / C-47. The first version of this invariant was defeated by its
+    own escape hatch. It skipped any line containing the word "superseded" so
+    that the ledger and the corrections log could quote history -- and the one
+    paragraph republishing the position OPENED with that word, on a single
+    physical line, so all four of its stale numbers were exempt. Measured at
+    the time: 24 positional hits in the prose, 24 skipped, 0 flagged.
+
+    Two things were wrong, and both are fixed here.
+
+    (a) The exemption was keyed on a WORD APPEARING ANYWHERE IN THE LINE
+        rather than on where the quote sits. It is now keyed on POSITION: a
+        markdown table row (the ledger and the corrections log) may quote a
+        historical number, because each such row is individually dated and
+        carries its own evidence cell. Running prose may not, full stop.
+        There is no keyword hatch, so no sentence can exempt itself.
+
+    (b) The pattern was anchored on a PHRASING -- \b(\d{2,3})/(199|200)\b --
+        so it could not see a bare percentage at all, and would have gone
+        blind the day the corpus grew past 200. It is now anchored on the
+        QUANTITY SHAPE: any fraction and any percentage.
+
+    Measured when this landed: exactly 10 hits, all on the one paragraph this
+    invariant exists to catch, and zero anywhere else in the prose -- so the
+    widened pattern costs no false positives.
+    """
     txt = (REPO / "docs/v27/PROJECT_STATE.md").read_text()
     begin = txt.index("<!-- BEGIN GENERATED")
     end = txt.index("<!-- END GENERATED")
     prose = txt[:begin] + txt[end:]
-    # a positional claim looks like "197/199" or "177/200"
-    for m in re.finditer(r"\b(\d{2,3})/(199|200)\b", prose):
-        line_start = prose.rfind("\n", 0, m.start()) + 1
-        line = prose[line_start:prose.find("\n", m.start())]
-        # ledger rows and the corrections log legitimately QUOTE history;
-        # they are marked by a leading table pipe or the word "superseded".
-        if line.lstrip().startswith("|") or "superseded" in line.lower():
+    # A fraction (12/199, 4/104) or a percentage (99.0%, 3.5%). Any denominator:
+    # pinning 199|200 would have gone stale the moment the corpus grew.
+    quantity = re.compile(r"\b\d{1,4}/\d{1,4}\b|\b\d{1,3}(?:\.\d+)?%")
+    for line in prose.split("\n"):
+        # Table rows ONLY: the ledger and the corrections log must be able to
+        # quote what a number used to be. Each row is dated and carries its own
+        # evidence cell, so the quote is attributable. Prose has no such anchor.
+        if line.lstrip().startswith("|"):
             continue
-        fail("handwritten-position",
-             f"PROJECT_STATE prose restates a positional number ({m.group(0)}); "
-             f"the measured position belongs to the GENERATED block only")
+        m = quantity.search(line)
+        if m:
+            fail("handwritten-position",
+                 f"PROJECT_STATE prose restates a measured quantity "
+                 f"({m.group(0)}); the measured position belongs to the "
+                 f"GENERATED block only. Point at it, do not copy it. "
+                 f"Line begins: {line.strip()[:70]!r}")
 
 
 def inv_fixture_baseline():
@@ -119,20 +151,74 @@ def inv_fixture_baseline():
 
 
 def inv_compile_blocking_count():
+    r"""No file may publish a compile-blocking rule count the code contradicts.
+
+    OPEN-079 / C-47. The first version of this invariant was VACUOUS: it
+    regexed "(\\d+)\\s+compile-blocking rules" over exactly three files and
+    matched ZERO times in all three, while eight live sites published 37
+    against a code list of 36 -- a class C-40 had already recorded as fixed.
+
+    It was anchored on a PHRASING that happened to appear in the audit note,
+    not on the QUANTITY. It is now anchored on len(compile_blocking_ids) and
+    scans every tracked text file, with two documented exclusions:
+
+      * CHANGELOG.md -- a release record states what was true AT THAT RELEASE.
+        Rewriting it would falsify history to please a gate.
+      * this file -- its own docstring quotes the defect it exists to catch.
+
+    Markdown table rows are skipped for the same reason as in
+    inv_no_handwritten_position: the ledger and the corrections log must be
+    able to say "this said 37 and the code said 36".
+    """
     src = (REPO / "latex-parse/src/validators.ml").read_text()
     m = re.search(r"let compile_blocking_ids\s*=\s*\[(.*?)\]", src, re.S)
     if not m:
+        fail("compile-blocking-count",
+             "cannot find compile_blocking_ids in latex-parse/src/validators.ml "
+             "-- the invariant has lost its anchor and is silently vacuous, "
+             "which is exactly the failure OPEN-079 records")
         return
     n = len(re.findall(r'"[A-Z]+-\d+"', m.group(1)))
-    for doc in ("README.md", "docs/COMPILATION_GUARANTEE.md", "docs/v27/ROADMAP.md"):
-        p = REPO / doc
-        if not p.is_file():
+
+    # Both spellings the repo actually uses for this quantity.
+    pats = [re.compile(r"(\d+)\s+compile-blocking"),
+            re.compile(r"(\d+)\s+DELIM/ENC/PRT")]
+    # Files whose JOB is to state the wrong value: this gate's own docstring,
+    # and the kill-test registry, whose mutations must literally contain the
+    # known-bad count in order to prove the gate fires on it.
+    EXCLUDE_NAMES = {"CHANGELOG.md", "check_doc_consistency.py",
+                     "check_gate_selftests.py"}
+    EXCLUDE_DIRS = ("archive/", "docs/archive/", "specs/archive/", "_build/")
+    try:
+        tracked = subprocess.run(["git", "ls-files"], cwd=REPO, check=True,
+                                 capture_output=True, text=True).stdout.split()
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        fail("compile-blocking-count", f"cannot enumerate tracked files: {exc}")
+        return
+    exts = {".md", ".ml", ".mli", ".sh", ".py", ".yml", ".yaml", ".v"}
+    for rel in tracked:
+        if pathlib.Path(rel).suffix not in exts:
             continue
-        for m2 in re.finditer(r"(\d+)\s+compile-blocking rules", p.read_text()):
-            if int(m2.group(1)) != n:
-                fail("compile-blocking-count",
-                     f"{doc} says {m2.group(1)} compile-blocking rules; "
-                     f"validators.ml lists {n}")
+        if pathlib.Path(rel).name in EXCLUDE_NAMES:
+            continue
+        if any(rel.startswith(d) or f"/{d}" in rel for d in EXCLUDE_DIRS):
+            continue
+        f = REPO / rel
+        try:
+            content = f.read_text(errors="replace")
+        except OSError:
+            continue
+        for lineno, line in enumerate(content.split("\n"), 1):
+            if line.lstrip().startswith("|"):
+                continue
+            for pat in pats:
+                for m2 in pat.finditer(line):
+                    if int(m2.group(1)) != n:
+                        fail("compile-blocking-count",
+                             f"{rel}:{lineno} says {m2.group(1)} compile-blocking "
+                             f"rules; validators.ml lists {n}. (OPEN-058: the "
+                             f"EFFECTIVE belt is smaller again -- say which "
+                             f"quantity you mean.)")
 
 
 def main():

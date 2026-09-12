@@ -36,7 +36,7 @@ WHAT THIS GATE MEASURES
 Two surfaces, because the project has two and only one of them has ever had a
 stated budget:
 
-  KEYSTROKE  `bench_readiness_kernel.exe` — parse + the 37 compile-blocking
+  KEYSTROKE  `bench_readiness_kernel.exe` — parse + the 36 compile-blocking
              rules, warm, startup excluded. This is the surface ROADMAP:276
              budgets. Reported per stage.
   BATCH      `validators_cli.exe --apply-fixes-best-effort` — ONE pass of the

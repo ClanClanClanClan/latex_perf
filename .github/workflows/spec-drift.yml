@@ -153,7 +153,7 @@ jobs:
         # project_facts, the rule-maturity block vs the YAML catalogue,
         # hand-written positional numbers in PROJECT_STATE prose contradicting
         # its own generated block, the fixture-baseline row counting
-        # accept-pins as false-READYs, and "37 compile-blocking rules" against
+        # accept-pins as false-READYs, and a compile-blocking rule count against
         # a code list of 36. A number lives in ONE artefact; prose points at it
         # or is generated from it.
         run: python3 scripts/tools/check_doc_consistency.py --repo .

@@ -2,8 +2,8 @@
  "provenance": {
   "produced_by": "scripts/tools/gen_proven_coverage.py",
   "results_source": "corpora/real_roots/results_sample2.json",
-  "cli_sha256": "188c3ec8cd121aa280857b79c28ecffa8fd8ee102e7e6e531c8ca98c47d2593b",
-  "measured_at_sha": "1b50a3a35f847c013949dcb94a4d17c5b3359780",
+  "cli_sha256": "d37b6a72647cc400b83fc00a26f6c487537fa5b515a4e8ce5fd830347325423f",
+  "measured_at_sha": "595965cbb8625163db0ca58c9601c11b99153ff8",
   "state_vocabulary": [
    "PREMISE-CERTIFIED",
    "PREMISE-REJECTED"
@@ -522,8 +522,8 @@
   {
    "id": "2507.03521v2",
    "cell": "false-NOT-READY",
-   "ready": false,
-   "model": "rejected",
+   "ready": true,
+   "model": "certified",
    "profile": "lp-extended"
   },
   {
@@ -942,8 +942,8 @@
   {
    "id": "2507.09165v1",
    "cell": "false-NOT-READY",
-   "ready": false,
-   "model": "rejected",
+   "ready": true,
+   "model": "certified",
    "profile": "lp-extended"
   },
   {

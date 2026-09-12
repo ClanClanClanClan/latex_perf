@@ -259,6 +259,34 @@ REGISTRY = [
                      r"specs/rules/README.md says Draft",
                      old="  - Draft: 529",
                      new="  - Draft: 619"),
+            # ── OPEN-078 / C-47 ───────────────────────────────────────────
+            # The three below pin the REPAIRS, not the original rules. The
+            # first version of inv_no_handwritten_position exempted any line
+            # containing "superseded" and matched only \d{2,3}/(199|200); the
+            # first version of inv_compile_blocking_count scanned three files
+            # for one phrasing and matched ZERO times in all three. Each
+            # mutation reproduces one of those blind spots, so a regression
+            # to the old shape fails here rather than eight days later.
+            Mutation("a positional restatement hides behind the retired "
+                     "'superseded' hatch",
+                     "docs/v27/PROJECT_STATE.md",
+                     r"handwritten-position.*198/200",
+                     old="## 2. Where we are, in one paragraph",
+                     new="## 2. Where we are, in one paragraph\n\n"
+                         "Superseded note: sample 1 is 198/200 correct."),
+            Mutation("a BARE PERCENTAGE — the shape the old pattern could "
+                     "not see at all",
+                     "docs/v27/PROJECT_STATE.md",
+                     r"handwritten-position.*7\.2%",
+                     old="## 6. Provenance",
+                     new="## 6. Provenance\n\n"
+                         "The certificate is wrong on 7.2% of certified papers."),
+            Mutation("a stale compile-blocking count OUTSIDE the three files "
+                     "the old invariant scanned",
+                     "latex-parse/src/compile_contract.mli",
+                     r"compile-blocking-count.*compile_contract\.mli.*37",
+                     old="run ONLY the 36 compile-blocking rules",
+                     new="run ONLY the 37 compile-blocking rules"),
         ]),
     GateTest(
         "check_proof_substance",

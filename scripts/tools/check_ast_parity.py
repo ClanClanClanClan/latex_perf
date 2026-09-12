@@ -27,10 +27,23 @@ def main() -> int:
     # `--root .` pins dune to this repo's workspace (matters when the checkout is
     # itself nested inside another dune workspace, e.g. a git worktree under
     # .claude/); harmless in the normal top-level checkout.
-    build = subprocess.run(
-        ["dune", "build", "--root", ".", "latex-parse/src/test_ast_parity.exe"],
-        cwd=REPO, capture_output=True, text=True,
-    )
+    # dune may live in a repo-LOCAL opam switch and not on the bare PATH (that
+    # is how this gate failed the first time it was ever wired into CI). Try it
+    # directly, then via `opam exec`, and say WHICH failed rather than dying on
+    # a bare FileNotFoundError that reads like the gate itself is broken.
+    cmd = ["dune", "build", "--root", ".", "latex-parse/src/test_ast_parity.exe"]
+    try:
+        build = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
+    except FileNotFoundError:
+        try:
+            build = subprocess.run(["opam", "exec", "--", *cmd], cwd=REPO,
+                                   capture_output=True, text=True)
+        except FileNotFoundError:
+            sys.stderr.write("[check_ast_parity] FAIL: neither `dune` nor "
+                             "`opam exec -- dune` is available; this gate needs "
+                             "the OCaml toolchain (it belongs in a job that has "
+                             "run setup-ocaml-env, not in a pure job)\n")
+            return 1
     if build.returncode != 0:
         sys.stderr.write("[check_ast_parity] FAIL: could not build parity checker\n")
         sys.stderr.write(build.stderr)

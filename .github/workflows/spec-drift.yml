@@ -147,6 +147,18 @@ jobs:
         # sizes) that lets a future session pick the work up.
         run: python3 scripts/tools/check_project_state.py --repo .
 
+      - name: Release-only gates, now run per-PR (OPEN-091)
+        # These four ran ONLY inside pre_release_check.py, i.e. only when a
+        # human cut a release — and the gap between the last two releases was
+        # 47 days. A gate with a seven-week blind window is a gate that finds
+        # defects long after the commit that caused them. All four are pure
+        # (no build products), so they belong here.
+        run: |
+          python3 scripts/tools/check_cst_structure_lossless.py --repo .
+          python3 scripts/tools/check_fix_integration_wired.py --repo .
+          python3 scripts/tools/check_fix_producer_ledger.py --repo .
+          python3 scripts/tools/check_result_helpers.py --repo .
+
       - name: Apply-fixes real-paper differential — the fixer must not break
               more real papers than the pinned baseline (OPEN-071)
         # The BLOCKING roundtrip gate asserts the right invariant over 78

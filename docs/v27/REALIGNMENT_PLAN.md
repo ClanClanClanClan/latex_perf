@@ -24,15 +24,22 @@ theorem. The plan targets that.
 
 ## 2. Measured position
 
-Published in `PROJECT_STATE.md` §1 (generated, diffed by CI):
+**The measured position is NOT reproduced here. Read the generated block in
+`PROJECT_STATE.md` §1.**
 
-| | sample 1 (tuned) | sample 2 (**virgin**) |
-|---|---|---|
-| correct verdicts | 197/199 = 99.0% | **177/200 = 88.5%** |
-| **proven coverage (LP-Core)** | **84/200 = 42.0%** | **76/200 = 38.0%** |
-| certified, any tier | 167/200 = 83.5% | 156/200 = 78.0% |
-| uncertified ("heuristic") READYs | 17 | 13 |
-| **certified FALSE-READY** | 0 | **9** (5 LP-Core) |
+⚠ This slot carried a five-row table until 2026-09-12, captioned "Published in
+`PROJECT_STATE.md` §1 (generated, diffed by CI)" under a preamble promising
+"every number is measured at `main` and sourced". **Nine of its ten cells were
+stale**, and neither claim in that caption was true: no gate read this file,
+and this document was absent from PROJECT_STATE's own role table. It is the
+plan the git history is actually executing — 33 of the last 40 commits cite its
+Phase and OPEN ids and none cites a ROADMAP track id — which made it the most
+consequential stale table in the repository. Recorded as OPEN-084.
+
+Copying the position into a second document is how it goes stale; the rule
+(C-40) is that a number lives in exactly one artefact and prose points at it.
+The two readings that must always travel together — the tuned sample and the
+VIRGIN sample — are the first two rows of that generated block.
 
 ## 3. The five facts that decide the plan
 

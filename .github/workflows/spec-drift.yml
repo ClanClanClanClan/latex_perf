@@ -147,13 +147,27 @@ jobs:
         # sizes) that lets a future session pick the work up.
         run: python3 scripts/tools/check_project_state.py --repo .
 
+      - name: Apply-fixes real-paper differential — the fixer must not break
+              more real papers than the pinned baseline (OPEN-071)
+        # The BLOCKING roundtrip gate asserts the right invariant over 78
+        # in-house documents in which grep for xymatrix / elsarticle /
+        # DeclareMathSymbol / chardef returns ZERO hits, and which exclude
+        # \input children by construction — so it stayed green through five
+        # producers that destroyed real papers. This reads the committed
+        # real-paper artefact instead: break count against a ratchet, cell
+        # consistency against each row's own rc pair, and provenance freshness.
+        # It does NOT re-measure; CI has no corpus by design (12 GB,
+        # non-redistributable). Refresh with
+        # gen_apply_fixes_real_differential.py.
+        run: python3 scripts/tools/check_apply_fixes_real_differential.py --repo .
+
       - name: Doc consistency — one source of truth per number (C-40)
         # Five cross-document invariants, every one of which was a LIVE
         # contradiction on main before 2026-09-04: the README title version vs
         # project_facts, the rule-maturity block vs the YAML catalogue,
         # hand-written positional numbers in PROJECT_STATE prose contradicting
         # its own generated block, the fixture-baseline row counting
-        # accept-pins as false-READYs, and "37 compile-blocking rules" against
+        # accept-pins as false-READYs, and a compile-blocking rule count against
         # a code list of 36. A number lives in ONE artefact; prose points at it
         # or is generated from it.
         run: python3 scripts/tools/check_doc_consistency.py --repo .

@@ -199,14 +199,61 @@ def generate(repo: Path) -> dict:
     except subprocess.CalledProcessError:
         release_state = "rc"
 
+    # OPEN-082 / C-47. This was `datetime.date.today()`, which made the file
+    # non-reproducible BY CONSTRUCTION: a regenerate-and-diff gate could never
+    # be added, so nothing checked the file at all and it went stale for 97
+    # commits. The release date is a property of the TAG, so read it from the
+    # tag; fall back to the committed value, and only then to today.
     import datetime
-    release_date = datetime.date.today().isoformat()
+    release_date = None
+    try:
+        release_date = subprocess.run(
+            ["git", "log", "-1", "--format=%cs", f"v{version.lstrip('v')}"],
+            cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+    except subprocess.CalledProcessError:
+        pass
+    if not release_date:
+        prior = repo / "governance/project_facts.yaml"
+        if prior.is_file():
+            for line in prior.read_text().splitlines():
+                m = re.match(r"^release_date:\s*'?([0-9-]+)'?", line)
+                if m:
+                    release_date = m.group(1)
+                    break
+    release_date = release_date or datetime.date.today().isoformat()
 
     return {
         "version": f"v{version}" if not version.startswith("v") else version,
         "release_state": release_state,
         "release_date": release_date,
         "generated_by": "scripts/tools/generate_project_facts.py",
+        # C-40's honesty annotation lived in a YAML COMMENT, and yaml.dump
+        # cannot emit comments — so the first regeneration would have silently
+        # deleted it (OPEN-082). It is data now, and survives.
+        "honesty_annotation": {
+            "note": "The counts listed under `constructed` are NOT measurements "
+                    "of proof strength and must not be quoted as such. "
+                    "OPEN-014/OPEN-051 track replacing them.",
+            "constructed": {
+                "proofs.per_rule_soundness_count":
+                    "rules.total_non_reserved copied verbatim — a catalogue "
+                    "headcount, not a proof count",
+                "proofs.formal_faithful_count":
+                    "a generator DEFAULT applied to every rule not on a "
+                    "23-id denylist",
+                "proofs.theorem_count_reported":
+                    "a raw Theorem/Lemma/Corollary grep; 803 of the 804 "
+                    "theorems under proofs/generated share ONE byte-identical "
+                    "proof body (`Proof. qed_text_sound. Qed.`) over 316 "
+                    "distinct predicates, 57 of which are `:= false`",
+                "languages.live/stubbed/target":
+                    "three hardcoded integers; the generator returns literals",
+            },
+            "measured_and_true": [
+                "proofs.admits = 0", "proofs.axioms = 0",
+                "proofs.proof_files_total", "proofs.proof_files_core",
+            ],
+        },
         "rules": rules,
         "proofs": proofs,
         "languages": langs,

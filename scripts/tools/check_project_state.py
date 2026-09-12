@@ -28,6 +28,7 @@ Exit 1 on any violation.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -162,27 +163,115 @@ def main() -> int:
                     f"{with_passes}/{len(docs)} rows carry pdflatex_passes — "
                     f"either re-measure the rest or scope the claim with an "
                     f"'APPLIED TO k/n rows' clause")
-        if not sha:
+    # ── 2c. EVERY artefact the block reads must be fresh, not just one ───
+    #
+    # OPEN-080 / C-47. Until 2026-09-12 the ratchet above pointed at
+    # results.json ALONE. The generated block reads four artefacts, and the
+    # two it did not watch are the ones that produce the North-Star metric:
+    # proven_coverage_sample{1,2}.json were 13 and 14 commits behind HEAD on
+    # latex-parse/src, against this same limit of 5, and no check_* script
+    # read them at all. Their cli_sha256 was compared to nothing, so the
+    # staleness was also provable directly: both had been produced by a
+    # binary that no longer existed.
+    #
+    # The rule this now encodes (C-47): a gate that reads one of N artefacts
+    # owning a published number must NAME the other N-1 and say why they are
+    # excluded. Hence the explicit list, and the pinned exclusion below.
+    ARTEFACTS = (
+        ("corpora/real_roots/results.json", ("measured_at_sha",),
+         "python3 scripts/tools/diff_real_roots.py --repo . --refresh-cli"),
+        ("corpora/real_roots/results_sample2.json", ("measured_at_sha",),
+         "OPEN-081: this artefact has no producer in-repo"),
+        ("corpora/real_roots/proven_coverage_sample1.json",
+         ("provenance", "measured_at_sha"),
+         "python3 scripts/tools/gen_proven_coverage.py --results "
+         "corpora/real_roots/results.json --out "
+         "corpora/real_roots/proven_coverage_sample1.json --corpus $LP_REAL_CORPUS "
+         "--cli _build/default/latex-parse/src/validators_cli.exe"),
+        ("corpora/real_roots/proven_coverage_sample2.json",
+         ("provenance", "measured_at_sha"),
+         "python3 scripts/tools/gen_proven_coverage.py --results "
+         "corpora/real_roots/results_sample2.json --out "
+         "corpora/real_roots/proven_coverage_sample2.json --corpus $LP_REAL_CORPUS "
+         "--cli _build/default/latex-parse/src/validators_cli.exe"),
+    )
+    # Artefacts that CANNOT yet carry provenance, each with the ledger row that
+    # removes it. Pinned to its exact size: adding a new unwatched artefact, or
+    # quietly widening this set, fails the gate. Removing an entry here without
+    # the artefact gaining a sha also fails, in the loop below.
+    NO_PROVENANCE_YET = {
+        "corpora/real_roots/results_sample2.json":
+            "OPEN-081 — measured_at_sha is null and NO script in the repo "
+            "writes this file; the sha cannot be stamped honestly until the "
+            "producer exists. Do not hand-stamp it: a guessed provenance is "
+            "worse than a declared absence.",
+    }
+    if len(NO_PROVENANCE_YET) != 1:
+        findings.append(
+            f"NO_PROVENANCE_YET holds {len(NO_PROVENANCE_YET)} entries, expected "
+            f"exactly 1. Every artefact owning a published number must be "
+            f"staleness-checked; widening this set needs a ledger row and a "
+            f"deliberate edit here (C-47).")
+
+    def _dig(d, path):
+        for k in path:
+            if not isinstance(d, dict):
+                return None
+            d = d.get(k)
+        return d
+
+    cli_path = repo / "_build/default/latex-parse/src/validators_cli.exe"
+    cli_hash = None
+    if cli_path.is_file():
+        h = hashlib.sha256()
+        with cli_path.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+        cli_hash = h.hexdigest()
+
+    for rel, sha_path, howto in ARTEFACTS:
+        f = repo / rel
+        if not f.is_file():
+            findings.append(f"{rel} is missing, but the generated block reads it")
+            continue
+        try:
+            data = json.loads(f.read_text())
+        except (json.JSONDecodeError, OSError) as exc:
+            findings.append(f"{rel} is unreadable: {exc}")
+            continue
+        a_sha = _dig(data, sha_path)
+        if not a_sha:
+            if rel not in NO_PROVENANCE_YET:
+                findings.append(
+                    f"{rel} has no {'.'.join(sha_path)}, so its staleness cannot "
+                    f"be checked. Refresh with:\n      {howto}")
+            continue
+        if rel in NO_PROVENANCE_YET:
             findings.append(
-                "corpora/real_roots/results.json has no measured_at_sha, so its "
-                "staleness cannot be checked. Refresh with:\n"
-                "      python3 scripts/tools/diff_real_roots.py --repo . --refresh-cli")
-        else:
-            r = subprocess.run(
-                ["git", "--no-optional-locks", "rev-list", "--count",
-                 f"{sha}..HEAD", "--", "latex-parse/src"],
-                cwd=repo, capture_output=True, text=True)
-            if r.returncode == 0 and r.stdout.strip().isdigit():
-                behind = int(r.stdout.strip())
-                if behind > MAX_MEASUREMENT_LAG:
-                    findings.append(
-                        f"the real-paper measurement is {behind} commits behind "
-                        f"HEAD on latex-parse/src (limit {MAX_MEASUREMENT_LAG}). "
-                        f"The published position is probably wrong. Refresh:\n"
-                        f"      python3 scripts/tools/diff_real_roots.py --repo . "
-                        f"--refresh-cli\n"
-                        f"    A CLI-only refresh is valid while the corpus and "
-                        f"engine are unchanged — it asserts both.")
+                f"{rel} now HAS provenance but is still listed in "
+                f"NO_PROVENANCE_YET. Remove the entry — the exemption has "
+                f"outlived its reason.")
+        r = subprocess.run(
+            ["git", "--no-optional-locks", "rev-list", "--count",
+             f"{a_sha}..HEAD", "--", "latex-parse/src"],
+            cwd=repo, capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip().isdigit():
+            behind = int(r.stdout.strip())
+            if behind > MAX_MEASUREMENT_LAG:
+                findings.append(
+                    f"{rel} is {behind} commits behind HEAD on latex-parse/src "
+                    f"(limit {MAX_MEASUREMENT_LAG}). The number it publishes is "
+                    f"probably wrong. Refresh:\n      {howto}")
+        # A commit count is a proxy; the binary hash is the fact. When the CLI
+        # is built (the `build` job; spec-drift is a pure job and has none),
+        # prove the artefact came from THIS binary.
+        recorded_cli = _dig(data, ("provenance", "cli_sha256"))
+        if cli_hash and recorded_cli and recorded_cli != cli_hash:
+            findings.append(
+                f"{rel} was produced by a DIFFERENT binary "
+                f"(records {recorded_cli[:12]}…, built is {cli_hash[:12]}…). "
+                f"Commit distance can be zero and this still wrong. Refresh:\n"
+                f"      {howto}")
 
     # ── 3. the corrections log must not be empty ─────────────────────────
     m = re.search(r"^##\s*4\..*?corrections log.*?$(.*?)^##\s", text,

@@ -12,7 +12,7 @@
 #   COLD  a full `validators_cli --compile-check` process. Includes ~55 ms of
 #         process start, registry and context setup. This is what a user gets
 #         today, because R2/R-WARM (the session daemon) is NOT STARTED.
-#   WARM  `bench_readiness_kernel` — parse + the 37 compile-blocking rules, with
+#   WARM  `bench_readiness_kernel` — parse + the 36 compile-blocking rules, with
 #         a warmup pass, startup excluded. This is the number the per-keystroke
 #         claim rests on, and the one ROADMAP:276 budgets per stage.
 #

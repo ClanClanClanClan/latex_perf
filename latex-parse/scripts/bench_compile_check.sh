@@ -3,7 +3,7 @@
 # (--compile-check) vs the FULL path (--compile-check-full) on real papers.
 #
 # The fast kernel (compile_contract.ml, v27.1.59) parses once and runs only the
-# ~37 compile-blocking rules; the full path parses twice and runs all ~641 rules
+# 36 compile-blocking rules; the full path parses twice and runs all ~641 rules
 # then filters. Both must produce the byte-identical verdict — this script
 # asserts that too.
 #

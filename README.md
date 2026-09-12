@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.1.62
+# LaTeX Perfectionist v27.1.63
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -65,7 +65,7 @@ automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status — v27.1.62 (July 2026)
+## Current Status — v27.1.63 (July 2026)
 
 > ⚠ **Where the numbers live.** `docs/v27/PROJECT_STATE.md` §1 is the single
 > source of truth for the measured position; it is generated and diffed by
@@ -243,7 +243,7 @@ bash scripts/latency_smoke_expand.sh 200
 - **[docs/BUILD_LOG_CONTRACT.md](docs/BUILD_LOG_CONTRACT.md)** — Class C compile-log contract
 - **[docs/UNIT_TESTS.md](docs/UNIT_TESTS.md)**, **[docs/BUILD_SYSTEM_GUIDE.md](docs/BUILD_SYSTEM_GUIDE.md)**, **[docs/REST_API.md](docs/REST_API.md)**
 
-## Success Metrics (v27.1.62)
+## Success Metrics (v27.1.63)
 
 - 660 rules specified / 643 shipped
 - 164 auto-fix producers + 124 Bucket-C candidate rules. ⚠ This read 167 until 2026-09-12; the delta is exactly the three producers WITHDRAWN for corrupting real documents (HI-001, TYPO-038, TYPO-028 — see OPEN-064/075/076), so the old figure advertised retracted fixes.
@@ -254,7 +254,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v27.1.62 released; main is 97 commits past that tag (OPEN-013). 643 validators implemented, **164 fix-producing rules**, 1,592 theorems across 179 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments. Tiers 1–3 are complete (v27.1.20–v27.1.40): the Tier 2 L3-AST migration (`ast_semantic_state` + REF migration + regex-vs-AST parity gate) and the Tier 3 faithful pdflatex operational semantics (token/aux/log/pass model, tight ≤2-pass convergence, WS8 capstone re-proved against it + Stage-6 residuals: PDF-artefact model, genuine T2/T3/T4, document-feature coherence) both shipped; see [`specs/v27/V27_2_MASTER_EXECUTION_PLAN.md`](specs/v27/V27_2_MASTER_EXECUTION_PLAN.md) and [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md). Honest residuals (T0/T1/T5 universal obligations, byte-exact PDF structural semantics) remain conservative/deferred.
+**Status**: v27.1.63 released 2026-09-12 — the first release graded against real documents. 643 validators implemented, **164 fix-producing rules**, 1,592 theorems across 179 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments. Tiers 1–3 are complete (v27.1.20–v27.1.40): the Tier 2 L3-AST migration (`ast_semantic_state` + REF migration + regex-vs-AST parity gate) and the Tier 3 faithful pdflatex operational semantics (token/aux/log/pass model, tight ≤2-pass convergence, WS8 capstone re-proved against it + Stage-6 residuals: PDF-artefact model, genuine T2/T3/T4, document-feature coherence) both shipped; see [`specs/v27/V27_2_MASTER_EXECUTION_PLAN.md`](specs/v27/V27_2_MASTER_EXECUTION_PLAN.md) and [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md). Honest residuals (T0/T1/T5 universal obligations, byte-exact PDF structural semantics) remain conservative/deferred.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

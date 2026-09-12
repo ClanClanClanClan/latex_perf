@@ -2,6 +2,178 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.63] — 2026-09-12
+
+**THE RELEASE IN ONE LINE: the tool was graded against real documents for the first
+time, and almost everything below is a consequence of what that measurement said.**
+85 commits, PRs #513–#595, 47 days. The previous release, v27.1.62, was measured
+only against hand-authored fixture corpora. This one publishes an out-of-sample
+number, and it is worse than the fixtures suggested.
+
+Three corpora are graded here and **they are disjoint — conflating them is this
+project's most repeated error**: (a) a 65-document differential allowlist, (b) 85
+hand-authored false-READY fixtures, and (c) **real arXiv papers**. Only (c) is
+quoted below unless stated otherwise.
+
+### The measured position (corpus (c), real papers)
+
+- **Sample 1 (tuned, 200 arXiv roots): 198/200 = 99.0% correct verdicts, FALSE-READY
+  0.** Over the release the tuned sample moved 141/199 → 198/200.
+- **Sample 2 (VIRGIN, ranks 201–400, never used to tune anything): 179/200 = 89.5%,
+  FALSE-READY 7/200 = 3.5%.** ⚠ **The in-sample zero does not generalise, and quoting
+  it alone is a documented error (C-39).** Both numbers travel together or neither
+  is published.
+- Premise-certified coverage (LP-Core): 50.0% (sample 1), 44.0% (sample 2). A
+  certified document is nevertheless rejected by pdflatex 3.8%–7.8% of the time,
+  and that rate is now GENERATED from the artefacts rather than restated in prose.
+
+### Soundness — new false-READY detectors
+
+- **feat (#561, OPEN-002)**: the thmtools **shared-counter** detector —
+  `\c@<env>` collisions, held-out FP 0/30, and FALSE-READY 8 → 0 on the sample.
+- **feat (#563, OPEN-037)**: **self-collision** detectors SC-A (duplicate theorem
+  name) and SC-B (`\theH*`), with the build-graph closure extended to local
+  `.sty`/`.cls` — the engine-independent false-READY family.
+- **feat (#564, OPEN-031)**: the `tabu` text-mode detector. The discriminator is
+  **math mode**: a text-mode `\begin{tabu}` is deterministically fatal at the pin
+  while the same environment inside math compiles.
+- **feat (#558, OPEN-033)**: PAR-IN-MATH — a blank line inside math is fatal and
+  the tool never saw it. ⚠ Its "zero natural incidence" claim was later REFUTED.
+- **fix (#554, #557, OPEN-032)**: a document can poison its own SECOND pass via
+  `.toc`, not `.aux`; the gate shipped the day before was comment-blind.
+- **fix (#550, OPEN-001)**: the six `corpora/unicode` false-READYs were live the
+  whole time in a corpus **no gate covered**. Gating them RAISED the published
+  baseline and lowered the unknown — a baseline that only ever falls is measuring
+  its own scope.
+
+### Over-rejection — the dominant failure mode, and the comment-blindness train
+
+Over-rejection, not the cardinal bug, turned out to be the larger error. The
+train #565–#571 took the tuned sample 141/199 → 197/199 and over-rejection 58 → 2:
+
+- **feat (#565)** the breaker fixtures, landed with the fix OFF; **(#566)**
+  comment-aware T3; **(#567)** comment-aware T2 + dir-shadow; **(#568)**
+  position-aware DELIM-001; **(#569)** TeX-faithful parser boundaries (the tool was
+  analysing bytes after `\end{document}`); **(#570)** comment-channel ENC +
+  LP-Foreign hooks; **(#571)** the residual-eight triple.
+- **fix (#544, OPEN-008)**: a duplicate `\label` is a warning, not a rejection.
+  ⚠ Later partly refuted — see C-43.
+- **fix (#535)**: DELIM counted `\left`/`\right` as SUBSTRINGS, so `\rightarrow`
+  read as `\right`.
+- **fix (#545, #548, OPEN-018)**: `\lstinline`'s optional argument, `[` as a legal
+  `\verb` delimiter, and blanks before the delimiter.
+
+### The auto-fix channel — `--apply-fixes`
+
+**This is the release's largest correction, and it is not finished.**
+
+- **feat (#518, #519, #527, #529, #536, #540)**: the round-trip gate, the adversarial
+  fixer corpus, and fix-guard regions 3–5. Recorded fixer damage on the round-trip
+  corpus reached zero, and the fixer stopped MANUFACTURING false-READYs (18 → 2 → 0).
+- ⚠ **Then it was pointed at real papers and the picture inverted.** #590–#594 and
+  the September ledger work found five separate producers destroying documents
+  pdflatex had accepted: `STRUCT-001` injecting a preamble into `\input` FRAGMENTS,
+  `SCRIPT-001` not knowing TeX's one-token subscript rule, `MATH-044` corrupting
+  `tikzcd` diagrams through a picture-region list written from a FIXTURE,
+  **`TYPO-038` WITHDRAWN** (emitted `\href` into documents that never load
+  hyperref; rewrote 78% of sampled papers) and **`TYPO-028` WITHDRAWN** (paired
+  `$$` positionally with no math-mode tracking, so one spurious pair inverted every
+  later delimiter in the file).
+- **feat (#595, OPEN-071)**: the real-paper differential finally has an **artefact**
+  (`corpora/apply_fixes_real/results.json`), a producer script and a **blocking
+  gate** in `spec-drift`. First measurement: **the default fixer breaks 7 of 38 real
+  COMPILING papers (18.4%)**, fixes applied to every `.tex` in the tree.
+  ⚠ **This does not reproduce the 6.7% previously recorded**; the two runs used
+  different denominators, fix scopes and residuals, and neither is retracted —
+  see C-49.
+- ⚠ **`--apply-fixes` is guard-gated, not proven safe** (#537), and on this
+  evidence it should be treated as an assistive tool over a version-controlled
+  document, not an unattended one.
+
+### Honesty — what the tool says about itself
+
+- **feat (#575, Phase A, OPEN-015)**: the shipped verdict no longer cites a compile
+  theorem. It prints a frozen state token (`PREMISE-CERTIFIED`/`PREMISE-REJECTED`),
+  a `tier=` information field, and prose stating it is **not** a compilation
+  guarantee.
+- **docs (#542)**: `docs/v27/PROJECT_STATE.md` — a single source of truth with a
+  GENERATED measured-position block, a stable `OPEN-nnn` ledger and a corrections
+  log, regenerated and diffed by a required gate.
+- **fix (#573, #576, #583)**: six published contradictions killed; grading moved to
+  pdflatex's DEFAULT restricted shell-escape (FALSE-READY 9 → 7); and Phase G
+  re-verified every remaining claim by measurement — **three were wrong, and the
+  effective compile-blocking belt is 12, not 36**.
+- **fix (#551, OPEN-029)**: the real-paper oracle ran pdflatex exactly ONCE. LaTeX
+  is multi-pass by construction; three papers had been recorded as false-READYs for
+  years-old ordinary natbib behaviour.
+- **fix (#595)**: a 15-domain documentation audit. Three registered CI invariants
+  were green while being violated — an exemption keyed on a word rather than a
+  position, a regex anchored on a phrasing rather than a quantity, and a staleness
+  ratchet pointed at one artefact of four. All three closed, each with a kill-test.
+
+### Proofs
+
+- **feat (#592, D1)**: `proofs/PdflatexFatalChannels.v` (751 lines) and
+  `model_fatal_iff`, the sixth CAPSTONE — the ONLY-IF direction the model lacked.
+  ⚠ Scoped honestly: it speaks about the model's image of a project, not about
+  "anything a document contains", because the encoder is unverified OCaml outside
+  Coq. Two of its three channels cannot fire on any input the shipped tool builds.
+- **fix (#589, OPEN-055)**: an `X <-> X` tautology deleted, and the three gate gaps
+  that let it ship closed.
+- **feat (#513)**: extraction-identity and Print-Assumptions gates in required
+  `proof-ci`. All capstones are now machine-checked `Closed under the global
+  context` in CI; three had only ever been *claimed* in comments.
+- Estate: 179 Coq files, 1,592 theorems/lemmas, **0 admits, 0 axioms**. ⚠ 803 of
+  the 804 theorems under `proofs/generated` share one byte-identical proof body;
+  `governance/project_facts.yaml` now carries a machine-readable
+  `honesty_annotation` saying which published counts are CONSTRUCTED.
+
+### Unicode and rule correctness
+
+- **fix (#585, #588, OPEN-059/065)**: `lead-byte-without-continuation` — three
+  instances of one class, in which a UTF-8 lead byte was tested without checking
+  the following bytes, so latin-1 text tripped it. ENC-008 counted `î`/`ï` as
+  private-use; CJK-010 read latin-1 as adjacent Han.
+- **fix (#592, OPEN-064)**: `EL-001` wrote an **UNASSIGNED codepoint** (U+038B), and
+  `HI-001`'s producer was WITHDRAWN — it deleted the joiner after a Devanagari
+  virama, which is mandatory Marathi and Nepali orthography, not misuse.
+- **fix (OPEN-061)**: language gating is wired but never invoked; CJK-001/002/014
+  were mis-tagged as language-dependent when their predicates are not.
+
+### CI and gates
+
+- **fix (#532, #533, #534)**: required contexts were published twice per commit;
+  `unicode-smoke` had been a REQUIRED check that tested nothing for **185 days**;
+  and the cardinal-invariant gates did not actually block a merge.
+- **feat (R7-INFRA-2)**: real pdflatex in CI behind a digest-pinned TeX Live image,
+  an engine-version assertion and a compile canary — before this, `.github/` held
+  zero texlive and both pdflatex-dependent scripts exited 0 when the binary was
+  absent, so every "0 over-rejection" claim had been an unreproducible local sweep.
+- **feat (#560, OPEN-036)**: mutation kill-tests — every covered gate must be
+  provably able to FAIL, with backup-restored inputs and an expected message. The
+  harness stands at 17 mutations across 6 gates.
+- **fix (#547)**: no gate script may swallow a broad exception into a fallback value.
+
+### Performance
+
+- **perf (#525)** memoised `extract_math_segments`, ~42% off the keystroke path;
+  **perf** de-quadratic'd the MOD family's paragraph-mixing helper; **feat (#522)**
+  measured the keystroke budget honestly — **it is missed by ~11x**, and the
+  real-time track remains 3 of 18 items shipped.
+
+### Known limitations, stated plainly
+
+- FALSE-READY is **3.5% on virgin data**, not zero.
+- `--apply-fixes` breaks **18.4%** of real compiling papers on the current
+  measurement.
+- `corpora/real_roots/results_sample2.json` — the artefact behind every
+  out-of-sample number — has **no producer script and no provenance sha**
+  (OPEN-081).
+- 90 open ledger items are tracked in `docs/v27/PROJECT_STATE.md`, which is the
+  authority on where this project stands. Where any other document disagrees with
+  it, it wins and the other is a bug.
+
+
 ## [v27.1.62] — 2026-07-27
 
 **SOUNDNESS — the round-7 fix train: the known false-READY baseline falls 21 → 7.** This release

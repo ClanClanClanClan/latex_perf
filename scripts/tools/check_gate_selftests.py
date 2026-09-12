@@ -132,6 +132,25 @@ class GateTest:
         self.name, self.cmd, self.level, self.mutations = name, cmd, level, mutations
 
 
+def readme_version_drift(text: str) -> str:
+    """Bump the README title version away from project_facts, version-agnostically.
+
+    This mutation used to pin the literal `# LaTeX Perfectionist v27.1.62`.
+    Cutting v27.1.63 rotted that anchor and aborted the whole harness — a
+    kill-test that breaks on every release is a kill-test people delete. The
+    rule it guards (README title must equal project_facts version) does not
+    depend on WHICH version, so neither should the mutation.
+    """
+    import re as _re
+    m = _re.search(r"^# LaTeX Perfectionist v(\d+)\.(\d+)\.(\d+)", text, _re.M)
+    if not m:
+        print("[gate-selftests] REGISTRY ROT: no '# LaTeX Perfectionist vX.Y.Z' "
+              "title in README.md")
+        sys.exit(2)
+    bogus = f"v{m.group(1)}.{m.group(2)}.{int(m.group(3)) - 1}"
+    return text.replace(m.group(0), f"# LaTeX Perfectionist {bogus}", 1)
+
+
 def afr_raise_break_count(text: str) -> str:
     """Flip one preserved row to broken — the regression this gate exists for.
 
@@ -286,8 +305,7 @@ REGISTRY = [
             Mutation("README version drifts from project_facts",
                      "README.md",
                      r"README title says .* but project_facts",
-                     old="# LaTeX Perfectionist v27.1.62",
-                     new="# LaTeX Perfectionist v27.1.61"),
+                     transform=readme_version_drift),
             Mutation("rule-maturity block goes stale",
                      "specs/rules/README.md",
                      r"specs/rules/README.md says Draft",

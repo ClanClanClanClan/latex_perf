@@ -16,6 +16,7 @@ import re
 import subprocess
 import yaml
 from collections import Counter
+import pathlib
 from pathlib import Path
 
 
@@ -320,7 +321,18 @@ def main():
     # The mirror is consumed by external tooling that prefers JSON; CI's
     # check_repo_facts.py reads the YAML authoritatively.
     import json
-    json_path = repo / "generated" / "project_facts.json"
+    # The JSON mirror must follow --output. It used to be hard-wired to
+    # generated/project_facts.json, so ANY invocation wrote the tracked file —
+    # including check_release_integrity's regenerate-into-a-tempdir-and-diff,
+    # which therefore DIRTIED THE WORKING TREE every time it ran. A gate must
+    # not mutate what it inspects: check_gate_selftests refuses to run on a
+    # dirty tree, so a read-only check was breaking the kill-test harness.
+    out = pathlib.Path(args.output).resolve()
+    default_yaml = (repo / "governance" / "project_facts.yaml").resolve()
+    if out == default_yaml:
+        json_path = repo / "generated" / "project_facts.json"
+    else:
+        json_path = out.with_suffix(".json")
     json_path.parent.mkdir(parents=True, exist_ok=True)
     with open(json_path, "w") as jf:
         json.dump(facts, jf, indent=2, default=str)

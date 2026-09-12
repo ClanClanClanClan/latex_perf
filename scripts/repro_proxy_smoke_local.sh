@@ -17,10 +17,17 @@
 # read timeout is 5 SECONDS (rust/l0_lexer_client/src/lib.rs:53). A failure is
 # therefore a multi-second stall, not a tight-timeout artefact.
 #
-# The service RECEIVES the failing requests -- service.stderr shows
-# `[svc] recv req_id=... len=9` for every one -- and then does not answer in
-# time. `[svc] read_exact(hdr) exn: Failure("unexpected EOF")` afterwards is
-# BENIGN: it is the proxy hanging up after its own timeout.
+# TWO FAILURE MODES, and this harness only shows the dominant one:
+#   (a) request RECEIVED and never answered -- `[svc] recv req_id=... len=9`
+#       with no reply, proxy times out. 5 of 5 local failures, majority in CI.
+#   (b) `hedged_call` RAISES -- `[svc] hedged_call exn`, caught at
+#       main_service.ml:175; the broker's only failwiths are
+#       `rescue failed (HUP)` / `rescue unexpected`. ZERO locally, exactly ONCE
+#       per failing CI run. Real, but rare.
+# `[svc] read_exact(hdr) exn: Failure("unexpected EOF")` is benign in both: the
+# proxy hanging up after its own timeout.
+#
+# Instrument mode (a) first: it needs no CI runner and reproduces every time.
 
 # $1 = worker start delay ms (0 = control)
 cd /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts

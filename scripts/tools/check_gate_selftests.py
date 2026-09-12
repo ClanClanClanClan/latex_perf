@@ -86,6 +86,14 @@ EXEMPT = {
     "check_severity_drift.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     "check_version_labels.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     "check_workflow_triggers.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
+    # Wired into spec-drift on 2026-09-12 (OPEN-091) after being release-only.
+    # Exempt ONLY until their kill-tests land in the same burn-down; wiring a
+    # gate and proving it can fail are two different things, and shipping the
+    # first without the second is what OPEN-036 is about.
+    "check_cst_structure_lossless.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
+    "check_fix_integration_wired.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
+    "check_fix_producer_ledger.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
+    "check_result_helpers.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
     "check_project_state.py": "covered (see REGISTRY)",
     "check_fix_type_consistency.py": "covered (see REGISTRY)",
     "check_gate_selftests.py": "this harness itself",

@@ -44,3 +44,13 @@ jobs:
 
       - name: Verbatim safety
         run: python3 scripts/tools/check_verbatim_safety.py --repo .
+
+      - name: Regex-vs-AST parity (OPEN-091)
+        # ⚠ THIS GATE RAN IN NO AUTOMATED PATH AT ALL until 2026-09-12. It sits
+        # in pre_release_check.py's BUILD_CHECKS list, and release.sh invokes
+        # that script with --skip-build, which skips the entire list — so it
+        # fired neither per-PR nor at release. It is the THIRD instance of this
+        # exact defect in this repo; ci.yml and tex-oracle.yml both carry
+        # comments recording the previous two. It needs the built CLI, which is
+        # why it lives in this job and not in spec-drift.
+        run: python3 scripts/tools/check_ast_parity.py --repo .

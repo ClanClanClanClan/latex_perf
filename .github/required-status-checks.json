@@ -1,15 +1,16 @@
 {
   "checks": [
-    {"context": "proof-ci",       "app_id": 15368},
-    {"context": "unicode-smoke",  "app_id": 15368},
-    {"context": "l1-smoke",       "app_id": 15368},
-    {"context": "smoke-cli",      "app_id": 15368},
-    {"context": "rest-smoke",     "app_id": 15368},
-    {"context": "perf-ci",        "app_id": 15368},
-    {"context": "xxh-selfcheck",  "app_id": 15368},
-    {"context": "unit-tests",     "app_id": 15368},
-    {"context": "spec-drift",     "app_id": 15368},
-    {"context": "build",          "app_id": 15368},
-    {"context": "tex-oracle",     "app_id": 15368}
+    {"context": "proof-ci", "app_id": 15368},
+    {"context": "unicode-smoke", "app_id": 15368},
+    {"context": "l1-smoke", "app_id": 15368},
+    {"context": "smoke-cli", "app_id": 15368},
+    {"context": "rest-smoke", "app_id": 15368},
+    {"context": "perf-ci", "app_id": 15368},
+    {"context": "xxh-selfcheck", "app_id": 15368},
+    {"context": "unit-tests", "app_id": 15368},
+    {"context": "spec-drift", "app_id": 15368},
+    {"context": "build", "app_id": 15368},
+    {"context": "tex-oracle", "app_id": 15368},
+    {"context": "format", "app_id": 15368}
   ]
 }

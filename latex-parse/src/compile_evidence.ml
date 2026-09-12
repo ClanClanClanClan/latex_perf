@@ -498,11 +498,11 @@ let map_kind : Build_graph.artefact_kind -> artefact_kind = function
   | Build_graph.Log -> Log
 
 (* Build the Coq-model nodes/edges from a real Build_graph, using each node's
-   unique [id] as [n_file] (so nodes stay distinct), and compute a topological
-   [order] satisfying Coq's [valid_topo] (for edge (u,v): index_of v < index_of
-   u — the CONSUMER v precedes the PRODUCER u). This is the reverse-postorder of
-   a DFS on the producer->consumer edges; the build graph is a DAG by
-   construction ([Build_graph.is_acyclic]). *)
+   POSITION in [Build_graph.nodes] as [n_file] (so nodes stay distinct), and
+   compute a topological [order] satisfying Coq's [valid_topo] (for edge (u,v):
+   index_of v < index_of u — the CONSUMER v precedes the PRODUCER u). This is
+   the reverse-postorder of a DFS on the producer->consumer edges; the build
+   graph is a DAG by construction ([Build_graph.is_acyclic]). *)
 let graph_of_build_graph (g : Build_graph.t) :
     node list * (node * node) list * node list =
   let bg_nodes = Build_graph.nodes g in
@@ -518,10 +518,26 @@ let graph_of_build_graph (g : Build_graph.t) :
     { n_file = Hashtbl.find idx bn.path; n_kind = map_kind bn.kind }
   in
   let nodes = List.map mk bg_nodes in
+  (* ⚠ THE FALLBACK MUST STAY INSIDE [nat]. Coq's [file_id := nat] is extracted
+     to OCaml [int] by ExtrOcamlNatInt, whose soundness precondition is that
+     callers only ever supply NON-NEGATIVE ints. This branch used to fabricate
+     [n_file = -1], a value outside the image of [nat]: every theorem about the
+     extracted checker is silently inapplicable to a graph containing it.
+
+     The BEHAVIOUR was right and is preserved. [find_node] can only fail on a
+     malformed Build_graph, and [of_project] cannot produce one (it pushes both
+     endpoints of every edge it mints — proved in proofs/BuildGraphFrontEnd.v).
+     If it ever did fail, emitting a node that is NOT in [bg_nodes] makes the
+     edge dangling, [ch_edge] fires and the verdict is NOT-READY: it fails
+     CLOSED, which is the direction we want.
+
+     [List.length bg_nodes] keeps exactly that property while being a lawful
+     [nat]: indices run 0..len-1, so len is never a real node's index. *)
+  let absent_index = List.length bg_nodes in
   let node_by_id id =
     match Build_graph.find_node g id with
     | Some bn -> mk bn
-    | None -> { n_file = -1; n_kind = Tex }
+    | None -> { n_file = absent_index; n_kind = Tex }
   in
   let edges =
     List.map

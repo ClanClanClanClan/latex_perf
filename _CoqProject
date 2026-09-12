@@ -120,3 +120,4 @@ proofs/BodyTokenFrontEndExtract.v
 # all three channels plus the negative polarity. Every statement is about the Coq
 # MODEL; the .tex -> pdflatex_project encoder is OCaml and outside Coq.
 proofs/PdflatexFatalChannels.v
+proofs/BuildGraphFrontEnd.v

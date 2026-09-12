@@ -72,28 +72,10 @@ TOOLS = "scripts/tools"
 # entry removed from this dict must gain REGISTRY coverage in the same
 # commit, and OPEN-036 tracks the burn-down.
 EXEMPT = {
-    "check_rule_contracts.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_regression_gates.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_code_quality.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_doc_refs.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_fix_safety_language.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_gates_meta.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_memo_files.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_mli_doc_coverage.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_release_integrity.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_repo_facts.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_roadmap_facts.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_severity_drift.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_version_labels.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_workflow_triggers.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     # Wired into spec-drift on 2026-09-12 (OPEN-091) after being release-only.
     # Exempt ONLY until their kill-tests land in the same burn-down; wiring a
     # gate and proving it can fail are two different things, and shipping the
     # first without the second is what OPEN-036 is about.
-    "check_cst_structure_lossless.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
-    "check_fix_integration_wired.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
-    "check_fix_producer_ledger.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
-    "check_result_helpers.py": "wired 2026-09-12 (OPEN-091); kill-test pending",
     "check_project_state.py": "covered (see REGISTRY)",
     "check_fix_type_consistency.py": "covered (see REGISTRY)",
     "check_gate_selftests.py": "this harness itself",
@@ -157,6 +139,82 @@ def readme_version_drift(text: str) -> str:
         sys.exit(2)
     bogus = f"v{m.group(1)}.{m.group(2)}.{int(m.group(3)) - 1}"
     return text.replace(m.group(0), f"# LaTeX Perfectionist {bogus}", 1)
+
+
+def stale_governance_count(text: str) -> str:
+    """OPEN-082/083. Roll ONE generated count back to a stale value.
+
+    governance/project_facts.yaml is generated, but for 97 commits nothing
+    regenerated it: 63/178/1543 shipped against a measured 64/179/1592, and
+    check_repo_facts.py meanwhile pinned ten outward-facing files to the stale
+    numbers. Gate B (regenerate into a tempdir, diff the committed file) exists
+    for exactly that; decrementing proof_files_core reproduces it.
+
+    This kills rather than no-ops because generate_project_facts.py MEASURES
+    proof_files_core (files_core, counted by globbing proofs/*.v) — it reads the
+    committed file only for a release_date fallback, and release_date is in the
+    gate's ignore_lines. So the regenerated side stays at the true count while
+    the committed side is stale, and run_and_diff reports the difference.
+
+    Version-agnostic on purpose: the count moves whenever a core .v file lands
+    (63 -> 64 with PdflatexFatalChannels.v), and a kill-test that rots on every
+    proof addition is a kill-test people delete. Line-anchored because the bare
+    string `proof_files_core` also appears as `- proofs.proof_files_core` under
+    honesty_annotation.measured_and_true.
+    """
+    import re as _re
+    anchor = r"^(  proof_files_core: )(\d+)$"
+    hits = _re.findall(anchor, text, _re.M)
+    if len(hits) != 1:
+        print(f"[gate-selftests] REGISTRY ROT: '  proof_files_core: <n>' occurs "
+              f"{len(hits)}x in governance/project_facts.yaml (need exactly 1)")
+        sys.exit(2)
+    m = _re.search(anchor, text, _re.M)
+    return text.replace(m.group(0), f"{m.group(1)}{int(m.group(2)) - 1}", 1)
+
+def stale_theorem_total(text: str) -> str:
+    """OPEN-082/083: docs/PROOFS.md states a theorem total governance denies.
+
+    Not hypothetical and not old. On 2026-09-12 docs/PROOFS.md:8 and
+    docs/PROOF_GUIDE.md:146 read `1,543 theorems/lemmas` while
+    governance/project_facts.yaml said 1592 — stale since
+    proofs/PdflatexFatalChannels.v landed in #592 — and scripts/release.sh was
+    armed to abort the v27.1.63 ceremony on the discrepancy. It is also the
+    exact finding that put these two files in CHECKS (PR #245 p1.9: the docs
+    said 1,157 theorems, governance said 1,181 — the 24 subtracted below).
+
+    The total moves every time a proof lands, so a literal anchor would rot at
+    the next release: the README-title anchor already did exactly that and
+    aborted this whole harness. The number is therefore read from governance
+    at mutation time, and EVERY rendering the gate accepts (bare and
+    comma-grouped) is rewritten globally, so the kill cannot be softened by
+    the document phrasing the number differently or stating it twice.
+    """
+    facts = REPO / "governance/project_facts.yaml"
+    m = (re.search(r"^\s*theorem_count_reported:\s*(\d+)\s*$",
+                   facts.read_text(encoding="utf-8"), re.M)
+         if facts.is_file() else None)
+    if m is None:
+        print("[gate-selftests] REGISTRY ROT: governance/project_facts.yaml is "
+              "missing or has no proofs.theorem_count_reported")
+        sys.exit(2)
+    n = int(m.group(1))
+    comma = f"{n:,}"
+    if comma not in text and str(n) not in text:
+        print(f"[gate-selftests] REGISTRY ROT: docs/PROOFS.md no longer states "
+              f"the governance theorem total {n} in any form the gate reads")
+        sys.exit(2)
+    out = text.replace(comma, f"{n - 24:,}").replace(str(n), str(n - 24))
+    # Post-condition: mirror check_repo_facts.render_candidates. If any
+    # rendering survived, the gate would PASS and the harness would report it
+    # blind — a false accusation of the gate. Fail as registry rot instead.
+    if any(c in out for c in (str(n), comma, f"{comma} theorems",
+                              f"{n} theorems", f"{comma} theorems/lemmas")):
+        print(f"[gate-selftests] REGISTRY ROT: a rendering of {n} survived the "
+              f"docs/PROOFS.md mutation; the gate would pass and be falsely "
+              f"reported blind")
+        sys.exit(2)
+    return out
 
 
 def afr_raise_break_count(text: str) -> str:
@@ -431,6 +489,242 @@ REGISTRY = [
                      transform=append_discarding_proof),
         ]),
     GateTest(
+        "check_cst_structure_lossless", [PY, f"{TOOLS}/check_cst_structure_lossless.py"],
+        "pure",
+        [
+            Mutation("the roundtrip corpus drops out of the CST test's dune sandbox "
+                     "while the test stays green",
+                     "latex-parse/src/dune",
+                     r"stanza missing `\(deps \(source_tree \.\./\.\./corpora/roundtrip\)\)`",
+                     old="  (source_tree ../../corpora/roundtrip)\n",
+                     new=""),
+        ]),
+    GateTest(
+        "check_fix_integration_wired", [PY, f"{TOOLS}/check_fix_integration_wired.py"],
+        "pure",
+        [
+            Mutation("E2E fix-pipeline test detached from `dune runtest`",
+                     "latex-parse/src/dune",
+                     r"fix-integration-wired\] FAIL: latex-parse/src/dune has no stanza "
+                     r"for test_rule_fix_integration",
+                     old="(test\n"
+                         " (name test_rule_fix_integration)\n"
+                         " (modules test_rule_fix_integration)\n"
+                         " (libraries latex_parse_lib test_helpers unix)\n"
+                         " (deps\n"
+                         "  (source_tree ../../corpora/fixtures/v26_2_1)))\n"
+                         "\n",
+                     new=""),
+        ]),
+    GateTest(
+        "check_fix_producer_ledger", [PY, f"{TOOLS}/check_fix_producer_ledger.py"],
+        "pure",
+        [
+            Mutation("a shipped producer left out of SHIPPED_VERSIONS (TYPO-002)",
+                             "scripts/tools/generate_fix_producer_ledger.py",
+                             r"\[ledger\] ERROR: SHIPPED_VERSIONS drifts from code:.*"
+                             r"In code but missing from SHIPPED_VERSIONS: \['TYPO-002'\]",
+                             old='    "TYPO-002": "v26.2.1",\n',
+                             new=''),
+        ]),
+    GateTest(
+        "check_result_helpers", [PY, f"{TOOLS}/check_result_helpers.py"],
+        "pure",
+        [
+            Mutation("ENC-004 hand-written as a raw 4-field result literal",
+                     "latex-parse/src/validators_l0.ml",
+                     r"validators_l0\.ml:\d+: raw result record literal at `\{ id = \"ENC-004\"",
+                     old='Some (mk_result ~id:"ENC-004" ~severity:Warning ~message ~count:!cnt)',
+                     new='Some { id = "ENC-004"; severity = Warning; message = message; count = !cnt }'),
+        ]),
+    GateTest(
+        "check_code_quality", [PY, f"{TOOLS}/check_code_quality.py"],
+        "pure",
+        [
+            Mutation("real_roots read goes broad again — the NameError swallow "
+                     "that manufactured 'no measured_at_sha'",
+                     "scripts/tools/check_project_state.py",
+                     r"Python gate silent-except: FAIL: "
+                     r"scripts/tools/check_project_state\.py:\d+: broad "
+                     r"`except Exception` produces a fallback and continues",
+                     old='        except (json.JSONDecodeError, OSError) as exc:\n'
+                         '            findings.append(f"corpora/real_roots/results.json is unreadable: {exc}")\n'
+                         '            sha, rr_data = "unreadable", None\n',
+                     new='        except Exception:  # noqa: BLE001\n'
+                         '            sha, rr_data = None, None\n'),
+        ]),
+    GateTest(
+        "check_doc_refs", [PY, f"{TOOLS}/check_doc_refs.py"],
+        "pure",
+        [
+            Mutation("docs index still points at the pre-rename "
+                     "PROOF_TAXONOMY.md",
+                     "docs/README.md",
+                     r"\[doc-refs\] FAIL: docs/README\.md:\d+: broken link: "
+                     r"\[PROOF_TAXONOMY\.md\]\(PROOF_TAXONOMY\.md\)",
+                     old="[PROOF_CLASSES.md](PROOF_CLASSES.md)",
+                     new="[PROOF_TAXONOMY.md](PROOF_TAXONOMY.md)"),
+        ]),
+    GateTest(
+        "check_fix_safety_language", [PY, f"{TOOLS}/check_fix_safety_language.py"],
+        "pure",
+        [
+            Mutation("the auto-fix channel called 'proven byte-safe' again (#537)",
+                     "docs/CANDIDATE_FIXES.md",
+                     r"\[fix-safety-language\] FAIL:.*"
+                     r"docs/CANDIDATE_FIXES\.md:\d+: 'proven byte-safe' — the "
+                     r"auto-fix channel is guard-gated, not proven",
+                     old="Auto-fixes (Bucket A) are **guard-gated, not proven**, "
+                         "and applied silently.",
+                     new="Auto-fixes (Bucket A) are proven byte-safe and "
+                         "applied silently."),
+        ]),
+    GateTest(
+        "check_gates_meta", [PY, f"{TOOLS}/check_gates_meta.py"],
+        "pure",
+        [
+            Mutation("a covered gate script stops validating anything "
+                     "(validators glob narrowed back to validators.ml)",
+                     "scripts/validate_catalogue.py",
+                     r"validate_catalogue\.py: output does not contain "
+                     r"PASS/FAIL marker.*only found \d+ runtime rule IDs",
+                     old='SRC_DIR.glob("validators*.ml")',
+                     new='SRC_DIR.glob("validators.ml")'),
+        ]),
+    GateTest(
+        "check_memo_files", [PY, f"{TOOLS}/check_memo_files.py"],
+        "pure",
+        [
+            Mutation("memo mandates a proof module nothing implements "
+                     "(round-7 gap, no file and no alias)",
+                     "specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md",
+                     r"\[memo-files\] FAIL: 1 / \d+ memo-mandated paths have "
+                     r"no implementation:\n[\s\S]*  §16\.2: "
+                     r"proofs/DependencyInvalidationSound\.v",
+                     old="- `proofs/DependencyInvalidation.v`",
+                     new="- `proofs/DependencyInvalidationSound.v`"),
+        ]),
+    GateTest(
+        "check_mli_doc_coverage", [PY, f"{TOOLS}/check_mli_doc_coverage.py"],
+        "pure",
+        [
+            Mutation("new exported vals land with no ocamldoc (ratchet breach)",
+                     "latex-parse/src/broker.mli",
+                     r"\[mli-doc\] FAIL: broker\.mli:\d+: val "
+                     r"'hedged_deadline_misses' has no ocamldoc "
+                     r"\(\*\* \.\.\. \*\) comment\..*undocumented val\(s\) "
+                     r"exceeds ceiling",
+                     old="val hedge_fired_count : pool -> int",
+                     new="val rescue_attempts : pool -> int\n"
+                         "val hedged_deadline_misses : pool -> int\n"
+                         "val worker_readiness_waits : pool -> int\n"
+                         "val hedge_fired_count : pool -> int"),
+        ]),
+    GateTest(
+        "check_regression_gates",
+        [PY, f"{TOOLS}/check_regression_gates.py", "--skip-mutation"],
+        "pure",
+        [
+            Mutation("STRUCT-003 reverted to its pre-P1.4 lowercase id (no_tabs)",
+                     "latex-parse/src/validators_l0.ml",
+                     r"validators_l0\.ml:\d+: lowercase rule id 'no_tabs'\. "
+                     r"Use FAMILY-NNN convention",
+                     old='  { id = "STRUCT-003"; run; languages = [] }',
+                     new='  { id = "no_tabs"; run; languages = [] }'),
+        ]),
+    GateTest(
+        "check_release_integrity", [PY, f"{TOOLS}/check_release_integrity.py"],
+        "pure",
+        [
+            Mutation("a count in the GENERATED governance facts goes stale "
+                     "(OPEN-082/083)",
+                     "governance/project_facts.yaml",
+                     r"Generated-file authenticity: FAIL: "
+                     r"governance/project_facts\.yaml: differs from regenerated "
+                     r"output.*proof_files_core",
+                     transform=stale_governance_count),
+        ]),
+    GateTest(
+        "check_repo_facts",
+        [PY, f"{TOOLS}/check_repo_facts.py",
+         "--facts", "governance/project_facts.yaml", "--repo", "."],
+        "pure",
+        [
+            Mutation("docs/PROOFS.md publishes a theorem total that governance "
+                     "contradicts (OPEN-082/083; the P1.8 finding this CHECKS row "
+                     "was added for)",
+                     "docs/PROOFS.md",
+                     r"PROJECT FACTS DRIFT DETECTED.*docs/PROOFS\.md: expected one of "
+                     r"[^\n]* for proofs\.theorem_count_reported",
+                     transform=stale_theorem_total),
+        ]),
+    GateTest(
+        "check_roadmap_facts", [PY, f"{TOOLS}/check_roadmap_facts.py"],
+        "pure",
+        [
+            Mutation("superseded 61-doc differential matrix restated in the "
+                     "roadmap (the line e3016b90 deleted)",
+                     "docs/v27/ROADMAP.md",
+                     r"ROADMAP\.md matrix false-READY: says 10, "
+                     r"authoritative source says \d+",
+                     old="### Honest current scope of the guarantee",
+                     new="### Honest current scope of the guarantee\n\n"
+                         "- **On `main` (v27.1.57):** **33 true-READY / "
+                         "16 true-NOT-READY / 10 false-READY / "
+                         "2 false-NOT-READY** (total 61)."),
+        ]),
+    GateTest(
+        "check_rule_contracts", [PY, f"{TOOLS}/check_rule_contracts.py"],
+        "pure",
+        [
+            Mutation("a log-dependent rule joins the hot-path Class C table while its "
+                     "contract still says B (the PR #241 p1.2 runtime/contract binding)",
+                     "latex-parse/src/execution_class.ml",
+                     r"execution_class\.ml Class C not in contracts: \['LAY-005'\]",
+                     old='let _class_c_ids =\n  [\n',
+                     new='let _class_c_ids =\n  [\n    "LAY-005";\n'),
+        ]),
+    GateTest(
+        "check_severity_drift", [PY, f"{TOOLS}/check_severity_drift.py"],
+        "pure",
+        [
+            Mutation("DELIM-003 quietened to Warning at runtime while the "
+                     "catalogue still says Error (drops it out of the T5 "
+                     "fatal belt)",
+                     "latex-parse/src/validators_l1.ml",
+                     r"\[severity-drift\] FAIL: DELIM-003: spec=Error "
+                     r"runtime=Warning",
+                     old='~id:"DELIM-003" ~severity:Error',
+                     new='~id:"DELIM-003" ~severity:Warning'),
+        ]),
+    GateTest(
+        "check_version_labels", [PY, f"{TOOLS}/check_version_labels.py"],
+        "pure",
+        [
+            Mutation("a maintained doc keeps last release's fix-producer stamp "
+                     "(the '96 as of v27.0.67' drift)",
+                     "specs/rules/README.md",
+                     r"'Fix producers: 96 as of v27\.0\.67' stale "
+                     r"\(current is \d+ as of v[\d.]+\)",
+                     old="## Catalog Snapshot (rules_v3.yaml)",
+                     new="## Catalog Snapshot (rules_v3.yaml)\n\n"
+                         "- Fix producers (`produces_fix: true` in "
+                         "`rule_contracts.yaml`): 96 as of\n"
+                         "  v27.0.67."),
+        ]),
+    GateTest(
+        "check_workflow_triggers", [PY, f"{TOOLS}/check_workflow_triggers.py"],
+        "pure",
+        [
+            Mutation("unit-tests push un-scoped -- required context published twice "
+                             "per commit (PR #531)",
+                             ".github/workflows/unit-tests.yml",
+                             r"DUPLICATED: 'unit-tests' is published by a workflow with an "
+                             r"unfiltered `push:`",
+                             old="  push:\n    branches: [main]\n",
+                             new="  push:\n"),
+        ]),
+    GateTest(
         "check_known_false_ready", [PY, f"{TOOLS}/check_known_false_ready.py"],
         "binary",
         [
@@ -488,7 +782,18 @@ def check_spec_drift_coverage() -> list[str]:
     pf_path = REPO / ".github/workflows/proof.yml"
     pf = pf_path.read_text() if pf_path.is_file() else ""
     invoked = set(re.findall(r"(check_[a-z_]+\.py)", sd + ci + pf))
-    covered = {Path(g.cmd[-1]).name for g in REGISTRY}
+    # The script is the first cmd element ending in .py, NOT cmd[-1]: gates that
+    # need arguments (check_repo_facts --facts ..., check_regression_gates
+    # --skip-mutation) put flags after it, and keying on the last element then
+    # silently mapped the gate to "--skip-mutation" and reported BOTH that the
+    # real gate was uncovered AND that a phantom gate ran nowhere.
+    def _script(g):
+        for a in g.cmd:
+            if str(a).endswith(".py"):
+                return Path(a).name
+        return Path(g.cmd[-1]).name
+
+    covered = {_script(g) for g in REGISTRY}
     problems = []
     for name in sorted(set(re.findall(r"(check_[a-z_]+\.py)", sd))):
         if name not in covered and name not in EXEMPT:

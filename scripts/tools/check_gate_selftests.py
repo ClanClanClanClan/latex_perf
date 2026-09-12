@@ -132,6 +132,40 @@ class GateTest:
         self.name, self.cmd, self.level, self.mutations = name, cmd, level, mutations
 
 
+def afr_raise_break_count(text: str) -> str:
+    """Flip one preserved row to broken — the regression this gate exists for.
+
+    A producer that starts destroying real papers shows up exactly here: the
+    break count rises above the ratchet. Mutating the ARTEFACT rather than the
+    gate proves the gate reads the measurement, not its own constant.
+    """
+    import json as _json
+    d = _json.loads(text)
+    for r in d["rows"]:
+        if r.get("cell") == "preserved":
+            r["cell"] = "broken"
+            r["rc_after"] = 1
+            break
+    d["summary"]["preserved"] -= 1
+    d["summary"]["broken"] += 1
+    return _json.dumps(d, indent=2, ensure_ascii=False) + "\n"
+
+
+def afr_desync_cell(text: str) -> str:
+    """Leave a row labelled `preserved` while its own rc says it failed.
+
+    C-45's shape: a summary computed FROM a wrong cell agrees with it. The
+    gate must re-derive each cell from the row's recorded rc pair.
+    """
+    import json as _json
+    d = _json.loads(text)
+    for r in d["rows"]:
+        if r.get("cell") == "preserved":
+            r["rc_after"] = 1
+            break
+    return _json.dumps(d, indent=2, ensure_ascii=False) + "\n"
+
+
 def append_discarding_proof(text: str) -> str:
     """Append a proof that discards 2 hypotheses via ADJACENT underscores.
 
@@ -287,6 +321,21 @@ REGISTRY = [
                      r"compile-blocking-count.*compile_contract\.mli.*37",
                      old="run ONLY the 36 compile-blocking rules",
                      new="run ONLY the 37 compile-blocking rules"),
+        ]),
+    GateTest(
+        "check_apply_fixes_real_differential",
+        [PY, f"{TOOLS}/check_apply_fixes_real_differential.py"],
+        "pure",
+        [
+            Mutation("a producer starts breaking real papers again",
+                     "corpora/apply_fixes_real/results.json",
+                     r"breaks \d+ of \d+ real COMPILING papers; the pinned "
+                     r"baseline is",
+                     transform=afr_raise_break_count),
+            Mutation("a row's cell stops following from its own rc pair",
+                     "corpora/apply_fixes_real/results.json",
+                     r"cell 'preserved' but rc_after=1",
+                     transform=afr_desync_cell),
         ]),
     GateTest(
         "check_proof_substance",

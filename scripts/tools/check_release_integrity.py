@@ -92,7 +92,8 @@ def gate_generated_authenticity(repo: Path) -> list[str]:
     tempdir, then diff against committed outputs."""
     failures: list[str] = []
 
-    def run_and_diff(generator: str, output_rel: str, *extra: str) -> None:
+    def run_and_diff(generator: str, output_rel: str, *extra: str,
+                     ignore_lines: tuple = ()) -> None:
         """Regen generator's output into repo/tmp and diff. If binary
         (e.g. json), compare verbatim."""
         output = repo / output_rel
@@ -129,6 +130,12 @@ def gate_generated_authenticity(repo: Path) -> list[str]:
                 return
             a = output.read_text()
             b = staging.read_text()
+            if ignore_lines:
+                def _strip(text: str) -> str:
+                    return "\n".join(
+                        ln for ln in text.splitlines()
+                        if not ln.lstrip().startswith(ignore_lines))
+                a, b = _strip(a), _strip(b)
             if a != b:
                 diff = list(
                     difflib.unified_diff(
@@ -154,9 +161,16 @@ def gate_generated_authenticity(repo: Path) -> list[str]:
     # stale values. It could not be added before, because the generator stamped
     # release_date = today() and so was non-reproducible by construction; the
     # date now comes from the tag and the output is byte-idempotent.
+    # ⚠ release_state and release_date are TAG-DERIVED, so they cannot be
+    # stable inside a PR: the release commit is authored BEFORE its tag exists,
+    # and regenerating after the tag lands flips release_state rc -> GA. Diffing
+    # them would make the release ceremony fail on its own ordering. They are
+    # excluded from the comparison and everything else — every COUNT, which is
+    # what actually went stale for 97 commits — is diffed. (OPEN-082/083.)
     run_and_diff(
         "scripts/tools/generate_project_facts.py",
         "governance/project_facts.yaml",
+        ignore_lines=("release_state:", "release_date:"),
     )
     # The rule_contracts generator writes BOTH yaml and json via its
     # single --output arg (json is derived). Rerunning already covers

@@ -141,7 +141,7 @@ Runs on every push and PR. Cannot be bypassed.
 
 ---
 
-## Current State (v27.1.62)
+## Current State (v27.1.63)
 
 - **1,592 theorems/lemmas** across 179 files
 - **637 faithful proofs** (VPD-pattern match, exact Coq model)

@@ -205,13 +205,18 @@ def generate(repo: Path) -> dict:
     # commits. The release date is a property of the TAG, so read it from the
     # tag; fall back to the committed value, and only then to today.
     import datetime
-    release_date = None
-    try:
-        release_date = subprocess.run(
-            ["git", "log", "-1", "--format=%cs", f"v{version.lstrip('v')}"],
-            cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
-    except subprocess.CalledProcessError:
-        pass
+    # LP_RELEASE_DATE lets the release ceremony stamp the date of a tag that
+    # does not exist yet (release.sh authors the commit BEFORE tagging it).
+    # Once the tag exists the tag lookup below reproduces the same value.
+    release_date = os.environ.get("LP_RELEASE_DATE") or None
+    if not release_date:
+        try:
+            release_date = subprocess.run(
+                ["git", "log", "-1", "--format=%cs", f"v{version.lstrip('v')}"],
+                cwd=repo, capture_output=True, text=True,
+                check=True).stdout.strip()
+        except subprocess.CalledProcessError:
+            release_date = None
     if not release_date:
         prior = repo / "governance/project_facts.yaml"
         if prior.is_file():

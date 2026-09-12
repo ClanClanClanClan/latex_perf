@@ -34,7 +34,11 @@ rm -f dune-project.bak
 # ship with stale project_facts.yaml or rule_contracts.yaml (drift gates
 # would then fail CI on the release branch).
 echo "[release] Regenerating governance/project_facts.yaml..."
-python3 scripts/tools/generate_project_facts.py > /dev/null
+# LP_RELEASE_DATE stamps the date of a tag that does not exist yet: this
+# commit is authored BEFORE step 8 tags it. Once the tag lands, the
+# generator's own tag lookup reproduces the same value (OPEN-082).
+LP_RELEASE_DATE="$(date -u +%Y-%m-%d)" \
+  python3 scripts/tools/generate_project_facts.py > /dev/null
 echo "[release] Regenerating specs/rules/rule_contracts.{yaml,json}..."
 python3 scripts/tools/generate_rule_contracts.py 2>&1 | tail -3
 echo "[release] Running drift gates..."

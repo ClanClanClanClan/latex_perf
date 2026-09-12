@@ -7,7 +7,7 @@
       "corpus": "papers",
       "frame_size": 2719,
       "selection": "sha256(arxiv_id) ascending",
-      "offset": 2000,
+      "offset": 2100,
       "n": 40
     },
     "oracle": {
@@ -20,433 +20,31 @@
   },
   "summary": {
     "sampled": 40,
-    "compiled_before": 38,
-    "excluded_did_not_compile": 2,
-    "preserved": 38,
-    "broken": 0
+    "compiled_before": 39,
+    "excluded_did_not_compile": 1,
+    "preserved": 33,
+    "broken": 6
   },
   "rows": [
     {
-      "arxiv_id": "2507.02366v1",
-      "toplevel": "Manuscript.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Manuscript.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.04187v1",
-      "toplevel": "tmlr_accept.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "math_commands.tex",
-        "tmlr_accept.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.00167v1",
-      "toplevel": "rank-2-integral-points.tex",
-      "rc_before": 1,
-      "first_error_before": "! LaTeX Error: Command \\c@theorem already defined.",
-      "cell": "excluded-did-not-compile"
-    },
-    {
-      "arxiv_id": "2507.11285v1",
-      "toplevel": "ekr_t_int_assoc_scheme.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "ekr_t_int_assoc_scheme.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10072v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10356v1",
-      "toplevel": "manuscript.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "manuscript.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09421v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08367v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "discussion.tex",
-        "introduction.tex",
-        "main.tex",
-        "method.tex",
-        "related-works.tex",
-        "results.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.14318v1",
-      "toplevel": "template.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "template.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.00573v1",
-      "toplevel": "paper.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "paper.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.17968v1",
-      "toplevel": "bare_jrnl_compsoc.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "appendix.tex",
-        "bare_jrnl_compsoc.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.07609v1",
-      "toplevel": "orbSaito_ADE_running.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "orbSaito_ADE_running.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.11367v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.03418v1",
-      "toplevel": "Realization_D21alpha.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Realization_D21alpha.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.21507v1",
-      "toplevel": "main.tex",
-      "rc_before": 1,
-      "first_error_before": "! LaTeX Error: Command \\c@theorem already defined.",
-      "cell": "excluded-did-not-compile"
-    },
-    {
-      "arxiv_id": "2506.19051v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.10519v1",
-      "toplevel": "GS_orbits_asympt_characters.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "GS_orbits_asympt_characters.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09928v1",
-      "toplevel": "main-neuirps25.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main-neuirps25.tex",
-        "paper/algorithm.tex",
-        "paper/appendix-proofs.tex",
-        "paper/formulation.tex",
-        "paper/introduction.tex",
-        "paper/numerical-experiments.tex",
-        "shared/packages.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.16766v1",
-      "toplevel": "Palojarvi_Trudgian_12thPowerMoment_Submitted.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Palojarvi_Trudgian_12thPowerMoment_Submitted.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08525v1",
-      "toplevel": "augmip.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "augmip.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10053v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.07998v2",
-      "toplevel": "arxiv.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "arxiv.tex",
-        "figures/teaser.tex",
-        "preamble.tex",
-        "sections/1_introduction.tex",
-        "sections/1_introduction_new.tex",
-        "sections/2_related_work.tex",
-        "sections/3_method.tex",
-        "sections/4_experiment.tex",
-        "sections/5_analysis.tex",
-        "sections/X_suppl.tex",
-        "sections/suppl/cot_prompt.tex",
-        "sections/suppl/system_prompt.tex",
-        "tables/cot_prompt.tex",
-        "tables/system_prompt.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08590v1",
-      "toplevel": "Paper__3259_Visual_Semantic_Description_Generation_with_MLLMs_for_Image-Text_Matching.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Paper__3259_Visual_Semantic_Description_Generation_with_MLLMs_for_Image-Text_Matching.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.23526v1",
-      "toplevel": "D-module-cohomology.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "D-module-cohomology.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.14432v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08726v1",
-      "toplevel": "root.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "root.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08536v1",
-      "toplevel": "paper.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "paper.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.14914v1",
-      "toplevel": "medima-template.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "medima-template.tex",
-        "pre.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08444v1",
-      "toplevel": "decastro_gribonval_jouvin.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "decastro_gribonval_jouvin.tex",
-        "notations_and_macros_s2mix.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.07811v1",
-      "toplevel": "template.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "template.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.19791v1",
-      "toplevel": "VoronoiSphericalCDF_paper.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "VoronoiSphericalCDF_paper.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09958v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08137v1",
+      "arxiv_id": "2507.08729v1",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
         "main.tex",
         "sec/0_abstract.tex",
-        "sec/3_method.tex",
-        "sec/4_experiment.tex",
-        "sec/5_discussion_limitation.tex",
-        "sec/x_suppl.tex"
+        "sec/1_intro.tex",
+        "sec/2_literature.tex",
+        "sec/3_dataset.tex",
+        "sec/4_experiment.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.10784v1",
+      "arxiv_id": "2506.19462v1",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
@@ -458,31 +56,169 @@
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.03824v1",
-      "toplevel": "FM-antiquantum-063025-submitted.tex",
+      "arxiv_id": "2507.08248v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "FM-antiquantum-063025-submitted.tex"
+        "main.tex",
+        "sections/00_main.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.06730v1",
-      "toplevel": "SierpinskiProductsPackingColoring.tex",
+      "arxiv_id": "2507.06789v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "SierpinskiProductsPackingColoring.tex"
+        "Appendix/bound_for_Gamma_function.tex",
+        "Section/Linf_approximation.tex",
+        "Section/Lower_bound.tex",
+        "Section/Lp_approximation.tex",
+        "Section/Shallow_NN_Lp_approximation.tex",
+        "Section/introduction.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.07717v1",
+      "arxiv_id": "2507.05786v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Missing $ inserted.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.09487v1",
+      "toplevel": "elsarticle-template-num.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "elsarticle-template-num.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.02260v2",
+      "toplevel": "cycle-count-3.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "cycle-count-3.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.01730v2",
+      "toplevel": "GMcKbije24.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "GMcKbije24.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.05326v1",
+      "toplevel": "main.tex",
+      "rc_before": 1,
+      "first_error_before": "! Missing $ inserted.",
+      "cell": "excluded-did-not-compile"
+    },
+    {
+      "arxiv_id": "2507.09815v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex",
+        "sec/10_prompts_for_benchmark_curation.tex",
+        "sec/1_intro.tex",
+        "sec/2_relatedworks.tex",
+        "sec/3_dataset_curation_benchmark.tex",
+        "sec/5_exp.tex",
+        "sec/8_metrics.tex",
+        "sec/9_quantitative_example.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.10668v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Package amsmath Error: Multiple \\label's: label 'rho_time_1B1' will be lost.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.09172v1",
+      "toplevel": "time_limit_EPJ_V2.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "time_limit_EPJ_V2.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.24091v1",
+      "toplevel": "minimal_regular_snc_models.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "minimal_regular_snc_models.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.09979v1",
+      "toplevel": "HBGL2Q.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.19755v1",
+      "toplevel": "xreg_main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "xreg_main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.07635v1",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
@@ -494,36 +230,319 @@
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.23298v2",
-      "toplevel": "Paper.tex",
+      "arxiv_id": "2507.00448v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "Paper.tex"
+        "main.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! LaTeX Error: Missing \\begin{document}.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.10688v1",
+      "toplevel": "apssamp.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "apssamp.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.04394v1",
-      "toplevel": "Witnessing_and_guiding_sets_-_arXive.tex",
+      "arxiv_id": "2507.10385v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "Witnessing_and_guiding_sets_-_arXive.tex"
+        "main.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.18389v1",
-      "toplevel": "paper.tex",
+      "arxiv_id": "2507.04362v1",
+      "toplevel": "main_arXiv.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "paper.tex"
+        "main_arXiv.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Missing $ inserted.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.00325v1",
+      "toplevel": "QUE-PrimePow.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "QUE-PrimePow.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.24028v1",
+      "toplevel": "groebner.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "groebner.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.18408v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.10656v1",
+      "toplevel": "HA2025.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "HA2025.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.08767v1",
+      "toplevel": "Main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "Main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.09206v1",
+      "toplevel": "multi_ot_arxiv.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "multi_ot_arxiv.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.04273v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Package inputenc Error: Keyboard character used is undefined",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.10615v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.10735v1",
+      "toplevel": "1-v2-Newsvendoer-2025.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "1-v2-Newsvendoer-2025.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.16917v1",
+      "toplevel": "Garcia_John_Novo.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "Garcia_John_Novo.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.17838v1",
+      "toplevel": "main_FBS_CSR_ver1.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "algo/algo_CSR_FBS.tex",
+        "algo/algo_sub_D_FISTA.tex",
+        "algo/algo_sub_FBSA_PDS_no_conj.tex",
+        "fig_tex/GT_images.tex",
+        "fig_tex/overall.tex",
+        "fig_tex/result_filter.tex",
+        "fig_tex/result_image_CAMEL_17_gsst.tex",
+        "fig_tex/result_image_cell1_gs.tex",
+        "fig_tex/result_image_cell2_g.tex",
+        "main_FBS_CSR_ver1.tex",
+        "table_tex/params.tex",
+        "table_tex/params_CSR.tex",
+        "table_tex/result_PSNR_SSIM.tex",
+        "table_tex/result_PSNR_SSIM_gs.tex",
+        "table_tex/result_PSNR_SSIM_gsst.tex",
+        "table_tex/result_abr.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.04065v1",
+      "toplevel": "fg-ac-lie-xv1.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "fg-ac-lie-xv1.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.10222v1",
+      "toplevel": "New_IEEEtran_how-to.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "New_IEEEtran_how-to.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.06516v1",
+      "toplevel": "uai2025-template.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "uai2025-template.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.23633v1",
+      "toplevel": "saturation.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "saturation.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.11002v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex",
+        "supplementary.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.10171v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.06873v1",
+      "toplevel": "arxiv_version.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "arxiv_version.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! LaTeX Error: Missing \\begin{document}.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.11352v1",
+      "toplevel": "neurips_2025.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "figure/vll-example.tex",
+        "neurips_2025.tex",
+        "tex/00-abstract.tex",
+        "tex/01-introduction.tex",
+        "tex/01_intro_new.tex",
+        "tex/02-related_work.tex",
+        "tex/03-preliminary.tex",
+        "tex/04-method.tex",
+        "tex/05-experiment.tex",
+        "tex/06-conclusion.tex",
+        "tex/package.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.09595v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex",
+        "sections/1_abstract.tex",
+        "sections/2_background.tex",
+        "sections/3_architecture.tex",
+        "sections/4_models.tex",
+        "sections/5_Appendix.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",

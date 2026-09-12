@@ -38,7 +38,7 @@ and exits 2 if any differs from the manifest.
 
 ## The oracle protocol is part of the result
 
-`-interaction=nonstopmode -halt-on-error -no-shell-escape`, **up to 3 passes**.
+`-interaction=nonstopmode -halt-on-error`, **RESTRICTED shell-escape** (pdflatex's own default), **up to 3 passes**. ⚠ This said `-no-shell-escape` until 2026-09-12, four days after OPEN-053 removed the flag — and removing it is exactly what moved sample-2 FALSE-READY from 9 to 7, so the stale line described a measurement nobody had taken. No gate read this file or `manifest.json`; OPEN-086 records that.
 Both halves of that are load-bearing, and one of them was wrong for the whole of
 the first measurement.
 

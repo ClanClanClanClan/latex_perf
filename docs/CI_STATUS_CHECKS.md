@@ -1,8 +1,13 @@
 CI Required Status Checks
 =========================
 
-This repo defines the following CI workflows as required checks:
+The authority is `.github/required-status-checks.json`, which
+`branch-protection.yml` PUTs on every push to main (process invariant 7).
+Edit that file, never the API, and never this list on its own.
 
+As of 2026-09-12 it holds **11** contexts:
+
+- Build / build
 - Proof CI (Coq) / proof-ci
 - Unicode Rules Smoke / unicode-smoke
 - L1 Rules Smoke / l1-smoke
@@ -10,6 +15,15 @@ This repo defines the following CI workflows as required checks:
 - REST Smoke Test / rest-smoke
 - Performance Gate CI / perf-ci
 - Unit Tests / unit-tests
+- Spec Drift / spec-drift
+- TeX Oracle (real pdflatex) / tex-oracle
+- XXH64 SIMD Selfcheck / xxh-selfcheck
+
+⚠ This document listed only the first seven of these until 2026-09-12, omitting
+`build`, `spec-drift`, `tex-oracle` and `xxh-selfcheck` — the build, the whole
+19-gate drift belt, the real-pdflatex oracle and the hash self-check. Anyone
+following it would have switched four required contexts off. Recorded as
+OPEN-085.
 
 How to enable branch protection (recommended)
 --------------------------------------------

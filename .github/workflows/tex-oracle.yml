@@ -9,8 +9,14 @@ name: TeX Oracle (real pdflatex)
 # was a manual local sweep that nobody else could reproduce. This makes those
 # claims machine-checked and reproducible by anyone.
 #
-# ADVISORY ON PURPOSE (for now). This context is deliberately NOT listed in
-# .github/required-status-checks.json:
+# REQUIRED since #534. This block used to say "ADVISORY ON PURPOSE (for now)"
+# and "deliberately NOT listed in .github/required-status-checks.json", and it
+# went on saying so for months after the context was listed there (OPEN-085).
+# The soak it describes as future work has happened. The reasoning below is
+# kept because it still explains the COST of the promotion, which is real:
+# branch-protection.yml PUTs enforce_admins: true, so a red tex-oracle is an
+# unbypassable block. That is now the accepted trade, not a hazard to avoid.
+# Historical rationale for the original advisory period:
 #   * branch-protection.yml PUTs enforce_admins: true, so a red REQUIRED check
 #     here would be unbypassable even by the maintainer, and would stall every PR
 #     in the repo;

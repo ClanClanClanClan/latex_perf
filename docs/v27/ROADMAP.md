@@ -118,13 +118,13 @@ The pre-existing principles (each still non-negotiable):
 | **Round-7 deep code audit** (2026-07-24, post-#501) | Two-phase adversarial workflow (16 finder layers, one independent re-executing verifier per finding, dual-protocol pdfTeX oracle): **77 findings confirmed, 1 refuted**. Verified core HELD; defects in 3 glue belts. **Fix program + regression infra = `docs/v27/AUDIT_R7_FIX_PLAN.md`** (Track R7 below). | task outputs `wj90flgff` / `weqcuwnwu` |
 
 ### Formal backbone state (Coq)
-- **178 proof files total** = **63 core + 114 generated + 1 ML** (plus **7 archived** `.disabled` files, tracked separately) (`governance/project_facts.yaml`). **NO `Admitted`, NO `Axiom`** in active proofs (only archived `.disabled` files carry them).
+- **179 proof files total** = **64 core + 114 generated + 1 ML** (plus **7 archived** `.disabled` files, tracked separately) (`governance/project_facts.yaml`). **NO `Admitted`, NO `Axiom`** in active proofs (only archived `.disabled` files carry them).
 - **Capstone** `PdflatexModel.pdflatex_compile_safe` — **Qed, unconditional, Print Assumptions Closed**; `xelatex`/`lualatex` aliases are **the same proof object** (⚠ this is exactly the multi-engine soundness gap — see S-ENGINE).
 - Front-end gap #1 **CLOSED** (v27.1.58); premise bridge **extracted+executed** (v27.1.54-56); LP-Core boundary **certified** (v27.1.57).
 - **Faithful pdflatex semantics** (Tier-3, v27.1.29-32): `LexerFaithfulStep.v` + `FaithfulWS8Bridge.v` — tokenize/aux/log/pass, ≤2-pass convergence; all Qed, Closed. **⚠ shipped ADDITIVELY** (bridge, capstone byte-identical) — NOT the plan's re-proof (see V4, now ADR-accepted by default).
 - **ML span-extractor asset:** `proofs/ML/SpanExtractorSound.v` proves `v2_span_extractor_sound` (Qed) over the trained v2 byte-classifier `ml/checkpoints_v2/best_model.pt` (**F1=0.9799, precision 0.975, recall 0.9849**), covering 8 ambiguous TYPO rules — prior art / substrate for Track H **and the H1 span extractor already exists**.
 - **T5 catalogue scaffold:** parametric `rule_passes` + **114 generated per-family proof files**.
-- `theorem_count_reported: 1543`; `per_rule_soundness_count: 643`.
+- `theorem_count_reported: 1592`; `per_rule_soundness_count: 643`. ⚠ **Both are CONSTRUCTED, not measured** — see `governance/project_facts.yaml`'s `honesty_annotation` key: the theorem count is a raw `Theorem`/`Lemma`/`Corollary` grep in which 803 of the 804 theorems under `proofs/generated` share one byte-identical proof body over 316 distinct predicates, 57 of them `:= false`; and `per_rule_soundness_count` is the non-reserved rule headcount copied verbatim. OPEN-014/OPEN-051 track replacing them.
 
 ### Coverage numbers
 - **Rule catalogue:** 660 total / 17 reserved / **643 non-reserved / 643 shipped** (`governance/project_facts.yaml`, internally consistent).
@@ -550,7 +550,7 @@ A stable **`POST /compile-check` JSON route** + a **frozen, semver'd verdict sch
 - **R-residual-assertion:** the 402 "non-candidate-able" diagnose-only rules are a *per-family* assertion, not individually re-audited. Re-audit against `rules_v3.yaml` before declaring done.
 - **R-corpus-representativeness:** the lint corpus is 470/473 LP-Core (too clean); the 88.4% recovery number rests on an UNTRACKED `bench_classify` driver + a 15+-day-old scratch analysis. **S0 commits the bench + corpus under version control** before quoting E-coverage as a commitment.
 - **R-security (SEC):** the differential harness / any pdflatex backstop / the range-oracle execute or parse untrusted LaTeX — `-no-shell-escape`, sandbox+timeout, bound `\input` to project root, fuzz the oracle (SEC1) before exposing any of it as a service.
-- **R-tags-without-commits:** v27.1.58/59 tags are on `origin/main`; the tree is v27.1.60 (PR #498, pending merge/tag). C-FD1 depends on the front-end (confirmed on origin/main this session).
+- **R-tags-without-commits:** ⚠ **stale as written and corrected 2026-09-12** — this said "the tree is v27.1.60 (PR #498, pending merge/tag)" roughly 96 PRs after that merged. `dune-project` is v27.1.62 and `origin/main` is 97 commits past the tag; OPEN-013 owns the release debt and no gate compares a version marker to a tag. C-FD1 depends on the front-end (confirmed on origin/main this session).
 
 ---
 

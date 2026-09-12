@@ -102,9 +102,18 @@ class Mutation:
         self.old, self.new, self.transform = old, new, transform
 
     def apply(self) -> None:
+        # ⚠ PRESERVE THE FILE MODE. write_text/write_bytes create the file with
+        # default permissions, so mutating an EXECUTABLE script and restoring it
+        # silently drops the +x bit. This harness reports "every restoration is
+        # byte-identical" and that stayed true — the CONTENT was identical and
+        # the METADATA was not. It cost a red `compliance` job:
+        # scripts/validate_catalogue.py went 100755 -> 100644 and
+        # validate_catalogue.sh died `Permission denied` (exit 126).
+        self._mode = self.target.stat().st_mode
         text = self.target.read_text(encoding="utf-8")
         if self.transform is not None:
             self.target.write_text(self.transform(text), encoding="utf-8")
+            os.chmod(self.target, self._mode)
             return
         n = text.count(self.old)
         if n != 1:
@@ -115,6 +124,7 @@ class Mutation:
             sys.exit(2)
         self.target.write_text(text.replace(self.old, self.new),
                                encoding="utf-8")
+        os.chmod(self.target, self._mode)
 
 
 class GateTest:
@@ -936,7 +946,9 @@ def main() -> int:
                             f"{out[:300]!r}")
                 finally:
                     tmp = m.target.with_suffix(m.target.suffix + ".restore-tmp")
+                    mode = m.target.stat().st_mode
                     tmp.write_bytes(bfile.read_bytes())
+                    os.chmod(tmp, mode)
                     os.replace(tmp, m.target)  # atomic: never a torn restore
                     # Preserve mtime at ns precision: a fresh mtime on a
                     # restored .ml makes dune rebuild the world for a no-op.

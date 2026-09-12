@@ -43,7 +43,21 @@ import pathlib
 import subprocess
 import sys
 
-ARTEFACT = "corpora/apply_fixes_real/results.json"
+# TWO WINDOWS, AND THE GATE RATCHETS BOTH. The tuned window is the one whose
+# breaks the fixes were designed from; the virgin window has never been used to
+# design anything. Measured 2026-09-12, immediately after fixing MATH-009,
+# MATH-014 and PKG-011: TUNED 0/38 = 0.0%, VIRGIN 6/39 = 15.4%.
+#
+# ⚠ THE ZERO DOES NOT GENERALISE, AND IT MUST NEVER BE QUOTED ALONE. This is
+# C-39/OPEN-034 reproduced on a second corpus: the in-sample number after a
+# round of fixes is an optimistic estimate of the fixer's real damage, because
+# the sample IS the thing the fixes were fitted to. Same idiom as
+# corpora/real_roots' sample 1 / sample 2 split, for the same reason.
+ARTEFACTS = [
+    ("corpora/apply_fixes_real/results.json", "tuned", 0),
+    ("corpora/apply_fixes_real/results_virgin.json", "virgin", 6),
+]
+ARTEFACT = ARTEFACTS[0][0]
 # The number of real COMPILING papers the default fixer is currently known to
 # break. A RATCHET: lower it when a producer is fixed, in the same commit that
 # refreshes the artefact. Raising it needs a ledger row saying why the
@@ -57,18 +71,38 @@ def main() -> int:
     ap.add_argument("--repo", default=".")
     ns = ap.parse_args()
     repo = pathlib.Path(ns.repo).resolve()
+    all_findings = []
+    summary_lines = []
+    for artefact_rel, window, baseline in ARTEFACTS:
+        rc = _check_one(repo, artefact_rel, window, baseline, all_findings,
+                        summary_lines)
+        if rc == 2:
+            return 1
+    if all_findings:
+        print("[apply-fixes-real] FAIL:")
+        for x in all_findings:
+            print("   -", x)
+        return 1
+    for line in summary_lines:
+        print(line)
+    return 0
+
+
+def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
+    ARTEFACT = artefact_rel
+    BASELINE_BROKEN = baseline
     f = repo / ARTEFACT
-    findings = []
 
     if not f.is_file():
-        print(f"[apply-fixes-real] FAIL: {ARTEFACT} is missing. The real-paper "
-              f"fixer rate must live in an artefact, not in prose (OPEN-071).")
-        return 1
+        findings.append(
+            f"{ARTEFACT} is missing. The real-paper fixer rate must live in an "
+            f"artefact, not in prose (OPEN-071).")
+        return 0
     try:
         doc = json.loads(f.read_text())
     except (json.JSONDecodeError, OSError) as exc:
-        print(f"[apply-fixes-real] FAIL: {ARTEFACT} unreadable: {exc}")
-        return 1
+        findings.append(f"{ARTEFACT} unreadable: {exc}")
+        return 0
 
     rows = doc.get("rows") or []
     summary = doc.get("summary") or {}
@@ -106,13 +140,13 @@ def main() -> int:
     compiled = recount.get("preserved", 0) + broken
     if broken > BASELINE_BROKEN:
         findings.append(
-            f"the default fixer breaks {broken} of {compiled} real COMPILING "
+            f"[{window}] the default fixer breaks {broken} of {compiled} real COMPILING "
             f"papers; the pinned baseline is {BASELINE_BROKEN}. A fix producer "
             f"has regressed. Bisect it — first-error attribution in a "
             f"multi-rule fixer is a hypothesis until bisected (OPEN-076).")
     elif broken < BASELINE_BROKEN:
         findings.append(
-            f"the fixer now breaks {broken} of {compiled}, BELOW the pinned "
+            f"[{window}] the fixer now breaks {broken} of {compiled}, BELOW the pinned "
             f"baseline of {BASELINE_BROKEN}. Lower BASELINE_BROKEN to {broken} "
             f"in this commit — a ratchet that is never tightened stops being "
             f"one.")
@@ -145,17 +179,13 @@ def main() -> int:
                 f"(records {prov['cli_sha256'][:12]}…, built is "
                 f"{h.hexdigest()[:12]}…).")
 
-    if findings:
-        print("[apply-fixes-real] FAIL:")
-        for x in findings:
-            print("   -", x)
-        return 1
     pct = (100.0 * broken / compiled) if compiled else 0.0
-    print(f"[apply-fixes-real] PASS: the default fixer breaks {broken}/"
-          f"{compiled} = {pct:.1f}% of real COMPILING papers "
-          f"(baseline {BASELINE_BROKEN}); "
-          f"{recount.get('excluded-did-not-compile', 0)} sampled papers "
-          f"excluded because pdflatex already rejects them.")
+    summary_lines.append(
+        f"[apply-fixes-real] {window.upper():<7} {broken}/{compiled} = "
+        f"{pct:.1f}% of real COMPILING papers broken (baseline "
+        f"{BASELINE_BROKEN}); "
+        f"{recount.get('excluded-did-not-compile', 0)} excluded, pdflatex "
+        f"already rejects them.")
     return 0
 
 

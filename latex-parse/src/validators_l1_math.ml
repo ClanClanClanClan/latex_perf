@@ -63,6 +63,15 @@ let l1_math_009_rule : rule =
               && boundary_before
               && boundary_after
               && is_in_math_range math !i
+              (* OPEN-072: a math RANGE is not math MODE. `\text{...}` is a
+                 text-mode island nested in math, and `\arg`/`\dim`/`\max` are
+                 `\mathop`, which is math-only — inserting one there makes
+                 pdflatex die `! Missing $ inserted.`. This producer alone
+                 destroyed FIVE of the seven real papers broken in the 40-paper
+                 differential. [in_math_mode_here] is DEFAULT-DENY: see its
+                 comment for why a denylist of text macros fails open (measured:
+                 `\emph{\deg}` still breaks 2507.04488v1). *)
+              && in_math_mode_here s !i
             then
               edits :=
                 Cst_edit.replace ~start_offset:!i ~end_offset:(!i + oplen)
@@ -488,12 +497,35 @@ let l1_math_014_rule : rule =
     in
     List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
   in
+  (* OPEN-072: `^` and `_` do not take "the next macro" — they invoke TeX's
+     scan_math, which reads ONE math field and accepts a character or a LEFT
+     BRACE. `\frac` is neither, so a brace-less superscript already relies on
+     TeX back_input'ing the token and running scan_left_brace. Rewriting
+     `^\frac{a}{b}` to `^\tfrac{a}{b}` keeps that shape, but the COUNT and the
+     FIX disagree about which offsets are safe, and on 2507.07717v1 the rewrite
+     lands after a brace-less `^` and pdflatex dies `! Missing { inserted.` with
+     `<to be read again> \def`.
+
+     The DIAGNOSTIC is unchanged; only the rewrite is declined at these sites.
+     Measured coverage cost over a deterministic 60-paper sample: 20 of 1001
+     conversions suppressed (2.0%). Declining a cosmetic \tfrac is the safe
+     direction; the alternative is a document pdflatex refuses to build. *)
+  let after_bare_script s off =
+    let j = ref (off - 1) in
+    while !j >= 0 && (s.[!j] = ' ' || s.[!j] = '\t') do
+      decr j
+    done;
+    !j >= 0 && (s.[!j] = '^' || s.[!j] = '_')
+  in
   let mk_fix_edits s =
-    List.map
+    List.filter_map
       (fun off ->
-        Cst_edit.replace ~start_offset:off
-          ~end_offset:(off + String.length needle)
-          replacement)
+        if after_bare_script s off then None
+        else
+          Some
+            (Cst_edit.replace ~start_offset:off
+               ~end_offset:(off + String.length needle)
+               replacement))
       (inline_offsets s)
   in
   let run s =

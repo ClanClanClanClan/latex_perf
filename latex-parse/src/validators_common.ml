@@ -534,6 +534,131 @@ let find_math_ranges (s : string) : (int * int) list =
 let is_in_math_range (ranges : (int * int) list) (off : int) : bool =
   List.exists (fun (a, b) -> a <= off && off < b) ranges
 
+(** Math-transparent brace groups: the argument of one of these stays in MATH
+    mode, so an offset inside it is still math. Everything NOT on this list is
+    treated as mode-unknown and therefore denied — see [in_math_mode_here]. *)
+let math_transparent_wrappers =
+  [
+    (* font/alphabet selectors: argument is math, letters just change shape *)
+    "mathrm";
+    "mathbf";
+    "mathit";
+    "mathsf";
+    "mathtt";
+    "mathcal";
+    "mathbb";
+    "mathfrak";
+    "mathscr";
+    "boldsymbol";
+    "bm";
+    "pmb";
+    (* operator constructors: the argument IS the operator name, and these are
+       the two spellings that make \arg-style tokens legal *)
+    "operatorname";
+    "operatorname*";
+    "DeclareMathOperator";
+    (* structural math constructors whose arguments are math lists *)
+    "frac";
+    "tfrac";
+    "dfrac";
+    "cfrac";
+    "binom";
+    "tbinom";
+    "dbinom";
+    "sqrt";
+    "overline";
+    "underline";
+    "widehat";
+    "widetilde";
+    "hat";
+    "tilde";
+    "bar";
+    "vec";
+    "dot";
+    "ddot";
+    "overbrace";
+    "underbrace";
+    "overset";
+    "underset";
+    "stackrel";
+    "substack";
+    "left";
+    "right";
+    "big";
+    "Big";
+    "bigg";
+    "Bigg";
+  ]
+
+(** [in_math_mode_here s off] — DEFAULT-DENY mode test for an offset already
+    known to lie in a math RANGE.
+
+    ⚠ A MATH RANGE IS NOT MATH MODE, and conflating the two corrupted five real
+    papers in one 40-paper differential (OPEN-072). [`\text{...}`] opens a
+    TEXT-mode island nested inside [$...$]: amsmath typesets its argument in
+    restricted horizontal mode. Inserting a math-only token there — [\arg],
+    [\dim], [\max] are all [\mathop] — makes TeX insert a [$] and die
+    [! Missing $ inserted.], fatal under -halt-on-error.
+
+    POLARITY IS THE WHOLE DESIGN. The obvious guard is a DENYLIST of text macros
+    ([\text], [\mbox], ...). That FAILS OPEN and was refuted by measurement:
+    [\emph{\deg}] still breaks 2507.04488v1, [\fbox]/[\tag] are absent from any
+    natural list, and a user macro [\newcommand{\note}[1]{\text{#1}}] is
+    unreachable by ANY name list. Worse, a denylist keyed on "the control word
+    before the innermost brace" fails open on [$\text{{dim}}$], where the
+    innermost brace is a bare one.
+
+    So this is an ALLOWLIST and it denies by default: walk out to the innermost
+    UNCLOSED brace; if there is none we are directly in the math list and the
+    answer is yes; if there is one, the answer is yes only when the control word
+    immediately before it is math-transparent. A bare [{] denies, an unknown
+    macro denies, a user macro denies.
+
+    FAILURE DIRECTION, which every guard in this codebase must state: denying
+    wrongly loses a COSMETIC fix (the operator stays upright-but-unspaced);
+    allowing wrongly produces a document pdflatex REFUSES TO BUILD. The
+    asymmetry is total, so the tie goes to denying. *)
+let in_math_mode_here (s : string) (off : int) : bool =
+  (* TeX control-word letters: catcode 11, i.e. ASCII letters only. *)
+  let is_cw_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let n = String.length s in
+  let off = if off > n then n else off in
+  (* Walk backwards tracking brace depth; find the innermost unclosed '{'. *)
+  let rec find_open i depth =
+    if i < 0 then None
+    else
+      let esc = i > 0 && s.[i - 1] = '\\' in
+      match s.[i] with
+      | '}' when not esc -> find_open (i - 1) (depth + 1)
+      | '{' when not esc ->
+          if depth = 0 then Some i else find_open (i - 1) (depth - 1)
+      | _ -> find_open (i - 1) depth
+  in
+  match find_open (off - 1) 0 with
+  | None -> true (* directly in the math list *)
+  | Some b ->
+      (* Read the control word ending immediately before the brace, allowing the
+         space TeX absorbs after a control word. *)
+      let j = ref (b - 1) in
+      while !j >= 0 && (s.[!j] = ' ' || s.[!j] = '\t') do
+        decr j
+      done;
+      let e = !j in
+      while !j >= 0 && is_cw_letter s.[!j] do
+        decr j
+      done;
+      let star = e >= 0 && s.[e] = '*' in
+      let e = if star then e - 1 else e in
+      let j2 = ref e in
+      while !j2 >= 0 && is_cw_letter s.[!j2] do
+        decr j2
+      done;
+      if !j2 < 0 || s.[!j2] <> '\\' || e <= !j2 then false
+      else
+        let name = String.sub s (!j2 + 1) (e - !j2) in
+        let name = if star then name ^ "*" else name in
+        List.mem name math_transparent_wrappers
+
 (** [range_is_inline_math s (a, _b)] — true iff the math range starting at byte
     [a] in [s] is an inline math segment (`$..$` with single dollars, or
     `\(..\)`).  Returns [false] for display-math ranges (`$$..$$`, `\[..\]`,
@@ -2484,13 +2609,51 @@ let has_package (s : string) (pkg : string) : bool =
     hyperref-when-nothing-else-provides-it) are load-order-insensitive at this
     position, so inserting right after \documentclass is safe. *)
 let mk_usepackage_insert (s : string) (pkg : string) : Cst_edit.t list =
-  let re = Re_compat.regexp_string "\\documentclass" in
-  match
-    try
-      let mr, _ = Re_compat.search_forward re s 0 in
-      Some (Re_compat.match_beginning mr)
-    with Not_found -> None
-  with
+  (* OPEN-090. The anchor USED TO BE SEARCHED IN THE RAW BYTES, so a
+     COMMENTED-OUT `%\documentclass` matched and the package was inserted before
+     the live one. Measured on 2506.14914v1, an Elsevier `elsarticle` template
+     whose lines 20-33 are a block of commented alternative class lines with the
+     live `\documentclass` at line 36: PKG-011 inserted `\usepackage{booktabs}`
+     at line 26 and pdflatex died `! LaTeX Error: \usepackage before
+     \documentclass.`
+
+     This is the OPEN-066 class arriving from the other side. OPEN-066 fixed
+     reading a TRIGGER out of dead bytes; this is choosing a WRITE POSITION from
+     dead bytes, and the existing guard could not see it because the edit lands
+     in the preamble, not in the protected range.
+
+     [blank_nonlive] is length- and newline-preserving (it writes spaces in
+     place and skips '\n'), so an offset found in the blanked view indexes the
+     same byte in [s]. A control-word boundary is required as well, so
+     `\documentclassx` cannot anchor the insertion.
+
+     FAILURE DIRECTION: if no LIVE `\documentclass` is found we return [], i.e.
+     the diagnostic still fires and no package is inserted. Withholding an
+     insertion is the state that shipped for years; inserting into a file with
+     no live class is a document pdflatex refuses to build. *)
+  let view = blank_nonlive s in
+  let vlen = String.length view in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let needle = "\\documentclass" in
+  let nlen = String.length needle in
+  let rec scan from =
+    if from > vlen - nlen then None
+    else
+      match
+        try
+          let mr, _ =
+            Re_compat.search_forward (Re_compat.regexp_string needle) view from
+          in
+          Some (Re_compat.match_beginning mr)
+        with Not_found -> None
+      with
+      | None -> None
+      | Some i ->
+          let after = i + nlen in
+          if after < vlen && is_letter view.[after] then scan (i + 1)
+          else Some i
+  in
+  match scan 0 with
   | None -> []
   | Some dc ->
       let n = String.length s in

@@ -31,13 +31,38 @@ let r_typo_001 : rule =
      tallying every straight quote outside the protected region (escaped umlaut
      quotes included); those escapes are excluded from the fix only, and the
      open/close alternation index runs over the fix offsets. *)
+  (* ── OPEN-094 guard A: the PREAMBLE is code, not prose ────────────── In
+     `\DeclareMathSymbol{\Sha}{\mathalpha}{cyrletters}{X58}` where X is an ASCII
+     double-quote, that character is TeX's HEXADECIMAL PREFIX and X58 is the
+     number 0x58. Curling it destroys the numeric argument and pdflatex dies `!
+     LaTeX Error: Missing \begin{document}.` (measured on 2507.00448v1 and
+     2507.06873v1, both rc 0 -> 1, TYPO-001 isolated as necessary AND
+     sufficient).
+
+     A typographic rule about PROSE has no business rewriting bytes before
+     `\begin{document}`: that region is macro definitions, package options and
+     numeric literals. FAILURE DIRECTION: skipping loses a cosmetic fix in
+     `\title{"..."}`; not skipping produces a document pdflatex refuses to
+     build. *)
+  let body_start s =
+    let needle = "\\begin{document}" in
+    let m = String.length needle and n = String.length s in
+    let rec go i =
+      if i + m > n then 0 (* no preamble found: treat the whole file as body *)
+      else if String.sub s i m = needle then i
+      else go (i + 1)
+    in
+    go 0
+  in
   let mk_fix_edits exempt s =
     let outside off = not (is_in_exempt_range exempt off) in
     let n = String.length s in
+    let body = body_start s in
     let rec collect i acc =
       if i >= n then List.rev acc
-      else if s.[i] = '"' && outside i && not (is_escaped_quote s i) then
-        collect (i + 1) (i :: acc)
+      else if
+        s.[i] = '"' && outside i && (not (is_escaped_quote s i)) && i >= body
+      then collect (i + 1) (i :: acc)
       else collect (i + 1) acc
     in
     let offsets = collect 0 [] in

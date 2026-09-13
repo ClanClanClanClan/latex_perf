@@ -1,8 +1,8 @@
 {
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "c54f26bf9f7d58eaacec63788a1e9533cadc9e9c",
-    "cli_sha256": "46b7745f236ffbc1f0b88a123bbc2d0ae3baf35ae0433e09bc8454ace0cdf8f5",
+    "measured_at_sha": "52d850effda787315a81f604263657e1e9a8f440",
+    "cli_sha256": "ecf8ef8e8d299005461bd4d10adff4836d64555da7c2652529e467f27e98c58e",
     "frame": {
       "corpus": "papers",
       "frame_size": 2719,
@@ -22,8 +22,8 @@
     "sampled": 40,
     "compiled_before": 39,
     "excluded_did_not_compile": 1,
-    "preserved": 33,
-    "broken": 6
+    "preserved": 36,
+    "broken": 3
   },
   "rows": [
     {
@@ -237,9 +237,9 @@
       "changed_files": [
         "main.tex"
       ],
-      "rc_after": 1,
-      "first_error_after": "! LaTeX Error: Missing \\begin{document}.",
-      "cell": "broken"
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
     },
     {
       "arxiv_id": "2507.10688v1",
@@ -357,9 +357,9 @@
       "changed_files": [
         "main.tex"
       ],
-      "rc_after": 1,
-      "first_error_after": "! Package inputenc Error: Keyboard character used is undefined",
-      "cell": "broken"
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
     },
     {
       "arxiv_id": "2507.10615v1",
@@ -505,9 +505,9 @@
       "changed_files": [
         "arxiv_version.tex"
       ],
-      "rc_after": 1,
-      "first_error_after": "! LaTeX Error: Missing \\begin{document}.",
-      "cell": "broken"
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
     },
     {
       "arxiv_id": "2507.11352v1",

@@ -3444,6 +3444,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "c54f26bf9f7d58eaacec63788a1e9533cadc9e9c",
+ "measured_at_sha": "52d850effda787315a81f604263657e1e9a8f440",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

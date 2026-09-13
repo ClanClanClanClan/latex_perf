@@ -2,7 +2,9 @@ name: Setup OCaml + Install Dependencies
 description: >-
   Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v2),
   installs system packages, filters darcs from apt, configures opam repos,
-  and performs a retry-loop dependency install.  Replaces the 15-line
+  and performs a retry-loop dependency install.  BOTH the switch setup and
+  the dependency install retry; both fail the job when their retries are
+  exhausted.  Replaces the 15-line
   boilerplate block that was duplicated across 25+ CI workflows.
 
   NOTE: This action calls ocaml/setup-ocaml@v2 DIRECTLY (not through an
@@ -86,7 +88,51 @@ runs:
         echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
 
     # ── OCaml toolchain (direct call, no intermediate composite) ───────
-    - name: Set up OCaml and opam
+    #
+    # ⚠ RUN TWICE ON PURPOSE.  setup-ocaml initialises the switch by fetching
+    # the opam repository, so a transient network fault surfaces as
+    #   "Switch initialisation failed" / "... failed with exit code 40"
+    # (opam exit 40 = Sync_error, i.e. repositories could not be synchronised).
+    # That is not a code failure and no amount of re-reading the diff finds it:
+    # on PR #601 (run 34732743239, attempt 1) tex-oracle died here while build,
+    # proof-ci, perf-ci, format, smoke and compliance all set the toolchain up
+    # successfully ON THE SAME COMMIT.  The same class cancelled unit-tests on
+    # PR #531 (a 25-minute network timeout in this action) -- see failure mode 1
+    # in scripts/tools/check_workflow_triggers.py.
+    #
+    # A `uses:` step cannot be wrapped in a shell retry loop, so the retry is
+    # spelled out: attempt 1 is allowed to fail, any half-built switch is
+    # discarded, attempt 2 runs unguarded and its failure fails the job.
+    # The two `with:` blocks MUST stay byte-identical -- enforced by failure
+    # mode 4 of check_workflow_triggers.py, which runs in required spec-drift.
+    - name: Set up OCaml and opam (attempt 1)
+      id: setup_ocaml_attempt_1
+      continue-on-error: true
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: 5.1.1
+        allow-prerelease-opam: false
+        opam-pin: true
+        opam-depext: false
+        opam-local-packages: "*.opam"
+        opam-disable-sandboxing: false
+        dune-cache: ${{ inputs.dune-cache }}
+        cache-prefix: v1
+
+    - name: Discard a partially-initialised switch
+      if: steps.setup_ocaml_attempt_1.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "::warning::[setup-ocaml-env] switch setup failed on attempt 1;" \
+             "discarding any partial switch and retrying once."
+        # The switch is repo-local (_opam/), so removing the directory is
+        # enough; the `opam switch remove` is belt-and-braces for the case
+        # where opam recorded the switch before the download failed.
+        opam switch remove . -y 2>/dev/null || true
+        rm -rf _opam
+
+    - name: Set up OCaml and opam (attempt 2)
+      if: steps.setup_ocaml_attempt_1.outcome == 'failure'
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 5.1.1
@@ -121,8 +167,22 @@ runs:
           url="${pair#*=}"
           opam repo add "$name" "$url" || true
         done
+        # ⚠ The loop's last command used to be `sleep 15`, so THREE failed
+        # installs exited 0 and this step reported success with the
+        # dependencies missing.  Under `bash -eo pipefail` a failing command
+        # inside an `&&` list does not trip -e, so nothing caught it.  Track
+        # success explicitly and fail loudly when the attempts are exhausted.
+        installed=0
         for attempt in 1 2 3; do
-          opam update -y && opam install -y ${{ inputs.opam-packages }} && break
+          if opam update -y && opam install -y ${{ inputs.opam-packages }}; then
+            installed=1
+            break
+          fi
           echo "[setup-ocaml-env] opam install failed (attempt $attempt/3), retrying in 15s..."
           sleep 15
         done
+        if [ "$installed" -ne 1 ]; then
+          echo "::error::[setup-ocaml-env] opam install failed 3/3 for:" \
+               "${{ inputs.opam-packages }}"
+          exit 1
+        fi

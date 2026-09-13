@@ -52,6 +52,8 @@ jobs:
             exit 1
           fi
           echo "Sending warmup request..."
+          # See rust-proxy-smoke.yml: without `warm` the loop cannot fail.
+          warm=0
           for attempt in $(seq 1 30); do
             if python3 -c "
           import socket, struct, sys
@@ -75,10 +77,16 @@ jobs:
             sys.exit(1)
           "; then
                 echo "Workers ready on attempt ${attempt}"
+                warm=1
                 break
               fi
             sleep 2
           done
+          if [ "$warm" -ne 1 ]; then
+            echo "::error::workers never answered a warmup request after 30 attempts" >&2
+            cat service.stderr 2>/dev/null || true
+            exit 1
+          fi
           # Allow worker rotation to complete
           sleep 3
 

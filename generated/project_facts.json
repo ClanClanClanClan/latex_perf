@@ -1,6 +1,6 @@
 {
   "version": "v27.1.63",
-  "release_state": "GA",
+  "release_state": "rc",
   "release_date": "2026-09-12",
   "generated_by": "scripts/tools/generate_project_facts.py",
   "honesty_annotation": {
@@ -91,8 +91,8 @@
     }
   },
   "proofs": {
-    "proof_files_total": 179,
-    "proof_files_core": 64,
+    "proof_files_total": 180,
+    "proof_files_core": 65,
     "proof_files_generated": 114,
     "proof_files_ml": 1,
     "proof_files_archive": 7,
@@ -100,7 +100,7 @@
     "formal_faithful_count": 637,
     "formal_conservative_count": 20,
     "formal_conditional_count": 3,
-    "theorem_count_reported": 1592,
+    "theorem_count_reported": 1599,
     "admits": 0,
     "axioms": 0
   },

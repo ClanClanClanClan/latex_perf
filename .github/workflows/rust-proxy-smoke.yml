@@ -66,6 +66,11 @@ jobs:
             exit 1
           fi
           echo "Sending warmup request..."
+          # `warm` is what makes exhaustion FAIL.  Without it the loop's last
+          # command is `sleep 2`, so 45 dead attempts exited 0 and the smoke
+          # ran against workers that never became ready -- the readiness
+          # PRECONDITION of OPEN-056 was never actually enforced.
+          warm=0
           for attempt in $(seq 1 45); do
             if python3 -c "
           import socket, struct, sys
@@ -89,6 +94,7 @@ jobs:
             sys.exit(1)
           "; then
               echo "Workers ready on attempt ${attempt}"
+              warm=1
               break
             fi
             if [ "$attempt" -le 5 ] || [ $(($attempt % 10)) -eq 0 ]; then
@@ -99,6 +105,11 @@ jobs:
             fi
             sleep 2
           done
+          if [ "$warm" -ne 1 ]; then
+            echo "::error::workers never answered a warmup request after 45 attempts" >&2
+            cat service.stderr 2>/dev/null || true
+            exit 1
+          fi
           # Allow worker rotation (triggered by warmup) to complete
           sleep 5
           echo "Sending stabilization request..."

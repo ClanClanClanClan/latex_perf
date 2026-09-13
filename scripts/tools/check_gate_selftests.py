@@ -330,6 +330,50 @@ def drift_baseline_split(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+# ── Anchors for the check_workflow_triggers mode-4/5 kill-tests ───────
+#
+# These pin the EXACT text of the exhaustion guards added on 2026-09-13.
+# Written out rather than regex-matched so that if the guard is reworded the
+# harness aborts with REGISTRY ROT instead of silently testing nothing --
+# a mutation whose `old` is absent is the classic vacuous kill-test.
+
+GUARD_45 = (
+    '          if [ "$warm" -ne 1 ]; then\n'
+    '            echo "::error::workers never answered a warmup request'
+    ' after 45 attempts" >&2\n'
+    "            cat service.stderr 2>/dev/null || true\n"
+    "            exit 1\n"
+    "          fi\n"
+)
+
+OPAM_GUARDED_HEAD = (
+    "        installed=0\n"
+    "        for attempt in 1 2 3; do\n"
+    "          if opam update -y && opam install -y"
+    " ${{ inputs.opam-packages }}; then\n"
+    "            installed=1\n"
+    "            break\n"
+    "          fi"
+)
+
+OPAM_SILENT_HEAD = (
+    "        for attempt in 1 2 3; do\n"
+    "          opam update -y && opam install -y"
+    " ${{ inputs.opam-packages }} && break"
+)
+
+
+def drift_second_setup_ocaml(text: str) -> str:
+    """Give the RETRY attempt a different compiler than attempt 1.
+
+    Mutates the LAST occurrence so attempt 1 keeps the pinned version and the
+    pair is genuinely inconsistent -- which is the defect, not merely an edit.
+    """
+    needle = "ocaml-compiler: 5.1.1"
+    i = text.rindex(needle)
+    return text[:i] + "ocaml-compiler: 5.2.0" + text[i + len(needle):]
+
+
 def flip_polyglossia(text: str) -> str:
     d = json.loads(text)
     fx = next(f for f in d["fixtures"] if f["id"] == "fr_polyglossia")
@@ -733,6 +777,32 @@ REGISTRY = [
                              r"unfiltered `push:`",
                              old="  push:\n    branches: [main]\n",
                              new="  push:\n"),
+            # Failure mode 4. Removing the exhaustion guard puts the loop back
+            # in the shape that reported READY while nothing was: measured
+            # 2026-09-13, all four live instances exited 0 with every probe
+            # failing. The `warm` flag is what makes exhaustion observable, so
+            # deleting the guard alone is the minimal, honest mutation.
+            Mutation("rust-proxy warmup loop loses its exhaustion guard",
+                     ".github/workflows/rust-proxy-smoke.yml",
+                     r"SILENT-RETRY: .*rust-proxy-smoke.*Wait for service readiness",
+                     old=GUARD_45,
+                     new=""),
+            # The `&& break` form is the one the FIRST draft of the detector
+            # missed, on the very loop that prompted it. Pin it separately from
+            # the bare-`break` form above so a regression to that draft is a
+            # kill, not a silent narrowing.
+            Mutation("setup-ocaml dep install reverts to the `&& break` "
+                     "no-guard form",
+                     ".github/actions/setup-ocaml-env/action.yml",
+                     r"SILENT-RETRY: .*setup-ocaml-env.*Install opam dependencies",
+                     old=OPAM_GUARDED_HEAD,
+                     new=OPAM_SILENT_HEAD),
+            # Failure mode 5. A retry that installs a different toolchain than
+            # the attempt it replaces is worse than no retry.
+            Mutation("the two setup-ocaml attempts drift apart",
+                     ".github/actions/setup-ocaml-env/action.yml",
+                     r"attempts have DRIFTED",
+                     transform=drift_second_setup_ocaml),
         ]),
     GateTest(
         "check_known_false_ready", [PY, f"{TOOLS}/check_known_false_ready.py"],

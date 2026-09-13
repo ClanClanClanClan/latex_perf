@@ -504,29 +504,11 @@ let compute_math_ranges (s : string) : (int * int) list =
   | None -> ());
   List.rev !ranges
 
-(* R-SHARED: memoise the math scan, exactly as the vcu/exempt scanners below are
-   memoised (see the cache note above [find_verbatim_comment_url_ranges] for the
-   full correctness argument). This one is the heaviest of the three by call
-   volume: 91 rule call sites across L0/L1/L4 each handed the SAME source-string
-   object, so before this every one of them re-ran an O(n) scan of the whole
-   document — on EVERY pass of the apply-fixes converge loop.
-
-   ⚠ Deliberately NOT used by [compute_exempt_ranges], which scans a BLANKED
-   copy obtained via [Bytes.unsafe_to_string]. Caching a string that shares its
-   bytes with a live [Bytes] would key the cache on something whose contents
-   could still change; routing that caller to [compute_math_ranges] keeps the
-   hazard out of the cache entirely, and as a bonus stops the blanked copy
-   evicting the raw source between rules. *)
-let _math_cache : (string * (int * int) list) option ref = ref None
-
-(** Memoised [compute_math_ranges] — see the cache note above. *)
-let find_math_ranges (s : string) : (int * int) list =
-  match !_math_cache with
-  | Some (s', r) when s' == s -> r
-  | _ ->
-      let r = compute_math_ranges s in
-      _math_cache := Some (s, r);
-      r
+(* R-SHARED: the memoised math entry point [find_math_ranges] used to live here,
+   beside its computation. It now lives just after
+   [find_verbatim_comment_url_ranges] (~660 lines below), because as of OPEN-097
+   it must blank comments/verbatim/urls before pairing `$`. See the note
+   there. *)
 
 (** [is_in_math_range ranges off] — true iff [off] falls inside any range in
     [ranges]. Linear in the number of ranges (typically small). Use with
@@ -989,6 +971,54 @@ let find_verbatim_comment_url_ranges (s : string) : (int * int) list =
   | _ ->
       let r = compute_verbatim_comment_url_ranges s in
       _vcu_cache := Some (s, r);
+      r
+
+(* ── OPEN-097: math ranges are computed on the COMMENT-BLANKED view ───────
+   [compute_math_ranges] is a raw `$`-pairing scan, so a `$` inside a `%` line
+   comment was counted as an opener and paired with the next REAL `$`. That
+   produced spurious ranges that swallowed prose: `2507.05786v1` got a
+   **8,134-byte** range opened by the literal comment `%%% $ pdfinfo
+   template.pdf` and closed by the first genuine `$`, while every other range in
+   that file was 4-43 bytes; `2507.04362v1` got **47,607 bytes** running
+   unclosed to EOF. Every producer gated on [is_in_math_range] then fired inside
+   the prose, and that was the single upstream cause of BOTH remaining OPEN-094
+   real-paper breaks, via two different producers.
+
+   ⚠ The asymmetry that hid it for so long: [compute_exempt_ranges] ALREADY
+   blanked before computing math, so every rule going through
+   [find_exempt_ranges] was comment-safe. Rules calling [find_math_ranges]
+   DIRECTLY were not. This is C-27 trap #1 (a regex over raw source counts
+   commented-out code) in the most-used helper in the fixer.
+
+   [compute_verbatim_comment_url_ranges] has zero references to math, so there
+   is no circularity — but it is defined ~660 lines after [compute_math_ranges],
+   which is why this entry point lives HERE rather than beside its computation.
+
+   Cache note: the key is [s], the caller's raw immutable source, NOT the
+   blanked copy. The hazard the old note warned about — keying on a string that
+   shares bytes with a live [Bytes] — is avoided because the [Bytes] never
+   escapes this function. *)
+let _math_cache : (string * (int * int) list) option ref = ref None
+
+(** Memoised comment/verbatim/url-aware math ranges — see the note above. *)
+let find_math_ranges (s : string) : (int * int) list =
+  match !_math_cache with
+  | Some (s', r) when s' == s -> r
+  | _ ->
+      let vcu = find_verbatim_comment_url_ranges s in
+      let r =
+        if vcu = [] then compute_math_ranges s
+        else
+          let blanked = Bytes.of_string s in
+          List.iter
+            (fun (a, b) ->
+              for k = a to b - 1 do
+                Bytes.set blanked k ' '
+              done)
+            vcu;
+          compute_math_ranges (Bytes.unsafe_to_string blanked)
+      in
+      _math_cache := Some (s, r);
       r
 
 (** [find_comment_ranges s] — ONLY the line-comment ranges (`%`..EOL) of the vcu
@@ -1625,17 +1655,11 @@ let benign_surplus_open_braces (s0 : string) : bool =
     [find_verbatim_comment_url_ranges], so that scan is shared too. *)
 let compute_exempt_ranges (s : string) : (int * int) list =
   let vcu = find_verbatim_comment_url_ranges s in
-  let blanked = Bytes.of_string s in
-  List.iter
-    (fun (a, b) ->
-      for k = a to b - 1 do
-        Bytes.set blanked k ' '
-      done)
-    vcu;
-  (* [compute_math_ranges], NOT the memoised wrapper: see the warning on
-     [_math_cache]. The blanked copy shares its bytes with a live [Bytes], and
-     it would also evict the raw source that the 91 rule call sites want. *)
-  let math = compute_math_ranges (Bytes.unsafe_to_string blanked) in
+  (* Since OPEN-097 [find_math_ranges] does this blanking itself, so the two
+     paths can no longer disagree about what counts as math — which is exactly
+     the asymmetry that hid the comment-blindness. It also shares the memo
+     instead of re-scanning. *)
+  let math = find_math_ranges s in
   List.sort (fun (a, _) (c, _) -> compare a c) (List.rev_append vcu math)
 
 let _exempt_cache : (string * (int * int) list) option ref = ref None

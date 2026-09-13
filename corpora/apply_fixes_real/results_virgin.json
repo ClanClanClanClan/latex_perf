@@ -1,8 +1,8 @@
 {
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "f4aa2cacc5c5171cdce3a8da15174a54f89aba7d",
-    "cli_sha256": "ed85f317db829cfa6d76065b3f4e1a6cc179533968771ca71cb094321ee9c5e2",
+    "measured_at_sha": "52d850effda787315a81f604263657e1e9a8f440",
+    "cli_sha256": "d2780297f8d35d63ccfe20b1947372cab3efea1ff495d210ecb6e98416bc3ceb",
     "frame": {
       "corpus": "papers",
       "frame_size": 2719,
@@ -22,8 +22,8 @@
     "sampled": 40,
     "compiled_before": 39,
     "excluded_did_not_compile": 1,
-    "preserved": 36,
-    "broken": 3
+    "preserved": 38,
+    "broken": 1
   },
   "rows": [
     {
@@ -93,9 +93,9 @@
       "changed_files": [
         "main.tex"
       ],
-      "rc_after": 1,
-      "first_error_after": "! Missing $ inserted.",
-      "cell": "broken"
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
     },
     {
       "arxiv_id": "2507.09487v1",
@@ -273,9 +273,9 @@
       "changed_files": [
         "main_arXiv.tex"
       ],
-      "rc_after": 1,
-      "first_error_after": "! Missing $ inserted.",
-      "cell": "broken"
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
     },
     {
       "arxiv_id": "2507.00325v1",

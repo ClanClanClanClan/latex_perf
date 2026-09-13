@@ -7,7 +7,7 @@
       "corpus": "papers",
       "frame_size": 2719,
       "selection": "sha256(arxiv_id) ascending",
-      "offset": 2000,
+      "offset": 2300,
       "n": 40
     },
     "oracle": {
@@ -22,158 +22,92 @@
     "sampled": 40,
     "compiled_before": 38,
     "excluded_did_not_compile": 2,
-    "preserved": 38,
-    "broken": 0
+    "preserved": 31,
+    "broken": 7
   },
   "rows": [
     {
-      "arxiv_id": "2507.02366v1",
-      "toplevel": "Manuscript.tex",
+      "arxiv_id": "2506.22264v1",
+      "toplevel": "Final_Version.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "Manuscript.tex"
+        "Final_Version.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.04187v1",
-      "toplevel": "tmlr_accept.tex",
+      "arxiv_id": "2507.10166v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "math_commands.tex",
-        "tmlr_accept.tex"
+        "main.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.00167v1",
-      "toplevel": "rank-2-integral-points.tex",
+      "arxiv_id": "2507.10835v1",
+      "toplevel": "ex_article.tex",
       "rc_before": 1,
-      "first_error_before": "! LaTeX Error: Command \\c@theorem already defined.",
+      "first_error_before": "! Use of \\cref@override@label@type doesn't match its definition.",
       "cell": "excluded-did-not-compile"
     },
     {
-      "arxiv_id": "2507.11285v1",
-      "toplevel": "ekr_t_int_assoc_scheme.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "ekr_t_int_assoc_scheme.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10072v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10356v1",
-      "toplevel": "manuscript.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "manuscript.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09421v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08367v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "discussion.tex",
-        "introduction.tex",
-        "main.tex",
-        "method.tex",
-        "related-works.tex",
-        "results.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.14318v1",
+      "arxiv_id": "2507.11488v1",
       "toplevel": "template.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
         "template.tex"
       ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
+      "rc_after": 1,
+      "first_error_after": "! Missing $ inserted.",
+      "cell": "broken"
     },
     {
-      "arxiv_id": "2507.00573v1",
-      "toplevel": "paper.tex",
+      "arxiv_id": "2506.16293v1",
+      "toplevel": "BHHMS5-ArXiV.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "paper.tex"
+        "BHHMS5-ArXiV.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Double superscript.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.08285v1",
+      "toplevel": "example_paper_camera_ready.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "example_paper_camera_ready.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.17968v1",
-      "toplevel": "bare_jrnl_compsoc.tex",
+      "arxiv_id": "2507.10536v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "appendix.tex",
-        "bare_jrnl_compsoc.tex"
+        "main.tex",
+        "math_commands.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.07609v1",
-      "toplevel": "orbSaito_ADE_running.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "orbSaito_ADE_running.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.11367v1",
+      "arxiv_id": "2507.05430v1",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
@@ -185,157 +119,238 @@
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.03418v1",
-      "toplevel": "Realization_D21alpha.tex",
+      "arxiv_id": "2507.10532v1",
+      "toplevel": "iclr2025_conference.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "Realization_D21alpha.tex"
+        "algorithm/alg_construction_of_random_calculation.tex",
+        "figure/figure_example_qwen2.5_aime2024.tex",
+        "figure/figure_example_qwen2.5_amc.tex",
+        "figure/figure_example_qwen2.5_math_7b_aime2024.tex",
+        "figure/figure_example_qwen2.5_math_7b_amc.tex",
+        "figure/figure_example_qwen2.5_math_7b_math_500.tex",
+        "figure/figure_example_rlvr_qwen_5_step_correct.tex",
+        "figure/figure_five_step_calculation_example.tex",
+        "figure/figure_math500_qwen_and_llama_output_comparison.tex",
+        "iclr2025_conference.tex",
+        "math_commands.tex",
+        "table/answer_memorization_capability_greedy_only.tex",
+        "table/answer_memorization_capability_template_greedy.tex",
+        "table/answer_memorization_capability_template_sampling.tex",
+        "table/generation_configuration.tex",
+        "table/math_500_comparison.tex",
+        "table/problem_memorization_capability.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.21507v1",
+      "arxiv_id": "2507.09697v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! LaTeX Error: Unicode character μ (U+03BC)",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.04882v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "10_euler_maruyama_interpolation.tex",
+        "1_intro.tex",
+        "2_bsde_error_setting.tex",
+        "3_error_bounds_application_main_results.tex",
+        "4_adapted_gronwall_proof.tex",
+        "5_existence__scheme.tex",
+        "6_majorant_scheme.tex",
+        "7_adapted_interpolation.tex",
+        "8_exp_moments_for_assumption_R.tex",
+        "9_application_Markovian_FBSDE.tex",
+        "A_Hoelder_composite_corollary.tex",
+        "B_strong_euler_bounds.tex",
+        "C_supplements.tex",
+        "main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.20025v1",
+      "toplevel": "neurips.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "neurips.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.20475v1",
+      "toplevel": "sn-article.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "sn-article.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.08746v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "1-Introduction.tex",
+        "3-TheoreticalBackground.tex",
+        "4-methodology.tex",
+        "5-ExperimentsSetup.tex",
+        "6-Results.tex",
+        "main.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Missing \\endcsname inserted.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.10387v1",
+      "toplevel": "Equidistribution_1.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "Equidistribution_1.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.11128v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "background_condensed.tex",
+        "introduction.tex",
+        "main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2506.22386v1",
       "toplevel": "main.tex",
       "rc_before": 1,
-      "first_error_before": "! LaTeX Error: Command \\c@theorem already defined.",
+      "first_error_before": "! LaTeX Error: Command \\c@corollary already defined.",
       "cell": "excluded-did-not-compile"
     },
     {
-      "arxiv_id": "2506.19051v1",
-      "toplevel": "main.tex",
+      "arxiv_id": "2507.08337v1",
+      "toplevel": "final.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "main.tex"
+        "final.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.10519v1",
-      "toplevel": "GS_orbits_asympt_characters.tex",
+      "arxiv_id": "2506.22825v1",
+      "toplevel": "0628.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "GS_orbits_asympt_characters.tex"
+        "0628.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.09928v1",
-      "toplevel": "main-neuirps25.tex",
+      "arxiv_id": "2507.00831v1",
+      "toplevel": "ArXiv.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "main-neuirps25.tex",
-        "paper/algorithm.tex",
-        "paper/appendix-proofs.tex",
-        "paper/formulation.tex",
-        "paper/introduction.tex",
-        "paper/numerical-experiments.tex",
-        "shared/packages.tex"
+        "ArXiv.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.16766v1",
-      "toplevel": "Palojarvi_Trudgian_12thPowerMoment_Submitted.tex",
+      "arxiv_id": "2507.11304v1",
+      "toplevel": "TschDecomp25.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "Palojarvi_Trudgian_12thPowerMoment_Submitted.tex"
+        "TschDecomp25.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.08525v1",
-      "toplevel": "augmip.tex",
+      "arxiv_id": "2507.10205v1",
+      "toplevel": "improved-2d-traffic-model-arxiv.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "augmip.tex"
+        "improved-2d-traffic-model-arxiv.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.10053v1",
-      "toplevel": "main.tex",
+      "arxiv_id": "2507.01150v1",
+      "toplevel": "p2_draft.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "main.tex"
+        "p2_draft.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.07998v2",
+      "arxiv_id": "2507.01885v1",
       "toplevel": "arxiv.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "arxiv.tex",
-        "figures/teaser.tex",
-        "preamble.tex",
-        "sections/1_introduction.tex",
-        "sections/1_introduction_new.tex",
-        "sections/2_related_work.tex",
-        "sections/3_method.tex",
-        "sections/4_experiment.tex",
-        "sections/5_analysis.tex",
-        "sections/X_suppl.tex",
-        "sections/suppl/cot_prompt.tex",
-        "sections/suppl/system_prompt.tex",
-        "tables/cot_prompt.tex",
-        "tables/system_prompt.tex"
+        "arxiv.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.08590v1",
-      "toplevel": "Paper__3259_Visual_Semantic_Description_Generation_with_MLLMs_for_Image-Text_Matching.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Paper__3259_Visual_Semantic_Description_Generation_with_MLLMs_for_Image-Text_Matching.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.23526v1",
-      "toplevel": "D-module-cohomology.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "D-module-cohomology.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.14432v1",
+      "arxiv_id": "2507.07789v2",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
+        "S1_Introduction.tex",
+        "S3_Methods.tex",
+        "S4_Results.tex",
+        "S5_Discussion.tex",
         "main.tex"
       ],
       "rc_after": 0,
@@ -343,110 +358,34 @@
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.08726v1",
-      "toplevel": "root.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "root.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08536v1",
-      "toplevel": "paper.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "paper.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.14914v1",
-      "toplevel": "medima-template.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "medima-template.tex",
-        "pre.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08444v1",
-      "toplevel": "decastro_gribonval_jouvin.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "decastro_gribonval_jouvin.tex",
-        "notations_and_macros_s2mix.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.07811v1",
-      "toplevel": "template.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "template.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.19791v1",
-      "toplevel": "VoronoiSphericalCDF_paper.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "VoronoiSphericalCDF_paper.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09958v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08137v1",
+      "arxiv_id": "2507.10115v1",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
         "main.tex",
-        "sec/0_abstract.tex",
-        "sec/3_method.tex",
-        "sec/4_experiment.tex",
-        "sec/5_discussion_limitation.tex",
-        "sec/x_suppl.tex"
+        "sec/1_intro.tex",
+        "sec/2_related_works.tex",
+        "sec/3_approach.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.10784v1",
+      "arxiv_id": "2507.09640v1",
+      "toplevel": "samplepaper.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "samplepaper.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.09500v1",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
@@ -458,31 +397,55 @@
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.03824v1",
-      "toplevel": "FM-antiquantum-063025-submitted.tex",
+      "arxiv_id": "2506.08696v1",
+      "toplevel": "isoc.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "FM-antiquantum-063025-submitted.tex"
+        "isoc.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! LaTeX Error: Missing \\begin{document}.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.05690v1",
+      "toplevel": "conn.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "conn.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.06730v1",
-      "toplevel": "SierpinskiProductsPackingColoring.tex",
+      "arxiv_id": "2506.15182v1",
+      "toplevel": "JBHI_MRI_classification_arxiv.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "SierpinskiProductsPackingColoring.tex"
+        "JBHI_MRI_classification_arxiv.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.07717v1",
+      "arxiv_id": "2506.17754v3",
+      "toplevel": "main_en3.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main_en3.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.04505v1",
       "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
@@ -494,36 +457,87 @@
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.23298v2",
-      "toplevel": "Paper.tex",
+      "arxiv_id": "2507.03638v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "Paper.tex"
+        "main.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2507.04394v1",
-      "toplevel": "Witnessing_and_guiding_sets_-_arXive.tex",
+      "arxiv_id": "2507.05719v1",
+      "toplevel": "boltzmann-coefficients.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "Witnessing_and_guiding_sets_-_arXive.tex"
+        "boltzmann-coefficients.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Improper alphabetic constant.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.08735v1",
+      "toplevel": "arxiv.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "arxiv.tex"
+      ],
+      "rc_after": 1,
+      "first_error_after": "! Missing \\endcsname inserted.",
+      "cell": "broken"
+    },
+    {
+      "arxiv_id": "2507.10780v1",
+      "toplevel": "f-i_7-14.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "f-i_7-14.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",
       "cell": "preserved"
     },
     {
-      "arxiv_id": "2506.18389v1",
-      "toplevel": "paper.tex",
+      "arxiv_id": "2507.09940v1",
+      "toplevel": "main.tex",
       "rc_before": 0,
       "first_error_before": "",
       "changed_files": [
-        "paper.tex"
+        "main.tex",
+        "sec/1_intro.tex",
+        "sec/3_Method.tex",
+        "sec/4_Experiment.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.08353v1",
+      "toplevel": "main.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "main.tex"
+      ],
+      "rc_after": 0,
+      "first_error_after": "",
+      "cell": "preserved"
+    },
+    {
+      "arxiv_id": "2507.00384v1",
+      "toplevel": "Z_Graded_Lie_Algebras.tex",
+      "rc_before": 0,
+      "first_error_before": "",
+      "changed_files": [
+        "Z_Graded_Lie_Algebras.tex"
       ],
       "rc_after": 0,
       "first_error_after": "",

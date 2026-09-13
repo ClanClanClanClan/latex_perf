@@ -658,6 +658,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_math_ranges_comment_blind)
+ (modules test_math_ranges_comment_blind)
+ (libraries latex_parse_lib))
+
+(test
  (name test_compile_evidence)
  (modules test_compile_evidence)
  (libraries latex_parse_lib test_helpers))

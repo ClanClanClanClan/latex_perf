@@ -47,15 +47,35 @@ import sys
 # breaks the fixes were designed from; the virgin window has never been used to
 # design anything. Measured 2026-09-12, immediately after fixing MATH-009,
 # MATH-014 and PKG-011: TUNED 0/38 = 0.0%, VIRGIN 6/39 = 15.4%.
+# 2026-09-13, after OPEN-097: those two windows read 0.0% and 2.6%, and a
+# never-used window read 18.4% -- statistically indistinguishable from the
+# 15.4% of the round before. Two rounds of producer fixes, no measurable
+# out-of-sample improvement. See OPEN-100.
 #
 # ⚠ THE ZERO DOES NOT GENERALISE, AND IT MUST NEVER BE QUOTED ALONE. This is
 # C-39/OPEN-034 reproduced on a second corpus: the in-sample number after a
 # round of fixes is an optimistic estimate of the fixer's real damage, because
 # the sample IS the thing the fixes were fitted to. Same idiom as
 # corpora/real_roots' sample 1 / sample 2 split, for the same reason.
+# ⚠ THREE WINDOWS, AND ONLY THE LAST ONE IS QUOTABLE ALONE.
+#
+# A window becomes TUNED the moment a fix is designed from its breaks, and the
+# rate on a tuned window collapses toward zero whether or not the underlying
+# defect class was closed. That has now happened twice in a row -- offset 2000
+# went to 0.0% while a fresh 2100 read 15.4%, then 2100 went to 2.6% while a
+# fresh 2300 read 18.4%. So the fresh slot ROTATES: whenever a fix is designed
+# from the breaks in `results_fresh.json`, that file's window joins the tuned
+# family and the fresh slot must be re-pointed at an offset that has never been
+# used for anything. Grep the repo for "offset <n>" before choosing one.
+#
+# Measured 2026-09-13, all three with cli d2780297, after the OPEN-097 fix:
+#   2000 (tuned twice)          0/38 =  0.0%
+#   2100 (tuned by OPEN-097)    1/39 =  2.6%
+#   2300 (never used)           7/38 = 18.4%   <-- the honest number
 ARTEFACTS = [
     ("corpora/apply_fixes_real/results.json", "tuned", 0),
-    ("corpora/apply_fixes_real/results_virgin.json", "virgin", 3),
+    ("corpora/apply_fixes_real/results_virgin.json", "tuned-by-OPEN-097", 1),
+    ("corpora/apply_fixes_real/results_fresh.json", "FRESH (offset 2300)", 7),
 ]
 ARTEFACT = ARTEFACTS[0][0]
 # The number of real COMPILING papers the default fixer is currently known to

@@ -346,20 +346,34 @@ GUARD_45 = (
     "          fi\n"
 )
 
-OPAM_GUARDED_HEAD = (
+OPAM_GUARDED_BLOCK = (
     "        installed=0\n"
     "        for attempt in 1 2 3; do\n"
     "          if opam update -y && opam install -y"
     " ${{ inputs.opam-packages }}; then\n"
     "            installed=1\n"
     "            break\n"
-    "          fi"
+    "          fi\n"
+    "          echo \"[setup-ocaml-env] opam install failed"
+    " (attempt $attempt/3), retrying in 15s...\"\n"
+    "          sleep 15\n"
+    "        done\n"
+    "        if [ \"$installed\" -ne 1 ]; then\n"
+    "          echo \"::error::[setup-ocaml-env] opam install failed 3/3 for:\" \\\n"
+    "               \"${{ inputs.opam-packages }}\"\n"
+    "          exit 1\n"
+    "        fi\n"
 )
 
-OPAM_SILENT_HEAD = (
+# main's text before 2026-09-13: `&& break`, and nothing after `done`.
+OPAM_SILENT_BLOCK = (
     "        for attempt in 1 2 3; do\n"
     "          opam update -y && opam install -y"
-    " ${{ inputs.opam-packages }} && break"
+    " ${{ inputs.opam-packages }} && break\n"
+    "          echo \"[setup-ocaml-env] opam install failed"
+    " (attempt $attempt/3), retrying in 15s...\"\n"
+    "          sleep 15\n"
+    "        done\n"
 )
 
 
@@ -795,8 +809,8 @@ REGISTRY = [
                      "no-guard form",
                      ".github/actions/setup-ocaml-env/action.yml",
                      r"SILENT-RETRY: .*setup-ocaml-env.*Install opam dependencies",
-                     old=OPAM_GUARDED_HEAD,
-                     new=OPAM_SILENT_HEAD),
+                     old=OPAM_GUARDED_BLOCK,
+                     new=OPAM_SILENT_BLOCK),
             # Failure mode 5. A retry that installs a different toolchain than
             # the attempt it replaces is worse than no retry.
             Mutation("the two setup-ocaml attempts drift apart",

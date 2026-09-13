@@ -55,7 +55,7 @@ import sys
 # corpora/real_roots' sample 1 / sample 2 split, for the same reason.
 ARTEFACTS = [
     ("corpora/apply_fixes_real/results.json", "tuned", 0),
-    ("corpora/apply_fixes_real/results_virgin.json", "virgin", 6),
+    ("corpora/apply_fixes_real/results_virgin.json", "virgin", 3),
 ]
 ARTEFACT = ARTEFACTS[0][0]
 # The number of real COMPILING papers the default fixer is currently known to

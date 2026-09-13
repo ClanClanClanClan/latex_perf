@@ -817,6 +817,74 @@ let filter_with ~(active : (int * int) list list) (edits : Cst_edit.t list) :
     (fun (ed : Cst_edit.t) -> not (blocked (ed.start_offset, ed.end_offset)))
     edits
 
+(* -- Encoding guard: never INTRODUCE a byte the document cannot read --
+
+   OPEN-094. A document declaring a legacy 8-bit input encoding cannot decode
+   multi-byte UTF-8; injecting any is fatal with [! Package inputenc Error:
+   Keyboard character used is undefined].
+
+   MEASURED on 2507.04273v1 ([latin1] inputenc), which the bisect showed TWO
+   producers could kill independently: TYPO-001 emitting U+201C/D curly quotes
+   and TYPO-002 emitting a U+2013 en-dash. Guarding TYPO-001 alone left the
+   paper broken by TYPO-002 — which is exactly why this lives HERE, at the one
+   choke point every auto-fix edit passes through, and not in a producer. 18
+   producers across L0/L1 can emit non-ASCII; one test covers all of them.
+
+   THE DECLARATION IS AUTHORITATIVE. An earlier version of this test accepted
+   "the file already contains multi-byte sequences" as evidence of UTF-8
+   capability, and 2507.04273v1 slipped through because arbitrary latin-1 high
+   bytes match the UTF-8 lead/continuation bit pattern by chance — 62 times in
+   that one file. A byte heuristic cannot outrank the document stating its own
+   encoding.
+
+   FAILURE DIRECTION: declining loses a cosmetic fix in a legacy-encoded
+   document; allowing produces a document pdflatex refuses to build. Absent any
+   declaration the answer is UTF-8 (the LaTeX default since 2018), so the common
+   case is untouched. *)
+let non_utf8_inputenc_encodings =
+  [
+    "latin1";
+    "latin2";
+    "latin3";
+    "latin4";
+    "latin5";
+    "latin9";
+    "applemac";
+    "ansinew";
+    "cp1252";
+    "cp1250";
+    "cp850";
+    "cp437";
+    "ascii";
+    "koi8-r";
+    "macce";
+    "next";
+    "decmulti";
+  ]
+
+let declares_non_utf8 (src : string) : bool =
+  let has sub =
+    let m = String.length sub and n = String.length src in
+    let rec go i = i + m <= n && (String.sub src i m = sub || go (i + 1)) in
+    m > 0 && go 0
+  in
+  List.exists
+    (fun e -> has ("[" ^ e ^ "]{inputenc}"))
+    non_utf8_inputenc_encodings
+
+let has_non_ascii (s : string) : bool =
+  let n = String.length s in
+  let rec go i = i < n && (Char.code s.[i] >= 0x80 || go (i + 1)) in
+  go 0
+
+let drop_non_ascii_when_legacy_encoding ~(src : string)
+    (edits : Cst_edit.t list) : Cst_edit.t list =
+  if not (declares_non_utf8 src) then edits
+  else
+    List.filter
+      (fun (e : Cst_edit.t) -> not (has_non_ascii e.Cst_edit.replacement))
+      edits
+
 let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
     Cst_edit.t list =
   match edits with
@@ -839,7 +907,7 @@ let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
         @ [ r.picture; r.filename; r.preamble; r.crossref ]
         @ if List.mem rule_id package_spec_aware then [] else [ r.package_spec ]
       in
-      filter_with ~active edits
+      drop_non_ascii_when_legacy_encoding ~src (filter_with ~active edits)
 
 (* ── The CANDIDATE channel ────────────────────────────────────────────────
 
@@ -953,4 +1021,4 @@ let filter_candidate ~(src : string) ~(rule_id : string)
         if List.mem rule_id candidate_package_spec_aware then []
         else [ r.package_spec ]
       in
-      filter_with ~active edits
+      drop_non_ascii_when_legacy_encoding ~src (filter_with ~active edits)

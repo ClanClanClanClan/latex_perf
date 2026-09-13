@@ -2,8 +2,8 @@
  "provenance": {
   "produced_by": "scripts/tools/gen_proven_coverage.py",
   "results_source": "corpora/real_roots/results_sample2.json",
-  "cli_sha256": "78ac87d16874451dbc7875767d1db9a2fbda166037c8ba8a23cdb0277845e56f",
-  "measured_at_sha": "235473d12f1768a75af964a12557027bd00ae978",
+  "cli_sha256": "ed85f317db829cfa6d76065b3f4e1a6cc179533968771ca71cb094321ee9c5e2",
+  "measured_at_sha": "f4aa2cacc5c5171cdce3a8da15174a54f89aba7d",
   "state_vocabulary": [
    "PREMISE-CERTIFIED",
    "PREMISE-REJECTED"

@@ -268,6 +268,23 @@ Tracks: **S** (verdict soundness — incl. **S6/S7** zero-catalogue residual-shr
 
 ### Track R — Real-Time Serving (v3: the MAXIMAL real-time engine; nothing sacrificed)
 
+> **FUNDED — maintainer decision 2026-09-20 (`docs/v27/adr/ADR-011-fund-track-R-and-demote-apply-fixes.md`).**
+> Not parked, no date promised. Sequenced BEHIND the soundness and fixer-safety
+> repair (OPEN-080/101/103 and the fixer class sweep), because the failure mode
+> here has never been under-funding — it is starting the interesting work before
+> the measurement is trustworthy. The serving path has not changed since February
+> 2026 (`broker.ml`, `main_service.ml`, `rest_api_server.ml`, `rust/` all last
+> touched 2026-02-20..22), and over the last 40 first-parent commits
+> `specs/rules/rules_v3.yaml` held 660 rule ids at both ends.
+> **First deliverable is a RECORDED cold-path number, not an optimisation**:
+> `scripts/bench_wedge.sh` already prints `cold_check_ms` on every `perf-ci` run
+> and the value is discarded — `check_keystroke_budget.py` contains zero
+> occurrences of `cold`. ⚠ Baseline from an idle CI runner or not at all
+> (process invariant 5): the maintainer's machine reported a load average of 257
+> on 8 cores while actual CPU use was near zero, so even the load guard that
+> gate uses to refuse `--record` reads a number that does not mean what it says.
+> Tracked as **OPEN-104**.
+
 **Rationale.** Deliver the sound verdict **as the user types** — the segment-A wedge (Section 0, clause 1). The correctness plane is fine; this is the latency/interactivity plane. **Standing performance-budget clause applies to every R item.** v3 upgrades this from a serving track to a **provably-sound incremental engine** with an explicit SLO, a machine-checked sound-incremental contract, a nothing-sacrificed budget invariant, and a typed two-channel result — and names the two latent false-READY bugs it must fix.
 
 #### Latency SLO (the target, tracked)

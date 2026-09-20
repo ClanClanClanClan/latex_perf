@@ -261,7 +261,13 @@ def main() -> int:
         # version was `if rc == 0 and isdigit():` with no else, so a shallow
         # clone (rc 128) and a non-ancestor sha (a meaningless count) both read
         # as a pass — see scripts/tools/_measurement_provenance.py and C-58.
-        findings.extend(check_measured_at_sha(repo, a_sha, rel, howto))
+        findings.extend(check_measured_at_sha(
+            repo, a_sha, rel, howto,
+            # Platform-independent engine anchor (C-64). Optional by design:
+            # absent, the distance ratchet applies exactly as before, so this
+            # can only make the gate smarter, never weaker.
+            src_tree_sha=(_dig(data, ("provenance", "src_tree_sha"))
+                          or data.get("src_tree_sha"))))
         # A commit count is a proxy; the binary hash is the fact. When the CLI
         # is built, prove the artefact came from THIS binary.
         recorded_cli = _dig(data, ("provenance", "cli_sha256"))

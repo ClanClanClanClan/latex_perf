@@ -400,6 +400,7 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
 
     res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
     res["measured_at_sha"] = git_head(repo)
+    res["src_tree_sha"] = engine_tree(repo)
     res["measured_at"] = "cli-only refresh; pdflatex verdicts carried forward"
     results_path.write_text(json.dumps(res, indent=1) + "\n")
     print(f"\n[real-roots] refreshed: {len(changed)} cell change(s)")
@@ -411,6 +412,21 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
 
 def git_head(repo: Path) -> str:
     r = subprocess.run(["git", "--no-optional-locks", "rev-parse", "HEAD"],
+                       cwd=repo, capture_output=True, text=True)
+    return r.stdout.strip() or "unknown"
+
+
+def engine_tree(repo: Path) -> str:
+    """git tree id of latex-parse/src at HEAD. See C-64 / OPEN-101.
+
+    Recorded alongside measured_at_sha so a checker can establish that the
+    engine source is UNCHANGED since the measurement, rather than merely
+    bounding how many commits have gone by. Unlike cli_sha256 it is comparable
+    on any machine: CI builds ubuntu-22.04 ELF, artefacts are produced by a
+    maintainer's macOS arm64 binary, and those hashes can never agree.
+    """
+    r = subprocess.run(["git", "--no-optional-locks", "rev-parse",
+                        "HEAD:latex-parse/src"],
                        cwd=repo, capture_output=True, text=True)
     return r.stdout.strip() or "unknown"
 
@@ -535,6 +551,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
         f"{ORACLE['protocol']} — APPLIED TO {remeasured}/{_n} rows; "
         f"the remainder carry a single-pass grade from an earlier run"))
     res["measured_at_sha"] = git_head(repo)
+    res["src_tree_sha"] = engine_tree(repo)
     _scope_note = {
         "failures": ("recorded FAILURES only; documents already recorded "
                      "pdflatex_rc 0 were NOT revisited, so this pass cannot "

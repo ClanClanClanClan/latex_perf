@@ -112,6 +112,14 @@ def main() -> int:
             "measured_at_sha": subprocess.run(
                 ["git", "rev-parse", "HEAD"], capture_output=True, text=True
             ).stdout.strip(),
+            # Engine source anchor (C-64). cli_sha256 above is a MACHINE-LOCAL
+            # fact — CI builds ubuntu-22.04, this is produced by a macOS arm64
+            # binary, and those sha256s can never agree — so it can never gate
+            # anything in CI. This one can: it is git's own tree id for
+            # latex-parse/src, identical on every platform.
+            "src_tree_sha": subprocess.run(
+                ["git", "rev-parse", "HEAD:latex-parse/src"],
+                capture_output=True, text=True).stdout.strip() or None,
             "state_vocabulary": sorted(STATES),
         },
         "summary": {

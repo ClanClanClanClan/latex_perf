@@ -61,9 +61,33 @@ def _git(repo, *args):
         cwd=repo, capture_output=True, text=True)
 
 
+def engine_tree_id(repo, rev="HEAD", path=WATCHED_PATH):
+    """git's tree object id for the engine source at `rev`, or None.
+
+    Platform-independent, content-exact, and free: git already stores it. This
+    is the anchor `cli_sha256` cannot be (C-64) — a binary hash compares a
+    macOS arm64 Mach-O against whatever CI's ubuntu-22.04 runner builds, so it
+    can only ever be checked on the machine that produced the artefact.
+
+    It is also SHARPER than the commit-distance proxy in the useful direction:
+    the id is unchanged by any commit that does not touch `latex-parse/src`, so
+    an artefact measured 40 commits ago whose engine source never moved is
+    PROVABLY current rather than merely within a tolerance. The proxy can only
+    bound staleness; this can establish freshness.
+
+    Known blind spot, stated rather than hidden: it is taken from a COMMIT, so
+    a measurement made against a dirty working tree records the committed tree
+    and still looks clean. Catching that needs a content hash of the working
+    files, which is a different and larger change.
+    """
+    r = _git(repo, "rev-parse", f"{rev}:{path}")
+    return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
+
+
 def check_measured_at_sha(repo, sha, label, howto,
                           limit=MAX_MEASUREMENT_LAG,
-                          path=WATCHED_PATH):
+                          path=WATCHED_PATH,
+                          src_tree_sha=None):
     """Return a list of findings about `sha`'s freshness. Empty means fresh.
 
     `label` names the artefact in the message; `howto` is the command that
@@ -97,7 +121,24 @@ def check_measured_at_sha(repo, sha, label, howto,
             f"say so in provenance.measured_at_note.\n      {howto}")
         return findings
 
-    # Arm 3 — the distance itself. Unreachable failures are still reported.
+    # Arm 3 — if the artefact recorded the engine tree it was measured against
+    # and that tree is still HEAD's, the measurement is CURRENT and the commit
+    # distance is irrelevant: not one byte of `path` has changed since. This
+    # can only ever turn a red green on evidence, never the reverse, and a
+    # recorded id that DISAGREES falls through to the distance ratchet below
+    # with the disagreement named.
+    if src_tree_sha:
+        head_tree = engine_tree_id(repo, "HEAD", path)
+        if head_tree and src_tree_sha == head_tree:
+            return findings
+        if head_tree:
+            findings.append(
+                f"{label} was measured against {path} tree {src_tree_sha[:12]}…, "
+                f"HEAD has {head_tree[:12]}… — the engine source HAS changed "
+                f"since this was measured (this is exact, unlike the commit "
+                f"count below).")
+
+    # Arm 4 — the distance. Unreachable failures are still reported.
     r = _git(repo, "rev-list", "--count", f"{sha}..HEAD", "--", path)
     if r.returncode != 0 or not r.stdout.strip().isdigit():
         findings.append(

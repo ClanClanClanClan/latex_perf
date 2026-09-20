@@ -227,6 +227,21 @@ def stale_theorem_total(text: str) -> str:
     return out
 
 
+def prov_stale_engine_tree(text: str) -> str:
+    """Claim the artefact was measured against a different engine source tree.
+
+    The platform-independent anchor added for OPEN-101/C-64. It is the arm that
+    can actually run in CI — `cli_sha256` compares a macOS arm64 Mach-O against
+    an ubuntu-22.04 build and can never agree off the producing machine — so it
+    is the one that most needs a kill-test of its own.
+    """
+    import json as _json
+    d = _json.loads(text)
+    tgt = d.get("provenance", d)
+    tgt["src_tree_sha"] = "0" * 40
+    return _json.dumps(d, indent=2)
+
+
 def prov_unresolvable_sha(text: str) -> str:
     """Point an artefact's provenance at a sha no clone can resolve.
 
@@ -552,6 +567,13 @@ REGISTRY = [
                      # denominator went 199 -> 200 and correct 197 -> 198.
                      old="Correct verdicts: 198/200",
                      new="Correct verdicts: 199/200"),
+            # The engine anchor must FAIL when the source has moved under a
+            # recorded measurement (C-64). Exact, where the commit count is a
+            # proxy — and unlike cli_sha256 this one is checkable in CI.
+            Mutation("engine source moved under the measurement (C-64)",
+                     "corpora/real_roots/proven_coverage_sample1.json",
+                     r"the engine source HAS changed since this was measured",
+                     transform=prov_stale_engine_tree),
             # The staleness ratchet must FAIL when it cannot see its own
             # input. Before C-58 this passed: an unresolvable sha made
             # `git rev-list` exit 128 and the guard had no else branch.

@@ -1,9 +1,9 @@
 {
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "4ed314bbffb9f6747cee01d92fdf8d687556d457",
-    "src_tree_sha": "fdc90807097b3572c4004d4092dcf56896e27e1b",
-    "cli_sha256": "65f624dd5143ad6c7b32df4b3d18354bc90274cabcc1ccb1552184187da52af7",
+    "measured_at_sha": "ad834babf2ffc4b19d9575b788b7973562a93117",
+    "src_tree_sha": "21c3b6bb1bd9b69f698cd054d2dd8c869d1d67b4",
+    "cli_sha256": "b2d70f55c173386ffdc40d5970b4b5dc9176c5327683254c76c415656f83e8a1",
     "frame": {
       "corpus": "papers",
       "frame_size": 2719,

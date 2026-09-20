@@ -35,15 +35,20 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _measurement_provenance import (  # noqa: E402
+    MAX_MEASUREMENT_LAG, check_measured_at_sha)
+
 DOC = Path("docs/v27/PROJECT_STATE.md")
 GEN = Path("scripts/tools/gen_project_state.py")
 BEGIN = "<!-- BEGIN GENERATED: measured-position -->"
 END = "<!-- END GENERATED: measured-position -->"
 MIN_OPEN = 10
 MIN_CORRECTIONS = 5
-# Commits touching latex-parse/src that may land before the real-paper
-# measurement must be refreshed. Deliberately not 0: see C-13.
-MAX_MEASUREMENT_LAG = 5
+# MAX_MEASUREMENT_LAG (commits touching latex-parse/src tolerated before the
+# real-paper measurement must be refreshed; deliberately not 0, see C-13) is
+# imported above from _measurement_provenance, so the two gates that enforce it
+# cannot drift apart.
 
 
 def main() -> int:
@@ -221,6 +226,7 @@ def main() -> int:
         return d
 
     cli_path = repo / "_build/default/latex-parse/src/validators_cli.exe"
+    skipped_binary_checks = []
     cli_hash = None
     if cli_path.is_file():
         h = hashlib.sha256()
@@ -251,20 +257,13 @@ def main() -> int:
                 f"{rel} now HAS provenance but is still listed in "
                 f"NO_PROVENANCE_YET. Remove the entry — the exemption has "
                 f"outlived its reason.")
-        r = subprocess.run(
-            ["git", "--no-optional-locks", "rev-list", "--count",
-             f"{a_sha}..HEAD", "--", "latex-parse/src"],
-            cwd=repo, capture_output=True, text=True)
-        if r.returncode == 0 and r.stdout.strip().isdigit():
-            behind = int(r.stdout.strip())
-            if behind > MAX_MEASUREMENT_LAG:
-                findings.append(
-                    f"{rel} is {behind} commits behind HEAD on latex-parse/src "
-                    f"(limit {MAX_MEASUREMENT_LAG}). The number it publishes is "
-                    f"probably wrong. Refresh:\n      {howto}")
+        # Fails CLOSED, and says which kind of blindness it hit. The previous
+        # version was `if rc == 0 and isdigit():` with no else, so a shallow
+        # clone (rc 128) and a non-ancestor sha (a meaningless count) both read
+        # as a pass — see scripts/tools/_measurement_provenance.py and C-58.
+        findings.extend(check_measured_at_sha(repo, a_sha, rel, howto))
         # A commit count is a proxy; the binary hash is the fact. When the CLI
-        # is built (the `build` job; spec-drift is a pure job and has none),
-        # prove the artefact came from THIS binary.
+        # is built, prove the artefact came from THIS binary.
         recorded_cli = _dig(data, ("provenance", "cli_sha256"))
         if cli_hash and recorded_cli and recorded_cli != cli_hash:
             findings.append(
@@ -272,6 +271,15 @@ def main() -> int:
                 f"(records {recorded_cli[:12]}…, built is {cli_hash[:12]}…). "
                 f"Commit distance can be zero and this still wrong. Refresh:\n"
                 f"      {howto}")
+        elif recorded_cli and not cli_hash:
+            # ⚠ This is the arm the gate's own comment claimed ran in `build`.
+            # It does not: as of 2026-09-20 check_project_state.py is invoked
+            # from spec-drift.yml ONLY, a pure job that compiles nothing, so
+            # `cli_hash` is always None in CI and the strongest check the gate
+            # owns has never executed there. Announce the skip rather than
+            # taking it silently — a check nobody can see not running is
+            # indistinguishable from one that passed (OPEN-101, C-59).
+            skipped_binary_checks.append(rel)
 
     # ── 3. the corrections log must not be empty ─────────────────────────
     m = re.search(r"^##\s*4\..*?corrections log.*?$(.*?)^##\s", text,
@@ -339,6 +347,13 @@ def main() -> int:
         for f in findings:
             print(f"  - {f}", file=sys.stderr)
         return 1
+
+    if skipped_binary_checks:
+        print(f"[project-state] NOTE: cli_sha256 NOT verified for "
+              f"{len(skipped_binary_checks)} artefact(s) — no built CLI in this "
+              f"run: {', '.join(skipped_binary_checks)}. This is the gate's "
+              f"strongest arm and it does not run in CI (OPEN-101).",
+              file=sys.stderr)
 
     print(f"[project-state] PASS: generated block matches its sources; "
           f"{len(ids)} open items with ids/evidence/sizes; "

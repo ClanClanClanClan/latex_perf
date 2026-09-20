@@ -42,6 +42,11 @@ import json
 import pathlib
 import subprocess
 import sys
+from pathlib import Path as _Path
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent))
+from _measurement_provenance import (  # noqa: E402
+    MAX_MEASUREMENT_LAG, check_measured_at_sha)
 
 # TWO WINDOWS, AND THE GATE RATCHETS BOTH. The tuned window is the one whose
 # breaks the fixes were designed from; the virgin window has never been used to
@@ -83,7 +88,8 @@ ARTEFACT = ARTEFACTS[0][0]
 # refreshes the artefact. Raising it needs a ledger row saying why the
 # regression is acceptable -- there is no such reason yet.
 BASELINE_BROKEN = 7
-MAX_MEASUREMENT_LAG = 5
+# MAX_MEASUREMENT_LAG is imported from _measurement_provenance so the
+# two gates enforcing it cannot drift apart.
 
 
 def main() -> int:
@@ -177,16 +183,12 @@ def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
         findings.append(f"{ARTEFACT} has no provenance.measured_at_sha, so its "
                         f"staleness cannot be checked (OPEN-080).")
     else:
-        r = subprocess.run(["git", "--no-optional-locks", "rev-list", "--count",
-                            f"{sha}..HEAD", "--", "latex-parse/src"],
-                           cwd=repo, capture_output=True, text=True)
-        if r.returncode == 0 and r.stdout.strip().isdigit():
-            behind = int(r.stdout.strip())
-            if behind > MAX_MEASUREMENT_LAG:
-                findings.append(
-                    f"{ARTEFACT} is {behind} commits behind HEAD on "
-                    f"latex-parse/src (limit {MAX_MEASUREMENT_LAG}); the fixer "
-                    f"has changed since this was measured.")
+        # Fails CLOSED. Was `if rc == 0 and isdigit():` with no else, so a
+        # shallow CI clone (rc 128) and a non-ancestor sha (a meaningless
+        # count) both read as a pass. See _measurement_provenance.py / C-58.
+        findings.extend(check_measured_at_sha(
+            repo, sha, ARTEFACT,
+            "re-run the apply-fixes differential and re-stamp provenance"))
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
     if cli.is_file() and prov.get("cli_sha256"):
         h = hashlib.sha256()

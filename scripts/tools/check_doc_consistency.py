@@ -149,6 +149,46 @@ def inv_fixture_baseline():
         fail("fixture-baseline",
              f"PROJECT_STATE row (b) publishes {m.group(1)}, manifest says {recorded}")
 
+    # ⚠ The ROADMAP banner was outside EVERY gate's scope until 2026-09-20, and
+    # it was wrong in both magnitude and split: "stands at **eight** (seven
+    # strong-fatal, one error-halt)" against a manifest holding 17 live, split
+    # 4 strong-fatal / 13 error-halt. check_roadmap_facts.py printed "passed"
+    # on BOTH values, because its load_false_ready_count reads corpus (a)'s
+    # KNOWN_FALSE_READY allowlist out of diff_compile_check.sh to check a claim
+    # about corpus (b) — the (a)/(b) conflation embedded inside the gate meant
+    # to prevent it. This invariant read the manifest and PROJECT_STATE and
+    # never opened the ROADMAP at all. So the number was published in three
+    # places and checked in two. (C-60)
+    #
+    # Written against the SPELLED-OUT form the banner uses, so a numeral edit
+    # cannot slip past it, and asserting the SPLIT as well as the total —
+    # the split is what was inverted, and a total-only check would have
+    # accepted "seventeen (thirteen strong-fatal, four error-halt)".
+    roadmap = (REPO / "docs/v27/ROADMAP.md").read_text()
+    WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six",
+             7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven",
+             12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
+             16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen",
+             20: "twenty"}
+    rm = re.search(r"fixture baseline stands at \*\*(\w+)\*\*\s*"
+                   r"\((\d+) strong-fatal, (\d+) error-halt", roadmap)
+    if rm is None:
+        fail("fixture-baseline",
+             "ROADMAP.md no longer carries the 'fixture baseline stands at "
+             "**N** (x strong-fatal, y error-halt)' claim this invariant "
+             "checks. If it moved, move the check; do not delete it — that "
+             "sentence was wrong and ungated for eight days (C-60).")
+    else:
+        strong = sum(1 for f in live if f.get("pdflatex") == "strong-fatal")
+        halt = sum(1 for f in live if f.get("pdflatex") == "error-halt")
+        want = WORDS.get(recorded, str(recorded))
+        if (rm.group(1) != want or int(rm.group(2)) != strong
+                or int(rm.group(3)) != halt):
+            fail("fixture-baseline",
+                 f"ROADMAP.md banner says '{rm.group(1)} ({rm.group(2)} "
+                 f"strong-fatal, {rm.group(3)} error-halt)' but the manifest "
+                 f"holds {want} ({strong} strong-fatal, {halt} error-halt)")
+
 
 def inv_compile_blocking_count():
     r"""No file may publish a compile-blocking rule count the code contradicts.

@@ -227,6 +227,32 @@ def stale_theorem_total(text: str) -> str:
     return out
 
 
+def prov_unresolvable_sha(text: str) -> str:
+    """Point an artefact's provenance at a sha no clone can resolve.
+
+    This is the arm that was live in CI for the whole life of both staleness
+    ratchets (C-58). `actions/checkout` defaults to a one-commit clone, in which
+    `git rev-list <sha>..HEAD` exits 128 for ANY provenance sha; the gates read
+    `if rc == 0 and isdigit():` with no else, so the ratchet silently skipped on
+    every PR ever run. The sha below is well-formed hex that is not a commit, so
+    `git cat-file -e` fails exactly as it does in a shallow clone — reproducing
+    CI's condition on a full local clone.
+
+    The sibling arm (a RESOLVABLE sha that is not an ancestor, which returns a
+    meaningless count rather than an error) is not mutation-tested here because
+    no sha is portably guaranteed to be present-but-unreachable in every clone.
+    It was verified live on 2026-09-20 against the real defect: five artefacts
+    stamped 52d850ef and the fixed gate reported "is NOT an ancestor of HEAD",
+    where the old one had read "2 commits behind, limit 5" and passed. Both arms
+    sit in the same function, so this mutation proves it is reached.
+    """
+    import json as _json
+    d = _json.loads(text)
+    tgt = d.get("provenance", d)
+    tgt["measured_at_sha"] = "dead" * 10  # 40 hex chars, not an object
+    return _json.dumps(d, indent=2)
+
+
 def afr_raise_break_count(text: str) -> str:
     """Flip one preserved row to broken — the regression this gate exists for.
 
@@ -484,6 +510,10 @@ REGISTRY = [
                      r"breaks \d+ of \d+ real COMPILING papers; the pinned "
                      r"baseline is",
                      transform=afr_raise_break_count),
+            Mutation("provenance sha unresolvable — ratchet blinded (C-58)",
+                     "corpora/apply_fixes_real/results.json",
+                     r"cannot be resolved in this clone",
+                     transform=prov_unresolvable_sha),
             Mutation("a row's cell stops following from its own rc pair",
                      "corpora/apply_fixes_real/results.json",
                      r"cell 'preserved' but rc_after=1",
@@ -522,6 +552,13 @@ REGISTRY = [
                      # denominator went 199 -> 200 and correct 197 -> 198.
                      old="Correct verdicts: 198/200",
                      new="Correct verdicts: 199/200"),
+            # The staleness ratchet must FAIL when it cannot see its own
+            # input. Before C-58 this passed: an unresolvable sha made
+            # `git rev-list` exit 128 and the guard had no else branch.
+            Mutation("provenance sha unresolvable — ratchet blinded (C-58)",
+                     "corpora/real_roots/results.json",
+                     r"cannot be resolved in this clone",
+                     transform=prov_unresolvable_sha),
             # Ledger discipline: a malformed size cell (caught live on
             # 2026-08-24 when an append overflowed the row — keep it caught).
             Mutation("ledger size cell malformed (OPEN-022)",

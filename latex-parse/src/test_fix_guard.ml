@@ -585,4 +585,90 @@ let () =
         = [])
         (tag ^ ": region 2 is never exempt"));
 
+  (* ── ATTESTATION GUARD (OPEN-100): typesettability is not NFKC ──────────
+
+     Every expectation below is pinned to a pdflatex measurement at the pin
+     (pdfTeX 3.141592653-2.6-1.40.29), a four-line article with one character
+     changed and nothing else. The rc values are in the guard's own docstring.
+
+     This is ENC-015's whole NFKC table and it is exactly half wrong: the two
+     Greek-block targets BREAK a compiling document, the two Latin-1/ASCII
+     targets REPAIR a broken one. It broke 2507.09697v1 in the offset-2300
+     window. The guard is at the choke point rather than in ENC-015 because
+     three rounds of per-producer guards left the out-of-sample rate flat
+     (C-57): this states a property of EDITS, so it covers all 164 producers. *)
+  let subst src needle replacement =
+    let i = find_sub src needle in
+    Fix_guard.filter ~src ~rule_id:"ENC-015"
+      [
+        Cst_edit.replace ~start_offset:i
+          ~end_offset:(i + String.length needle)
+          replacement;
+      ]
+    <> []
+  in
+  run "micro sign -> greek mu is WITHHELD (rc 0 -> rc 1 at the pin)" (fun tag ->
+      (* U+00B5 typesets with no package; U+03BC does not. *)
+      expect
+        (not (subst "a 5\xc2\xb5m gap\n" "\xc2\xb5" "\xce\xbc"))
+        (tag ^ ": greek mu is neither attested nor introducible"));
+
+  run "ohm sign -> greek capital omega is WITHHELD" (fun tag ->
+      expect
+        (not (subst "R = 5\xe2\x84\xa6 here\n" "\xe2\x84\xa6" "\xce\xa9"))
+        (tag ^ ": U+2126 typesets, U+03A9 does not"));
+
+  run "angstrom -> latin A-with-ring SURVIVES (a genuine repair)" (fun tag ->
+      (* The source does NOT compile; the target does. Pinned so the guard is
+         not quietly widened into blocking ENC-015's useful half. *)
+      expect
+        (subst "d = 3\xe2\x84\xab wide\n" "\xe2\x84\xab" "\xc3\x85")
+        (tag ^ ": U+00C5 is on the measured introducible list"));
+
+  run "long s -> ASCII 's' SURVIVES" (fun tag ->
+      expect
+        (subst "the \xc5\xbfun\n" "\xc5\xbf" "s")
+        (tag ^ ": ASCII is always allowed"));
+
+  run "en dash SURVIVES in an all-ASCII document" (fun tag ->
+      (* The rule that would have made this guard useless: attestation ALONE
+         would withhold ordinary typography, which is most of the fixer's
+         value. Measured rc 0, so U+2013 is on the introducible list. *)
+      expect
+        (subst "pages 10 - 20\n" "-" "\xe2\x80\x93")
+        (tag ^ ": en dash typesets with no package"));
+
+  run "an UNATTESTED greek letter is withheld even as a pure insertion"
+    (fun tag ->
+      let src = "plain ascii only\n" in
+      expect
+        (Fix_guard.filter ~src ~rule_id:"ENC-015"
+           [ Cst_edit.insert ~at:(find_sub src "ascii") "\xce\xbb" ]
+        = [])
+        (tag ^ ": insertion is screened on the same rule as substitution"));
+
+  run "an attested greek letter SURVIVES (the document proved it typesets)"
+    (fun tag ->
+      (* A document that already contains and compiles with greek has loaded
+         whatever defines it, so re-emitting it is not a bet. *)
+      let src = "greek \xce\xbc already here\n" in
+      let i = find_sub src "already" in
+      expect
+        (Fix_guard.filter ~src ~rule_id:"ENC-015"
+           [ Cst_edit.replace ~start_offset:i ~end_offset:(i + 7) "\xce\xbc" ]
+        <> [])
+        (tag ^ ": attestation, not a fixed allowlist, is what admits it"));
+
+  run "a malformed UTF-8 lead byte does not slice past its own bytes"
+    (fun tag ->
+      (* lead-byte-without-continuation: three instances found in this repo
+         (OPEN-059, OPEN-065). A truncated lead must degrade to one byte and
+         fail attestation, never consume the following bytes. *)
+      let src = "plain ascii only\n" in
+      expect
+        (Fix_guard.filter ~src ~rule_id:"ENC-015"
+           [ Cst_edit.insert ~at:(find_sub src "ascii") "\xce" ]
+        = [])
+        (tag ^ ": a bare lead byte is unattested and withheld"));
+
   finalise "fix-guard"

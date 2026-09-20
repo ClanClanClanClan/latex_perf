@@ -80,7 +80,12 @@ from _measurement_provenance import (  # noqa: E402
 ARTEFACTS = [
     ("corpora/apply_fixes_real/results.json", "tuned", 0),
     ("corpora/apply_fixes_real/results_virgin.json", "tuned-by-OPEN-097", 1),
-    ("corpora/apply_fixes_real/results_fresh.json", "FRESH (offset 2300)", 7),
+    # Tightened 7 -> 6 on 2026-09-20: the attestation guard (OPEN-106)
+    # removed ENC-015's micro-sign substitution, which took 2507.09697v1
+    # from broken to preserved. EXACTLY ONE row moved; the other six
+    # breaks are untouched and are where the rate actually lives
+    # (OPEN-107). Ratcheting a 1-row gain is still ratcheting.
+    ("corpora/apply_fixes_real/results_fresh.json", "FRESH (offset 2300)", 6),
 ]
 ARTEFACT = ARTEFACTS[0][0]
 # The number of real COMPILING papers the default fixer is currently known to

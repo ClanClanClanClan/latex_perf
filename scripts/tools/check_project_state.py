@@ -154,7 +154,17 @@ def main() -> int:
             proto = (rr_data.get("oracle") or {}).get("protocol", "")
             docs = rr_data.get("docs") or []
             with_passes = sum(1 for d in docs if d.get("pdflatex_passes"))
-            m = re.search(r"APPLIED TO (\d+)/(\d+) rows", proto)
+            # ⚠ Matches BOTH spellings. The producer emits "APPLIED TO ALL
+            # n/n rows" at full coverage (the "remainder" clause is a false
+            # sentence about an empty set), and this regex was anchored on
+            # digits straight after "APPLIED TO". When the first full-coverage
+            # sweep landed, the pattern stopped matching, the `elif` below is
+            # false once with_passes == len(docs), and the C-28 claim-provenance
+            # check silently stopped checking anything while printing PASS.
+            # Caught by the registry-rot arm of check_gate_selftests, not by
+            # any gate run. A checker coupled to the FORMAT of the string it
+            # validates goes blind the moment that string is reworded (C-65).
+            m = re.search(r"APPLIED TO (?:ALL )?(\d+)/(\d+) rows", proto)
             if m:
                 k, n = int(m.group(1)), int(m.group(2))
                 if k != with_passes or n != len(docs):
@@ -261,7 +271,13 @@ def main() -> int:
         # version was `if rc == 0 and isdigit():` with no else, so a shallow
         # clone (rc 128) and a non-ancestor sha (a meaningless count) both read
         # as a pass — see scripts/tools/_measurement_provenance.py and C-58.
-        findings.extend(check_measured_at_sha(repo, a_sha, rel, howto))
+        findings.extend(check_measured_at_sha(
+            repo, a_sha, rel, howto,
+            # Platform-independent engine anchor (C-64). Optional by design:
+            # absent, the distance ratchet applies exactly as before, so this
+            # can only make the gate smarter, never weaker.
+            src_tree_sha=(_dig(data, ("provenance", "src_tree_sha"))
+                          or data.get("src_tree_sha"))))
         # A commit count is a proxy; the binary hash is the fact. When the CLI
         # is built, prove the artefact came from THIS binary.
         recorded_cli = _dig(data, ("provenance", "cli_sha256"))

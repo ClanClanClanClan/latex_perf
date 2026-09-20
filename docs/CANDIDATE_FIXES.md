@@ -13,6 +13,14 @@ intent, so it must never be applied without review. Example: inserting a space i
 only the author knows which is meant. Such rules therefore emit candidates, not
 auto-fixes.
 
+> ⚠ **`--apply-fixes` is not on the recommended path** (maintainer decision 2026-09-20,
+> `docs/v27/adr/ADR-011-fund-track-R-and-demote-apply-fixes.md`, ledger `OPEN-105`).
+> On real arXiv papers that compile cleanly it has been measured to break some of
+> them, at a rate that three rounds of producer fixes did not move on windows never
+> used for tuning. The invariants below still hold and every guard still runs — the
+> change is the advice, not the mechanism. Prefer `--list-candidate-fixes`, which
+> proposes and never edits, and diff any applied output before keeping it.
+
 **Invariant:** `--apply-fixes` and `--apply-fixes-for` read **only** the `fix`
 field. Candidate rules keep `produces_fix: false`, so they are absent from the
 producer-coverage gate and never mutate a document mechanically. Running

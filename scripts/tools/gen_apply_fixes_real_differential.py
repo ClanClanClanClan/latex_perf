@@ -211,6 +211,12 @@ def main() -> int:
         "provenance": {
             "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
             "measured_at_sha": sha,
+            # Engine source anchor (C-64): comparable on any machine, unlike
+            # cli_sha256, which only the producing machine can check.
+            "src_tree_sha": subprocess.run(
+                ["git", "--no-optional-locks", "rev-parse",
+                 "HEAD:latex-parse/src"], cwd=repo, capture_output=True,
+                text=True).stdout.strip() or None,
             "cli_sha256": sha256_file(cli),
             "frame": {"corpus": str(root.name), "frame_size": len(frame),
                       "selection": "sha256(arxiv_id) ascending",

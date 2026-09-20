@@ -227,6 +227,21 @@ def stale_theorem_total(text: str) -> str:
     return out
 
 
+def prov_stale_engine_tree(text: str) -> str:
+    """Claim the artefact was measured against a different engine source tree.
+
+    The platform-independent anchor added for OPEN-101/C-64. It is the arm that
+    can actually run in CI — `cli_sha256` compares a macOS arm64 Mach-O against
+    an ubuntu-22.04 build and can never agree off the producing machine — so it
+    is the one that most needs a kill-test of its own.
+    """
+    import json as _json
+    d = _json.loads(text)
+    tgt = d.get("provenance", d)
+    tgt["src_tree_sha"] = "0" * 40
+    return _json.dumps(d, indent=2)
+
+
 def prov_unresolvable_sha(text: str) -> str:
     """Point an artefact's provenance at a sha no clone can resolve.
 
@@ -552,6 +567,13 @@ REGISTRY = [
                      # denominator went 199 -> 200 and correct 197 -> 198.
                      old="Correct verdicts: 198/200",
                      new="Correct verdicts: 199/200"),
+            # The engine anchor must FAIL when the source has moved under a
+            # recorded measurement (C-64). Exact, where the commit count is a
+            # proxy — and unlike cli_sha256 this one is checkable in CI.
+            Mutation("engine anchor names a tree that never existed (C-64)",
+                     "corpora/real_roots/proven_coverage_sample1.json",
+                     r"not a tree object in this repository",
+                     transform=prov_stale_engine_tree),
             # The staleness ratchet must FAIL when it cannot see its own
             # input. Before C-58 this passed: an unresolvable sha made
             # `git rev-list` exit 128 and the guard had no else branch.
@@ -571,8 +593,12 @@ REGISTRY = [
             Mutation("protocol APPLIED-TO clause falsified",
                      "corpora/real_roots/results.json",
                      r"does not match the recorded measurement",
-                     old="APPLIED TO 18/200 rows",
-                     new="APPLIED TO 42/200 rows"),
+                     # Re-anchored 2026-09-20: the OPEN-103 sweep took the
+                     # clause to full coverage, so the old "18/200" anchor
+                     # matched 0x and the registry-rot arm fired. Deliberate
+                     # update, per the message it prints.
+                     old="APPLIED TO ALL 200/200 rows",
+                     new="APPLIED TO ALL 42/200 rows"),
             # C-45: a verdict cell that its own row contradicts. The regex
             # names the COMPILES wording specifically, because re-stranding a
             # row also makes the generated block stale and that unrelated

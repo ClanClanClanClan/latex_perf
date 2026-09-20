@@ -44,6 +44,7 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l0 paper.tex
 dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 
 # Apply the mechanical (Bucket-A) auto-fixes (writes to stdout, not in place)
+# ⚠ NOT RECOMMENDED — see the warning below before using this on real work.
 dune exec latex-parse/src/validators_cli.exe -- --apply-fixes paper.tex
 
 # List the review-only (Bucket-C) candidate fixes for an editor to offer
@@ -53,6 +54,28 @@ dune exec latex-parse/src/validators_cli.exe -- --list-candidate-fixes paper.tex
 `--apply-fixes` applies only the guard-gated auto-fixes; intent-dependent
 suggestions are surfaced separately via `--list-candidate-fixes` and never applied
 automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
+
+> ### ⚠ `--apply-fixes` is not on the recommended path
+>
+> **Measured on real arXiv papers that pdflatex compiles cleanly, the auto-fix
+> channel turns some of them into papers that do not compile.** On a 38-paper
+> window that had never been used to design anything, 7 were broken — and a
+> control run with the most recent fix *reverted* broke the same seven, so the
+> last round of repair work changed that number by zero. Across the windows
+> never used for tuning the rate has been flat over three rounds of
+> individually-correct producer fixes.
+>
+> The flag still works, still runs behind every guard it has, and is still
+> gated in CI. What changed is the advice: **do not run it unattended over work
+> you care about, and diff the output before you keep it.** Prefer
+> `--list-candidate-fixes`, which proposes and never edits.
+>
+> This is a deliberate, dated decision with a stated way back —
+> [`docs/v27/adr/ADR-011`](docs/v27/adr/ADR-011-fund-track-R-and-demote-apply-fixes.md),
+> ledger row `OPEN-105`. It is reversible by one thing only: a class-level guard
+> at the `Fix_guard` choke point that moves an **untouched** measurement window.
+> A tuned window reading zero is not evidence — every tuned window in this
+> project's history has read near zero while the out-of-sample rate stayed put.
 
 ### Environment Variables
 

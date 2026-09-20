@@ -188,7 +188,8 @@ def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
         # count) both read as a pass. See _measurement_provenance.py / C-58.
         findings.extend(check_measured_at_sha(
             repo, sha, ARTEFACT,
-            "re-run the apply-fixes differential and re-stamp provenance"))
+            "re-run the apply-fixes differential and re-stamp provenance",
+            src_tree_sha=prov.get("src_tree_sha")))
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
     if cli.is_file() and prov.get("cli_sha256"):
         h = hashlib.sha256()

@@ -1,552 +1,553 @@
 {
-  "provenance": {
-    "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "8dc2c99bb3798df26acdee2c7e5dcbf9c5448a81",
-    "cli_sha256": "7b19454df7d4edf5bc99ca4b1dfe3b982cf7f8bebc504617cabe97ade6f853ec",
-    "frame": {
-      "corpus": "papers",
-      "frame_size": 2719,
-      "selection": "sha256(arxiv_id) ascending",
-      "offset": 2100,
-      "n": 40
-    },
-    "oracle": {
-      "engine": "pdflatex",
-      "distribution": "TeX Live 2026",
-      "version": "pdfTeX 3.141592653-2.6-1.40.29",
-      "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"
-    },
-    "fix_scope": "every .tex in the tree, root and children"
+ "provenance": {
+  "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
+  "measured_at_sha": "8dc2c99bb3798df26acdee2c7e5dcbf9c5448a81",
+  "cli_sha256": "7b19454df7d4edf5bc99ca4b1dfe3b982cf7f8bebc504617cabe97ade6f853ec",
+  "frame": {
+   "corpus": "papers",
+   "frame_size": 2719,
+   "selection": "sha256(arxiv_id) ascending",
+   "offset": 2100,
+   "n": 40
   },
-  "summary": {
-    "sampled": 40,
-    "compiled_before": 39,
-    "excluded_did_not_compile": 1,
-    "preserved": 38,
-    "broken": 1
+  "oracle": {
+   "engine": "pdflatex",
+   "distribution": "TeX Live 2026",
+   "version": "pdfTeX 3.141592653-2.6-1.40.29",
+   "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"
   },
-  "rows": [
-    {
-      "arxiv_id": "2507.08729v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex",
-        "sec/0_abstract.tex",
-        "sec/1_intro.tex",
-        "sec/2_literature.tex",
-        "sec/3_dataset.tex",
-        "sec/4_experiment.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.19462v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08248v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex",
-        "sections/00_main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.06789v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Appendix/bound_for_Gamma_function.tex",
-        "Section/Linf_approximation.tex",
-        "Section/Lower_bound.tex",
-        "Section/Lp_approximation.tex",
-        "Section/Shallow_NN_Lp_approximation.tex",
-        "Section/introduction.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.05786v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09487v1",
-      "toplevel": "elsarticle-template-num.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "elsarticle-template-num.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.02260v2",
-      "toplevel": "cycle-count-3.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "cycle-count-3.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.01730v2",
-      "toplevel": "GMcKbije24.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "GMcKbije24.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.05326v1",
-      "toplevel": "main.tex",
-      "rc_before": 1,
-      "first_error_before": "! Missing $ inserted.",
-      "cell": "excluded-did-not-compile"
-    },
-    {
-      "arxiv_id": "2507.09815v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex",
-        "sec/10_prompts_for_benchmark_curation.tex",
-        "sec/1_intro.tex",
-        "sec/2_relatedworks.tex",
-        "sec/3_dataset_curation_benchmark.tex",
-        "sec/5_exp.tex",
-        "sec/8_metrics.tex",
-        "sec/9_quantitative_example.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10668v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 1,
-      "first_error_after": "! Package amsmath Error: Multiple \\label's: label 'rho_time_1B1' will be lost.",
-      "cell": "broken"
-    },
-    {
-      "arxiv_id": "2507.09172v1",
-      "toplevel": "time_limit_EPJ_V2.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "time_limit_EPJ_V2.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.24091v1",
-      "toplevel": "minimal_regular_snc_models.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "minimal_regular_snc_models.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09979v1",
-      "toplevel": "HBGL2Q.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.19755v1",
-      "toplevel": "xreg_main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "xreg_main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.07635v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.00448v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10688v1",
-      "toplevel": "apssamp.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "apssamp.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10385v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.04362v1",
-      "toplevel": "main_arXiv.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main_arXiv.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.00325v1",
-      "toplevel": "QUE-PrimePow.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "QUE-PrimePow.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.24028v1",
-      "toplevel": "groebner.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "groebner.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.18408v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10656v1",
-      "toplevel": "HA2025.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "HA2025.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.08767v1",
-      "toplevel": "Main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09206v1",
-      "toplevel": "multi_ot_arxiv.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "multi_ot_arxiv.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.04273v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10615v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10735v1",
-      "toplevel": "1-v2-Newsvendoer-2025.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "1-v2-Newsvendoer-2025.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.16917v1",
-      "toplevel": "Garcia_John_Novo.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "Garcia_John_Novo.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.17838v1",
-      "toplevel": "main_FBS_CSR_ver1.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "algo/algo_CSR_FBS.tex",
-        "algo/algo_sub_D_FISTA.tex",
-        "algo/algo_sub_FBSA_PDS_no_conj.tex",
-        "fig_tex/GT_images.tex",
-        "fig_tex/overall.tex",
-        "fig_tex/result_filter.tex",
-        "fig_tex/result_image_CAMEL_17_gsst.tex",
-        "fig_tex/result_image_cell1_gs.tex",
-        "fig_tex/result_image_cell2_g.tex",
-        "main_FBS_CSR_ver1.tex",
-        "table_tex/params.tex",
-        "table_tex/params_CSR.tex",
-        "table_tex/result_PSNR_SSIM.tex",
-        "table_tex/result_PSNR_SSIM_gs.tex",
-        "table_tex/result_PSNR_SSIM_gsst.tex",
-        "table_tex/result_abr.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.04065v1",
-      "toplevel": "fg-ac-lie-xv1.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "fg-ac-lie-xv1.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10222v1",
-      "toplevel": "New_IEEEtran_how-to.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "New_IEEEtran_how-to.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.06516v1",
-      "toplevel": "uai2025-template.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "uai2025-template.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2506.23633v1",
-      "toplevel": "saturation.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "saturation.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.11002v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex",
-        "supplementary.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.10171v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.06873v1",
-      "toplevel": "arxiv_version.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "arxiv_version.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.11352v1",
-      "toplevel": "neurips_2025.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "figure/vll-example.tex",
-        "neurips_2025.tex",
-        "tex/00-abstract.tex",
-        "tex/01-introduction.tex",
-        "tex/01_intro_new.tex",
-        "tex/02-related_work.tex",
-        "tex/03-preliminary.tex",
-        "tex/04-method.tex",
-        "tex/05-experiment.tex",
-        "tex/06-conclusion.tex",
-        "tex/package.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    },
-    {
-      "arxiv_id": "2507.09595v1",
-      "toplevel": "main.tex",
-      "rc_before": 0,
-      "first_error_before": "",
-      "changed_files": [
-        "main.tex",
-        "sections/1_abstract.tex",
-        "sections/2_background.tex",
-        "sections/3_architecture.tex",
-        "sections/4_models.tex",
-        "sections/5_Appendix.tex"
-      ],
-      "rc_after": 0,
-      "first_error_after": "",
-      "cell": "preserved"
-    }
-  ]
+  "fix_scope": "every .tex in the tree, root and children",
+  "src_tree_sha": "ee1d71dd760b6d637d1bb9f9bf3760d8ad553ee6"
+ },
+ "summary": {
+  "sampled": 40,
+  "compiled_before": 39,
+  "excluded_did_not_compile": 1,
+  "preserved": 38,
+  "broken": 1
+ },
+ "rows": [
+  {
+   "arxiv_id": "2507.08729v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex",
+    "sec/0_abstract.tex",
+    "sec/1_intro.tex",
+    "sec/2_literature.tex",
+    "sec/3_dataset.tex",
+    "sec/4_experiment.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.19462v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.08248v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex",
+    "sections/00_main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.06789v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "Appendix/bound_for_Gamma_function.tex",
+    "Section/Linf_approximation.tex",
+    "Section/Lower_bound.tex",
+    "Section/Lp_approximation.tex",
+    "Section/Shallow_NN_Lp_approximation.tex",
+    "Section/introduction.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.05786v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.09487v1",
+   "toplevel": "elsarticle-template-num.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "elsarticle-template-num.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.02260v2",
+   "toplevel": "cycle-count-3.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "cycle-count-3.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.01730v2",
+   "toplevel": "GMcKbije24.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "GMcKbije24.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.05326v1",
+   "toplevel": "main.tex",
+   "rc_before": 1,
+   "first_error_before": "! Missing $ inserted.",
+   "cell": "excluded-did-not-compile"
+  },
+  {
+   "arxiv_id": "2507.09815v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex",
+    "sec/10_prompts_for_benchmark_curation.tex",
+    "sec/1_intro.tex",
+    "sec/2_relatedworks.tex",
+    "sec/3_dataset_curation_benchmark.tex",
+    "sec/5_exp.tex",
+    "sec/8_metrics.tex",
+    "sec/9_quantitative_example.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10668v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 1,
+   "first_error_after": "! Package amsmath Error: Multiple \\label's: label 'rho_time_1B1' will be lost.",
+   "cell": "broken"
+  },
+  {
+   "arxiv_id": "2507.09172v1",
+   "toplevel": "time_limit_EPJ_V2.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "time_limit_EPJ_V2.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.24091v1",
+   "toplevel": "minimal_regular_snc_models.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "minimal_regular_snc_models.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.09979v1",
+   "toplevel": "HBGL2Q.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.19755v1",
+   "toplevel": "xreg_main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "xreg_main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.07635v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.00448v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10688v1",
+   "toplevel": "apssamp.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "apssamp.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10385v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.04362v1",
+   "toplevel": "main_arXiv.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main_arXiv.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.00325v1",
+   "toplevel": "QUE-PrimePow.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "QUE-PrimePow.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.24028v1",
+   "toplevel": "groebner.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "groebner.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.18408v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10656v1",
+   "toplevel": "HA2025.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "HA2025.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.08767v1",
+   "toplevel": "Main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "Main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.09206v1",
+   "toplevel": "multi_ot_arxiv.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "multi_ot_arxiv.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.04273v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10615v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10735v1",
+   "toplevel": "1-v2-Newsvendoer-2025.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "1-v2-Newsvendoer-2025.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.16917v1",
+   "toplevel": "Garcia_John_Novo.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "Garcia_John_Novo.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.17838v1",
+   "toplevel": "main_FBS_CSR_ver1.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "algo/algo_CSR_FBS.tex",
+    "algo/algo_sub_D_FISTA.tex",
+    "algo/algo_sub_FBSA_PDS_no_conj.tex",
+    "fig_tex/GT_images.tex",
+    "fig_tex/overall.tex",
+    "fig_tex/result_filter.tex",
+    "fig_tex/result_image_CAMEL_17_gsst.tex",
+    "fig_tex/result_image_cell1_gs.tex",
+    "fig_tex/result_image_cell2_g.tex",
+    "main_FBS_CSR_ver1.tex",
+    "table_tex/params.tex",
+    "table_tex/params_CSR.tex",
+    "table_tex/result_PSNR_SSIM.tex",
+    "table_tex/result_PSNR_SSIM_gs.tex",
+    "table_tex/result_PSNR_SSIM_gsst.tex",
+    "table_tex/result_abr.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.04065v1",
+   "toplevel": "fg-ac-lie-xv1.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "fg-ac-lie-xv1.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10222v1",
+   "toplevel": "New_IEEEtran_how-to.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "New_IEEEtran_how-to.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.06516v1",
+   "toplevel": "uai2025-template.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "uai2025-template.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2506.23633v1",
+   "toplevel": "saturation.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "saturation.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.11002v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex",
+    "supplementary.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.10171v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.06873v1",
+   "toplevel": "arxiv_version.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "arxiv_version.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.11352v1",
+   "toplevel": "neurips_2025.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "figure/vll-example.tex",
+    "neurips_2025.tex",
+    "tex/00-abstract.tex",
+    "tex/01-introduction.tex",
+    "tex/01_intro_new.tex",
+    "tex/02-related_work.tex",
+    "tex/03-preliminary.tex",
+    "tex/04-method.tex",
+    "tex/05-experiment.tex",
+    "tex/06-conclusion.tex",
+    "tex/package.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  },
+  {
+   "arxiv_id": "2507.09595v1",
+   "toplevel": "main.tex",
+   "rc_before": 0,
+   "first_error_before": "",
+   "changed_files": [
+    "main.tex",
+    "sections/1_abstract.tex",
+    "sections/2_background.tex",
+    "sections/3_architecture.tex",
+    "sections/4_models.tex",
+    "sections/5_Appendix.tex"
+   ],
+   "rc_after": 0,
+   "first_error_after": "",
+   "cell": "preserved"
+  }
+ ]
 }

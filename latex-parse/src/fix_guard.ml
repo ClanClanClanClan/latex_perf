@@ -877,130 +877,6 @@ let has_non_ascii (s : string) : bool =
   let rec go i = i < n && (Char.code s.[i] >= 0x80 || go (i + 1)) in
   go 0
 
-(* -- ATTESTATION GUARD: never INTRODUCE a character the document has not
-   already shown it can typeset --
-
-   OPEN-100 / OPEN-105. The sibling guard below screens documents that DECLARE
-   a legacy 8-bit encoding. A UTF-8 document got no screening at all, on the
-   premise that UTF-8 can encode anything. It can. LaTeX cannot TYPESET
-   anything, and those are different properties.
-
-   MEASURED at the pin (pdfTeX 3.141592653-2.6-1.40.29) on a four-line article,
-   one character changed, nothing else:
-
-     U+00B5 MICRO SIGN          rc 0  ->  U+03BC GREEK SMALL MU     rc 1
-     U+2126 OHM SIGN            rc 0  ->  U+03A9 GREEK CAP OMEGA    rc 1
-     U+212B ANGSTROM SIGN       rc 1  ->  U+00C5 LATIN A W/ RING    rc 0
-     U+017F LATIN SMALL LONG S  rc 1  ->  's' (U+0073)              rc 0
-
-   That is ENC-015's entire NFKC table, and it is exactly half wrong. The two
-   Latin-1/ASCII targets REPAIR a broken document; the two Greek-block targets
-   BREAK a compiling one. NFKC is a relation on Unicode, typesettability is a
-   relation on LaTeX, and ENC-015 assumed they were the same relation. It is
-   the rule that broke 2507.09697v1 in the offset-2300 window with
-   `! LaTeX Error: Unicode character mu (U+03BC)`.
-
-   THE INVARIANT, and why it lives here rather than in ENC-015. Three rounds of
-   per-producer guards have each closed their measured breaks and left the
-   out-of-sample rate flat (C-57), so this states a property of EDITS, not of
-   rules: an auto-fix may introduce a non-ASCII character only if that exact
-   character ALREADY OCCURS in the document, or is one of the small pinned
-   set below that is measured typesettable with no package at all. The document compiles -- that is
-   the precondition this whole channel exists to preserve -- so every character
-   already in it is demonstrably typesettable IN ITS OWN CONTEXT, whatever
-   packages, encodings and fonts it loads. A character absent from it is a bet,
-   and that is the one bet this channel may not place. One test, all 164
-   producers, and no table of LaTeX-defined codepoints to rot as TeX Live moves.
-
-   ASCII is always allowed: a compiling LaTeX document typesets it by
-   construction, and demanding attestation would block ordinary punctuation
-   fixes for no gain.
-
-   FAILURE DIRECTION, deliberately asymmetric. Declining loses a cosmetic
-   normalisation. Allowing hands the author a document pdflatex refuses to
-   build -- the same harm as a false READY, delivered through the channel that
-   writes to their file. On the four rows above it also declines
-   U+212B -> U+00C5, a genuine repair of an ALREADY-BROKEN document. That is a
-   real loss and an acceptable one: it cannot turn a compiling document into a
-   broken one, which is the only direction that matters here.
-
-   Applied to the CANDIDATE channel too. A withheld candidate is withheld
-   ADVICE, cheaper still than a withheld fix, and offering a reviewer a rewrite
-   that would break their document is not advice worth giving.
-
-   WARNING Continuation bytes are CHECKED. `lead-byte-without-continuation` is
-   a recurring defect here -- three instances found and fixed (OPEN-059,
-   OPEN-065) -- and a scan advancing on the lead byte alone would mis-slice
-   latin-1 bytes that merely resemble a UTF-8 lead. A malformed sequence
-   degrades to a single byte, which then simply fails attestation unless that
-   byte is itself present in the source. *)
-let utf8_units (s : string) : string list =
-  let n = String.length s in
-  let cont i = i < n && Char.code s.[i] land 0xC0 = 0x80 in
-  let rec go i acc =
-    if i >= n then List.rev acc
-    else
-      let c = Char.code s.[i] in
-      if c < 0x80 then go (i + 1) acc
-      else
-        let want =
-          if c land 0xE0 = 0xC0 then 2
-          else if c land 0xF0 = 0xE0 then 3
-          else if c land 0xF8 = 0xF0 then 4
-          else 1
-        in
-        let ok =
-          want > 1 && i + want <= n
-          &&
-          let rec chk k = k >= want || (cont (i + k) && chk (k + 1)) in
-          chk 1
-        in
-        let len = if ok then want else 1 in
-        go (i + len) (String.sub s i len :: acc)
-  in
-  go 0 []
-
-(* Characters a producer is PERMITTED to introduce into a document that has
-   never used them. Each row is a measurement, not an opinion: a four-line
-   article containing only that character, compiled at the pin, rc 0.
-
-     U+2013 EN DASH  U+2014 EM DASH  U+00D7 MULTIPLICATION SIGN
-     U+201C/D " "    U+2018/9 ' '    U+00C5 LATIN CAPITAL A WITH RING ABOVE
-
-   These are exactly the typography a fixer legitimately emits -- the goldens
-   in specs/v27/producer_triggers.json contain four distinct non-ASCII
-   codepoints in total -- plus U+00C5, which is ENC-015's one NFKC target that
-   REPAIRS a broken document rather than breaking a working one.
-
-   ⚠ The boundary is NOT a codepoint range, and writing one would be wrong.
-   Measured at the pin: U+0161 s-caron typesets, U+017F long s does not;
-   U+2013 en dash typesets, U+2212 minus sign does not; U+2126 OHM SIGN
-   typesets, U+212B ANGSTROM SIGN does not. LaTeX's default UTF-8 support is a
-   lookup table, so this is a lookup table, kept to what producers actually
-   emit so it stays auditable. Add a row only with its rc 0 alongside. *)
-let introducible_non_ascii =
-  [
-    "\xe2\x80\x93";
-    "\xe2\x80\x94";
-    "\xc3\x97";
-    "\xe2\x80\x9c";
-    "\xe2\x80\x9d";
-    "\xe2\x80\x98";
-    "\xe2\x80\x99";
-    "\xc3\x85";
-  ]
-
-let drop_unattested_non_ascii ~(src : string) (edits : Cst_edit.t list) :
-    Cst_edit.t list =
-  List.filter
-    (fun (e : Cst_edit.t) ->
-      List.for_all
-        (fun u ->
-          List.mem u introducible_non_ascii
-          || Validators_common.contains_substring src u)
-        (utf8_units e.Cst_edit.replacement))
-    edits
-
 let drop_non_ascii_when_legacy_encoding ~(src : string)
     (edits : Cst_edit.t list) : Cst_edit.t list =
   if not (declares_non_utf8 src) then edits
@@ -1031,8 +907,7 @@ let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
         @ [ r.picture; r.filename; r.preamble; r.crossref ]
         @ if List.mem rule_id package_spec_aware then [] else [ r.package_spec ]
       in
-      drop_unattested_non_ascii ~src
-        (drop_non_ascii_when_legacy_encoding ~src (filter_with ~active edits))
+      drop_non_ascii_when_legacy_encoding ~src (filter_with ~active edits)
 
 (* ── The CANDIDATE channel ────────────────────────────────────────────────
 
@@ -1146,5 +1021,4 @@ let filter_candidate ~(src : string) ~(rule_id : string)
         if List.mem rule_id candidate_package_spec_aware then []
         else [ r.package_spec ]
       in
-      drop_unattested_non_ascii ~src
-        (drop_non_ascii_when_legacy_encoding ~src (filter_with ~active edits))
+      drop_non_ascii_when_legacy_encoding ~src (filter_with ~active edits)

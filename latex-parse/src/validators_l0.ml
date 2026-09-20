@@ -877,10 +877,28 @@ let r_enc_015 : rule =
     Buffer.contents buf
   in
   (* (needle, byte length, NFKC codepoint) *)
+  (* ⚠ TWO OF THE FOUR NFKC MAPPINGS AUTO-FIXED A COMPILING DOCUMENT INTO A
+     BROKEN ONE, AND THEY ARE GONE FROM THIS TABLE. Measured at the pin
+     (pdfTeX 3.141592653-2.6-1.40.29), four-line article, one character
+     changed and nothing else:
+
+       U+00B5 MICRO SIGN          rc 0  ->  U+03BC GREEK SMALL MU     rc 1
+       U+2126 OHM SIGN            rc 0  ->  U+03A9 GREEK CAP OMEGA    rc 1
+       U+212B ANGSTROM SIGN       rc 1  ->  U+00C5 LATIN A W/ RING    rc 0
+       U+017F LATIN SMALL LONG S  rc 1  ->  's'                       rc 0
+
+     NFKC is a relation on Unicode; typesettability is a relation on LaTeX;
+     this rule assumed they were the same relation. The two Greek-block targets
+     have no definition under pdflatex's default UTF-8 support, so rewriting to
+     them is fatal -- it is what broke 2507.09697v1 in the offset-2300 window
+     with `! LaTeX Error: Unicode character mu (U+03BC)`. The two Latin-1/ASCII
+     targets genuinely REPAIR a document that does not compile, and stay.
+
+     DETECTION is unchanged: [cnt] below still counts all four, so the rule
+     still reports the compatibility character. Only the AUTO-FIX is withdrawn
+     for the unsafe pair -- diagnose, do not rewrite. (OPEN-106, C-66/C-67.) *)
   let homoglyphs =
     [
-      ("\xc2\xb5", 2, 0x03BC);
-      ("\xe2\x84\xa6", 3, 0x03A9);
       ("\xe2\x84\xab", 3, 0x00C5);
       ("\xc5\xbf", 2, 0x0073);
     ]

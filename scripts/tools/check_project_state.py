@@ -154,7 +154,17 @@ def main() -> int:
             proto = (rr_data.get("oracle") or {}).get("protocol", "")
             docs = rr_data.get("docs") or []
             with_passes = sum(1 for d in docs if d.get("pdflatex_passes"))
-            m = re.search(r"APPLIED TO (\d+)/(\d+) rows", proto)
+            # ⚠ Matches BOTH spellings. The producer emits "APPLIED TO ALL
+            # n/n rows" at full coverage (the "remainder" clause is a false
+            # sentence about an empty set), and this regex was anchored on
+            # digits straight after "APPLIED TO". When the first full-coverage
+            # sweep landed, the pattern stopped matching, the `elif` below is
+            # false once with_passes == len(docs), and the C-28 claim-provenance
+            # check silently stopped checking anything while printing PASS.
+            # Caught by the registry-rot arm of check_gate_selftests, not by
+            # any gate run. A checker coupled to the FORMAT of the string it
+            # validates goes blind the moment that string is reworded (C-65).
+            m = re.search(r"APPLIED TO (?:ALL )?(\d+)/(\d+) rows", proto)
             if m:
                 k, n = int(m.group(1)), int(m.group(2))
                 if k != with_passes or n != len(docs):

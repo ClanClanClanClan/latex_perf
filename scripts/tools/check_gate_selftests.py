@@ -593,8 +593,12 @@ REGISTRY = [
             Mutation("protocol APPLIED-TO clause falsified",
                      "corpora/real_roots/results.json",
                      r"does not match the recorded measurement",
-                     old="APPLIED TO 18/200 rows",
-                     new="APPLIED TO 42/200 rows"),
+                     # Re-anchored 2026-09-20: the OPEN-103 sweep took the
+                     # clause to full coverage, so the old "18/200" anchor
+                     # matched 0x and the registry-rot arm fired. Deliberate
+                     # update, per the message it prints.
+                     old="APPLIED TO ALL 200/200 rows",
+                     new="APPLIED TO ALL 42/200 rows"),
             # C-45: a verdict cell that its own row contradicts. The regex
             # names the COMPILES wording specifically, because re-stranding a
             # row also makes the generated block stale and that unrelated

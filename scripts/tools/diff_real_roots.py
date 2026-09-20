@@ -416,8 +416,29 @@ def git_head(repo: Path) -> str:
 
 
 def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
-                    timeout: int) -> int:
-    """Re-grade ONLY the recorded pdflatex FAILURES under the multi-pass oracle.
+                    timeout: int, scope: str = "failures") -> int:
+    """Re-grade recorded rows under the multi-pass oracle. `scope` picks which.
+
+    ⚠ THE DEFAULT SCOPE IS THE ONE DIRECTION THAT CANNOT FIND A FALSE-READY,
+    AND FOR A LONG TIME IT WAS THE ONLY SCOPE THIS TOOL HAD (OPEN-103, C-63).
+    `failures` re-runs documents already recorded as failing, so its outcomes
+    are "still fails" or "actually compiles" — it can only ever move a verdict
+    toward true-READY/false-NOT-READY. A document recorded rc 0 on a single
+    pass was never revisited. That is why `results.json` read "APPLIED TO
+    18/200 rows": 13 failures re-passed here, 5 successes from an earlier run,
+    and 180 true-READY rows carrying an unconfirmed single-pass grade — with
+    100% of the protocol deficit sitting on the soundness side, where the only
+    direction a row can move is INTO false-READY.
+
+    The paragraph below this one already said so ("run the full sweep before
+    publishing a headline number"), and the headline was published anyway.
+    `scope="unmeasured"` is that instruction made executable without paying for
+    a full re-sweep: it re-grades every row that has never had the protocol
+    applied, which is the honest way to take the APPLIED-TO clause to n/n.
+
+      failures    rows with pdflatex_rc not in (0, None)   — the legacy default
+      unmeasured  rows with no pdflatex_passes             — completes the protocol
+      all         every row                                — a full re-grade
 
     The single-pass oracle marked as failures documents that merely needed a
     second pass. Correcting that does not require re-running the whole sweep:
@@ -447,9 +468,18 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                       f"{banner!r}. Re-grading under a different engine is not a "
                       f"correction, it is a new measurement — run the full sweep.")
 
-    failures = [d for d in res["docs"] if d.get("pdflatex_rc") not in (0, None)]
-    print(f"[real-roots] re-passing {len(failures)} recorded pdflatex failure(s) "
-          f"under up to {MAX_PASSES} passes")
+    SCOPES = {
+        "failures": lambda d: d.get("pdflatex_rc") not in (0, None),
+        "unmeasured": lambda d: not d.get("pdflatex_passes"),
+        "all": lambda d: True,
+    }
+    if scope not in SCOPES:
+        return die(2, f"unknown --repass-scope {scope!r}; pick one of "
+                      f"{sorted(SCOPES)}")
+    failures = [d for d in res["docs"] if SCOPES[scope](d)]
+    print(f"[real-roots] re-passing {len(failures)} row(s) in scope {scope!r} "
+          f"under up to {MAX_PASSES} passes "
+          f"(run-to-success plus ONE CONFIRMING PASS)")
     changed = []
     for i, d in enumerate(failures, 1):
         rec = man.get(d["arxiv_id"])
@@ -492,18 +522,49 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     # verbatim into the published block, so the overstatement propagated into
     # the headline. Record what was actually measured, per row and in aggregate.
     remeasured = sum(1 for d in res["docs"] if d.get("pdflatex_passes"))
+    # ⚠ The "remainder" clause is only TRUE while a remainder exists. Caught by
+    # the scope=unmeasured pilot: at 3/3 it still published "the remainder carry
+    # a single-pass grade from an earlier run", which is a false sentence about
+    # an empty set — and this string is printed verbatim into the published
+    # block by gen_project_state.py, so it would have become the next
+    # corrections-log entry. State the full-coverage case as its own sentence.
+    _n = len(res["docs"])
     res["oracle"] = dict(ORACLE, protocol=(
-        f"{ORACLE['protocol']} — APPLIED TO {remeasured}/{len(res['docs'])} rows; "
+        f"{ORACLE['protocol']} — APPLIED TO ALL {_n}/{_n} rows"
+        if remeasured == _n else
+        f"{ORACLE['protocol']} — APPLIED TO {remeasured}/{_n} rows; "
         f"the remainder carry a single-pass grade from an earlier run"))
     res["measured_at_sha"] = git_head(repo)
-    res["measured_at"] = (f"multi-pass re-grade of recorded FAILURES only "
-                          f"(<= {MAX_PASSES} passes, {remeasured} rows); CLI "
-                          f"verdicts and already-compiling papers carried "
-                          f"forward from the prior run")
+    _scope_note = {
+        "failures": ("recorded FAILURES only; documents already recorded "
+                     "pdflatex_rc 0 were NOT revisited, so this pass cannot "
+                     "discover a false-READY (OPEN-103)"),
+        "unmeasured": ("every row that had never had the multi-pass protocol "
+                       "applied, INCLUDING recorded successes, so a document "
+                       "that compiles on pass 1 and breaks itself on pass 2 "
+                       "is detectable"),
+        "all": "every row, regardless of prior grade",
+    }[scope]
+    res["measured_at"] = (f"multi-pass re-grade, scope={scope}: {_scope_note} "
+                          f"(<= {MAX_PASSES} passes, {remeasured}/{len(res['docs'])} "
+                          f"rows now carry a pdflatex_passes count); CLI verdicts "
+                          f"carried forward from the prior run")
     results_path.write_text(json.dumps(res, indent=1) + "\n")
     print(f"\n[real-roots] {len(changed)} cell(s) changed:")
     for aid, a, b, p in changed:
         print(f"    {aid:16s} {a} -> {b}  (compiled on pass {p})")
+    # A row entering FALSE-READY is the cardinal bug, and under scope=unmeasured
+    # it is the EXPECTED direction of discovery, not a surprise. Per ADR-011 a
+    # rise is a publication event, not a regression — say it loudly here so it
+    # cannot be scrolled past. The exit code stays 0 on purpose: this is a
+    # measurement command, and the gates downstream are what enforce.
+    new_fr = [c for c in changed if c[2] == "FALSE-READY"]
+    if new_fr:
+        print(f"\n[real-roots] ⚠ {len(new_fr)} NEW FALSE-READY row(s) — the "
+              f"cardinal bug, found by confirming a grade nobody had confirmed:")
+        for aid, a, b, p in new_fr:
+            print(f"    {aid:16s} {a} -> {b}  (failed on pass {p})")
+        print("[real-roots] Publish it. ADR-011 decision 3.")
     print(f"[real-roots] counts now: {res['counts']}")
     return 0
 
@@ -570,8 +631,16 @@ def main() -> int:  # noqa: C901
                          "pdflatex results forward (asserts corpus + engine "
                          "unchanged)")
     ap.add_argument("--repass", action="store_true",
-                    help="re-grade ONLY the recorded pdflatex failures under the "
-                         "multi-pass oracle (asserts corpus + engine unchanged)")
+                    help="re-grade recorded rows under the multi-pass oracle "
+                         "(asserts corpus + engine unchanged); see --repass-scope")
+    ap.add_argument("--repass-scope", default="failures",
+                    choices=["failures", "unmeasured", "all"],
+                    help="which rows --repass re-grades. 'failures' (default, "
+                         "legacy) cannot discover a false-READY because it never "
+                         "revisits a recorded success. 'unmeasured' re-grades "
+                         "every row lacking a pdflatex_passes count, which is "
+                         "what takes the published APPLIED-TO clause to n/n "
+                         "(OPEN-103).")
     ap.add_argument("--refresh-metadata", action="store_true",
                     help="re-read declared metadata into manifest.json; runs "
                          "neither pdflatex nor the CLI (asserts corpus "
@@ -606,7 +675,8 @@ def main() -> int:  # noqa: C901
         return die(3, f"engine skew: local is {banner!r}, pinned is {PIN!r}")
 
     if ns.repass:
-        return repass_failures(repo, root, outdir, banner, ns.timeout)
+        return repass_failures(repo, root, outdir, banner, ns.timeout,
+                               scope=ns.repass_scope)
 
     if ns.refresh_cli:
         return refresh_cli_only(repo, root, outdir, banner, ns.timeout)

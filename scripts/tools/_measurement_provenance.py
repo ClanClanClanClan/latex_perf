@@ -130,13 +130,35 @@ def check_measured_at_sha(repo, sha, label, howto,
     if src_tree_sha:
         head_tree = engine_tree_id(repo, "HEAD", path)
         if head_tree and src_tree_sha == head_tree:
+            # Provably current: not one byte of `path` differs from HEAD, so
+            # the commit distance cannot mean anything. Strict improvement —
+            # this can only turn a red green ON EVIDENCE.
             return findings
-        if head_tree:
+        # ⚠ A mere DIFFERENCE is not a failure, and making it one was a defect
+        # in the first version of this arm. The engine is supposed to change;
+        # C-13 set MAX_MEASUREMENT_LAG deliberately above 0 precisely because
+        # failing on every source edit trains people to refresh without
+        # reading. Ordinary drift therefore falls through to the ratchet below,
+        # unchanged.
+        #
+        # What IS a failure is an INCOHERENT claim: a recorded tree id that is
+        # not an object in this repository at all. That artefact asserts an
+        # engine state which has never existed here, so nothing about it can be
+        # trusted — including the measurement it carries.
+        # ⚠ ORDERING IS LOAD-BEARING. This existence test would give a FALSE
+        # failure in a shallow clone, where an older tree object simply has
+        # not been fetched. It is safe only because Arm 1 above already
+        # returned on an unresolvable measured_at_sha, which is exactly what
+        # a shallow clone produces. Do not reorder these arms, and do not
+        # remove `fetch-depth: 0` from the workflows that run them.
+        if _git(repo, "cat-file", "-e", f"{src_tree_sha}^{{tree}}").returncode != 0:
             findings.append(
-                f"{label} was measured against {path} tree {src_tree_sha[:12]}…, "
-                f"HEAD has {head_tree[:12]}… — the engine source HAS changed "
-                f"since this was measured (this is exact, unlike the commit "
-                f"count below).")
+                f"{label} records src_tree_sha {src_tree_sha[:12]}…, which is "
+                f"not a tree object in this repository. The artefact claims an "
+                f"engine source state that has never existed on this branch, so "
+                f"its provenance is incoherent — re-measure rather than "
+                f"re-stamp.\n      {howto}")
+            return findings
 
     # Arm 4 — the distance. Unreachable failures are still reported.
     r = _git(repo, "rev-list", "--count", f"{sha}..HEAD", "--", path)

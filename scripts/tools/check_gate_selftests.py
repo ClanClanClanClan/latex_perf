@@ -570,9 +570,9 @@ REGISTRY = [
             # The engine anchor must FAIL when the source has moved under a
             # recorded measurement (C-64). Exact, where the commit count is a
             # proxy — and unlike cli_sha256 this one is checkable in CI.
-            Mutation("engine source moved under the measurement (C-64)",
+            Mutation("engine anchor names a tree that never existed (C-64)",
                      "corpora/real_roots/proven_coverage_sample1.json",
-                     r"the engine source HAS changed since this was measured",
+                     r"not a tree object in this repository",
                      transform=prov_stale_engine_tree),
             # The staleness ratchet must FAIL when it cannot see its own
             # input. Before C-58 this passed: an unresolvable sha made

@@ -42,20 +42,45 @@ import json
 import pathlib
 import subprocess
 import sys
+from pathlib import Path as _Path
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent))
+from _measurement_provenance import (  # noqa: E402
+    MAX_MEASUREMENT_LAG, check_measured_at_sha)
 
 # TWO WINDOWS, AND THE GATE RATCHETS BOTH. The tuned window is the one whose
 # breaks the fixes were designed from; the virgin window has never been used to
 # design anything. Measured 2026-09-12, immediately after fixing MATH-009,
 # MATH-014 and PKG-011: TUNED 0/38 = 0.0%, VIRGIN 6/39 = 15.4%.
+# 2026-09-13, after OPEN-097: those two windows read 0.0% and 2.6%, and a
+# never-used window read 18.4% -- statistically indistinguishable from the
+# 15.4% of the round before. Two rounds of producer fixes, no measurable
+# out-of-sample improvement. See OPEN-100.
 #
 # ⚠ THE ZERO DOES NOT GENERALISE, AND IT MUST NEVER BE QUOTED ALONE. This is
 # C-39/OPEN-034 reproduced on a second corpus: the in-sample number after a
 # round of fixes is an optimistic estimate of the fixer's real damage, because
 # the sample IS the thing the fixes were fitted to. Same idiom as
 # corpora/real_roots' sample 1 / sample 2 split, for the same reason.
+# ⚠ THREE WINDOWS, AND ONLY THE LAST ONE IS QUOTABLE ALONE.
+#
+# A window becomes TUNED the moment a fix is designed from its breaks, and the
+# rate on a tuned window collapses toward zero whether or not the underlying
+# defect class was closed. That has now happened twice in a row -- offset 2000
+# went to 0.0% while a fresh 2100 read 15.4%, then 2100 went to 2.6% while a
+# fresh 2300 read 18.4%. So the fresh slot ROTATES: whenever a fix is designed
+# from the breaks in `results_fresh.json`, that file's window joins the tuned
+# family and the fresh slot must be re-pointed at an offset that has never been
+# used for anything. Grep the repo for "offset <n>" before choosing one.
+#
+# Measured 2026-09-13, all three with cli d2780297, after the OPEN-097 fix:
+#   2000 (tuned twice)          0/38 =  0.0%
+#   2100 (tuned by OPEN-097)    1/39 =  2.6%
+#   2300 (never used)           7/38 = 18.4%   <-- the honest number
 ARTEFACTS = [
     ("corpora/apply_fixes_real/results.json", "tuned", 0),
-    ("corpora/apply_fixes_real/results_virgin.json", "virgin", 3),
+    ("corpora/apply_fixes_real/results_virgin.json", "tuned-by-OPEN-097", 1),
+    ("corpora/apply_fixes_real/results_fresh.json", "FRESH (offset 2300)", 7),
 ]
 ARTEFACT = ARTEFACTS[0][0]
 # The number of real COMPILING papers the default fixer is currently known to
@@ -63,7 +88,8 @@ ARTEFACT = ARTEFACTS[0][0]
 # refreshes the artefact. Raising it needs a ledger row saying why the
 # regression is acceptable -- there is no such reason yet.
 BASELINE_BROKEN = 7
-MAX_MEASUREMENT_LAG = 5
+# MAX_MEASUREMENT_LAG is imported from _measurement_provenance so the
+# two gates enforcing it cannot drift apart.
 
 
 def main() -> int:
@@ -157,16 +183,12 @@ def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
         findings.append(f"{ARTEFACT} has no provenance.measured_at_sha, so its "
                         f"staleness cannot be checked (OPEN-080).")
     else:
-        r = subprocess.run(["git", "--no-optional-locks", "rev-list", "--count",
-                            f"{sha}..HEAD", "--", "latex-parse/src"],
-                           cwd=repo, capture_output=True, text=True)
-        if r.returncode == 0 and r.stdout.strip().isdigit():
-            behind = int(r.stdout.strip())
-            if behind > MAX_MEASUREMENT_LAG:
-                findings.append(
-                    f"{ARTEFACT} is {behind} commits behind HEAD on "
-                    f"latex-parse/src (limit {MAX_MEASUREMENT_LAG}); the fixer "
-                    f"has changed since this was measured.")
+        # Fails CLOSED. Was `if rc == 0 and isdigit():` with no else, so a
+        # shallow CI clone (rc 128) and a non-ancestor sha (a meaningless
+        # count) both read as a pass. See _measurement_provenance.py / C-58.
+        findings.extend(check_measured_at_sha(
+            repo, sha, ARTEFACT,
+            "re-run the apply-fixes differential and re-stamp provenance"))
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
     if cli.is_file() and prov.get("cli_sha256"):
         h = hashlib.sha256()

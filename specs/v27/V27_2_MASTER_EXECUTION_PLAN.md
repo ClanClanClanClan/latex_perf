@@ -13,7 +13,7 @@ grounded in two data-driven audits (`REMAINING_FIXABILITY_AUDIT.md`,
 
 ## Final state (v27.1.39)
 
-- 643/660 rules implemented (17 reserved); **167 auto-fix producers + 69 Bucket-C
+- 643/660 rules implemented (17 reserved); **164 auto-fix producers + 69 Bucket-C
   candidates**. Every fixable rule has an auto-fix or a `--list-candidate-fixes`
   candidate.
 - All safety gates in CI: multi-trigger coverage, verbatim, convergence,
@@ -26,7 +26,7 @@ grounded in two data-driven audits (`REMAINING_FIXABILITY_AUDIT.md`,
 | # | Workstream | Real size | Status |
 |---|---|---|---|
 | T1 | Reconcile & de-risk | small | **DONE** (README, plan banners, expert briefings, ML scope, 2 audit docs) |
-| M | Finish mechanical auto-fix | 10 rules | **DONE** — mechanical auto-fix universe exhausted (167 producers) |
+| M | Finish mechanical auto-fix | 10 rules | **DONE** — mechanical auto-fix universe exhausted (167 producers; 164 live since the HI-001/TYPO-038/TYPO-028 withdrawals) |
 | CP | Candidate pool | ~170 rules | **DONE** — 69 Bucket-C candidates shipped; risky REF/BIB/STYLE renames documented as HELD pending a review UX |
 | T2 | L3-AST migration | **~6–11 rules** (not 116) | **COMPLETE** — `ast_semantic_state` module (v27.1.28) + REF migration (v27.1.36) + regex-vs-AST parity gate |
 | T3 | Faithful semantics (Coq) | epic | **COMPLETE** — faithful pdflatex operational semantics, Stages 1–6 + residuals (v27.1.29–39) |

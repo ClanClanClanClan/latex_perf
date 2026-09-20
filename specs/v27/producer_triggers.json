@@ -2658,6 +2658,13 @@
     "kind": "mutate",
     "note": "canonical legitimate hit, no enclosing brace: default-deny must NOT suppress this.",
     "pilot": false
+   },
+   {
+    "expected_hex": "252420706466696e666f20782e7064660a7468652073696e206f662069740a2479240a",
+    "hex": "252420706466696e666f20782e7064660a7468652073696e206f662069740a2479240a",
+    "kind": "preserve",
+    "note": "OPEN-097: a math-operator word in PROSE after a comment `$`. Pre-fix MATH-009 backslashed it; this is the 2507.04362v1 shape.",
+    "pilot": false
    }
   ]
  },
@@ -4221,6 +4228,13 @@
     "hex": "5c766572627c24782727247c0a",
     "kind": "preserve",
     "note": "in-verbatim (vcu-exempt)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "252420706466696e666f20782e7064660a48652073616964206060686927272e0a2479240a",
+    "hex": "252420706466696e666f20782e7064660a48652073616964206060686927272e0a2479240a",
+    "kind": "preserve",
+    "note": "OPEN-097: `''` in PROSE after a comment `$`. Pre-fix this became `^{\\prime\\prime}`, which is how 2507.05786v1 broke.",
     "pilot": false
    }
   ]

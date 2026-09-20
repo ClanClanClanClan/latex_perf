@@ -23,13 +23,36 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # fetch-depth: 0 is LOAD-BEARING, not hygiene. actions/checkout defaults
+      # to a one-commit clone, in which `git rev-list <sha>..HEAD` exits 128 for
+      # every provenance sha an artefact records. Both staleness ratchets in
+      # this job (check_project_state.py, check_apply_fixes_real_differential.py)
+      # treated that non-zero exit as a pass, so NEITHER had ever fired in CI —
+      # on any PR, since they were written. As of 2026-09-20 no workflow in this
+      # repo set fetch-depth at all. It also brings tags, which the release-debt
+      # gate needs. Removing this line silently blinds both ratchets again; the
+      # kill-tests registered for them are what stops that going unnoticed.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - run: pip install pyyaml
+
+      # Ground truth is the OCaml source: this greps the actual result
+      # constructor each rule calls. The committed doc is a MIRROR of that, so
+      # regenerating it cannot launder anything -- unlike gen_producer_triggers,
+      # whose goldens derive from the producer under test.
+      # It was stale on main (70 producers vs a true 67 -- TYPO-028, TYPO-038
+      # and HI-001, withdrawn for corrupting real documents) while its own
+      # header claimed a CI check kept it in sync. `grep -rn gen_candidate_backlog
+      # .github/workflows/` returned nothing: the FOURTH instance in this repo of
+      # a gate that runs in no automated path at all (OPEN-091, OPEN-102).
+      - name: Check candidate backlog is in sync with the OCaml source
+        run: python3 scripts/tools/gen_candidate_backlog.py --check
 
       - name: Check project facts consistency
         run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .

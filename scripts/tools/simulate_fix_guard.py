@@ -613,11 +613,14 @@ def main():
                                     "summary": summarise(rows), "rows": rows},
                                    indent=1, ensure_ascii=False) + "\n")
 
+    harness_errors = []
+
     def one(item):
         rank, rec = item
         try:
             return run_paper(rank, rec, root, ns.timeout, ns.sample_cap)
-        except Exception as ex:  # a harness error is recorded, never a pass
+        except Exception as ex:  # recorded as its own cell AND fails the run
+            harness_errors.append(rec["arxiv_id"])
             return {"rank": rank, "arxiv_id": rec["arxiv_id"],
                     "cell": "harness-error", "error": repr(ex),
                     "trace": traceback.format_exc()}
@@ -632,7 +635,14 @@ def main():
     s = summarise(rows)
     print(json.dumps(s, indent=1))
     print("SENTINEL_DONE", flush=True)
+    if harness_errors:
+        # A paper the harness could not measure is not a result; never let the
+        # run look complete and clean when it was not.
+        print(f"FATAL: harness error on {len(harness_errors)} paper(s): "
+              f"{', '.join(harness_errors)}", file=sys.stderr)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

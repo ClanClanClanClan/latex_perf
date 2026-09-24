@@ -877,14 +877,38 @@ let r_enc_015 : rule =
     Buffer.contents buf
   in
   (* (needle, byte length, NFKC codepoint) *)
-  let homoglyphs =
-    [
-      ("\xc2\xb5", 2, 0x03BC);
-      ("\xe2\x84\xa6", 3, 0x03A9);
-      ("\xe2\x84\xab", 3, 0x00C5);
-      ("\xc5\xbf", 2, 0x0073);
-    ]
-  in
+  (* ⚠ TWO OF THE FOUR NFKC MAPPINGS AUTO-FIXED A COMPILING DOCUMENT INTO A
+     BROKEN ONE, AND THEY ARE GONE FROM THIS TABLE. Measured at the pin (pdfTeX
+     3.141592653-2.6-1.40.29), four-line article, one character changed and
+     nothing else:
+
+     Each row is a pdflatex run, not an opinion. ⚠ Written as whole sentences
+     rather than an aligned table on purpose: `.ocamlformat` sets `wrap-comments
+     = true`, which reflows prose AND `{v v}` blocks inside a plain `(* *)`
+     comment (verbatim blocks only survive in a `(** *)` docstring). An aligned
+     table therefore gets rewrapped into a run-on that detaches each rc from its
+     codepoint, which turns the evidence into noise. Encode meaning in the
+     sentence, never in the whitespace.
+
+     - U+00B5 MICRO SIGN typesets (rc 0) and its NFKC target U+03BC GREEK SMALL
+     MU does NOT (rc 1) — mapping DROPPED, it broke 2507.09697v1. - U+2126 OHM
+     SIGN typesets (rc 0) and its target U+03A9 GREEK CAPITAL OMEGA does NOT (rc
+     1) — mapping DROPPED. - U+212B ANGSTROM SIGN does NOT typeset (rc 1) and
+     its target U+00C5 LATIN CAPITAL A WITH RING DOES (rc 0) — mapping KEPT, it
+     repairs. - U+017F LATIN SMALL LONG S does NOT typeset (rc 1) and its target
+     's' does (rc 0) — mapping KEPT, it repairs.
+
+     NFKC is a relation on Unicode; typesettability is a relation on LaTeX; this
+     rule assumed they were the same relation. The two Greek-block targets have
+     no definition under pdflatex's default UTF-8 support, so rewriting to them
+     is fatal -- it is what broke 2507.09697v1 in the offset-2300 window with `!
+     LaTeX Error: Unicode character mu (U+03BC)`. The two Latin-1/ASCII targets
+     genuinely REPAIR a document that does not compile, and stay.
+
+     DETECTION is unchanged: [cnt] below still counts all four, so the rule
+     still reports the compatibility character. Only the AUTO-FIX is withdrawn
+     for the unsafe pair -- diagnose, do not rewrite. (OPEN-106, C-66/C-67.) *)
+  let homoglyphs = [ ("\xe2\x84\xab", 3, 0x00C5); ("\xc5\xbf", 2, 0x0073) ] in
   let run s =
     (* U+00B5 MICRO SIGN = C2 B5 *)
     let cnt_micro = count_substring s "\xc2\xb5" in

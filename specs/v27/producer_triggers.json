@@ -1802,17 +1802,17 @@
  "ENC-015": {
   "variants": [
    {
-    "expected_hex": "61cebc620a",
+    "expected_hex": "61c2b5620a",
     "hex": "61c2b5620a",
-    "kind": "mutate",
-    "note": "base — micro U+00B5 -> Greek mu U+03BC",
+    "kind": "preserve",
+    "note": "base — micro U+00B5 -> Greek mu U+03BC [hand-corrected 2026-09-20, NOT regenerated: the micro and ohm auto-fixes were WITHDRAWN because their NFKC targets are Greek-block and have no definition under pdflatex's default UTF-8 support — measured rc 0 -> rc 1 at the pin. Detection is unchanged; only the rewrite is gone.]",
     "pilot": false
    },
    {
-    "expected_hex": "35cea90a",
+    "expected_hex": "35e284a60a",
     "hex": "35e284a60a",
-    "kind": "mutate",
-    "note": "ohm U+2126 -> Omega U+03A9",
+    "kind": "preserve",
+    "note": "ohm U+2126 -> Omega U+03A9 [hand-corrected 2026-09-20, NOT regenerated: the micro and ohm auto-fixes were WITHDRAWN because their NFKC targets are Greek-block and have no definition under pdflatex's default UTF-8 support — measured rc 0 -> rc 1 at the pin. Detection is unchanged; only the rewrite is gone.]",
     "pilot": false
    },
    {
@@ -1830,31 +1830,31 @@
     "pilot": false
    },
    {
-    "expected_hex": "e6bca2cebce6bca20a",
+    "expected_hex": "e6bca2c2b5e6bca20a",
     "hex": "e6bca2c2b5e6bca20a",
-    "kind": "mutate",
-    "note": "CJK-adjacent",
+    "kind": "preserve",
+    "note": "CJK-adjacent [hand-corrected 2026-09-20, NOT regenerated: the micro and ohm auto-fixes were WITHDRAWN because their NFKC targets are Greek-block and have no definition under pdflatex's default UTF-8 support — measured rc 0 -> rc 1 at the pin. Detection is unchanged; only the rewrite is gone.]",
     "pilot": false
    },
    {
-    "expected_hex": "61cebccebc620a",
+    "expected_hex": "61c2b5c2b5620a",
     "hex": "61c2b5c2b5620a",
-    "kind": "mutate",
-    "note": "doubled",
+    "kind": "preserve",
+    "note": "doubled [hand-corrected 2026-09-20, NOT regenerated: the micro and ohm auto-fixes were WITHDRAWN because their NFKC targets are Greek-block and have no definition under pdflatex's default UTF-8 support — measured rc 0 -> rc 1 at the pin. Detection is unchanged; only the rewrite is gone.]",
     "pilot": false
    },
    {
-    "expected_hex": "cebccea9c385730a",
+    "expected_hex": "c2b5e284a6c385730a",
     "hex": "c2b5e284a6e284abc5bf0a",
     "kind": "mutate",
-    "note": "all four homoglyphs mixed",
+    "note": "all four homoglyphs mixed [hand-corrected 2026-09-20, NOT regenerated: the micro and ohm auto-fixes were WITHDRAWN because their NFKC targets are Greek-block and have no definition under pdflatex's default UTF-8 support — measured rc 0 -> rc 1 at the pin. Detection is unchanged; only the rewrite is gone.]",
     "pilot": false
    },
    {
-    "expected_hex": "6162cebc",
+    "expected_hex": "6162c2b5",
     "hex": "6162c2b5",
-    "kind": "mutate",
-    "note": "EOF",
+    "kind": "preserve",
+    "note": "EOF [hand-corrected 2026-09-20, NOT regenerated: the micro and ohm auto-fixes were WITHDRAWN because their NFKC targets are Greek-block and have no definition under pdflatex's default UTF-8 support — measured rc 0 -> rc 1 at the pin. Detection is unchanged; only the rewrite is gone.]",
     "pilot": false
    },
    {

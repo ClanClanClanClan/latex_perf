@@ -99,33 +99,53 @@ let () =
     | Ok out -> out
     | Error _ -> failwith "ENC-015: overlapping edits"
   in
-  run "ENC-015 fix: micro µ → Greek mu μ" (fun tag ->
-      (* 5 µ m → 5 μ m : C2 B5 → CE BC *)
-      expect (enc015_apply "5\xc2\xb5m" = "5\xce\xbcm") (tag ^ ": micro→mu"));
-  run "ENC-015 fix: ohm → Greek capital omega" (fun tag ->
-      (* E2 84 A6 → CE A9 (U+03A9) *)
-      expect (enc015_apply "50\xe2\x84\xa6" = "50\xce\xa9") (tag ^ ": ohm→Omega"));
+  (* ⚠ micro and ohm are DETECTED but NO LONGER REWRITTEN. Measured at the pin:
+     U+00B5 typesets (rc 0) and U+03BC GREEK SMALL MU does not (rc 1), so the
+     old rewrite turned a compiling document into a broken one -- it is what
+     broke 2507.09697v1. Same for U+2126 -> U+03A9. The auto-fix is withdrawn;
+     the finding still fires. Diagnose, do not rewrite. (OPEN-106, C-67.) *)
+  run "ENC-015 fix: micro µ is DETECTED but NOT rewritten" (fun tag ->
+      expect
+        (enc015_apply "5\xc2\xb5m" = "5\xc2\xb5m"
+        && fires "ENC-015" "5\xc2\xb5m")
+        (tag ^ ": micro left alone, still reported"));
+  run "ENC-015 fix: ohm is DETECTED but NOT rewritten" (fun tag ->
+      expect
+        (enc015_apply "50\xe2\x84\xa6" = "50\xe2\x84\xa6"
+        && fires "ENC-015" "50\xe2\x84\xa6")
+        (tag ^ ": ohm left alone, still reported"));
   run "ENC-015 fix: angstrom → Latin A with ring" (fun tag ->
       (* E2 84 AB → C3 85 (U+00C5) *)
       expect (enc015_apply "3\xe2\x84\xab" = "3\xc3\x85") (tag ^ ": angstrom→Å"));
   run "ENC-015 fix: long s → ASCII s" (fun tag ->
       (* C5 BF → 's' *)
       expect (enc015_apply "proce\xc5\xbfs" = "process") (tag ^ ": long s→s"));
-  run "ENC-015 fix: all four homoglyphs in one pass" (fun tag ->
+  run "ENC-015 fix: only the two SAFE homoglyphs convert" (fun tag ->
+      (* U+212B -> U+00C5 and U+017F -> 's' each take a document that does NOT
+         compile to one that does, so they stay. The Greek-block pair does the
+         opposite and is gone. *)
       expect
         (enc015_apply "\xc2\xb5\xe2\x84\xa6\xe2\x84\xab\xc5\xbf"
-        = "\xce\xbc\xce\xa9\xc3\x85s")
-        (tag ^ ": batch rewrite"));
-  run "ENC-015 fix: idempotent (second pass is a no-op)" (fun tag ->
+        = "\xc2\xb5\xe2\x84\xa6\xc3\x85s")
+        (tag ^ ": angstrom and long-s convert, micro and ohm do not"));
+  run "ENC-015 fix: idempotent, and still REPORTS what it declined to fix"
+    (fun tag ->
+      (* The finding must survive its own fix: micro and ohm are still present
+         and still worth telling the author about. A rule that silenced itself
+         by rewriting only the easy half would hide the real problem. *)
       let once = enc015_apply "5\xc2\xb5m 50\xe2\x84\xa6 3\xe2\x84\xab" in
       expect
-        (enc015_apply once = once && does_not_fire "ENC-015" once)
-        (tag ^ ": fixed output no longer fires"));
-  run "ENC-015 fix: count preserved alongside fix" (fun tag ->
+        (enc015_apply once = once && fires "ENC-015" once)
+        (tag ^ ": fixpoint reached, micro+ohm still reported"));
+  run "ENC-015: DETECTION count and FIX count are now allowed to differ"
+    (fun tag ->
+      (* Two homoglyphs found, zero edits offered -- the shape of a rule that
+         diagnoses what it must not rewrite. This assertion is the contract: if
+         someone re-adds the Greek-block mappings, this is what breaks. *)
       expect
         (fires_with_count "ENC-015" "5\xc2\xb5m 50\xe2\x84\xa6" 2
-        && List.length (fix_edits "ENC-015" "5\xc2\xb5m 50\xe2\x84\xa6") = 2)
-        (tag ^ ": count=2 and 2 edits"));
+        && List.length (fix_edits "ENC-015" "5\xc2\xb5m 50\xe2\x84\xa6") = 0)
+        (tag ^ ": count=2, edits=0"));
 
   (* ══════════════════════════════════════════════════════════════════════
      MATH-083: Unicode minus inside text mode

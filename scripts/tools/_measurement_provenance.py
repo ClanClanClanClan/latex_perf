@@ -45,6 +45,7 @@ directions or it is not verified.
 
 from __future__ import annotations
 
+import platform
 import subprocess
 
 # A measurement more than this many commits behind HEAD on the engine source is
@@ -84,8 +85,20 @@ def engine_tree_id(repo, rev="HEAD", path=WATCHED_PATH):
     return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
 
 
+# Every artefact that records a cli_sha256 before `cli_platform` existed was
+# produced on the owner's macOS arm64 machine (C-64 records that CI builds
+# ubuntu ELF and never produced one). That is an ASSUMPTION about legacy
+# artefacts, stated here so it can be checked, not inferred silently.
+LEGACY_CLI_PLATFORM = "Darwin-arm64"
+
+
+def cli_platform():
+    """The platform a binary hash is comparable within, e.g. Darwin-arm64."""
+    return f"{platform.system()}-{platform.machine()}"
+
+
 def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
-                     src_tree_sha, path=WATCHED_PATH):
+                     src_tree_sha, path=WATCHED_PATH, recorded_platform=None):
     """Is the artefact's recorded binary hash a problem? Returns (findings, notes).
 
     ⚠ THIS ARM USED TO HARD-FAIL ON ANY MISMATCH, AND THAT WAS WRONG IN A WAY
@@ -126,6 +139,14 @@ def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
         return [], [f"{label}: cli_sha256 NOT verified — no built CLI in this run"]
     if recorded_cli == built_cli:
         return [], []
+    # A hash from another platform is incomparable, not wrong (C-64). Without
+    # this, the stale-build arm below would fire on EVERY CI run for any
+    # artefact measured at HEAD's source: identical source, ubuntu ELF versus a
+    # macOS Mach-O. Only the producing platform can run this check.
+    rec_plat = recorded_platform or LEGACY_CLI_PLATFORM
+    if rec_plat != cli_platform():
+        return [], [f"{label}: cli_sha256 NOT comparable — recorded on "
+                    f"{rec_plat}, this run is {cli_platform()} (C-64)"]
 
     head_tree = engine_tree_id(repo, "HEAD", path)
     if src_tree_sha and head_tree and src_tree_sha == head_tree:

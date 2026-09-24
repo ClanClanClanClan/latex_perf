@@ -51,6 +51,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from diff_real_roots import (  # noqa: E402
     ORACLE, PIN, build_frame, run_to_fixpoint,
 )
+from _measurement_provenance import cli_platform  # noqa: E402
 
 DEFAULT_OFFSET = 2000
 DEFAULT_N = 40
@@ -218,6 +219,8 @@ def main() -> int:
                  "HEAD:latex-parse/src"], cwd=repo, capture_output=True,
                 text=True).stdout.strip() or None,
             "cli_sha256": sha256_file(cli),
+            # The hash is only comparable on this platform (C-64).
+            "cli_platform": cli_platform(),
             "frame": {"corpus": str(root.name), "frame_size": len(frame),
                       "selection": "sha256(arxiv_id) ascending",
                       "offset": ns.offset, "n": ns.n},

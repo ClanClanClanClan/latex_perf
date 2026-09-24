@@ -248,6 +248,11 @@ def prov_stale_build(text: str) -> str:
         ["git", "--no-optional-locks", "rev-parse", "HEAD:latex-parse/src"],
         capture_output=True, text=True).stdout.strip()
     tgt["cli_sha256"] = "0" * 64
+    # And claim THIS platform produced it: a hash from another platform is a
+    # note, not a kill (C-64), so without this the mutation would not fire on
+    # the ubuntu CI runner.
+    from _measurement_provenance import cli_platform as _plat
+    tgt["cli_platform"] = _plat()
     return _json.dumps(d, indent=2)
 
 

@@ -84,6 +84,66 @@ def engine_tree_id(repo, rev="HEAD", path=WATCHED_PATH):
     return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
 
 
+def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
+                     src_tree_sha, path=WATCHED_PATH):
+    """Is the artefact's recorded binary hash a problem? Returns (findings, notes).
+
+    ⚠ THIS ARM USED TO HARD-FAIL ON ANY MISMATCH, AND THAT WAS WRONG IN A WAY
+    THAT MADE MAIN RED FOR A COMMENT (C-68).
+
+    Two measurements decide the semantics, both taken 2026-09-24 at the pin:
+
+    1. A COMMENT-ONLY edit moves the hash. `validators_l0.ml` changed by comment
+       text alone -- verified line by line -- and the CLI went
+       b2d70f55 -> 2c6ca273. OCaml embeds source locations, so reflowing a
+       comment shifts line numbers and the binary differs while behaviour is
+       provably identical.
+    2. IDENTICAL source reproduces the hash exactly. Deleting the exe and
+       relinking returned 2c6ca2736f2e byte-for-byte.
+
+    Together those say the check is meaningful in exactly one situation. When
+    the recorded SOURCE TREE still equals HEAD's and the binaries nevertheless
+    differ, the artefact was produced by a build that does not correspond to its
+    own source -- a stale or dirty `_build`. That is real, it is what this check
+    was written for, and it stays a FAILURE.
+
+    When the source tree has MOVED, the binary must move with it, so a mismatch
+    carries no information the source anchor did not already carry. Failing
+    there is pure false positive, and `MAX_MEASUREMENT_LAG` (deliberately not 0,
+    C-13) already governs how much drift is tolerated. Demoted to a note.
+
+    The same arm is also unrunnable in CI (spec-drift is a pure job, OPEN-101)
+    and incomparable across platforms (CI builds ubuntu ELF, artefacts come from
+    a macOS arm64 Mach-O, C-64). `src_tree_sha` exists because of those two; this
+    change is the third defect of the same arm, and the reason the SOURCE anchor
+    is the primary one and the binary hash is now its subordinate.
+    """
+    if not recorded_cli:
+        return [], []
+    if not built_cli:
+        # Announce rather than skip silently: a check nobody can see not
+        # running is indistinguishable from one that passed (C-59).
+        return [], [f"{label}: cli_sha256 NOT verified — no built CLI in this run"]
+    if recorded_cli == built_cli:
+        return [], []
+
+    head_tree = engine_tree_id(repo, "HEAD", path)
+    if src_tree_sha and head_tree and src_tree_sha == head_tree:
+        return ([
+            f"{label} records cli_sha256 {recorded_cli[:12]}… but the built "
+            f"binary is {built_cli[:12]}…, while {path} is UNCHANGED since the "
+            f"measurement. Identical source reproduces the hash exactly, so a "
+            f"mismatch here means the artefact came from a build that does not "
+            f"match its own source — a stale or dirty _build.\n      {howto}"
+        ], [])
+    return [], [
+        f"{label}: cli_sha256 differs ({recorded_cli[:12]}… vs {built_cli[:12]}…) "
+        f"but {path} has also changed since the measurement, so the binary was "
+        f"expected to differ. Staleness is governed by the source anchor and the "
+        f"commit-distance ratchet, not by this hash (C-68)."
+    ]
+
+
 def check_measured_at_sha(repo, sha, label, howto,
                           limit=MAX_MEASUREMENT_LAG,
                           path=WATCHED_PATH,

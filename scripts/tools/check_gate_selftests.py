@@ -227,6 +227,30 @@ def stale_theorem_total(text: str) -> str:
     return out
 
 
+def prov_stale_build(text: str) -> str:
+    """Same engine source, different binary — the STALE BUILD case (C-68).
+
+    After C-68 a cli_sha256 mismatch is a failure only when latex-parse/src is
+    UNCHANGED since the measurement, because identical source reproduces the
+    hash byte-for-byte while a comment-only edit moves it. This mutation
+    therefore has to set BOTH fields: the source anchor to HEAD's actual tree,
+    and the binary hash to something impossible. Setting only the hash would
+    now (correctly) produce a note rather than a kill.
+
+    Binary level: the arm is inert without a built CLI, which is the whole of
+    OPEN-101.
+    """
+    import json as _json
+    import subprocess as _sp
+    d = _json.loads(text)
+    tgt = d.get("provenance", d)
+    tgt["src_tree_sha"] = _sp.run(
+        ["git", "--no-optional-locks", "rev-parse", "HEAD:latex-parse/src"],
+        capture_output=True, text=True).stdout.strip()
+    tgt["cli_sha256"] = "0" * 64
+    return _json.dumps(d, indent=2)
+
+
 def prov_stale_engine_tree(text: str) -> str:
     """Claim the artefact was measured against a different engine source tree.
 
@@ -880,6 +904,16 @@ REGISTRY = [
                      ".github/actions/setup-ocaml-env/action.yml",
                      r"attempts have DRIFTED",
                      transform=drift_second_setup_ocaml),
+        ]),
+    GateTest(
+        "check_project_state (binary arm)",
+        [PY, f"{TOOLS}/check_project_state.py"],
+        "binary",
+        [
+            Mutation("stale build: same source, different binary (C-68)",
+                     "corpora/real_roots/proven_coverage_sample1.json",
+                     r"stale or dirty _build",
+                     transform=prov_stale_build),
         ]),
     GateTest(
         "check_known_false_ready", [PY, f"{TOOLS}/check_known_false_ready.py"],

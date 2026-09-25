@@ -37,7 +37,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _measurement_provenance import (  # noqa: E402
-    MAX_MEASUREMENT_LAG, check_measured_at_sha)
+    MAX_MEASUREMENT_LAG, check_cli_sha256, check_measured_at_sha)
 
 DOC = Path("docs/v27/PROJECT_STATE.md")
 GEN = Path("scripts/tools/gen_project_state.py")
@@ -278,24 +278,15 @@ def main() -> int:
             # can only make the gate smarter, never weaker.
             src_tree_sha=(_dig(data, ("provenance", "src_tree_sha"))
                           or data.get("src_tree_sha"))))
-        # A commit count is a proxy; the binary hash is the fact. When the CLI
-        # is built, prove the artefact came from THIS binary.
-        recorded_cli = _dig(data, ("provenance", "cli_sha256"))
-        if cli_hash and recorded_cli and recorded_cli != cli_hash:
-            findings.append(
-                f"{rel} was produced by a DIFFERENT binary "
-                f"(records {recorded_cli[:12]}…, built is {cli_hash[:12]}…). "
-                f"Commit distance can be zero and this still wrong. Refresh:\n"
-                f"      {howto}")
-        elif recorded_cli and not cli_hash:
-            # ⚠ This is the arm the gate's own comment claimed ran in `build`.
-            # It does not: as of 2026-09-20 check_project_state.py is invoked
-            # from spec-drift.yml ONLY, a pure job that compiles nothing, so
-            # `cli_hash` is always None in CI and the strongest check the gate
-            # owns has never executed there. Announce the skip rather than
-            # taking it silently — a check nobody can see not running is
-            # indistinguishable from one that passed (OPEN-101, C-59).
-            skipped_binary_checks.append(rel)
+        # The binary hash is SUBORDINATE to the source anchor above, not the
+        # primary fact it once claimed to be — see check_cli_sha256 and C-68.
+        f_cli, n_cli = check_cli_sha256(
+            repo, rel, howto,
+            _dig(data, ("provenance", "cli_sha256")), cli_hash,
+            (_dig(data, ("provenance", "src_tree_sha")) or data.get("src_tree_sha")),
+            recorded_platform=_dig(data, ("provenance", "cli_platform")))
+        findings.extend(f_cli)
+        skipped_binary_checks.extend(n_cli)
 
     # ── 3. the corrections log must not be empty ─────────────────────────
     m = re.search(r"^##\s*4\..*?corrections log.*?$(.*?)^##\s", text,
@@ -365,11 +356,8 @@ def main() -> int:
         return 1
 
     if skipped_binary_checks:
-        print(f"[project-state] NOTE: cli_sha256 NOT verified for "
-              f"{len(skipped_binary_checks)} artefact(s) — no built CLI in this "
-              f"run: {', '.join(skipped_binary_checks)}. This is the gate's "
-              f"strongest arm and it does not run in CI (OPEN-101).",
-              file=sys.stderr)
+        for _n in skipped_binary_checks:
+            print(f"[project-state] NOTE: {_n}", file=sys.stderr)
 
     print(f"[project-state] PASS: generated block matches its sources; "
           f"{len(ids)} open items with ids/evidence/sizes; "

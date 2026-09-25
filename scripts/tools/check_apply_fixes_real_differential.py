@@ -46,7 +46,7 @@ from pathlib import Path as _Path
 
 sys.path.insert(0, str(_Path(__file__).resolve().parent))
 from _measurement_provenance import (  # noqa: E402
-    MAX_MEASUREMENT_LAG, check_measured_at_sha)
+    MAX_MEASUREMENT_LAG, check_cli_sha256, check_measured_at_sha)
 
 # TWO WINDOWS, AND THE GATE RATCHETS BOTH. The tuned window is the one whose
 # breaks the fixes were designed from; the virgin window has never been used to
@@ -196,16 +196,24 @@ def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
             "re-run the apply-fixes differential and re-stamp provenance",
             src_tree_sha=prov.get("src_tree_sha")))
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
-    if cli.is_file() and prov.get("cli_sha256"):
+    built = None
+    if cli.is_file():
         h = hashlib.sha256()
         with cli.open("rb") as fh:
             for chunk in iter(lambda: fh.read(1 << 20), b""):
                 h.update(chunk)
-        if h.hexdigest() != prov["cli_sha256"]:
-            findings.append(
-                f"{ARTEFACT} was produced by a DIFFERENT binary "
-                f"(records {prov['cli_sha256'][:12]}…, built is "
-                f"{h.hexdigest()[:12]}…).")
+        built = h.hexdigest()
+    # Subordinate to the source anchor: a mismatch is a FAILURE only when
+    # latex-parse/src is unchanged, because identical source reproduces the
+    # hash exactly while a comment-only edit moves it (C-68).
+    f_cli, n_cli = check_cli_sha256(repo, ARTEFACT,
+                                    "re-run the apply-fixes differential",
+                                    prov.get("cli_sha256"), built,
+                                    prov.get("src_tree_sha"),
+                                    recorded_platform=prov.get("cli_platform"))
+    findings.extend(f_cli)
+    for _n in n_cli:
+        print(f"[apply-fixes-real] NOTE: {_n}", file=sys.stderr)
 
     pct = (100.0 * broken / compiled) if compiled else 0.0
     summary_lines.append(

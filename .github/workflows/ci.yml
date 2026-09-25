@@ -51,7 +51,14 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
+      # fetch-depth: 0 is LOAD-BEARING, for the same reason as in spec-drift.yml:
+      # the binary-level gate selftest runs check_project_state here, and in a
+      # one-commit clone every provenance sha an artefact records is
+      # unresolvable, so the gate is red before any mutation and the selftest
+      # aborts (PR #607's first CI run).
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Show revision and entry points
         shell: bash
         run: |

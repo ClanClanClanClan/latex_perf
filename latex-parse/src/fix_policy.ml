@@ -1,13 +1,20 @@
 (* Fix policy — see fix_policy.mli for the why.
 
-   The allow-list below is PROVISIONAL. It is filled from the meaning audit
-   recorded as OPEN-112, and membership is a CLAIM that a gate checks. TYPO-018
-   collapses a run of spaces in running text, and SPC-031 collapses the run of
-   spaces after a period. Both were measured over thousands of real edits with
-   zero change to the words or the layout of the compiled PDF, because TeX
-   already treats a run of spaces as one. Do NOT add other ids here without the
-   OPEN-112 measurement. *)
-let default_allowlist = [ "TYPO-018"; "SPC-031" ]
+   The allow-list comes from the meaning audit recorded as OPEN-112. Every
+   candidate rule's fix was applied ALONE to real compiling papers, the typeset
+   text was diffed against the pristine build, every changed word was
+   classified, and every SAFE verdict was then attacked by an independent
+   refuter. Of 54 candidates only MATH-106 survived. scripts/tools/
+   check_fix_allowlist.py refuses any entry without that evidence.
+
+   TYPO-018 and SPC-031 were listed here provisionally and then REMOVED. They
+   change nothing in running text, which is why the first sample showed zero PDF
+   differences, but they collapse spaces inside author-defined verbatim and
+   listing environments that the exempt layer does not recognise (OPEN-113).
+   That was measured on a real paper, 2506.16341v1, whose \lstnewenvironment
+   listing came back flattened. Zero differences on a sample only says the
+   sample did not contain the hazard. *)
+let default_allowlist = [ "MATH-106" ]
 let in_default_set id = List.mem id default_allowlist
 
 (* The 24 rules measured in a break repair set by OPEN-109 and OPEN-110. They

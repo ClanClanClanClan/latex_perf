@@ -78,11 +78,13 @@ let () =
      allow-list (OPEN-105): this case asserts DEFAULT-mode behaviour, and the
      default no longer applies STRUCT-001, so it used to check for an inserted
      \documentclass and now checks the policy instead. The input carries both a
-     STRUCT-001 trigger and a TYPO-018 trigger (a double space in text); the env
-     gate must apply the allow-listed TYPO-018 fix, must NOT insert the
+     STRUCT-001 trigger and a MATH-106 trigger (\not= in math); the env gate
+     must apply the allow-listed MATH-106 fix, must NOT insert the
      \documentclass, and must emit exactly what --apply-fixes emits. *)
   run "CLI L0_APPLY_FIXES=1 env gate equivalent to --apply-fixes" (fun tag ->
-      let src = "No docclass  here.\n\\begin{document}\nX\n\\end{document}\n" in
+      let src =
+        "No docclass $a \\not= b$.\n\\begin{document}\nX\n\\end{document}\n"
+      in
       let path = write_temp_tex src in
       Unix.putenv "L0_APPLY_FIXES" "1";
       let out, code = run_cli [ path ] in
@@ -95,8 +97,10 @@ let () =
         (body = strip_comments flag_out)
         (tag ^ ": env-gated output equals --apply-fixes output");
       expect
-        (String.length body >= 17 && String.sub body 0 17 = "No docclass here.")
-        (tag ^ ": allow-listed TYPO-018 fix applied, no \\documentclass"));
+        (let want = "No docclass $a \\neq b$." in
+         String.length body >= String.length want
+         && String.sub body 0 (String.length want) = want)
+        (tag ^ ": allow-listed MATH-106 fix applied, no \\documentclass"));
 
   (* Clean source → no rule emits a fix → stdout echoes input. *)
   run "CLI --apply-fixes on clean source echoes input" (fun tag ->
@@ -373,20 +377,23 @@ let () =
         (contains (strip_comments out) "$a \\rightarrow b$")
         (tag ^ ": `->` rewritten under the explicit set"));
 
-  (* An allow-listed rule IS applied by default. TYPO-018 collapses a run of
-     spaces in running text; the math and the missing-docclass trigger in the
-     same input are left alone, which pins that nothing outside the allow-list
-     leaks through. *)
-  run "CLI --apply-fixes applies an allow-listed rule (TYPO-018)" (fun tag ->
+  (* An allow-listed rule IS applied by default. MATH-106 rewrites \not= to \neq
+     in math; the double space, the CHEM-005 arrow and the missing-docclass
+     trigger in the same input are left alone, which pins that nothing outside
+     the allow-list leaks through (TYPO-018 was removed from the list by
+     OPEN-113). *)
+  run "CLI --apply-fixes applies an allow-listed rule (MATH-106)" (fun tag ->
       let path =
-        write_temp_tex "Two  spaces here.\n\\begin{document}\n$a -> b$\n"
+        write_temp_tex
+          "Two  spaces $a \\not= b$.\n\\begin{document}\n$a -> b$\n"
       in
       let out, code = run_cli [ "--apply-fixes"; path ] in
       Sys.remove path;
       expect (code = 0) (tag ^ ": exit code 0");
       expect
-        (strip_comments out = "Two spaces here.\n\\begin{document}\n$a -> b$\n")
-        (tag ^ ": only the double space changed"));
+        (strip_comments out
+        = "Two  spaces $a \\neq b$.\n\\begin{document}\n$a -> b$\n")
+        (tag ^ ": only the \\not= changed"));
 
   (* The non-converging best-effort path obeys the same policy: it used to
      bypass the rule filter entirely. *)

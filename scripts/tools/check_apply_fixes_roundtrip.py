@@ -103,7 +103,11 @@ MANIFEST = "corpora/apply_fixes/manifest.json"
 # was before the allow-list existed.
 # The recorded modes in corpora/apply_fixes/manifest.json carry the -all names
 # for the same reason: they name the flag that actually ran.
-FLAGS = ["--apply-fixes-all", "--apply-fixes-best-effort-all"]
+# The SHIPPED default flags are graded as well (OPEN-112): under convergence
+# the allow-list run is not a subset of the -all run, so the superset cells
+# alone would leave the path users actually run ungraded.
+FLAGS = ["--apply-fixes-all", "--apply-fixes-best-effort-all",
+         "--apply-fixes", "--apply-fixes-best-effort"]
 PROFILES = [("default", {}), ("pilot", {"L0_VALIDATORS": "pilot"})]
 CELLS = [(pname, penv, flag) for pname, penv in PROFILES for flag in FLAGS]
 MIN_DOCS = 60  # compile_check alone is 65 standalone docs; a smaller sweep is a bug

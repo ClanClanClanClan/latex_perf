@@ -196,6 +196,15 @@ jobs:
         # gen_apply_fixes_real_differential.py.
         run: python3 scripts/tools/check_apply_fixes_real_differential.py --repo .
 
+      - name: Default auto-fix set is evidence-backed (OPEN-112)
+        # --apply-fixes applies only Fix_policy.default_allowlist. OPEN-110
+        # measured that a rule with zero compile breaks can still change what a
+        # paper SAYS (CHEM-005 turned `c_- > 0` into `c→ 0` in a theorem), so
+        # every entry must be unimplicated in any measured break, reviewed SAFE
+        # in fix_meaning_review.json with a refutation that found no damage, and
+        # audited with a compiling standalone build in fix_meaning_audit.json.
+        run: python3 scripts/tools/check_fix_allowlist.py --repo .
+
       - name: Doc consistency — one source of truth per number (C-40)
         # Five cross-document invariants, every one of which was a LIVE
         # contradiction on main before 2026-09-04: the README title version vs

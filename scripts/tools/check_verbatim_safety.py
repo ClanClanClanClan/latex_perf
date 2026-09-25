@@ -163,7 +163,7 @@ def cli(repo: str) -> str:
     return os.path.join(repo, "_build/default/latex-parse/src/validators_cli.exe")
 
 
-def apply_fixes(binp: str, data: bytes, env) -> bytes:
+def apply_fixes(binp: str, data: bytes, env, flag: str = "--apply-fixes-all") -> bytes:
     with tempfile.NamedTemporaryFile("wb", suffix=".tex", delete=False) as t:
         t.write(data)
         tp = t.name
@@ -172,7 +172,7 @@ def apply_fixes(binp: str, data: bytes, env) -> bytes:
         # unqualified flag applies only Fix_policy.default_allowlist. This gate
         # vets the SUPERSET (every rule's fix), so its coverage is exactly what it
         # was before the allow-list existed.
-        r = subprocess.run([binp, "--apply-fixes-all", tp], capture_output=True, env=env)
+        r = subprocess.run([binp, flag, tp], capture_output=True, env=env)
         # drop the leading "# profile=..." banner lines
         lines = [ln for ln in r.stdout.split(b"\n") if not ln.startswith(b"# ")]
         return b"\n".join(lines)
@@ -188,16 +188,17 @@ def between(data: bytes, a: bytes, b: bytes):
     return data[i + len(a) : j]
 
 
-def check(binp: str, env, label: str, violations: list) -> None:
+def check(binp: str, env, label: str, violations: list,
+          flag: str = "--apply-fixes-all", require_fire: bool = True) -> None:
     src = build_torture()
-    out = apply_fixes(binp, src, env)
+    out = apply_fixes(binp, src, env, flag)
     # NON-VACUITY. Every assertion below is "these bytes did not change", which
     # a fixer that produced nothing at all would satisfy perfectly. A CLI that
     # failed to run, a profile that enabled no producer, or a future refactor
     # that stopped the battery triggering would all read as a clean PASS. So
     # require positive evidence that the fixer fired somewhere OUTSIDE the
     # protected regions before trusting that it left the inside alone.
-    if out == src:
+    if out == src and require_fire:
         violations.append(
             f"[{label}] VACUOUS: --apply-fixes changed nothing anywhere in the "
             f"torture document, so byte-preservation inside the protected "
@@ -230,7 +231,8 @@ def check(binp: str, env, label: str, violations: list) -> None:
             )
 
 
-def check_no_outside_edit(binp: str, env, label: str, violations: list) -> None:
+def check_no_outside_edit(binp: str, env, label: str, violations: list,
+                          flag: str = "--apply-fixes-all") -> None:
     r"""OPEN-066: a protected region must not TRIGGER an edit outside itself.
 
     [check] above asks "were the bytes INSIDE the region preserved?". That is
@@ -270,7 +272,7 @@ def check_no_outside_edit(binp: str, env, label: str, violations: list) -> None:
     scoped = [r for r in REGIONS if r[0] in OUTSIDE_SCOPE] + DEAD_REGIONS
     for name, pre, suf in scoped:
         src = b"\\documentclass{article}\n" + pre + BATTERY + suf
-        out = apply_fixes(binp, src, env)
+        out = apply_fixes(binp, src, env, flag)
         sa, sb = pre.split()[-1], suf.split()[0]
         i_s, j_s = src.find(sa), src.find(sb, src.find(sa))
         i_o, j_o = out.find(sa), out.find(sb, out.find(sa))
@@ -311,10 +313,20 @@ def main() -> int:
     default.pop("L0_VALIDATORS", None)
     check(binp, pilot, "pilot", violations)
     check(binp, default, "default", violations)
+    # The SHIPPED default path (OPEN-112): --apply-fixes applies only the
+    # allow-list, so the superset check above does not cover it under
+    # convergence (withholding rules changes later passes). Its protected
+    # regions must be byte-preserved too. require_fire is off because the
+    # allow-list may legitimately edit nothing in the torture document; the
+    # -all checks above already prove the battery triggers producers.
+    check(binp, pilot, "pilot/default-flag", violations, "--apply-fixes", False)
+    check(binp, default, "default/default-flag", violations, "--apply-fixes", False)
     # OPEN-066: the same regions, asked the OTHER question — did anything
     # outside them change because of what is inside them?
     check_no_outside_edit(binp, pilot, "pilot/outside", violations)
     check_no_outside_edit(binp, default, "default/outside", violations)
+    check_no_outside_edit(binp, pilot, "pilot/outside/default-flag", violations, "--apply-fixes")
+    check_no_outside_edit(binp, default, "default/outside/default-flag", violations, "--apply-fixes")
 
     if violations:
         print(
@@ -334,7 +346,7 @@ def main() -> int:
     print(
         f"[verbatim-safety] PASS: {len(REGIONS)} regions byte-preserved and "
         f"{len(DEAD_REGIONS)} TeX-dead regions trigger-free under "
-        f"--apply-fixes (pilot + default): "
+        f"--apply-fixes-all and --apply-fixes (pilot + default): "
         f"{', '.join(name for name, _pre, _suf in REGIONS)}."
     )
     return 0

@@ -187,7 +187,7 @@ let env_rule_set name =
            (List.map String.trim (String.split_on_char ',' v)))
 
 (* The fix SCOPE of a run that is not a single-rule opt-in (OPEN-105, OPEN-110).
-   [Scope_default] applies only the measured-safe allow-list in [Fix_policy].
+   [Scope_default] applies only the meaning-reviewed allow-list in [Fix_policy].
    [Scope_all] applies every rule's fix, which is what [--apply-fixes] did
    before the allow-list existed. *)
 type fix_scope = Scope_default | Scope_all
@@ -857,7 +857,7 @@ let () =
   let apply_env_on = env_flag_on "L0_APPLY_FIXES" in
   match args with
   (* OPEN-105 / OPEN-110: the unqualified fixer modes apply only the
-     measured-safe allow-list in [Fix_policy]; the [-all] modes apply every
+     meaning-reviewed allow-list in [Fix_policy]; the [-all] modes apply every
      rule's fix, exactly as the unqualified modes did before; the [-for] modes
      are single-rule opt-ins that bypass the policy. *)
   | [ _; "--apply-fixes"; path ] ->
@@ -1181,11 +1181,11 @@ let () =
         \               --strict, exits nonzero if the effective support drops \
          below the\n\
         \               base guarantee.\n\
-         --apply-fixes  run validators, apply the fix edits of the MEASURED-SAFE\n\
-        \               allow-list only (Fix_policy.default_allowlist: rules \
-         whose fixes were\n\
-        \               measured not to change the words or layout of real \
-         papers), and emit the\n\
+         --apply-fixes  run validators, apply the fix edits of the ALLOW-LIST\n\
+        \               only (Fix_policy.default_allowlist: rules whose fixes \
+         passed the\n\
+        \               OPEN-112 meaning review on real papers, enforced by \
+         check_fix_allowlist), and emit the\n\
         \               modified source to stdout. Every other rule's fix is \
          explicit opt-in:\n\
         \               use --apply-fixes-for RULE-ID for one rule. \

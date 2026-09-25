@@ -44,7 +44,7 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l0 paper.tex
 dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 
 # Apply the ALLOW-LISTED auto-fixes only (writes to stdout, not in place):
-# the rules whose fixes were measured not to change a paper's words or layout
+# the rules whose fixes passed a meaning review on real papers (OPEN-112)
 dune exec latex-parse/src/validators_cli.exe -- --apply-fixes paper.tex
 
 # Opt in to ONE other rule's auto-fix
@@ -60,8 +60,11 @@ dune exec latex-parse/src/validators_cli.exe -- --list-candidate-fixes paper.tex
 
 `--apply-fixes` applies only the auto-fixes of an ALLOW-LIST
 (`Fix_policy.default_allowlist` in `latex-parse/src/fix_policy.ml`): rules whose
-fixes were measured, over thousands of real edits, not to change the words or the
-layout of the compiled paper. Every other rule's auto-fix is explicit opt-in —
+fixes passed the OPEN-112 meaning review. Each candidate was applied alone to real
+compiling papers, every change to the typeset text was classified, and every SAFE
+verdict was attacked by an independent refuter; `check_fix_allowlist.py` enforces
+the list against that evidence. The list is deliberately small, because almost every fix that changes what a reader sees was found wrong
+in some measured context. Every other rule's auto-fix is explicit opt-in —
 one rule at a time with `--apply-fixes-for RULE-ID`, or all of them with
 `--apply-fixes-all`. Intent-dependent suggestions are surfaced separately via
 `--list-candidate-fixes` and never applied automatically. See

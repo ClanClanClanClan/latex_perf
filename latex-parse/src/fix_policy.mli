@@ -19,11 +19,13 @@
     default set. *)
 
 val default_allowlist : string list
-(** The rule ids whose fixes the default [--apply-fixes] applies. The list is
-    filled from the meaning audit recorded as OPEN-112, and it is PROVISIONAL
-    until that audit completes. Each entry is a claim that the rule's fix, over
-    thousands of real edits, changed neither the words nor the layout of the
-    compiled PDF. Do not add an id without that measurement. *)
+(** The rule ids whose fixes the default [--apply-fixes] applies. Each entry is
+    a claim that the rule's fix passed the OPEN-112 meaning review: it was
+    applied alone to real compiling papers, no measured case changed the words,
+    symbols or mathematics of the typeset output or was wrong for its context,
+    and an independent attempt to refute that found no damage. The gate
+    scripts/tools/check_fix_allowlist.py enforces it against the committed
+    evidence, so an id cannot be added without that measurement. *)
 
 val in_default_set : string -> bool
 (** [in_default_set id] is true exactly when [id] is in {!default_allowlist}. *)

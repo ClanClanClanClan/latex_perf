@@ -219,8 +219,12 @@ def check(binp: str, env, label: str, violations: list,
         # bodies; everywhere else (inline \verb, % comment, \url) the protected
         # bytes must stay byte-identical. Any other change in any region — or a
         # non-tab change in an env body — still trips the gate.
+        # The expansion is expected only when VERB-002 is in scope, i.e. under
+        # --apply-fixes-all. Under the allow-list (OPEN-112) VERB-002 is not
+        # applied, so the only correct output is the untouched bytes; the -all
+        # arm stays exactly as strict as before.
         expected = want
-        if name in ("verbatim-env", "lstlisting"):
+        if name in ("verbatim-env", "lstlisting") and flag == "--apply-fixes-all":
             expected = want.replace(b"\t", b"    ")
         if got is None:
             violations.append(f"[{label}] {name}: region vanished (sentinels {sa!r}/{sb!r} missing in output)")

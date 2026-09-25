@@ -47,6 +47,66 @@ let () =
       in
       expect (does_not_fire "CY-001" out) (tag ^ ": no re-fire on fixpoint"));
 
+  (* CY-001 used to spin forever when a Cyrillic capital was followed by ". "
+     and then by any byte other than 0xD0, because its scan index did not
+     advance on that path. The delta-debugged minimum of a real arXiv paper
+     (2506.17069v1) is five bytes: a Cyrillic capital A, a period, a space and a
+     backslash. That paper's Russian bibliography comment had the initials Yu.
+     A. followed by an italic group. Each case runs in a forked child so that a
+     regression fails the suite after the deadline instead of hanging it. The
+     5-second bound is generous: the fixed rule takes milliseconds here, and the
+     unfixed rule never returns. *)
+  let cy001_count_within ~seconds src =
+    let t0 = Unix.gettimeofday () in
+    match Unix.fork () with
+    | 0 ->
+        let n =
+          match find_result "CY-001" src with Some r -> r.count | None -> 0
+        in
+        Unix._exit (min n 100)
+    | pid ->
+        let rec wait () =
+          match Unix.waitpid [ Unix.WNOHANG ] pid with
+          | 0, _ ->
+              if Unix.gettimeofday () -. t0 > seconds then (
+                Unix.kill pid Sys.sigkill;
+                ignore (Unix.waitpid [] pid);
+                None)
+              else (
+                Unix.sleepf 0.01;
+                wait ())
+          | _, Unix.WEXITED n -> Some n
+          | _, _ -> None
+        in
+        wait ()
+  in
+  List.iter
+    (fun (label, src, expected) ->
+      run ("CY-001 terminates and counts: " ^ label) (fun tag ->
+          expect
+            (cy001_count_within ~seconds:5.0 src = Some expected)
+            (tag ^ ": expected count within 5 s")))
+    [
+      (* The delta-debugged minimum, which never returned before the fix. *)
+      ("minimal hang input", "\xd0\x90. \\", 0);
+      (* The original line from the paper's bibliography comment. *)
+      ("paper line", "% \xd0\x9d\xd0\xb5 \xd0\xae. \xd0\x90. {\\it x}", 1);
+      (* The capital, period and space end the input one byte after 0xD0. *)
+      ("truncated second byte", "\xd0\x90. \xd0", 0);
+      (* A real match after the former hang point is still found. *)
+      ("match after hang point", "\xd0\x90. x \xd0\x98. \xd0\x90.", 1);
+      (* A Latin word after the space also never returned before the fix. *)
+      ("latin after space", "\xd0\x98. Neretin", 0);
+      (* Unspaced initials followed by a spaced word never returned either. *)
+      ("no space", "\xd0\xae.\xd0\x90. x", 0);
+      (* These ordinary inputs have the same count as the reference binary. *)
+      ("single pair", "\xd0\x98. \xd0\x90.", 1);
+      ( "chained initials",
+        "\xd0\x98. \xd0\x98. \xd0\x98\xd0\xb2\xd0\xb0\xd0\xbd\xd0\xbe\xd0\xb2",
+        2 );
+      ("thin space already", "\xd0\x98.\\,\xd0\x90.", 0);
+    ];
+
   (* ══════════════════════════════════════════════════════════════════════
      DE-006: Swiss DE glyph eszett prohibited
      ══════════════════════════════════════════════════════════════════════ *)

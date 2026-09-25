@@ -3626,7 +3626,7 @@
    "pdflatex_passes": 2
   }
  ],
- "measured_at_sha": "9bd7e1ace9342aecbecfd8d408aa7a222e3cfc11",
- "measured_at": "multi-pass re-grade, scope=unmeasured: every row that had never had the multi-pass protocol applied, INCLUDING recorded successes, so a document that compiles on pass 1 and breaks itself on pass 2 is detectable (<= 3 passes, 200/200 rows now carry a pdflatex_passes count); CLI verdicts carried forward from the prior run",
- "src_tree_sha": "ee1d71dd760b6d637d1bb9f9bf3760d8ad553ee6"
+ "measured_at_sha": "d4e48ab4ec4844305775f4cab3026940224e33f4",
+ "measured_at": "cli-only refresh; pdflatex verdicts carried forward",
+ "src_tree_sha": "a762288a6e745f00a0dc1a287f2d3e6bc4dc806f"
 }

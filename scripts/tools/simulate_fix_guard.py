@@ -462,7 +462,10 @@ def run_paper(rank, rec, root, timeout, sample_cap):
         shutil.copytree(pkg, work)
         O = {str(t.relative_to(work)): t.read_bytes()
              for t in sorted(work.rglob("*.tex")) if t.is_file()}
-        changed = apply_fixes_tree(work, CLI, timeout)
+        failures = []
+        changed = apply_fixes_tree(work, CLI, timeout, failures)
+        if failures:  # an unfixed file would score the paper preserved
+            raise RuntimeError(f"fixer failed: {failures}")
         F = {rel: (work / rel).read_bytes() for rel in O}
     row["changed_files"] = changed
     assert set(changed) == {r for r in O if O[r] != F[r]}, "changed-set mismatch"

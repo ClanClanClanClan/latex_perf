@@ -76,7 +76,8 @@ def first_error(work: pathlib.Path, toplevel: str) -> str:
     return ""
 
 
-def apply_fixes_tree(work: pathlib.Path, cli: pathlib.Path, timeout: int):
+def apply_fixes_tree(work: pathlib.Path, cli: pathlib.Path, timeout: int,
+                     failures: list | None = None):
     """Apply the DEFAULT fixer to every .tex in the tree, in place.
 
     Every .tex, not just the root: STRUCT-001 inserted a preamble into `\\input`
@@ -90,7 +91,15 @@ def apply_fixes_tree(work: pathlib.Path, cli: pathlib.Path, timeout: int):
             r = subprocess.run([str(cli), "--apply-fixes", str(tex)],
                                capture_output=True, timeout=timeout)
         except subprocess.TimeoutExpired:
+            if failures is not None:
+                failures.append(f"{tex.relative_to(work)}: timeout")
             continue
+        # ⚠ A NON-ZERO, NON-ONE EXIT IS A CRASH, NOT "NO EDITS". Before
+        # 2026-09-25 this branch was skipped silently, so a fixer that raised
+        # (measured: a relocated binary exits 2 with Rule_contracts_missing)
+        # left every file untouched and the paper scored PRESERVED.
+        if r.returncode not in (0, 1) and failures is not None:
+            failures.append(f"{tex.relative_to(work)}: exit {r.returncode}")
         # BYTES, never text=True: real papers carry latin-1 and the CLI echoes
         # source fragments, so strict decoding raises mid-sweep (C-9 family).
         if r.returncode in (0, 1) and r.stdout and r.stdout != before:
@@ -133,7 +142,12 @@ def run_one(rec, root, cli, timeout):
                         key=lambda x: -len(x.parts)):
             if q.relative_to(work) not in shipped:
                 q.unlink(missing_ok=True)
-        out["changed_files"] = apply_fixes_tree(work, cli, timeout)
+        failures: list = []
+        out["changed_files"] = apply_fixes_tree(work, cli, timeout, failures)
+        if failures:
+            out["cell"] = "instrument-error-fixer-failed"
+            out["fixer_failures"] = failures
+            return out
         after_fix = {q.relative_to(work) for q in work.rglob("*") if q.is_file()}
         if after_fix != shipped:
             out["cell"] = "instrument-error-file-set-changed"
@@ -204,6 +218,18 @@ def main() -> int:
         print(f"  [{i}/{len(window)}] {r['arxiv_id']:<16} {r['cell']}",
               flush=True)
 
+    # An instrument error is an UNMEASURED row. Folding it into
+    # "excluded_did_not_compile" (as len(rows) - len(compiled) did) would hide
+    # it, so refuse to write the artefact at all.
+    unmeasured = [r for r in rows if r["cell"].startswith("instrument-error")]
+    if unmeasured:
+        for r in unmeasured:
+            print(f"[apply-fixes-real] FATAL: {r['arxiv_id']}: {r['cell']} "
+                  f"{r.get('fixer_failures') or r.get('file_set_delta')}",
+                  file=sys.stderr)
+        print(f"[apply-fixes-real] FATAL: {len(unmeasured)} row(s) were not "
+              f"measured; no artefact written.", file=sys.stderr)
+        return 2
     compiled = [r for r in rows if r["cell"] in ("preserved", "broken")]
     broken = [r for r in compiled if r["cell"] == "broken"]
     sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo,

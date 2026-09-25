@@ -618,6 +618,10 @@ def run_pkg(pkg: pathlib.Path, timeout: int):
             except subprocess.TimeoutExpired:
                 out.append({"file": str(tex.relative_to(work)), "timeout": True})
                 continue
+            if p.returncode not in (0, 1):
+                # A crash is not "no edits": it would undercount every region.
+                raise RuntimeError(f"fixer crashed (exit {p.returncode}) on "
+                                   f"{tex}: {p.stderr[-300:]!r}")
             if not (p.returncode in (0, 1) and p.stdout and p.stdout != before):
                 continue
             o, f, enc = decode_pair(before, p.stdout)

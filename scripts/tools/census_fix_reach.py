@@ -151,7 +151,12 @@ def main() -> int:
                     p = subprocess.run([str(cli), "--apply-fixes", str(tex)],
                                        capture_output=True, timeout=ns.timeout)
                 except subprocess.TimeoutExpired:
-                    continue
+                    raise RuntimeError(f"fixer timed out on {tex}")
+                if p.returncode not in (0, 1):
+                    # A crash is not "no edits": it would undercount reach.
+                    raise RuntimeError(
+                        f"fixer crashed (exit {p.returncode}) on {tex}: "
+                        f"{p.stderr[-300:]!r}")
                 # BYTES, never text=True: real papers carry latin-1 and strict
                 # decoding raises mid-sweep (C-9 family).
                 if not (p.returncode in (0, 1) and p.stdout

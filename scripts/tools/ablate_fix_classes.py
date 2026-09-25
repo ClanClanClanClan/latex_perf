@@ -45,7 +45,11 @@ def build(work, preds, revert_all=False):
             p = subprocess.run([str(CLI), "--apply-fixes", str(tex)],
                                capture_output=True, timeout=120)
         except subprocess.TimeoutExpired:
-            continue
+            raise RuntimeError(f"fixer timed out on {tex}")
+        if p.returncode not in (0, 1):
+            # Never read a crash as "changed nothing" (it would score the arm).
+            raise RuntimeError(f"fixer crashed (exit {p.returncode}) on {tex}: "
+                               f"{p.stderr[-300:]!r}")
         if not (p.returncode in (0, 1) and p.stdout and p.stdout != before):
             continue
         if revert_all:

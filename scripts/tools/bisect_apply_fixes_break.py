@@ -107,7 +107,13 @@ def apply_rules(work, rules, timeout=120):
                 try:
                     r = subprocess.run(cmd, capture_output=True, timeout=timeout)
                 except subprocess.TimeoutExpired:
-                    continue
+                    # A timed-out file is an UNFIXED file: in a sufficiency
+                    # trial that makes the rule look safe. Fail loudly.
+                    raise RuntimeError(f"fixer timed out on {tex} ({rule})")
+                if r.returncode not in (0, 1):
+                    raise RuntimeError(
+                        f"fixer crashed (exit {r.returncode}) on {tex} ({rule}): "
+                        f"{r.stderr[-300:]!r}")
                 if r.returncode in (0, 1) and r.stdout and r.stdout != before:
                     tex.write_bytes(r.stdout)
                     changed.add(str(tex.relative_to(work)))

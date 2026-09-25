@@ -157,6 +157,61 @@ let collect_fix_edits ?filter_id ~(src : string)
       | _ -> [])
     results
 
+(* ── Measurement hooks for the fix channel (OPEN-109) ─────────────────
+
+   OPEN-109 measured that the fixer's real-paper breaks are a long tail of
+   PER-RULE defects, so the next decision needs a per-rule table: which rules
+   the converged fixer actually applied (reach), and what happens when a rule
+   set is withheld. Both used to cost one CLI call per rule per file per round —
+   ~4,000 calls for one six-file paper — which made a sweep infeasible.
+
+   These hooks are ENV-GATED and change nothing when unset.
+
+   [LP_FIX_ONLY=A,B] and [LP_FIX_EXCLUDE=A,B] restrict the CONVERGING fixer to a
+   rule set, so a withdrawal or an allow-list is measured with the engine's own
+   fixpoint loop instead of a Python approximation.
+
+   [LP_FIX_TRACE=<file>] appends one line per APPLIED edit on every pass, with
+   five tab-separated fields: the pass number, the rule id, the start offset,
+   the end offset, and the replacement as an OCaml string literal. Attribution
+   is by physical identity of the edit value, which [apply_best_effort] returns
+   unchanged from its input. *)
+let env_rule_set name =
+  match Sys.getenv_opt name with
+  | None | Some "" -> None
+  | Some v ->
+      Some
+        (List.filter
+           (fun x -> x <> "")
+           (List.map String.trim (String.split_on_char ',' v)))
+
+let rule_admitted =
+  let only = env_rule_set "LP_FIX_ONLY"
+  and exclude = env_rule_set "LP_FIX_EXCLUDE" in
+  fun id ->
+    (match only with None -> true | Some l -> List.mem id l)
+    && match exclude with None -> true | Some l -> not (List.mem id l)
+
+let trace_applied ~pass (tagged : (string * Latex_parse_lib.Cst_edit.t) list)
+    (applied : Latex_parse_lib.Cst_edit.t list) =
+  match Sys.getenv_opt "LP_FIX_TRACE" with
+  | None | Some "" -> ()
+  | Some file ->
+      let oc =
+        open_out_gen [ Open_wronly; Open_append; Open_creat ] 0o644 file
+      in
+      List.iter
+        (fun (e : Latex_parse_lib.Cst_edit.t) ->
+          let rule =
+            match List.find_opt (fun (_, t) -> t == e) tagged with
+            | Some (id, _) -> id
+            | None -> "?"
+          in
+          Printf.fprintf oc "%d\t%s\t%d\t%d\t%S\n" pass rule e.start_offset
+            e.end_offset e.replacement)
+        applied;
+      close_out oc
+
 let env_flag_on name =
   match Sys.getenv_opt name with
   | Some ("1" | "true" | "TRUE" | "on" | "ON") -> true
@@ -226,13 +281,28 @@ let run_apply_fixes_converge ?filter_id ~path ~src () =
     ignore (setup_all ~path ~src:cur ~log_path:None);
     (* Class-D-inclusive so L4 STYLE fix producers (STYLE-015/023) apply; batch
        path, not the keystroke hot path (v27.1.6). *)
-    let results = Latex_parse_lib.Validators.run_all_with_class_d cur in
-    let edits = collect_fix_edits ?filter_id ~src:cur results in
+    let results =
+      List.filter
+        (fun (r : Latex_parse_lib.Validators.result) -> rule_admitted r.id)
+        (Latex_parse_lib.Validators.run_all_with_class_d cur)
+    in
+    (* Tagged per rule, in the same rule order [collect_fix_edits] uses, so
+       best-effort conflict priority is unchanged. *)
+    let tagged =
+      List.concat_map
+        (fun (r : Latex_parse_lib.Validators.result) ->
+          List.map
+            (fun e -> (r.id, e))
+            (collect_fix_edits ?filter_id ~src:cur [ r ]))
+        results
+    in
+    let edits = List.map snd tagged in
     if edits = [] then cur
     else
-      let nxt, _applied, _skipped =
+      let nxt, applied, _skipped =
         Latex_parse_lib.Cst_edit.apply_best_effort cur edits
       in
+      trace_applied ~pass:(passes + 1) tagged applied;
       if String.equal nxt cur then cur
       else
         let dn = Digest.string nxt in

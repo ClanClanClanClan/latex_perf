@@ -178,24 +178,35 @@ def main() -> int:
         if not root.is_dir():
             continue
         for md in root.rglob("*.md"):
+            # Every exclusion below tests the path RELATIVE TO THE REPO. Testing
+            # md.parts tested the ABSOLUTE path, so a checkout that itself lives
+            # under a directory named `.claude` (a Claude Code worktree),
+            # `archive` or `_build` excluded EVERY doc and this gate failed its
+            # own non-vacuity guard with "only 0 doc(s) discovered" -- which is
+            # what check_gate_selftests reported from such a worktree.
+            try:
+                parts = md.relative_to(repo).parts
+            except ValueError:
+                parts = md.parts
             # Skip archived docs
-            if "archive" in md.parts:
+            if "archive" in parts:
                 continue
-            if "_build" in md.parts:
+            if "_build" in parts:
                 continue
             # Gitignored SCRATCH written by check_gate_selftests.py while it
             # mutates gates. It is transient, it is not documentation, and
             # scanning it made THIS gate (and check_gates_meta, which runs it)
             # fail spuriously whenever a selftest run had happened — twice in
             # one session before it was tracked down.
-            if ".gate-selftest-backups" in md.parts:
+            if ".gate-selftest-backups" in parts:
                 continue
-            if ".claude" in md.parts:
+            if ".claude" in parts:
                 continue
-            if "latex-perfectionist" in md.parts:
+            if "latex-perfectionist" in parts:
                 # Only audit repo root, not submodules
                 continue
-            if any(pat in md.name or pat in str(md) for pat in EXCLUDED_PATTERNS):
+            if any(pat in md.name or pat in "/".join(parts)
+                   for pat in EXCLUDED_PATTERNS):
                 continue
             doc_files.add(md)
     # Silent-failure guard: docs/ + specs/ ship dozens of markdown

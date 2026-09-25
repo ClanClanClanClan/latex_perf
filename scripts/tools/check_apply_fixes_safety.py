@@ -87,7 +87,11 @@ def apply_once(binp: str, path: str, env):
     # catch. Decode with surrogateescape so invalid bytes round-trip into the
     # string; the [final.encode("utf-8")] check downstream then flags them as
     # bad_utf8 instead of the run aborting with a traceback.
-    r = subprocess.run([binp, "--apply-fixes", path], capture_output=True, env=env)
+    # --apply-fixes-all, not --apply-fixes: since the OPEN-105 allow-list the
+    # unqualified flag applies only Fix_policy.default_allowlist. This gate
+    # vets the SUPERSET (every rule's fix), so its coverage is exactly what it
+    # was before the allow-list existed.
+    r = subprocess.run([binp, "--apply-fixes-all", path], capture_output=True, env=env)
     raw = b"\n".join(l for l in r.stdout.split(b"\n") if not l.startswith(b"# "))
     text = raw.decode("utf-8", errors="surrogateescape")
     return text, r.returncode

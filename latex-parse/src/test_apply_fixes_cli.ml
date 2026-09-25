@@ -4,7 +4,13 @@
     or `L0_APPLY_FIXES=1` and asserts that the collected fix edits are applied
     via `Cst_edit.apply_all` before stdout is written. Separate file from
     `test_validators_cli.ml` because the output format is distinct (raw source,
-    not TSV). *)
+    not TSV).
+
+    OPEN-105 / OPEN-110: `--apply-fixes` now applies only the measured-safe
+    allow-list in `Fix_policy`, and `--apply-fixes-all` applies every rule's fix
+    as `--apply-fixes` used to. A case that asserts a PRODUCER's behaviour for a
+    rule outside the allow-list therefore runs `--apply-fixes-all`, so it still
+    tests exactly what it tested before. *)
 
 open Test_helpers
 
@@ -52,13 +58,15 @@ let () =
      the STRUCT cases, while plain `dune runtest` (no env) passed. *)
   Unix.putenv "L0_VALIDATORS" "";
 
-  (* --apply-fixes applies STRUCT-001's fix: insert \documentclass at 0. *)
-  run "CLI --apply-fixes inserts \\documentclass for STRUCT-001" (fun tag ->
+  (* --apply-fixes-all applies STRUCT-001's fix: insert \documentclass at 0.
+     STRUCT-001 is an implicated rule outside the allow-list, so this producer
+     test runs the all-rules scope; the default scope is pinned below. *)
+  run "CLI --apply-fixes-all inserts \\documentclass for STRUCT-001" (fun tag ->
       let path =
         write_temp_tex
           "Body without docclass.\n\\begin{document}\nX\n\\end{document}\n"
       in
-      let out, code = run_cli [ "--apply-fixes"; path ] in
+      let out, code = run_cli [ "--apply-fixes-all"; path ] in
       Sys.remove path;
       expect (code = 0) (tag ^ ": exit code 0");
       let body = strip_comments out in
@@ -66,21 +74,29 @@ let () =
         (String.length body >= 14 && String.sub body 0 14 = "\\documentclass")
         (tag ^ ": output begins with \\documentclass"));
 
-  (* L0_APPLY_FIXES=1 env gate is equivalent to --apply-fixes. *)
+  (* L0_APPLY_FIXES=1 env gate is equivalent to --apply-fixes. CHANGED by the
+     allow-list (OPEN-105): this case asserts DEFAULT-mode behaviour, and the
+     default no longer applies STRUCT-001, so it used to check for an inserted
+     \documentclass and now checks the policy instead. The input carries both a
+     STRUCT-001 trigger and a TYPO-018 trigger (a double space in text); the env
+     gate must apply the allow-listed TYPO-018 fix, must NOT insert the
+     \documentclass, and must emit exactly what --apply-fixes emits. *)
   run "CLI L0_APPLY_FIXES=1 env gate equivalent to --apply-fixes" (fun tag ->
-      let path =
-        write_temp_tex
-          "No docclass here.\n\\begin{document}\nX\n\\end{document}\n"
-      in
+      let src = "No docclass  here.\n\\begin{document}\nX\n\\end{document}\n" in
+      let path = write_temp_tex src in
       Unix.putenv "L0_APPLY_FIXES" "1";
       let out, code = run_cli [ path ] in
       Unix.putenv "L0_APPLY_FIXES" "";
+      let flag_out, flag_code = run_cli [ "--apply-fixes"; path ] in
       Sys.remove path;
-      expect (code = 0) (tag ^ ": exit code 0");
+      expect (code = 0 && flag_code = 0) (tag ^ ": exit code 0");
       let body = strip_comments out in
       expect
-        (String.length body >= 14 && String.sub body 0 14 = "\\documentclass")
-        (tag ^ ": env-gated apply-fixes also inserts \\documentclass"));
+        (body = strip_comments flag_out)
+        (tag ^ ": env-gated output equals --apply-fixes output");
+      expect
+        (String.length body >= 17 && String.sub body 0 17 = "No docclass here.")
+        (tag ^ ": allow-listed TYPO-018 fix applied, no \\documentclass"));
 
   (* Clean source → no rule emits a fix → stdout echoes input. *)
   run "CLI --apply-fixes on clean source echoes input" (fun tag ->
@@ -99,7 +115,9 @@ let () =
   (* v26.2.1 PR #4 plan §3 item 4: TYPO-002 apply converts `a -- b` to `a – b`.
      TYPO rules ship in the pilot set; enable via [L0_VALIDATORS]. The body of
      the document holds the dashes so they survive past STRUCT-001's check. *)
-  run "CLI --apply-fixes converts -- to en-dash for TYPO-002" (fun tag ->
+  (* TYPO-002 is implicated (OPEN-110) and outside the allow-list, so this
+     producer test runs the all-rules scope. *)
+  run "CLI --apply-fixes-all converts -- to en-dash for TYPO-002" (fun tag ->
       let path =
         write_temp_tex
           "\\documentclass{article}\n\
@@ -108,7 +126,7 @@ let () =
            \\end{document}\n"
       in
       Unix.putenv "L0_VALIDATORS" "pilot";
-      let out, code = run_cli [ "--apply-fixes"; path ] in
+      let out, code = run_cli [ "--apply-fixes-all"; path ] in
       Unix.putenv "L0_VALIDATORS" "";
       Sys.remove path;
       expect (code = 0) (tag ^ ": exit code 0");
@@ -142,7 +160,9 @@ let () =
      The overlap-error wiring itself (Rewrite_engine.apply returning [Error
      (`Overlap _)]) is unit-tested in [test_cst_edit.ml] and
      [test_rewrite_engine.ml]. *)
-  run "CLI --apply-fixes on TYPO-003 input takes non-overlap branch" (fun tag ->
+  (* TYPO-003 is outside the allow-list, so this runs the all-rules scope. *)
+  run "CLI --apply-fixes-all on TYPO-003 input takes non-overlap branch"
+    (fun tag ->
       let path =
         write_temp_tex
           "\\documentclass{article}\n\
@@ -157,7 +177,7 @@ let () =
       in
       let cmd =
         String.concat " "
-          (List.map Filename.quote [ exe; "--apply-fixes"; path ])
+          (List.map Filename.quote [ exe; "--apply-fixes-all"; path ])
         ^ " 2>"
         ^ Filename.quote stderr_path
       in
@@ -261,7 +281,8 @@ let () =
      see — and delete — the space before that freshly-created ellipsis. A single
      pass would stop at "word <U+2026>"; convergence yields "word<U+2026>". All
      three rules (STRUCT-001 docclass insert, ENC-004, SPC-025) are in the
-     default set, so no pilot env is needed. *)
+     default VALIDATOR set, so no pilot env is needed. None of them is on the
+     fix allow-list, so the cascade runs the all-rules scope. *)
   let contains s sub =
     let nlen = String.length sub and slen = String.length s in
     let rec find i =
@@ -271,10 +292,10 @@ let () =
     in
     find 0
   in
-  run "CLI --apply-fixes converges a cross-rule cascade (ENC-004 → SPC-025)"
+  run "CLI --apply-fixes-all converges a cross-rule cascade (ENC-004 → SPC-025)"
     (fun tag ->
       let path = write_temp_tex "word \x85\n" in
-      let out, code = run_cli [ "--apply-fixes"; path ] in
+      let out, code = run_cli [ "--apply-fixes-all"; path ] in
       Sys.remove path;
       let body = strip_comments out in
       expect (code = 0) (tag ^ ": exit code 0");
@@ -285,18 +306,103 @@ let () =
         (not (contains body "word \xe2\x80\xa6"))
         (tag ^ ": no half-fixed 'word <space> U+2026' left behind"));
 
-  (* P1a: the converged output is a fixpoint — re-running --apply-fixes on it is
-     a no-op (idempotence), the defining property of convergence. *)
-  run "CLI --apply-fixes output is idempotent" (fun tag ->
+  (* P1a: the converged output is a fixpoint — re-running the fixer on it is a
+     no-op (idempotence), the defining property of convergence. The input only
+     exercises rules outside the allow-list, so both runs use the all-rules
+     scope. *)
+  run "CLI --apply-fixes-all output is idempotent" (fun tag ->
       let path = write_temp_tex "word \x85\n" in
-      let out1, c1 = run_cli [ "--apply-fixes"; path ] in
+      let out1, c1 = run_cli [ "--apply-fixes-all"; path ] in
       Sys.remove path;
       let body1 = strip_comments out1 in
       let path2 = write_temp_tex body1 in
-      let out2, c2 = run_cli [ "--apply-fixes"; path2 ] in
+      let out2, c2 = run_cli [ "--apply-fixes-all"; path2 ] in
       Sys.remove path2;
       let body2 = strip_comments out2 in
       expect (c1 = 0 && c2 = 0) (tag ^ ": exit code 0 both runs");
       expect (body1 = body2) (tag ^ ": second pass changes nothing (fixpoint)"));
+
+  (* OPEN-105 / OPEN-110: the fix SCOPE. CHEM-005 rewrites `->` to \rightarrow
+     in math; it was measured correct in 1 of the 54 papers it edits, so it is
+     implicated and outside the allow-list. The default must leave `->` alone,
+     while the all-rules scope and the per-rule opt-in must both still apply
+     it. *)
+  let chem_src =
+    "\\documentclass{article}\n\\begin{document}\n$a -> b$\n\\end{document}\n"
+  in
+  run "CLI --apply-fixes leaves an implicated rule (CHEM-005) unapplied"
+    (fun tag ->
+      let path = write_temp_tex chem_src in
+      let out, code = run_cli [ "--apply-fixes"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      let body = strip_comments out in
+      expect (contains body "$a -> b$") (tag ^ ": `->` left untouched");
+      expect
+        (not (contains body "\\rightarrow"))
+        (tag ^ ": no \\rightarrow written"));
+
+  run "CLI --apply-fixes-all applies CHEM-005" (fun tag ->
+      let path = write_temp_tex chem_src in
+      let out, code = run_cli [ "--apply-fixes-all"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      expect
+        (contains (strip_comments out) "$a \\rightarrow b$")
+        (tag ^ ": `->` rewritten"));
+
+  run "CLI --apply-fixes-for CHEM-005 is an explicit opt-in" (fun tag ->
+      let path = write_temp_tex chem_src in
+      let out, code = run_cli [ "--apply-fixes-for"; "CHEM-005"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      expect
+        (contains (strip_comments out) "$a \\rightarrow b$")
+        (tag ^ ": `->` rewritten"));
+
+  (* LP_FIX_ONLY is an explicit set, so it REPLACES the allow-list base rather
+     than intersecting with it. *)
+  run "CLI LP_FIX_ONLY=CHEM-005 replaces the default base" (fun tag ->
+      let path = write_temp_tex chem_src in
+      Unix.putenv "LP_FIX_ONLY" "CHEM-005";
+      let out, code = run_cli [ "--apply-fixes"; path ] in
+      Unix.putenv "LP_FIX_ONLY" "";
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      expect
+        (contains (strip_comments out) "$a \\rightarrow b$")
+        (tag ^ ": `->` rewritten under the explicit set"));
+
+  (* An allow-listed rule IS applied by default. TYPO-018 collapses a run of
+     spaces in running text; the math and the missing-docclass trigger in the
+     same input are left alone, which pins that nothing outside the allow-list
+     leaks through. *)
+  run "CLI --apply-fixes applies an allow-listed rule (TYPO-018)" (fun tag ->
+      let path =
+        write_temp_tex "Two  spaces here.\n\\begin{document}\n$a -> b$\n"
+      in
+      let out, code = run_cli [ "--apply-fixes"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      expect
+        (strip_comments out = "Two spaces here.\n\\begin{document}\n$a -> b$\n")
+        (tag ^ ": only the double space changed"));
+
+  (* The non-converging best-effort path obeys the same policy: it used to
+     bypass the rule filter entirely. *)
+  run "CLI --apply-fixes-best-effort obeys the allow-list" (fun tag ->
+      let path = write_temp_tex chem_src in
+      let out, code = run_cli [ "--apply-fixes-best-effort"; path ] in
+      let out_all, code_all =
+        run_cli [ "--apply-fixes-best-effort-all"; path ]
+      in
+      Sys.remove path;
+      expect (code = 0 && code_all = 0) (tag ^ ": exit code 0");
+      expect
+        (contains (strip_comments out) "$a -> b$")
+        (tag ^ ": default best-effort leaves `->`");
+      expect
+        (contains (strip_comments out_all) "$a \\rightarrow b$")
+        (tag ^ ": best-effort-all rewrites `->`"));
 
   finalise "apply-fixes-cli"

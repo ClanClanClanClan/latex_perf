@@ -100,7 +100,10 @@ def apply_rules(work, rules, timeout=120):
         for tex in sorted(work.rglob("*.tex")):
             for rule in (rules if rules is not None else [None]):
                 cmd = [str(CLI)]
-                cmd += ["--apply-fixes"] if rule is None else \
+                # --apply-fixes-all: this instrument measures the FULL fixer (every rule's
+                # fix), which is what the unqualified --apply-fixes meant before the
+                # OPEN-105 allow-list made it apply only Fix_policy.default_allowlist.
+                cmd += ["--apply-fixes-all"] if rule is None else \
                        ["--apply-fixes-for", rule]
                 cmd += [str(tex)]
                 before = tex.read_bytes()

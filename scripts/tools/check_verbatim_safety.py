@@ -168,7 +168,11 @@ def apply_fixes(binp: str, data: bytes, env) -> bytes:
         t.write(data)
         tp = t.name
     try:
-        r = subprocess.run([binp, "--apply-fixes", tp], capture_output=True, env=env)
+        # --apply-fixes-all, not --apply-fixes: since the OPEN-105 allow-list the
+        # unqualified flag applies only Fix_policy.default_allowlist. This gate
+        # vets the SUPERSET (every rule's fix), so its coverage is exactly what it
+        # was before the allow-list existed.
+        r = subprocess.run([binp, "--apply-fixes-all", tp], capture_output=True, env=env)
         # drop the leading "# profile=..." banner lines
         lines = [ln for ln in r.stdout.split(b"\n") if not ln.startswith(b"# ")]
         return b"\n".join(lines)

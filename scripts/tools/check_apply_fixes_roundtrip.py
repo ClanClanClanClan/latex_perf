@@ -97,7 +97,13 @@ MANIFEST = "corpora/apply_fixes/manifest.json"
 #           under pilot (`>{\bfseries}` -> `\textgreater{}{\bfseries}`, an illegal
 #           pream-token, pdflatex 0 -> 1). Varying only the flag misses that class
 #           entirely, which is exactly what my first version of this gate did.
-FLAGS = ["--apply-fixes", "--apply-fixes-best-effort"]
+# --apply-fixes-all, not --apply-fixes: since the OPEN-105 allow-list the
+# unqualified flag applies only Fix_policy.default_allowlist. This gate
+# vets the SUPERSET (every rule's fix), so its coverage is exactly what it
+# was before the allow-list existed.
+# The recorded modes in corpora/apply_fixes/manifest.json carry the -all names
+# for the same reason: they name the flag that actually ran.
+FLAGS = ["--apply-fixes-all", "--apply-fixes-best-effort-all"]
 PROFILES = [("default", {}), ("pilot", {"L0_VALIDATORS": "pilot"})]
 CELLS = [(pname, penv, flag) for pname, penv in PROFILES for flag in FLAGS]
 MIN_DOCS = 60  # compile_check alone is 65 standalone docs; a smaller sweep is a bug

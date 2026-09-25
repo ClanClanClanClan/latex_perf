@@ -613,7 +613,10 @@ def run_pkg(pkg: pathlib.Path, timeout: int):
                 continue
             before = tex.read_bytes()
             try:
-                p = subprocess.run([str(CLI), "--apply-fixes", str(tex)],
+                # --apply-fixes-all: this instrument measures the FULL fixer (every rule's
+                # fix), which is what the unqualified --apply-fixes meant before the
+                # OPEN-105 allow-list made it apply only Fix_policy.default_allowlist.
+                p = subprocess.run([str(CLI), "--apply-fixes-all", str(tex)],
                                    capture_output=True, timeout=timeout)
             except subprocess.TimeoutExpired:
                 out.append({"file": str(tex.relative_to(work)), "timeout": True})

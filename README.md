@@ -43,31 +43,47 @@ dune exec latex-parse/src/validators_cli.exe -- paper.tex
 dune exec latex-parse/src/validators_cli.exe -- --layer l0 paper.tex
 dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 
-# Apply the mechanical (Bucket-A) auto-fixes (writes to stdout, not in place)
-# ⚠ NOT RECOMMENDED — see the warning below before using this on real work.
+# Apply the ALLOW-LISTED auto-fixes only (writes to stdout, not in place):
+# the rules whose fixes were measured not to change a paper's words or layout
 dune exec latex-parse/src/validators_cli.exe -- --apply-fixes paper.tex
+
+# Opt in to ONE other rule's auto-fix
+dune exec latex-parse/src/validators_cli.exe -- --apply-fixes-for TYPO-002 paper.tex
+
+# Apply EVERY rule's auto-fix
+# ⚠ NOT RECOMMENDED — see the warning below before using this on real work.
+dune exec latex-parse/src/validators_cli.exe -- --apply-fixes-all paper.tex
 
 # List the review-only (Bucket-C) candidate fixes for an editor to offer
 dune exec latex-parse/src/validators_cli.exe -- --list-candidate-fixes paper.tex
 ```
 
-`--apply-fixes` applies only the guard-gated auto-fixes; intent-dependent
-suggestions are surfaced separately via `--list-candidate-fixes` and never applied
-automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
+`--apply-fixes` applies only the auto-fixes of an ALLOW-LIST
+(`Fix_policy.default_allowlist` in `latex-parse/src/fix_policy.ml`): rules whose
+fixes were measured, over thousands of real edits, not to change the words or the
+layout of the compiled paper. Every other rule's auto-fix is explicit opt-in —
+one rule at a time with `--apply-fixes-for RULE-ID`, or all of them with
+`--apply-fixes-all`. Intent-dependent suggestions are surfaced separately via
+`--list-candidate-fixes` and never applied automatically. See
+[docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 
-> ### ⚠ `--apply-fixes` is not on the recommended path
+> ### ⚠ `--apply-fixes-all` is not on the recommended path
 >
-> **Measured on real arXiv papers that pdflatex compiles cleanly, the auto-fix
-> channel turns some of them into papers that do not compile.** On a 38-paper
+> **Measured on real arXiv papers that pdflatex compiles cleanly, the full
+> auto-fix channel turns roughly 10-12% of them into papers that do not compile,
+> and silently changes the mathematics of some that still do** (ledger rows
+> `OPEN-109`, `OPEN-110`). That is why `--apply-fixes` now applies only the
+> allow-list, and why `--apply-fixes-all` is what the unqualified flag used to
+> be. On a 38-paper
 > window that had never been used to design anything, 7 were broken — and a
 > control run with the most recent fix *reverted* broke the same seven, so the
 > last round of repair work changed that number by zero. Across the windows
 > never used for tuning the rate has been flat over three rounds of
 > individually-correct producer fixes.
 >
-> The flag still works, still runs behind every guard it has, and is still
-> gated in CI. What changed is the advice: **do not run it unattended over work
-> you care about, and diff the output before you keep it.** Prefer
+> `--apply-fixes-all` still works, still runs behind every guard it has, and is
+> still gated in CI. What changed is the advice: **do not run it unattended over
+> work you care about, and diff the output before you keep it.** Prefer
 > `--list-candidate-fixes`, which proposes and never edits.
 >
 > This is a deliberate, dated decision with a stated way back —

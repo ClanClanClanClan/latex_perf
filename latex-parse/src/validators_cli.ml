@@ -167,9 +167,10 @@ let collect_fix_edits ?filter_id ~(src : string)
 
    These hooks are ENV-GATED and change nothing when unset.
 
-   [LP_FIX_ONLY=A,B] and [LP_FIX_EXCLUDE=A,B] restrict the CONVERGING fixer to a
+   [LP_FIX_ONLY=A,B] and [LP_FIX_EXCLUDE=A,B] restrict a SCOPED fixer run to a
    rule set, so a withdrawal or an allow-list is measured with the engine's own
-   fixpoint loop instead of a Python approximation.
+   fixpoint loop instead of a Python approximation. How they combine with the
+   fix scope is stated at [rule_admitted] below.
 
    [LP_FIX_TRACE=<file>] appends one line per APPLIED edit on every pass, with
    five tab-separated fields: the pass number, the rule id, the start offset,
@@ -185,12 +186,51 @@ let env_rule_set name =
            (fun x -> x <> "")
            (List.map String.trim (String.split_on_char ',' v)))
 
+(* The fix SCOPE of a run that is not a single-rule opt-in (OPEN-105, OPEN-110).
+   [Scope_default] applies only the measured-safe allow-list in [Fix_policy].
+   [Scope_all] applies every rule's fix, which is what [--apply-fixes] did
+   before the allow-list existed. *)
+type fix_scope = Scope_default | Scope_all
+
+(* Which rules a scoped run may apply. The BASE set is the allow-list under
+   [Scope_default] and every rule under [Scope_all]. When [LP_FIX_ONLY] is set,
+   its list REPLACES the base, because an explicit set is an explicit opt-in.
+   [LP_FIX_EXCLUDE] is then subtracted from whatever the base is. The
+   single-rule opt-ins [--apply-fixes-for] and [--apply-fixes-best-effort-for]
+   do not consult this predicate at all. *)
 let rule_admitted =
   let only = env_rule_set "LP_FIX_ONLY"
   and exclude = env_rule_set "LP_FIX_EXCLUDE" in
-  fun id ->
-    (match only with None -> true | Some l -> List.mem id l)
+  fun scope id ->
+    (match only with
+    | Some l -> List.mem id l
+    | None -> (
+        match scope with
+        | Scope_default -> Latex_parse_lib.Fix_policy.in_default_set id
+        | Scope_all -> true))
     && match exclude with None -> true | Some l -> not (List.mem id l)
+
+(* The rule selection of one fixer run: either a SCOPE, filtered by
+   [rule_admitted], or a single rule named on the command line, which is an
+   explicit opt-in and bypasses the policy entirely. *)
+type fix_target = Scoped of fix_scope | Single_rule of string
+
+let admits target (r : Latex_parse_lib.Validators.result) =
+  match target with
+  | Scoped scope -> rule_admitted scope r.id
+  | Single_rule id -> r.id = id
+
+(* Every fix edit the target admits from [results], each tagged with its rule,
+   in the rule order [collect_fix_edits] uses so best-effort conflict priority
+   is unchanged. This is the ONE place a fixer run selects edits, so no path can
+   apply an edit the policy did not admit. *)
+let tagged_fix_edits target ~src results =
+  List.concat_map
+    (fun (r : Latex_parse_lib.Validators.result) ->
+      if admits target r then
+        List.map (fun e -> (r.id, e)) (collect_fix_edits ~src [ r ])
+      else [])
+    results
 
 let trace_applied ~pass (tagged : (string * Latex_parse_lib.Cst_edit.t) list)
     (applied : Latex_parse_lib.Cst_edit.t list) =
@@ -261,7 +301,7 @@ let apply_fixes_cap = 64
    [cur] — not the repeated state — keeps the safety gate able to flag the
    regression: [--apply-fixes] of the two cycle states still map to each other,
    so the gate's external loop sees the cycle. *)
-let run_apply_fixes_converge ?filter_id ~path ~src () =
+let run_apply_fixes_converge ~target ~path ~src () =
   let seen = Hashtbl.create 16 in
   Hashtbl.replace seen (Digest.string src) ();
   (* v27.1.2: each pass applies the maximal NON-CONFLICTING subset of edits
@@ -281,21 +321,8 @@ let run_apply_fixes_converge ?filter_id ~path ~src () =
     ignore (setup_all ~path ~src:cur ~log_path:None);
     (* Class-D-inclusive so L4 STYLE fix producers (STYLE-015/023) apply; batch
        path, not the keystroke hot path (v27.1.6). *)
-    let results =
-      List.filter
-        (fun (r : Latex_parse_lib.Validators.result) -> rule_admitted r.id)
-        (Latex_parse_lib.Validators.run_all_with_class_d cur)
-    in
-    (* Tagged per rule, in the same rule order [collect_fix_edits] uses, so
-       best-effort conflict priority is unchanged. *)
-    let tagged =
-      List.concat_map
-        (fun (r : Latex_parse_lib.Validators.result) ->
-          List.map
-            (fun e -> (r.id, e))
-            (collect_fix_edits ?filter_id ~src:cur [ r ]))
-        results
-    in
+    let results = Latex_parse_lib.Validators.run_all_with_class_d cur in
+    let tagged = tagged_fix_edits target ~src:cur results in
     let edits = List.map snd tagged in
     if edits = [] then cur
     else
@@ -325,22 +352,24 @@ let run_apply_fixes_converge ?filter_id ~path ~src () =
   print_string (loop src 0);
   0
 
-let run_apply_fixes ?filter_id ?(best_effort = false) ?(converge = false) ~path
+let run_apply_fixes ~target ?(best_effort = false) ?(converge = false) ~path
     ~src () =
   let _tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner _tier features;
   Fun.protect ~finally:cleanup (fun () ->
       if converge && not best_effort then
-        run_apply_fixes_converge ?filter_id ~path ~src ()
+        run_apply_fixes_converge ~target ~path ~src ()
       else
         let _bp = setup_all ~path ~src ~log_path:None in
         (* Class-D-inclusive (see converge path) so STYLE-* fixes apply. *)
         let results = Latex_parse_lib.Validators.run_all_with_class_d src in
-        let edits = collect_fix_edits ?filter_id ~src results in
+        let tagged = tagged_fix_edits target ~src results in
+        let edits = List.map snd tagged in
         if best_effort then (
           let out, applied, skipped =
             Latex_parse_lib.Cst_edit.apply_best_effort src edits
           in
+          trace_applied ~pass:1 tagged applied;
           print_string out;
           if skipped <> [] then (
             eprintf
@@ -354,6 +383,7 @@ let run_apply_fixes ?filter_id ?(best_effort = false) ?(converge = false) ~path
         else
           match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
           | Ok out ->
+              trace_applied ~pass:1 tagged edits;
               print_string out;
               0
           | Error (`Overlap (a, b)) -> overlap_error a b)
@@ -826,18 +856,37 @@ let () =
      single-path invocation with [--apply-fixes]. *)
   let apply_env_on = env_flag_on "L0_APPLY_FIXES" in
   match args with
+  (* OPEN-105 / OPEN-110: the unqualified fixer modes apply only the
+     measured-safe allow-list in [Fix_policy]; the [-all] modes apply every
+     rule's fix, exactly as the unqualified modes did before; the [-for] modes
+     are single-rule opt-ins that bypass the policy. *)
   | [ _; "--apply-fixes"; path ] ->
       let src = read_all path in
-      exit (run_apply_fixes ~converge:true ~path ~src ())
+      exit
+        (run_apply_fixes ~target:(Scoped Scope_default) ~converge:true ~path
+           ~src ())
+  | [ _; "--apply-fixes-all"; path ] ->
+      let src = read_all path in
+      exit
+        (run_apply_fixes ~target:(Scoped Scope_all) ~converge:true ~path ~src ())
   | [ _; "--apply-fixes-for"; rule_id; path ] ->
       let src = read_all path in
-      exit (run_apply_fixes ~filter_id:rule_id ~path ~src ())
+      exit (run_apply_fixes ~target:(Single_rule rule_id) ~path ~src ())
   | [ _; "--apply-fixes-best-effort"; path ] ->
       let src = read_all path in
-      exit (run_apply_fixes ~best_effort:true ~path ~src ())
+      exit
+        (run_apply_fixes ~target:(Scoped Scope_default) ~best_effort:true ~path
+           ~src ())
+  | [ _; "--apply-fixes-best-effort-all"; path ] ->
+      let src = read_all path in
+      exit
+        (run_apply_fixes ~target:(Scoped Scope_all) ~best_effort:true ~path ~src
+           ())
   | [ _; "--apply-fixes-best-effort-for"; rule_id; path ] ->
       let src = read_all path in
-      exit (run_apply_fixes ~best_effort:true ~filter_id:rule_id ~path ~src ())
+      exit
+        (run_apply_fixes ~target:(Single_rule rule_id) ~best_effort:true ~path
+           ~src ())
   | [ _; "--list-candidate-fixes"; path ] ->
       (* Bucket-C: list intent-dependent CANDIDATE fixes for an editor frontend.
          These are surfaced for author review and are NEVER auto-applied by
@@ -933,7 +982,9 @@ let () =
       exit (run_extensions_registry ())
   | [ _; path ] when apply_env_on ->
       let src = read_all path in
-      exit (run_apply_fixes ~converge:true ~path ~src ())
+      exit
+        (run_apply_fixes ~target:(Scoped Scope_default) ~converge:true ~path
+           ~src ())
   | [ _; path ] ->
       let src = read_all path in
       let tier, features = resolve_profile ~requested:`Auto ~src in
@@ -1053,10 +1104,11 @@ let () =
             ps.file_states)
   | _ ->
       eprintf
-        "Usage: %s [--apply-fixes | --apply-fixes-for RULE-ID | \
-         --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
-         [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
-         [--policy <file.lppolicy> [--audit <file>]] [--explain <RULE-ID>] \
+        "Usage: %s [--apply-fixes | --apply-fixes-all | --apply-fixes-for \
+         RULE-ID | --apply-fixes-best-effort | --apply-fixes-best-effort-all | \
+         --apply-fixes-best-effort-for RULE-ID] [--profile \
+         auto|lp-core|lp-extended|lp-foreign] [--advisory] [--policy \
+         <file.lppolicy> [--audit <file>]] [--explain <RULE-ID>] \
          [--list-candidate-fixes <file.tex>] [--review <file.lpreview>] \
          [--report [--json] <file.tex>... | --report [--json] --manifest \
          <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log \
@@ -1129,10 +1181,18 @@ let () =
         \               --strict, exits nonzero if the effective support drops \
          below the\n\
         \               base guarantee.\n\
-         --apply-fixes  run validators, apply every rule's fix edits and emit \
-         the\n\
-        \               modified source to stdout. Iterates to a fixpoint \
-         (P1a) so\n\
+         --apply-fixes  run validators, apply the fix edits of the MEASURED-SAFE\n\
+        \               allow-list only (Fix_policy.default_allowlist: rules \
+         whose fixes were\n\
+        \               measured not to change the words or layout of real \
+         papers), and emit the\n\
+        \               modified source to stdout. Every other rule's fix is \
+         explicit opt-in:\n\
+        \               use --apply-fixes-for RULE-ID for one rule. \
+         LP_FIX_ONLY=A,B replaces the\n\
+        \               allow-list with an explicit set; LP_FIX_EXCLUDE=A,B \
+         subtracts from it.\n\
+        \               Iterates to a fixpoint (P1a) so\n\
         \               cross-rule cascades resolve in one run; cycle-safe. \
          Each pass\n\
         \               applies the maximal NON-CONFLICTING subset \
@@ -1142,17 +1202,32 @@ let () =
         \               different rules never abort the document (v27.1.2). \
          L0_APPLY_FIXES=1\n\
         \               is equivalent when no other flag is given.\n\
-         --apply-fixes-for RULE-ID  same as --apply-fixes but only applies \
-         fixes from results\n\
-        \               whose [r.id = RULE-ID] (strict; a single rule's edits \
-         must not self-overlap). Useful for incremental adoption (v26.3).\n\
+         --apply-fixes-all  NOT RECOMMENDED. Same as --apply-fixes but applies \
+         EVERY rule's\n\
+        \               fix, as --apply-fixes did before the allow-list. \
+         Measured on real compiling\n\
+        \               arXiv papers it breaks the build of roughly 10-12%% of \
+         them and silently\n\
+        \               changes the mathematics of some that still compile \
+         (OPEN-110).\n\
+         --apply-fixes-for RULE-ID  the per-rule OPT-IN: applies only the \
+         fixes of\n\
+        \               RULE-ID, whether or not it is on the allow-list (one \
+         pass, strict; a single\n\
+        \               rule's edits must not self-overlap). Useful for \
+         incremental adoption (v26.3).\n\
          --apply-fixes-best-effort  v26.4: applies the maximal non-conflicting \
-         subset of fixes\n\
-        \               via Cst_edit.apply_best_effort. Reports the skipped \
-         subset to stderr.\n\
-        \               Exit 0 even when some edits were skipped (the \
-         partial-fix output is the contract).\n\
+         subset of the\n\
+        \               allow-listed fixes in one pass via \
+         Cst_edit.apply_best_effort. Reports the\n\
+        \               skipped subset to stderr. Exit 0 even when some edits \
+         were skipped (the\n\
+        \               partial-fix output is the contract).\n\
+         --apply-fixes-best-effort-all  NOT RECOMMENDED. Same as \
+         --apply-fixes-best-effort\n\
+        \               over EVERY rule's fix (see --apply-fixes-all).\n\
          --apply-fixes-best-effort-for RULE-ID  same as \
-         --apply-fixes-best-effort, filtered by rule id (v26.4).\n"
+         --apply-fixes-best-effort, for the\n\
+        \               single opted-in rule RULE-ID (v26.4).\n"
         Sys.argv.(0);
       exit 2

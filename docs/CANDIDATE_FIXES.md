@@ -4,7 +4,7 @@ LaTeX-Perfectionist splits fixable rules into two channels:
 
 | Channel | Field on `result` | Applied by | Bucket |
 |---|---|---|---|
-| **Auto-fix** | `fix : Cst_edit.t list option` | `--apply-fixes` / `--apply-fixes-for` | A (mechanical, deterministic, guard-gated) |
+| **Auto-fix** | `fix : Cst_edit.t list option` | `--apply-fixes` (allow-listed rules only) / `--apply-fixes-for` (one opted-in rule) / `--apply-fixes-all` (every rule, not recommended) | A (mechanical, deterministic, guard-gated) |
 | **Candidate** | `candidate_fixes : candidate_fix list` | never auto-applied — surfaced for author review | C (context/intent-dependent) |
 
 A **candidate fix** is a *suggested* edit whose correctness depends on author
@@ -13,15 +13,18 @@ intent, so it must never be applied without review. Example: inserting a space i
 only the author knows which is meant. Such rules therefore emit candidates, not
 auto-fixes.
 
-> ⚠ **`--apply-fixes` is not on the recommended path** (maintainer decision 2026-09-20,
+> ⚠ **`--apply-fixes-all` is not on the recommended path** (maintainer decision 2026-09-20,
 > `docs/v27/adr/ADR-011-fund-track-R-and-demote-apply-fixes.md`, ledger `OPEN-105`).
-> On real arXiv papers that compile cleanly it has been measured to break some of
-> them, at a rate that three rounds of producer fixes did not move on windows never
-> used for tuning. The invariants below still hold and every guard still runs — the
-> change is the advice, not the mechanism. Prefer `--list-candidate-fixes`, which
-> proposes and never edits, and diff any applied output before keeping it.
+> On real arXiv papers that compile cleanly the full fixer has been measured to break
+> some of them, at a rate that three rounds of producer fixes did not move on windows
+> never used for tuning, and to change the mathematics of some that still compile
+> (`OPEN-110`). `--apply-fixes` therefore applies only the allow-list in
+> `latex-parse/src/fix_policy.ml`; every other rule's auto-fix is opt-in through
+> `--apply-fixes-for RULE-ID`. The invariants below still hold and every guard still
+> runs. Prefer `--list-candidate-fixes`, which proposes and never edits, and diff any
+> applied output before keeping it.
 
-**Invariant:** `--apply-fixes` and `--apply-fixes-for` read **only** the `fix`
+**Invariant:** `--apply-fixes`, `--apply-fixes-all` and `--apply-fixes-for` read **only** the `fix`
 field. Candidate rules keep `produces_fix: false`, so they are absent from the
 producer-coverage gate and never mutate a document mechanically. Running
 `--apply-fixes-for <candidate-rule> file.tex` is guaranteed byte-identical to the

@@ -54,9 +54,25 @@ jobs:
       # pass/fail against the spec budget — the spec budget is currently missed,
       # and a red-on-arrival required gate would block every merge. The gap is
       # printed on every run and the gate fails if it WIDENS.
-      - name: Keystroke + batch latency budget (R-BUDGET)
+      #
+      # OPEN-104: the gate also measures COLD --compile-check (a whole process,
+      # which is what every user gets today) and the `structural` stage. Their
+      # baselines start PENDING-CI, because ADR-011 allows a baseline only from
+      # an idle CI runner. --emit-json writes every measured number with this
+      # run's provenance, and the upload below keeps it, so the pending
+      # baselines are recorded FROM this runner with
+      # `check_keystroke_budget.py --adopt keystroke_budget_measured.json`.
+      - name: Keystroke + cold + batch latency budget (R-BUDGET)
         run: |
-          opam exec -- python3 scripts/tools/check_keystroke_budget.py --repo . --reps 9
+          opam exec -- python3 scripts/tools/check_keystroke_budget.py --repo . --reps 9 --emit-json keystroke_budget_measured.json
+
+      - name: Upload measured latency numbers (for --adopt)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keystroke-budget-measured
+          path: keystroke_budget_measured.json
+          if-no-files-found: warn
 
       # The baseline shipped in this repo was recorded on a loaded developer
       # machine and is marked provisional, which makes the ratchet LOOSE. Print

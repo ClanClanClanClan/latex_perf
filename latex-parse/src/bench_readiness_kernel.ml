@@ -7,6 +7,16 @@
    fast-kernel compute rules_ms : fastrun_ms - parse_ms — the rule execution
    alone
 
+   The fifth column, structural_ms, is one call of
+   [Compile_gate_checks.structural_fatal_reasons], the root-source structural
+   fatal detectors that [--compile-check] runs beside the rule belt. It is the
+   stage ROADMAP.md budgets as `structural <= 15 ms` at 300 KB, and it had no
+   instrumentation until OPEN-104: a per-byte range-list scan in those detectors
+   had made it cost seconds on real papers without any gate seeing it. It gets
+   its OWN pre-allocated copies, for the same reason every rep does (OPEN-021):
+   the detectors memoise the verbatim/comment/url scan on physical equality, so
+   reusing the strings the fastrun column already scanned would time the memo.
+
    ⚠ EVERY REP MUST GET ITS OWN PHYSICAL STRING. OPEN-021.
 
    This bench used to read the file once and hand the SAME physical string to
@@ -78,8 +88,8 @@ let () =
       "[bench] --shared-string-lie: reusing ONE physical string across reps, \
        which is the OPEN-021 defect. These numbers are memo hits, not kernel \
        time. For comparison only.";
-  Printf.printf "%-10s %-12s %-12s %-12s\n" "size" "parse_ms" "fastrun_ms"
-    "rules_ms";
+  Printf.printf "%-10s %-12s %-12s %-12s %-12s\n" "size" "parse_ms" "fastrun_ms"
+    "rules_ms" "structural_ms";
   for i = 1 to Array.length argv - 1 do
     if i >= 2 then (
       let path = argv.(i) in
@@ -92,9 +102,13 @@ let () =
       in
       (* Warm code paths and the rule registry on a string that is NOT one of
          the timed inputs, so no timed rep starts with a populated memo. *)
+      let structural_inputs =
+        Array.init reps (fun _ -> if shared_lie then src else fresh_copy src)
+      in
       let warm = fresh_copy src in
       ignore (Latex_parse_lib.Parser_l2.parse_located warm);
       ignore (Latex_parse_lib.Validators.run_compile_blocking warm);
+      ignore (Latex_parse_lib.Compile_gate_checks.structural_fatal_reasons warm);
       let parse =
         bench reps (fun k -> Latex_parse_lib.Parser_l2.parse_located inputs.(k))
       in
@@ -104,6 +118,11 @@ let () =
             let _n, errs = Latex_parse_lib.Parser_l2.parse_located s in
             Latex_parse_lib.Validators.run_compile_blocking ~parse_errors:errs s)
       in
-      Printf.printf "%-10d %-12.1f %-12.1f %-12.1f\n" (String.length src) parse
-        fastrun (fastrun -. parse))
+      let structural =
+        bench reps (fun k ->
+            Latex_parse_lib.Compile_gate_checks.structural_fatal_reasons
+              structural_inputs.(k))
+      in
+      Printf.printf "%-10d %-12.1f %-12.1f %-12.1f %-12.1f\n"
+        (String.length src) parse fastrun (fastrun -. parse) structural)
   done

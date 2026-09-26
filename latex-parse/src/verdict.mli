@@ -129,7 +129,8 @@ val reserved_word : string
 val quote : string -> string
 (** [quote s] is [s] between double quotes, byte for byte, except that each
     control character is shown in TeX's ^^ notation (tab = [^^I], newline =
-    [^^J], DEL = [^^?]). It never rewrites any other byte. *)
+    [^^J], DEL = [^^?]) and an embedded double quote is shown as [^^22], so the
+    field's delimiter never appears inside it. It never rewrites any other byte. *)
 
 val require_proof_exit : int
 (** The exit code of [--require-proof] when the verdict is not proven: 4. *)

@@ -106,7 +106,9 @@ let reserved_word = "PROVEN"
    characters, which are shown in TeX's own ^^ notation (a tab is ^^I, a newline
    ^^J) so that a user datum can never add a tab-separated field or a line to
    the rendering. Everything else, including the word PROVEN in a file or macro
-   name, is shown byte for byte. *)
+   name, is shown byte for byte. This function is also applied to whole rendered
+   lines as a safety net, so it must leave the renderer's own quote marks alone;
+   escaping the field delimiter is [quote]'s job, not this one's. *)
 let escape_controls s =
   if not (String.exists (fun c -> Char.code c < 0x20 || Char.code c = 0x7f) s)
   then s
@@ -123,7 +125,16 @@ let escape_controls s =
       s;
     Buffer.contents b
 
-let quote s = "\"" ^ escape_controls s ^ "\""
+(* A double quote inside a quoted field is shown as ^^22, in the same TeX
+   notation, so the field's own delimiter never appears inside it. Backslashes
+   pass through untouched, so LaTeX in a nudge stays readable. *)
+let quote s =
+  let q =
+    if String.contains s '"' then
+      String.concat "^^22" (String.split_on_char '"' s)
+    else s
+  in
+  "\"" ^ escape_controls q ^ "\""
 
 let tier_token = function
   | Proven_ready _ | Proven_not_ready _ -> "proven"

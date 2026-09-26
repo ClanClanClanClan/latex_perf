@@ -145,7 +145,15 @@ let () =
       expect (contains out (Verdict.quote mac)) (tag ^ ": " ^ out);
       expect (Verdict.quote "PROVEN" = "\"PROVEN\"") (tag ^ ": quote");
       expect (Verdict.quote "a\tb\nc" = "\"a^^Ib^^Jc\"") (tag ^ ": controls");
-      expect (Verdict.quote "\127" = "\"^^?\"") (tag ^ ": DEL"));
+      expect (Verdict.quote "\127" = "\"^^?\"") (tag ^ ": DEL");
+      (* The delimiter is escaped so a quoted field is unambiguous, and TeX
+         backslashes pass through untouched so nudges stay readable. *)
+      expect
+        (Verdict.quote "a\"b.tex" = "\"a^^22b.tex\"")
+        (tag ^ ": embedded double quote");
+      expect
+        (Verdict.quote "\\def\\R" = "\"\\def\\R\"")
+        (tag ^ ": backslashes verbatim"));
 
   run "every non-proven headline says it is not a proof" (fun tag ->
       List.iter

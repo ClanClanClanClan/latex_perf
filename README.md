@@ -119,7 +119,9 @@ one rule at a time with `--apply-fixes-for RULE-ID`, or all of them with
   (heuristic)** — today's checks, unchanged. A LIKELY OK document can still fail to
   compile; the measured rate is in `docs/v27/PROJECT_STATE.md` §1.
 - **FOREIGN** — a construct no static check can decide (shell escape, catcode
-  changes, Lua scripting).
+  changes, Lua scripting), found anywhere in the project. ⚠ In M0 a FOREIGN
+  document can still exit 0: that is the legacy heuristic READY exit code,
+  unchanged, and it does not place the document in any tier.
 
 Each non-proven verdict carries up to three `why not strict:` lines with a fix-it
 nudge, for example rewriting `\def\R{\mathbb R}` as `\newcommand{\R}{\mathbb R}`.
@@ -151,8 +153,10 @@ The `READY`/`NOT-READY` token line and the exit codes (0 = no known blocker,
 > model of a style rule is an invented predicate that does not match the
 > shipped OCaml. `admits: 0 / axioms: 0` IS measured and does hold. The
 > compile guarantee is proved over an abstract document model with four token
-> kinds, so a `MODEL-READY` verdict certifies the model, not your bytes —
-> measured: 9 of 200 virgin papers are certified yet fail to compile.
+> kinds, so a `PREMISE-CERTIFIED` verdict certifies the model's premises, not
+> your bytes. How often a certified paper still fails to compile is measured
+> and published in `docs/v27/PROJECT_STATE.md` §1 (sample 2 is design-seen
+> since ADR-012; the virgin figure will come from sample 3).
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (63 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.

@@ -48,7 +48,7 @@ single most repeated error in this project's history.
 |---|---|---|---|
 | **(a)** differential allowlist | `corpora/compile_check`, 65 hand-authored docs | **8** | S6/S7-style detectors |
 | **(b)** fixture baseline | `corpora/false_ready`, 85 fixtures | **17** (4 strong-fatal, 13 error-halt; 15 accept-pins excluded) | R7 fix ranks |
-| **(c)** **real papers** | `corpora/real_roots`, 200 arXiv trees (frame 2719) | **0 / 200 = 0.0%** | the SOUNDNESS CONSTRAINT of the North-Star metric (see below) |
+| **(c)** **real papers** | `corpora/real_roots`, 200 arXiv trees (frame 2719) | **0 / 200 = 0.0%** | the heuristic tier's soundness (the strict tier's is `strict_wrong`, below) |
 
 ### Real-paper position
 
@@ -67,16 +67,25 @@ Oracle `pdfTeX 3.141592653-2.6-1.40.29`, TeX Live 2026, protocol `-interaction=n
 - **Over-rejection: 2/200 = 1.0%** — i.e. **13.3% of every NOT-READY verdict issued on a real paper is wrong**
 - **False-READY: 0/200 = 0.0%**, against a definition requiring zero
 
-### Premise-certified coverage — THE North-Star metric
+### Strict-tier coverage — THE North-Star metric (ADR-012)
 
-The ROADMAP calls this *proven-verdict coverage*. It is published here as **premise-certified** coverage, because that is what the artefact measures and what the CLI now prints: the Coq-extracted checker certified its PREMISES over the abstract model (`PREMISE-CERTIFIED`) **and** pdflatex compiled the document. It is NOT a proof that the document compiles: the second table below gives how often that reading is wrong, computed from the same artefacts. Restricting to LP-Core does not reliably reduce it — the direction differs between the two samples, so no general claim is made either way (C-43 withdrew the earlier one). The guarantee doc scopes the claim to LP-Core, so that column is the number this project may publish.
+A document counts only when the CLI prints a **PROVEN** verdict (READY or NOT-READY, decided inside the contract-bounded strict tier by the Coq-extracted decider) **and** that verdict matches the pinned pdflatex. `strict_wrong` counts every PROVEN verdict that disagrees with pdflatex; ADR-012 also counts a wrong reason or location, which the strict battery and the generated differential grade. It must be zero, and it is published with its exact one-sided 95% upper bound, because zero out of a small number is weak evidence. **In milestone M0 the strict-tier membership predicate is a stub that returns false, so no verdict is proven and this number is zero by measurement.** The headline figure will come from a sample no design decision has seen (ADR-012); sample 2 is now design-seen. Definitions: `docs/v27/STRICT_TIER_DESIGN.md` §E and `docs/v27/adr/ADR-012-contract-bounded-proven-tier.md`.
+
+| corpus | strict-tier coverage (PROVEN = pdflatex) | strict_wrong | 95% upper bound on the strict_wrong rate | heuristic verdicts | foreign verdicts |
+|---|---|---|---|---|---|
+| sample 1 (tuned) | **0/200 = 0.0%** | 0 | n/a — no proven verdicts, so no evidence either way | 199 | 1 |
+| **sample 2 (virgin)** | **0/200 = 0.0%** | 0 | n/a — no proven verdicts, so no evidence either way | 198 | 2 |
+
+### Heuristic-tier statistic: premise-certified coverage (NOT a proof)
+
+**This is a heuristic-tier statistic, not the North Star and not a proof (ADR-012, decision 2).** Before ADR-012 it was published as the North-Star metric under the name *proven-verdict coverage*. It counts documents where the Coq-extracted checker certified its PREMISES over the abstract model (`PREMISE-CERTIFIED`) **and** pdflatex compiled the document; the CLI renders every such verdict as `LIKELY OK (heuristic; premise-certified)`. It is NOT a proof that the document compiles: the second table below gives how often that reading is wrong, computed from the same artefacts. Restricting to LP-Core does not reliably reduce it — the direction differs between the two samples, so no general claim is made either way (C-43 withdrew the earlier one). The LP-Core column is the heuristic figure this project publishes, and only under this heading.
 
 | corpus | premise-certified (LP-Core) | certified (any tier) | uncertified READYs | certified FALSE-READY |
 |---|---|---|---|---|
 | sample 1 (tuned) | 100/200 = 50.0% | 185/200 = 92.5% | 0 | 0 |
 | **sample 2 (virgin)** | 88/200 = 44.0% | 171/200 = 85.5% | 0 | 7 |
 
-#### How often the certificate is wrong
+#### Heuristic tier: how often the certificate is wrong
 
 Certified documents that pdflatex nevertheless REJECTS. This is the honest size of the gap between "the premises hold over the abstract model" and "this document compiles".
 

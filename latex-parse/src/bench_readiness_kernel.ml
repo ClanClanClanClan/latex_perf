@@ -88,8 +88,8 @@ let () =
       "[bench] --shared-string-lie: reusing ONE physical string across reps, \
        which is the OPEN-021 defect. These numbers are memo hits, not kernel \
        time. For comparison only.";
-  Printf.printf "%-10s %-12s %-12s %-12s %-12s\n" "size" "parse_ms"
-    "fastrun_ms" "rules_ms" "structural_ms";
+  Printf.printf "%-10s %-12s %-12s %-12s %-12s\n" "size" "parse_ms" "fastrun_ms"
+    "rules_ms" "structural_ms";
   for i = 1 to Array.length argv - 1 do
     if i >= 2 then (
       let path = argv.(i) in

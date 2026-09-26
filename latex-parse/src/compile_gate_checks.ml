@@ -14,16 +14,16 @@
 (* A byte offset is "skipped" (comment / verbatim / \verb / url) — no detector
    reads structural meaning out of those bytes.
 
-   OPEN-104 (v27.1.65). Every detector below asks this question at every byte
-   of the source, and it used to be answered by [List.exists] over the whole
-   range list, which made each scan O(n × ranges); on a 300 KB real paper that
-   was the dominant cost of the structural stage. [range_mask n ranges] paints
-   the ranges into a byte bitmap ONCE, in O(n + covered bytes), and returns an
-   O(1) membership test. It answers exactly what the list scan answered for
-   every offset in [0, n), which is the only domain any caller queries (each
-   query offset is a scan cursor guarded by [< n]); outside that domain it
-   answers false. The same bitmap had already been added to the double-script
-   scan in v27.1.62 (Bug 6), and this generalises it to every detector. *)
+   OPEN-104 (v27.1.65). Every detector below asks this question at every byte of
+   the source, and it used to be answered by [List.exists] over the whole range
+   list, which made each scan O(n × ranges); on a 300 KB real paper that was the
+   dominant cost of the structural stage. [range_mask n ranges] paints the
+   ranges into a byte bitmap ONCE, in O(n + covered bytes), and returns an O(1)
+   membership test. It answers exactly what the list scan answered for every
+   offset in [0, n), which is the only domain any caller queries (each query
+   offset is a scan cursor guarded by [< n]); outside that domain it answers
+   false. The same bitmap had already been added to the double-script scan in
+   v27.1.62 (Bug 6), and this generalises it to every detector. *)
 let range_mask (n : int) (ranges : (int * int) list) : int -> bool =
   let bm = Bytes.make (max 1 n) '\000' in
   List.iter
@@ -412,8 +412,8 @@ let double_script_fatal (s : string) : string option =
      and both range lists grow with the input (one math range per `$…$`, one
      skip range per label/ref key), so the scan was O(n²) — 31 s on a 380 KB
      math-dense file, losing the real-time wedge. Precompute two byte-bitmaps
-     once with [range_mask] (O(n): the total covered length is ≤ n per
-     category) so each query is O(1). *)
+     once with [range_mask] (O(n): the total covered length is ≤ n per category)
+     so each query is O(1). *)
   let in_skip = range_mask n skip in
   let in_math = range_mask n math in
   (* Per brace-frame state: has the current base seen a super / a sub, and has a

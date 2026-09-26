@@ -1064,14 +1064,14 @@ let blank_line_comments (s : string) : string =
         ranges;
       Bytes.unsafe_to_string b
 
-(* [sub_eq s a pfx] is [String.sub s a (String.length pfx) = pfx] guarded by
-   the bounds test [a + String.length pfx <= String.length s], computed WITHOUT
+(* [sub_eq s a pfx] is [String.sub s a (String.length pfx) = pfx] guarded by the
+   bounds test [a + String.length pfx <= String.length s], computed WITHOUT
    allocating the substring. OPEN-104 (v27.1.65): the breaker scans below and
    every structural detector in [Compile_gate_checks] asked the allocating form
-   at every byte of the source, once per needle, and on a 300 KB real paper
-   that allocate-copy-compare was the largest single cost of a cold
-   --compile-check. A negative [a] raises the same [Invalid_argument] that
-   [String.sub] raised, so even the failure behaviour is unchanged. *)
+   at every byte of the source, once per needle, and on a 300 KB real paper that
+   allocate-copy-compare was the largest single cost of a cold --compile-check.
+   A negative [a] raises the same [Invalid_argument] that [String.sub] raised,
+   so even the failure behaviour is unchanged. *)
 let sub_eq (s : string) (a : int) (pfx : string) : bool =
   let pl = String.length pfx in
   a + pl <= String.length s
@@ -1080,7 +1080,7 @@ let sub_eq (s : string) (a : int) (pfx : string) : bool =
   else
     let rec go k =
       k >= pl
-      || String.unsafe_get s (a + k) = String.unsafe_get pfx k && go (k + 1)
+      || (String.unsafe_get s (a + k) = String.unsafe_get pfx k && go (k + 1))
     in
     go 0
 

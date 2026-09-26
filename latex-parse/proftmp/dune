@@ -1,0 +1,3 @@
+(executable
+ (name prof_stages)
+ (libraries latex_parse_lib unix))

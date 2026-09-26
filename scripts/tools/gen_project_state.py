@@ -49,6 +49,33 @@ def allowlist_count(repo: Path) -> int:
     return len([l for l in m.group(1).splitlines() if l.strip().endswith(".tex")])
 
 
+def binom_upper95(k: int, n: int) -> float:
+    """Exact (Clopper-Pearson) one-sided 95% upper bound on a rate k/n.
+
+    ADR-012 publishes strict_wrong with its upper bound, because 0/n is weak
+    evidence when n is small: for k = 0 this is 1 - 0.05**(1/n), which the
+    design rounds to the rule of three, 3/n. Pure Python, bisection on the
+    binomial CDF, so the generator has no new dependency.
+    """
+    from math import comb
+    if n <= 0:
+        return 1.0
+    if k >= n:
+        return 1.0
+
+    def cdf(p: float) -> float:
+        return sum(comb(n, i) * p**i * (1 - p)**(n - i) for i in range(k + 1))
+
+    lo, hi = k / n, 1.0
+    for _ in range(80):
+        mid = (lo + hi) / 2
+        if cdf(mid) > 0.05:
+            lo = mid
+        else:
+            hi = mid
+    return hi
+
+
 def build(repo: Path) -> str:
     fr = json.loads((repo / "corpora/false_ready/manifest.json").read_text())
     # A fixture whose expected_cli is READY is a LIVE false-READY only when
@@ -129,8 +156,8 @@ def build(repo: Path) -> str:
         graded = sum(v for k, v in c.items() if not k.startswith("ungraded"))
         L.append(f"| **(c)** **real papers** | `corpora/real_roots`, {rr['frame']['n']} arXiv trees "
                  f"(frame {rr['frame']['frame_size']}) | **{c.get('FALSE-READY',0)} / {graded} = "
-                 f"{100*c.get('FALSE-READY',0)/graded:.1f}%** | the SOUNDNESS CONSTRAINT "
-                 f"of the North-Star metric (see below) |")
+                 f"{100*c.get('FALSE-READY',0)/graded:.1f}%** | the heuristic "
+                 f"tier's soundness (the strict tier's is `strict_wrong`, below) |")
     L.append("")
 
     if rr:
@@ -204,23 +231,86 @@ def build(repo: Path) -> str:
                        f"{100*len(bad)/len(cert):.1f}% |")
         return out
 
+    # ── ADR-012: THE NORTH STAR IS STRICT-TIER COVERAGE ─────────────────
+    # A document counts only when the CLI printed a PROVEN verdict (the TIER
+    # line's tier token is "proven") AND that verdict matches pdflatex. The
+    # tier token is recorded per row by gen_proven_coverage.py. A row without
+    # it comes from a binary older than ADR-012 and is refused LOUDLY rather
+    # than read as "not proven" (C-65: never let a missing field read as 0).
+    def strict_row(path, label):
+        f = repo / path
+        if not f.is_file():
+            return []
+        raw = json.loads(f.read_text())
+        rows = raw["rows"] if isinstance(raw, dict) else raw
+        missing = [r["id"] for r in rows if "verdict_tier" not in r]
+        if missing:
+            raise SystemExit(
+                f"FATAL: {path} has {len(missing)} rows without verdict_tier "
+                f"(first: {missing[0]}). It predates ADR-012; regenerate it "
+                f"with scripts/tools/gen_proven_coverage.py.")
+        n = len(rows)
+        proven = [r for r in rows if r["verdict_tier"] == "proven"]
+        ok = [r for r in proven
+              if (r["verdict_kind"] == "PROVEN-READY" and r["cell"] == "true-READY")
+              or (r["verdict_kind"] == "PROVEN-NOT-READY"
+                  and r["cell"] == "true-NOT-READY")]
+        wrong = len(proven) - len(ok)
+        k = len(proven)
+        ub = ("n/a — no proven verdicts, so no evidence either way" if k == 0
+              else f"{100*binom_upper95(wrong, k):.1f}% of {k}")
+        heur = sum(1 for r in rows if r["verdict_tier"] == "heuristic")
+        foreign = sum(1 for r in rows if r["verdict_tier"] == "foreign")
+        return [f"| {label} | **{len(ok)}/{n} = {100*len(ok)/n:.1f}%** | "
+                f"{wrong} | {ub} | {heur} | {foreign} |"]
+
+    sr = strict_row("corpora/real_roots/proven_coverage_sample1.json",
+                    "sample 1 (tuned)")
+    sr += strict_row("corpora/real_roots/proven_coverage_sample2.json",
+                     "**sample 2 (virgin)**")
+    if sr:
+        L += ["### Strict-tier coverage — THE North-Star metric (ADR-012)", "",
+              "A document counts only when the CLI prints a **PROVEN** verdict "
+              "(READY or NOT-READY, decided inside the contract-bounded strict "
+              "tier by the Coq-extracted decider) **and** that verdict matches "
+              "the pinned pdflatex. `strict_wrong` counts every PROVEN verdict "
+              "that disagrees with pdflatex; ADR-012 also counts a wrong reason "
+              "or location, which the strict battery and the generated "
+              "differential grade. It must be zero, and it is published with "
+              "its exact one-sided 95% upper bound, because zero out of a small "
+              "number is weak evidence. **In milestone M0 the strict-tier "
+              "membership predicate is a stub that returns false, so no "
+              "verdict is proven and this number is zero by measurement.** "
+              "The headline figure will come from a sample no design decision "
+              "has seen (ADR-012); sample 2 is now design-seen. Definitions: "
+              "`docs/v27/STRICT_TIER_DESIGN.md` §E and "
+              "`docs/v27/adr/ADR-012-contract-bounded-proven-tier.md`.", "",
+              "| corpus | strict-tier coverage (PROVEN = pdflatex) | strict_wrong "
+              "| 95% upper bound on the strict_wrong rate | heuristic verdicts "
+              "| foreign verdicts |",
+              "|---|---|---|---|---|---|"] + sr + [""]
+
     pb = proven_block("corpora/real_roots/proven_coverage_sample1.json",
                       "sample 1 (tuned)")
     pb += proven_block("corpora/real_roots/proven_coverage_sample2.json",
                        "**sample 2 (virgin)**")
     if pb:
-        L += ["### Premise-certified coverage — THE North-Star metric", "",
-              "The ROADMAP calls this *proven-verdict coverage*. It is "
-              "published here as **premise-certified** coverage, because that "
-              "is what the artefact measures and what the CLI now prints: the "
-              "Coq-extracted checker certified its PREMISES over the abstract "
-              "model (`PREMISE-CERTIFIED`) **and** pdflatex compiled the "
-              "document. It is NOT a proof that the document compiles: the "
-              "second table below gives how often that reading is wrong, "
-              "computed from the same artefacts. Restricting to LP-Core does "
-              "not reliably reduce it — the direction differs between the two "
-              "samples, so no general claim is made either way (C-43 withdrew "
-              "the earlier one). The guarantee doc scopes the claim to LP-Core, so that column is the number this project may publish.",
+        L += ["### Heuristic-tier statistic: premise-certified coverage (NOT a proof)", "",
+              "**This is a heuristic-tier statistic, not the North Star and not "
+              "a proof (ADR-012, decision 2).** Before ADR-012 it was published "
+              "as the North-Star metric under the name *proven-verdict "
+              "coverage*. It counts documents where the Coq-extracted checker "
+              "certified its PREMISES over the abstract model "
+              "(`PREMISE-CERTIFIED`) **and** pdflatex compiled the document; "
+              "the CLI renders every such verdict as `LIKELY OK (heuristic; "
+              "premise-certified)`. It is NOT a proof that the document "
+              "compiles: the second table below gives how often that reading "
+              "is wrong, computed from the same artefacts. Restricting to "
+              "LP-Core does not reliably reduce it — the direction differs "
+              "between the two samples, so no general claim is made either way "
+              "(C-43 withdrew the earlier one). The LP-Core column is the "
+              "heuristic figure this project publishes, and only under this "
+              "heading.",
               "",
               "| corpus | premise-certified (LP-Core) | certified (any tier) | uncertified READYs | certified FALSE-READY |",
               "|---|---|---|---|---|"] + pb + [""]
@@ -229,7 +319,7 @@ def build(repo: Path) -> str:
               + cert_error_row("corpora/real_roots/proven_coverage_sample2.json",
                                "**sample 2 (virgin)**"))
         if ce:
-            L += ["#### How often the certificate is wrong", "",
+            L += ["#### Heuristic tier: how often the certificate is wrong", "",
                   "Certified documents that pdflatex nevertheless REJECTS. This "
                   "is the honest size of the gap between "
                   "\"the premises hold over the abstract model\" and "

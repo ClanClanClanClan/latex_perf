@@ -56,6 +56,15 @@ dune exec latex-parse/src/validators_cli.exe -- --apply-fixes-all paper.tex
 
 # List the review-only (Bucket-C) candidate fixes for an editor to offer
 dune exec latex-parse/src/validators_cli.exe -- --list-candidate-fixes paper.tex
+
+# Pre-compile readiness check (every verdict is HEURISTIC today; see below)
+dune exec latex-parse/src/validators_cli.exe -- --compile-check paper.tex
+
+# The same, but exit 4 unless the verdict is PROVEN (always 4 until the strict tier ships)
+dune exec latex-parse/src/validators_cli.exe -- --compile-check --require-proof paper.tex
+
+# List every construct in the project closure that keeps it out of the strict tier
+dune exec latex-parse/src/validators_cli.exe -- --strict-boundary paper.tex
 ```
 
 `--apply-fixes` applies only the auto-fixes of an ALLOW-LIST
@@ -95,6 +104,29 @@ one rule at a time with `--apply-fixes-for RULE-ID`, or all of them with
 > at the `Fix_guard` choke point that moves an **untouched** measurement window.
 > A tuned window reading zero is not evidence — every tuned window in this
 > project's history has read near zero while the out-of-sample rate stayed put.
+
+### Compile check: three tiers (ADR-012)
+
+`--compile-check` answers in one of three tiers and says which on a `TIER` line:
+
+- **PROVEN READY / PROVEN NOT-READY** — the contract-bounded strict tier: an exact,
+  Coq-proved decision (READY if and only if the document compiles under the pinned
+  TeX Live) for Turing-free documents whose exact package configuration has an
+  attested contract. **No document is proven yet**: milestone M0 ships the verdict
+  type with the strict tier stubbed off, and the first proven verdicts arrive with
+  milestones M2 and M3.
+- **LIKELY OK (heuristic; premise-certified) — not a proof** and **LIKELY FAIL
+  (heuristic)** — today's checks, unchanged. A LIKELY OK document can still fail to
+  compile; the measured rate is in `docs/v27/PROJECT_STATE.md` §1.
+- **FOREIGN** — a construct no static check can decide (shell escape, catcode
+  changes, Lua scripting).
+
+Each non-proven verdict carries up to three `why not strict:` lines with a fix-it
+nudge, for example rewriting `\def\R{\mathbb R}` as `\newcommand{\R}{\mathbb R}`.
+The `READY`/`NOT-READY` token line and the exit codes (0 = no known blocker,
+1 = blocker) are unchanged. Details: [docs/COMPILATION_GUARANTEE.md](docs/COMPILATION_GUARANTEE.md),
+[ADR-012](docs/v27/adr/ADR-012-contract-bounded-proven-tier.md),
+[the design](docs/v27/STRICT_TIER_DESIGN.md).
 
 ### Environment Variables
 

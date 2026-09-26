@@ -208,14 +208,26 @@ let compiled_foreign =
 let compiled_core =
   List.map (fun fd -> (fd, Re_compat.regexp fd.f_pattern)) core_forbidden
 
-(** Count newlines in [src] up to [offset] to derive a 1-indexed line number. *)
-let line_at_offset src offset =
-  let n = min offset (String.length src) in
-  let lines = ref 1 in
-  for i = 0 to n - 1 do
-    if String.unsafe_get src i = '\n' then incr lines
+(** [newline_offsets src] is the sorted array of the byte offsets of every
+    newline in [src]. It is computed once per [detect] call. *)
+let newline_offsets src =
+  let acc = ref [] in
+  String.iteri (fun i c -> if c = '\n' then acc := i :: !acc) src;
+  Array.of_list (List.rev !acc)
+
+(** [line_at_offset nls offset] is the 1-indexed line number of [offset], where
+    [nls] is [newline_offsets src]. It counts the newlines strictly before
+    [offset] by binary search. The previous version rescanned the source from
+    byte 0 for every match, which is quadratic on a large file with many
+    matches, and the strict-tier boundary scan runs this over a whole project
+    closure. The result is identical to that version for every offset. *)
+let line_at_offset nls offset =
+  let lo = ref 0 and hi = ref (Array.length nls) in
+  while !lo < !hi do
+    let mid = (!lo + !hi) / 2 in
+    if nls.(mid) < offset then lo := mid + 1 else hi := mid
   done;
-  !lines
+  !lo + 1
 
 (** Scan [src] for every match of [re] and invoke [f] with each start offset. No
     allocation beyond the returned accumulator. *)
@@ -234,6 +246,7 @@ let scan_all src re f acc =
   loop 0 acc
 
 let detect src =
+  let nls = newline_offsets src in
   let collect defs compiled acc =
     List.fold_left2
       (fun acc fd (_, re) ->
@@ -243,7 +256,7 @@ let detect src =
               id = fd.f_id;
               severity = fd.f_severity;
               offset = start_pos;
-              line = line_at_offset src start_pos;
+              line = line_at_offset nls start_pos;
               message = fd.f_message;
             }
             :: acc)

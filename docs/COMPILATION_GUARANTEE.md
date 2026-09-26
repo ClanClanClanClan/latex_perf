@@ -9,11 +9,55 @@ and [specs/v26/compilation_profiles.yaml](../specs/v26/compilation_profiles.yaml
 
 ---
 
+## The three tiers (ADR-012, 2026-09-26) — read this first
+
+Every `--compile-check` answer now belongs to exactly one of three tiers, and the
+CLI says which on a `TIER` line printed after the verdict token line. The decision
+record is [ADR-012](v27/adr/ADR-012-contract-bounded-proven-tier.md); the design is
+[STRICT_TIER_DESIGN.md](v27/STRICT_TIER_DESIGN.md).
+
+| tier | what the CLI prints | what it means | status |
+|---|---|---|---|
+| **Proven (exact)** | `PROVEN READY` or `PROVEN NOT-READY file:line:col … [E-code, probe, contract]` | Inside the *strict tier*: the whole project closure is Turing-free text in the strict grammar, and the exact configuration (class, ordered package loads with options, the preamble definers between them, and the format hash) has a contract generated and solo-attested under the pinned TeX Live. A Coq-extracted decider then returns READY **if and only if** the document compiles, in both directions, with respect to a declarative semantics; a NOT-READY names the first fatal with its reason and location. | **Empty today.** Milestone M0 ships the verdict type with the membership predicate stubbed to false, so no document is proven. The first proven verdicts arrive with the Coq kernel (M2) and structure, definers and on-demand configuration attestation (M3). |
+| **Heuristic** | `LIKELY OK (heuristic; premise-certified) — not a proof`, or `LIKELY FAIL (heuristic) — not a proof` with the blocking reasons above it | Today's pipeline, unchanged: the T0–T5 runtime checks and the model-connected premise check described in the rest of this document. **It is not a proof.** A LIKELY OK document can fail to compile; the measured rate is generated into `docs/v27/PROJECT_STATE.md` §1 ("Heuristic tier: how often the certificate is wrong"). | Every verdict the CLI issues today. |
+| **Impossible by design (FOREIGN)** | `FOREIGN — <construct> at <file:line> is outside every supported tier` | The document uses a construct no static checker can decide without running TeX: shell escape, catcode changes, Lua scripting and the rest of the LP-Foreign list. Turing-complete constructs outside any contract (`\def`, `\if…`, loops, `\csname`, `\expandafter`, `@`-internals, expl3) keep a document out of the proven tier and are listed on its `why not strict:` lines. | Printed today for LP-Foreign documents, which used to be mislabelled as a parse failure. |
+
+**What PROVEN will rest on (the trusted base, design §G.2).** The pinned pdfTeX
+binary, `pdflatex.fmt` and TeX Live tree; the named premise `Faithful` (each rule of
+the semantics and each contract entry models pdflatex), which is attested by solo
+probes and a release-blocking generated differential of at least 10,000 documents
+and is never proved; the oracle protocol (`-interaction=nonstopmode
+-halt-on-error`, up to three passes, a PDF required); the contract generator; the
+contract store and its reader; the file-system snapshot and kpathsea model; the
+byte source; the Coq kernel, extraction and OCaml runtime; and the renderer, which
+is unit-tested so that no non-proven verdict can print PROVEN. Composed per-package
+contracts and heuristic detectors are **not** in it: neither can produce or
+override a PROVEN verdict.
+
+**Why the heuristic tier is not called proven any more.** Its `PREMISE-CERTIFIED`
+token certifies the premises of a Coq theorem over an *abstract* model, not the
+document. Measured, that reading is wrong on a few percent of certified real papers,
+and the minimal failing documents of `corpora/strict_battery/` show the heuristic
+tier accepting most of them. ADR-012 therefore publishes the proven (strict-tier)
+figure as the North Star, and keeps the premise-certified figure only as a
+heuristic-tier statistic.
+
+**Machine interface.** The `MODEL-CONNECTED` line, the `READY`/`NOT-READY` token
+line and the indented reasons are unchanged, and so are the exit codes (0 = no
+known blocker, 1 = blocker). The new `--require-proof` flag exits 4 unless the
+verdict is PROVEN, so in M0 it exits 4 on every document.
+`--strict-boundary FILE` prints every construct in the project closure that keeps
+it out of the strict grammar.
+
+---
+
 ## TL;DR
 
 Run `latex_parse_cli --compile-check path/to/main.tex` before running
-latexmk. If it says **READY**, these runtime preconditions genuinely
-held (within the declared profile):
+latexmk. Every verdict it issues today is **heuristic** (see the three tiers
+above). If it says **READY** — rendered `LIKELY OK (heuristic;
+premise-certified) — not a proof` — these runtime preconditions genuinely held
+(within the declared profile):
 
 - Your source **parsed** with the real L2 parser (no unclosed
   math/environment/`\verb`) and is **not** in the LP-Foreign tier

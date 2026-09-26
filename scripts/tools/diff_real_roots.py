@@ -63,6 +63,31 @@ INFRA = re.compile(
     r"|epstopdf")
 
 
+REASON_TOKEN = re.compile(r"\b(T\d|[A-Z]{2,8}-\d{3})\b")
+
+
+def scrape_reasons(stdout: str) -> list[str]:
+    """The reason tokens of one `--compile-check` run, e.g. ["T5", "DELIM-003"].
+
+    Scope (ADR-012, M0): the scrape reads the output UP TO the first line that
+    starts with `TIER\t`. Everything before that line is the frozen surface
+    (the MODEL-CONNECTED line, the READY/NOT-READY token line, the indented
+    reasons) and is byte-identical to what the CLI printed before M0. The TIER
+    line and the `why not strict:` lines after it are diagnostic: they quote
+    file names and macro definitions from the author's source, and a name like
+    `\\T1` or `sec-001.tex` would otherwise be recorded as a BLOCKING reason.
+    On output with no TIER line (every binary before M0) this is exactly the
+    old whole-buffer scrape, which is the compatibility argument; it is pinned
+    by scripts/tools/selftest_compile_check_consumers.py.
+    """
+    head = []
+    for line in stdout.split("\n"):
+        if line.startswith("TIER\t"):
+            break
+        head.append(line)
+    return sorted(set(REASON_TOKEN.findall("\n".join(head))))
+
+
 def die(code: int, msg: str) -> int:
     print(f"[real-roots] FATAL: {msg}", file=sys.stderr)
     return code
@@ -266,8 +291,7 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
             stdout = r.stdout.decode("utf-8", errors="replace")
             out["cli_rc"] = r.returncode
             out["cli_verdict"] = "READY" if r.returncode == 0 else "NOT-READY"
-            out["cli_reasons"] = sorted(set(re.findall(r"\b(T\d|[A-Z]{2,8}-\d{3})\b",
-                                                       stdout)))
+            out["cli_reasons"] = scrape_reasons(stdout)
         except subprocess.TimeoutExpired:
             out["cli_rc"] = -1
             out["cli_verdict"] = "TIMEOUT"
@@ -370,8 +394,7 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
             r = subprocess.run([str(cli), "--compile-check", str(top)],
                                capture_output=True, timeout=timeout, env=env)
             rc = r.returncode
-            reasons = sorted(set(re.findall(r"\b(T\d|[A-Z]{2,8}-\d{3})\b",
-                                            r.stdout.decode("utf-8", "replace"))))
+            reasons = scrape_reasons(r.stdout.decode("utf-8", "replace"))
         except subprocess.TimeoutExpired:
             return die(2, f"{d['arxiv_id']}: CLI timeout — the run is void")
         before = d["cell"]

@@ -1,0 +1,419 @@
+(* The closure-scoped strict-tier boundary scan (ADR-012, milestone M0). See
+   strict_boundary.mli.
+
+   Every reported construct is one for which the strict grammar of
+   docs/v27/STRICT_TIER_DESIGN.md section A.1.4 has no production. The scan is
+   DIAGNOSTIC: nothing here can change a READY or NOT-READY verdict or an exit
+   code. *)
+
+type finding = {
+  category : string;
+  id : string;
+  file : string;
+  line : int;
+  count : int;
+  construct : string;
+  nudge : string;
+}
+
+let categories =
+  [
+    "foreign";
+    "def";
+    "let";
+    "xparse";
+    "atletter";
+    "local_style";
+    "expl3";
+    "conditional";
+    "loop";
+    "csname";
+    "expandafter";
+    "write";
+  ]
+
+let priority c =
+  let rec go i = function
+    | [] -> max_int
+    | x :: r -> if x = c then i else go (i + 1) r
+  in
+  go 0 categories
+
+let construct_of_feature_id = function
+  | "shell_escape_invocation" -> "\\write18"
+  | "shell_escape_command" -> "\\ShellEscape"
+  | "catcode_mutation_direct" -> "\\catcode"
+  | "scantokens_primitive" -> "\\scantokens"
+  | "detokenize_primitive" -> "\\detokenize"
+  | "csstring_primitive" -> "\\csstring"
+  | "openout_primitive" -> "\\openout"
+  | "directlua_primitive" -> "\\directlua"
+  | "arbitrary_def" -> "\\def"
+  | "arbitrary_edef" -> "\\edef/\\gdef/\\xdef"
+  | "arbitrary_let" -> "\\let"
+  | "makeatletter" -> "\\makeatletter"
+  | "csname_construct" -> "\\csname"
+  | "primitive_ifnum" -> "\\ifnum"
+  | "primitive_ifdim" -> "\\ifdim"
+  | "primitive_ifx" -> "\\ifx"
+  | "primitive_ifodd" -> "\\ifodd"
+  | "primitive_conditionals" -> "a primitive \\if conditional"
+  | "primitive_if_bare" -> "\\if"
+  | "expandafter_chain" -> "\\expandafter\\expandafter"
+  | other -> other
+
+let category_of_feature (f : Unsupported_feature.t) =
+  match f.severity with
+  | Unsupported_feature.Foreign_trigger -> "foreign"
+  | Forbidden_in_core -> (
+      match f.id with
+      | "arbitrary_def" | "arbitrary_edef" -> "def"
+      | "arbitrary_let" -> "let"
+      | "makeatletter" -> "atletter"
+      | "csname_construct" -> "csname"
+      | "expandafter_chain" -> "expandafter"
+      | _ -> "conditional")
+
+let nudge_of_category = function
+  | "foreign" ->
+      "outside every supported tier by design: shell escape, catcode changes \
+       and scripting cannot be decided without running TeX"
+  | "def" ->
+      "use \\newcommand (or \\renewcommand when the name already exists); \
+       plain \\def is outside the strict grammar"
+  | "let" ->
+      "\\let is outside the strict grammar; when it only aliases a command, \
+       write \\newcommand{\\new}{\\old}"
+  | "xparse" ->
+      "use \\newcommand where the argument signature allows it; xparse \
+       argument specifications are outside the strict grammar"
+  | "atletter" ->
+      "@-internal code belongs in a local .sty file, which is admitted by \
+       content hash rather than parsed"
+  | "local_style" ->
+      "a vendored class or package is admitted by content hash once its \
+       contract can be generated (a later milestone)"
+  | "expl3" -> "expl3 code belongs in a local .sty file or a package"
+  | "conditional" ->
+      "conditionals are Turing-complete constructs, outside the strict tier by \
+       design; move them into a local .sty file"
+  | "loop" ->
+      "loops are Turing-complete constructs, outside the strict tier by design"
+  | "csname" | "expandafter" ->
+      "expansion-control primitives are outside the strict grammar by design; \
+       move the code into a local .sty file"
+  | "write" -> "file-output primitives are outside the strict tier by design"
+  | _ -> "outside the strict grammar"
+
+(* Blank comments, verbatim and url targets to spaces, keeping every newline so
+   that line numbers survive. The memoised wrapper in Validators_common is not
+   used, because its one-entry cache belongs to the validator pass. *)
+let blank_keep_lines (src : string) : string =
+  let b = Bytes.of_string src in
+  List.iter
+    (fun (a, e) ->
+      for k = a to e - 1 do
+        if k >= 0 && k < Bytes.length b && Bytes.get b k <> '\n' then
+          Bytes.set b k ' '
+      done)
+    (Validators_common.compute_verbatim_comment_url_ranges src);
+  Bytes.unsafe_to_string b
+
+let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+
+(* Build a concrete nudge for a plain \def at [off] in [src] when its shape is
+   simple enough: \def\name{body} or \def\name#1#2{body}. The rewrite keeps the
+   body verbatim. A delimited parameter text has no \newcommand form. *)
+let def_nudge (src : string) (off : int) : string option =
+  let n = String.length src in
+  if off + 4 > n || String.sub src off 4 <> "\\def" then None
+  else
+    let i = ref (off + 4) in
+    while !i < n && (src.[!i] = ' ' || src.[!i] = '\t') do
+      incr i
+    done;
+    if !i >= n || src.[!i] <> '\\' then None
+    else
+      let ns = !i in
+      incr i;
+      while !i < n && (is_letter src.[!i] || src.[!i] = '@') do
+        incr i
+      done;
+      if !i = ns + 1 then None
+      else
+        let name = String.sub src ns (!i - ns) in
+        let ps = !i in
+        while !i < n && src.[!i] <> '{' && src.[!i] <> '\n' do
+          incr i
+        done;
+        if !i >= n || src.[!i] <> '{' then None
+        else
+          let params = String.sub src ps (!i - ps) in
+          let nparams =
+            let k = String.length params in
+            if k = 0 then Some 0
+            else if k mod 2 <> 0 || k > 18 then None
+            else
+              let ok = ref true in
+              for j = 0 to (k / 2) - 1 do
+                if
+                  params.[2 * j] <> '#'
+                  || params.[(2 * j) + 1] <> Char.chr (Char.code '1' + j)
+                then ok := false
+              done;
+              if !ok then Some (k / 2) else None
+          in
+          match nparams with
+          | None ->
+              Some
+                (Printf.sprintf
+                   "%s has a delimited parameter text, which has no \
+                    \\newcommand form; outside the strict grammar by design"
+                   name)
+          | Some k ->
+              let bs = !i in
+              let depth = ref 0 and j = ref bs and stop = ref false in
+              while (not !stop) && !j < n && !j - bs < 200 do
+                (match src.[!j] with
+                | '\\' -> incr j
+                | '{' -> incr depth
+                | '}' ->
+                    decr depth;
+                    if !depth = 0 then stop := true
+                | _ -> ());
+                incr j
+              done;
+              let body =
+                if !stop then Some (String.sub src bs (!j - bs)) else None
+              in
+              let arity = if k = 0 then "" else Printf.sprintf "[%d]" k in
+              Some
+                (match body with
+                | Some b
+                  when String.length b <= 60 && not (String.contains b '\n') ->
+                    Printf.sprintf
+                      "rewrite \\def%s%s%s as \\newcommand{%s}%s%s (or \
+                       \\renewcommand if %s already exists)"
+                      name params b name arity b name
+                | _ ->
+                    Printf.sprintf
+                      "rewrite \\def%s%s{...} as \\newcommand{%s}%s{...} (or \
+                       \\renewcommand if %s already exists)"
+                      name params name arity name)
+
+let xparse_words =
+  [
+    "NewDocumentCommand";
+    "RenewDocumentCommand";
+    "ProvideDocumentCommand";
+    "DeclareDocumentCommand";
+    "NewDocumentEnvironment";
+    "RenewDocumentEnvironment";
+    "ProvideDocumentEnvironment";
+    "DeclareDocumentEnvironment";
+    "NewExpandableDocumentCommand";
+    "RenewExpandableDocumentCommand";
+    "ProvideExpandableDocumentCommand";
+    "DeclareExpandableDocumentCommand";
+  ]
+
+let loop_words = [ "loop"; "whiledo"; "foreach"; "multido"; "forloop" ]
+
+(* The additions of design section A.1.4 that Unsupported_feature does not
+   cover. Returns (id, category, construct, offset) for each control word. *)
+let scan_control_words (blanked : string) :
+    (string * string * string * int) list =
+  let n = String.length blanked in
+  let acc = ref [] in
+  let i = ref 0 in
+  while !i < n do
+    if blanked.[!i] = '\\' && !i + 1 < n then (
+      let s = !i + 1 in
+      let j = ref s in
+      while !j < n && (is_letter blanked.[!j] || blanked.[!j] = '@') do
+        incr j
+      done;
+      (if !j > s then
+         let w = String.sub blanked s (!j - s) in
+         let add id cat = acc := (id, cat, "\\" ^ w, !i) :: !acc in
+         (* A bare [\@] is the kernel's space-factor command, not an @-internal
+            name, so an @-name must also contain a letter. *)
+         if String.contains w '@' && String.exists is_letter w then
+           add "at_name" "atletter"
+         else if w = "expandafter" then add "expandafter" "expandafter"
+         else if w = "newif" then add "newif" "conditional"
+         else if w = "ifthenelse" then add "ifthenelse" "conditional"
+         else if
+           String.length w >= 2
+           && String.sub w 0 2 = "if"
+           && w <> "iff"
+           && not (List.mem w [ "if"; "ifnum"; "ifdim"; "ifx"; "ifodd" ])
+         then add "if_other" "conditional"
+         else if List.mem w loop_words then add ("loop_" ^ w) "loop"
+         else if w = "ExplSyntaxOn" then add "expl3" "expl3"
+         else if List.mem w xparse_words then add "xparse" "xparse"
+         else if w = "write" then
+           if not (!j + 1 < n && blanked.[!j] = '1' && blanked.[!j + 1] = '8')
+           then add "write" "write");
+      i := max (!i + 1) !j)
+    else incr i
+  done;
+  List.rev !acc
+
+let line_of nls off =
+  let lo = ref 0 and hi = ref (Array.length nls) in
+  while !lo < !hi do
+    let mid = (!lo + !hi) / 2 in
+    if nls.(mid) < off then lo := mid + 1 else hi := mid
+  done;
+  !lo + 1
+
+let display_path ~base_dir path =
+  let pre = if base_dir = "" then "" else base_dir ^ Filename.dir_sep in
+  let lp = String.length pre in
+  if lp > 0 && String.length path > lp && String.sub path 0 lp = pre then
+    String.sub path lp (String.length path - lp)
+  else path
+
+let scan_file ~display (src : string) : finding list =
+  let blanked = blank_keep_lines src in
+  let nls =
+    let a = ref [] in
+    String.iteri (fun i c -> if c = '\n' then a := i :: !a) blanked;
+    Array.of_list (List.rev !a)
+  in
+  let feats = Unsupported_feature.detect blanked in
+  let seen_offsets = Hashtbl.create 64 in
+  let raw =
+    List.map
+      (fun (f : Unsupported_feature.t) ->
+        Hashtbl.replace seen_offsets f.offset ();
+        let cat = category_of_feature f in
+        let construct = construct_of_feature_id f.id in
+        let nudge =
+          if f.id = "arbitrary_def" then
+            match def_nudge src f.offset with
+            | Some s -> s
+            | None -> nudge_of_category cat
+          else nudge_of_category cat
+        in
+        (f.id, cat, construct, f.offset, nudge))
+      feats
+    (* Unsupported_feature's primitive_conditionals alternation has no word
+       boundary, so it reports \ifxetex or \ifcsname at the same offset where
+       the control-word scanner reports if_other. Such duplicates are dropped by
+       offset. *)
+    @ List.filter_map
+        (fun (id, cat, construct, off) ->
+          if Hashtbl.mem seen_offsets off && cat <> "atletter" then None
+          else Some (id, cat, construct, off, nudge_of_category cat))
+        (scan_control_words blanked)
+  in
+  (* One finding per (id), at its first occurrence, carrying the use count. *)
+  let order = ref [] in
+  let tbl = Hashtbl.create 16 in
+  List.iter
+    (fun (id, cat, construct, off, nudge) ->
+      match Hashtbl.find_opt tbl id with
+      | Some (f, first_off) ->
+          if off < first_off then
+            Hashtbl.replace tbl id
+              ( {
+                  f with
+                  line = line_of nls off;
+                  construct;
+                  nudge;
+                  count = f.count + 1;
+                },
+                off )
+          else Hashtbl.replace tbl id ({ f with count = f.count + 1 }, first_off)
+      | None ->
+          order := id :: !order;
+          Hashtbl.replace tbl id
+            ( {
+                category = cat;
+                id;
+                file = display;
+                line = line_of nls off;
+                count = 1;
+                construct;
+                nudge;
+              },
+              off ))
+    raw;
+  List.rev !order
+  |> List.map (fun id -> Hashtbl.find tbl id)
+  |> List.sort (fun (_, a) (_, b) -> compare a b)
+  |> List.map fst
+
+let is_style path =
+  Filename.check_suffix path ".sty" || Filename.check_suffix path ".cls"
+
+let scan_files ~base_dir (files : (string * string) list) : finding list =
+  List.concat_map
+    (fun (path, contents) ->
+      let display = display_path ~base_dir path in
+      if is_style path then
+        [
+          {
+            category = "local_style";
+            id =
+              (if Filename.check_suffix path ".cls" then "local_cls"
+               else "local_sty");
+            file = display;
+            line = 1;
+            count = 1;
+            construct = "vendored " ^ Filename.basename path;
+            nudge = nudge_of_category "local_style";
+          };
+        ]
+      else scan_file ~display contents)
+    files
+
+let scan (proj : Project_model.t) ~(root_src : string) : finding list =
+  let root_path = (Project_model.root_file proj).path in
+  let base_dir = Filename.dirname root_path in
+  let files = Compile_contract.closure_files proj ~root_src in
+  (* The .bbl is read as LaTeX when \bibliography is used (design A.1.1). *)
+  let bbl =
+    if Compile_gate_checks.source_uses_bibliography root_src then
+      let p = Filename.remove_extension root_path ^ ".bbl" in
+      if Sys.file_exists p && not (Sys.is_directory p) then
+        try
+          let ic = open_in_bin p in
+          Fun.protect
+            ~finally:(fun () -> close_in_noerr ic)
+            (fun () -> [ (p, really_input_string ic (in_channel_length ic)) ])
+        with Sys_error _ -> []
+      else []
+    else []
+  in
+  scan_files ~base_dir (files @ bbl)
+
+let to_boundary (f : finding) : Verdict.boundary =
+  {
+    Verdict.b_kind = f.category;
+    b_where = Some (Printf.sprintf "%s:%d" f.file f.line);
+    b_construct =
+      (if f.count > 1 then Printf.sprintf "%s (%d uses)" f.construct f.count
+       else f.construct);
+    b_nudge = f.nudge;
+  }
+
+let why_not_strict (fs : finding list) : Verdict.boundary list =
+  let ranked =
+    List.stable_sort
+      (fun a b -> compare (priority a.category) (priority b.category))
+      fs
+  in
+  let rec pick seen k = function
+    | [] -> []
+    | _ when k = 0 -> []
+    | f :: r ->
+        if List.mem f.category seen then pick seen k r
+        else to_boundary f :: pick (f.category :: seen) (k - 1) r
+  in
+  pick [] (Verdict.max_why_not_strict - 1) ranked @ [ Verdict.m0_boundary ]
+
+let first_foreign (fs : finding list) : finding option =
+  List.find_opt (fun f -> f.category = "foreign") fs

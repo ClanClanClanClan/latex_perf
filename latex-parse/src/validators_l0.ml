@@ -5977,21 +5977,30 @@ let r_cy_001 : rule =
           then (
             (* Check if next is Cyrillic capital *)
             let n0 = Char.code (String.unsafe_get s (!i + 4)) in
-            if n0 = 0xd0 && !i + 5 < len then (
-              let n1 = Char.code (String.unsafe_get s (!i + 5)) in
-              if n1 >= 0x90 && n1 <= 0xaf then (
-                incr cnt;
-                (* Fix: replace the regular space between the initials with a
-                   LaTeX thin non-breaking space "\," (the catalog's insert_nbsp
-                   token, matching the message's "И.\,И."). The space is one
-                   byte at offset (!i + 3). After the fix that byte is '\\', not
-                   ' ', so the detector cannot re-fire here →
-                   idempotent/convergent. *)
-                edits :=
-                  Cst_edit.replace ~start_offset:(!i + 3) ~end_offset:(!i + 4)
-                    "\\,"
-                  :: !edits);
-              i := !i + 4))
+            (if n0 = 0xd0 && !i + 5 < len then
+               let n1 = Char.code (String.unsafe_get s (!i + 5)) in
+               if n1 >= 0x90 && n1 <= 0xaf then (
+                 incr cnt;
+                 (* Fix: replace the regular space between the initials with a
+                    LaTeX thin non-breaking space "\," (the catalog's
+                    insert_nbsp token, matching the message's "И.\,И."). The
+                    space is one byte at offset (!i + 3). After the fix that
+                    byte is '\\', not ' ', so the detector cannot re-fire here →
+                    idempotent/convergent. *)
+                 edits :=
+                   Cst_edit.replace ~start_offset:(!i + 3) ~end_offset:(!i + 4)
+                     "\\,"
+                   :: !edits));
+            (* The index advances past the capital, the period and the space on
+               every path through this branch. It used to advance only when the
+               byte after the space was 0xD0, so a Cyrillic capital followed by
+               a period, a space and then any other byte never advanced and the
+               loop spun forever. The initials Yu. A. followed by an italic
+               group in a Russian bibliography comment of arXiv 2506.17069v1
+               were enough to hang the linter. Skipping four bytes loses no
+               match, because neither '.' nor ' ' can begin a Cyrillic
+               capital. *)
+            i := !i + 4)
           else i := !i + 2
         else i := !i + 2
       else i := !i + 1

@@ -1,9 +1,10 @@
 {
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "ad834babf2ffc4b19d9575b788b7973562a93117",
-    "src_tree_sha": "21c3b6bb1bd9b69f698cd054d2dd8c869d1d67b4",
-    "cli_sha256": "b2d70f55c173386ffdc40d5970b4b5dc9176c5327683254c76c415656f83e8a1",
+    "measured_at_sha": "53995d0c5bf02e739f1b4ed332c07ed74bc1773d",
+    "src_tree_sha": "c54e4d69e80bc1e7b50dd17c4b574b57de216fb1",
+    "cli_sha256": "6ea9631021db48e912860cf5771f48b97ca3a7e8340c8ef810d26e947cd1aad6",
+    "cli_platform": "Darwin-arm64",
     "frame": {
       "corpus": "papers",
       "frame_size": 2719,
@@ -17,7 +18,8 @@
       "version": "pdfTeX 3.141592653-2.6-1.40.29",
       "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"
     },
-    "fix_scope": "every .tex in the tree, root and children"
+    "fix_scope": "every .tex in the tree, root and children",
+    "fixer_scope": "all"
   },
   "summary": {
     "sampled": 40,

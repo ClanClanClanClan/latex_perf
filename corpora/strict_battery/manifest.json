@@ -3,7 +3,7 @@
   "produced_by": "scripts/tools/gen_strict_battery.py",
   "oracle": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
   "protocol": "pdflatex -interaction=nonstopmode -halt-on-error, restricted shell-escape (default), up to 3 passes plus a confirming pass, PDF required",
-  "src_tree_sha": "c99802ad99a06470fe64dfa30260260a506a7314"
+  "src_tree_sha": "4b23a6f84779977bd863f7704c70eaba2efde14b"
  },
  "summary": {
   "n": 22,

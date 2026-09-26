@@ -2,10 +2,11 @@
  "provenance": {
   "produced_by": "scripts/tools/gen_proven_coverage.py",
   "results_source": "corpora/real_roots/results.json",
-  "cli_sha256": "dacff14a607396a635315d89f7eb7107fd71cc7a1a49be882fb99e099a2ccf32",
+  "cli_sha256": "a95382954d8a76ff58dc5c0add13072e996e572d1966a4b3e7c67d26048bf807",
   "cli_platform": "Darwin-arm64",
-  "measured_at_sha": "319fe4dbad9d23067b36f3ae32cdecaa06522013",
-  "src_tree_sha": "c99802ad99a06470fe64dfa30260260a506a7314",
+  "cli_build_root": "ee202bf007b269000fa2f57f01344d4540195dddc2cea8d1fbd4ddb6f43b7b60",
+  "measured_at_sha": "f6a72d6e785a68df96d128324914e9093fea3e00",
+  "src_tree_sha": "4b23a6f84779977bd863f7704c70eaba2efde14b",
   "state_vocabulary": [
    "PREMISE-CERTIFIED",
    "PREMISE-REJECTED"

@@ -2897,58 +2897,178 @@ let l1_ref_006_rule : rule =
   in
   { id = "REF-006"; run; languages = [] }
 
-(* REF-007: Cite key contains whitespace *)
+(* REF-007: Cite key contains whitespace.
+
+   What LaTeX actually does was MEASURED at the pinned pdfTeX
+   3.141592653-2.6-1.40.29 (TeX Live 2026) on minimal documents compiled with
+   the kernel's own \cite, with natbib, with the cite package and with biblatex.
+   The kernel, natbib and biblatex all strip the LEADING whitespace of each
+   comma-separated key, so \cite{a, b} and a key list broken across lines after
+   its commas resolve both keys and produce no warning under any of the four. A
+   key that still contains whitespace once its leading whitespace is dropped is
+   a real defect: \cite{a b} leaves the citation `a b' undefined under all four,
+   and a TRAILING space or line end, as in \cite{a ,b} or a key list whose last
+   key is followed by a newline before the closing brace, leaves `a ' or `b '
+   undefined under the kernel, natbib and biblatex (only the cite package strips
+   it). None of these is a compile failure, since every case exits with status
+   0.
+
+   The severity is Warning, not the Error it used to be, because a key with
+   whitespace is fragile rather than wrong. In the 297-package sweep of the real
+   corpus every residual hit was compiled at the pinned pdflatex and none left a
+   citation undefined: a key such as "Li and Wang2025" resolves because the
+   document's own thebibliography declares \bibitem{Li and Wang2025} with the
+   same spaces, and the one trailing-space hit loads the cite package, which
+   strips the blank. Such a key still breaks the moment the bibliography moves
+   to BibTeX or biblatex, and the sibling rule REF-003 reports a label with
+   spaces at the same Warning severity.
+
+   The previous implementation fired whenever the brace argument contained any
+   space or tab, so the legal and very common \cite{a, b} was an Error finding
+   on roughly half of all real papers. This scanner fires only when some key,
+   after its leading whitespace is dropped, still contains whitespace. A comment
+   inside the argument contributes nothing, because TeX discards it together
+   with its line end and the next line's leading spaces. The command must look
+   like a citation, meaning \cite followed by letters, an optional star, and
+   optional bracketed arguments before the brace, and it must not be natbib's
+   free-text \citetext, the \citestyle declaration, or one of the
+   bibliography-formatting macros \citename, \citenamefont and \citeauthoryear,
+   whose argument is an author name printed in a .bbl entry rather than a key. A
+   \cite inside a comment, verbatim or url region is ignored. *)
+let ref_007_is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r'
+
+(* [ref_007_arg_defective arg] is true iff some comma-separated key of [arg]
+   still contains whitespace after its leading whitespace is dropped. *)
+let ref_007_arg_defective (arg : string) : bool =
+  let n = String.length arg in
+  let at_key_start = ref true in
+  let pending_ws = ref false in
+  let bad = ref false in
+  let i = ref 0 in
+  while (not !bad) && !i < n do
+    let c = arg.[!i] in
+    if c = '%' && (!i = 0 || arg.[!i - 1] <> '\\') then (
+      (* A comment eats the rest of its line, the line end, and the leading
+         blanks of the next line. *)
+      while !i < n && arg.[!i] <> '\n' do
+        incr i
+      done;
+      incr i;
+      while !i < n && (arg.[!i] = ' ' || arg.[!i] = '\t') do
+        incr i
+      done)
+    else (
+      if c = ',' then (
+        if !pending_ws then bad := true;
+        at_key_start := true;
+        pending_ws := false)
+      else if ref_007_is_ws c then (
+        if not !at_key_start then pending_ws := true)
+      else (
+        if !pending_ws then bad := true;
+        at_key_start := false);
+      incr i)
+  done;
+  !bad || !pending_ws
+
+(* [ref_007_defective_args s] lists, in source order, the brace-argument spans
+   [(a, b)] of every citation command whose key list is defective. *)
+let ref_007_defective_args (s : string) : (int * int) list =
+  let n = String.length s in
+  let vcu = find_verbatim_comment_url_ranges s in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let out = ref [] in
+  let p = ref 0 in
+  (try
+     while true do
+       let q = String.index_from s !p '\\' in
+       p := q + 1;
+       if
+         q + 5 <= n
+         && s.[q + 1] = 'c'
+         && s.[q + 2] = 'i'
+         && s.[q + 3] = 't'
+         && s.[q + 4] = 'e'
+       then (
+         let j = ref (q + 5) in
+         while !j < n && is_letter s.[!j] do
+           incr j
+         done;
+         let name = String.sub s (q + 5) (!j - q - 5) in
+         if !j < n && s.[!j] = '*' then incr j;
+         let ok =
+           ref
+             (not
+                (List.mem name
+                   [ "text"; "style"; "name"; "namefont"; "authoryear" ]))
+         in
+         let more = ref true in
+         while !ok && !more do
+           while !j < n && ref_007_is_ws s.[!j] do
+             incr j
+           done;
+           if !j < n && s.[!j] = '[' then
+             match String.index_from_opt s !j ']' with
+             | Some k -> j := k + 1
+             | None -> ok := false
+           else more := false
+         done;
+         if !ok && !j < n && s.[!j] = '{' && not (is_in_math_range vcu q) then
+           match String.index_from_opt s (!j + 1) '}' with
+           | Some k ->
+               let a = !j + 1 in
+               if ref_007_arg_defective (String.sub s a (k - a)) then
+                 out := (a, k) :: !out;
+               p := k + 1
+           | None -> ())
+     done
+   with Not_found | Invalid_argument _ -> ());
+  List.rev !out
+
 let l1_ref_007_rule : rule =
-  let re = Re_compat.regexp "\\\\cite\\([^{]*\\){[^}]*[ \t][^}]*}" in
-  (* Same shape, but capture the brace ARGUMENT (group 2) so a candidate can
-     rewrite exactly that span. Group 1 = the optional [..]/* suffix. *)
-  let re_arg = Re_compat.regexp "\\\\cite\\([^{]*\\){\\([^}]*[ \t][^}]*\\)}" in
   let run s =
-    let cnt = count_re_matches re s in
-    if cnt > 0 then (
-      (* Bucket-C CANDIDATE (v27.1.48): a BibTeX cite key cannot contain
-         whitespace, and the determinate canonical form strips every space/tab
-         from inside the `\cite{…}` argument (commas separating multiple keys
-         are preserved). This is a cross-referencing RENAME, so it is surfaced
-         for review, never auto-applied. We rewrite exactly the argument span
-         over the ORIGINAL source; matches inside a protected region are
-         dropped. Count above is UNCHANGED. *)
+    let spans = ref_007_defective_args s in
+    let cnt = List.length spans in
+    if cnt > 0 then
+      (* Bucket-C CANDIDATE (v27.1.48): the determinate canonical form strips
+         every blank from inside the citation argument while keeping the commas
+         that separate keys. Because that renames a key it is surfaced for
+         review and never auto-applied. It rewrites exactly the argument span of
+         the ORIGINAL source, and it is withheld when the argument holds a
+         comment, since joining lines would then comment out the keys after it,
+         or when the argument lies in a protected region. *)
       let exempt = find_exempt_ranges s in
-      let cands = ref [] in
-      let i = ref 0 in
-      (try
-         while true do
-           let mr, _ = Re_compat.search_forward re_arg s !i in
-           let a = Re_compat.group_beginning mr 2 in
-           let b = Re_compat.group_end mr 2 in
-           let arg = String.sub s a (b - a) in
-           let stripped =
-             String.concat ""
-               (List.filter_map
-                  (fun c ->
-                    if c = ' ' || c = '\t' then None else Some (String.make 1 c))
-                  (List.init (String.length arg) (fun k -> arg.[k])))
-           in
-           if (not (is_in_exempt_range exempt a)) && stripped <> arg then
-             cands :=
-               {
-                 c_edits =
-                   [ Cst_edit.replace ~start_offset:a ~end_offset:b stripped ];
-                 c_label = "Strip whitespace from the cite key";
-               }
-               :: !cands;
-           i := Re_compat.match_end mr
-         done
-       with Not_found -> ());
-      let candidates = List.rev !cands in
+      let candidates =
+        List.filter_map
+          (fun (a, b) ->
+            let arg = String.sub s a (b - a) in
+            let buf = Buffer.create (String.length arg) in
+            String.iter
+              (fun c -> if not (ref_007_is_ws c) then Buffer.add_char buf c)
+              arg;
+            let stripped = Buffer.contents buf in
+            if
+              is_in_exempt_range exempt a
+              || String.contains arg '%'
+              || stripped = arg
+            then None
+            else
+              Some
+                {
+                  c_edits =
+                    [ Cst_edit.replace ~start_offset:a ~end_offset:b stripped ];
+                  c_label = "Strip whitespace from the cite key";
+                })
+          spans
+      in
       if candidates = [] then
         Some
-          (mk_result ~id:"REF-007" ~severity:Error
+          (mk_result ~id:"REF-007" ~severity:Warning
              ~message:"Cite key contains whitespace" ~count:cnt)
       else
         Some
-          (mk_result_with_candidates ~id:"REF-007" ~severity:Error
-             ~message:"Cite key contains whitespace" ~count:cnt ~candidates))
+          (mk_result_with_candidates ~id:"REF-007" ~severity:Warning
+             ~message:"Cite key contains whitespace" ~count:cnt ~candidates)
     else None
   in
   { id = "REF-007"; run; languages = [] }

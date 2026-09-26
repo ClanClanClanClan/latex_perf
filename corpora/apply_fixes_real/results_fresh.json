@@ -1,10 +1,11 @@
 {
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "41c9be67dafd37cceddde7d6b38270f04c1d9e80",
-    "src_tree_sha": "c54e4d69e80bc1e7b50dd17c4b574b57de216fb1",
-    "cli_sha256": "6ea9631021db48e912860cf5771f48b97ca3a7e8340c8ef810d26e947cd1aad6",
+    "measured_at_sha": "edec6c772a7732e6bda10381380d7f417daf206b",
+    "src_tree_sha": "0a70876bec82e49b5e71adfbfdaf526b740e8e07",
+    "cli_sha256": "e2be3307a8e561e6c279b5bf99570f02e8b10d22edbc72052ffbdbf2eaffc3c1",
     "cli_platform": "Darwin-arm64",
+    "cli_build_root": "ee202bf007b269000fa2f57f01344d4540195dddc2cea8d1fbd4ddb6f43b7b60",
     "frame": {
       "corpus": "papers",
       "frame_size": 2719,

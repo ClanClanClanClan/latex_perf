@@ -37,9 +37,21 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from _measurement_provenance import cli_platform  # noqa: E402
+from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
 
 STATES = {"PREMISE-CERTIFIED", "PREMISE-REJECTED"}
+
+# ADR-012 (M0). The CLI also prints one tier line AFTER the frozen token lines:
+#
+#     TIER \t <tier> \t <KIND> \t <human headline>
+#
+# Fields 2 and 3 are frozen tokens owned by latex-parse/src/verdict.ml
+# (tier_token and kind_token). Only a PROVEN tier can yield the strict-tier
+# (North-Star) numerator; in M0 no verdict is proven, so it is 0 by
+# measurement, not by assertion.
+TIERS = {"proven", "heuristic", "foreign"}
+KINDS = {"PROVEN-READY", "PROVEN-NOT-READY", "PENDING", "LIKELY-OK",
+         "LIKELY-FAIL", "FOREIGN"}
 
 
 def sha256_file(p: pathlib.Path) -> str:
@@ -72,6 +84,31 @@ def parse_verdict(out: str):
     return None, None
 
 
+def parse_tier(out: str):
+    """Return (tier, kind) from the TIER line, or (None, None)."""
+    for line in out.splitlines():
+        if not line.startswith("TIER\t"):
+            continue
+        fields = line.split("\t")
+        if len(fields) < 4:
+            raise SystemExit(
+                f"[gen-proven-coverage] FATAL: malformed tier line "
+                f"(expected >=4 tab fields): {line!r}")
+        tier, kind = fields[1].strip(), fields[2].strip()
+        if tier not in TIERS or kind not in KINDS:
+            raise SystemExit(
+                f"[gen-proven-coverage] FATAL: unknown tier/kind token "
+                f"{tier!r}/{kind!r}. The vocabulary is owned by "
+                f"latex-parse/src/verdict.ml; if it changed, update TIERS/KINDS "
+                f"here IN THE SAME COMMIT.")
+        if (tier == "proven") != kind.startswith("PROVEN-"):
+            raise SystemExit(
+                f"[gen-proven-coverage] FATAL: tier {tier!r} with kind {kind!r} "
+                f"— only the proven tier may carry a PROVEN kind.")
+        return tier, kind
+    return None, None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", required=True, help="results.json to join against")
@@ -92,6 +129,12 @@ def main() -> int:
             raise SystemExit(
                 f"[gen-proven-coverage] FATAL: no MODEL-CONNECTED line for "
                 f"{doc['arxiv_id']}; the CLI surface changed shape.")
+        vtier, vkind = parse_tier(proc.stdout)
+        if vtier is None:
+            raise SystemExit(
+                f"[gen-proven-coverage] FATAL: no TIER line for "
+                f"{doc['arxiv_id']}; the CLI surface changed shape, or this "
+                f"binary predates ADR-012 (M0).")
         rows.append({
             "id": doc["arxiv_id"],
             "cell": doc["cell"],
@@ -100,6 +143,10 @@ def main() -> int:
             # certified / inapplicable / rejected, mapped from the CLI token.
             "model": state.replace("PREMISE-", "").lower(),
             "profile": tier,
+            # ADR-012: the verdict tier. Only "proven" can count toward the
+            # strict-tier North Star.
+            "verdict_tier": vtier,
+            "verdict_kind": vkind,
         })
 
     certified_ok = sum(1 for r in rows
@@ -107,6 +154,12 @@ def main() -> int:
     core_ok = sum(1 for r in rows
                   if r["model"] == "certified" and r["cell"] == "true-READY"
                   and r["profile"] == "lp-core")
+    strict_ok = sum(1 for r in rows
+                    if (r["verdict_kind"] == "PROVEN-READY"
+                        and r["cell"] == "true-READY")
+                    or (r["verdict_kind"] == "PROVEN-NOT-READY"
+                        and r["cell"] == "true-NOT-READY"))
+    strict_wrong = sum(1 for r in rows if r["verdict_tier"] == "proven") - strict_ok
     out = {
         "provenance": {
             "produced_by": "scripts/tools/gen_proven_coverage.py",
@@ -114,6 +167,9 @@ def main() -> int:
             "cli_sha256": sha256_file(cli),
             # The hash is only comparable on this platform (C-64).
             "cli_platform": cli_platform(),
+            # And only within the checkout directory that built it: the build
+            # embeds absolute paths (C-72).
+            "cli_build_root": cli_build_root(cli),
             "measured_at_sha": subprocess.run(
                 ["git", "rev-parse", "HEAD"], capture_output=True, text=True
             ).stdout.strip(),
@@ -126,11 +182,18 @@ def main() -> int:
                 ["git", "rev-parse", "HEAD:latex-parse/src"],
                 capture_output=True, text=True).stdout.strip() or None,
             "state_vocabulary": sorted(STATES),
+            "tier_vocabulary": sorted(TIERS),
         },
         "summary": {
             "n": len(rows),
             "premise_certified_and_compiles": certified_ok,
             "lp_core_certified_and_compiles": core_ok,
+            # ADR-012. A PROVEN verdict whose cell disagrees with pdflatex is
+            # strict_wrong. The row-level cell carries READY/NOT-READY only, so
+            # a wrong reason or location is not visible here; that is graded
+            # by the strict battery and the generated differential.
+            "strict_tier_matches_oracle": strict_ok,
+            "strict_wrong": strict_wrong,
         },
         "rows": rows,
     }

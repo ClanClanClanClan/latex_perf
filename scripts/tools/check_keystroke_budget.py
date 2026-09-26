@@ -368,8 +368,13 @@ def main() -> int:
     # NON-VACUITY: a bench that silently did nothing reports zeros, and zeros
     # would compare favourably against every baseline forever.
     for kb, row in keystroke.items():
+        # structural_ms may legitimately round to 0.0 on the smallest bands
+        # (one-decimal output), so it is required to be positive only at
+        # 300 KB, where a skipped structural call would otherwise read as a
+        # perfect score and could never regress once adopted.
         if row["rules_ms"] <= 0.0 or row["fastrun_ms"] <= 0.0 \
-                or row["structural_ms"] < 0.0:
+                or row["structural_ms"] < 0.0 \
+                or (kb == "300" and row["structural_ms"] <= 0.0):
             return die(f"{kb} KB band measured {row} — a zero timing means the "
                        f"bench did not run; refusing to report success")
 

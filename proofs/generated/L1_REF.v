@@ -87,7 +87,7 @@ Proof. qed_text_sound. Qed.
 
 Theorem ref_007_sound :
   forall doc, text_validator ref_007_chk
-    (mk_iss "REF-007" "Cite key contains whitespace" Error None)
+    (mk_iss "REF-007" "Cite key contains whitespace" Warning None)
     doc = [] ->
   text_check_absent ref_007_chk doc.
 Proof. qed_text_sound. Qed.

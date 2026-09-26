@@ -1697,6 +1697,17 @@ let () =
         (tag ^ ": edit [6,13)->foobar"));
   run "REF-007 --apply-fixes leaves source byte-identical" (fun tag ->
       expect (apply_fix "REF-007" r007 = r007) (tag ^ ": no rewrite"));
+  (* Joining the lines of a key list that holds a comment would comment out the
+     keys after it, so no candidate is offered there, though the rule fires. *)
+  let r007c = "\\cite{a b,% note\n c}" in
+  run "REF-007 fires on a commented key list (count=1)" (fun tag ->
+      expect (fires_with_count "REF-007" r007c 1) (tag ^ ": count=1"));
+  run "REF-007 offers no candidate when the argument holds a comment"
+    (fun tag ->
+      expect
+        (edit_of_label "REF-007" r007c "Strip whitespace from the cite key"
+        = None)
+        (tag ^ ": no candidate"));
 
   (* SPC-026: mixed \item indentation -> normalise to modal width *)
   let sp26 =

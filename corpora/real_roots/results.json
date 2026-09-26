@@ -3626,7 +3626,7 @@
    "pdflatex_passes": 2
   }
  ],
- "measured_at_sha": "edec6c772a7732e6bda10381380d7f417daf206b",
+ "measured_at_sha": "d6e3c40b2b5e6564416e88af6063ff9489f2b7a3",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward",
- "src_tree_sha": "0a70876bec82e49b5e71adfbfdaf526b740e8e07"
+ "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433"
 }

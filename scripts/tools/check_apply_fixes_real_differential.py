@@ -139,6 +139,20 @@ def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
     summary = doc.get("summary") or {}
     prov = doc.get("provenance") or {}
 
+    # ── 0. the fixer scope ───────────────────────────────────────────────
+    # Every baseline below was measured with the FULL fixer. Artefacts made
+    # before the OPEN-105 allow-list carry no fixer_scope, and the only
+    # fixer that existed then was the full one, so a missing value reads as
+    # "all". A "default"-scope artefact measures a different fixer and
+    # cannot be ratcheted against an all-scope baseline.
+    scope = prov.get("fixer_scope", "all")
+    if scope != "all":
+        findings.append(
+            f"{ARTEFACT}: provenance.fixer_scope={scope!r}, but the pinned "
+            f"baseline of {BASELINE_BROKEN} was measured with the full "
+            f"fixer ('all'). Record a default-scope measurement in its own "
+            f"artefact with its own baseline.")
+
     # ── 1. the cells must follow from the rows (C-45) ────────────────────
     recount = {"preserved": 0, "broken": 0, "excluded-did-not-compile": 0}
     for r in rows:

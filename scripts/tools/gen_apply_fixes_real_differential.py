@@ -76,9 +76,18 @@ def first_error(work: pathlib.Path, toplevel: str) -> str:
     return ""
 
 
+# The CLI flag for each fixer scope. "all" applies every rule's fix, which is
+# what every recorded artefact measured (the unqualified --apply-fixes before
+# the OPEN-105 allow-list); "default" is the allow-list the CLI now applies.
+SCOPE_FLAG = {"all": "--apply-fixes-all", "default": "--apply-fixes"}
+
+
 def apply_fixes_tree(work: pathlib.Path, cli: pathlib.Path, timeout: int,
-                     failures: list | None = None):
-    """Apply the DEFAULT fixer to every .tex in the tree, in place.
+                     failures: list | None = None, scope: str = "all"):
+    """Apply the fixer of the given SCOPE to every .tex in the tree, in place.
+
+    scope "all" is the full fixer every recorded artefact measured; callers
+    that do not pass it (simulate_fix_guard) keep that meaning.
 
     Every .tex, not just the root: STRUCT-001 inserted a preamble into `\\input`
     FRAGMENTS and killed their parents, and a root-only differential is blind
@@ -88,7 +97,7 @@ def apply_fixes_tree(work: pathlib.Path, cli: pathlib.Path, timeout: int,
     for tex in sorted(work.rglob("*.tex")):
         before = tex.read_bytes()
         try:
-            r = subprocess.run([str(cli), "--apply-fixes", str(tex)],
+            r = subprocess.run([str(cli), SCOPE_FLAG[scope], str(tex)],
                                capture_output=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             if failures is not None:
@@ -108,7 +117,7 @@ def apply_fixes_tree(work: pathlib.Path, cli: pathlib.Path, timeout: int,
     return changed
 
 
-def run_one(rec, root, cli, timeout):
+def run_one(rec, root, cli, timeout, scope="all"):
     pkg = root / rec["arxiv_id"]
     out = {"arxiv_id": rec["arxiv_id"], "toplevel": rec["toplevel"]}
     with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
@@ -143,7 +152,8 @@ def run_one(rec, root, cli, timeout):
             if q.relative_to(work) not in shipped:
                 q.unlink(missing_ok=True)
         failures: list = []
-        out["changed_files"] = apply_fixes_tree(work, cli, timeout, failures)
+        out["changed_files"] = apply_fixes_tree(work, cli, timeout, failures,
+                                                scope)
         if failures:
             out["cell"] = "instrument-error-fixer-failed"
             out["fixer_failures"] = failures
@@ -169,6 +179,11 @@ def main() -> int:
     ap.add_argument("--offset", type=int, default=DEFAULT_OFFSET)
     ap.add_argument("--n", type=int, default=DEFAULT_N)
     ap.add_argument("--timeout", type=int, default=180)
+    # Default "all" for continuity with every recorded artefact, which measured
+    # the full fixer. "default" measures the OPEN-105 allow-list. The choice
+    # is recorded as provenance.fixer_scope so the two can never be confused.
+    ap.add_argument("--fixer-scope", choices=sorted(SCOPE_FLAG),
+                    default="all")
     ns = ap.parse_args()
 
     repo = pathlib.Path(ns.repo).resolve()
@@ -213,7 +228,7 @@ def main() -> int:
 
     rows = []
     for i, rec in enumerate(window, 1):
-        r = run_one(rec, root, cli, ns.timeout)
+        r = run_one(rec, root, cli, ns.timeout, ns.fixer_scope)
         rows.append(r)
         print(f"  [{i}/{len(window)}] {r['arxiv_id']:<16} {r['cell']}",
               flush=True)
@@ -252,6 +267,7 @@ def main() -> int:
                       "offset": ns.offset, "n": ns.n},
             "oracle": ORACLE,
             "fix_scope": "every .tex in the tree, root and children",
+            "fixer_scope": ns.fixer_scope,
         },
         "summary": {
             "sampled": len(rows),
@@ -269,7 +285,7 @@ def main() -> int:
     pct = (100.0 * s["broken"] / s["compiled_before"]) if s["compiled_before"] else 0.0
     print(f"[apply-fixes-real] wrote {ns.out}: {s['broken']}/"
           f"{s['compiled_before']} = {pct:.1f}% of real COMPILING papers "
-          f"broken by the default fixer "
+          f"broken by the {ns.fixer_scope!r}-scope fixer "
           f"({s['excluded_did_not_compile']} excluded, did not compile)")
     return 0
 

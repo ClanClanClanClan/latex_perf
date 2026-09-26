@@ -39,7 +39,7 @@ stated budget:
   KEYSTROKE  `bench_readiness_kernel.exe` — parse + the 36 compile-blocking
              rules, warm, startup excluded. This is the surface ROADMAP:276
              budgets. Reported per stage.
-  BATCH      `validators_cli.exe --apply-fixes-best-effort` — ONE pass of the
+  BATCH      `validators_cli.exe --apply-fixes-best-effort-all` — ONE pass of the
              full ~641-rule set, wall clock. ROADMAP.md:80 (Principle 9) requires
              every serving change to state and defend a latency budget; this one
              never got one. There is no target to compare against, so this gate
@@ -164,7 +164,10 @@ def run_batch(cli: Path, bands: dict[int, Path], reps: int) -> dict[str, float]:
         for _ in range(max(1, reps)):
             t0 = time.monotonic()
             r = subprocess.run(
-                [str(cli), "--apply-fixes-best-effort", str(bands[kb])],
+                # -all keeps this the FULL fix pass the baseline timed; since
+                # the OPEN-105 allow-list the unqualified flag applies only
+                # Fix_policy.default_allowlist.
+                [str(cli), "--apply-fixes-best-effort-all", str(bands[kb])],
                 capture_output=True)
             dt = (time.monotonic() - t0) * 1000.0
             if r.returncode not in (0, 1):

@@ -256,6 +256,47 @@ def prov_stale_build(text: str) -> str:
     return _json.dumps(d, indent=2)
 
 
+
+def allowlist_inject_implicated(text: str) -> str:
+    """Slip an implicated rule into the default auto-fix set (OPEN-112).
+
+    A transform, not an exact-string anchor: the list's content changes as the
+    meaning review admits rules, and the mutation must keep landing."""
+    new, n = re.subn(r'(let default_allowlist\s*=\s*\[)', r'\1 "CHEM-005";',
+                     text, count=1)
+    assert n == 1, "default_allowlist anchor not found"
+    return new
+
+
+def review_flip_first_safe(text: str) -> str:
+    """Flip the first SAFE-reviewed rule to UNSAFE while it stays allow-listed."""
+    import json as _json
+    d = _json.loads(text)
+    for v in d["rules"].values():
+        if v.get("verdict") == "safe":
+            v["verdict"] = "unsafe"
+            break
+    else:
+        raise AssertionError("no safe rule to flip")
+    return _json.dumps(d, indent=1, ensure_ascii=False)
+
+
+def review_drop_refutations(text: str) -> str:
+    """Keep every verdict but delete the adversarial refutation evidence."""
+    import json as _json
+    d = _json.loads(text)
+    for v in d["rules"].values():
+        v["refutation"] = None
+    return _json.dumps(d, indent=1, ensure_ascii=False)
+
+
+def afr_scope_default(text: str) -> str:
+    """Claim the pinned artefact measured the allow-list, not the full fixer."""
+    import json as _json
+    d = _json.loads(text)
+    d.setdefault("provenance", {})["fixer_scope"] = "default"
+    return _json.dumps(d, indent=2, ensure_ascii=False)
+
 def prov_stale_engine_tree(text: str) -> str:
     """Claim the artefact was measured against a different engine source tree.
 
@@ -562,6 +603,28 @@ REGISTRY = [
                      "corpora/apply_fixes_real/results.json",
                      r"cell 'preserved' but rc_after=1",
                      transform=afr_desync_cell),
+            Mutation("the pinned artefact claims the allow-list scope (OPEN-112)",
+                     "corpora/apply_fixes_real/results.json",
+                     r"provenance\.fixer_scope=",
+                     transform=afr_scope_default),
+        ]),
+    GateTest(
+        "check_fix_allowlist",
+        [PY, f"{TOOLS}/check_fix_allowlist.py"],
+        "pure",
+        [
+            Mutation("an implicated rule enters the default fix set",
+                     "latex-parse/src/fix_policy.ml",
+                     r"CHEM-005 is in the default set but listed as implicated",
+                     transform=allowlist_inject_implicated),
+            Mutation("an allow-listed rule's review verdict is UNSAFE",
+                     "corpora/apply_fixes_real/fix_meaning_review.json",
+                     r"is reviewed 'unsafe', not 'safe'",
+                     transform=review_flip_first_safe),
+            Mutation("the refutation evidence is missing",
+                     "corpora/apply_fixes_real/fix_meaning_review.json",
+                     r"has no refutation attempt that found no damage",
+                     transform=review_drop_refutations),
         ]),
     GateTest(
         "check_proof_substance",

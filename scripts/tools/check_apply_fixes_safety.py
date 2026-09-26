@@ -78,7 +78,7 @@ def lint_counts(binp: str, path: str, env) -> dict[str, int]:
     return d
 
 
-def apply_once(binp: str, path: str, env):
+def apply_once(binp: str, path: str, env, flag: str = "--apply-fixes-all"):
     """Return (text, returncode). returncode != 0 means the CLI refused to apply
     (e.g. exit 2 = E.apply-fixes.overlap) — the error goes to stderr so stdout is
     empty, which earlier silently looked like 'converged to empty'."""
@@ -87,13 +87,17 @@ def apply_once(binp: str, path: str, env):
     # catch. Decode with surrogateescape so invalid bytes round-trip into the
     # string; the [final.encode("utf-8")] check downstream then flags them as
     # bad_utf8 instead of the run aborting with a traceback.
-    r = subprocess.run([binp, "--apply-fixes", path], capture_output=True, env=env)
+    # --apply-fixes-all, not --apply-fixes: since the OPEN-105 allow-list the
+    # unqualified flag applies only Fix_policy.default_allowlist. This gate
+    # vets the SUPERSET (every rule's fix), so its coverage is exactly what it
+    # was before the allow-list existed.
+    r = subprocess.run([binp, flag, path], capture_output=True, env=env)
     raw = b"\n".join(l for l in r.stdout.split(b"\n") if not l.startswith(b"# "))
     text = raw.decode("utf-8", errors="surrogateescape")
     return text, r.returncode
 
 
-def fixpoint(binp: str, path: str, env):
+def fixpoint(binp: str, path: str, env, flag: str = "--apply-fixes-all"):
     """Return (status, final_text, passes) where status is one of
     'converged' | 'cycle' | 'cap' | 'aborted'."""
     cur = open(path, encoding="utf-8", errors="ignore").read()
@@ -105,7 +109,7 @@ def fixpoint(binp: str, path: str, env):
             t.write(cur)
             tp = t.name
         try:
-            nxt, rc = apply_once(binp, tp, env)
+            nxt, rc = apply_once(binp, tp, env, flag)
         finally:
             os.unlink(tp)
         if rc != 0:
@@ -171,6 +175,24 @@ def main() -> int:
         _, drc = apply_once(binp, f, default_env)
         if drc not in (0,):
             aborted.append(f"{rel}: default-mode --apply-fixes exited {drc} (overlap-abort?)")
+        # The SHIPPED default path (OPEN-112) gets its own convergence and
+        # UTF-8 check: under convergence the allow-list is not a subset of
+        # the -all run (withholding rules changes later passes).
+        for dflag in ("--apply-fixes", "--apply-fixes-best-effort"):
+            _, rc_d = apply_once(binp, f, default_env, dflag)
+            if rc_d not in (0,):
+                aborted.append(f"{rel}: default-mode {dflag} exited {rc_d}")
+        dstatus, dfinal, _ = fixpoint(binp, f, env, "--apply-fixes")
+        if dstatus == "aborted":
+            aborted.append(f"{rel}: pilot-mode --apply-fixes (allow-list) aborted")
+        elif dstatus != "converged":
+            if not allowlisted(rel):
+                nonconv.append(f"{rel}: --apply-fixes (allow-list) did not converge ({dstatus})")
+        else:
+            try:
+                dfinal.encode("utf-8")
+            except UnicodeError:
+                bad_utf8.append(f"{rel} (allow-list)")
         base = lint_counts(binp, f, env)
         status, final, passes = fixpoint(binp, f, env)
         if status == "aborted":

@@ -75,7 +75,12 @@ class Arm:
                 for tex in sorted(work.rglob("*.tex")):
                     before = tex.read_bytes()
                     try:
-                        r = subprocess.run([str(CLI), "--apply-fixes", str(tex)],
+                        # --apply-fixes-all: this instrument measures the FULL fixer (every rule's
+                        # fix), which is what the unqualified --apply-fixes meant before the
+                        # OPEN-105 allow-list made it apply only Fix_policy.default_allowlist.
+                        # LP_FIX_ONLY replaces the all-rules base and
+                        # LP_FIX_EXCLUDE subtracts from it, as before.
+                        r = subprocess.run([str(CLI), "--apply-fixes-all", str(tex)],
                                            capture_output=True, env=env,
                                            timeout=self.timeout)
                     except subprocess.TimeoutExpired:

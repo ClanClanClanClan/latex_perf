@@ -148,7 +148,10 @@ def main() -> int:
                 except OSError:
                     continue
                 try:
-                    p = subprocess.run([str(cli), "--apply-fixes", str(tex)],
+                    # --apply-fixes-all: this instrument measures the FULL fixer (every rule's
+                    # fix), which is what the unqualified --apply-fixes meant before the
+                    # OPEN-105 allow-list made it apply only Fix_policy.default_allowlist.
+                    p = subprocess.run([str(cli), "--apply-fixes-all", str(tex)],
                                        capture_output=True, timeout=ns.timeout)
                 except subprocess.TimeoutExpired:
                     raise RuntimeError(f"fixer timed out on {tex}")

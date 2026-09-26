@@ -7,8 +7,10 @@ pdflatex/single-toplevel frame from diff_real_roots.build_frame, ordered by
 sha256(arxiv_id) ascending, sliced [offset, offset+n)):
 
   CTRL   pristine copy                               (must be rc 0, else excluded)
-  FULL   the gen tool's recipe: --apply-fixes every .tex in the tree, in place,
-         sorted order (gen_apply_fixes_real_differential.apply_fixes_tree)
+  FULL   the gen tool's recipe: --apply-fixes-all (the full fixer, which the
+         unqualified flag meant before the OPEN-105 allow-list) on every .tex
+         in the tree, in place, sorted order
+         (gen_apply_fixes_real_differential.apply_fixes_tree, scope "all")
   GUARD  per .tex: original O, full output F, char-level diff hunks O->F;
          every NON-whitespace hunk whose ORIGINAL span intersects R1..R4 is
          reverted.  Whitespace-only hunks are kept in every arm.

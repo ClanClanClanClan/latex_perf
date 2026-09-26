@@ -18,7 +18,7 @@
   "known_broken": [
     {
       "doc": "corpora/compile_check/good_quotes_dashes.tex",
-      "mode": "default:--apply-fixes-best-effort",
+      "mode": "default:--apply-fixes-best-effort-all",
       "breaks_compile": false,
       "degrades_verdict": false,
       "not_idempotent": true,
@@ -26,7 +26,7 @@
     },
     {
       "doc": "corpora/compile_check/good_quotes_dashes.tex",
-      "mode": "pilot:--apply-fixes-best-effort",
+      "mode": "pilot:--apply-fixes-best-effort-all",
       "breaks_compile": false,
       "degrades_verdict": false,
       "not_idempotent": true,
@@ -34,7 +34,7 @@
     },
     {
       "doc": "corpora/compile_check/tolerated_trailing_whitespace.tex",
-      "mode": "pilot:--apply-fixes-best-effort",
+      "mode": "pilot:--apply-fixes-best-effort-all",
       "breaks_compile": false,
       "degrades_verdict": false,
       "not_idempotent": true,

@@ -138,6 +138,51 @@ let () =
       expect (does_not_fire "REF-007" "\\cite{jones2020}") (tag ^ ": clean cite"));
   run "REF-007 clean: no cite" (fun tag ->
       expect (does_not_fire "REF-007" "No citations here.") (tag ^ ": no cite"));
+  (* The kernel, natbib and biblatex drop the leading whitespace of every key,
+     so a space after a separating comma is legal and must not fire. This was
+     measured at the pinned pdflatex, where every such document exits with
+     status 0 and leaves no citation undefined. *)
+  run "REF-007 clean: space after comma" (fun tag ->
+      expect (does_not_fire "REF-007" "\\cite{a, b}") (tag ^ ": a, b"));
+  run "REF-007 clean: key list broken after commas" (fun tag ->
+      expect
+        (does_not_fire "REF-007" "\\citep{alpha,\n  beta,\n\tgamma}")
+        (tag ^ ": multiline"));
+  run "REF-007 clean: leading space before the first key" (fun tag ->
+      expect (does_not_fire "REF-007" "\\cite{ a}") (tag ^ ": leading"));
+  run "REF-007 clean: spaces only in the optional arguments" (fun tag ->
+      expect
+        (does_not_fire "REF-007" "\\citep[see][p. 4]{a, b}")
+        (tag ^ ": optional args"));
+  run "REF-007 clean: comment inside the key list" (fun tag ->
+      expect
+        (does_not_fire "REF-007" "\\cite{a,% old key\n  b}")
+        (tag ^ ": comment"));
+  run "REF-007 clean: commented-out cite" (fun tag ->
+      expect (does_not_fire "REF-007" "% \\cite{a b}\nText.") (tag ^ ": comment"));
+  run "REF-007 clean: citetext is free text" (fun tag ->
+      expect
+        (does_not_fire "REF-007" "\\citetext{priv. comm.}")
+        (tag ^ ": citetext"));
+  run "REF-007 clean: bbl author-name formatting macros" (fun tag ->
+      expect
+        (does_not_fire "REF-007"
+           "\\citenamefont {del Campo} \\citeauthoryear{Smith et~al.} \
+            \\citename{Hartland \\textit{et al.}}")
+        (tag ^ ": citenamefont/citeauthoryear/citename"));
+  (* A trailing blank survives into the key under the kernel, natbib and
+     biblatex, where the pinned pdflatex reports the citation `a ' or `b ' as
+     undefined. *)
+  run "REF-007 fires on trailing space before comma" (fun tag ->
+      expect (fires "REF-007" "\\cite{a ,b}") (tag ^ ": a ,b"));
+  run "REF-007 fires on line end before closing brace" (fun tag ->
+      expect (fires "REF-007" "\\cite{a,\n b\n}") (tag ^ ": trailing newline"));
+  run "REF-007 fires on space inside a natbib key" (fun tag ->
+      expect (fires "REF-007" "\\citep[p. 3]{jones 2020}") (tag ^ ": citep"));
+  run "REF-007 counts only defective cite commands" (fun tag ->
+      expect
+        (fires_with_count "REF-007" "\\cite{a, b} \\cite{c d} \\cite{e ,f}" 2)
+        (tag ^ ": count=2"));
 
   (* ══════════════════════════════════════════════════════════════════════
      REF-009: Reference appears before label definition (forward ref)

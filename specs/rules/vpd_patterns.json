@@ -5487,7 +5487,7 @@
         "\\cite{"
       ]
     },
-    "severity": "Error"
+    "severity": "Warning"
   },
   "REF-010": {
     "layer": "L0",

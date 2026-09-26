@@ -4,13 +4,18 @@
   "provisional_note": "",
   "spec_budget_300kb_ms": {
     "parse": 40.0,
-    "rules": 30.0
+    "rules": 30.0,
+    "structural": 15.0
   },
   "stages_not_instrumented": [
     "shared",
-    "structural",
     "IPC"
   ],
+  "pending_ci": [
+    "cold_check_ms",
+    "structural_ms"
+  ],
+  "pending_ci_note": "OPEN-104. cold_check_ms (validators_cli --compile-check, whole process, wall clock, median per band) and the keystroke structural_ms column are MEASURED and printed on every perf-ci run but have no recorded value yet, because ADR-011 allows a baseline only from an idle CI runner and none existed when the mechanism landed. Until they are adopted the gate cannot fail on them. To record: from a green perf-ci run on main, run 'gh run download RUN_ID -n keystroke-budget-measured -D DIR', then 'python3 scripts/tools/check_keystroke_budget.py --adopt DIR/keystroke_budget_measured.json', and commit this file. --adopt refuses a file without a CI run id or measured above load 4.0, and writes only the pending metrics.",
   "keystroke": {
     "4": {
       "bytes": 4125,
@@ -37,6 +42,7 @@
       "rules_ms": 284.0
     }
   },
+  "cold_check_ms": "pending-CI",
   "batch_ms": {
     "4": 111.3,
     "50": 1109.2,

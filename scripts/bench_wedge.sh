@@ -19,6 +19,11 @@
 # Bands are deterministic line-aligned slices of corpora/perf/perf_smoke_big.tex,
 # so no duplicate corpus is committed and the bands cannot desync from source.
 #
+# This script is INFORMATIONAL and keeps nothing: its COLD column is best-of-REPS.
+# The RATCHETED cold number is `cold_check_ms` in check_keystroke_budget.py
+# (median of reps, recorded in corpora/perf/keystroke_budget.json), added by
+# OPEN-104 after this column drifted ~700 -> ~1690 ms at 300 KB unseen.
+#
 # Usage: bench_wedge.sh [REPS]        (default 11)
 set -euo pipefail
 

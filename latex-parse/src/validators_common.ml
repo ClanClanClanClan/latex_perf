@@ -1064,6 +1064,26 @@ let blank_line_comments (s : string) : string =
         ranges;
       Bytes.unsafe_to_string b
 
+(* [sub_eq s a pfx] is [String.sub s a (String.length pfx) = pfx] guarded by the
+   bounds test [a + String.length pfx <= String.length s], computed WITHOUT
+   allocating the substring. OPEN-104 (v27.1.65): the breaker scans below and
+   every structural detector in [Compile_gate_checks] asked the allocating form
+   at every byte of the source, once per needle, and on a 300 KB real paper that
+   allocate-copy-compare was the largest single cost of a cold --compile-check.
+   A negative [a] raises the same [Invalid_argument] that [String.sub] raised,
+   so even the failure behaviour is unchanged. *)
+let sub_eq (s : string) (a : int) (pfx : string) : bool =
+  let pl = String.length pfx in
+  a + pl <= String.length s
+  &&
+  if a < 0 then invalid_arg "String.sub / Bytes.sub"
+  else
+    let rec go k =
+      k >= pl
+      || (String.unsafe_get s (a + k) = String.unsafe_get pfx k && go (k + 1))
+    in
+    go 0
+
 (** [comment_semantics_breaker s] — FAIL-CLOSED guard for comment blanking:
     [true] iff [s] contains a construct that changes what `%` means or makes the
     scanner's verbatim model unreliable, so blanking could hide LIVE fatal bytes
@@ -1089,7 +1109,7 @@ let comment_semantics_breaker (s : string) : bool =
   let n = String.length s in
   let has sub =
     let m = String.length sub in
-    let rec go i = i + m <= n && (String.sub s i m = sub || go (i + 1)) in
+    let rec go i = i + m <= n && (sub_eq s i sub || go (i + 1)) in
     go 0
   in
   let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
@@ -1103,7 +1123,7 @@ let comment_semantics_breaker (s : string) : bool =
     let rec at i =
       if i + m > n then false
       else if
-        String.sub s i m = needle
+        sub_eq s i needle
         && (i + m >= n || not (is_letter (String.unsafe_get s (i + m))))
       then true
       else at (i + 1)
@@ -1118,7 +1138,7 @@ let comment_semantics_breaker (s : string) : bool =
     let m = String.length needle in
     let rec at i =
       if i + m > n then false
-      else if String.sub s i m = needle then (
+      else if sub_eq s i needle then (
         (* Same EOL bound as the \catcode arm: never read into the next line. *)
         let hit = ref false in
         let k = ref (i + m) in
@@ -1239,7 +1259,7 @@ let comment_semantics_breaker (s : string) : bool =
             (fun d ->
               let m = String.length d in
               i + m <= n
-              && String.sub s i m = d
+              && sub_eq s i d
               && (i + m >= n || not (is_letter (String.unsafe_get s (i + m))))
               && check_from i m)
             defs
@@ -1254,7 +1274,7 @@ let comment_semantics_breaker (s : string) : bool =
     let m = String.length needle in
     let rec at i =
       if i + m > n then false
-      else if String.sub s i m = needle then (
+      else if sub_eq s i needle then (
         (* The lookahead must STOP at end-of-line: a `%` on the NEXT line is an
            ordinary comment, not this assignment's target — measured false-fire
            on asme2e.cls (`\catcode`\:12` + EOL + a comment line), which cost a
@@ -1285,7 +1305,7 @@ let comment_semantics_breaker (s : string) : bool =
     let m = String.length needle in
     let rec at i =
       if i + m > n then false
-      else if String.sub s i m = needle then (
+      else if sub_eq s i needle then (
         let q = ref (i + m) in
         if !q < n && String.unsafe_get s !q = '*' then incr q;
         if
@@ -1379,7 +1399,7 @@ let defined_verbatim_env_names (s : string) : string list =
       let i = ref 0 in
       while !i + m <= n do
         if
-          String.sub s !i m = d
+          sub_eq s !i d
           && (!i + m >= n || not (is_letter (String.unsafe_get s (!i + m))))
         then (
           let q = ref (!i + m) in
@@ -1423,7 +1443,7 @@ let env_name_used (sources : string list) (name : string) : bool =
       let i = ref 0 in
       let found = ref false in
       while (not !found) && !i + 6 <= n do
-        if String.sub s !i 6 = "\\begin" then (
+        if sub_eq s !i "\\begin" then (
           let q = ref (!i + 6) in
           let nl = ref 0 in
           let go = ref true in
@@ -1437,7 +1457,7 @@ let env_name_used (sources : string list) (name : string) : bool =
                   incr q)
             | _ -> go := false
           done;
-          if !q + tl <= n && String.sub s !q tl = target then found := true);
+          if !q + tl <= n && sub_eq s !q target then found := true);
         incr i
       done;
       !found)

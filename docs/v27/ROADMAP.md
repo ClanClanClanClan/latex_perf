@@ -284,6 +284,14 @@ Tracks: **S** (verdict soundness — incl. **S6/S7** zero-catalogue residual-shr
 > on 8 cores while actual CPU use was near zero, so even the load guard that
 > gate uses to refuse `--record` reads a number that does not mean what it says.
 > Tracked as **OPEN-104**.
+> **2026-09-26 (v27.1.65, `perf/v27165-structural-linear`):** the mechanism
+> landed. `check_keystroke_budget.py` now measures `cold_check_ms` (a whole
+> `--compile-check` process, median per band) and a `structural_ms` stage, and
+> both baselines are `pending-CI` in `corpora/perf/keystroke_budget.json` until
+> adopted from a perf-ci artefact with `--adopt` (never from a laptop). The same
+> change removed the per-byte work the cold path was paying in the
+> structural-fatal detectors and the comment-breaker scans, verdict-identical by
+> construction; the measured before/after is in that commit's message.
 
 **Rationale.** Deliver the sound verdict **as the user types** — the segment-A wedge (Section 0, clause 1). The correctness plane is fine; this is the latency/interactivity plane. **Standing performance-budget clause applies to every R item.** v3 upgrades this from a serving track to a **provably-sound incremental engine** with an explicit SLO, a machine-checked sound-incremental contract, a nothing-sacrificed budget invariant, and a typed two-channel result — and names the two latent false-READY bugs it must fix.
 

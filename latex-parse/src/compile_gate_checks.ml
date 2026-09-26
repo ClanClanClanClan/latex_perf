@@ -12,9 +12,32 @@
     fatal boundary is unambiguous, never on a compiling form. *)
 
 (* A byte offset is "skipped" (comment / verbatim / \verb / url) — no detector
-   reads structural meaning out of those bytes. *)
-let in_ranges (ranges : (int * int) list) (off : int) : bool =
-  List.exists (fun (a, b) -> a <= off && off < b) ranges
+   reads structural meaning out of those bytes.
+
+   OPEN-104 (v27.1.65). Every detector below asks this question at every byte
+   of the source, and it used to be answered by [List.exists] over the whole
+   range list, which made each scan O(n × ranges); on a 300 KB real paper that
+   was the dominant cost of the structural stage. [range_mask n ranges] paints
+   the ranges into a byte bitmap ONCE, in O(n + covered bytes), and returns an
+   O(1) membership test. It answers exactly what the list scan answered for
+   every offset in [0, n), which is the only domain any caller queries (each
+   query offset is a scan cursor guarded by [< n]); outside that domain it
+   answers false. The same bitmap had already been added to the double-script
+   scan in v27.1.62 (Bug 6), and this generalises it to every detector. *)
+let range_mask (n : int) (ranges : (int * int) list) : int -> bool =
+  let bm = Bytes.make (max 1 n) '\000' in
+  List.iter
+    (fun (a, b) ->
+      let a = if a < 0 then 0 else a and b = if b > n then n else b in
+      for k = a to b - 1 do
+        Bytes.unsafe_set bm k '\001'
+      done)
+    ranges;
+  fun off -> off >= 0 && off < n && Bytes.unsafe_get bm off = '\001'
+
+(* The allocation-free substring test shared with the breaker scans; see
+   [Validators_common.sub_eq]. Every local [starts] below is this test. *)
+let sub_eq = Validators_common.sub_eq
 
 (* Commands whose brace argument is a MOVING / NAME argument that pdflatex does
    NOT re-typeset in the current mode: the argument bytes are stored/used as a
@@ -120,6 +143,7 @@ let ref_body_commands =
 let find_ref_alias_macros (s : string) : string list =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
   let is_escaped idx =
     let rec count b acc =
@@ -129,10 +153,7 @@ let find_ref_alias_macros (s : string) : string list =
     in
     count (idx - 1) 0 land 1 = 1
   in
-  let starts pfx j =
-    let pl = String.length pfx in
-    j + pl <= n && String.sub s j pl = pfx
-  in
+  let starts pfx j = sub_eq s j pfx in
   (* read a matched brace group starting at the '{' at [k]; returns
      (inner_start, inner_stop, past_close) or None. *)
   let read_group k =
@@ -155,7 +176,7 @@ let find_ref_alias_macros (s : string) : string list =
         let cl = String.length cmd and bl = String.length body in
         let rec go i =
           if i + cl > bl then false
-          else if String.sub body i cl = cmd then true
+          else if sub_eq body i cmd then true
           else go (i + 1)
         in
         go 0)
@@ -165,7 +186,7 @@ let find_ref_alias_macros (s : string) : string list =
   let i = ref 0 in
   while !i < n do
     let pos = !i in
-    if in_ranges skip pos then incr i
+    if in_skip pos then incr i
     else if
       (not (is_escaped pos))
       && (starts "\\newcommand" pos
@@ -268,6 +289,7 @@ let find_ref_alias_macros (s : string) : string list =
 let find_moving_arg_ranges ?(extra = []) (s : string) : (int * int) list =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let cmd_tbl = Hashtbl.create 64 in
   List.iter (fun c -> Hashtbl.replace cmd_tbl c ()) moving_arg_commands;
   List.iter (fun c -> Hashtbl.replace cmd_tbl c ()) extra;
@@ -284,7 +306,7 @@ let find_moving_arg_ranges ?(extra = []) (s : string) : (int * int) list =
   let i = ref 0 in
   while !i < n do
     let pos = !i in
-    if in_ranges skip pos then incr i
+    if in_skip pos then incr i
     else if String.unsafe_get s pos = '\\' && not (is_escaped pos) then (
       (* read control word *)
       let j = ref (pos + 1) in
@@ -385,31 +407,15 @@ let double_script_fatal (s : string) : string option =
     Validators_common.find_math_ranges (Bytes.unsafe_to_string blanked)
   in
   (* v27.1.62 (Bug 6): the main scan below queries skip/math membership at every
-     one of [n] monotonically-increasing positions. The old list-scan
-     ([in_ranges], [is_in_math_range]) is O(ranges) per query, and both range
-     lists grow with the input (one math range per `$…$`, one skip range per
-     label/ref key), so the scan was O(n²) — 31 s on a 380 KB math-dense file,
-     losing the real-time wedge. Precompute two byte-bitmaps once (O(n): the
-     total covered length is ≤ n per category) so each query is O(1). *)
-  let paint (ranges : (int * int) list) : Bytes.t =
-    let bm = Bytes.make (max 1 n) '\000' in
-    List.iter
-      (fun (a, b) ->
-        let a = if a < 0 then 0 else a and b = if b > n then n else b in
-        for k = a to b - 1 do
-          Bytes.unsafe_set bm k '\001'
-        done)
-      ranges;
-    bm
-  in
-  let skip_bm = paint skip in
-  let math_bm = paint math in
-  let in_skip off =
-    off >= 0 && off < n && Bytes.unsafe_get skip_bm off = '\001'
-  in
-  let in_math off =
-    off >= 0 && off < n && Bytes.unsafe_get math_bm off = '\001'
-  in
+     one of [n] monotonically-increasing positions. The old list-scan (a
+     [List.exists] per query, and [is_in_math_range]) is O(ranges) per query,
+     and both range lists grow with the input (one math range per `$…$`, one
+     skip range per label/ref key), so the scan was O(n²) — 31 s on a 380 KB
+     math-dense file, losing the real-time wedge. Precompute two byte-bitmaps
+     once with [range_mask] (O(n): the total covered length is ≤ n per
+     category) so each query is O(1). *)
+  let in_skip = range_mask n skip in
+  let in_math = range_mask n math in
   (* Per brace-frame state: has the current base seen a super / a sub, and has a
      `^` (caret, not just primes) locked the superscript slot. [prime_only] lets
      consecutive primes-before-caret coexist (x''^b) while a prime after a caret
@@ -589,6 +595,7 @@ let double_script_fatal (s : string) : string option =
 let no_documentclass_fatal (s : string) : string option =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_escaped idx =
     let rec count b acc =
       if b < 0 then acc
@@ -597,15 +604,12 @@ let no_documentclass_fatal (s : string) : string option =
     in
     count (idx - 1) 0 land 1 = 1
   in
-  let starts pfx j =
-    let pl = String.length pfx in
-    j + pl <= n && String.sub s j pl = pfx
-  in
+  let starts pfx j = sub_eq s j pfx in
   let found = ref false in
   let i = ref 0 in
   while !i < n && not !found do
     let pos = !i in
-    if in_ranges skip pos then incr i
+    if in_skip pos then incr i
     else if
       (not (is_escaped pos))
       && (starts "\\documentclass" pos || starts "\\documentstyle" pos)
@@ -627,6 +631,7 @@ let no_documentclass_fatal (s : string) : string option =
 let usepackage_after_begin_fatal (s : string) : string option =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_escaped idx =
     let rec count b acc =
       if b < 0 then acc
@@ -635,16 +640,13 @@ let usepackage_after_begin_fatal (s : string) : string option =
     in
     count (idx - 1) 0 land 1 = 1
   in
-  let starts pfx j =
-    let pl = String.length pfx in
-    j + pl <= n && String.sub s j pl = pfx
-  in
+  let starts pfx j = sub_eq s j pfx in
   (* locate first real \begin{document} *)
   let begin_doc = ref (-1) in
   let i = ref 0 in
   while !i < n && !begin_doc < 0 do
     let pos = !i in
-    if in_ranges skip pos then incr i
+    if in_skip pos then incr i
     else if (not (is_escaped pos)) && starts "\\begin{document}" pos then
       begin_doc := pos
     else incr i
@@ -656,7 +658,7 @@ let usepackage_after_begin_fatal (s : string) : string option =
     let j = ref (!begin_doc + String.length "\\begin{document}") in
     while !j < n && !result = None do
       let pos = !j in
-      if in_ranges skip pos then incr j
+      if in_skip pos then incr j
       else if (not (is_escaped pos)) && starts "\\usepackage" pos then
         result :=
           Some
@@ -690,6 +692,7 @@ let usepackage_after_begin_fatal (s : string) : string option =
 let no_live_end_document_fatal (s : string) : string option =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' || c = '\012' in
   let is_escaped idx =
     let rec count b acc =
@@ -699,10 +702,7 @@ let no_live_end_document_fatal (s : string) : string option =
     in
     count (idx - 1) 0 land 1 = 1
   in
-  let starts pfx j =
-    let pl = String.length pfx in
-    j + pl <= n && String.sub s j pl = pfx
-  in
+  let starts pfx j = sub_eq s j pfx in
   (* \end, optional whitespace, {document} — tolerant of `\end {document}`. *)
   let is_end_document pos =
     starts "\\end" pos
@@ -745,7 +745,7 @@ let no_live_end_document_fatal (s : string) : string option =
   let dead =
     let acc = ref [] and j = ref 0 and depth = ref 0 in
     while !j < n do
-      if in_ranges skip !j || is_escaped !j then incr j
+      if in_skip !j || is_escaped !j then incr j
       else
         let c = String.unsafe_get s !j in
         if c = '{' then (
@@ -757,7 +757,7 @@ let no_live_end_document_fatal (s : string) : string option =
         else if !depth = 0 && starts_cw "\\iffalse" !j then (
           let k = ref (!j + 8) and stop = ref (-1) in
           while !stop < 0 && !k < n do
-            if in_ranges skip !k || is_escaped !k then incr k
+            if in_skip !k || is_escaped !k then incr k
             else if starts_cw "\\else" !k then stop := !k + 5
             else if starts_cw "\\fi" !k then stop := !k + 3
             else incr k
@@ -771,11 +771,12 @@ let no_live_end_document_fatal (s : string) : string option =
     done;
     List.rev !acc
   in
+  let in_dead = range_mask n dead in
   let found = ref false in
   let i = ref 0 in
   while !i < n && not !found do
     let pos = !i in
-    if in_ranges skip pos || is_escaped pos || in_ranges dead pos then incr i
+    if in_skip pos || is_escaped pos || in_dead pos then incr i
     else if is_end_document pos then found := true
     else incr i
   done;
@@ -810,6 +811,7 @@ let nul_byte_fatal (s : string) : string option =
 let deep_grouping_fatal (s : string) : string option =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_escaped idx =
     let rec count b acc =
       if b < 0 then acc
@@ -821,7 +823,7 @@ let deep_grouping_fatal (s : string) : string option =
   let depth = ref 0 and maxd = ref 0 and i = ref 0 in
   while !i < n do
     let pos = !i in
-    if in_ranges skip pos then incr i
+    if in_skip pos then incr i
     else (
       (match String.unsafe_get s pos with
       | '{' when not (is_escaped pos) ->
@@ -849,6 +851,7 @@ let deep_grouping_fatal (s : string) : string option =
 let unbalanced_open_brace (s : string) : bool =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_escaped idx =
     let rec count b acc =
       if b < 0 then acc
@@ -860,7 +863,7 @@ let unbalanced_open_brace (s : string) : bool =
   let depth = ref 0 and i = ref 0 in
   while !i < n do
     let pos = !i in
-    if in_ranges skip pos then incr i
+    if in_skip pos then incr i
     else (
       (match String.unsafe_get s pos with
       | '{' when not (is_escaped pos) -> incr depth
@@ -876,6 +879,7 @@ let unbalanced_open_brace (s : string) : bool =
 let source_uses_bibliography (s : string) : bool =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' || c = '\012' in
   let is_escaped idx =
     let rec count b acc =
@@ -885,15 +889,12 @@ let source_uses_bibliography (s : string) : bool =
     in
     count (idx - 1) 0 land 1 = 1
   in
-  let starts pfx j =
-    let pl = String.length pfx in
-    j + pl <= n && String.sub s j pl = pfx
-  in
+  let starts pfx j = sub_eq s j pfx in
   let found = ref false in
   let i = ref 0 in
   while !i < n && not !found do
     let pos = !i in
-    if in_ranges skip pos || is_escaped pos then incr i
+    if in_skip pos || is_escaped pos then incr i
     else if starts "\\bibliography" pos then (
       let j = ref (pos + String.length "\\bibliography") in
       while !j < n && is_ws (String.unsafe_get s !j) do
@@ -917,6 +918,7 @@ let source_uses_bibliography (s : string) : bool =
 let duplicate_begin_document_fatal (s : string) : string option =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let in_skip = range_mask n skip in
   let is_escaped idx =
     let rec count b acc =
       if b < 0 then acc
@@ -925,10 +927,7 @@ let duplicate_begin_document_fatal (s : string) : string option =
     in
     count (idx - 1) 0 land 1 = 1
   in
-  let starts pfx j =
-    let pl = String.length pfx in
-    j + pl <= n && String.sub s j pl = pfx
-  in
+  let starts pfx j = sub_eq s j pfx in
   let anchor = "\\begin{document}" in
   let alen = String.length anchor in
   let seen = ref 0 in
@@ -936,7 +935,7 @@ let duplicate_begin_document_fatal (s : string) : string option =
   let i = ref 0 in
   while !i < n && !result = None do
     let pos = !i in
-    if in_ranges skip pos then incr i
+    if in_skip pos then incr i
     else if (not (is_escaped pos)) && starts anchor pos then (
       incr seen;
       if !seen >= 2 then
@@ -962,10 +961,7 @@ let duplicate_begin_document_fatal (s : string) : string option =
 let verb_broken_eol_fatal (s : string) : string option =
   let n = String.length s in
   let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
-  let starts pfx a =
-    let pl = String.length pfx in
-    a + pl <= n && String.sub s a pl = pfx
-  in
+  let starts pfx a = sub_eq s a pfx in
   (* [a] starts a REAL inline \verb/\verb* : "\verb", optional "*", then a
      non-letter delimiter (the non-letter guard excludes \verbatim…). *)
   let is_inline_verb a =
@@ -1047,10 +1043,7 @@ let thmtools_counter_collision_fatal (s0 : string) : string option =
   in
   let n = String.length s in
   let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
-  let starts pfx a =
-    let pl = String.length pfx in
-    a + pl <= n && String.sub s a pl = pfx
-  in
+  let starts pfx a = sub_eq s a pfx in
   let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
   let skip_ws j =
     let k = ref j in
@@ -1185,7 +1178,7 @@ let thmtools_counter_collision_fatal (s0 : string) : string option =
                   let kl = String.length key and ol = String.length opts in
                   let rec go a =
                     if a + kl > ol then false
-                    else if String.sub opts a kl = key then
+                    else if sub_eq opts a key then
                       let e = ref (a + kl) in
                       let _ =
                         while !e < ol && is_ws opts.[!e] do
@@ -1288,10 +1281,7 @@ let sc_scan_segment (st : sc_state) (seg : string) : sc_state * sc_event list =
   let n = String.length seg in
   let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
   let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
-  let starts pfx a =
-    let pl = String.length pfx in
-    a + pl <= n && String.sub seg a pl = pfx
-  in
+  let starts pfx a = sub_eq seg a pfx in
   let starts_cw pfx a =
     starts pfx a
     &&
@@ -1525,10 +1515,7 @@ let tabu_textmode_fatal (s0 : string) : string option =
     Bytes.unsafe_to_string b
   in
   let n = String.length s in
-  let starts pfx a =
-    let pl = String.length pfx in
-    a + pl <= n && String.sub s a pl = pfx
-  in
+  let starts pfx a = sub_eq s a pfx in
   (* 1. does the closure LIVE-load package tabu? Comma lists honoured. *)
   let loads_tabu = ref false in
   let i = ref 0 in
@@ -1584,10 +1571,7 @@ let tabu_textmode_fatal (s0 : string) : string option =
     let window_is_math wstart pos =
       let w = String.sub s wstart (pos - wstart) in
       let wl = String.length w in
-      let has p a =
-        let pl = String.length p in
-        a + pl <= wl && String.sub w a pl = p
-      in
+      let has p a = sub_eq w a p in
       (* last unclosed display opener wins *)
       let state = ref 0 (* 0 text, 1 math *) in
       let dollars = ref 0 in

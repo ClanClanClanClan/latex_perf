@@ -33,17 +33,38 @@ because it represents a user's machine.
 
 WHAT THIS GATE MEASURES
 -----------------------
-Two surfaces, because the project has two and only one of them has ever had a
-stated budget:
+Three surfaces:
 
   KEYSTROKE  `bench_readiness_kernel.exe` — parse + the 36 compile-blocking
              rules, warm, startup excluded. This is the surface ROADMAP:276
-             budgets. Reported per stage.
+             budgets. Reported per stage, including `structural` (the
+             root-source structural-fatal detectors) since OPEN-104.
+  COLD       `validators_cli.exe --compile-check`, a whole fresh process, wall
+             clock, MEDIAN of the reps. This is what every user gets today,
+             because no warm serving path ships (R2/R-WARM is not started).
   BATCH      `validators_cli.exe --apply-fixes-best-effort-all` — ONE pass of the
              full ~641-rule set, wall clock. ROADMAP.md:80 (Principle 9) requires
              every serving change to state and defend a latency budget; this one
              never got one. There is no target to compare against, so this gate
              establishes a measured baseline and forbids regression from it.
+
+WHY COLD IS HERE (OPEN-104). `scripts/bench_wedge.sh` printed `cold_check_ms` on
+every perf-ci run and nothing kept it, so cold --compile-check at 300 KB drifted
+from ~700 ms (2026-08-25) to ~1690 ms (2026-09-25) on the CI runner with every
+gate green. Most of that was per-byte work in the structural-fatal detectors
+(a range-list scan and a substring allocation at every byte), which the WARM
+kernel column never executed and so could not see. The cold number is now
+recorded and ratcheted like the others.
+
+PENDING-CI BASELINES. A metric listed in the baseline's `pending_ci` has no
+recorded value yet, because ADR-011 forbids baselining from a developer
+machine. The gate MEASURES and PRINTS it on every run but cannot fail on it.
+`--emit-json PATH` writes everything measured, with the CI run's provenance,
+and perf-ci uploads that file as the `keystroke-budget-measured` artifact.
+To record the baseline, take that artifact from a green perf-ci run on main and
+run `check_keystroke_budget.py --adopt <file>`, which refuses a file that did
+not come from a CI run or was measured above the load limit, writes ONLY the
+pending metrics into the baseline, and clears them from `pending_ci`.
 
 Both are measured on deterministic slices of corpora/perf/perf_smoke_big.tex cut
 at line boundaries. Slicing rather than committing new fixtures keeps 300 KB of
@@ -72,13 +93,15 @@ are how rules reached ~9.5x over budget. For precision use an interleaved A/B of
 two binaries ON A QUIET MACHINE; a loaded machine has been measured INVERTING the
 sign of an A/B result.
 
-⚠ NOT MEASURED: the `shared`, `structural` and `IPC` stages of the ROADMAP:276
-budget have no separate instrumentation in bench_readiness_kernel.ml, so this
-gate covers `parse` and `rules` only. Recorded here rather than passed over in
+⚠ NOT MEASURED: the `shared` and `IPC` stages of the ROADMAP:276 budget have no
+separate instrumentation in bench_readiness_kernel.ml, so this gate covers
+`parse`, `rules` and `structural` only. Recorded here rather than passed over in
 silence; extending the bench is the follow-up.
 
 USAGE
     check_keystroke_budget.py [--repo DIR] [--record] [--reps N] [--tolerance F]
+                              [--emit-json PATH]
+    check_keystroke_budget.py --adopt MEASURED.json [--repo DIR]
 
 EXIT 0 clean | 1 regression or widened spec gap | 2 infrastructure
 """
@@ -101,7 +124,10 @@ BANDS_KB = [4, 50, 100, 300]
 
 # ROADMAP.md:276, per-stage at 300 KB. Only the stages the bench can actually
 # separate are listed; see the NOT MEASURED note above.
-SPEC_BUDGET_300KB_MS = {"parse": 40.0, "rules": 30.0}
+SPEC_BUDGET_300KB_MS = {"parse": 40.0, "rules": 30.0, "structural": 15.0}
+
+# Metrics that can be PENDING-CI (measured and printed, not yet ratcheted).
+PENDABLE = ("cold_check_ms", "structural_ms")
 
 
 def die(msg: str) -> int:
@@ -130,7 +156,7 @@ def build_bands(repo: Path, tmp: Path) -> dict[int, Path]:
 
 
 def run_keystroke(bench: Path, bands: dict[int, Path], reps: int) -> dict[str, dict]:
-    """bench_readiness_kernel: size parse_ms fastrun_ms rules_ms (warm, no startup)."""
+    """bench_readiness_kernel: size parse_ms fastrun_ms rules_ms structural_ms."""
     args = [str(bench), str(reps)] + [str(bands[kb]) for kb in BANDS_KB]
     p = subprocess.run(args, capture_output=True, text=True)
     if p.returncode != 0:
@@ -139,8 +165,14 @@ def run_keystroke(bench: Path, bands: dict[int, Path], reps: int) -> dict[str, d
     order = list(BANDS_KB)
     for line in p.stdout.splitlines():
         f = line.split()
-        if len(f) != 4 or not f[0].isdigit():
+        if not f or not f[0].isdigit():
             continue  # header
+        if len(f) != 5:
+            # A 4-column row is a bench built before structural_ms existed; a
+            # silently missing column would read as "not measured" forever.
+            raise RuntimeError(
+                f"bench row has {len(f)} columns, expected 5 "
+                f"(size parse fastrun rules structural): {line!r}")
         if not order:
             break
         kb = order.pop(0)
@@ -149,6 +181,7 @@ def run_keystroke(bench: Path, bands: dict[int, Path], reps: int) -> dict[str, d
             "parse_ms": float(f[1]),
             "fastrun_ms": float(f[2]),
             "rules_ms": float(f[3]),
+            "structural_ms": float(f[4]),
         }
     if len(rows) != len(BANDS_KB):
         raise RuntimeError(
@@ -177,6 +210,96 @@ def run_batch(cli: Path, bands: dict[int, Path], reps: int) -> dict[str, float]:
     return out
 
 
+def run_cold(cli: Path, bands: dict[int, Path], reps: int,
+             cwd: Path) -> dict[str, float]:
+    """A whole `--compile-check` process per rep, wall clock, MEDIAN of reps.
+
+    The median, not the minimum: this number is ratcheted, and a best-of is
+    biased low by exactly the lucky run the ratchet should not rely on. Startup
+    is included on purpose — it is part of what a user waits for."""
+    out: dict[str, float] = {}
+    for kb in BANDS_KB:
+        times = []
+        for _ in range(max(1, reps)):
+            t0 = time.monotonic()
+            r = subprocess.run([str(cli), "--compile-check", str(bands[kb])],
+                               capture_output=True, text=True, cwd=str(cwd))
+            times.append((time.monotonic() - t0) * 1000.0)
+            # NON-VACUITY: exit 0/1 alone is not proof the check ran — a
+            # process that died early would be very fast. Require a verdict.
+            if r.returncode not in (0, 1) or "READY" not in r.stdout:
+                raise RuntimeError(
+                    f"--compile-check exited {r.returncode} on the {kb} KB band "
+                    f"without a verdict: {r.stderr[:300]}")
+        times.sort()
+        out[str(kb)] = round(times[len(times) // 2], 1)
+    return out
+
+
+def provenance() -> dict:
+    """Where a measurement came from. Only a CI run id makes it adoptable."""
+    env = os.environ
+    return {
+        "ci_run_id": env.get("GITHUB_RUN_ID", ""),
+        "ci_sha": env.get("GITHUB_SHA", ""),
+        "ci_ref": env.get("GITHUB_REF", ""),
+        "runner_os": env.get("RUNNER_OS", ""),
+        "runner_arch": env.get("RUNNER_ARCH", ""),
+    }
+
+
+def adopt(repo: Path, measured_path: Path, max_load: float) -> int:
+    """Write the PENDING-CI metrics from a CI-emitted measurement into the
+    baseline. Touches nothing that is already recorded."""
+    base_path = repo / BASELINE
+    try:
+        recorded = json.loads(base_path.read_text())
+        measured = json.loads(measured_path.read_text())
+    except Exception as exc:  # noqa: BLE001
+        return die(f"cannot read baseline or {measured_path}: {exc}")
+    prov = measured.get("provenance", {})
+    if not prov.get("ci_run_id"):
+        return die(f"{measured_path} carries no CI run id — ADR-011: a baseline "
+                   f"is adopted only from a CI runner, never a developer machine")
+    load = measured.get("loadavg_1min")
+    if load is None or load > max_load:
+        return die(f"{measured_path} was measured at load {load} "
+                   f"(limit {max_load}); take it from a quieter run")
+    pending = list(recorded.get("pending_ci", []))
+    if not pending:
+        print("[keystroke-budget] nothing is pending-CI; baseline unchanged")
+        return 0
+    if "cold_check_ms" in pending:
+        cold = measured.get("cold_check_ms") or {}
+        if sorted(cold) != sorted(str(k) for k in BANDS_KB):
+            return die(f"{measured_path} cold_check_ms covers {sorted(cold)}, "
+                       f"expected every band {BANDS_KB}")
+        recorded["cold_check_ms"] = cold
+        pending.remove("cold_check_ms")
+    if "structural_ms" in pending:
+        ks = measured.get("keystroke") or {}
+        for kb in BANDS_KB:
+            row = ks.get(str(kb), {})
+            if "structural_ms" not in row:
+                return die(f"{measured_path} has no structural_ms for {kb} KB")
+            recorded.setdefault("keystroke", {}).setdefault(str(kb), {})[
+                "structural_ms"] = row["structural_ms"]
+        gap = measured.get("spec_gap_300kb", {}).get("structural")
+        if gap is not None:
+            recorded.setdefault("spec_gap_300kb", {})["structural"] = gap
+        pending.remove("structural_ms")
+    recorded["pending_ci"] = pending
+    recorded["pending_ci_recorded_from"] = (
+        f"ADOPTED from the perf-ci artefact of GitHub Actions run "
+        f"{prov.get('ci_run_id')} (sha {prov.get('ci_sha', '')[:8]}, "
+        f"{prov.get('runner_os')}/{prov.get('runner_arch')}, load average "
+        f"{load}) by check_keystroke_budget.py --adopt.")
+    base_path.write_text(json.dumps(recorded, indent=2) + "\n", encoding="utf-8")
+    print(f"[keystroke-budget] adopted {', '.join(p for p in PENDABLE if p not in pending)} "
+          f"from CI run {prov.get('ci_run_id')} into {BASELINE}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=".")
@@ -192,8 +315,17 @@ def main() -> int:
                     help="refuse to --record above this 1-minute load average")
     ap.add_argument("--force-record", action="store_true",
                     help="record anyway, marking the baseline provisional")
+    ap.add_argument("--emit-json", metavar="PATH",
+                    help="also write every measured number, with CI provenance, "
+                         "to PATH (perf-ci uploads it for --adopt)")
+    ap.add_argument("--adopt", metavar="MEASURED_JSON",
+                    help="write the PENDING-CI metrics from a CI-emitted "
+                         "--emit-json file into the baseline, then exit")
     ns = ap.parse_args()
     repo = Path(ns.repo).resolve()
+
+    if ns.adopt:
+        return adopt(repo, Path(ns.adopt), ns.max_record_load)
 
     bench = repo / "_build/default/latex-parse/src/bench_readiness_kernel.exe"
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
@@ -228,6 +360,7 @@ def main() -> int:
         try:
             bands = build_bands(repo, Path(td))
             keystroke = run_keystroke(bench, bands, ns.reps)
+            cold = run_cold(cli, bands, max(7, ns.reps), repo)
             batch = run_batch(cli, bands, max(3, ns.reps // 3))
         except Exception as exc:  # noqa: BLE001
             return die(str(exc))
@@ -235,7 +368,8 @@ def main() -> int:
     # NON-VACUITY: a bench that silently did nothing reports zeros, and zeros
     # would compare favourably against every baseline forever.
     for kb, row in keystroke.items():
-        if row["rules_ms"] <= 0.0 or row["fastrun_ms"] <= 0.0:
+        if row["rules_ms"] <= 0.0 or row["fastrun_ms"] <= 0.0 \
+                or row["structural_ms"] < 0.0:
             return die(f"{kb} KB band measured {row} — a zero timing means the "
                        f"bench did not run; refusing to report success")
 
@@ -246,24 +380,36 @@ def main() -> int:
 
     print("[keystroke-budget] KEYSTROKE surface "
           "(bench_readiness_kernel, warm, startup excluded):")
-    print(f"  {'band':>8}  {'parse_ms':>9}  {'rules_ms':>9}  {'fastrun_ms':>11}")
+    print(f"  {'band':>8}  {'parse_ms':>9}  {'rules_ms':>9}  {'fastrun_ms':>11}"
+          f"  {'structural_ms':>13}")
     for kb in BANDS_KB:
         r = keystroke[str(kb)]
         print(f"  {kb:>6}KB  {r['parse_ms']:>9.1f}  {r['rules_ms']:>9.1f}  "
-              f"{r['fastrun_ms']:>11.1f}")
+              f"{r['fastrun_ms']:>11.1f}  {r['structural_ms']:>13.1f}")
+    print("[keystroke-budget] COLD surface (validators_cli --compile-check, "
+          "whole process, wall clock, median):")
+    for kb in BANDS_KB:
+        print(f"  {kb:>6}KB  {cold[str(kb)]:>9.1f} ms  cold_check_ms")
     print("[keystroke-budget] BATCH surface (one full-lint pass, wall clock):")
     for kb in BANDS_KB:
         print(f"  {kb:>6}KB  {batch[str(kb)]:>9.1f} ms")
     print(f"[keystroke-budget] vs ROADMAP:276 budget @300KB "
           f"(parse<={SPEC_BUDGET_300KB_MS['parse']:.0f}, "
-          f"rules<={SPEC_BUDGET_300KB_MS['rules']:.0f} ms): "
+          f"rules<={SPEC_BUDGET_300KB_MS['rules']:.0f}, "
+          f"structural<={SPEC_BUDGET_300KB_MS['structural']:.0f} ms): "
           + ", ".join(f"{s} {g}x" for s, g in sorted(gap.items())))
     print(f"[keystroke-budget] load average during run: {load1:.1f} "
           f"(absolute numbers are inflated by concurrent work; ratios are not)")
 
-    measured = {"keystroke": keystroke, "batch_ms": batch,
-                "spec_gap_300kb": gap, "reps": ns.reps,
+    measured = {"keystroke": keystroke, "cold_check_ms": cold,
+                "batch_ms": batch, "spec_gap_300kb": gap, "reps": ns.reps,
                 "loadavg_1min": round(load1, 2)}
+
+    if ns.emit_json:
+        Path(ns.emit_json).write_text(json.dumps(
+            {**measured, "provenance": provenance()}, indent=2) + "\n",
+            encoding="utf-8")
+        print(f"[keystroke-budget] wrote measured numbers to {ns.emit_json}")
 
     if ns.record:
         # The refusal itself is enforced up front, before the sweep is paid for.
@@ -282,7 +428,8 @@ def main() -> int:
                 "and the ratchet is LOOSE until re-recorded on an idle runner."
                 if provisional else ""),
             "spec_budget_300kb_ms": SPEC_BUDGET_300KB_MS,
-            "stages_not_instrumented": ["shared", "structural", "IPC"],
+            "stages_not_instrumented": ["shared", "IPC"],
+            "pending_ci": [],
             **measured,
         }, indent=2) + "\n", encoding="utf-8")
         print(f"[keystroke-budget] recorded baseline to {BASELINE}"
@@ -296,7 +443,31 @@ def main() -> int:
               f"ratchet is LOOSE. Re-record on an idle runner "
               f"(--record) to make it bind.")
 
+    pending = set(recorded.get("pending_ci", []))
+    for metric in sorted(pending):
+        print(f"[keystroke-budget] ⚠ PENDING-CI: {metric} is measured and printed "
+              f"above but has NO recorded baseline yet, so it cannot fail this "
+              f"run. Record it from CI: download the keystroke-budget-measured "
+              f"artifact of a green perf-ci run on main and run "
+              f"check_keystroke_budget.py --adopt <file>.")
+
     findings: list[str] = []
+    rec_cold = recorded.get("cold_check_ms")
+    if "cold_check_ms" not in pending:
+        if not isinstance(rec_cold, dict):
+            findings.append("cold_check_ms absent from the baseline and not "
+                            "marked pending_ci — re-record")
+        else:
+            for kb in BANDS_KB:
+                was, now = rec_cold.get(str(kb)), cold[str(kb)]
+                if was is None:
+                    findings.append(f"{kb} KB cold_check_ms absent from the "
+                                    f"baseline — re-record")
+                elif now > was * ns.tolerance and now - was > ns.min_delta_ms:
+                    findings.append(
+                        f"{kb} KB cold_check_ms: {now:.1f} ms vs baseline "
+                        f"{was:.1f} ms (> {ns.tolerance}x and > "
+                        f"{ns.min_delta_ms} ms) — cold latency regression")
     for kb in BANDS_KB:
         prev = recorded.get("keystroke", {}).get(str(kb))
         if not prev:
@@ -309,7 +480,14 @@ def main() -> int:
         # proof run failed exactly that way on a restored, unmodified baseline.
         # 5 ms is below anything that could matter against a 30-40 ms budget and
         # well above the noise floor seen here.
-        for stage in ("parse_ms", "rules_ms"):
+        stages = ["parse_ms", "rules_ms"]
+        if "structural_ms" not in pending:
+            stages.append("structural_ms")
+        for stage in stages:
+            if stage not in prev:
+                findings.append(f"{kb} KB {stage} absent from the baseline and "
+                                f"not marked pending_ci — re-record")
+                continue
             now, was = keystroke[str(kb)][stage], prev[stage]
             if was > 0 and now > was * ns.tolerance and now - was > ns.min_delta_ms:
                 findings.append(

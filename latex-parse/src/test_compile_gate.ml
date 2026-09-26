@@ -819,4 +819,51 @@ let () =
             && contains "earlier distributions")
             (t ^ ": version condition present, no RULE-123 shapes"))
 
+(* OPEN-104. [Validators_common.sub_eq] replaced the allocating guarded test
+   [a + String.length p <= String.length s && String.sub s a (String.length p)
+   = p] at every call site in the structural detectors and the comment-breaker
+   scans, on the claim that the two agree on every input. This checks the claim
+   exhaustively over a small alphabet, including the empty needle, needles
+   longer than the haystack, and every offset from one before the start to one
+   past the end, where both forms must raise or both must return. *)
+let () =
+  let reference s a p =
+    let pl = String.length p in
+    a + pl <= String.length s && String.sub s a pl = p
+  in
+  let outcome f =
+    match f () with b -> `Ok b | exception Invalid_argument _ -> `Raises
+  in
+  let alphabet = [| 'a'; 'b'; '\\' |] in
+  let rec strings k =
+    if k = 0 then [ "" ]
+    else
+      let shorter = strings (k - 1) in
+      shorter
+      @ List.concat_map
+          (fun s ->
+            if String.length s = k - 1 then
+              Array.to_list
+                (Array.map (fun c -> s ^ String.make 1 c) alphabet)
+            else [])
+          shorter
+  in
+  let hay = strings 4 and needles = strings 3 in
+  let mismatches = ref 0 and cases = ref 0 in
+  List.iter
+    (fun s ->
+      List.iter
+        (fun p ->
+          for a = -1 to String.length s + 1 do
+            incr cases;
+            if
+              outcome (fun () -> reference s a p)
+              <> outcome (fun () -> Validators_common.sub_eq s a p)
+            then incr mismatches
+          done)
+        needles)
+    hay;
+  run "sub_eq agrees with the guarded String.sub test on every case" (fun t ->
+      expect (!mismatches = 0 && !cases > 10_000) t)
+
 let () = finalise "compile_gate"

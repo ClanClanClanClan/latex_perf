@@ -2536,7 +2536,7 @@
 - id: "REF-007"
   description: "Cite key contains whitespace"
   precondition: L1_Expanded
-  default_severity: Error
+  default_severity: Warning
   maturity: Draft
   owner: "@bib-team"
   fix: null

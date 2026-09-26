@@ -237,6 +237,10 @@ def prov_stale_build(text: str) -> str:
     and the binary hash to something impossible. Setting only the hash would
     now (correctly) produce a note rather than a kill.
 
+    Since C-72 it also sets cli_build_root to this checkout's fingerprint: the
+    same source built in another checkout directory legitimately gives another
+    hash, so the failure arm fires only for a build made in this checkout.
+
     Binary level: the arm is inert without a built CLI, which is the whole of
     OPEN-101.
     """
@@ -253,6 +257,11 @@ def prov_stale_build(text: str) -> str:
     # the ubuntu CI runner.
     from _measurement_provenance import cli_platform as _plat
     tgt["cli_platform"] = _plat()
+    # And claim THIS checkout built it: a hash built in another checkout
+    # directory is a note, not a kill, because the build embeds absolute paths
+    # (C-72). Without this the mutation would only produce a note.
+    from _measurement_provenance import build_root_fingerprint as _root
+    tgt["cli_build_root"] = _root(REPO)
     return _json.dumps(d, indent=2)
 
 
@@ -607,6 +616,32 @@ REGISTRY = [
                      "corpora/apply_fixes_real/results.json",
                      r"provenance\.fixer_scope=",
                      transform=afr_scope_default),
+        ]),
+    GateTest(
+        "check_compile_check_consumers",
+        [PY, f"{TOOLS}/check_compile_check_consumers.py"],
+        "pure",
+        [
+            # ADR-012 (M0): the reason scrape must stop at the TIER line, or
+            # author source quoted on a why-not-strict line is recorded as a
+            # BLOCKING reason. Reverting the stop must fail the gate.
+            Mutation("diff_real_roots scrapes the tier block again (C-65)",
+                     "scripts/tools/diff_real_roots.py",
+                     r"scrape_reasons reads the M0 tier block",
+                     old='        if line.startswith("TIER\\t"):\n            break\n',
+                     new='        if line.startswith("TIER\\t"):\n            pass\n'),
+            Mutation("parse_tier accepts PROVEN outside the proven tier",
+                     "scripts/tools/gen_proven_coverage.py",
+                     r"parse_tier accepted a PROVEN kind in the heuristic tier",
+                     old='        if (tier == "proven") != kind.startswith("PROVEN-"):',
+                     new='        if False:'),
+            # The gate IMPORTS regrade_sample's filter, so breaking the real
+            # filter's T0 prefix must fail it (a hand copy would stay green).
+            Mutation("regrade_sample stops keeping T0 reason lines",
+                     "scripts/tools/regrade_sample.py",
+                     r"regrade_sample lost the leading T0 token",
+                     old='REASON_PREFIXES = ("T0", "T2", "T3", "T4", "T5", "MODEL-NOT")',
+                     new='REASON_PREFIXES = ("T2", "T3", "T4", "T5", "MODEL-NOT")'),
         ]),
     GateTest(
         "check_fix_allowlist",

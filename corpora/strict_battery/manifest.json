@@ -1,0 +1,434 @@
+{
+ "provenance": {
+  "produced_by": "scripts/tools/gen_strict_battery.py",
+  "oracle": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+  "protocol": "pdflatex -interaction=nonstopmode -halt-on-error, restricted shell-escape (default), up to 3 passes plus a confirming pass, PDF required",
+  "src_tree_sha": "4b23a6f84779977bd863f7704c70eaba2efde14b"
+ },
+ "summary": {
+  "n": 22,
+  "pdflatex_fails": 22,
+  "cli_ready_exit_0": 17,
+  "cli_proven": 0
+ },
+ "rows": [
+  {
+   "file": "e0_empty_body.tex",
+   "e_code": "E0",
+   "failure_mode": "rc 0 but no PDF (no typeset material)",
+   "pdflatex": {
+    "rc": 0,
+    "passes": 2,
+    "pdf": false,
+    "compiles": false,
+    "first_error": ""
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E0]"
+  },
+  {
+   "file": "e10_missing_graphic.tex",
+   "e_code": "E10",
+   "failure_mode": "missing input or graphics file",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: File `no-such-figure-anywhere' not found."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E10]"
+  },
+  {
+   "file": "e11_raw_approx.tex",
+   "e_code": "E11",
+   "failure_mode": "Unicode code point without a u8 definition",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: Unicode character ≈ (U+2248)               not set up for use with LaTeX."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E11]"
+  },
+  {
+   "file": "e12_cleveref_before_hyperref.tex",
+   "e_code": "E12",
+   "failure_mode": "configuration fatal",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Package cleveref Error: cleveref must be loaded after hyperref!."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E12]"
+  },
+  {
+   "file": "e12_fontspec_in_input_child/main.tex",
+   "e_code": "E12",
+   "failure_mode": "configuration fatal",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Fatal Package fontspec Error: The fontspec package requires either XeTeX or(fontspec)                      LuaTeX."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E12]"
+  },
+  {
+   "file": "e12_usepackage_after_begin.tex",
+   "e_code": "E12",
+   "failure_mode": "configuration fatal",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: Can be used only in preamble."
+   },
+   "cli_m0": {
+    "rc": 1,
+    "tier": "heuristic",
+    "kind": "LIKELY-FAIL",
+    "token_line": "NOT-READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E12]"
+  },
+  {
+   "file": "e1_selectlanguage_cs_key.tex",
+   "e_code": "E1",
+   "failure_mode": "undefined control sequence",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Undefined control sequence.<argument> \\english"
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E1]"
+  },
+  {
+   "file": "e1_undefined_cs.tex",
+   "e_code": "E1",
+   "failure_mode": "undefined control sequence",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Undefined control sequence.l.3 Hello \\foo"
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E1]"
+  },
+  {
+   "file": "e2_undefined_env.tex",
+   "e_code": "E2",
+   "failure_mode": "undefined environment",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: Environment foo undefined."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E2]"
+  },
+  {
+   "file": "e3_amp_outside_alignment.tex",
+   "e_code": "E3",
+   "failure_mode": "mode violation",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Misplaced alignment tab character &.l.3 Tom &"
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E3]"
+  },
+  {
+   "file": "e3_frac_in_text.tex",
+   "e_code": "E3",
+   "failure_mode": "mode violation",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Missing $ inserted.<inserted text>"
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E3]"
+  },
+  {
+   "file": "e3_item_outside_list.tex",
+   "e_code": "E3",
+   "failure_mode": "mode violation",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: Lonely \\item--perhaps a missing list environment."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E3]"
+  },
+  {
+   "file": "e3_script_in_text.tex",
+   "e_code": "E3",
+   "failure_mode": "mode violation",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Missing $ inserted.<inserted text>"
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E3]"
+  },
+  {
+   "file": "e4_double_superscript.tex",
+   "e_code": "E4",
+   "failure_mode": "double superscript or subscript",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Double superscript.l.3 $x^1^"
+   },
+   "cli_m0": {
+    "rc": 1,
+    "tier": "heuristic",
+    "kind": "LIKELY-FAIL",
+    "token_line": "NOT-READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E4]"
+  },
+  {
+   "file": "e5_env_mismatch.tex",
+   "e_code": "E5",
+   "failure_mode": "group or environment stack discipline",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: \\begin{center} on input line 3 ended by \\end{flushleft}."
+   },
+   "cli_m0": {
+    "rc": 1,
+    "tier": "heuristic",
+    "kind": "LIKELY-FAIL",
+    "token_line": "NOT-READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E5]"
+  },
+  {
+   "file": "e5_missing_end_document.tex",
+   "e_code": "E5",
+   "failure_mode": "group or environment stack discipline",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Emergency stop.<*> e5_missing_end_document.tex"
+   },
+   "cli_m0": {
+    "rc": 1,
+    "tier": "heuristic",
+    "kind": "LIKELY-FAIL",
+    "token_line": "NOT-READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E5]"
+  },
+  {
+   "file": "e5_stray_close_brace.tex",
+   "e_code": "E5",
+   "failure_mode": "group or environment stack discipline",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Too many }'s.l.3 Hello}"
+   },
+   "cli_m0": {
+    "rc": 1,
+    "tier": "heuristic",
+    "kind": "LIKELY-FAIL",
+    "token_line": "NOT-READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E5]"
+  },
+  {
+   "file": "e6_blank_line_in_align.tex",
+   "e_code": "E6",
+   "failure_mode": "\\par in math or in a non-long argument",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Paragraph ended before \\align was complete.<to be read again>"
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E6]"
+  },
+  {
+   "file": "e7_frac_missing_arg.tex",
+   "e_code": "E7",
+   "failure_mode": "missing mandatory argument",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Missing } inserted.<inserted text>"
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E7]"
+  },
+  {
+   "file": "e8_newcommand_text.tex",
+   "e_code": "E8",
+   "failure_mode": "definer clash",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: Command \\text already defined.               Or name \\end... illegal, see p.192 of the manual."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E8]"
+  },
+  {
+   "file": "e8_newcounter_section.tex",
+   "e_code": "E8",
+   "failure_mode": "definer clash",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: Command \\c@section already defined.               Or name \\end... illegal, see p.192 of the manual."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E8]"
+  },
+  {
+   "file": "e9_unknown_counter.tex",
+   "e_code": "E9",
+   "failure_mode": "counter operation on an unknown counter",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! LaTeX Error: No counter 'nosuchcounter' defined."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E9]"
+  }
+ ]
+}

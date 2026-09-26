@@ -204,7 +204,12 @@ let () =
   (* ── T0/T5 de-stub tests (v27.1.52) ────────────────────────────── *)
   let has_reason pred rs = List.exists pred rs in
   let is_t0 = function
-    | Compile_contract.T0_parse_fails _ -> true
+    | Compile_contract.T0_parse_fails _ | Compile_contract.T0_lp_foreign _ ->
+        true
+    | _ -> false
+  in
+  let is_foreign = function
+    | Compile_contract.T0_lp_foreign _ -> true
     | _ -> false
   in
   let is_t5 = function
@@ -257,7 +262,10 @@ let () =
     ~content:
       "\\documentclass{article}\n\\begin{document}\n$x = 1\n\\end{document}\n"
     false (fun tag rs ->
-      expect (has_reason is_t0 rs) (tag ^ ": T0 flags unclosed math"));
+      expect (has_reason is_t0 rs) (tag ^ ": T0 flags unclosed math");
+      expect
+        (not (has_reason is_foreign rs))
+        (tag ^ ": a parse failure is not reported as Foreign"));
 
   (* NOT-READY for an LP-Foreign construct (\write18 shell-escape): caught by T0
      via the language-profile gate. *)
@@ -267,7 +275,18 @@ let () =
        \\begin{document}\n\
        \\write18{rm -rf /}\n\
        \\end{document}\n" false (fun tag rs ->
-      expect (has_reason is_t0 rs) (tag ^ ": T0 flags LP-Foreign construct"));
+      expect (has_reason is_t0 rs) (tag ^ ": T0 flags LP-Foreign construct");
+      (* ADR-012 (M0): an LP-Foreign document is reported as FOREIGN, not as a
+         parse failure. *)
+      expect (has_reason is_foreign rs)
+        (tag ^ ": the reason is the Foreign constructor");
+      expect
+        (not
+           (List.exists
+              (function
+                | Compile_contract.T0_parse_fails _ -> true | _ -> false)
+              rs))
+        (tag ^ ": an LP-Foreign document is not reported as a parse failure"));
 
   (* Stubbed-Ready regression guard: if T0/T5 ever silently regress to no-ops,
      BOTH the brace doc and the foreign doc would spuriously report Ready.

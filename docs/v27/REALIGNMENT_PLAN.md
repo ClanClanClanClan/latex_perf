@@ -17,6 +17,15 @@ on a Coq backbone.
 
 **Metric:** *proven-verdict coverage at ZERO false-READY.*
 
+⚠ **2026-09-26: [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) redefines
+this metric and supersedes the direction of Phase D below.** "Proven" now means a
+verdict of the contract-bounded strict tier (design:
+[STRICT_TIER_DESIGN.md](STRICT_TIER_DESIGN.md)), which IS a biconditional — READY
+iff compiles — inside its boundary, with faithfulness to pdflatex a named,
+attested premise. The one-directional premise certificate this plan built on is
+kept only as a heuristic-tier statistic. Programme and milestones: ledger row
+OPEN-116 in `PROJECT_STATE.md`.
+
 ⚠ The biconditional is not achievable and the ROADMAP concedes it
 (`ROADMAP.md:427`). The achievable claim is **one-directional soundness over
 LP-Core** — READY ⇒ compiles — with completeness as a measured quality, not a
@@ -202,6 +211,12 @@ Ranked by measured gain per unit effort.
   **L**
 
 ### Phase D — Make "proven" mean something
+
+⚠ **Superseded in direction by ADR-012 (2026-09-26).** D3 (widening the abstract
+`body_token` model) is replaced by the strict tier's own semantics, decider and
+contracts, milestones M0–M7+ in [STRICT_TIER_DESIGN.md](STRICT_TIER_DESIGN.md)
+§F; `model_fatal_iff` (D1) survives as the proof pattern of `strict_fatal_iff`.
+The items below are kept as the record of what this phase planned.
 
 Not adequacy (F3). In dependency order:
 

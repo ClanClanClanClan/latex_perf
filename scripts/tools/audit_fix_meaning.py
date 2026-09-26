@@ -33,6 +33,7 @@ from concurrent.futures import ThreadPoolExecutor
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, run_to_fixpoint  # noqa: E402
+import _measurement_provenance as _mp  # noqa: E402
 
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
 SWEEP = REPO / "corpora/apply_fixes_real/rule_attribution_400_719.json"
@@ -171,6 +172,8 @@ def main() -> int:
                 {"complete": False, "errors": errors, "results": results},
                 indent=1, ensure_ascii=False))
     prov = {"cli_sha256": hashlib.sha256(CLI.read_bytes()).hexdigest(),
+            "cli_platform": _mp.cli_platform(),
+            "cli_build_root": _mp.cli_build_root(CLI),  # C-72
             "src_tree_sha": subprocess.run(
                 ["git", "--no-optional-locks", "rev-parse", "HEAD:latex-parse/src"],
                 cwd=REPO, capture_output=True, text=True).stdout.strip(),

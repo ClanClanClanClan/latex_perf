@@ -773,7 +773,76 @@ let print_model_connected_verdict ~src ~tier
     duplicate_label_advisory ();
     false)
 
-let run_compile_check ~fast ~path ~src : int =
+(* ADR-012 (M0). Build the tier verdict for a compile check whose heuristic
+   answer is already decided. The boundary scan is DIAGNOSTIC: it only feeds the
+   why-not-strict lines, and any exception inside it degrades to the M0 reason
+   alone, so it can never change the exit code. The strict-tier membership
+   predicate is a stub that returns false in M0, so this function never builds a
+   proven verdict. *)
+let in_strict_m0 (_proj : Latex_parse_lib.Project_model.t) = false
+
+let strict_findings proj ~src =
+  (* EXN-OK: the scan is diagnostic, so any failure degrades to the M0 reason
+     alone and can never change the verdict or the exit code. *)
+  try Latex_parse_lib.Strict_boundary.scan proj ~root_src:src with _ -> []
+
+let tier_verdict ~proj ~src
+    ~(result : Latex_parse_lib.Compile_contract.ready_check_result) ~model_ok :
+    Latex_parse_lib.Verdict.t =
+  let module V = Latex_parse_lib.Verdict in
+  let module SB = Latex_parse_lib.Strict_boundary in
+  let module CC = Latex_parse_lib.Compile_contract in
+  assert (not (in_strict_m0 proj));
+  let findings = strict_findings proj ~src in
+  let why_not_strict = SB.why_not_strict findings in
+  (* FOREIGN renders whenever an LP-Foreign construct occurs ANYWHERE in the
+     closure (an \input child included), not only when the root-level T0
+     classifier fires. A finding in the generated .bbl is never foreign (it is
+     reported as bbl_dialect). Only the TIER line changes: the exit code stays
+     the legacy heuristic one in M0, and the FOREIGN headline says so when that
+     code is 0. *)
+  let root_foreign =
+    match result with
+    | CC.NotReady reasons ->
+        List.exists (function CC.T0_lp_foreign _ -> true | _ -> false) reasons
+    | CC.Ready -> false
+  in
+  let legacy_ready = result = CC.Ready && model_ok in
+  match (SB.first_foreign findings, root_foreign) with
+  | Some f, _ ->
+      V.Foreign
+        {
+          construct = f.construct;
+          where = Some (Printf.sprintf "%s:%d" f.file f.line);
+          legacy_ready;
+          why_not_strict;
+        }
+  | None, true ->
+      V.Foreign
+        {
+          construct = "an LP-Foreign construct";
+          where = None;
+          legacy_ready;
+          why_not_strict;
+        }
+  | None, false -> (
+      match (result, model_ok) with
+      | CC.Ready, true ->
+          V.Likely_ok { basis = "premise-certified"; why_not_strict }
+      | Ready, false -> V.Likely_fail { reasons = []; why_not_strict }
+      | NotReady reasons, _ -> V.Likely_fail { reasons; why_not_strict })
+
+let print_tier_verdict (v : Latex_parse_lib.Verdict.t) =
+  List.iter (fun l -> printf "%s\n" l) (Latex_parse_lib.Verdict.render v)
+
+(* [--require-proof] exits 4 unless the verdict is proven; otherwise the exit
+   code is the unchanged 0/1 of the heuristic answer. *)
+let with_require_proof ~require_proof (v : Latex_parse_lib.Verdict.t) rc =
+  if require_proof && not (Latex_parse_lib.Verdict.is_proven v) then
+    Latex_parse_lib.Verdict.require_proof_exit
+  else rc
+
+let run_compile_check ?(require_proof = false) ~fast ~path ~src () : int =
   (* v27.1.59: the FAST readiness kernel is the default (parse once, run only
      the 36 compile-blocking rules — of which only 12 can emit the [Error]
      severity T5 requires; see [Validators.compile_blocking_ids]).
@@ -789,16 +858,27 @@ let run_compile_check ~fast ~path ~src : int =
         Latex_parse_lib.Build_profile.create ~tex_path:path
           ~base_dir:(Filename.dirname path)
       in
+      let no_project_verdict =
+        Latex_parse_lib.Verdict.Likely_fail
+          {
+            reasons = [];
+            why_not_strict = [ Latex_parse_lib.Verdict.m0_boundary ];
+          }
+      in
       match Latex_parse_lib.Project_model.of_root path with
       | Error (`File_not_found p) ->
           eprintf "NOT-READY\n";
           eprintf "  T0 parse fails in %s: file not found\n" p;
-          1
+          List.iter (eprintf "%s\n")
+            (Latex_parse_lib.Verdict.render no_project_verdict);
+          with_require_proof ~require_proof no_project_verdict 1
       | Error (`Not_latex p) ->
           eprintf "NOT-READY\n";
           eprintf "  T0 parse fails in %s: not a LaTeX document\n" p;
-          1
-      | Ok proj -> (
+          List.iter (eprintf "%s\n")
+            (Latex_parse_lib.Verdict.render no_project_verdict);
+          with_require_proof ~require_proof no_project_verdict 1
+      | Ok proj ->
           let aux_path =
             let cand = Filename.remove_extension path ^ ".aux" in
             if Sys.file_exists cand then Some cand else None
@@ -825,28 +905,57 @@ let run_compile_check ~fast ~path ~src : int =
           let model_ok =
             print_model_connected_verdict ~src ~tier:verdict_tier proj
           in
-          match (result, model_ok) with
-          | Latex_parse_lib.Compile_contract.Ready, true ->
-              printf "READY\t%s\n" path;
-              0
-          | Ready, false ->
-              (* Runtime contract passed but the proven model rejects: the
-                 authoritative (sound) answer is NOT-READY. Reasons were printed
-                 above under MODEL-NOT-READY. *)
-              printf "NOT-READY\t%s\n" path;
-              printf
-                "  (model-connected checks reject; see MODEL-NOT-READY above)\n";
-              1
-          | NotReady reasons, _ ->
-              printf "NOT-READY\t%s\n" path;
-              List.iter
-                (fun r ->
-                  printf "  %s\n"
-                    (Latex_parse_lib.Compile_contract.reason_to_string r))
-                reasons;
-              if not model_ok then
-                printf "  (model-connected checks also reject; see above)\n";
-              1))
+          (* ADR-012 (M0). The token lines below (READY or NOT-READY, a tab, the
+             path, then the indented reasons) are FROZEN: scripts and gates read
+             them. The honest tier line and the why-not-strict lines are printed
+             AFTER them by [print_tier_verdict]. *)
+          let verdict = tier_verdict ~proj ~src ~result ~model_ok in
+          let rc =
+            match (result, model_ok) with
+            | Latex_parse_lib.Compile_contract.Ready, true ->
+                printf "READY\t%s\n" path;
+                0
+            | Ready, false ->
+                (* Runtime contract passed but the model-connected premise check
+                   rejects: the answer is NOT-READY (heuristic, like every
+                   verdict in M0). Reasons were printed above under
+                   MODEL-NOT-READY. *)
+                printf "NOT-READY\t%s\n" path;
+                printf
+                  "  (model-connected checks reject; see MODEL-NOT-READY above)\n";
+                1
+            | NotReady reasons, _ ->
+                printf "NOT-READY\t%s\n" path;
+                List.iter
+                  (fun r ->
+                    printf "  %s\n"
+                      (Latex_parse_lib.Compile_contract.reason_to_string r))
+                  reasons;
+                if not model_ok then
+                  printf "  (model-connected checks also reject; see above)\n";
+                1
+          in
+          print_tier_verdict verdict;
+          with_require_proof ~require_proof verdict rc)
+
+(* [--strict-boundary FILE]: print every finding of the closure-scoped
+   strict-tier boundary scan, one tab-separated BOUNDARY line each. It is the
+   measurement surface behind scripts/tools/measure_strict_boundary.py. Exit 0,
+   or 2 when the project cannot be opened. *)
+let run_strict_boundary ~path ~src : int =
+  match Latex_parse_lib.Project_model.of_root path with
+  | Error _ ->
+      eprintf "strict-boundary: cannot open %s\n" path;
+      2
+  | Ok proj ->
+      let fs = Latex_parse_lib.Strict_boundary.scan proj ~root_src:src in
+      List.iter
+        (fun (f : Latex_parse_lib.Strict_boundary.finding) ->
+          printf "BOUNDARY\t%s\t%s\t%s:%d\t%d\t%s\n" f.category f.id f.file
+            f.line f.count f.construct)
+        fs;
+      printf "BOUNDARY-SUMMARY\t%d\n" (List.length fs);
+      0
 
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
@@ -953,7 +1062,17 @@ let () =
          0 = ready, 1 = not-ready. Matched before the two-element catch-all so
          "--compile-check" is not read as a file path. *)
       let src = read_all path in
-      exit (run_compile_check ~fast:true ~path ~src)
+      exit (run_compile_check ~fast:true ~path ~src ())
+  | [ _; "--compile-check"; "--require-proof"; path ]
+  | [ _; "--require-proof"; "--compile-check"; path ]
+  | [ _; "--compile-check"; path; "--require-proof" ] ->
+      (* ADR-012: the same check, but exit 4 unless the verdict is PROVEN. In
+         milestone M0 no verdict is proven, so this always exits 4. *)
+      let src = read_all path in
+      exit (run_compile_check ~require_proof:true ~fast:true ~path ~src ())
+  | [ _; "--strict-boundary"; path ] ->
+      let src = read_all path in
+      exit (run_strict_boundary ~path ~src)
   | [ _; "--compile-check-full"; path ] ->
       (* Escape hatch (v27.1.59): force the FULL readiness path (every rule,
          then filter) rather than the fast compile-blocking kernel. Used by the
@@ -961,7 +1080,7 @@ let () =
          Matched before the two-element catch-all so the flag is not read as a
          file path. *)
       let src = read_all path in
-      exit (run_compile_check ~fast:false ~path ~src)
+      exit (run_compile_check ~fast:false ~path ~src ())
   | _ :: "--review" :: state_path :: rest -> (
       (* WS9 Stage 2: annotate/filter findings by review state. *)
       match rest with
@@ -1128,15 +1247,35 @@ let () =
         \               (duplicate labels are advisory only), and \
          compile-blocking DELIM/ENC/PRT Error rules for T5). Prints\n\
         \               READY (exit 0) or NOT-READY with the failing reasons \
-         (exit 1). This is a\n\
-        \               sound readiness PRE-CHECK, not a total \"it will \
-         compile\" certificate.\n\
+         (exit 1). READY is a\n\
+        \               HEURISTIC premise check: not a proof, and not sound. \
+         It can be wrong in the\n\
+        \               dangerous direction (the standing battery \
+         corpora/strict_battery: READY on 17\n\
+        \               of 22 documents pdflatex rejects; certified papers \
+         pdflatex rejects: 14/197 on\n\
+        \               sample 2, see docs/v27/PROJECT_STATE.md section 1).\n\
         \               Uses the FAST kernel by default (parse once, run only \
          the 36\n\
         \               compile-blocking rules, of which 12 can actually \
          produce NOT-READY);\n\
         \               use --compile-check-full (or LP_COMPILE_CHECK_FULL=1)\n\
         \               to force the full path for differential validation.\n\
+        \               ADR-012: every verdict today is HEURISTIC. A TIER line \
+         after the verdict\n\
+        \               says so (LIKELY OK / LIKELY FAIL / FOREIGN; nothing is \
+         proven yet), followed\n\
+        \               by up to three why-not-strict lines with fix-it nudges.\n\
+        \               FOREIGN = an LP-Foreign construct anywhere in the \
+         closure; the exit code\n\
+        \               is unchanged in M0, so FOREIGN with exit 0 means \
+         outside every tier.\n\
+         --compile-check --require-proof <file.tex>  the same check, but exit \
+         4 unless the\n\
+        \               verdict is proven (in milestone M0 it always exits 4).\n\
+         --strict-boundary <file.tex>  list every construct in the project \
+         closure that keeps\n\
+        \               it out of the strict tier (diagnostic; exit 0).\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \

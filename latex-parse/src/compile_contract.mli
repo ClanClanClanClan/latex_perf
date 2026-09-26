@@ -29,6 +29,12 @@
 
 type reason =
   | T0_parse_fails of { file : string; message : string }
+  | T0_lp_foreign of { file : string; constructs : string }
+      (** The document uses an LP-Foreign construct (shell escape, catcode
+          mutation, Lua scripting, and the rest of
+          [Unsupported_feature.foreign_triggers]). It is not a parse failure,
+          and it renders as the FOREIGN verdict ([Verdict.Foreign]). The reason
+          line keeps its leading T0 token for the scripts that read it. *)
   | T1_expansion_fails of string
   | T2_project_not_closed of [ `Cycle_in_build_graph | `Missing_file of string ]
   | T3_profile_incompatible of { feature : string; profile : string }
@@ -68,6 +74,13 @@ val read_closure_source : Project_model.t -> root_src:string -> string
     zero IO on single-file projects). Callers: the structural-fatal detectors,
     and [Compile_evidence.extract_of_project]'s [?breaker_probe] (OPEN-007: the
     comment-blanking guard must see breakers defined in children). *)
+
+val closure_files : Project_model.t -> root_src:string -> (string * string) list
+(** [closure_files proj ~root_src] — the same closure as [read_closure_source],
+    returned as whole files: [(path, contents)] for each distinct file, in
+    first-visit order, root first (carrying [root_src]). Local [.sty]/[.cls]
+    files appear under their own paths. Used by [Strict_boundary], which must
+    report a file and line for every construct it finds. *)
 
 val check_ready_to_compile :
   ?fast:bool ->

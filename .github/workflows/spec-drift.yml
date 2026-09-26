@@ -170,6 +170,14 @@ jobs:
         # sizes) that lets a future session pick the work up.
         run: python3 scripts/tools/check_project_state.py --repo .
 
+      - name: Compile-check output consumers read the ADR-012 surface
+        # ADR-012 (M0) added a TIER line and why-not-strict lines after the
+        # frozen --compile-check lines. This feeds every script that parses
+        # that output a pre-M0 and an M0 rendering of the same document and
+        # asserts each reads the same thing, so a consumer cannot go blind by
+        # a string rewording (C-65). Pure: no CLI, no pdflatex.
+        run: python3 scripts/tools/check_compile_check_consumers.py
+
       - name: Release-only gates, now run per-PR (OPEN-091)
         # These four ran ONLY inside pre_release_check.py, i.e. only when a
         # human cut a release — and the gap between the last two releases was

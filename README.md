@@ -56,6 +56,15 @@ dune exec latex-parse/src/validators_cli.exe -- --apply-fixes-all paper.tex
 
 # List the review-only (Bucket-C) candidate fixes for an editor to offer
 dune exec latex-parse/src/validators_cli.exe -- --list-candidate-fixes paper.tex
+
+# Pre-compile readiness check (every verdict is HEURISTIC today; see below)
+dune exec latex-parse/src/validators_cli.exe -- --compile-check paper.tex
+
+# The same, but exit 4 unless the verdict is PROVEN (always 4 until the strict tier ships)
+dune exec latex-parse/src/validators_cli.exe -- --compile-check --require-proof paper.tex
+
+# List every construct in the project closure that keeps it out of the strict tier
+dune exec latex-parse/src/validators_cli.exe -- --strict-boundary paper.tex
 ```
 
 `--apply-fixes` applies only the auto-fixes of an ALLOW-LIST
@@ -96,6 +105,31 @@ one rule at a time with `--apply-fixes-for RULE-ID`, or all of them with
 > A tuned window reading zero is not evidence — every tuned window in this
 > project's history has read near zero while the out-of-sample rate stayed put.
 
+### Compile check: three tiers (ADR-012)
+
+`--compile-check` answers in one of three tiers and says which on a `TIER` line:
+
+- **PROVEN READY / PROVEN NOT-READY** — the contract-bounded strict tier: an exact,
+  Coq-proved decision (READY if and only if the document compiles under the pinned
+  TeX Live) for Turing-free documents whose exact package configuration has an
+  attested contract. **No document is proven yet**: milestone M0 ships the verdict
+  type with the strict tier stubbed off, and the first proven verdicts arrive with
+  milestones M2 and M3.
+- **LIKELY OK (heuristic; premise-certified) — not a proof** and **LIKELY FAIL
+  (heuristic)** — today's checks, unchanged. A LIKELY OK document can still fail to
+  compile; the measured rate is in `docs/v27/PROJECT_STATE.md` §1.
+- **FOREIGN** — a construct no static check can decide (shell escape, catcode
+  changes, Lua scripting), found anywhere in the project. ⚠ In M0 a FOREIGN
+  document can still exit 0: that is the legacy heuristic READY exit code,
+  unchanged, and it does not place the document in any tier.
+
+Each non-proven verdict carries up to three `why not strict:` lines with a fix-it
+nudge, for example rewriting `\def\R{\mathbb R}` as `\newcommand{\R}{\mathbb R}`.
+The `READY`/`NOT-READY` token line and the exit codes (0 = no known blocker,
+1 = blocker) are unchanged. Details: [docs/COMPILATION_GUARANTEE.md](docs/COMPILATION_GUARANTEE.md),
+[ADR-012](docs/v27/adr/ADR-012-contract-bounded-proven-tier.md),
+[the design](docs/v27/STRICT_TIER_DESIGN.md).
+
 ### Environment Variables
 
 | Variable | Default | Description |
@@ -119,8 +153,10 @@ one rule at a time with `--apply-fixes-for RULE-ID`, or all of them with
 > model of a style rule is an invented predicate that does not match the
 > shipped OCaml. `admits: 0 / axioms: 0` IS measured and does hold. The
 > compile guarantee is proved over an abstract document model with four token
-> kinds, so a `MODEL-READY` verdict certifies the model, not your bytes —
-> measured: 9 of 200 virgin papers are certified yet fail to compile.
+> kinds, so a `PREMISE-CERTIFIED` verdict certifies the model's premises, not
+> your bytes. How often a certified paper still fails to compile is measured
+> and published in `docs/v27/PROJECT_STATE.md` §1 (sample 2 is design-seen
+> since ADR-012; the virgin figure will come from sample 3).
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (63 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.

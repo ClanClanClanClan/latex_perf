@@ -57,6 +57,7 @@ TMPROOT = SCRATCH / "guardsim" / "tmp"
 
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import (  # noqa: E402
     apply_fixes_tree, first_error)
 import census_fix_regions as rc_mod  # noqa: E402
@@ -603,6 +604,8 @@ def main():
             "offset": ns.offset, "n": ns.n, "shard": ns.shard,
             "papers_in_shard": [r["arxiv_id"] for _, r in mine],
             "engine": banner, "cli_sha256": cli_sha,
+            "cli_platform": _mp.cli_platform(),
+            "cli_build_root": _mp.cli_build_root(CLI),  # C-72
             "src_tree_sha": subprocess.run(
                 ["git", "--no-optional-locks", "rev-parse", "HEAD:latex-parse/src"],
                 cwd=REPO, capture_output=True, text=True).stdout.strip(),

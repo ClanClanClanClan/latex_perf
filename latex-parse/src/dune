@@ -78,6 +78,8 @@
   aux_state
   compile_gate_checks
   compile_contract
+  verdict
+  strict_boundary
   compile_guarantee_extracted
   body_token_frontend_extracted
   compile_evidence
@@ -658,6 +660,14 @@
  (name test_compile_contract)
  (modules test_compile_contract)
  (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_verdict)
+ (modules test_verdict)
+ (libraries latex_parse_lib test_helpers unix re)
+ (deps
+  validators_cli.exe
+  (source_tree ../../corpora/strict_battery)))
 
 (test
  (name test_compile_gate)

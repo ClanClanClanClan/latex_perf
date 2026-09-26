@@ -2,6 +2,7 @@
 
 type reason =
   | T0_parse_fails of { file : string; message : string }
+  | T0_lp_foreign of { file : string; constructs : string }
   | T1_expansion_fails of string
   | T2_project_not_closed of [ `Cycle_in_build_graph | `Missing_file of string ]
   | T3_profile_incompatible of { feature : string; profile : string }
@@ -181,14 +182,17 @@ let t0_check_with_errors ?probe ~(source : string)
       let describe (f : Unsupported_feature.t) =
         Printf.sprintf "%s (line %d)" f.message f.line
       in
-      let msg =
+      (* ADR-012 (M0). This used to be reported as a PARSE failure, which it is
+         not: the document parses, but it uses a construct outside every
+         supported tier. It now has its own constructor, rendered as its own
+         FOREIGN verdict. The reason line keeps its leading T0 token, because
+         diff_real_roots.py and regrade_sample.py read that token. *)
+      let constructs =
         match feats with
         | [] -> "document uses LP-Foreign constructs (unsupported subset)"
-        | fs ->
-            "LP-Foreign construct(s): "
-            ^ String.concat "; " (List.map describe fs)
+        | fs -> String.concat "; " (List.map describe fs)
       in
-      [ T0_parse_fails { file; message = msg } ]
+      [ T0_lp_foreign { file; constructs } ]
   | (LP_Core | LP_Extended), _ -> (
       match List.rev parse_errors with
       | [] -> []
@@ -672,6 +676,38 @@ let read_closure_source (proj : Project_model.t) ~(root_src : string) : string =
   | [ (_, only) ] -> only
   | segs -> String.concat "\n" (List.map snd segs)
 
+(* The closure as a list of whole FILES rather than spliced segments. The
+   strict-tier boundary scan needs a file and a line for every construct it
+   reports, and a spliced segment has lost both. Each distinct key that
+   [closure_segments] visited is returned once, in first-visit order, with the
+   root first. The root carries [root_src]; every other file is re-read whole
+   from disk, and a file that cannot be re-read is omitted. *)
+let closure_files (proj : Project_model.t) ~(root_src : string) :
+    (string * string) list =
+  let root_path = (Project_model.root_file proj).path in
+  let seen = Hashtbl.create 8 in
+  let keys = ref [] in
+  List.iter
+    (fun (key, _) ->
+      if not (Hashtbl.mem seen key) then (
+        Hashtbl.replace seen key ();
+        keys := key :: !keys))
+    (closure_segments proj ~root_src);
+  let read p =
+    try
+      let ic = open_in_bin p in
+      Fun.protect
+        ~finally:(fun () -> close_in_noerr ic)
+        (fun () -> Some (really_input_string ic (in_channel_length ic)))
+    with Sys_error _ -> None
+  in
+  let others =
+    List.rev !keys
+    |> List.filter (fun k -> k <> "<root>" && k <> root_path)
+    |> List.filter_map (fun k -> Option.map (fun c -> (k, c)) (read k))
+  in
+  (root_path, root_src) :: others
+
 (* The SC (self-collision) verdict over the closure: scan each segment with ITS
    FILE's carried scanner state — per-file depths, splice-order events — exactly
    the contract [sc_scan_segment] documents. Segments are
@@ -841,6 +877,11 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
 let reason_to_string = function
   | T0_parse_fails { file; message } ->
       Printf.sprintf "T0 parse fails in %s: %s" file message
+  | T0_lp_foreign { file; constructs } ->
+      Printf.sprintf
+        "T0 LP-Foreign construct(s) in %s (outside every supported tier; not a \
+         parse failure): %s"
+        file constructs
   | T1_expansion_fails msg -> Printf.sprintf "T1 expansion fails: %s" msg
   | T2_project_not_closed `Cycle_in_build_graph ->
       "T2 project not closed: cycle in build graph"

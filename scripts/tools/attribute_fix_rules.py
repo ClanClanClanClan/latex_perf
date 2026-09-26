@@ -42,6 +42,7 @@ import argparse, hashlib, json, os, pathlib, shutil, subprocess, tempfile
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import first_error  # noqa: E402
 
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
@@ -193,6 +194,8 @@ def main() -> int:
             "offset": ns.offset, "n": ns.n, "only_ids": ns.only_ids or None,
             "engine": banner,
             "cli_sha256": hashlib.sha256(CLI.read_bytes()).hexdigest(),
+            "cli_platform": _mp.cli_platform(),
+            "cli_build_root": _mp.cli_build_root(CLI),  # C-72
             "src_tree_sha": subprocess.run(
                 ["git", "--no-optional-locks", "rev-parse", "HEAD:latex-parse/src"],
                 cwd=REPO, capture_output=True, text=True).stdout.strip()}

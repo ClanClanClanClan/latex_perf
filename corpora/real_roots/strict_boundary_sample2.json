@@ -1,0 +1,9148 @@
+{
+ "provenance": {
+  "produced_by": "scripts/tools/measure_strict_boundary.py",
+  "results_source": "corpora/real_roots/results_sample2.json",
+  "measured_at_sha": "319fe4dbad9d23067b36f3ae32cdecaa06522013",
+  "src_tree_sha": "c99802ad99a06470fe64dfa30260260a506a7314",
+  "note": "DIAGNOSTIC (ADR-012 M0): no verdict or exit code depends on this scan."
+ },
+ "summary": {
+  "n": 200,
+  "no_finding": 30,
+  "no_finding_and_compiles": 28,
+  "any_turing_construct": 147,
+  "turing_only_in_bbl": 39,
+  "local_style_file": 85,
+  "local_style_without_turing": 23,
+  "blocked_only_by_def": 13,
+  "closure_adds_a_category_the_root_lacks": 114,
+  "papers_per_category": {
+   "conditional": 96,
+   "def": 95,
+   "local_style": 85,
+   "expandafter": 70,
+   "csname": 68,
+   "atletter": 43,
+   "let": 38,
+   "foreign": 10,
+   "loop": 7,
+   "xparse": 4,
+   "write": 1
+  }
+ },
+ "rows": [
+  {
+   "id": "2506.11486v1",
+   "toplevel": "DUDSBSbinomialsForArxiv.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.13684v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.16102v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2024.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2024.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.16179v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.tex",
+     "line": 64,
+     "count": 2,
+     "construct": "\\ifpdf"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 105,
+     "count": 4,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "siamart250211.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored siamart250211.cls"
+    }
+   ]
+  },
+  {
+   "id": "2506.16210v2",
+   "toplevel": "main/New_IEEEtran_how-to.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    }
+   ]
+  },
+  {
+   "id": "2506.16582v1",
+   "toplevel": "articleV0.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.16708v1",
+   "toplevel": "HBps.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "foreign",
+    "let",
+    "write"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "foreign",
+    "let",
+    "write"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "HBps.tex",
+     "line": 9,
+     "count": 3,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "HBps.tex",
+     "line": 10,
+     "count": 174,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "HBps.tex",
+     "line": 10,
+     "count": 81,
+     "construct": "\\@seccntformat"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "HBps.tex",
+     "line": 10,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "HBps.tex",
+     "line": 22,
+     "count": 1,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_edef",
+     "file": "HBps.tex",
+     "line": 29,
+     "count": 6,
+     "construct": "\\edef/\\gdef/\\xdef"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "HBps.tex",
+     "line": 29,
+     "count": 7,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "HBps.tex",
+     "line": 29,
+     "count": 4,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_if_bare",
+     "file": "HBps.tex",
+     "line": 35,
+     "count": 6,
+     "construct": "\\if"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "HBps.tex",
+     "line": 35,
+     "count": 12,
+     "construct": "\\let"
+    },
+    {
+     "category": "write",
+     "id": "write",
+     "file": "HBps.tex",
+     "line": 36,
+     "count": 1,
+     "construct": "\\write"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "HBps.tex",
+     "line": 38,
+     "count": 6,
+     "construct": "\\ifvmode"
+    },
+    {
+     "category": "conditional",
+     "id": "newif",
+     "file": "HBps.tex",
+     "line": 106,
+     "count": 1,
+     "construct": "\\newif"
+    }
+   ]
+  },
+  {
+   "id": "2506.17165v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.17193v1",
+   "toplevel": "MatalonSpillane.tex",
+   "cell": "true-READY",
+   "categories": [
+    "loop"
+   ],
+   "root_only_categories": [
+    "loop"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "loop",
+     "id": "loop_foreach",
+     "file": "MatalonSpillane.tex",
+     "line": 986,
+     "count": 11,
+     "construct": "\\foreach"
+    }
+   ]
+  },
+  {
+   "id": "2506.17636v1",
+   "toplevel": "root.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "ieeeconf.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored ieeeconf.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "root.bbl",
+     "line": 3,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "root.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "root.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "root.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2506.17648v1",
+   "toplevel": "main_Ali.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main_Ali.tex",
+     "line": 17,
+     "count": 3,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.17768v1",
+   "toplevel": "neurips_2025.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "defns.tex",
+     "line": 138,
+     "count": 2,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "defns.tex",
+     "line": 624,
+     "count": 2,
+     "construct": "\\iftodonotes"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_if_bare",
+     "file": "defns.tex",
+     "line": 624,
+     "count": 1,
+     "construct": "\\if"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "defns.tex",
+     "line": 624,
+     "count": 3,
+     "construct": "\\if@todonotes@disabled"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "defns.tex",
+     "line": 624,
+     "count": 2,
+     "construct": "\\expandafter"
+    }
+   ]
+  },
+  {
+   "id": "2506.17809v1",
+   "toplevel": "flatness.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "new_macros.tex",
+     "line": 92,
+     "count": 2,
+     "construct": "\\def"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "flatness.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "flatness.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "flatness.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "flatness.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.17880v1",
+   "toplevel": "AAmain_arxiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "AAmain_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "AAmain_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "AAmain_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "AAmain_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.17983v2",
+   "toplevel": "MICCAI2025_paper_template.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "llncs.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored llncs.cls"
+    }
+   ]
+  },
+  {
+   "id": "2506.18287v1",
+   "toplevel": "skdual.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "skdual.tex",
+     "line": 7,
+     "count": 60,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.18436v1",
+   "toplevel": "main.tex",
+   "cell": "FALSE-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style",
+    "xparse"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 663,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "elsarticle.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored elsarticle.cls"
+    },
+    {
+     "category": "xparse",
+     "id": "xparse",
+     "file": "preamble.tex",
+     "line": 48,
+     "count": 154,
+     "construct": "\\NewDocumentCommand"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "images/column-vector-plot.tex",
+     "line": 4,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "leftRightCurrentFigs.tex",
+     "line": 4,
+     "count": 4,
+     "construct": "\\def"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "interferenceFieldFigs.tex",
+     "line": 4,
+     "count": 6,
+     "construct": "\\def"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "linRefLRelDiffFigs.tex",
+     "line": 4,
+     "count": 4,
+     "construct": "\\def"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "linRefRelDiffFigs.tex",
+     "line": 4,
+     "count": 12,
+     "construct": "\\def"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.bbl",
+     "line": 3,
+     "count": 4,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.18482v2",
+   "toplevel": "ReaPER_preprint.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "PRIMEarxiv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored PRIMEarxiv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "ReaPER_preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "ReaPER_preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "ReaPER_preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "ReaPER_preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.18809v1",
+   "toplevel": "implicit_timestepping.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "implicit_timestepping.tex",
+     "line": 31,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "mymacros.tex",
+     "line": 1,
+     "count": 97,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "ifthenelse",
+     "file": "mymacros.tex",
+     "line": 95,
+     "count": 32,
+     "construct": "\\ifthenelse"
+    }
+   ]
+  },
+  {
+   "id": "2506.18869v1",
+   "toplevel": "main.tex",
+   "cell": "FALSE-READY",
+   "categories": [
+    "atletter",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 100,
+     "count": 5,
+     "construct": "\\let"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 113,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 114,
+     "count": 1,
+     "construct": "\\@namedef"
+    }
+   ]
+  },
+  {
+   "id": "2506.19031v1",
+   "toplevel": "icml2025.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "math_commands.tex",
+     "line": 22,
+     "count": 384,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "math_commands.tex",
+     "line": 509,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "icml2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored icml2025.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fancyhdr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fancyhdr.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "algorithm.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored algorithm.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "algorithmic.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored algorithmic.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "natbib.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored natbib.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "icml2025.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "icml2025.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "icml2025.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "icml2025.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.19104v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.19186v1",
+   "toplevel": "arxiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.19431v2",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "loop"
+   ],
+   "root_only_categories": [
+    "def",
+    "loop"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "loop",
+     "id": "loop_foreach",
+     "file": "main.tex",
+     "line": 122,
+     "count": 2,
+     "construct": "\\foreach"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 189,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.19455v1",
+   "toplevel": "sn-article.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "atletter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "sn-article.tex",
+     "line": 676,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "sn-article.tex",
+     "line": 677,
+     "count": 1,
+     "construct": "\\@biblabel"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "sn-jnl.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored sn-jnl.cls"
+    }
+   ]
+  },
+  {
+   "id": "2506.19560v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 41,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\ifhmode"
+    }
+   ]
+  },
+  {
+   "id": "2506.19568v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "let",
+    "local_style",
+    "xparse"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_edef",
+     "file": "main.tex",
+     "line": 100,
+     "count": 1,
+     "construct": "\\edef/\\gdef/\\xdef"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 106,
+     "count": 3,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 107,
+     "count": 2,
+     "construct": "\\@startsection"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 115,
+     "count": 5,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "llncs.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored llncs.cls"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "defs.tex",
+     "line": 82,
+     "count": 2,
+     "construct": "\\let"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "defs.tex",
+     "line": 229,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "xparse",
+     "id": "xparse",
+     "file": "defs.tex",
+     "line": 230,
+     "count": 1,
+     "construct": "\\NewDocumentEnvironment"
+    },
+    {
+     "category": "conditional",
+     "id": "ifthenelse",
+     "file": "defs.tex",
+     "line": 234,
+     "count": 1,
+     "construct": "\\ifthenelse"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "04-evaluation.tex",
+     "line": 17,
+     "count": 2,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.19812v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "let",
+    "loop"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "def",
+    "let",
+    "loop"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 83,
+     "count": 13,
+     "construct": "\\def"
+    },
+    {
+     "category": "loop",
+     "id": "loop_foreach",
+     "file": "main.tex",
+     "line": 144,
+     "count": 7,
+     "construct": "\\foreach"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 147,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 149,
+     "count": 11,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "main.tex",
+     "line": 149,
+     "count": 11,
+     "construct": "\\ifnum"
+    }
+   ]
+  },
+  {
+   "id": "2506.20333v1",
+   "toplevel": "samplepaper.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "llncs.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored llncs.cls"
+    }
+   ]
+  },
+  {
+   "id": "2506.20372v1",
+   "toplevel": "DampPosOpti.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "conditional"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "DampPosOpti.tex",
+     "line": 73,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "DampPosOpti.tex",
+     "line": 73,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "mpi2015-cscpreprint.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored mpi2015-cscpreprint.cls"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "mymacros.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored mymacros.sty"
+    }
+   ]
+  },
+  {
+   "id": "2506.20456v2",
+   "toplevel": "Final-fractals.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "loop"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "def",
+    "loop"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "Final-fractals.tex",
+     "line": 24,
+     "count": 8,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "Final-fractals.tex",
+     "line": 26,
+     "count": 3,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "Final-fractals.tex",
+     "line": 26,
+     "count": 3,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "loop",
+     "id": "loop_foreach",
+     "file": "Final-fractals.tex",
+     "line": 465,
+     "count": 16,
+     "construct": "\\foreach"
+    }
+   ]
+  },
+  {
+   "id": "2506.20623v2",
+   "toplevel": "arxiv_v2.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.21146v1",
+   "toplevel": "neurips_submission.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "neurips_submission.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "neurips_submission.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "neurips_submission.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "neurips_submission.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.21275v1",
+   "toplevel": "BIFFLUID.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "arxiv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored arxiv.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "algpseudocodex.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored algpseudocodex.sty"
+    }
+   ]
+  },
+  {
+   "id": "2506.21350v1",
+   "toplevel": "algebraic_groups.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "algebraic_groups.tex",
+     "line": 132,
+     "count": 4,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "algebraic_groups.tex",
+     "line": 149,
+     "count": 2,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_edef",
+     "file": "algebraic_groups.tex",
+     "line": 150,
+     "count": 1,
+     "construct": "\\edef/\\gdef/\\xdef"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "algebraic_groups.tex",
+     "line": 150,
+     "count": 3,
+     "construct": "\\@tempa"
+    }
+   ]
+  },
+  {
+   "id": "2506.21830v1",
+   "toplevel": "main0303.tex",
+   "cell": "FALSE-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "siamart220329.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored siamart220329.cls"
+    }
+   ]
+  },
+  {
+   "id": "2506.21932v1",
+   "toplevel": "sample-sigconf-authordraft.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "def"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "acmart.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored acmart.cls"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "sample-sigconf-authordraft.bbl",
+     "line": 24,
+     "count": 8,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "sample-sigconf-authordraft.bbl",
+     "line": 24,
+     "count": 8,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "sample-sigconf-authordraft.bbl",
+     "line": 24,
+     "count": 8,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.22126v1",
+   "toplevel": "GIT2Comp_2025_06_27.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "GIT2Comp_2025_06_27.tex",
+     "line": 90,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "GIT2Comp_2025_06_27.tex",
+     "line": 99,
+     "count": 3,
+     "construct": "\\pgfutil@ifundefined"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "GIT2Comp_2025_06_27.tex",
+     "line": 117,
+     "count": 23,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.22204v1",
+   "toplevel": "arXiv/arxiv-ot-phyiscs-iclr.tex",
+   "cell": "false-NOT-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.22317v1",
+   "toplevel": "statistics_of_MIS_s_final.tex",
+   "cell": "true-NOT-READY",
+   "categories": [
+    "atletter",
+    "def",
+    "loop"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def",
+    "loop"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "statistics_of_MIS_s_final.tex",
+     "line": 35,
+     "count": 15,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "statistics_of_MIS_s_final.tex",
+     "line": 64,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "loop",
+     "id": "loop_foreach",
+     "file": "statistics_of_MIS_s_final.tex",
+     "line": 136,
+     "count": 24,
+     "construct": "\\foreach"
+    }
+   ]
+  },
+  {
+   "id": "2506.22754v1",
+   "toplevel": "arxiv-062025.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "expandafter"
+   ],
+   "root_only_categories": [
+    "def",
+    "expandafter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "arxiv-062025.tex",
+     "line": 79,
+     "count": 57,
+     "construct": "\\def"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "arxiv-062025.tex",
+     "line": 156,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "macros.tex",
+     "line": 1,
+     "count": 144,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2506.22994v1",
+   "toplevel": "KOD.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "jdssv.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored jdssv.cls"
+    }
+   ]
+  },
+  {
+   "id": "2506.23084v1",
+   "toplevel": "Wave_equation_new.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.23238v1",
+   "toplevel": "29-KrdPar-arXiv.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2506.23453v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 20,
+     "count": 20,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iclr2025_conference.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iclr2025_conference.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fancyhdr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fancyhdr.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "natbib.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored natbib.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "math_commands.tex",
+     "line": 21,
+     "count": 384,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "math_commands.tex",
+     "line": 508,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.23481v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 27,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "cvpr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored cvpr.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2506.23550v2",
+   "toplevel": "main.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 1767,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 1768,
+     "count": 38,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 1772,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "main.tex",
+     "line": 1772,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.tex",
+     "line": 1772,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.tex",
+     "line": 1777,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "main.tex",
+     "line": 1790,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.tex",
+     "line": 1807,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 1808,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2506.23688v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 29,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 46,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "cas-dc.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored cas-dc.cls"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "cas-common.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored cas-common.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "natbib.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored natbib.sty"
+    }
+   ]
+  },
+  {
+   "id": "2506.23757v1",
+   "toplevel": "main_no_ADF.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main_no_ADF.tex",
+     "line": 62,
+     "count": 2,
+     "construct": "\\let"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main_no_ADF.tex",
+     "line": 77,
+     "count": 2,
+     "construct": "\\ifCLASSINFOpdf"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main_no_ADF.tex",
+     "line": 86,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main_no_ADF.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main_no_ADF.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main_no_ADF.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main_no_ADF.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2506.23894v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.00209v2",
+   "toplevel": "dataset-paper.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "melba.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored melba.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "dataset-paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "dataset-paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "dataset-paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "dataset-paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.00260v1",
+   "toplevel": "arXiv.tex",
+   "cell": "true-NOT-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "mystyle.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored mystyle.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.00326v1",
+   "toplevel": "For_Arxiv_Bruna-Capunay-Friedman_June_30_2025.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.00349v1",
+   "toplevel": "twisted-20240624.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "twisted-20240624.tex",
+     "line": 60,
+     "count": 63,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.00404v1",
+   "toplevel": "Applications_of_Faa_di_Bruno_s_formula_to_partition_traces.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "Applications_of_Faa_di_Bruno_s_formula_to_partition_traces.tex",
+     "line": 32,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "Applications_of_Faa_di_Bruno_s_formula_to_partition_traces.tex",
+     "line": 33,
+     "count": 1,
+     "construct": "\\@namedef"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "Applications_of_Faa_di_Bruno_s_formula_to_partition_traces.tex",
+     "line": 108,
+     "count": 4,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.00640v1",
+   "toplevel": "preprint-arxiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "preprint-arxiv.tex",
+     "line": 22,
+     "count": 2,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "preprint-arxiv.tex",
+     "line": 185,
+     "count": 12,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "preprint-arxiv.tex",
+     "line": 207,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "preprint-arxiv.tex",
+     "line": 207,
+     "count": 1,
+     "construct": "\\ifhmode"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "preprint-arxiv.tex",
+     "line": 212,
+     "count": 4,
+     "construct": "\\tagsleft@true"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "preprint-arxiv.tex",
+     "line": 212,
+     "count": 2,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.00730v1",
+   "toplevel": "Gaudin-duality.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "Gaudin-duality.tex",
+     "line": 28,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.00876v1",
+   "toplevel": "main.tex",
+   "cell": "true-NOT-READY",
+   "categories": [
+    "atletter",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 73,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 75,
+     "count": 2,
+     "construct": "\\enddoc@text"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 75,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.00993v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 24,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iccv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iccv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.01726v1",
+   "toplevel": "manuscript.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "manuscript.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "manuscript.bbl",
+     "line": 11,
+     "count": 66,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "manuscript.bbl",
+     "line": 15,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "manuscript.bbl",
+     "line": 15,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "manuscript.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "manuscript.bbl",
+     "line": 20,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "manuscript.bbl",
+     "line": 33,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "manuscript.bbl",
+     "line": 49,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "manuscript.bbl",
+     "line": 50,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.02263v1",
+   "toplevel": "2-Some_Turan-type_results_for_signless_Laplacian_spectral_radius.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional"
+   ],
+   "root_only_categories": [
+    "conditional"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "2-Some_Turan-type_results_for_signless_Laplacian_spectral_radius.tex",
+     "line": 1665,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "2-Some_Turan-type_results_for_signless_Laplacian_spectral_radius.tex",
+     "line": 1665,
+     "count": 1,
+     "construct": "\\iffalse"
+    }
+   ]
+  },
+  {
+   "id": "2507.02421v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 14,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.02445v1",
+   "toplevel": "TAI_template.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtai.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtai.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "TAI_template.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "TAI_template.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "TAI_template.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "TAI_template.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.02524v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "arxiv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored arxiv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.bbl",
+     "line": 3,
+     "count": 4,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.02662v1",
+   "toplevel": "weak_NLS.tex",
+   "cell": "true-READY",
+   "categories": [
+    "let"
+   ],
+   "root_only_categories": [
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "weak_NLS.tex",
+     "line": 189,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.02823v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 84,
+     "count": 9,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 128,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 129,
+     "count": 2,
+     "construct": "\\l@subsection"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 133,
+     "count": 3,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.02993v1",
+   "toplevel": "eucass_paperV4.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "eucass_paperV4.tex",
+     "line": 71,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "eucass_paperV4.tex",
+     "line": 72,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "eucass_paperV4.tex",
+     "line": 72,
+     "count": 6,
+     "construct": "\\@maketitle"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "eucass_paperV4.tex",
+     "line": 77,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_if_bare",
+     "file": "eucass_paperV4.tex",
+     "line": 91,
+     "count": 2,
+     "construct": "\\if"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "eucass_paperV4.tex",
+     "line": 628,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "eucass_paperV4.tex",
+     "line": 628,
+     "count": 1,
+     "construct": "\\iffalse"
+    }
+   ]
+  },
+  {
+   "id": "2507.03053v1",
+   "toplevel": "Silvertiles.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.03212v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "let"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "CatherinesDefns.tex",
+     "line": 4,
+     "count": 94,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "CatherinesDefns.tex",
+     "line": 71,
+     "count": 3,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.03261v1",
+   "toplevel": "regularization-subdivisions.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.03309v1",
+   "toplevel": "InfSym.tex",
+   "cell": "true-NOT-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.03519v1",
+   "toplevel": "main.tex",
+   "cell": "FALSE-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 111,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 112,
+     "count": 2,
+     "construct": "\\rep@title"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 115,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.03521v2",
+   "toplevel": "PINNS_FE-CM-GG-TP_Final.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "let",
+    "xparse"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "def",
+    "let",
+    "xparse"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "PINNS_FE-CM-GG-TP_Final.tex",
+     "line": 21,
+     "count": 71,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "PINNS_FE-CM-GG-TP_Final.tex",
+     "line": 133,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "xparse",
+     "id": "xparse",
+     "file": "PINNS_FE-CM-GG-TP_Final.tex",
+     "line": 328,
+     "count": 3,
+     "construct": "\\NewDocumentCommand"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "PINNS_FE-CM-GG-TP_Final.tex",
+     "line": 340,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifdim",
+     "file": "PINNS_FE-CM-GG-TP_Final.tex",
+     "line": 340,
+     "count": 2,
+     "construct": "\\ifdim"
+    }
+   ]
+  },
+  {
+   "id": "2507.03667v1",
+   "toplevel": "nonorprimepower20k.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "nonorprimepower20k.tex",
+     "line": 8,
+     "count": 2,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "nonorprimepower20k.tex",
+     "line": 8,
+     "count": 1,
+     "construct": "\\@class"
+    }
+   ]
+  },
+  {
+   "id": "2507.03727v1",
+   "toplevel": "arxiv-upload.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "arxiv-upload.tex",
+     "line": 19,
+     "count": 3,
+     "construct": "\\let"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "arxiv-upload.tex",
+     "line": 67,
+     "count": 7,
+     "construct": "\\rep@title"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "arxiv-upload.tex",
+     "line": 70,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "arxiv-upload.tex",
+     "line": 116,
+     "count": 2,
+     "construct": "\\makeatletter"
+    }
+   ]
+  },
+  {
+   "id": "2507.03754v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.03971v1",
+   "toplevel": "example_paper.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "icml2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored icml2025.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fancyhdr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fancyhdr.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "algorithm.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored algorithm.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "algorithmic.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored algorithmic.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "example_paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "example_paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "example_paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "example_paper.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.03988v1",
+   "toplevel": "bruhat-mult_5_.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "bruhat-mult_5_.tex",
+     "line": 38,
+     "count": 9,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "bruhat-mult_5_.tex",
+     "line": 38,
+     "count": 9,
+     "construct": "\\@addtoreset"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "bruhat-mult_5_.tex",
+     "line": 43,
+     "count": 147,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.04168v1",
+   "toplevel": "main.tex",
+   "cell": "true-NOT-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "def"
+   ],
+   "bbl_only_categories": [
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 84,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 85,
+     "count": 1,
+     "construct": "\\ALG@name"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 113,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.tex",
+     "line": 113,
+     "count": 2,
+     "construct": "\\ifmmode"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 131,
+     "count": 4,
+     "construct": "\\def"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.04216v1",
+   "toplevel": "ap_cde_arxiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "ap_cde_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "ap_cde_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "ap_cde_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "ap_cde_arxiv.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.04297v1",
+   "toplevel": "preprint250706.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.04341v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 4,
+     "count": 4,
+     "construct": "\\def"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "document_includes/packages.tex",
+     "line": 2,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "document_includes/packages.tex",
+     "line": 7,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "document_includes/packages.tex",
+     "line": 7,
+     "count": 2,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iclr2025_conference.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iclr2025_conference.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fancyhdr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fancyhdr.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "natbib.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored natbib.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "document_includes/definitions.tex",
+     "line": 3,
+     "count": 8,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "document_includes/definitions.tex",
+     "line": 9,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "document_includes/definitions.tex",
+     "line": 9,
+     "count": 2,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "document_includes/math_commands.tex",
+     "line": 19,
+     "count": 384,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "document_includes/math_commands.tex",
+     "line": 506,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "document_includes/author_def.tex",
+     "line": 1,
+     "count": 10,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "document_includes/arxiv_addon.tex",
+     "line": 1,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "document_includes/arxiv_addon.tex",
+     "line": 1,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.04490v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 9,
+     "count": 2,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "aaai25.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored aaai25.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.04510v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 13,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 13,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 13,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.04617v1",
+   "toplevel": "manuscript.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "manuscript.tex",
+     "line": 10,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "manuscript.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "manuscript.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "manuscript.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "manuscript.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.04712v1",
+   "toplevel": "lcsys.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "lcsys.tex",
+     "line": 40,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "ieeecolor.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored ieeecolor.cls"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "lcsys.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored lcsys.sty"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "lcsys.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "lcsys.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "lcsys.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "lcsys.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.04814v1",
+   "toplevel": "template.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "arxiv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored arxiv.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.05193v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.05216v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.05473v2",
+   "toplevel": "two-level_arXiv2.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "two-level_arXiv2.tex",
+     "line": 55,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.05550v2",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "csname",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 3764,
+     "count": 38,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.tex",
+     "line": 3764,
+     "count": 38,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 3764,
+     "count": 38,
+     "construct": "\\def"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.tex",
+     "line": 3803,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "sn-jnl.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored sn-jnl.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.05821v1",
+   "toplevel": "Cubic_vt_graph_of_given_girth.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "Cubic_vt_graph_of_given_girth.tex",
+     "line": 50,
+     "count": 9,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.05827v1",
+   "toplevel": "wjud_v10.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.05892v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 107,
+     "count": 28,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 137,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 139,
+     "count": 64,
+     "construct": "\\@tempdima"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 141,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifdim",
+     "file": "main.tex",
+     "line": 141,
+     "count": 1,
+     "construct": "\\ifdim"
+    }
+   ]
+  },
+  {
+   "id": "2507.06199v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "latexdefs.tex",
+     "line": 31,
+     "count": 11,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "latexdefs.tex",
+     "line": 65,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "latexdefs.tex",
+     "line": 65,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "latexdefs.tex",
+     "line": 67,
+     "count": 1,
+     "construct": "\\expandafter"
+    }
+   ]
+  },
+  {
+   "id": "2507.06394v1",
+   "toplevel": "paper.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter"
+   ],
+   "root_only_categories": [
+    "atletter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "paper.tex",
+     "line": 127,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "paper.tex",
+     "line": 128,
+     "count": 5,
+     "construct": "\\make@circled"
+    }
+   ]
+  },
+  {
+   "id": "2507.06417v1",
+   "toplevel": "root.tex",
+   "cell": "false-NOT-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.06551v1",
+   "toplevel": "Manuscript.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "loop"
+   ],
+   "root_only_categories": [
+    "let",
+    "loop"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "Manuscript.tex",
+     "line": 41,
+     "count": 2,
+     "construct": "\\let"
+    },
+    {
+     "category": "loop",
+     "id": "loop_foreach",
+     "file": "Manuscript.tex",
+     "line": 416,
+     "count": 4,
+     "construct": "\\foreach"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "Manuscript.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "Manuscript.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "Manuscript.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "Manuscript.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "Manuscript.bbl",
+     "line": 3,
+     "count": 4,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.06593v1",
+   "toplevel": "bare_jrnl_new_sample4.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "bare_jrnl_new_sample4.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "bare_jrnl_new_sample4.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "bare_jrnl_new_sample4.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "bare_jrnl_new_sample4.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.06707v1",
+   "toplevel": "Multiscale.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.06806v1",
+   "toplevel": "neurips_2025_preprint.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.06913v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "expandafter",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "def",
+    "expandafter",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 87,
+     "count": 40,
+     "construct": "\\def"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.tex",
+     "line": 196,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 237,
+     "count": 2,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 238,
+     "count": 14,
+     "construct": "\\appendix@section"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 243,
+     "count": 3,
+     "construct": "\\let"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 248,
+     "count": 4,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "main.tex",
+     "line": 248,
+     "count": 2,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.tex",
+     "line": 250,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.tex",
+     "line": 1455,
+     "count": 1,
+     "construct": "\\iffalse"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.bbl",
+     "line": 1,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.06921v1",
+   "toplevel": "template.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "template.tex",
+     "line": 45,
+     "count": 34,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "arxiv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored arxiv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "template.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "template.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "template.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "template.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.06942v1",
+   "toplevel": "25-07-09_arXiv_v1.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "25-07-09_arXiv_v1.tex",
+     "line": 40,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "25-07-09_arXiv_v1.tex",
+     "line": 42,
+     "count": 1,
+     "construct": "\\@addtoreset"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "25-07-09_arXiv_v1.tex",
+     "line": 706,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "25-07-09_arXiv_v1.tex",
+     "line": 706,
+     "count": 1,
+     "construct": "\\ifhmode"
+    }
+   ]
+  },
+  {
+   "id": "2507.06971v2",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 8,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 15,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.07041v1",
+   "toplevel": "main_arxiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main_arxiv.tex",
+     "line": 58,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main_arxiv.tex",
+     "line": 61,
+     "count": 1,
+     "construct": "\\@addtofilelist"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main_arxiv.tex",
+     "line": 95,
+     "count": 4,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.07156v1",
+   "toplevel": "arXiv.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.07234v2",
+   "toplevel": "ham7.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.07308v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.07423v1",
+   "toplevel": "ultimo.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.07596v1",
+   "toplevel": "tropLFP20250709.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional"
+   ],
+   "root_only_categories": [
+    "conditional"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "tropLFP20250709.tex",
+     "line": 23,
+     "count": 1,
+     "construct": "\\ifpdf"
+    }
+   ]
+  },
+  {
+   "id": "2507.07652v1",
+   "toplevel": "sn-article.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "sn-jnl.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored sn-jnl.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.07704v1",
+   "toplevel": "ecai-sample-and-instructions.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "ecai.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored ecai.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "ecai-sample-and-instructions.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "ecai-sample-and-instructions.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "ecai-sample-and-instructions.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "ecai-sample-and-instructions.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.07781v1",
+   "toplevel": "neurips_2025.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.07822v1",
+   "toplevel": "Revised_version.tex",
+   "cell": "FALSE-READY",
+   "categories": [
+    "atletter"
+   ],
+   "root_only_categories": [
+    "atletter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "Revised_version.tex",
+     "line": 75,
+     "count": 2,
+     "construct": "\\@fleqntrue"
+    }
+   ]
+  },
+  {
+   "id": "2507.07852v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional"
+   ],
+   "bbl_only_categories": [
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 7,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 8,
+     "count": 1,
+     "construct": "\\AB@authnote"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 795,
+     "count": 3,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.tex",
+     "line": 795,
+     "count": 3,
+     "construct": "\\iffalse"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "notation.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored notation.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "arxiv-2.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored arxiv-2.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.07951v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.07958v1",
+   "toplevel": "SomeR_inf.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "SomeR_inf.tex",
+     "line": 22,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fullpage.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fullpage.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.07966v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 14,
+     "count": 12,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "nv.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored nv.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.07993v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.08088v1",
+   "toplevel": "main.tex",
+   "cell": "FALSE-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.bbl",
+     "line": 11,
+     "count": 37,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 20,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "main.bbl",
+     "line": 33,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 49,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.bbl",
+     "line": 50,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.08121v1",
+   "toplevel": "iclr2025_conference.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "let"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "iclr2025_conference.tex",
+     "line": 39,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "iclr2025_conference.tex",
+     "line": 40,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "iclr2025_conference.tex",
+     "line": 40,
+     "count": 2,
+     "construct": "\\@fnsymbol"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iclr2025_conference.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iclr2025_conference.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fancyhdr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fancyhdr.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "natbib.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored natbib.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "math_commands.tex",
+     "line": 21,
+     "count": 384,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "math_commands.tex",
+     "line": 508,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "iclr2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "iclr2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "iclr2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "iclr2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.08157v2",
+   "toplevel": "Main_final.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.08206v1",
+   "toplevel": "dipolar_TaT_2.1.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "dipolar_TaT_2.1.bbl",
+     "line": 2,
+     "count": 6,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "dipolar_TaT_2.1.bbl",
+     "line": 2,
+     "count": 6,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "dipolar_TaT_2.1.bbl",
+     "line": 2,
+     "count": 6,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "dipolar_TaT_2.1.bbl",
+     "line": 2,
+     "count": 6,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "dipolar_TaT_2.1.bbl",
+     "line": 2,
+     "count": 6,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.08221v1",
+   "toplevel": "delta_f.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "delta_f.tex",
+     "line": 44,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "delta_f.tex",
+     "line": 45,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "delta_f.tex",
+     "line": 45,
+     "count": 1,
+     "construct": "\\@currentlabel"
+    }
+   ]
+  },
+  {
+   "id": "2507.08223v1",
+   "toplevel": "neurips_2019.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2019.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2019.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.08384v1",
+   "toplevel": "odor_arxiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "conditional",
+    "let"
+   ],
+   "bbl_only_categories": [
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "odor_arxiv.tex",
+     "line": 43,
+     "count": 2,
+     "construct": "\\let"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "odor_arxiv.tex",
+     "line": 70,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "odor_arxiv.tex",
+     "line": 71,
+     "count": 4,
+     "construct": "\\@let@token"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "odor_arxiv.tex",
+     "line": 72,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "odor_arxiv.tex",
+     "line": 72,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "elsarticle.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored elsarticle.cls"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "rebuttal.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored rebuttal.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "odor_arxiv.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "odor_arxiv.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "odor_arxiv.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "odor_arxiv.bbl",
+     "line": 2,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "odor_arxiv.bbl",
+     "line": 3,
+     "count": 4,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.08493v1",
+   "toplevel": "Full0711.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [
+    "atletter"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "Full0711.tex",
+     "line": 251,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "Full0711.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "Full0711.bbl",
+     "line": 11,
+     "count": 33,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "Full0711.bbl",
+     "line": 15,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "Full0711.bbl",
+     "line": 15,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "Full0711.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "Full0711.bbl",
+     "line": 20,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "Full0711.bbl",
+     "line": 33,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "Full0711.bbl",
+     "line": 50,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "Full0711.bbl",
+     "line": 51,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.08648v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "ecai.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored ecai.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.08896v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.09087v1",
+   "toplevel": "main.tex",
+   "cell": "true-NOT-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "rlj.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored rlj.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "paper_style.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored paper_style.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "math_commands.tex",
+     "line": 19,
+     "count": 384,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "math_commands.tex",
+     "line": 506,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.09148v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "ifthenelse",
+     "file": "main.tex",
+     "line": 23,
+     "count": 5,
+     "construct": "\\ifthenelse"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 150,
+     "count": 10,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09165v1",
+   "toplevel": "main.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "atletter",
+    "def",
+    "let",
+    "xparse"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 36,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 37,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 37,
+     "count": 1,
+     "construct": "\\cref@section@alias"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "preamble_packages.tex",
+     "line": 78,
+     "count": 4,
+     "construct": "\\let"
+    },
+    {
+     "category": "xparse",
+     "id": "xparse",
+     "file": "shortcuts.tex",
+     "line": 120,
+     "count": 3,
+     "construct": "\\DeclareDocumentCommand"
+    }
+   ]
+  },
+  {
+   "id": "2507.09248v1",
+   "toplevel": "AGCD-NET.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "llncs.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored llncs.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.09261v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 20,
+     "count": 9,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.bbl",
+     "line": 11,
+     "count": 30,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 20,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "main.bbl",
+     "line": 33,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 50,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.bbl",
+     "line": 51,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.bbl",
+     "line": 306,
+     "count": 2,
+     "construct": "\\ifmmode"
+    }
+   ]
+  },
+  {
+   "id": "2507.09274v1",
+   "toplevel": "manuscript_stress_test_emac.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "atletter"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "manuscript_stress_test_emac.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "manuscript_stress_test_emac.bbl",
+     "line": 11,
+     "count": 2,
+     "construct": "\\@ifundefined"
+    }
+   ]
+  },
+  {
+   "id": "2507.09290v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.09338v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 13,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iccv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iccv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.09401v1",
+   "toplevel": "DG-Nonlocal-Wave.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional"
+   ],
+   "root_only_categories": [
+    "conditional"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "newif",
+     "file": "DG-Nonlocal-Wave.tex",
+     "line": 83,
+     "count": 1,
+     "construct": "\\newif"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "DG-Nonlocal-Wave.tex",
+     "line": 83,
+     "count": 3,
+     "construct": "\\ifPDF"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "DG-Nonlocal-Wave.tex",
+     "line": 84,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "DG-Nonlocal-Wave.tex",
+     "line": 84,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "DG-Nonlocal-Wave.tex",
+     "line": 87,
+     "count": 1,
+     "construct": "\\ifnum"
+    }
+   ]
+  },
+  {
+   "id": "2507.09426v1",
+   "toplevel": "paper.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "paper.tex",
+     "line": 31,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "paper.tex",
+     "line": 32,
+     "count": 1,
+     "construct": "\\g@addto@macro"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "paper.tex",
+     "line": 39,
+     "count": 2,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09475v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 41,
+     "count": 8,
+     "construct": "\\def"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 330,
+     "count": 5,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.tex",
+     "line": 330,
+     "count": 5,
+     "construct": "\\iffalse"
+    }
+   ]
+  },
+  {
+   "id": "2507.09622v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 28,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "aa.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored aa.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09693v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "def"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "acmart.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored acmart.cls"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 24,
+     "count": 8,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 24,
+     "count": 8,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.bbl",
+     "line": 24,
+     "count": 8,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09702v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "APSIPA2025.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored APSIPA2025.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.09716v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.09725v1",
+   "toplevel": "samplepaper.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "llncs.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored llncs.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.09731v1",
+   "toplevel": "fractures_detection.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "fractures_detection.tex",
+     "line": 26,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09746v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 72,
+     "count": 3,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09752v1",
+   "toplevel": "HirSel_generalizedAmdeberhanMerca_July2025_AJC.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.09832v1",
+   "toplevel": "Fan-goodness_of_sparse_graphs.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "def"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "Fan-goodness_of_sparse_graphs.tex",
+     "line": 24,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "Fan-goodness_of_sparse_graphs.tex",
+     "line": 26,
+     "count": 5,
+     "construct": "\\p@"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "Fan-goodness_of_sparse_graphs.tex",
+     "line": 56,
+     "count": 12,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09871v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "preamble.tex",
+     "line": 14,
+     "count": 366,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "preamble.tex",
+     "line": 476,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.09916v1",
+   "toplevel": "notes_time_series_data.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "notes_time_series_data.tex",
+     "line": 15,
+     "count": 6,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09921v1",
+   "toplevel": "ArXiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "ArXiv.tex",
+     "line": 156,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "elsarticle.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored elsarticle.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "ArXiv.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "ArXiv.bbl",
+     "line": 2,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "ArXiv.bbl",
+     "line": 2,
+     "count": 2,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "ArXiv.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "ArXiv.bbl",
+     "line": 2,
+     "count": 2,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.09961v1",
+   "toplevel": "main_submit.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main_submit.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main_submit.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main_submit.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main_submit.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.09994v1",
+   "toplevel": "main.tex",
+   "cell": "FALSE-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.09995v2",
+   "toplevel": "aaai2026.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "aaai2026.tex",
+     "line": 18,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "aaai2026.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored aaai2026.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.10009v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 22,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.10057v1",
+   "toplevel": "acl_latex.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "acl.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored acl.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.10123v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.tex",
+     "line": 828,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.tex",
+     "line": 836,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 836,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.tex",
+     "line": 836,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.10127v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 24,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iccv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iccv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.10232v1",
+   "toplevel": "manuscript_arxiv.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "manuscript_arxiv.tex",
+     "line": 69,
+     "count": 4,
+     "construct": "\\def"
+    },
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "manuscript_arxiv.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "manuscript_arxiv.bbl",
+     "line": 11,
+     "count": 33,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "manuscript_arxiv.bbl",
+     "line": 15,
+     "count": 14,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "manuscript_arxiv.bbl",
+     "line": 15,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "manuscript_arxiv.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "manuscript_arxiv.bbl",
+     "line": 20,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "manuscript_arxiv.bbl",
+     "line": 33,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "manuscript_arxiv.bbl",
+     "line": 50,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "manuscript_arxiv.bbl",
+     "line": 51,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "manuscript_arxiv.bbl",
+     "line": 122,
+     "count": 12,
+     "construct": "\\ifmmode"
+    }
+   ]
+  },
+  {
+   "id": "2507.10239v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.10287v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.bbl",
+     "line": 11,
+     "count": 38,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 20,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "main.bbl",
+     "line": 33,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 49,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.bbl",
+     "line": 50,
+     "count": 1,
+     "construct": "\\let"
+    }
+   ]
+  },
+  {
+   "id": "2507.10296v1",
+   "toplevel": "LHBP25.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "LHBP25.tex",
+     "line": 66,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "icml2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored icml2025.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fancyhdr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fancyhdr.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "algorithm.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored algorithm.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "algorithmic.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored algorithmic.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "LHBP25.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "LHBP25.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "LHBP25.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "LHBP25.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.10311v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 16,
+     "count": 11,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.10358v1",
+   "toplevel": "main.tex",
+   "cell": "true-NOT-READY",
+   "categories": [
+    "conditional",
+    "def"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "def"
+   ],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 24,
+     "count": 9,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 24,
+     "count": 9,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.bbl",
+     "line": 24,
+     "count": 9,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.10394v1",
+   "toplevel": "Journal.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "let"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "Journal.tex",
+     "line": 29,
+     "count": 3,
+     "construct": "\\let"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "new-aiaa.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored new-aiaa.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "Journal.bbl",
+     "line": 6,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "Journal.bbl",
+     "line": 6,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "Journal.bbl",
+     "line": 6,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "Journal.bbl",
+     "line": 6,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.10449v1",
+   "toplevel": "neurips_2025.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "neurips_2025.tex",
+     "line": 53,
+     "count": 2,
+     "construct": "\\let"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips_2025.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.10488v1",
+   "toplevel": "preprint.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "preprint.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.10637v1",
+   "toplevel": "collas2025_conference.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "let",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "collas2025_conference.tex",
+     "line": 15,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "collas2025_conference.tex",
+     "line": 15,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "collas2025_conference.tex",
+     "line": 15,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "conditional",
+     "id": "newif",
+     "file": "collas2025_conference.tex",
+     "line": 36,
+     "count": 1,
+     "construct": "\\newif"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "collas2025_conference.tex",
+     "line": 36,
+     "count": 2,
+     "construct": "\\ifshowrevisions"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "collas2025_conference.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored collas2025_conference.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "fancyhdr.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored fancyhdr.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "natbib.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored natbib.sty"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "math_commands.tex",
+     "line": 21,
+     "count": 384,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "math_commands.tex",
+     "line": 508,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "collas2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "collas2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "collas2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "collas2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.10702v1",
+   "toplevel": "arxiv_submission.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "aastex701.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored aastex701.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "arxiv_submission.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "arxiv_submission.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "arxiv_submission.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "arxiv_submission.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "arxiv_submission.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.10771v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional"
+   ],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 28,
+     "count": 2,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.bbl",
+     "line": 28,
+     "count": 2,
+     "construct": "\\ifmmode"
+    }
+   ]
+  },
+  {
+   "id": "2507.10838v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "Files/spconf.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored spconf.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.10885v1",
+   "toplevel": "p.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "p.tex",
+     "line": 31,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.10892v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "expandafter",
+    "foreign",
+    "let"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.bbl",
+     "line": 10,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.bbl",
+     "line": 11,
+     "count": 37,
+     "construct": "\\@ifxundefined"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 9,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifnum",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 1,
+     "construct": "\\ifnum"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 15,
+     "count": 4,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 20,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "foreign",
+     "id": "catcode_mutation_direct",
+     "file": "main.bbl",
+     "line": 33,
+     "count": 7,
+     "construct": "\\catcode"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 49,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.bbl",
+     "line": 50,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.bbl",
+     "line": 263,
+     "count": 7,
+     "construct": "\\ifmmode"
+    }
+   ]
+  },
+  {
+   "id": "2507.10895v1",
+   "toplevel": "arxiv_main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "arxiv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored arxiv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "arxiv_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "arxiv_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "arxiv_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "arxiv_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.10903v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "main.tex",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifCLASSINFOpdf"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.tex",
+     "line": 530,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.tex",
+     "line": 538,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.tex",
+     "line": 538,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.tex",
+     "line": 538,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.10927v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "llncs.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored llncs.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.10935v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 31,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iccv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iccv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.10943v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "llncs.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored llncs.cls"
+    }
+   ]
+  },
+  {
+   "id": "2507.10965v1",
+   "toplevel": "CEFS_ExpMath.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter"
+   ],
+   "root_only_categories": [
+    "atletter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "CEFS_ExpMath.tex",
+     "line": 111,
+     "count": 1,
+     "construct": "\\makeatletter"
+    }
+   ]
+  },
+  {
+   "id": "2507.11013v1",
+   "toplevel": "carapoly.tex",
+   "cell": "true-READY",
+   "categories": [],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": []
+  },
+  {
+   "id": "2507.11034v1",
+   "toplevel": "linear-forest-0714.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "root_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "linear-forest-0714.tex",
+     "line": 21,
+     "count": 15,
+     "construct": "\\def"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "linear-forest-0714.tex",
+     "line": 1021,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "linear-forest-0714.tex",
+     "line": 1021,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "linear-forest-0714.tex",
+     "line": 1021,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "linear-forest-0714.tex",
+     "line": 1021,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.11035v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  },
+  {
+   "id": "2507.11057v1",
+   "toplevel": "plos_latex_template.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter"
+   ],
+   "root_only_categories": [
+    "atletter"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "plos_latex_template.tex",
+     "line": 158,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "plos_latex_template.tex",
+     "line": 159,
+     "count": 1,
+     "construct": "\\@biblabel"
+    }
+   ]
+  },
+  {
+   "id": "2507.11100v1",
+   "toplevel": "paper.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "aastex7.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored aastex7.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "paper.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "paper.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "paper.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "paper.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "paper.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.11132v1",
+   "toplevel": "fv-saturation.tex",
+   "cell": "true-NOT-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "foreign"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "primitive_if_bare",
+     "file": "tex/header.tex",
+     "line": 62,
+     "count": 2,
+     "construct": "\\if"
+    },
+    {
+     "category": "foreign",
+     "id": "detokenize_primitive",
+     "file": "tex/header.tex",
+     "line": 62,
+     "count": 2,
+     "construct": "\\detokenize"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "tex/header.tex",
+     "line": 63,
+     "count": 4,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.11194v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "let",
+    "loop"
+   ],
+   "root_only_categories": [
+    "def",
+    "let",
+    "loop"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 157,
+     "count": 12,
+     "construct": "\\def"
+    },
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 196,
+     "count": 1,
+     "construct": "\\let"
+    },
+    {
+     "category": "loop",
+     "id": "loop_foreach",
+     "file": "main.tex",
+     "line": 368,
+     "count": 15,
+     "construct": "\\foreach"
+    }
+   ]
+  },
+  {
+   "id": "2507.11229v1",
+   "toplevel": "CoFly.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored 2025.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.11281v1",
+   "toplevel": "tileableShort.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional"
+   ],
+   "findings": [
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "tileableShort.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "tileableShort.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\ifhmode"
+    }
+   ]
+  },
+  {
+   "id": "2507.11287v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 32,
+     "count": 3,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "iccv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored iccv.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.11371v1",
+   "toplevel": "cs224r_final_report_2025.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "def",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "def"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "cs224r_2025.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored cs224r_2025.sty"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "cs224r_final_report_2025.bbl",
+     "line": 24,
+     "count": 9,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "cs224r_final_report_2025.bbl",
+     "line": 24,
+     "count": 9,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "cs224r_final_report_2025.bbl",
+     "line": 24,
+     "count": 9,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.11381v1",
+   "toplevel": "new_main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "new_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "new_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "new_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "new_main.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.11407v1",
+   "toplevel": "exaone4.0.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "lg.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored lg.sty"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "sections/99_appendix.tex",
+     "line": 169,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "sections/99_appendix.tex",
+     "line": 169,
+     "count": 1,
+     "construct": "\\iffalse"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "resources/tab_helmet_per_tasks.tex",
+     "line": 1,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "if_other",
+     "file": "resources/tab_helmet_per_tasks.tex",
+     "line": 1,
+     "count": 1,
+     "construct": "\\iffalse"
+    }
+   ]
+  },
+  {
+   "id": "2507.11412v1",
+   "toplevel": "colm2025_conference.tex",
+   "cell": "true-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "neurips.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored neurips.sty"
+    },
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "natbib.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored natbib.sty"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "colm2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "colm2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "colm2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "colm2025_conference.bbl",
+     "line": 4,
+     "count": 1,
+     "construct": "\\csname"
+    }
+   ]
+  },
+  {
+   "id": "2507.11414v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def"
+   ],
+   "root_only_categories": [
+    "def"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 12,
+     "count": 29,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.11430v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_sty",
+     "file": "arxiv.sty",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored arxiv.sty"
+    }
+   ]
+  },
+  {
+   "id": "2507.11492v1",
+   "toplevel": "main.tex",
+   "cell": "false-NOT-READY",
+   "categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "def",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "aastex631.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored aastex631.cls"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\ifx"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\csname"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.bbl",
+     "line": 2,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.11514v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "def",
+    "let"
+   ],
+   "root_only_categories": [
+    "def",
+    "let"
+   ],
+   "bbl_only_categories": [],
+   "findings": [
+    {
+     "category": "let",
+     "id": "arbitrary_let",
+     "file": "main.tex",
+     "line": 10,
+     "count": 4,
+     "construct": "\\let"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 32,
+     "count": 1,
+     "construct": "\\def"
+    }
+   ]
+  },
+  {
+   "id": "2507.11515v1",
+   "toplevel": "main.tex",
+   "cell": "true-READY",
+   "categories": [
+    "atletter",
+    "conditional",
+    "csname",
+    "def",
+    "expandafter",
+    "local_style"
+   ],
+   "root_only_categories": [
+    "atletter",
+    "def"
+   ],
+   "bbl_only_categories": [
+    "conditional",
+    "csname",
+    "expandafter"
+   ],
+   "findings": [
+    {
+     "category": "atletter",
+     "id": "makeatletter",
+     "file": "main.tex",
+     "line": 9,
+     "count": 1,
+     "construct": "\\makeatletter"
+    },
+    {
+     "category": "atletter",
+     "id": "at_name",
+     "file": "main.tex",
+     "line": 10,
+     "count": 1,
+     "construct": "\\ALG@name"
+    },
+    {
+     "category": "def",
+     "id": "arbitrary_def",
+     "file": "main.tex",
+     "line": 25,
+     "count": 1,
+     "construct": "\\def"
+    },
+    {
+     "category": "local_style",
+     "id": "local_cls",
+     "file": "IEEEtran.cls",
+     "line": 1,
+     "count": 1,
+     "construct": "vendored IEEEtran.cls"
+    },
+    {
+     "category": "csname",
+     "id": "csname_construct",
+     "file": "main.bbl",
+     "line": 4,
+     "count": 3,
+     "construct": "\\csname"
+    },
+    {
+     "category": "expandafter",
+     "id": "expandafter",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\expandafter"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_conditionals",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "a primitive \\if conditional"
+    },
+    {
+     "category": "conditional",
+     "id": "primitive_ifx",
+     "file": "main.bbl",
+     "line": 12,
+     "count": 1,
+     "construct": "\\ifx"
+    }
+   ]
+  }
+ ]
+}

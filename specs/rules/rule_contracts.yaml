@@ -5964,7 +5964,7 @@ rules:
   - REF-007
   depends_on: []
   conflicts_with: []
-  fix_scope: document
+  fix_scope: local
   project_scope: any
   produces_fix: null
 - rule_id: REF-008

@@ -224,7 +224,8 @@ def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
                                     "re-run the apply-fixes differential",
                                     prov.get("cli_sha256"), built,
                                     prov.get("src_tree_sha"),
-                                    recorded_platform=prov.get("cli_platform"))
+                                    recorded_platform=prov.get("cli_platform"),
+                                    recorded_build_root=prov.get("cli_build_root"))
     findings.extend(f_cli)
     for _n in n_cli:
         print(f"[apply-fixes-real] NOTE: {_n}", file=sys.stderr)

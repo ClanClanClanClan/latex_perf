@@ -45,6 +45,8 @@ directions or it is not verified.
 
 from __future__ import annotations
 
+import hashlib
+import pathlib
 import platform
 import subprocess
 
@@ -97,8 +99,41 @@ def cli_platform():
     return f"{platform.system()}-{platform.machine()}"
 
 
+def build_root_fingerprint(root):
+    """sha256 of the ABSOLUTE, resolved path of the checkout a CLI was built in.
+
+    C-72. The same source tree built in three different checkout directories
+    gave three different validators_cli.exe hashes, because the build embeds
+    absolute paths. A binary hash is therefore comparable only between builds
+    made in the SAME checkout directory, and this fingerprint records which one
+    that was. The path itself is hashed, not stored, so an artefact does not
+    publish the producer's home directory.
+    """
+    return hashlib.sha256(
+        str(pathlib.Path(root).resolve()).encode("utf-8")).hexdigest()
+
+
+def cli_build_root(cli_path):
+    """The build-root fingerprint of the checkout that built `cli_path`.
+
+    The checkout is the directory that contains the `_build` component of the
+    resolved path (dune's layout: <root>/_build/default/...). A binary outside
+    any `_build` directory falls back to the git top level of its directory.
+    """
+    p = pathlib.Path(cli_path).resolve()
+    for parent in p.parents:
+        if parent.name == "_build":
+            return build_root_fingerprint(parent.parent)
+    r = subprocess.run(["git", "--no-optional-locks", "rev-parse",
+                        "--show-toplevel"], cwd=str(p.parent),
+                       capture_output=True, text=True)
+    top = r.stdout.strip() if r.returncode == 0 else str(p.parent)
+    return build_root_fingerprint(top)
+
+
 def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
-                     src_tree_sha, path=WATCHED_PATH, recorded_platform=None):
+                     src_tree_sha, path=WATCHED_PATH, recorded_platform=None,
+                     recorded_build_root=None):
     """Is the artefact's recorded binary hash a problem? Returns (findings, notes).
 
     ⚠ THIS ARM USED TO HARD-FAIL ON ANY MISMATCH, AND THAT WAS WRONG IN A WAY
@@ -130,6 +165,20 @@ def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
     a macOS arm64 Mach-O, C-64). `src_tree_sha` exists because of those two; this
     change is the third defect of the same arm, and the reason the SOURCE anchor
     is the primary one and the binary hash is now its subordinate.
+
+    ⚠ C-72 (extends C-68): "identical source reproduces the hash" held only
+    WITHIN ONE CHECKOUT. The same tree built in three different checkout
+    directories gave three different hashes, because the build embeds absolute
+    paths. So the stale-build FAILURE is sound only when the artefact was built
+    in THIS checkout: producers now record `cli_build_root`
+    (build_root_fingerprint of the absolute repo root), and the hashes are
+    compared only when that fingerprint equals this checkout's and the platform
+    matches. Another checkout (for example the main checkout after a merge, or
+    a worktree), and a legacy artefact without the field, give a NOTE.
+
+    The four states, in order: other platform -> note; no or other build root
+    -> note; same build root and moved source -> note; same build root, same
+    source, different hash -> FAILURE.
     """
     if not recorded_cli:
         return [], []
@@ -147,6 +196,20 @@ def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
     if rec_plat != cli_platform():
         return [], [f"{label}: cli_sha256 NOT comparable — recorded on "
                     f"{rec_plat}, this run is {cli_platform()} (C-64)"]
+
+    # C-72. Identical source reproduces the hash only in the same checkout
+    # directory, because the build embeds absolute paths.
+    if not recorded_build_root:
+        return [], [f"{label}: cli_sha256 NOT comparable — the artefact records "
+                    f"no cli_build_root (a legacy artefact), and the binary "
+                    f"hash depends on the checkout directory it was built in "
+                    f"(C-72)"]
+    if recorded_build_root != build_root_fingerprint(repo):
+        return [], [f"{label}: cli_sha256 NOT comparable — built in another "
+                    f"checkout directory (cli_build_root "
+                    f"{recorded_build_root[:12]}…, this checkout "
+                    f"{build_root_fingerprint(repo)[:12]}…); the binary embeds "
+                    f"absolute paths (C-72)"]
 
     head_tree = engine_tree_id(repo, "HEAD", path)
     if src_tree_sha and head_tree and src_tree_sha == head_tree:

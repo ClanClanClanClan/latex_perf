@@ -51,7 +51,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from diff_real_roots import (  # noqa: E402
     ORACLE, PIN, build_frame, run_to_fixpoint,
 )
-from _measurement_provenance import cli_platform  # noqa: E402
+from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
 
 DEFAULT_OFFSET = 2000
 DEFAULT_N = 40
@@ -262,6 +262,8 @@ def main() -> int:
             "cli_sha256": sha256_file(cli),
             # The hash is only comparable on this platform (C-64).
             "cli_platform": cli_platform(),
+            # And only within the checkout directory that built it (C-72).
+            "cli_build_root": cli_build_root(cli),
             "frame": {"corpus": str(root.name), "frame_size": len(frame),
                       "selection": "sha256(arxiv_id) ascending",
                       "offset": ns.offset, "n": ns.n},

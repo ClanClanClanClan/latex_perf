@@ -78,7 +78,7 @@ def scrape_reasons(stdout: str) -> list[str]:
     `\\T1` or `sec-001.tex` would otherwise be recorded as a BLOCKING reason.
     On output with no TIER line (every binary before M0) this is exactly the
     old whole-buffer scrape, which is the compatibility argument; it is pinned
-    by scripts/tools/selftest_compile_check_consumers.py.
+    by scripts/tools/check_compile_check_consumers.py.
     """
     head = []
     for line in stdout.split("\n"):

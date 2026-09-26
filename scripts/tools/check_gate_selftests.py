@@ -609,6 +609,25 @@ REGISTRY = [
                      transform=afr_scope_default),
         ]),
     GateTest(
+        "check_compile_check_consumers",
+        [PY, f"{TOOLS}/check_compile_check_consumers.py"],
+        "pure",
+        [
+            # ADR-012 (M0): the reason scrape must stop at the TIER line, or
+            # author source quoted on a why-not-strict line is recorded as a
+            # BLOCKING reason. Reverting the stop must fail the gate.
+            Mutation("diff_real_roots scrapes the tier block again (C-65)",
+                     "scripts/tools/diff_real_roots.py",
+                     r"scrape_reasons reads the M0 tier block",
+                     old='        if line.startswith("TIER\\t"):\n            break\n',
+                     new='        if line.startswith("TIER\\t"):\n            pass\n'),
+            Mutation("parse_tier accepts PROVEN outside the proven tier",
+                     "scripts/tools/gen_proven_coverage.py",
+                     r"parse_tier accepted a PROVEN kind in the heuristic tier",
+                     old='        if (tier == "proven") != kind.startswith("PROVEN-"):',
+                     new='        if False:'),
+        ]),
+    GateTest(
         "check_fix_allowlist",
         [PY, f"{TOOLS}/check_fix_allowlist.py"],
         "pure",

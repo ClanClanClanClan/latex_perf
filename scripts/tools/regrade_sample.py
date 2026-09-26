@@ -51,6 +51,17 @@ def first_error(work, toplevel):
     return ""
 
 
+# The reason filter over --compile-check output. It is a named function so that
+# scripts/tools/check_compile_check_consumers.py imports THIS code rather than a
+# hand copy of it (ADR-012 M0): the leading T0..T5 token is the contract.
+REASON_PREFIXES = ("T0", "T2", "T3", "T4", "T5", "MODEL-NOT")
+
+
+def reason_lines(out):
+    return [l.strip() for l in out.splitlines()
+            if l.strip().startswith(REASON_PREFIXES)]
+
+
 def grade(aid, top):
     pkg = pathlib.Path(CORP) / aid
     with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
@@ -66,8 +77,7 @@ def grade(aid, top):
     c = subprocess.run([CLI, "--compile-check", str(pkg / top)],
                        capture_output=True, text=True, timeout=TIMEOUT)
     cli_ready = (c.returncode == 0)
-    reasons = [l.strip() for l in (c.stdout + c.stderr).splitlines()
-               if l.strip().startswith(("T0", "T2", "T3", "T4", "T5", "MODEL-NOT"))]
+    reasons = reason_lines(c.stdout + c.stderr)
     cell = ("true-READY" if compiles and cli_ready else
             "false-NOT-READY" if compiles and not cli_ready else
             "FALSE-READY" if not compiles and cli_ready else "true-NOT-READY")

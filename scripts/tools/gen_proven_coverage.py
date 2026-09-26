@@ -37,7 +37,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from _measurement_provenance import cli_platform  # noqa: E402
+from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
 
 STATES = {"PREMISE-CERTIFIED", "PREMISE-REJECTED"}
 
@@ -167,6 +167,9 @@ def main() -> int:
             "cli_sha256": sha256_file(cli),
             # The hash is only comparable on this platform (C-64).
             "cli_platform": cli_platform(),
+            # And only within the checkout directory that built it: the build
+            # embeds absolute paths (C-72).
+            "cli_build_root": cli_build_root(cli),
             "measured_at_sha": subprocess.run(
                 ["git", "rev-parse", "HEAD"], capture_output=True, text=True
             ).stdout.strip(),

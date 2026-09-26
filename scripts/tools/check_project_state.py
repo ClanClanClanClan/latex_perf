@@ -284,7 +284,8 @@ def main() -> int:
             repo, rel, howto,
             _dig(data, ("provenance", "cli_sha256")), cli_hash,
             (_dig(data, ("provenance", "src_tree_sha")) or data.get("src_tree_sha")),
-            recorded_platform=_dig(data, ("provenance", "cli_platform")))
+            recorded_platform=_dig(data, ("provenance", "cli_platform")),
+            recorded_build_root=_dig(data, ("provenance", "cli_build_root")))
         findings.extend(f_cli)
         skipped_binary_checks.extend(n_cli)
 

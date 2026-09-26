@@ -20,7 +20,7 @@ record is [ADR-012](v27/adr/ADR-012-contract-bounded-proven-tier.md); the design
 |---|---|---|---|
 | **Proven (exact)** | `PROVEN READY` or `PROVEN NOT-READY file:line:col … [E-code, probe, contract]` | Inside the *strict tier*: the whole project closure is Turing-free text in the strict grammar, and the exact configuration (class, ordered package loads with options, the preamble definers between them, and the format hash) has a contract generated and solo-attested under the pinned TeX Live. A Coq-extracted decider then returns READY **if and only if** the document compiles, in both directions, with respect to a declarative semantics; a NOT-READY names the first fatal with its reason and location. | **Empty today.** Milestone M0 ships the verdict type with the membership predicate stubbed to false, so no document is proven. The first proven verdicts arrive with the Coq kernel (M2) and structure, definers and on-demand configuration attestation (M3). |
 | **Heuristic** | `LIKELY OK (heuristic; premise-certified) — not a proof`, or `LIKELY FAIL (heuristic) — not a proof` with the blocking reasons above it | Today's pipeline, unchanged: the T0–T5 runtime checks and the model-connected premise check described in the rest of this document. **It is not a proof.** A LIKELY OK document can fail to compile; the measured rate is generated into `docs/v27/PROJECT_STATE.md` §1 ("Heuristic tier: how often the certificate is wrong"). | Every verdict the CLI issues today. |
-| **Impossible by design (FOREIGN)** | `FOREIGN — <construct> at <file:line> is outside every supported tier` | The document uses a construct no static checker can decide without running TeX: shell escape, catcode changes, Lua scripting and the rest of the LP-Foreign list. Turing-complete constructs outside any contract (`\def`, `\if…`, loops, `\csname`, `\expandafter`, `@`-internals, expl3) keep a document out of the proven tier and are listed on its `why not strict:` lines. | Printed today for LP-Foreign documents, which used to be mislabelled as a parse failure. |
+| **Impossible by design (FOREIGN)** | `FOREIGN — "<construct>" at "<file:line>" is outside every supported tier …; not a proof`, and, when the exit code is 0, `…; the exit code 0 is the legacy heuristic READY, unchanged in M0, and does not place this document in any tier` | The document uses a construct no static checker can decide without running TeX — shell escape, catcode changes, Lua scripting and the rest of the LP-Foreign list — **anywhere in its project closure**: the root or any `\input`/`\include` child. Local `.sty`/`.cls` files are admitted by content hash and not scanned inside. A construct found only in the generated `.bbl` is **not** FOREIGN: it is reported on a `why not strict:` line as *bbl dialect (M6)*, because bst boilerplate is written by BibTeX, not by the author, and there is nothing for the author to move or rewrite. Turing-complete constructs outside any contract (`\def`, `\if…`, loops, `\csname`, `\expandafter`, `@`-internals, expl3) keep a document out of the proven tier and are listed on its `why not strict:` lines. | Printed today whenever the closure contains an LP-Foreign construct. **Only the TIER line changed in M0; the exit code did not.** A FOREIGN verdict with exit 0 means *outside every tier; the legacy READY exit code is unchanged in M0* — it is not a READY verdict in any tier. Exit-code changes are out of scope for M0. |
 
 **What PROVEN will rest on (the trusted base, design §G.2).** The pinned pdfTeX
 binary, `pdflatex.fmt` and TeX Live tree; the named premise `Faithful` (each rule of
@@ -29,8 +29,11 @@ probes and a release-blocking generated differential of at least 10,000 document
 and is never proved; the oracle protocol (`-interaction=nonstopmode
 -halt-on-error`, up to three passes, a PDF required); the contract generator; the
 contract store and its reader; the file-system snapshot and kpathsea model; the
-byte source; the Coq kernel, extraction and OCaml runtime; and the renderer, which
-is unit-tested so that no non-proven verdict can print PROVEN. Composed per-package
+byte source; the Coq kernel, extraction and OCaml runtime; and the renderer, whose
+unit-tested guarantee is that the TIER line's verdict kind is PROVEN if and only if
+the verdict is proven. (User data is quoted verbatim, so a file you named
+`PROVEN.tex` appears in the output under that name; the kind field cannot carry
+it.) Composed per-package
 contracts and heuristic detectors are **not** in it: neither can produce or
 override a PROVEN verdict.
 
@@ -60,8 +63,10 @@ premise-certified) — not a proof` — these runtime preconditions genuinely he
 (within the declared profile):
 
 - Your source **parsed** with the real L2 parser (no unclosed
-  math/environment/`\verb`) and is **not** in the LP-Foreign tier
-  (no `\write18`, etc.).
+  math/environment/`\verb`) and the ROOT file is **not** in the LP-Foreign
+  tier (no `\write18`, etc.). The T0 classifier reads the root only; an
+  LP-Foreign construct in an `\input` child leaves the exit code at 0 in M0
+  but renders the TIER line as `FOREIGN`, not `LIKELY OK`.
 - Your multi-file project is closed (no missing `\input`, no cycles).
 - Your selected engine supports every **declared** feature.
 - No **compile-blocking** lint rule fired (`DELIM-`/`ENC-`/`PRT-`) —
@@ -69,9 +74,17 @@ premise-certified) — not a proof` — these runtime preconditions genuinely he
   does not catch.
 - If a sibling `.aux` was present, its labels are unique.
 
-**READY is a sound readiness PRE-CHECK, not a total "it will compile"
-certificate.** It means every runtime precondition we check held; it does
-**not** prove the document compiles. What is NOT verified at runtime: T1
+**READY is a heuristic premise check. It is not a proof, and it is not a sound
+pre-check: it can be wrong in the dangerous direction.** It means every runtime
+precondition we check held; it does **not** prove the document compiles, and
+documents that pdflatex rejects do get READY. Two measurements, both under the
+laptop pin `pdfTeX 3.141592653-2.6-1.40.29` (pre-baseline under ADR-012
+decision 7): the standing battery `corpora/strict_battery/` has 22 minimal
+documents that pdflatex rejects, and READY (exit 0) is returned on 17 of them
+(`manifest.json` `summary` is authoritative); and among real papers whose
+premises the checker certified, pdflatex rejects 14/197 = 7.1% on sample 2 and
+12/199 = 6.0% on sample 1 (any tier; LP-Core 8/102 and 4/104), generated into
+`docs/v27/PROJECT_STATE.md` §1, which is authoritative if these drift. What is NOT verified at runtime: T1
 macro-expansion (skipped), T4 without an `.aux` (skipped), and the
 byte-for-byte connection from your source to the abstract model the T6/T7
 compile-safety capstone is proved over (see the residual-gap note below).

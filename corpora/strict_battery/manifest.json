@@ -6,9 +6,9 @@
   "src_tree_sha": "c99802ad99a06470fe64dfa30260260a506a7314"
  },
  "summary": {
-  "n": 21,
-  "pdflatex_fails": 21,
-  "cli_ready_exit_0": 16,
+  "n": 22,
+  "pdflatex_fails": 22,
+  "cli_ready_exit_0": 17,
   "cli_proven": 0
  },
  "rows": [
@@ -79,6 +79,25 @@
     "pdf": false,
     "compiles": false,
     "first_error": "! Package cleveref Error: cleveref must be loaded after hyperref!."
+   },
+   "cli_m0": {
+    "rc": 0,
+    "tier": "heuristic",
+    "kind": "LIKELY-OK",
+    "token_line": "READY"
+   },
+   "must_eventually_render": "PROVEN NOT-READY [E12]"
+  },
+  {
+   "file": "e12_fontspec_in_input_child/main.tex",
+   "e_code": "E12",
+   "failure_mode": "configuration fatal",
+   "pdflatex": {
+    "rc": 1,
+    "passes": 3,
+    "pdf": false,
+    "compiles": false,
+    "first_error": "! Fatal Package fontspec Error: The fontspec package requires either XeTeX or(fontspec)                      LuaTeX."
    },
    "cli_m0": {
     "rc": 0,

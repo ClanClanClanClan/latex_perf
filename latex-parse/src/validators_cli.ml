@@ -795,21 +795,42 @@ let tier_verdict ~proj ~src
   assert (not (in_strict_m0 proj));
   let findings = strict_findings proj ~src in
   let why_not_strict = SB.why_not_strict findings in
-  match (result, model_ok) with
-  | CC.Ready, true ->
-      V.Likely_ok { basis = "premise-certified"; why_not_strict }
-  | Ready, false -> V.Likely_fail { reasons = []; why_not_strict }
-  | NotReady reasons, _ ->
-      if
+  (* FOREIGN renders whenever an LP-Foreign construct occurs ANYWHERE in the
+     closure (an \input child included), not only when the root-level T0
+     classifier fires. A finding in the generated .bbl is never foreign (it is
+     reported as bbl_dialect). Only the TIER line changes: the exit code stays
+     the legacy heuristic one in M0, and the FOREIGN headline says so when that
+     code is 0. *)
+  let root_foreign =
+    match result with
+    | CC.NotReady reasons ->
         List.exists (function CC.T0_lp_foreign _ -> true | _ -> false) reasons
-      then
-        let construct, where =
-          match SB.first_foreign findings with
-          | Some f -> (f.construct, Some (Printf.sprintf "%s:%d" f.file f.line))
-          | None -> ("an LP-Foreign construct", None)
-        in
-        V.Foreign { construct; where; why_not_strict }
-      else V.Likely_fail { reasons; why_not_strict }
+    | CC.Ready -> false
+  in
+  let legacy_ready = result = CC.Ready && model_ok in
+  match (SB.first_foreign findings, root_foreign) with
+  | Some f, _ ->
+      V.Foreign
+        {
+          construct = f.construct;
+          where = Some (Printf.sprintf "%s:%d" f.file f.line);
+          legacy_ready;
+          why_not_strict;
+        }
+  | None, true ->
+      V.Foreign
+        {
+          construct = "an LP-Foreign construct";
+          where = None;
+          legacy_ready;
+          why_not_strict;
+        }
+  | None, false -> (
+      match (result, model_ok) with
+      | CC.Ready, true ->
+          V.Likely_ok { basis = "premise-certified"; why_not_strict }
+      | Ready, false -> V.Likely_fail { reasons = []; why_not_strict }
+      | NotReady reasons, _ -> V.Likely_fail { reasons; why_not_strict })
 
 let print_tier_verdict (v : Latex_parse_lib.Verdict.t) =
   List.iter (fun l -> printf "%s\n" l) (Latex_parse_lib.Verdict.render v)
@@ -895,9 +916,10 @@ let run_compile_check ?(require_proof = false) ~fast ~path ~src () : int =
                 printf "READY\t%s\n" path;
                 0
             | Ready, false ->
-                (* Runtime contract passed but the proven model rejects: the
-                   authoritative (sound) answer is NOT-READY. Reasons were
-                   printed above under MODEL-NOT-READY. *)
+                (* Runtime contract passed but the model-connected premise check
+                   rejects: the answer is NOT-READY (heuristic, like every
+                   verdict in M0). Reasons were printed above under
+                   MODEL-NOT-READY. *)
                 printf "NOT-READY\t%s\n" path;
                 printf
                   "  (model-connected checks reject; see MODEL-NOT-READY above)\n";
@@ -1225,9 +1247,14 @@ let () =
         \               (duplicate labels are advisory only), and \
          compile-blocking DELIM/ENC/PRT Error rules for T5). Prints\n\
         \               READY (exit 0) or NOT-READY with the failing reasons \
-         (exit 1). This is a\n\
-        \               sound readiness PRE-CHECK, not a total \"it will \
-         compile\" certificate.\n\
+         (exit 1). READY is a\n\
+        \               HEURISTIC premise check: not a proof, and not sound. \
+         It can be wrong in the\n\
+        \               dangerous direction (the standing battery \
+         corpora/strict_battery: READY on 17\n\
+        \               of 22 documents pdflatex rejects; certified papers \
+         pdflatex rejects: 14/197 on\n\
+        \               sample 2, see docs/v27/PROJECT_STATE.md section 1).\n\
         \               Uses the FAST kernel by default (parse once, run only \
          the 36\n\
         \               compile-blocking rules, of which 12 can actually \
@@ -1239,6 +1266,10 @@ let () =
         \               says so (LIKELY OK / LIKELY FAIL / FOREIGN; nothing is \
          proven yet), followed\n\
         \               by up to three why-not-strict lines with fix-it nudges.\n\
+        \               FOREIGN = an LP-Foreign construct anywhere in the \
+         closure; the exit code\n\
+        \               is unchanged in M0, so FOREIGN with exit 0 means \
+         outside every tier.\n\
          --compile-check --require-proof <file.tex>  the same check, but exit \
          4 unless the\n\
         \               verdict is proven (in milestone M0 it always exits 4).\n\

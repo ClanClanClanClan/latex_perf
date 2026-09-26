@@ -31,7 +31,9 @@ type finding = {
 val categories : string list
 (** Every category, in the priority order used to choose why-not-strict lines:
     foreign, def, let, xparse, atletter, local_style, expl3, conditional, loop,
-    csname, expandafter, write. *)
+    csname, expandafter, write, bbl_dialect. Every finding in the [.bbl] is in
+    bbl_dialect, whatever construct it is: the [.bbl] is generated, not
+    author-actionable, and a construct there never makes a document FOREIGN. *)
 
 val construct_of_feature_id : string -> string
 (** The control sequence an [Unsupported_feature] id stands for. *)
@@ -56,4 +58,5 @@ val why_not_strict : finding list -> Verdict.boundary list
     categories, chosen by priority, followed by [Verdict.m0_boundary]. *)
 
 val first_foreign : finding list -> finding option
-(** The first finding in the foreign category, if any. *)
+(** The first finding in the foreign category, if any. A [.bbl] finding is never
+    in that category. *)

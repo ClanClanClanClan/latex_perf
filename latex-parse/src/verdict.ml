@@ -63,7 +63,8 @@ let e_code = function
 type boundary = {
   b_kind : string;
   b_where : string option;
-  b_construct : string;
+  b_construct : string option;
+  b_uses : int;
   b_nudge : string;
 }
 
@@ -86,6 +87,7 @@ type t =
   | Foreign of {
       construct : string;
       where : string option;
+      legacy_ready : bool;
       why_not_strict : boundary list;
     }
 
@@ -100,20 +102,28 @@ let require_proof_exit = 4
    [proven_kind_and_headline] reads it. *)
 let reserved_word = "PROVEN"
 
-let defang s =
-  let r = reserved_word and rl = String.length reserved_word in
-  let n = String.length s in
-  let b = Buffer.create n in
-  let i = ref 0 in
-  while !i < n do
-    if !i + rl <= n && String.sub s !i rl = r then (
-      Buffer.add_string b "Proven";
-      i := !i + rl)
-    else (
-      Buffer.add_char b s.[!i];
-      incr i)
-  done;
-  Buffer.contents b
+(* User data is QUOTED, never rewritten. The only bytes changed are control
+   characters, which are shown in TeX's own ^^ notation (a tab is ^^I, a newline
+   ^^J) so that a user datum can never add a tab-separated field or a line to
+   the rendering. Everything else, including the word PROVEN in a file or macro
+   name, is shown byte for byte. *)
+let escape_controls s =
+  if not (String.exists (fun c -> Char.code c < 0x20 || Char.code c = 0x7f) s)
+  then s
+  else
+    let b = Buffer.create (String.length s + 8) in
+    String.iter
+      (fun c ->
+        let k = Char.code c in
+        if k < 0x20 then (
+          Buffer.add_string b "^^";
+          Buffer.add_char b (Char.chr (k + 0x40)))
+        else if k = 0x7f then Buffer.add_string b "^^?"
+        else Buffer.add_char b c)
+      s;
+    Buffer.contents b
+
+let quote s = "\"" ^ escape_controls s ^ "\""
 
 let tier_token = function
   | Proven_ready _ | Proven_not_ready _ -> "proven"
@@ -137,9 +147,9 @@ let proven_kind_and_headline = function
   | Pending _ | Likely_ok _ | Likely_fail _ | Foreign _ ->
       invalid_arg "Verdict.proven_kind_and_headline: not a proven verdict"
 
-(* Heuristic kinds and headlines. Nothing here may use [reserved_word]; the
-   output is defanged by [render] regardless, so user data cannot smuggle the
-   word in either. *)
+(* Heuristic kinds and headlines. Nothing here may use [reserved_word]. The kind
+   is always one of the fixed tokens below; user data appears only inside
+   [quote]d fields of the headline, so it can never reach the kind field. *)
 let heuristic_kind_and_headline = function
   | Pending { predicted; missing } ->
       ( "PENDING",
@@ -149,7 +159,7 @@ let heuristic_kind_and_headline = function
           (match predicted with `Ready -> "READY" | `Not_ready -> "NOT-READY")
           (match missing with
           | [] -> "(nothing listed)"
-          | l -> String.concat ", " l) )
+          | l -> String.concat ", " (List.map quote l)) )
   | Likely_ok { basis; _ } ->
       ( "LIKELY-OK",
         Printf.sprintf "LIKELY OK (heuristic; %s) — not a proof" basis )
@@ -165,29 +175,43 @@ let heuristic_kind_and_headline = function
              listed above"
             n
             (if n = 1 then "" else "s") )
-  | Foreign { construct; where; _ } ->
+  | Foreign { construct; where; legacy_ready; _ } ->
       ( "FOREIGN",
         Printf.sprintf
           "FOREIGN — %s%s is outside every supported tier (neither the exact \
-           tier nor the heuristic tier applies); not a proof"
-          construct
-          (match where with Some w -> " at " ^ w | None -> "") )
+           tier nor the heuristic tier applies); not a proof%s"
+          (quote construct)
+          (match where with Some w -> " at " ^ quote w | None -> "")
+          (if legacy_ready then
+             "; the exit code 0 is the legacy heuristic READY, unchanged in \
+              M0, and does not place this document in any tier"
+           else "") )
   | Proven_ready _ | Proven_not_ready _ ->
       invalid_arg "Verdict.heuristic_kind_and_headline: proven verdict"
 
+(* The KIND field of the TIER line is produced here and nowhere else: a
+   [Proven_] verdict takes its kind from [proven_kind_and_headline], every other
+   verdict from the fixed tokens of [heuristic_kind_and_headline]. *)
 let kind_and_headline v =
-  if is_proven v then proven_kind_and_headline v
-  else
-    let k, h = heuristic_kind_and_headline v in
-    (defang k, defang h)
+  let k, h =
+    if is_proven v then proven_kind_and_headline v
+    else heuristic_kind_and_headline v
+  in
+  (k, escape_controls h)
 
 let kind_token v = fst (kind_and_headline v)
 let headline v = snd (kind_and_headline v)
 
 let render_boundary (b : boundary) =
-  Printf.sprintf "  why not strict: %s%s — %s" b.b_construct
-    (match b.b_where with Some w -> " at " ^ w | None -> "")
-    b.b_nudge
+  let subject =
+    match b.b_construct with
+    | None -> ""
+    | Some c ->
+        Printf.sprintf "%s%s%s — " (quote c)
+          (if b.b_uses > 1 then Printf.sprintf " (%d uses)" b.b_uses else "")
+          (match b.b_where with Some w -> " at " ^ quote w | None -> "")
+  in
+  escape_controls ("  why not strict: " ^ subject ^ b.b_nudge)
 
 let why_not_strict = function
   | Likely_ok { why_not_strict; _ }
@@ -207,17 +231,16 @@ let render v =
       | x :: r -> x :: take (k - 1) r
     in
     first
-    :: List.map
-         (fun b -> defang (render_boundary b))
-         (take max_why_not_strict (why_not_strict v))
+    :: List.map render_boundary (take max_why_not_strict (why_not_strict v))
 
 let m0_boundary =
   {
     b_kind = "strict_unavailable";
     b_where = None;
-    b_construct = "strict tier not yet available (M0)";
+    b_construct = None;
+    b_uses = 0;
     b_nudge =
-      "no document is decided by proof yet; the first exact verdicts arrive \
-       with the Coq kernel in milestones M2 and M3 \
-       (docs/v27/STRICT_TIER_DESIGN.md)";
+      "strict tier not yet available (M0): no document is decided by proof \
+       yet; the first exact verdicts arrive with the Coq kernel in milestones \
+       M2 and M3 (docs/v27/STRICT_TIER_DESIGN.md)";
   }

@@ -19,8 +19,8 @@ number carried the word *proven*. The facts, measured under the pin
 
 - **The certificate is wrong in both samples.** The generated block of
   `PROJECT_STATE.md` §1 publishes how often a certified document fails to compile; the
-  rate is not near zero on either sample, and sample 2 (virgin) carries FALSE-READYs
-  that the certificate accepted.
+  rate is not near zero on either sample, and sample 2 (never tuned against, and
+  design-seen since this ADR) carries FALSE-READYs that the certificate accepted.
 - **The heuristic tier accepts minimal failing documents.** A battery of minimal
   documents, each exhibiting one pdflatex fatal (`\frac` in text, an undefined control
   sequence, an undefined environment, `$\frac{1}$`, `\newcommand{\text}`, a missing
@@ -62,10 +62,27 @@ The owner's decisions of 2026-09-26, recorded verbatim:
 5. Benign \def: admitted LATER (M7+), after expand_terminates / subst_preserves_L_S are proved.
 6. Exit codes stay 0/1; new --require-proof exits 4 unless the verdict is PROVEN. A wrong reason or location counts as strict_wrong. Any differential disagreement blocks a release. Preamble definers are part of the configuration key.
 
-These answer the design's §H open decisions 1–6 and 8. Decision 7 of §H (draw sample 3
-only after the pdfmanagement oracle repair, with sample 2 marked design-seen) is the
-design's recommendation and is adopted with this ADR, since the headline strict number
-must come from a virgin sample and sample 2 has now been used for design statistics.
+These answer the design's §H open decisions 1–6 and 8.
+
+**§H decision 7 (sample-3 timing): the owner's actual decision of 2026-09-26.** An
+earlier draft of this ADR listed the design's *recommendation* for §H.7 (repair the
+pdfmanagement orphan files in the laptop TeX Live, then draw sample 3) as adopted. That
+was not the owner's decision, and it is withdrawn. The decision is:
+
+7. The project's pdflatex oracle is **frozen as CI's digest-pinned TeX Live image**:
+   the `TEX_IMAGE` digest in `.github/workflows/tex-oracle.yml`
+   (`texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b`
+   when this was written; the workflow is the source of truth), run locally through a
+   container. **The laptop TeX Live is not the oracle.** Every graded artefact is
+   re-graded once under that image, and the diffs are published as an
+   **oracle-baseline change**. Sample 3, the virgin North-Star sample, is drawn and
+   graded only after that.
+
+Consequences of decision 7 for what M0 ships: every pdflatex grade M0 records (the
+standing battery's `manifest.json`, and the real-paper cells the strict-tier rows are
+joined against) was taken under the laptop pin `pdfTeX 3.141592653-2.6-1.40.29`, so it
+is **pre-baseline** and is re-graded with everything else. Sample 2 has been used for
+design statistics and is design-seen; it is never labelled virgin again.
 
 ## What milestone M0 ships (this ADR's PR)
 
@@ -73,17 +90,28 @@ M0 is the honesty change. **Nothing is proven yet**: the strict-tier membership
 predicate is a stub that returns false, so the published strict-tier figure is 0 on
 both samples, by measurement.
 
-- One verdict type and one renderer (`latex-parse/src/verdict.ml`). Only its two
-  `Proven_` constructors can render the word PROVEN, enforced by construction and by
-  a unit test that scans every rendering, including adversarial user data
-  (`latex-parse/src/test_verdict.ml`).
+- One verdict type and one renderer (`latex-parse/src/verdict.ml`). The guarantee,
+  stated precisely: **the TIER line's verdict kind is `PROVEN-READY` or
+  `PROVEN-NOT-READY` if and only if the verdict is a `Proven_` constructor.** The kind
+  field is produced only by the renderer, from a fixed token per constructor. User
+  data (paths, macro names, the author's text in a nudge) is shown verbatim inside
+  double-quoted fields and never rewritten, so a file named `PROVEN-READY.tex` is
+  printed as such; control characters are shown in TeX's `^^` notation so that user
+  data cannot add a field or a line. Enforced by construction and by a unit test over
+  every constructor with adversarial user data (`latex-parse/src/test_verdict.ml`).
 - `--compile-check` keeps every machine-read line byte-identical (the
   `MODEL-CONNECTED` line with its `PREMISE-CERTIFIED`/`PREMISE-REJECTED` token, the
   `READY\t`/`NOT-READY\t` token line, and the indented reasons) and adds, after them,
   one `TIER` line and at most three `why not strict:` lines. Every READY now reads
   `LIKELY OK (heuristic; premise-certified) — not a proof`; every NOT-READY reads
-  `LIKELY FAIL (heuristic)`; an LP-Foreign document, previously mislabelled as a
-  parse failure, reads `FOREIGN`. Exit codes are unchanged.
+  `LIKELY FAIL (heuristic)`; a document with an LP-Foreign construct **anywhere in its
+  closure** (an `\input` child included; previously mislabelled as a parse failure
+  when the root had it, and missed when only a child had it) reads `FOREIGN`. A
+  finding in the generated `.bbl` is never FOREIGN: it is reported as *bbl dialect
+  (M6)*, since bst boilerplate is not the author's to rewrite. **Exit codes are
+  unchanged in M0**, and that includes FOREIGN: a FOREIGN verdict with exit 0 means
+  *outside every tier; the legacy READY exit code is unchanged in M0*, and the TIER
+  line says so.
 - `--require-proof` exits 4 unless the verdict is proven, so in M0 it exits 4 on every
   document.
 - A closure-scoped boundary scan (`latex-parse/src/strict_boundary.ml`) runs over the
@@ -100,9 +128,12 @@ both samples, by measurement.
 - **The published North-Star figure falls to zero and then grows.** That is the honest
   starting point, not a regression: it was never a proof. Sample 2 is now design-seen,
   so the first real strict number is reported on sample 3 (M3).
-- **OPEN-024 is closed by construction in the strict tier**, because strict membership
-  requires the whole closure to parse in the strict grammar. The heuristic tier is
-  unchanged by this ADR, and OPEN-024 stays open there.
+- **OPEN-024 will be closed by construction in the strict tier (M2/M3); the heuristic
+  tier still admits it.** Strict membership will require the whole closure to parse in
+  the strict grammar, but no strict verdict exists in M0. The heuristic tier is
+  unchanged by this ADR and still returns READY on the OPEN-024 shape; M0 records one
+  such document in the battery (`corpora/strict_battery/e12_fontspec_in_input_child/`:
+  `\usepackage{fontspec}` in an `\input` child, pdflatex rc 1, CLI READY exit 0).
 - **PROVEN needs pdflatex on the attestation side** (decision 3). The checker never
   compiles the body; it compiles the configuration's preamble and probe documents.
   Without pdflatex the strict tier is capped at the shipped cache, which is close to

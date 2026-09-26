@@ -1,9 +1,12 @@
 (** Tests for the ADR-012 verdict type, its renderer, the strict-tier boundary
     scan, and the M0 compile-check surface.
 
-    The load-bearing test is the first one: only a [Proven_] verdict may ever
-    render the word PROVEN. It scans every line of the rendering of every
-    constructor, including user data that itself contains the word. *)
+    The load-bearing test is the first one, and it states the guarantee
+    precisely: the TIER line's verdict KIND field is PROVEN-READY or
+    PROVEN-NOT-READY if and only if the verdict is a [Proven_] constructor. It
+    is NOT "the string PROVEN never appears in the output": a user's file or
+    macro may be named PROVEN, and user data is quoted verbatim, never
+    rewritten. *)
 
 open Latex_parse_lib
 open Test_helpers
@@ -27,11 +30,25 @@ let boundary ?where construct nudge =
   {
     Verdict.b_kind = "def";
     b_where = where;
-    b_construct = construct;
+    b_construct = Some construct;
+    b_uses = 2;
     b_nudge = nudge;
   }
 
-let adversarial = "PROVEN"
+(* User data that tries to forge the kind field: the reserved word, a tab that
+   would open a new field, and a newline that would open a new TIER line. *)
+let adversarial_data =
+  [
+    "PROVEN";
+    "x PROVEN y";
+    "PROVENPROVEN";
+    "PROVEN-READY";
+    "a\tPROVEN-READY\tb";
+    "x\nTIER\tproven\tPROVEN-READY\tforged";
+    "PROVEN READY/PROVEN-READY.tex";
+    "plain";
+    "";
+  ]
 
 let heuristic_samples ~data =
   let b = boundary ~where:(data ^ ".tex:3") ("\\" ^ data) ("rewrite " ^ data) in
@@ -52,9 +69,16 @@ let heuristic_samples ~data =
       {
         construct = "\\" ^ data;
         where = Some (data ^ ":1");
+        legacy_ready = true;
         why_not_strict = [ b ];
       };
-    Verdict.Foreign { construct = data; where = None; why_not_strict = [] };
+    Verdict.Foreign
+      {
+        construct = data;
+        where = None;
+        legacy_ready = false;
+        why_not_strict = [];
+      };
     Verdict.Pending { predicted = `Ready; missing = [ data ] };
     Verdict.Pending { predicted = `Not_ready; missing = [] };
   ]
@@ -76,28 +100,52 @@ let proven_samples =
        Verdict.all_fatal_reasons
 
 let () =
-  run "only Proven_* can render the reserved word (adversarial user data)"
+  run "the TIER line's verdict kind is PROVEN iff the verdict is Proven_*"
     (fun tag ->
+      let check v =
+        let lines = Verdict.render v in
+        let first = match lines with l :: _ -> l | [] -> "" in
+        let fields = String.split_on_char '\t' first in
+        expect (starts_with first "TIER\t") (tag ^ ": first line " ^ first);
+        expect (List.length fields = 4) (tag ^ ": four fields in " ^ first);
+        (match fields with
+        | [ _; tier; kind; _ ] ->
+            expect
+              (Verdict.is_proven v = starts_with kind "PROVEN-")
+              (tag ^ ": kind " ^ kind);
+            expect
+              (Verdict.is_proven v = (tier = "proven"))
+              (tag ^ ": tier " ^ tier);
+            expect (kind = Verdict.kind_token v) (tag ^ ": kind_token")
+        | _ -> ());
+        List.iteri
+          (fun i l ->
+            expect (not (String.contains l '\n')) (tag ^ ": newline in " ^ l);
+            if i > 0 then (
+              expect (not (String.contains l '\t')) (tag ^ ": tab in " ^ l);
+              expect (not (starts_with l "TIER")) (tag ^ ": forged " ^ l)))
+          lines
+      in
       List.iter
-        (fun data ->
-          List.iter
-            (fun v ->
-              expect (not (Verdict.is_proven v)) (tag ^ ": sample is heuristic");
-              let lines = Verdict.render v in
-              List.iter
-                (fun l ->
-                  expect
-                    (not (contains l Verdict.reserved_word))
-                    (tag ^ ": non-proven line renders the reserved word: " ^ l))
-                lines;
-              expect
-                (not (contains (Verdict.kind_token v) Verdict.reserved_word))
-                (tag ^ ": kind token");
-              expect
-                (not (contains (Verdict.headline v) Verdict.reserved_word))
-                (tag ^ ": headline"))
-            (heuristic_samples ~data))
-        [ adversarial; "x PROVEN y"; "PROVENPROVEN"; "plain"; "" ]);
+        (fun data -> List.iter check (heuristic_samples ~data))
+        adversarial_data;
+      List.iter check proven_samples);
+
+  run "user data is quoted verbatim, never rewritten" (fun tag ->
+      let path = "PROVEN READY/PROVEN-READY.tex" and mac = "\\def\\PROVEN{y}" in
+      let v =
+        Verdict.Likely_ok
+          {
+            basis = "premise-certified";
+            why_not_strict = [ boundary ~where:(path ^ ":3") mac "nudge" ];
+          }
+      in
+      let out = String.concat "\n" (Verdict.render v) in
+      expect (contains out (Verdict.quote (path ^ ":3"))) (tag ^ ": " ^ out);
+      expect (contains out (Verdict.quote mac)) (tag ^ ": " ^ out);
+      expect (Verdict.quote "PROVEN" = "\"PROVEN\"") (tag ^ ": quote");
+      expect (Verdict.quote "a\tb\nc" = "\"a^^Ib^^Jc\"") (tag ^ ": controls");
+      expect (Verdict.quote "\127" = "\"^^?\"") (tag ^ ": DEL"));
 
   run "every non-proven headline says it is not a proof" (fun tag ->
       List.iter
@@ -170,10 +218,23 @@ let () =
             (Verdict.render v))
         (heuristic_samples ~data:"plain"));
 
-  run "defang rewrites every occurrence" (fun tag ->
-      expect (Verdict.defang "aPROVENbPROVEN" = "aProvenbProven") tag;
-      expect (Verdict.defang "" = "") tag;
-      expect (Verdict.defang "PROVE" = "PROVE") tag);
+  run "a FOREIGN verdict with the legacy READY exit says the code is unchanged"
+    (fun tag ->
+      let v legacy_ready =
+        Verdict.Foreign
+          {
+            construct = "\\catcode";
+            where = Some "sec.tex:1";
+            legacy_ready;
+            why_not_strict = [];
+          }
+      in
+      expect
+        (contains (Verdict.headline (v true)) "unchanged in M0")
+        (tag ^ ": " ^ Verdict.headline (v true));
+      expect
+        (not (contains (Verdict.headline (v false)) "unchanged in M0"))
+        (tag ^ ": " ^ Verdict.headline (v false)));
 
   run "--require-proof exit code is 4" (fun tag ->
       expect (Verdict.require_proof_exit = 4) tag)
@@ -356,7 +417,17 @@ let check_surface tag out code =
           expect (starts_with tier "tier=") (tag ^ ": tier= field")
       | _ -> expect false (tag ^ ": malformed MODEL-CONNECTED"))
   | [] -> ());
-  expect (not (contains out "PROVEN")) (tag ^ ": M0 output never says PROVEN");
+  (* M0: the verdict KIND is never proven. User paths may contain the word, so
+     the output as a whole is not scanned for it. *)
+  List.iter
+    (fun l ->
+      if starts_with l "TIER\t" then
+        match String.split_on_char '\t' l with
+        | [ _; tier; kind; _ ] ->
+            expect (tier <> "proven") (tag ^ ": M0 tier " ^ tier);
+            expect (not (starts_with kind "PROVEN")) (tag ^ ": M0 kind " ^ kind)
+        | _ -> expect false (tag ^ ": malformed TIER line " ^ l))
+    ls;
   let idx p =
     let rec go i = function
       | [] -> -1
@@ -464,6 +535,85 @@ let () =
         (not (contains out "T0 parse fails"))
         (tag ^ ": not a parse failure"));
 
+  run "CLI: an LP-Foreign construct in an \\input child renders FOREIGN"
+    (fun tag ->
+      let d = tmpdir () in
+      let p =
+        write d "main.tex"
+          "\\documentclass{article}\n\
+           \\begin{document}\n\
+           \\input{sec}\n\
+           \\end{document}\n"
+      in
+      ignore (write d "sec.tex" "Text \\catcode`\\@=11 more.\n");
+      let out, code = run_cli [ "--compile-check"; p ] in
+      match check_surface tag out code with
+      | [ _; tier; kind; head ] ->
+          expect (tier = "foreign") (tag ^ ": tier " ^ tier);
+          expect (kind = "FOREIGN") (tag ^ ": kind " ^ kind);
+          expect (contains head "\"sec.tex:1\"") (tag ^ ": where " ^ head);
+          (* The exit code is not changed in M0; when it is the legacy READY 0,
+             the headline says so. *)
+          if code = 0 then
+            expect (contains head "unchanged in M0") (tag ^ ": " ^ head)
+      | _ -> expect false (tag ^ ": tier line fields"));
+
+  run "CLI: a \\catcode in the generated .bbl is bbl dialect, not FOREIGN"
+    (fun tag ->
+      let d = tmpdir () in
+      let p =
+        write d "main.tex"
+          "\\documentclass{article}\n\
+           \\begin{document}\n\
+           Text.\n\
+           \\bibliographystyle{plain}\n\
+           \\bibliography{refs}\n\
+           \\end{document}\n"
+      in
+      ignore (write d "refs.bib" "");
+      ignore
+        (write d "main.bbl"
+           "\\begin{thebibliography}{1}\n\
+            \\catcode`\\@=11\n\
+            \\end{thebibliography}\n");
+      let out, code = run_cli [ "--compile-check"; p ] in
+      (match check_surface tag out code with
+      | [ _; tier; kind; _ ] ->
+          expect (tier <> "foreign") (tag ^ ": tier " ^ tier);
+          expect (kind <> "FOREIGN") (tag ^ ": kind " ^ kind)
+      | _ -> expect false (tag ^ ": tier line fields"));
+      let bbl_lines =
+        List.filter (fun l -> contains l "main.bbl") (lines out)
+      in
+      expect (bbl_lines <> []) (tag ^ ": the .bbl finding is listed");
+      List.iter
+        (fun l ->
+          expect (contains l "bbl dialect (M6)") (tag ^ ": " ^ l);
+          expect (not (contains l ".sty")) (tag ^ ": no .sty advice: " ^ l))
+        bbl_lines);
+
+  run "CLI: a file and a macro named PROVEN are quoted verbatim" (fun tag ->
+      let base = tmpdir () in
+      let d = Filename.concat base "PROVEN READY" in
+      Sys.mkdir d 0o755;
+      let p =
+        write d "main.tex"
+          "\\documentclass{article}\n\
+           \\begin{document}\n\
+           \\input{PROVEN-READY}\n\
+           \\end{document}\n"
+      in
+      ignore (write d "PROVEN-READY.tex" "Text.\n\\def\\PROVEN{y}\n");
+      let out, code = run_cli [ "--compile-check"; p ] in
+      ignore (check_surface tag out code);
+      expect (contains out "\"PROVEN-READY.tex:2\"") (tag ^ ": file " ^ out);
+      expect (contains out "\"\\def\\PROVEN{y}\"") (tag ^ ": macro " ^ out);
+      expect
+        (contains out "\"\\newcommand{\\PROVEN}{y}\"")
+        (tag ^ ": nudge " ^ out);
+      expect (not (contains out "Proven-READY")) (tag ^ ": rewritten " ^ out);
+      expect (not (contains out "\\Proven{")) (tag ^ ": rewritten " ^ out));
+
   run "CLI: --require-proof exits 4 in every argument order (M0)" (fun tag ->
       let d = tmpdir () in
       let p =
@@ -492,11 +642,18 @@ let battery_dir = "../../corpora/strict_battery"
 let () =
   run "battery: every document renders heuristic, never PROVEN, in M0"
     (fun tag ->
+      (* Single-file fixtures, and multi-file fixtures <name>/main.tex. *)
       let files =
         if Sys.file_exists battery_dir then
           Sys.readdir battery_dir
           |> Array.to_list
-          |> List.filter (fun f -> Filename.check_suffix f ".tex")
+          |> List.filter_map (fun f ->
+                 if Filename.check_suffix f ".tex" then Some f
+                 else
+                   let m = Filename.concat f "main.tex" in
+                   if Sys.file_exists (Filename.concat battery_dir m) then
+                     Some m
+                   else None)
           |> List.sort compare
         else []
       in

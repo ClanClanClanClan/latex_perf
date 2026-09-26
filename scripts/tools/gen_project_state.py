@@ -266,8 +266,11 @@ def build(repo: Path) -> str:
 
     sr = strict_row("corpora/real_roots/proven_coverage_sample1.json",
                     "sample 1 (tuned)")
+    # ADR-012: sample 2 was used for the strict-tier design statistics, so it is
+    # DESIGN-SEEN for this metric and must never be labelled virgin here. The
+    # North Star's virgin sample is sample 3 (ADR-012 decision 7).
     sr += strict_row("corpora/real_roots/proven_coverage_sample2.json",
-                     "**sample 2 (virgin)**")
+                     "sample 2 (design-seen since ADR-012)")
     if sr:
         L += ["### Strict-tier coverage — THE North-Star metric (ADR-012)", "",
               "A document counts only when the CLI prints a **PROVEN** verdict "
@@ -281,8 +284,13 @@ def build(repo: Path) -> str:
               "number is weak evidence. **In milestone M0 the strict-tier "
               "membership predicate is a stub that returns false, so no "
               "verdict is proven and this number is zero by measurement.** "
-              "The headline figure will come from a sample no design decision "
-              "has seen (ADR-012); sample 2 is now design-seen. Definitions: "
+              "The North Star is defined on a VIRGIN sample, and neither row "
+              "below is one: sample 1 is tuned and sample 2 has been "
+              "design-seen since ADR-012. The headline figure will come from "
+              "sample 3 (ranks 401-600), drawn and graded only after every "
+              "graded artefact has been re-graded under the frozen oracle, "
+              "CI's digest-pinned TeX Live image (ADR-012 decision 7). "
+              "Definitions: "
               "`docs/v27/STRICT_TIER_DESIGN.md` §E and "
               "`docs/v27/adr/ADR-012-contract-bounded-proven-tier.md`.", "",
               "| corpus | strict-tier coverage (PROVEN = pdflatex) | strict_wrong "
@@ -293,7 +301,7 @@ def build(repo: Path) -> str:
     pb = proven_block("corpora/real_roots/proven_coverage_sample1.json",
                       "sample 1 (tuned)")
     pb += proven_block("corpora/real_roots/proven_coverage_sample2.json",
-                       "**sample 2 (virgin)**")
+                       "**sample 2 (untuned; design-seen since ADR-012)**")
     if pb:
         L += ["### Heuristic-tier statistic: premise-certified coverage (NOT a proof)", "",
               "**This is a heuristic-tier statistic, not the North Star and not "
@@ -317,7 +325,7 @@ def build(repo: Path) -> str:
         ce = (cert_error_row("corpora/real_roots/proven_coverage_sample1.json",
                              "sample 1 (tuned)")
               + cert_error_row("corpora/real_roots/proven_coverage_sample2.json",
-                               "**sample 2 (virgin)**"))
+                               "**sample 2 (untuned; design-seen since ADR-012)**"))
         if ce:
             L += ["#### Heuristic tier: how often the certificate is wrong", "",
                   "Certified documents that pdflatex nevertheless REJECTS. This "
@@ -334,9 +342,13 @@ def build(repo: Path) -> str:
         c2 = s2["counts"]
         g2 = sum(v for k, v in c2.items() if not k.startswith("ungraded"))
         ok2 = c2.get("true-READY", 0) + c2.get("true-NOT-READY", 0)
-        L += ["### Out-of-sample position (sample 2 — VIRGIN)", "",
+        L += ["### Out-of-sample position (sample 2 — untuned)", "",
               "Ranks 201-400 of the same deterministic ordering. **No fix has "
-              "ever been tuned against these documents.** Sample 1 is burned "
+              "ever been tuned against these documents**, so for the heuristic "
+              "tier this remains the out-of-sample position. It is no longer "
+              "virgin: ADR-012's strict-tier design used sample 2 for its "
+              "configuration statistics, so it is design-seen, and the "
+              "strict-tier North Star waits for sample 3. Sample 1 is burned "
               "for soundness claims: every fix in the #565-#572 run was "
               "measured against it, so its false-READY rate is an optimistic "
               "estimate and must never be quoted alone.", "",

@@ -9,7 +9,10 @@ PREMISE-CERTIFIED line on most of them. Milestone M0 relabels every one as
 heuristic; milestones M2/M3 must turn every one into PROVEN NOT-READY with the
 named E-code.
 
-For every `corpora/strict_battery/*.tex` this script records:
+For every `corpora/strict_battery/*.tex`, and every multi-file fixture
+`corpora/strict_battery/<name>/main.tex` (a directory whose whole content is
+the project, needed for the closure-scoped shapes such as OPEN-024, where the
+fatal line sits in an \\input child), this script records:
 
   pdflatex  the pinned-oracle outcome, graded by the SAME protocol as the
             real-paper differential: `-interaction=nonstopmode -halt-on-error`,
@@ -80,8 +83,12 @@ def first_error(log: Path) -> str:
 def grade(tex: Path, timeout: int = 60) -> dict:
     with tempfile.TemporaryDirectory() as td:
         work = Path(td) / "w"
-        work.mkdir()
-        shutil.copy(tex, work / tex.name)
+        if tex.name == "main.tex" and tex.parent.name != BATTERY.name:
+            # A multi-file fixture: the whole directory is the project.
+            shutil.copytree(tex.parent, work)
+        else:
+            work.mkdir()
+            shutil.copy(tex, work / tex.name)
         env = dict(os.environ, TEXMFHOME=str(Path(td) / "th"),
                    TEXMFVAR=str(Path(td) / "tv"), openin_any="p",
                    openout_any="p", SOURCE_DATE_EPOCH="0")
@@ -114,14 +121,18 @@ def build(repo: Path) -> dict:
     if not pin.startswith(PIN):
         raise SystemExit(f"[strict-battery] PIN MISMATCH: {pin!r} != {PIN!r}")
     rows = []
-    for tex in sorted((repo / BATTERY).glob("*.tex")):
-        m = re.match(r"(e\d+)_", tex.name)
+    docs = sorted(list((repo / BATTERY).glob("*.tex"))
+                  + list((repo / BATTERY).glob("*/main.tex")),
+                  key=lambda t: str(t.relative_to(repo / BATTERY)))
+    for tex in docs:
+        rel = str(tex.relative_to(repo / BATTERY))
+        m = re.match(r"(e\d+)_", rel)
         if not m:
-            raise SystemExit(f"[strict-battery] {tex.name}: name must start "
+            raise SystemExit(f"[strict-battery] {rel}: name must start "
                              f"with its E-code, e.g. e3_frac_in_text.tex")
         code = m.group(1)
         rows.append({
-            "file": tex.name,
+            "file": rel,
             "e_code": code.upper(),
             "failure_mode": E_DESCRIPTIONS[code],
             "pdflatex": grade(tex),

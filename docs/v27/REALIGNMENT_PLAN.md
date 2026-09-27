@@ -63,11 +63,17 @@ artefacts:
 
 | share | n | class |
 |---|---|---|
-| 64.3% | 18 | counter/command collision (`\c@`, `\theH`, `\AddToDocumentProperties`) |
+| 64.3% | 18 | counter/command collision (`\c@`, `\theH`, `\qed`) |
 | 14.3% | 4 | undefined control sequence |
 | 10.7% | 3 | math-mode violation (PAR-IN-MATH) |
 | 7.1% | 2 | stray primitive / brace (`\or`, `\caption@ydblarg`) |
 | 3.6% | 1 | cleveref override |
+
+⚠ **Corrected 2026-09-27 (C-74):** the third example used to read
+`\AddToDocumentProperties`. That was 2506.18436v1's recorded reason, and it was
+the laptop TeX Live's own clash. Under the pinned image the paper still fails,
+on `\qed` already defined, so it stays a real counter/command-collision
+false-READY and the counts above do not move. It is not an oracle artefact.
 
 `body_token` has four constructors (`PdflatexModel.v:127-131`) and a document
 can be model-fatal only via a dangling build edge or an unadmitted feature.

@@ -22,7 +22,8 @@
 # whole macro universe) are expected and do NOT fail the run; a genuinely new
 # soundness miss does.
 #
-# Requires pdflatex on PATH. Runs locally and in CI's tex-oracle workflow, where
+# pdflatex COMPILES means rc 0 AND a PDF (STRICT_TIER_DESIGN.md §B.4, E0).
+# Requires the pinned-image oracle (_oracle.sh). Runs locally and in CI's tex-oracle workflow, where
 # it is ADVISORY (continue-on-error): its exit condition is a measurement of the
 # soundness residual, and it needs a large, correctness-critical TeX install — an
 # incomplete one manufactures spurious FALSE-READY(NEW!) rows. It is also blind to
@@ -31,7 +32,8 @@
 # (CLI-only, monotone) and false_ready_oracle.sh (pdflatex, HARD drift only).
 #
 # EXIT CODES: 0 clean | 1 a NEW false-READY beyond the allowlist | 2 infrastructure
-# (no pdflatex, no CLI, too few docs, a timeout, or a vacuous run) | 3 engine skew
+# (no oracle, no CLI, too few docs, a timeout or oracle failure on ANY document,
+# or a vacuous run) | 3 engine skew
 # | 4 over-rejection budget exceeded (SAFE direction — never conflate with 1).
 #
 # ENV: REQUIRE_PDFLATEX=1 makes every precondition an error instead of a skip;
@@ -85,21 +87,24 @@ REQUIRE="${REQUIRE_PDFLATEX:-0}"
 TEX_TIMEOUT="${TEX_TIMEOUT:-60}"
 die_infra() { echo "[diff-compile-check] FATAL: $*" >&2; exit 2; }
 
-if ! command -v pdflatex >/dev/null 2>&1; then
-  [ "$REQUIRE" = 1 ] && die_infra "REQUIRE_PDFLATEX=1 but pdflatex is not on PATH"
-  echo "[diff-compile-check] SKIP: pdflatex not on PATH"; exit 0
-fi
+# The ONE oracle (ADR-012 decision 7): the pinned TeX Live image, natively when
+# this runs inside it (tex-oracle.yml sets LP_ORACLE_IN_IMAGE), through the
+# container otherwise. A host pdflatex never grades; see _oracle.sh.
+# shellcheck source=scripts/tools/_oracle.sh
+. "$ROOT/scripts/tools/_oracle.sh"
+oracle_setup diff-compile-check "$REQUIRE"
 
 # A timeout produces pl=FAILS, which against a READY verdict manufactures a
 # FALSE-READY(NEW!) out of thin air. Never grade an unbounded run.
-TIMEOUT="$(command -v gtimeout || command -v timeout || true)"
-if [ -z "$TIMEOUT" ]; then
+TIMEOUT=""
+[ "$ORACLE_TIMEOUT_INSIDE" = 1 ] || TIMEOUT="$(command -v gtimeout || command -v timeout || true)"
+if [ -z "$TIMEOUT" ] && [ "$ORACLE_TIMEOUT_INSIDE" != 1 ]; then
   [ "$REQUIRE" = 1 ] && die_infra "REQUIRE_PDFLATEX=1 but neither gtimeout nor timeout is available"
   echo "[diff-compile-check] WARNING: no timeout binary; a hung pdflatex would be scored as a failure" >&2
 fi
 
 if [ -n "${EXPECT_TEX_VERSION:-}" ]; then
-  GOT_ENGINE="$(pdflatex --version 2>/dev/null | head -1)"
+  GOT_ENGINE="$ORACLE_BANNER"
   case "$GOT_ENGINE" in
     *"$EXPECT_TEX_VERSION"*) ;;
     *) echo "[diff-compile-check] PIN MISMATCH: engine '$GOT_ENGINE' != expected '$EXPECT_TEX_VERSION'." >&2
@@ -131,21 +136,63 @@ for f in "$CORPUS"/*.tex; do
   esac
   total=$((total+1))
   if "$CLI" --compile-check "$f" >/dev/null 2>&1; then cc=READY; else cc=NOT-READY; fi
-  d=$(mktemp -d); cp "$f" "$d/"
+  d=$(mktemp -d "${TMPDIR:-/tmp}/lp-oracle.XXXXXX"); cp "$f" "$d/"
   # Also copy any sibling _part.tex fragments so \input parents resolve.
   cp "$CORPUS"/*_part.tex "$d/" 2>/dev/null || true
-  if [ -n "$TIMEOUT" ]; then
-    ( cd "$d" && "$TIMEOUT" "$TEX_TIMEOUT" pdflatex -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
+  # Free space BEFORE and AFTER, and the run's stdout for pdfTeX failing to
+  # write its OWN output (oracle_vet, _oracle.sh). MEASURED 2026-09-27: with
+  # the work root full, pdfTeX printed its banner, failed on its own .pdf and
+  # exited 1 with a log -- ran=yes, pdf=no, i.e. graded FAILS.
+  pout="$(mktemp "${TMPDIR:-/tmp}/lp-oracle-out.XXXXXX")"
+  envok=yes
+  oracle_vet "$d" 2>/dev/null || envok=no
+  if [ "$envok" = no ]; then
+    prc=125
+  elif [ -n "$TIMEOUT" ]; then
+    ( cd "$d" && "$TIMEOUT" "$TEX_TIMEOUT" "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >"$pout" 2>/dev/null )
+    prc=$?
   else
-    ( cd "$d" && pdflatex -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
+    ( cd "$d" && "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >"$pout" 2>/dev/null )
+    prc=$?
   fi
-  prc=$?
+  if [ "$envok" = yes ] && ! oracle_vet "$d" "$pout" -interaction=nonstopmode -halt-on-error "$base" 2>/dev/null; then
+    envok=no
+  fi
+  rm -f "$pout"
+  if [ "$envok" = no ]; then
+    printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "ENVFAIL" "not graded (work root short of space, or pdfTeX could not write its own output)"
+    rm -rf "$d"; timeouts=$((timeouts+1)); continue
+  fi
+  # The §B.4 predicate (STRICT_TIER_DESIGN.md, E0): COMPILES = rc 0 AND a PDF.
+  # Grading by rc alone scored tolerated_write18.tex (rc 0, no PDF: its body
+  # typesets nothing) COMPILES, i.e. a false-not-ready, where every other
+  # grader in the repo scores it FAILS.
+  [ -s "$d/${base%.tex}.pdf" ] && pdf=yes || pdf=no
+  # Affirmative proof that pdfTeX ran, as false_ready_oracle.sh requires: the
+  # banner pdfTeX writes as the first line of the log. $d is fresh per document
+  # and the protocol here is ONE pass, so a log carrying it can only be this
+  # run's. (It used to match 'pdftex' anywhere, case-insensitively.)
+  if [ -s "$d/${base%.tex}.log" ] && grep -q 'This is pdfTeX' "$d/${base%.tex}.log" 2>/dev/null; then
+    ran=yes
+  else
+    ran=no
+  fi
   rm -rf "$d"
-  if [ "$prc" = 124 ]; then
-    printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "TIMEOUT" "not graded"
+  # 124 = timeout; 125 = the oracle itself failed (_oracle.py INFRA_RC: docker
+  # unreachable, container gone, a refused environment); 126/127 = a wrapper
+  # could not execute. None is a property of the DOCUMENT. Grading them as
+  # FAILS turned an infrastructure failure into FALSE-READY(NEW!) rows against
+  # the CLI and silently counted every NOT-READY row as a correct rejection.
+  case "$prc" in
+    124|125|126|127)
+      printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "rc=$prc" "not graded (timeout/oracle failure)"
+      timeouts=$((timeouts+1)); continue ;;
+  esac
+  if [ "$ran" = no ]; then
+    printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "NO-LOG" "not graded (no pdfTeX log: pdflatex did not run)"
     timeouts=$((timeouts+1)); continue
   fi
-  if [ "$prc" = 0 ]; then pl=COMPILES; else pl=FAILS; fi
+  if [ "$prc" = 0 ] && [ "$pdf" = yes ]; then pl=COMPILES; else pl=FAILS; fi
   cls=ok
   if   [ "$cc" = READY ]     && [ "$pl" = FAILS ];    then
     cls="FALSE-READY"; false_ready=$((false_ready+1)); false_ready_files="$false_ready_files $base"
@@ -165,6 +212,10 @@ echo "[diff-compile-check] FALSE-READY (cc=READY,pdflatex FAILS) total=$false_re
 echo "[diff-compile-check]   of which KNOWN-limitation (allowlisted)=$((false_ready-new_false_ready))"
 echo "[diff-compile-check]   of which NEW (regression)=$new_false_ready :$new_false_ready_files"
 echo "[diff-compile-check] false-not-ready (safe over-reject)=$false_notready"
+# First, before any verdict-shaped message: a run with ungraded documents has
+# no verdicts to report (the anti-vacuity message below would otherwise blame
+# the CLI for what the oracle did).
+[ "$timeouts" -eq 0 ] || die_infra "$timeouts document(s) not graded (timeout, oracle failure, no pdfTeX log, or a work root short of space / pdfTeX unable to write its own output); the classification is not trustworthy"
 
 # Allowlist staleness: an entry the CLI now catches is dead weight, and worse, it
 # would silently absorb the NEXT regression in that file. Warn, never fail.
@@ -188,7 +239,6 @@ fi
 if [ "$tp" -eq 0 ]; then
   die_infra "ZERO documents were both READY and compiled — the CLI is rejecting everything; these numbers are meaningless"
 fi
-[ "$timeouts" -eq 0 ] || die_infra "$timeouts document(s) timed out; the classification is not trustworthy"
 # Headroom on purpose. Every fix train in this repo is add-NOT-READY-only by
 # construction, so a cap sitting exactly at today's measurement (3) would trip on
 # the very next conservative detector and misreport routine work as breakage.

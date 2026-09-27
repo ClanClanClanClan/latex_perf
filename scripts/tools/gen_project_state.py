@@ -168,7 +168,11 @@ def build(repo: Path) -> str:
         nr = fnr + c.get("true-NOT-READY", 0)
         L += ["### Real-paper position", "",
               f"Oracle `{rr['oracle']['version']}`, {rr['oracle']['distribution']}, "
-              f"protocol `{rr['oracle']['protocol']}`.", "",
+              + (f"pinned image `{rr['oracle']['image']}` ({rr['oracle'].get('arch', '?')}, "
+                 f"{rr['oracle'].get('backend', '?')} backend), "
+                 if rr['oracle'].get('image') else
+                 "graded by a HOST TeX Live, not the pinned image (pre-baseline), ")
+              + f"protocol `{rr['oracle']['protocol']}`.", "",
               "| cell | n |", "|---|---|"]
         for k in ("true-READY", "true-NOT-READY", "FALSE-READY", "false-NOT-READY",
                   "ungraded-infra", "ungraded-timeout"):
@@ -287,9 +291,10 @@ def build(repo: Path) -> str:
               "The North Star is defined on a VIRGIN sample, and neither row "
               "below is one: sample 1 is tuned and sample 2 has been "
               "design-seen since ADR-012. The headline figure will come from "
-              "sample 3 (ranks 401-600), drawn and graded only after every "
+              "sample 3 (frame offset 720, ranks 721-920), drawn and graded only after every "
               "graded artefact has been re-graded under the frozen oracle, "
-              "CI's digest-pinned TeX Live image (ADR-012 decision 7). "
+              "CI's digest-pinned TeX Live image (ADR-012 decision 7); that "
+              "re-grade is done and moved no cell (OPEN-118). "
               "Definitions: "
               "`docs/v27/STRICT_TIER_DESIGN.md` §E and "
               "`docs/v27/adr/ADR-012-contract-bounded-proven-tier.md`.", "",

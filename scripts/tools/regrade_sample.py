@@ -8,37 +8,24 @@ scripts/tools/diff_real_roots.py:run_to_fixpoint byte-for-byte:
   <=3 passes, -halt-on-error KEPT, break on first rc 0, then ONE CONFIRMING
   pass whose rc is authoritative.
 """
-import json, os, shutil, subprocess, sys, tempfile, pathlib
+import json, shutil, subprocess, sys, pathlib
 
 CORP = "/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers"
 CLI = "/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/_build/default/latex-parse/src/validators_cli.exe"
 MAX_PASSES, TIMEOUT = 3, 300
 
-ENV = dict(os.environ)
-ENV.update({"TEXMFVAR": "/tmp/regrade-texmfvar", "openout_any": "p", "openin_any": "p"})
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _oracle import get_oracle  # noqa: E402
 
 
-def run_to_fixpoint(work, toplevel):
-    rc, passes = 1, 0
-    while passes < MAX_PASSES:
-        try:
-            t = subprocess.run(["pdflatex",
-                                "-interaction=nonstopmode", "-halt-on-error", toplevel],
-                               cwd=work, env=ENV, capture_output=True, timeout=TIMEOUT)
-        except subprocess.TimeoutExpired:
-            return -1, passes + 1
-        rc, passes = t.returncode, passes + 1
-        if rc == 0:
-            break
-    if rc != 0:
-        return rc, passes
-    try:
-        confirm = subprocess.run(["pdflatex",
-                                  "-interaction=nonstopmode", "-halt-on-error", toplevel],
-                                 cwd=work, env=ENV, capture_output=True, timeout=TIMEOUT)
-    except subprocess.TimeoutExpired:
-        return -1, passes + 1
-    return confirm.returncode, passes + 1
+def run_to_fixpoint(work, toplevel, env):
+    """The recorded protocol, run by the ONE oracle: the pinned TeX Live image
+    (ADR-012 decision 7). Superseded for sample 2 by
+    `diff_real_roots.py --repass --results results_sample2.json
+    --sample-offset 200`, which records per-row provenance."""
+    r = get_oracle().run_to_fixpoint(pathlib.Path(work), toplevel, env, TIMEOUT,
+                                     MAX_PASSES)
+    return r.rc, r.passes
 
 
 def first_error(work, toplevel):
@@ -64,10 +51,10 @@ def reason_lines(out):
 
 def grade(aid, top):
     pkg = pathlib.Path(CORP) / aid
-    with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+    with get_oracle().tempdir() as td:
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
-        rc, passes = run_to_fixpoint(str(work), top)
+        rc, passes = run_to_fixpoint(str(work), top, get_oracle().tex_env(td))
         pdf = (work / (pathlib.Path(top).stem + ".pdf")).exists()
         err = first_error(str(work), top)
     if rc == -1:

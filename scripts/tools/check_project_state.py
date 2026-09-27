@@ -314,7 +314,10 @@ def main() -> int:
     def _compiles(row):
         rc = row.get("pdflatex_rc")
         if rc is not None and rc != -1:
-            return rc == 0
+            # The oracle protocol requires a PDF as well (STRICT_TIER_DESIGN
+            # B.4, E0). Rows graded before the PDF was recorded lack the field
+            # and are read by rc alone, which is what graded them.
+            return rc == 0 and row.get("pdflatex_pdf", True) is not False
         v = str(row.get("pdflatex_verdict") or "").lower()
         return True if v == "compiles" else False if v == "fails" else None
 

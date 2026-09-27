@@ -1,0 +1,9 @@
+{
+ "artefact": "corpora/strict_battery/manifest.json",
+ "before_rev": "origin/main",
+ "before_oracle": "host TeX Live (no image recorded)",
+ "after_oracle": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+ "rows": 22,
+ "outcome_moved": [],
+ "first_error_changed_only": []
+}

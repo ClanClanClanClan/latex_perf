@@ -8,7 +8,10 @@ Arm CTRL reverts EVERYTHING and therefore MUST compile: without that control an
 after-number is compatible with the change having helped, hurt, or done nothing
 (C-57). Its absence from v1 of this harness was a real omission.
 """
-import json, os, pathlib, re, shutil, subprocess, sys, tempfile, difflib
+import json, os, pathlib, re, shutil, subprocess, sys, difflib
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _oracle import get_oracle  # noqa: E402
 
 CLI = pathlib.Path("_build/default/latex-parse/src/validators_cli.exe").resolve()
 ROOT = pathlib.Path(os.environ["LP_REAL_CORPUS"])
@@ -80,15 +83,13 @@ def compile_rc(work, top, td):
     env = dict(os.environ, TEXMFHOME=str(pathlib.Path(td) / "th"),
                TEXMFVAR=str(pathlib.Path(td) / "tv"), openin_any="p",
                openout_any="p", SOURCE_DATE_EPOCH="0")
+    # This tool's own (older) two-pass protocol, unchanged; the runs go
+    # through the pinned-image oracle (ADR-012 decision 7).
     rc = None
     for _ in range(2):
-        try:
-            r = subprocess.run(["pdflatex", "-interaction=nonstopmode",
-                                "-halt-on-error", top],
-                               cwd=work, env=env, capture_output=True, timeout=180)
-        except subprocess.TimeoutExpired:
+        rc, timed_out = get_oracle().run_once(pathlib.Path(work), top, env, 180)
+        if timed_out:
             return "timeout"
-        rc = r.returncode
         if rc != 0:
             break
     return rc
@@ -110,7 +111,7 @@ def main():
         aid, top = r["arxiv_id"], r["toplevel"]
         cells = []
         for _, preds, rall in arms:
-            with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+            with get_oracle().tempdir() as td:
                 work = pathlib.Path(td) / "w"
                 shutil.copytree(ROOT / aid, work)
                 build(work, preds, rall)

@@ -40,16 +40,25 @@ import pathlib
 import shutil
 import subprocess
 import sys
-import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from diff_real_roots import run_to_fixpoint, PIN  # noqa: E402
+from _oracle import OracleError, get_oracle  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
 CORPUS = pathlib.Path(
     os.environ.get("LP_REAL_CORPUS", "")).expanduser()
 
+
+
+def oracle_banner() -> str:
+    """The pinned-image oracle's banner, or exit 2 loudly: a host pdflatex is
+    never a substitute (ADR-012 decision 7)."""
+    try:
+        return get_oracle().banner
+    except OracleError as e:
+        sys.exit(f"FATAL: the pinned-image oracle is unavailable: {e}")
 
 def toplevel_of(pkg: pathlib.Path) -> str:
     """From arXiv's own 00README.json — never a \\documentclass scan, which a
@@ -128,7 +137,7 @@ def apply_rules(work, rules, timeout=120):
 
 def trial(pkg, toplevel, rules, timeout=240):
     """Fresh copy -> compile -> apply -> recompile. Returns (rc0, rc1, err, changed)."""
-    with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+    with get_oracle().tempdir() as td:
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
         env = tex_env(td)
@@ -164,7 +173,7 @@ def bisect(arxiv_id):
         out["verdict"] = "NOT REPRODUCED: the full fixer does not break it"
         return out
 
-    with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+    with get_oracle().tempdir() as td:
         probe = pathlib.Path(td) / "w"
         shutil.copytree(pkg, probe)
         firing = firing_rules(probe)
@@ -173,7 +182,7 @@ def bisect(arxiv_id):
     # 4. cheap pass — which rules change bytes at all
     byte_changing = []
     for rule in firing:
-        with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+        with get_oracle().tempdir() as td:
             w = pathlib.Path(td) / "w"
             shutil.copytree(pkg, w)
             if apply_rules(w, [rule]):
@@ -220,8 +229,7 @@ def main():
     if not CORPUS.is_dir():
         print("FATAL: LP_REAL_CORPUS unset or missing", file=sys.stderr)
         return 2
-    banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                            text=True).stdout.split("\n")[0]
+    banner = oracle_banner()  # the pinned image (ADR-012 decision 7)
     if PIN not in banner:
         print(f"FATAL: engine skew: {banner!r} vs pinned {PIN!r}",
               file=sys.stderr)

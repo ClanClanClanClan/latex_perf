@@ -37,16 +37,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from diff_real_roots import PIN, run_to_fixpoint  # noqa: E402
+from diff_real_roots import PIN, run_to_fixpoint_full  # noqa: E402
+from _oracle import OracleError, get_oracle  # noqa: E402
 
 BATTERY = Path("corpora/strict_battery")
 CLI = Path("_build/default/latex-parse/src/validators_cli.exe")
@@ -81,7 +80,8 @@ def first_error(log: Path) -> str:
 
 
 def grade(tex: Path, timeout: int = 60) -> dict:
-    with tempfile.TemporaryDirectory() as td:
+    # The pinned-image oracle (ADR-012 decision 7) must see the work directory.
+    with get_oracle().tempdir() as td:
         work = Path(td) / "w"
         if tex.name == "main.tex" and tex.parent.name != BATTERY.name:
             # A multi-file fixture: the whole directory is the project.
@@ -89,11 +89,9 @@ def grade(tex: Path, timeout: int = 60) -> dict:
         else:
             work.mkdir()
             shutil.copy(tex, work / tex.name)
-        env = dict(os.environ, TEXMFHOME=str(Path(td) / "th"),
-                   TEXMFVAR=str(Path(td) / "tv"), openin_any="p",
-                   openout_any="p", SOURCE_DATE_EPOCH="0")
-        rc, passes = run_to_fixpoint(work, tex.name, env, timeout)
-        pdf = (work / (tex.stem + ".pdf")).is_file()
+        run = run_to_fixpoint_full(work, tex.name, get_oracle().tex_env(td),
+                                   timeout)
+        rc, passes, pdf = run.rc, run.passes, run.pdf
         err = first_error(work / (tex.stem + ".log"))
     return {"rc": rc, "passes": passes, "pdf": pdf,
             "compiles": rc == 0 and pdf, "first_error": err}
@@ -116,8 +114,11 @@ def cli_verdict(repo: Path, tex: Path) -> dict:
 
 
 def build(repo: Path) -> dict:
-    pin = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                         text=True).stdout.split("\n")[0].strip()
+    try:
+        pin = get_oracle().banner
+    except OracleError as e:
+        raise SystemExit(f"[strict-battery] the pinned-image oracle is "
+                         f"unavailable: {e}")
     if not pin.startswith(PIN):
         raise SystemExit(f"[strict-battery] PIN MISMATCH: {pin!r} != {PIN!r}")
     rows = []
@@ -143,6 +144,7 @@ def build(repo: Path) -> dict:
         "provenance": {
             "produced_by": "scripts/tools/gen_strict_battery.py",
             "oracle": pin,
+            "oracle_provenance": get_oracle().provenance(),
             "protocol": "pdflatex -interaction=nonstopmode -halt-on-error, "
                         "restricted shell-escape (default), up to 3 passes plus "
                         "a confirming pass, PDF required",
@@ -170,6 +172,12 @@ def main() -> int:
     man = repo / BATTERY / "manifest.json"
     if ns.check:
         old = json.loads(man.read_text())
+        rec_img = (old["provenance"].get("oracle_provenance") or {}).get("image")
+        if rec_img != out["provenance"]["oracle_provenance"]["image"]:
+            print(f"[strict-battery] FAIL: the manifest was graded by "
+                  f"{rec_img or 'a host TeX Live (no image recorded)'}, not the "
+                  f"pinned image; re-grade it (ADR-012 decision 7)")
+            return 1
         a = [(r["file"], r["pdflatex"]["compiles"], r["cli_m0"]["rc"],
               r["cli_m0"]["tier"]) for r in old["rows"]]
         b = [(r["file"], r["pdflatex"]["compiles"], r["cli_m0"]["rc"],

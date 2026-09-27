@@ -1,0 +1,599 @@
+#!/usr/bin/env python3
+"""The ONE pdflatex oracle of this project (ADR-012 decision 7).
+
+WHY THIS FILE EXISTS.
+
+Until 2026-09-27 every grading tool in `scripts/tools/` ran whatever `pdflatex`
+was first on PATH, and checked only its `--version` banner against the pin
+`pdfTeX 3.141592653-2.6-1.40.29`. The banner pins the ENGINE BINARY and nothing
+else: the macro layer (LaTeX kernel, every package, every font map) is whatever
+the local TeX Live tree holds. On the maintainer's laptop that tree had seen 37
+`tlmgr update` sessions since March, a failed restore, and orphaned
+pdfmanagement files, while still printing the pinned banner. So two machines
+that both "passed the pin check" could grade the same paper differently, and
+the project's published numbers were graded by the laptop.
+
+The owner's decision (ADR-012, decision 7): the oracle is CI's digest-pinned
+TeX Live image, `TEX_IMAGE` in `.github/workflows/tex-oracle.yml` (the
+workflow is the source of truth; this module reads it from there), run locally
+through a container. The laptop TeX Live is not the oracle.
+
+WHAT THIS MODULE GUARANTEES.
+
+* One entry point. Every grading tool calls `get_oracle()` and runs pdflatex
+  through it; nothing else in the repo may shell out to `pdflatex` directly
+  (`check_oracle_pin.py` enforces that).
+* Two backends, chosen POSITIVELY, never by fallback:
+    - `container`: a long-lived container of the pinned image, reached with
+      `docker exec`. The work directory must lie under the oracle work root,
+      which is mounted into the container at the SAME absolute path (colima
+      mounts only the user's home, so `/private/tmp` is invisible inside it;
+      this is checked by a nonce round-trip, not assumed).
+    - `native`: used ONLY when this process already runs inside the pinned
+      image (CI's tex-oracle job). It is selected by `LP_ORACLE_IN_IMAGE`,
+      which tex-oracle.yml sets to the image reference, AND it is then
+      verified: the TeX tree's fingerprint must equal the one recorded below
+      for this architecture. Setting the variable on a laptop fails loudly.
+  If neither is available the oracle raises `OracleUnavailable`. There is no
+  path on which a laptop pdflatex grades anything.
+* The digest pins an INDEX, not an image: it names one arm64 and one amd64
+  image. CI grades on amd64; a Mac grades on arm64. Their TeX trees are
+  compared by `macro_layer_sha256` (every non-binary TeX Live package with its
+  revision), recorded below for both architectures; `tlpdb_sha256` differs by
+  construction because the tlpdb lists the architecture's binary packages.
+* Every artefact records `provenance()`: image, architecture, banner, the tree
+  fingerprints and the backend. `check_oracle_pin.py` refuses a graded artefact
+  whose recorded image is not the workflow's.
+
+THE PROTOCOL (unchanged from the recorded one; STRICT_TIER_DESIGN.md §B.4).
+
+`pdflatex -interaction=nonstopmode -halt-on-error <toplevel>`, the stock
+restricted shell-escape (no `-shell-escape`, no `-no-shell-escape`, OPEN-053),
+up to 3 passes: run to the first rc 0, then ONE confirming pass whose rc is
+authoritative (the `fr_toc_second_pass` lesson). The result also records
+whether a PDF was produced; `compiles` requires rc 0 AND a PDF (§B.4 E0).
+
+Usage as a tool:
+  _oracle.py info                 print the oracle's provenance (starts it)
+  _oracle.py fingerprint          fingerprint the TeX tree this process sees
+  _oracle.py assert-native        inside the image: verify, exit 0/2
+  _oracle.py workroot             print the work root (for shell callers)
+  _oracle.py pdflatex [--timeout S] ARGS...
+                                  run ONE pdflatex in the current directory
+                                  through the oracle; exit with its rc (124 on
+                                  timeout). The shim the shell graders use.
+  _oracle.py stop                 remove the long-lived container
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import platform
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+WORKFLOW = REPO / ".github/workflows/tex-oracle.yml"
+
+PROTOCOL = ("-interaction=nonstopmode -halt-on-error, restricted shell-escape "
+            "(the pdflatex default, OPEN-053), up to 3 passes: run to the first "
+            "rc 0, then ONE confirming pass whose rc is authoritative; PDF "
+            "recorded (compiles = rc 0 AND a PDF, STRICT_TIER_DESIGN.md B.4 E0)")
+MAX_PASSES = 3
+
+# MEASURED 2026-09-27 from the two platform images of the pinned index
+# (arm64 manifest sha256:010653c0bb13..., amd64 manifest sha256:c268e1c3611a...),
+# by `_oracle.py fingerprint` run inside each. A re-pin of TEX_IMAGE must
+# re-measure both; check_oracle_pin.py fails when the workflow's digest is not
+# the one these were measured for.
+FINGERPRINTED_IMAGE = ("texlive/texlive@sha256:"
+                       "4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b")
+TREE_FINGERPRINTS = {
+    "aarch64": {
+        "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+        "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+    },
+    "x86_64": {
+        "tlpdb_sha256": "48e01be17878c251ee82c881bb0d94d83120956da8339b52defcee2d5cd7e677",
+        "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+    },
+}
+
+# Environment variables that shape a pdflatex run and are forwarded into the
+# container. Nothing else from the host crosses: in particular not PATH, HOME
+# or any TEXMF* tree pointing at the host's TeX Live.
+_ENV_FORWARD = re.compile(
+    r"^(TEXMFHOME|TEXMFVAR|TEXMFCONFIG|openin_any|openout_any|"
+    r"SOURCE_DATE_EPOCH|FORCE_SOURCE_DATE|max_print_line|error_line|"
+    r"half_error_line|TEXINPUTS|BIBINPUTS|BSTINPUTS|L0_VALIDATORS)$")
+
+_DOCKER_CANDIDATES = ("docker", "/opt/homebrew/bin/docker", "/usr/local/bin/docker")
+
+
+class OracleError(RuntimeError):
+    """The oracle cannot give a trustworthy answer. Never caught to fall back."""
+
+
+class OracleUnavailable(OracleError):
+    """No pinned-image backend is reachable from this process."""
+
+
+def workflow_pin() -> tuple[str, str]:
+    """(TEX_IMAGE, TEX_EXPECT_VERSION) as tex-oracle.yml declares them."""
+    text = WORKFLOW.read_text()
+    img = re.search(r"^\s*TEX_IMAGE:\s*(\S+)\s*$", text, re.M)
+    ver = re.search(r"^\s*TEX_EXPECT_VERSION:\s*(\S+)\s*$", text, re.M)
+    if not img or not ver:
+        raise OracleError(f"cannot read TEX_IMAGE/TEX_EXPECT_VERSION from {WORKFLOW}")
+    return img.group(1), ver.group(1)
+
+
+IMAGE, EXPECT_VERSION = workflow_pin()
+
+
+def tree_fingerprint(texmfroot: str | None = None) -> dict:
+    """Fingerprint the TeX Live tree visible to THIS process.
+
+    tlpdb_sha256        the whole package database (architecture-specific: it
+                        lists the installed binary packages).
+    macro_layer_sha256  sha256 over the sorted `name revision` pairs of every
+                        package that is not a per-architecture binary package
+                        (`<pkg>.<arch>`) and not the installation record. Equal
+                        values mean the same kernel, packages and fonts at the
+                        same TeX Live revisions, whatever the CPU.
+    fmt_sha256          the built pdflatex.fmt.
+    """
+    if texmfroot is None:
+        texmfroot = subprocess.run(["kpsewhich", "-var-value", "TEXMFROOT"],
+                                   capture_output=True, text=True).stdout.strip()
+    tlpdb = Path(texmfroot) / "tlpkg" / "texlive.tlpdb"
+    raw = tlpdb.read_bytes()
+    # `<pkg>.<arch>` binary packages (e.g. `pdftex.aarch64-linux`); a plain
+    # dot is NOT enough (`texlive.infra` is a macro-layer package).
+    import re as _re
+    arch_suffix = _re.compile(r"\.(aarch64|x86_64|amd64|i386|armhf|universal)-"
+                              r"[a-z0-9]+$|\.windows$|\.win64$")
+    pairs = []
+    name = None
+    for line in raw.decode("utf-8", "replace").split("\n"):
+        if line.startswith("name "):
+            name = line[5:].strip()
+        elif line.startswith("revision ") and name is not None:
+            if (not arch_suffix.search(name)
+                    and name != "00texlive.installation"):
+                pairs.append(f"{name} {line[9:].strip()}")
+            name = None
+    fmt = subprocess.run(["kpsewhich", "-engine=pdftex", "pdflatex.fmt"],
+                         capture_output=True, text=True).stdout.strip()
+    banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
+                            text=True).stdout.split("\n")[0].strip()
+    return {
+        "arch": platform.machine(),
+        "texmfroot": texmfroot,
+        "banner": banner,
+        "tlpdb_sha256": hashlib.sha256(raw).hexdigest(),
+        "macro_layer_sha256": hashlib.sha256(
+            "\n".join(sorted(pairs)).encode()).hexdigest(),
+        "macro_layer_packages": len(pairs),
+        "fmt_sha256": (hashlib.sha256(Path(fmt).read_bytes()).hexdigest()
+                       if fmt and Path(fmt).is_file() else None),
+    }
+
+
+def _check_fingerprint(fp: dict, where: str) -> None:
+    if IMAGE != FINGERPRINTED_IMAGE:
+        raise OracleError(
+            f"tex-oracle.yml pins {IMAGE} but the tree fingerprints in "
+            f"_oracle.py were measured for {FINGERPRINTED_IMAGE}. A re-pin must "
+            f"re-measure them (`_oracle.py fingerprint` inside each platform "
+            f"image) in the same PR.")
+    want = TREE_FINGERPRINTS.get(fp["arch"])
+    if want is None:
+        raise OracleError(f"{where}: no recorded fingerprint for arch {fp['arch']!r}")
+    if EXPECT_VERSION not in fp["banner"]:
+        raise OracleError(f"{where}: banner {fp['banner']!r} is not the pin "
+                          f"{EXPECT_VERSION!r}")
+    for k in ("tlpdb_sha256", "macro_layer_sha256"):
+        if fp[k] != want[k]:
+            raise OracleError(
+                f"{where}: {k} = {fp[k]} but the pinned image's {fp['arch']} tree "
+                f"is {want[k]}. This TeX tree is NOT the oracle; refusing to grade.")
+
+
+@dataclass
+class OracleRun:
+    rc: int            # -1 on timeout
+    passes: int
+    pdf: bool
+    timed_out: bool
+
+    @property
+    def compiles(self) -> bool:
+        return self.rc == 0 and self.pdf
+
+
+class _Base:
+    backend = "?"
+
+    def __init__(self):
+        self._fp = None
+
+    # -- provenance -------------------------------------------------------
+    def fingerprint(self) -> dict:
+        raise NotImplementedError
+
+    def provenance(self) -> dict:
+        fp = self.fingerprint()
+        return {
+            "engine": "pdflatex",
+            "distribution": "TeX Live 2026",
+            "version": fp["banner"],
+            "image": IMAGE,
+            "arch": fp["arch"],
+            "tlpdb_sha256": fp["tlpdb_sha256"],
+            "macro_layer_sha256": fp["macro_layer_sha256"],
+            "fmt_sha256": fp["fmt_sha256"],
+            "backend": self.backend,
+            "protocol": PROTOCOL,
+        }
+
+    @property
+    def banner(self) -> str:
+        return self.fingerprint()["banner"]
+
+    # -- work directories -------------------------------------------------
+    def tempdir(self, prefix: str = "lp-oracle-"):
+        return tempfile.TemporaryDirectory(prefix=prefix)
+
+    def tex_env(self, td) -> dict:
+        """The recorded per-run environment: private TEXMFHOME/TEXMFVAR,
+        paranoid file access, a fixed SOURCE_DATE_EPOCH."""
+        td = Path(td)
+        return dict(os.environ, TEXMFHOME=str(td / "th"), TEXMFVAR=str(td / "tv"),
+                    openin_any="p", openout_any="p", SOURCE_DATE_EPOCH="0")
+
+    # -- running ----------------------------------------------------------
+    def run_pdflatex(self, cwd: Path, args: list[str], env: dict | None,
+                     timeout: int) -> tuple[int, bytes, bool]:
+        """ONE pdflatex run. Returns (rc, combined output, timed_out)."""
+        raise NotImplementedError
+
+    def run_once(self, work: Path, toplevel: str, env: dict | None, timeout: int,
+                 halt: bool = True) -> tuple[int, bool]:
+        args = ["-interaction=nonstopmode"] + (["-halt-on-error"] if halt else []) + [toplevel]
+        rc, _, to = self.run_pdflatex(Path(work), args, env, timeout)
+        return (-1 if to else rc), to
+
+    def run_to_fixpoint(self, work: Path, toplevel: str, env: dict | None,
+                        timeout: int, max_passes: int = MAX_PASSES) -> OracleRun:
+        """The recorded protocol; see diff_real_roots.run_to_fixpoint's
+        docstring for why each step exists."""
+        work = Path(work)
+        pdf_path = work / (Path(toplevel).stem + ".pdf")
+        rc, passes = -1, 0
+        for _ in range(max_passes):
+            rc, to = self.run_once(work, toplevel, env, timeout)
+            passes += 1
+            if to:
+                return OracleRun(-1, passes, pdf_path.is_file(), True)
+            if rc == 0:
+                break
+        if rc != 0:
+            return OracleRun(rc, passes, pdf_path.is_file(), False)
+        rc, to = self.run_once(work, toplevel, env, timeout)
+        passes += 1
+        if to:
+            return OracleRun(-1, passes, pdf_path.is_file(), True)
+        return OracleRun(rc, passes, pdf_path.is_file(), False)
+
+
+class NativeOracle(_Base):
+    """Only inside the pinned image. Verified, never assumed."""
+    backend = "native"
+
+    def __init__(self):
+        super().__init__()
+        self.fingerprint()  # verify eagerly: a wrong tree fails at construction
+
+    def fingerprint(self) -> dict:
+        if self._fp is None:
+            fp = tree_fingerprint()
+            _check_fingerprint(fp, "LP_ORACLE_IN_IMAGE is set, but")
+            self._fp = fp
+        return self._fp
+
+    def run_pdflatex(self, cwd, args, env, timeout):
+        try:
+            p = subprocess.run(["pdflatex", *args], cwd=cwd, env=env,
+                               capture_output=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            return 124, b"", True
+        return p.returncode, p.stdout + p.stderr, False
+
+
+class HostDiagnostic(NativeOracle):
+    """The host's own TeX Live, for DIAGNOSIS ONLY: attributing an
+    oracle-baseline diff to the host tree (ADR-012 decision 7 asks for each
+    changed cell to be classified). It is NOT the oracle: `get_oracle()` never
+    returns it, it verifies nothing, and its provenance says so, so a grade it
+    produces cannot be mistaken for one. Callers: oracle_baseline_classify.py."""
+    backend = "host-diagnostic-NOT-THE-ORACLE"
+
+    def __init__(self):
+        _Base.__init__(self)
+
+    def fingerprint(self) -> dict:
+        if self._fp is None:
+            self._fp = tree_fingerprint()
+        return self._fp
+
+    def provenance(self) -> dict:
+        d = super().provenance()
+        d["image"] = None
+        return d
+
+
+def host_diagnostic() -> HostDiagnostic:
+    return HostDiagnostic()
+
+
+def _docker() -> str | None:
+    if os.environ.get("LP_ORACLE_DOCKER"):  # explicit override (and for tests)
+        c = os.environ["LP_ORACLE_DOCKER"]
+        return c if os.access(c, os.X_OK) else None
+    for c in _DOCKER_CANDIDATES:
+        p = shutil.which(c) or (c if os.path.isabs(c) and os.access(c, os.X_OK) else None)
+        if p:
+            return p
+    return None
+
+
+def default_workroot() -> Path:
+    return Path(os.environ.get("LP_ORACLE_WORKROOT")
+                or Path.home() / ".cache" / "lp-oracle" / "work")
+
+
+class ContainerOracle(_Base):
+    """A long-lived container of the pinned image, reached by `docker exec`."""
+    backend = "container"
+
+    def __init__(self, workroot: Path | None = None):
+        super().__init__()
+        self.docker = _docker()
+        if self.docker is None:
+            raise OracleUnavailable(
+                "no docker CLI found. The oracle is the pinned TeX Live image "
+                f"{IMAGE}; start it with `colima start --cpu 4 --memory 6` (or "
+                "any docker) and `docker pull` the image. A local pdflatex is "
+                "NOT a substitute (ADR-012 decision 7).")
+        self.workroot = (workroot or default_workroot()).expanduser().resolve()
+        wr = str(self.workroot)
+        if "Dropbox" in wr or "CloudStorage" in wr:
+            raise OracleError(f"oracle work root {wr} is inside a synced folder; "
+                              "the container must never write there")
+        self.workroot.mkdir(parents=True, exist_ok=True)
+        self.name = ("lp-oracle-" + IMAGE.split("sha256:")[-1][:12] + "-"
+                     + hashlib.sha256(wr.encode()).hexdigest()[:8])
+        self._ensure_container()
+
+    def _dk(self, *args, timeout=120, check=False, input=None):
+        try:
+            p = subprocess.run([self.docker, *args], capture_output=True,
+                               timeout=timeout, input=input)
+        except subprocess.TimeoutExpired as e:
+            raise OracleError(f"docker {' '.join(args[:2])} timed out") from e
+        if check and p.returncode != 0:
+            raise OracleError(f"docker {' '.join(args[:3])} failed rc={p.returncode}: "
+                              f"{p.stderr.decode(errors='replace').strip()[:400]}")
+        return p
+
+    def _ensure_container(self):
+        v = self._dk("version", "--format", "{{.Server.Version}}", timeout=30)
+        if v.returncode != 0:
+            raise OracleUnavailable(
+                "the docker daemon is not reachable ("
+                + v.stderr.decode(errors="replace").strip()[:200]
+                + "). Start it (`colima start --cpu 4 --memory 6`). A local "
+                  "pdflatex is NOT a substitute (ADR-012 decision 7).")
+        if self._dk("image", "inspect", IMAGE, timeout=60).returncode != 0:
+            raise OracleUnavailable(f"the pinned image is not present: run "
+                                    f"`docker pull {IMAGE}`")
+        ins = self._dk("inspect", "--format",
+                       "{{.State.Running}} {{.Config.Image}}", self.name)
+        if ins.returncode == 0:
+            running, img = ins.stdout.decode().split()
+            if img != IMAGE:
+                self._dk("rm", "-f", self.name)
+            elif running != "true":
+                self._dk("start", self.name, check=True)
+        if self._dk("inspect", self.name).returncode != 0:
+            p = self._dk("run", "-d", "--name", self.name,
+                         "--label", "lp-oracle=1",
+                         "-v", f"{self.workroot}:{self.workroot}",
+                         "-e", "HOME=/tmp", "--entrypoint", "sleep",
+                         IMAGE, "infinity", timeout=300)
+            if p.returncode != 0 and b"already in use" not in p.stderr:
+                raise OracleError("cannot start the oracle container: "
+                                  + p.stderr.decode(errors="replace")[:400])
+            for _ in range(50):
+                ins = self._dk("inspect", "--format", "{{.State.Running}}", self.name)
+                if ins.stdout.strip() == b"true":
+                    break
+                time.sleep(0.2)
+        # Positive proof the work root is the SAME directory inside: a nonce
+        # written on the host must be read back through the container.
+        nonce = uuid.uuid4().hex
+        probe = self.workroot / f".mount-probe-{os.getpid()}-{nonce[:8]}"
+        probe.write_text(nonce)
+        try:
+            got = self._dk("exec", self.name, "cat", str(probe), timeout=60)
+        finally:
+            probe.unlink(missing_ok=True)
+        if got.stdout.decode().strip() != nonce:
+            raise OracleError(
+                f"the work root {self.workroot} is not visible inside the "
+                f"container (colima mounts only $HOME by default). Choose a "
+                f"work root under $HOME via LP_ORACLE_WORKROOT.")
+
+    def fingerprint(self) -> dict:
+        if self._fp is None:
+            p = self._dk("exec", self.name, "python3", "-c",
+                         _FINGERPRINT_SNIPPET, timeout=120, check=True)
+            fp = json.loads(p.stdout)
+            _check_fingerprint(fp, f"container {self.name}")
+            self._fp = fp
+        return self._fp
+
+    def tempdir(self, prefix: str = "lp-oracle-"):
+        return tempfile.TemporaryDirectory(prefix=prefix, dir=self.workroot)
+
+    def _inside(self, p: Path) -> bool:
+        try:
+            Path(p).resolve().relative_to(self.workroot)
+            return True
+        except ValueError:
+            return False
+
+    def run_pdflatex(self, cwd, args, env, timeout):
+        cwd = Path(cwd).resolve()
+        if not self._inside(cwd):
+            raise OracleError(
+                f"{cwd} is outside the oracle work root {self.workroot}, so the "
+                f"container cannot see it. Create work directories with "
+                f"oracle.tempdir().")
+        cmd = ["exec", "-w", str(cwd), "-e", "HOME=/tmp"]
+        for k, v in sorted((env or {}).items()):
+            if _ENV_FORWARD.match(k):
+                if k.startswith("TEXMF") and not self._inside(Path(v)):
+                    raise OracleError(f"{k}={v} is outside the oracle work root")
+                cmd += ["-e", f"{k}={v}"]
+        # The timeout runs INSIDE the container: killing the docker client on
+        # the host would leave pdflatex running in the container.
+        cmd += [self.name, "timeout", "-k", "10", str(int(timeout)), "pdflatex", *args]
+        try:
+            p = subprocess.run([self.docker, *cmd], capture_output=True,
+                               timeout=timeout + 90)
+        except subprocess.TimeoutExpired:
+            return 124, b"", True
+        if p.returncode in (124, 137):
+            return p.returncode, p.stdout + p.stderr, True
+        if p.returncode in (125, 126, 127) or (
+                p.returncode != 0 and b"Error response from daemon" in p.stderr):
+            raise OracleError("docker exec failed: "
+                              + p.stderr.decode(errors="replace")[:400])
+        return p.returncode, p.stdout + p.stderr, False
+
+    def stop(self):
+        self._dk("rm", "-f", self.name)
+
+
+def _fingerprint_source() -> str:
+    """The fingerprint function's own source, run inside the container, so the
+    container and native paths cannot compute different things."""
+    import inspect
+    return ("import hashlib, json, platform, subprocess\nfrom pathlib import Path\n"
+            + inspect.getsource(tree_fingerprint)
+            + "\nprint(json.dumps(tree_fingerprint()))\n")
+
+
+_FINGERPRINT_SNIPPET = _fingerprint_source()
+
+_ORACLE = None
+
+
+def in_image() -> bool:
+    return bool(os.environ.get("LP_ORACLE_IN_IMAGE"))
+
+
+def get_oracle() -> _Base:
+    """The oracle for this process. Raises OracleUnavailable/OracleError; never
+    returns a host-pdflatex backend."""
+    global _ORACLE
+    if _ORACLE is None:
+        if in_image():
+            if os.environ["LP_ORACLE_IN_IMAGE"] != IMAGE:
+                raise OracleError(f"LP_ORACLE_IN_IMAGE={os.environ['LP_ORACLE_IN_IMAGE']!r} "
+                                  f"but tex-oracle.yml pins {IMAGE!r}")
+            _ORACLE = NativeOracle()
+        else:
+            _ORACLE = ContainerOracle()
+    return _ORACLE
+
+
+def availability() -> tuple[bool, str]:
+    """(available, reason) without raising: for callers that may legitimately
+    SKIP in an environment with no TeX at all (CI's pure jobs)."""
+    try:
+        get_oracle()
+        return True, "ok"
+    except OracleError as e:
+        return False, str(e)
+
+
+def host_has_pdflatex() -> bool:
+    return shutil.which("pdflatex") is not None
+
+
+def first_error_block(log: Path, lines: int = 4) -> str:
+    """The first `!` line of a pdflatex log joined with its wrapped
+    continuation (TeX hard-wraps at ~79 columns; concatenation, not a space,
+    is the inverse of the wrap)."""
+    if not Path(log).is_file():
+        return ""
+    ll = Path(log).read_text(errors="replace").split("\n")
+    for i, line in enumerate(ll):
+        if line.startswith("!"):
+            return "".join(ll[i:i + lines])
+    return ""
+
+
+def main(argv: list[str]) -> int:
+    if not argv:
+        print(__doc__)
+        return 2
+    cmd, rest = argv[0], argv[1:]
+    try:
+        if cmd == "fingerprint":
+            print(json.dumps(tree_fingerprint(), indent=1))
+            return 0
+        if cmd == "assert-native":
+            NativeOracle()
+            print(f"[oracle] native backend verified: {IMAGE}")
+            return 0
+        if cmd == "workroot":
+            print(default_workroot().expanduser().resolve())
+            return 0
+        if cmd == "stop":
+            ContainerOracle().stop()
+            return 0
+        o = get_oracle()
+        if cmd == "info":
+            print(json.dumps(o.provenance(), indent=1))
+            return 0
+        if cmd == "version":
+            print(o.banner)
+            return 0
+        if cmd == "pdflatex":
+            timeout = 120
+            if rest[:1] == ["--timeout"]:
+                timeout, rest = int(rest[1]), rest[2:]
+            rc, out, to = o.run_pdflatex(Path.cwd(), rest, dict(os.environ), timeout)
+            sys.stdout.buffer.write(out)
+            return 124 if to else rc
+    except OracleError as e:
+        print(f"[oracle] FATAL: {e}", file=sys.stderr)
+        return 2
+    print(f"[oracle] unknown command {cmd!r}", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

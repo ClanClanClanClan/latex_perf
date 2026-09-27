@@ -87,6 +87,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _oracle import availability, get_oracle, host_has_pdflatex  # noqa: E402
+
 CORPORA = ["corpora/compile_check", "corpora/apply_fixes"]
 MANIFEST = "corpora/apply_fixes/manifest.json"
 # TWO ORTHOGONAL AXES, and both matter:
@@ -123,14 +126,17 @@ def find_timeout() -> str | None:
 
 
 def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 60) -> bool | None:
-    """True=compiles, False=fails, None=could not be graded (timeout/not run)."""
-    cmd = ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", base]
-    if timeout_bin:
-        cmd = [timeout_bin, str(secs)] + cmd
-    p = subprocess.run(cmd, cwd=workdir, capture_output=True)
-    if p.returncode in (124, 125, 126, 127):
+    """True=compiles, False=fails, None=could not be graded (timeout/not run).
+
+    One pass under `-halt-on-error`, as this gate has always graded, run by the
+    ONE oracle (ADR-012 decision 7): natively inside CI's pinned image, through
+    the container elsewhere. `timeout_bin` is kept for the precondition check;
+    the oracle enforces the timeout itself (inside the container, so a hung
+    pdflatex is killed where it runs)."""
+    rc, timed_out = get_oracle().run_once(workdir, base, dict(os.environ), secs)
+    if timed_out or rc in (124, 125, 126, 127):
         return None
-    return p.returncode == 0
+    return rc == 0
 
 
 def main() -> int:
@@ -153,9 +159,19 @@ def main() -> int:
         return die("the CLI did not produce its usage banner — it cannot execute here")
 
     require_tex = args.require_pdflatex or os.environ.get("REQUIRE_PDFLATEX") == "1"
-    have_tex = shutil.which("pdflatex") is not None
+    # The ONE oracle (ADR-012 decision 7). A host pdflatex is never used: in
+    # an environment with no TeX at all (ci.yml's build job) property (b) is
+    # skipped as before, but a host pdflatex WITHOUT the pinned-image oracle is
+    # a loud failure, because silently skipping there would hide that the
+    # grader someone expected is not the one that would have run.
+    have_tex, why = availability()
     if require_tex and not have_tex:
-        return die("REQUIRE_PDFLATEX=1 but pdflatex is not on PATH")
+        return die(f"REQUIRE_PDFLATEX=1 but the pinned-image oracle is unavailable: {why}")
+    if not have_tex and host_has_pdflatex():
+        return die(f"a host pdflatex is on PATH but the pinned-image oracle is "
+                   f"unavailable ({why}); the host TeX Live is not the oracle, so "
+                   f"property (b) would be graded by the wrong engine. Start the "
+                   f"container, or run with pdflatex off PATH to skip (b).")
     timeout_bin = find_timeout()
     if have_tex and not timeout_bin and require_tex:
         return die("pdflatex present but no gtimeout/timeout; a hang would be scored as a failure")
@@ -239,7 +255,7 @@ def main() -> int:
             # actually takes today.
             b4: bool | None = None
             if have_tex:
-                with tempfile.TemporaryDirectory(prefix="fixer-rt-pristine-") as ptmp:
+                with get_oracle().tempdir(prefix="fixer-rt-pristine-") as ptmp:
                     pristine = Path(ptmp) / "p"
                     shutil.copytree(corpus, pristine)
                     b4 = pdflatex_ok(pristine, base, timeout_bin)
@@ -249,7 +265,8 @@ def main() -> int:
                 env = {**os.environ, **penv}
                 # Stage the WHOLE directory: \input{sibling} resolves relative to
                 # the file, so a bare temp dir manufactures T2 failures.
-                with tempfile.TemporaryDirectory(prefix="fixer-rt-") as tmp:
+                with (get_oracle().tempdir(prefix="fixer-rt-") if have_tex
+                      else tempfile.TemporaryDirectory(prefix="fixer-rt-")) as tmp:
                     stage = Path(tmp) / "c"
                     shutil.copytree(corpus, stage)
                     # BYTES, not text. The corpus deliberately contains

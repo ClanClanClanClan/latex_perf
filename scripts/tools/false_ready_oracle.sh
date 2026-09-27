@@ -81,13 +81,16 @@ if [ "${1:-}" = "--emit-fixtures" ]; then
 fi
 
 # ── preconditions ────────────────────────────────────────────────────────────
-if ! command -v pdflatex >/dev/null 2>&1; then
-  [ "$REQUIRE" = 1 ] && die_infra "REQUIRE_PDFLATEX=1 but pdflatex is not on PATH"
-  echo "[fr-oracle] SKIP: no pdflatex on PATH"; exit 0
-fi
+# The ONE oracle (ADR-012 decision 7): the pinned TeX Live image, natively when
+# this runs inside it (tex-oracle.yml sets LP_ORACLE_IN_IMAGE), through the
+# container otherwise. A host pdflatex never grades; see _oracle.sh.
+# shellcheck source=scripts/tools/_oracle.sh
+. "$ROOT/scripts/tools/_oracle.sh"
+oracle_setup fr-oracle "$REQUIRE"
 
-TIMEOUT="$(command -v gtimeout || command -v timeout || true)"
-if [ -z "$TIMEOUT" ]; then
+TIMEOUT=""
+[ "$ORACLE_TIMEOUT_INSIDE" = 1 ] || TIMEOUT="$(command -v gtimeout || command -v timeout || true)"
+if [ -z "$TIMEOUT" ] && [ "$ORACLE_TIMEOUT_INSIDE" != 1 ]; then
   # Without a timeout a hung pdflatex would be GRADED: GNU timeout's 124 looks
   # exactly like "failed with no PDF" = strong-fatal, which MATCHES the manifest
   # for most fixtures. A hanging TeX Live would report `ok`. Refuse to grade.
@@ -141,7 +144,7 @@ fi
 if [ -z "$MAN_ENGINE" ] && [ "$REQUIRE" = 1 ]; then
   die_infra "cannot determine the expected engine (no FR_EXPECT_ENGINE and no readable manifest oracle.version) — refusing to grade against an unpinned engine"
 fi
-GOT_ENGINE="$(pdflatex --version 2>/dev/null | head -1)"
+GOT_ENGINE="$ORACLE_BANNER"
 if [ -n "$MAN_ENGINE" ]; then
   case "$GOT_ENGINE" in
     *"$MAN_ENGINE"*) ;;
@@ -187,7 +190,7 @@ EXPECT_N="$(wc -l < "$TSV" | tr -d ' ')"
 # build tool would leave the author in.
 run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
   local wd="$1" base="$2" halt="$3" rc pdf i
-  local -a cmd=(pdflatex -interaction=nonstopmode)
+  local -a cmd=("${PDFLATEX[@]}" -interaction=nonstopmode)
   [ "$halt" = 1 ] && cmd+=(-halt-on-error)
   cmd+=("$base")
   rc=1
@@ -291,7 +294,7 @@ if [ "$n" -ne "$EXPECT_N" ]; then
 fi
 [ "$timeouts" -eq 0 ] || die_infra "$timeouts fixture(s) timed out; grades are not trustworthy"
 
-echo "[fr-oracle] checked $n fixtures; hard=$hard soft=$soft (engine: $GOT_ENGINE)"
+echo "[fr-oracle] checked $n fixtures; hard=$hard soft=$soft (engine: $GOT_ENGINE; oracle: $ORACLE_BACKEND)"
 if [ "$hard" -ne 0 ]; then
   echo "[fr-oracle] FAIL: $hard fixture(s) that pdflatex now compiles." >&2
   exit 1

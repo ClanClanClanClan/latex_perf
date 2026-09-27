@@ -114,6 +114,17 @@ jobs:
           case "$amn" in *"$TEX_EXPECT_VERSION"*) ;; *)
             echo "::error::PIN MISMATCH: corpora/apply_fixes/manifest.json oracle.version '$amn' != pinned '$TEX_EXPECT_VERSION'. Re-record property (b) against the pinned image."
             exit 1 ;; esac
+          # ADR-012 decision 7: the banner pins the engine BINARY, never the
+          # macro layer. The ONE oracle entry point, scripts/tools/_oracle.py,
+          # records the TeX tree fingerprint of each platform image of this
+          # digest (the digest is a multi-arch INDEX: CI grades amd64, a Mac
+          # grades arm64). Verify the tree this job will grade with IS that tree.
+          # Every grader below runs with LP_ORACLE_IN_IMAGE set, which is what
+          # selects _oracle.py's native backend; outside the image that variable
+          # makes the oracle fail loudly rather than grade with a host TeX.
+          docker run --rm -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \
+            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
+            "$TEX_IMAGE" python3 scripts/tools/_oracle.py assert-native
 
       # The anti-silent-green measure. A missing .sty grades identically to the
       # intended fatal (strong-fatal), so an under-provisioned image would let
@@ -205,6 +216,7 @@ jobs:
             -v /tmp/fixtures.tsv:/tmp/fixtures.tsv:ro \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 -e FR_FIXTURE_TSV=/tmp/fixtures.tsv \
             -e FR_EXPECT_ENGINE="$TEX_EXPECT_VERSION" \
+            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
             "$TEX_IMAGE" bash scripts/tools/false_ready_oracle.sh
 
       # ADVISORY: a measurement of the soundness residual, not a regression gate.
@@ -219,6 +231,7 @@ jobs:
             -v "$PWD:$PWD" -w "$PWD" \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
             -e EXPECT_TEX_VERSION="$TEX_EXPECT_VERSION" \
+            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
             "$TEX_IMAGE" bash scripts/tools/diff_compile_check.sh
 
       # R7-INFRA-4 property (b): "a document that compiled must still compile
@@ -267,4 +280,5 @@ jobs:
           docker run --rm \
             -v "$PWD:$PWD" -w "$PWD" \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
+            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
             "$TEX_IMAGE" python3 scripts/tools/check_apply_fixes_roundtrip.py --repo .

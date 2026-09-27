@@ -57,6 +57,7 @@ TMPROOT = SCRATCH / "guardsim" / "tmp"
 
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+from _oracle import OracleError, get_oracle  # noqa: E402
 import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import (  # noqa: E402
     apply_fixes_tree, first_error)
@@ -91,6 +92,15 @@ R4_BRACE_CMDS = {"xymatrix", "xygraph"}
 
 
 # ---------------------------------------------------------------- lexing ---
+
+def oracle_banner() -> str:
+    """The pinned-image oracle's banner, or exit 2 loudly: a host pdflatex is
+    never a substitute (ADR-012 decision 7)."""
+    try:
+        return get_oracle().banner
+    except OracleError as e:
+        sys.exit(f"FATAL: the pinned-image oracle is unavailable: {e}")
+
 def comment_intervals(src: str):
     """[(start,end)) of live % comments (a % preceded by an even number of
     backslashes), end = the newline index."""
@@ -434,8 +444,8 @@ def tex_env(td):
 
 def compile_tree(pkg, toplevel, texts, timeout):
     """fresh copy of pkg, overwrite texts {relpath: bytes}, compile."""
-    TMPROOT.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=str(TMPROOT)) as td:
+    # The compile directory must be visible to the pinned-image oracle.
+    with get_oracle().tempdir() as td:
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
         shipped = {q.relative_to(work) for q in work.rglob("*") if q.is_file()}
@@ -588,8 +598,7 @@ def main():
     root = pathlib.Path(ns.corpus_root)
     if not CLI.is_file():
         sys.exit(f"FATAL: {CLI} missing")
-    banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                            text=True).stdout.split("\n")[0]
+    banner = oracle_banner()  # the pinned image (ADR-012 decision 7)
     if PIN not in banner:
         sys.exit(f"FATAL: engine skew {banner!r} vs {PIN!r}")
     frame = build_frame(root)
@@ -603,7 +612,8 @@ def main():
     prov = {"frame_size": len(frame), "selection": "sha256(arxiv_id) ascending",
             "offset": ns.offset, "n": ns.n, "shard": ns.shard,
             "papers_in_shard": [r["arxiv_id"] for _, r in mine],
-            "engine": banner, "cli_sha256": cli_sha,
+            "engine": banner, "oracle": get_oracle().provenance(),
+            "cli_sha256": cli_sha,
             "cli_platform": _mp.cli_platform(),
             "cli_build_root": _mp.cli_build_root(CLI),  # C-72
             "src_tree_sha": subprocess.run(

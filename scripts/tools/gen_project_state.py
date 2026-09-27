@@ -168,7 +168,11 @@ def build(repo: Path) -> str:
         nr = fnr + c.get("true-NOT-READY", 0)
         L += ["### Real-paper position", "",
               f"Oracle `{rr['oracle']['version']}`, {rr['oracle']['distribution']}, "
-              f"protocol `{rr['oracle']['protocol']}`.", "",
+              + (f"pinned image `{rr['oracle']['image']}` ({rr['oracle'].get('arch', '?')}, "
+                 f"{rr['oracle'].get('backend', '?')} backend), "
+                 if rr['oracle'].get('image') else
+                 "graded by a HOST TeX Live, not the pinned image (pre-baseline), ")
+              + f"protocol `{rr['oracle']['protocol']}`.", "",
               "| cell | n |", "|---|---|"]
         for k in ("true-READY", "true-NOT-READY", "FALSE-READY", "false-NOT-READY",
                   "ungraded-infra", "ungraded-timeout"):

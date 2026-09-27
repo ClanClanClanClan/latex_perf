@@ -85,21 +85,24 @@ REQUIRE="${REQUIRE_PDFLATEX:-0}"
 TEX_TIMEOUT="${TEX_TIMEOUT:-60}"
 die_infra() { echo "[diff-compile-check] FATAL: $*" >&2; exit 2; }
 
-if ! command -v pdflatex >/dev/null 2>&1; then
-  [ "$REQUIRE" = 1 ] && die_infra "REQUIRE_PDFLATEX=1 but pdflatex is not on PATH"
-  echo "[diff-compile-check] SKIP: pdflatex not on PATH"; exit 0
-fi
+# The ONE oracle (ADR-012 decision 7): the pinned TeX Live image, natively when
+# this runs inside it (tex-oracle.yml sets LP_ORACLE_IN_IMAGE), through the
+# container otherwise. A host pdflatex never grades; see _oracle.sh.
+# shellcheck source=scripts/tools/_oracle.sh
+. "$ROOT/scripts/tools/_oracle.sh"
+oracle_setup diff-compile-check "$REQUIRE"
 
 # A timeout produces pl=FAILS, which against a READY verdict manufactures a
 # FALSE-READY(NEW!) out of thin air. Never grade an unbounded run.
-TIMEOUT="$(command -v gtimeout || command -v timeout || true)"
-if [ -z "$TIMEOUT" ]; then
+TIMEOUT=""
+[ "$ORACLE_TIMEOUT_INSIDE" = 1 ] || TIMEOUT="$(command -v gtimeout || command -v timeout || true)"
+if [ -z "$TIMEOUT" ] && [ "$ORACLE_TIMEOUT_INSIDE" != 1 ]; then
   [ "$REQUIRE" = 1 ] && die_infra "REQUIRE_PDFLATEX=1 but neither gtimeout nor timeout is available"
   echo "[diff-compile-check] WARNING: no timeout binary; a hung pdflatex would be scored as a failure" >&2
 fi
 
 if [ -n "${EXPECT_TEX_VERSION:-}" ]; then
-  GOT_ENGINE="$(pdflatex --version 2>/dev/null | head -1)"
+  GOT_ENGINE="$ORACLE_BANNER"
   case "$GOT_ENGINE" in
     *"$EXPECT_TEX_VERSION"*) ;;
     *) echo "[diff-compile-check] PIN MISMATCH: engine '$GOT_ENGINE' != expected '$EXPECT_TEX_VERSION'." >&2
@@ -135,9 +138,9 @@ for f in "$CORPUS"/*.tex; do
   # Also copy any sibling _part.tex fragments so \input parents resolve.
   cp "$CORPUS"/*_part.tex "$d/" 2>/dev/null || true
   if [ -n "$TIMEOUT" ]; then
-    ( cd "$d" && "$TIMEOUT" "$TEX_TIMEOUT" pdflatex -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
+    ( cd "$d" && "$TIMEOUT" "$TEX_TIMEOUT" "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
   else
-    ( cd "$d" && pdflatex -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
+    ( cd "$d" && "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
   fi
   prc=$?
   rm -rf "$d"

@@ -45,12 +45,12 @@ import pathlib
 import shutil
 import subprocess
 import sys
-import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from diff_real_roots import (  # noqa: E402
-    ORACLE, PIN, build_frame, run_to_fixpoint,
+    PIN, build_frame, oracle_record, run_to_fixpoint_full,
 )
+from _oracle import OracleError, get_oracle  # noqa: E402
 from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
 
 DEFAULT_OFFSET = 2000
@@ -120,12 +120,12 @@ def apply_fixes_tree(work: pathlib.Path, cli: pathlib.Path, timeout: int,
 def run_one(rec, root, cli, timeout, scope="all"):
     pkg = root / rec["arxiv_id"]
     out = {"arxiv_id": rec["arxiv_id"], "toplevel": rec["toplevel"]}
-    with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+    # The work directory must be visible to the pinned-image oracle
+    # (ADR-012 decision 7), so it comes from the oracle, never /private/tmp.
+    with get_oracle().tempdir() as td:
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
-        tex_env = dict(os.environ, TEXMFHOME=str(pathlib.Path(td) / "th"),
-                       TEXMFVAR=str(pathlib.Path(td) / "tv"),
-                       openin_any="p", openout_any="p", SOURCE_DATE_EPOCH="0")
+        tex_env = get_oracle().tex_env(td)
         # ⚠ SNAPSHOT THE SHIPPED FILE SET FIRST. The two compiles must start
         # from byte-identical trees or the differential measures the harness.
         # The first draft of this function cleared by-products with
@@ -139,9 +139,15 @@ def run_one(rec, root, cli, timeout, scope="all"):
         # is the only rule that cannot touch a shipped asset. (C-30: the
         # verifier gets the adversarial pass first.)
         shipped = {q.relative_to(work) for q in work.rglob("*") if q.is_file()}
-        rc0, _ = run_to_fixpoint(work, rec["toplevel"], tex_env, timeout)
+        run0 = run_to_fixpoint_full(work, rec["toplevel"], tex_env, timeout)
+        rc0 = run0.rc
         out["rc_before"] = rc0
+        out["pdf_before"] = run0.pdf
         out["first_error_before"] = first_error(work, rec["toplevel"])
+        if run0.timed_out:
+            # A timeout is UNMEASURED, not "did not compile" (C-70's rule).
+            out["cell"] = "instrument-error-timeout"
+            return out
         if rc0 != 0:
             out["cell"] = "excluded-did-not-compile"
             return out
@@ -164,9 +170,14 @@ def run_one(rec, root, cli, timeout, scope="all"):
             out["file_set_delta"] = sorted(
                 str(x) for x in after_fix.symmetric_difference(shipped))
             return out
-        rc1, _ = run_to_fixpoint(work, rec["toplevel"], tex_env, timeout)
+        run1 = run_to_fixpoint_full(work, rec["toplevel"], tex_env, timeout)
+        rc1 = run1.rc
         out["rc_after"] = rc1
+        out["pdf_after"] = run1.pdf
         out["first_error_after"] = first_error(work, rec["toplevel"])
+        if run1.timed_out:
+            out["cell"] = "instrument-error-timeout"
+            return out
         out["cell"] = "preserved" if rc1 == 0 else "broken"
     return out
 
@@ -184,6 +195,8 @@ def main() -> int:
     # is recorded as provenance.fixer_scope so the two can never be confused.
     ap.add_argument("--fixer-scope", choices=sorted(SCOPE_FLAG),
                     default="all")
+    ap.add_argument("--jobs", type=int, default=1,
+                    help="papers graded in parallel")
     ns = ap.parse_args()
 
     repo = pathlib.Path(ns.repo).resolve()
@@ -204,11 +217,13 @@ def main() -> int:
         return 2
     # Engine skew is its own failure: a differential graded by the wrong
     # pdflatex is not a soundness result, it is a different experiment.
+    # The ONE oracle: the pinned TeX Live image (ADR-012 decision 7). A host
+    # pdflatex is never a substitute, so an unavailable oracle is exit 2.
     try:
-        banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                                text=True).stdout.split("\n")[0]
-    except FileNotFoundError:
-        print("[apply-fixes-real] FATAL: pdflatex not on PATH", file=sys.stderr)
+        banner = get_oracle().banner
+    except OracleError as e:
+        print(f"[apply-fixes-real] FATAL: the pinned-image oracle is "
+              f"unavailable: {e}", file=sys.stderr)
         return 2
     if PIN not in banner:
         print(f"[apply-fixes-real] FATAL: engine skew: local is {banner!r}, "
@@ -226,10 +241,14 @@ def main() -> int:
               file=sys.stderr)
         return 2
 
-    rows = []
-    for i, rec in enumerate(window, 1):
-        r = run_one(rec, root, cli, ns.timeout, ns.fixer_scope)
-        rows.append(r)
+    # Papers are independent (each has its own work directory), so they may be
+    # graded in parallel; rows keep the window's order.
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=max(1, ns.jobs)) as ex:
+        rows = list(ex.map(
+            lambda rec: run_one(rec, root, cli, ns.timeout, ns.fixer_scope),
+            window))
+    for i, r in enumerate(rows, 1):
         print(f"  [{i}/{len(window)}] {r['arxiv_id']:<16} {r['cell']}",
               flush=True)
 
@@ -267,7 +286,7 @@ def main() -> int:
             "frame": {"corpus": str(root.name), "frame_size": len(frame),
                       "selection": "sha256(arxiv_id) ascending",
                       "offset": ns.offset, "n": ns.n},
-            "oracle": ORACLE,
+            "oracle": oracle_record(),
             "fix_scope": "every .tex in the tree, root and children",
             "fixer_scope": ns.fixer_scope,
         },

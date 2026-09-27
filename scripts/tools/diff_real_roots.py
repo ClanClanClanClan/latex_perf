@@ -26,7 +26,8 @@ EXIT CODES, deliberately identical in meaning to diff_compile_check.sh:
   1  a NEW false-READY not in the allowlist          <- the cardinal bug
   2  infrastructure (missing binary, sha mismatch, ANY timeout, too many
      ungraded, or zero true-READY -- the anti-vacuity guard)
-  3  engine skew (local pdflatex != the pinned oracle)
+  3  oracle skew (the recorded grades came from a different oracle than
+     the pinned image; see --rebaseline-oracle)
   4  over-rejection above the recorded baseline      <- the SAFE direction
 Never conflate 1 and 4.
 """
@@ -42,8 +43,12 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _oracle import (  # noqa: E402
+    IMAGE as ORACLE_IMAGE, OracleError, get_oracle)
 
 PIN = "pdfTeX 3.141592653-2.6-1.40.29"
 ORACLE = {
@@ -53,6 +58,26 @@ ORACLE = {
     "protocol": ("-interaction=nonstopmode -halt-on-error, "
                  "up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"),
 }
+
+
+def oracle_record() -> dict:
+    """ORACLE plus the pinned image's identity, as every artefact records it
+    since the oracle-baseline change (ADR-012 decision 7): the image digest,
+    the architecture the grade ran on, the TeX tree fingerprints and the
+    backend. The banner alone pins the engine binary, never the macro layer."""
+    prov = get_oracle().provenance()
+    return dict(ORACLE, **{k: prov[k] for k in (
+        "image", "arch", "tlpdb_sha256", "macro_layer_sha256", "fmt_sha256",
+        "backend")})
+
+
+def same_oracle(recorded: dict | None) -> bool:
+    """True iff a recorded oracle block names the pinned image. A block with
+    no `image` was graded before the oracle-baseline change, by whatever TeX
+    Live the grading machine had, and is never carried forward."""
+    recorded = recorded or {}
+    return (recorded.get("image") == ORACLE_IMAGE
+            and PIN in str(recorded.get("version", "")))
 
 # A missing converted-EPS or graphics file is a property of how the paper was
 # BUILT (arXiv ran epstopdf via shell-escape), not of the document's validity.
@@ -230,46 +255,37 @@ def run_to_fixpoint(work: Path, toplevel: str, env: dict, timeout: int,
     healthy document costs 2 runs, not 3; an unstable one is caught. The
     returned rc is the confirming pass's when it disagrees, because the LAST
     state is the one a real build tool would leave the author in.
+
+    ONE ORACLE (ADR-012 decision 7). The runs go through `_oracle.get_oracle()`:
+    the pinned TeX Live image, in a container locally and natively inside CI's
+    image. Nothing here may call a host `pdflatex`. The flags are unchanged:
+    `-interaction=nonstopmode -halt-on-error` and pdflatex's DEFAULT
+    restricted shell-escape (OPEN-053: `-no-shell-escape` made 19 of 22
+    affected frame papers grade as failures although they compile in the real
+    world, and disagreed with the required tex-oracle gate). `work` must come
+    from `get_oracle().tempdir()`, which is visible inside the container.
     """
-    rc, passes = -1, 0
-    for _ in range(max_passes):
-        try:
-            t = subprocess.run(
-                # OPEN-053: RESTRICTED shell-escape — pdflatex's DEFAULT
-                # (`shell_escape = p`, `repstopdf` allowlisted) — because the
-                # oracle must model what our CONSUMERS run: interactive
-                # authors and publishers (ROADMAP section 0), both of whom use
-                # the stock engine. Passing `-no-shell-escape` made 19 of 22
-                # affected frame papers grade as failures although they
-                # compile in the real world. It also disagreed with
-                # false_ready_oracle.sh, the REQUIRED tex-oracle gate, which
-                # has always run in default mode: two oracles, two ground
-                # truths. Restricted mode IS the hardened posture SEC1 asks
-                # for — its allowlist holds only vetted wrappers.
-                ["pdflatex", "-interaction=nonstopmode",
-                 "-halt-on-error", toplevel],
-                cwd=work, env=env, capture_output=True, timeout=timeout)
-        except subprocess.TimeoutExpired:
-            return -1, passes + 1
-        rc, passes = t.returncode, passes + 1
-        if rc == 0:
-            break
-    if rc != 0:
-        return rc, passes
-    try:
-        confirm = subprocess.run(
-            ["pdflatex", "-interaction=nonstopmode",
-             "-halt-on-error", toplevel],
-            cwd=work, env=env, capture_output=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return -1, passes + 1
-    return confirm.returncode, passes + 1
+    r = get_oracle().run_to_fixpoint(work, toplevel, env, timeout, max_passes)
+    return r.rc, r.passes
+
+
+def run_to_fixpoint_full(work: Path, toplevel: str, env: dict, timeout: int,
+                         max_passes: int = MAX_PASSES):
+    """As run_to_fixpoint, returning the `_oracle.OracleRun` (rc, passes, pdf)."""
+    return get_oracle().run_to_fixpoint(work, toplevel, env, timeout, max_passes)
+
+
+def row_compiles(d: dict) -> bool:
+    """The oracle predicate on a recorded row: rc 0 AND a PDF (STRICT_TIER_DESIGN
+    B.4, E0). Rows graded before the PDF was recorded carry no `pdflatex_pdf`
+    and are read by rc alone, which is what they were graded by."""
+    return d.get("pdflatex_rc") == 0 and d.get("pdflatex_pdf", True) is not False
 
 
 def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
     pkg = root / rec["arxiv_id"]
     out = dict(rec)
-    with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+    with get_oracle().tempdir() as td:
         work = Path(td) / "w"
         # NEVER compile in the corpus directory: pdflatex writes .aux/.log/.pdf
         # next to the source, which would mutate the very bytes the manifest
@@ -297,13 +313,11 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
             out["cli_verdict"] = "TIMEOUT"
             out["cli_reasons"] = []
 
-        tex_env = dict(os.environ,
-                       TEXMFHOME=str(Path(td) / "th"),
-                       TEXMFVAR=str(Path(td) / "tv"),
-                       openin_any="p", openout_any="p", SOURCE_DATE_EPOCH="0")
-        rc, passes = run_to_fixpoint(work, rec["toplevel"], tex_env, timeout)
-        out["pdflatex_rc"] = rc
-        out["pdflatex_passes"] = passes
+        tex_env = get_oracle().tex_env(td)
+        run = run_to_fixpoint_full(work, rec["toplevel"], tex_env, timeout)
+        out["pdflatex_rc"] = run.rc
+        out["pdflatex_passes"] = run.passes
+        out["pdflatex_pdf"] = run.pdf
 
         log = work / (Path(rec["toplevel"]).stem + ".log")
         first_full = ""
@@ -335,7 +349,7 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
     elif out["pdflatex_rc"] != 0 and INFRA.search(first_full):
         out["cell"] = "ungraded-infra"
     else:
-        compiles = out["pdflatex_rc"] == 0
+        compiles = row_compiles(out)
         ready = out["cli_rc"] == 0
         out["pdflatex_verdict"] = "COMPILES" if compiles else "FAILS"
         out["cell"] = ("true-READY" if (ready and compiles) else
@@ -373,10 +387,12 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
     res = json.loads(results_path.read_text())
     man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
 
-    if res["oracle"]["version"] not in banner:
-        return die(3, f"engine skew: recorded {res['oracle']['version']!r}, local "
-                      f"{banner!r}. A CLI-only refresh cannot carry pdflatex "
-                      f"verdicts across an engine change — run the full sweep.")
+    if not same_oracle(res.get("oracle")):
+        return die(3, f"oracle skew: the recorded pdflatex grades were taken by "
+                      f"{res.get('oracle', {}).get('image') or 'a host TeX Live (no image recorded)'}, "
+                      f"not the pinned image {ORACLE_IMAGE}. A CLI-only refresh "
+                      f"cannot carry them forward; re-grade with --repass "
+                      f"--repass-scope all --rebaseline-oracle.")
 
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
     env = dict(os.environ, L0_VALIDATORS="pilot")
@@ -411,7 +427,7 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
         if d["cell"].startswith("ungraded") and d.get("pdflatex_rc", -1) != 0:
             pass                                   # still genuinely ungraded
         else:
-            compiles = d["pdflatex_rc"] == 0
+            compiles = row_compiles(d)
             ready = rc == 0
             d["cell"] = ("true-READY" if (ready and compiles) else
                          "FALSE-READY" if (ready and not compiles) else
@@ -455,7 +471,11 @@ def engine_tree(repo: Path) -> str:
 
 
 def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
-                    timeout: int, scope: str = "failures") -> int:
+                    timeout: int, scope: str = "failures",
+                    results_name: str = "results.json",
+                    sample_offset: int | None = None,
+                    rebaseline: bool = False, diff_out: str | None = None,
+                    jobs: int = 1) -> int:
     """Re-grade recorded rows under the multi-pass oracle. `scope` picks which.
 
     ⚠ THE DEFAULT SCOPE IS THE ONE DIRECTION THAT CANNOT FIND A FALSE-READY,
@@ -492,20 +512,53 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     before publishing a headline number; this mode is for correcting a recorded
     baseline in place, and it says so in `results.json`.
 
-    Asserts the corpus (per-paper `sha256_tree`) and the engine pin first: a
-    verdict carried forward from a different corpus or engine is not evidence.
+    ORACLE-BASELINE CHANGE (ADR-012 decision 7). A recorded grade is carried or
+    re-used only when it was taken by the pinned image (`same_oracle`). Grades
+    from before the change name no image: they came from the grading machine's
+    own TeX Live. `rebaseline=True` is the one sanctioned way across that line:
+    it requires scope `all` (every row re-graded, nothing carried), keeps the
+    CLI verdicts (they do not depend on pdflatex), and writes a per-row
+    before/after diff to `diff_out`, because the diff IS the finding.
+
+    SAMPLE 2. `results_name` picks the artefact; sample 2
+    (`results_sample2.json`) has no hash manifest, so `sample_offset` names its
+    window in the frame and the ids are asserted equal to that window before
+    anything is graded; each row then records the `sha256_tree` it was graded
+    on.
+
+    Asserts the corpus (per-paper `sha256_tree`) and the oracle first: a
+    verdict carried forward from a different corpus or oracle is not evidence.
     """
-    results_path = outdir / "results.json"
+    results_path = outdir / results_name
     manifest_path = outdir / "manifest.json"
-    if not (results_path.is_file() and manifest_path.is_file()):
+    if not results_path.is_file():
         return die(2, "no recorded results to re-pass — run a full sweep first")
     res = json.loads(results_path.read_text())
-    man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+    if sample_offset is None:
+        if not manifest_path.is_file():
+            return die(2, "no manifest.json to verify the corpus against")
+        man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+    else:
+        frame = build_frame(root)
+        ordered = select(frame, len(frame))
+        window = ordered[sample_offset:sample_offset + len(res["docs"])]
+        want_ids = {d["arxiv_id"] for d in window}
+        have_ids = {d["arxiv_id"] for d in res["docs"]}
+        if want_ids != have_ids:
+            return die(2, f"{results_name}: its {len(have_ids)} ids are not ranks "
+                          f"{sample_offset}..{sample_offset + len(res['docs']) - 1} "
+                          f"of the frame ({len(want_ids ^ have_ids)} differ)")
+        man = {d["arxiv_id"]: dict(d, sha256_tree=d.get("sha256_tree")) for d in window}
 
-    if res["oracle"]["version"] not in banner:
-        return die(3, f"engine skew: recorded {res['oracle']['version']!r}, local "
-                      f"{banner!r}. Re-grading under a different engine is not a "
-                      f"correction, it is a new measurement — run the full sweep.")
+    if not same_oracle(res.get("oracle")) and not rebaseline:
+        return die(3, f"oracle skew: {results_name} was graded by "
+                      f"{(res.get('oracle') or {}).get('image') or 'a host TeX Live (no image recorded)'}, "
+                      f"not the pinned image {ORACLE_IMAGE}. Re-grading under a "
+                      f"different oracle is not a correction, it is a new "
+                      f"measurement: pass --rebaseline-oracle with "
+                      f"--repass-scope all.")
+    if rebaseline and scope != "all":
+        return die(2, "--rebaseline-oracle re-grades EVERY row; use --repass-scope all")
 
     SCOPES = {
         "failures": lambda d: d.get("pdflatex_rc") not in (0, None),
@@ -516,40 +569,90 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
         return die(2, f"unknown --repass-scope {scope!r}; pick one of "
                       f"{sorted(SCOPES)}")
     failures = [d for d in res["docs"] if SCOPES[scope](d)]
-    print(f"[real-roots] re-passing {len(failures)} row(s) in scope {scope!r} "
-          f"under up to {MAX_PASSES} passes "
-          f"(run-to-success plus ONE CONFIRMING PASS)")
-    changed = []
-    for i, d in enumerate(failures, 1):
+    print(f"[real-roots] re-passing {len(failures)} row(s) of {results_name} in "
+          f"scope {scope!r} under up to {MAX_PASSES} passes "
+          f"(run-to-success plus ONE CONFIRMING PASS), oracle "
+          f"{get_oracle().backend}:{ORACLE_IMAGE}, jobs={jobs}")
+    for d in failures:
         rec = man.get(d["arxiv_id"])
         if rec is None:
             return die(2, f"{d['arxiv_id']} missing from the manifest")
-        if sha256_tree(root / d["arxiv_id"]) != rec["sha256_tree"]:
+        tree = sha256_tree(root / d["arxiv_id"])
+        if rec.get("sha256_tree") and tree != rec["sha256_tree"]:
             return die(2, f"{d['arxiv_id']}: tree sha differs from the manifest — "
                           f"the corpus changed under the baseline. Run the sweep.")
-        with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+        if d.get("sha256_tree") and tree != d["sha256_tree"]:
+            return die(2, f"{d['arxiv_id']}: tree sha differs from the one this "
+                          f"row was graded on")
+        d["_tree"] = tree
+
+    lower = any(str(d.get("pdflatex_verdict", "")).islower() and d.get("pdflatex_verdict")
+                for d in res["docs"])
+
+    def grade(d):
+        oracle = get_oracle()
+        with oracle.tempdir() as td:
             work = Path(td) / "w"
             shutil.copytree(root / d["arxiv_id"], work)
-            env = dict(os.environ, TEXMFHOME=str(Path(td) / "th"),
-                       TEXMFVAR=str(Path(td) / "tv"), openin_any="p",
-                       openout_any="p", SOURCE_DATE_EPOCH="0")
-            rc, passes = run_to_fixpoint(work, d["toplevel"], env, timeout)
-        before = d["cell"]
+            run = run_to_fixpoint_full(work, d["toplevel"], oracle.tex_env(td),
+                                       timeout)
+            first = ""
+            log = work / (Path(d["toplevel"]).stem + ".log")
+            if log.is_file():
+                ll = log.read_text(errors="replace").split("\n")
+                for i, line in enumerate(ll):
+                    if line.startswith("!"):
+                        first = "".join(ll[i:i + 4])
+                        break
+        return run, first
+
+    with ThreadPoolExecutor(max_workers=max(1, jobs)) as ex:
+        graded = list(ex.map(grade, failures))
+
+    changed, diff_rows = [], []
+    for i, (d, (run, first_full)) in enumerate(zip(failures, graded), 1):
+        rc, passes = run.rc, run.passes
+        before = {"cell": d["cell"], "pdflatex_rc": d.get("pdflatex_rc"),
+                  "pdflatex_verdict": d.get("pdflatex_verdict"),
+                  "first_error": d.get("first_error", "")}
+        tree = d.pop("_tree")
+        if sample_offset is not None:
+            d["sha256_tree"] = tree
         d["pdflatex_rc"], d["pdflatex_passes"] = rc, passes
-        # Same sticky-ungraded defect as in refresh_cli_only: this path RE-RUNS
-        # pdflatex, so it is precisely where an `ungraded-infra` row can start
-        # compiling. Leaving the label then strands a compiling document
-        # outside the metric. Re-derive whenever the FRESH rc is 0.
-        if not before.startswith("ungraded") or rc == 0:
-            compiles, ready = rc == 0, d["cli_rc"] == 0
-            d["pdflatex_verdict"] = "COMPILES" if compiles else "FAILS"
+        d["pdflatex_pdf"] = run.pdf
+        if "passes" in d:
+            d["passes"] = passes
+        if "graded_by" in d:
+            d["graded_by"] = "pinned-image oracle (ADR-012 decision 7)"
+        d["first_error"] = first_full[:160]
+        cell_before = d["cell"]
+        if rc == -1:
+            d["cell"] = "ungraded-timeout"
+        elif rc != 0 and INFRA.search(first_full):
+            d["cell"] = "ungraded-infra"
+        else:
+            compiles, ready = row_compiles(d), d["cli_rc"] == 0
+            v = "COMPILES" if compiles else "FAILS"
+            d["pdflatex_verdict"] = v.lower() if lower else v
             d["cell"] = ("true-READY" if (ready and compiles) else
                          "FALSE-READY" if (ready and not compiles) else
                          "false-NOT-READY" if compiles else "true-NOT-READY")
-        if d["cell"] != before:
-            changed.append((d["arxiv_id"], before, d["cell"], passes))
+        after = {"cell": d["cell"], "pdflatex_rc": rc,
+                 "pdflatex_verdict": d.get("pdflatex_verdict"),
+                 "pdflatex_pdf": run.pdf, "first_error": d["first_error"]}
+        diff_rows.append({"arxiv_id": d["arxiv_id"], "toplevel": d["toplevel"],
+                          "cli_rc": d.get("cli_rc"), "before": before,
+                          "after": after, "passes": passes,
+                          "cell_changed": d["cell"] != cell_before})
+        if d["cell"] != cell_before:
+            changed.append((d["arxiv_id"], cell_before, d["cell"], passes))
         print(f"  [{i}/{len(failures)}] {d['arxiv_id']:16s} "
-              f"rc={rc} passes={passes} {d['cell']}", flush=True)
+              f"rc={rc} passes={passes} pdf={run.pdf} {d['cell']}", flush=True)
+
+    if any(d["cell"] == "ungraded-timeout" for d in res["docs"]):
+        return die(2, "a pdflatex TIMEOUT occurred during the re-grade; nothing "
+                      "written. A timeout would score as FAILS and could "
+                      "manufacture a false-READY.")
 
     res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
 
@@ -568,13 +671,19 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     # block by gen_project_state.py, so it would have become the next
     # corrections-log entry. State the full-coverage case as its own sentence.
     _n = len(res["docs"])
-    res["oracle"] = dict(ORACLE, protocol=(
+    rec_oracle = oracle_record()
+    res["oracle"] = dict(rec_oracle, protocol=(
         f"{ORACLE['protocol']} — APPLIED TO ALL {_n}/{_n} rows"
         if remeasured == _n else
         f"{ORACLE['protocol']} — APPLIED TO {remeasured}/{_n} rows; "
         f"the remainder carry a single-pass grade from an earlier run"))
-    res["measured_at_sha"] = git_head(repo)
-    res["src_tree_sha"] = engine_tree(repo)
+    if sample_offset is None:
+        res["measured_at_sha"] = git_head(repo)
+        res["src_tree_sha"] = engine_tree(repo)
+    else:
+        # Sample 2's CLI verdicts still have no in-repo producer (OPEN-081), so
+        # its measured_at_sha stays as it was; only the oracle side is stamped.
+        res["oracle_regraded_at_sha"] = git_head(repo)
     _scope_note = {
         "failures": ("recorded FAILURES only; documents already recorded "
                      "pdflatex_rc 0 were NOT revisited, so this pass cannot "
@@ -585,14 +694,27 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                        "is detectable"),
         "all": "every row, regardless of prior grade",
     }[scope]
-    res["measured_at"] = (f"multi-pass re-grade, scope={scope}: {_scope_note} "
-                          f"(<= {MAX_PASSES} passes, {remeasured}/{len(res['docs'])} "
-                          f"rows now carry a pdflatex_passes count); CLI verdicts "
-                          f"carried forward from the prior run")
+    measured = (f"multi-pass re-grade, scope={scope}: {_scope_note} "
+                f"(<= {MAX_PASSES} passes, {remeasured}/{len(res['docs'])} "
+                f"rows now carry a pdflatex_passes count); CLI verdicts "
+                f"carried forward from the prior run")
+    if rebaseline:
+        measured = ("ORACLE-BASELINE CHANGE (ADR-012 decision 7): every row "
+                    "re-graded under the pinned TeX Live image "
+                    f"{ORACLE_IMAGE} ({rec_oracle['arch']}, "
+                    f"{rec_oracle['backend']} backend); " + measured)
+    res["measured_at"] = measured
     results_path.write_text(json.dumps(res, indent=1) + "\n")
+    if diff_out:
+        Path(diff_out).parent.mkdir(parents=True, exist_ok=True)
+        Path(diff_out).write_text(json.dumps({
+            "artefact": str(results_path.relative_to(repo)),
+            "oracle_after": rec_oracle,
+            "rows": diff_rows}, indent=1) + "\n")
+        print(f"[real-roots] per-row before/after diff written to {diff_out}")
     print(f"\n[real-roots] {len(changed)} cell(s) changed:")
     for aid, a, b, p in changed:
-        print(f"    {aid:16s} {a} -> {b}  (compiled on pass {p})")
+        print(f"    {aid:16s} {a} -> {b}  (passes {p})")
     # A row entering FALSE-READY is the cardinal bug, and under scope=unmeasured
     # it is the EXPECTED direction of discovery, not a surprise. Per ADR-011 a
     # rise is a publication event, not a regression — say it loudly here so it
@@ -681,6 +803,21 @@ def main() -> int:  # noqa: C901
                          "every row lacking a pdflatex_passes count, which is "
                          "what takes the published APPLIED-TO clause to n/n "
                          "(OPEN-103).")
+    ap.add_argument("--results", default="results.json",
+                    help="the results artefact under --out that --repass "
+                         "re-grades (results_sample2.json for sample 2)")
+    ap.add_argument("--sample-offset", type=int, default=None,
+                    help="with --repass on an artefact that has no hash "
+                         "manifest (sample 2): its first frame rank (200)")
+    ap.add_argument("--rebaseline-oracle", action="store_true",
+                    help="the one-time ORACLE-BASELINE CHANGE (ADR-012 "
+                         "decision 7): re-grade every row of an artefact graded "
+                         "by a host TeX Live under the pinned image; requires "
+                         "--repass --repass-scope all")
+    ap.add_argument("--diff-out", default=None,
+                    help="with --repass: write the per-row before/after diff here")
+    ap.add_argument("--jobs", type=int, default=1,
+                    help="parallel pdflatex gradings for --repass")
     ap.add_argument("--refresh-metadata", action="store_true",
                     help="re-read declared metadata into manifest.json; runs "
                          "neither pdflatex nor the CLI (asserts corpus "
@@ -705,18 +842,23 @@ def main() -> int:  # noqa: C901
     if ns.refresh_metadata:
         return refresh_metadata_only(root, outdir)
 
-    # Engine skew is its OWN exit code: a mismatch is not a soundness result.
+    # The ONE oracle (ADR-012 decision 7): the pinned image, never a host
+    # pdflatex. Unavailable is an infrastructure failure, not a skip.
     try:
-        banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                                text=True).stdout.split("\n")[0]
-    except FileNotFoundError:
-        return die(2, "pdflatex not on PATH")
+        banner = get_oracle().banner
+    except OracleError as e:
+        return die(2, f"the pinned-image oracle is unavailable: {e}")
     if PIN not in banner:
-        return die(3, f"engine skew: local is {banner!r}, pinned is {PIN!r}")
+        return die(3, f"engine skew: the oracle reports {banner!r}, pinned is {PIN!r}")
 
     if ns.repass:
         return repass_failures(repo, root, outdir, banner, ns.timeout,
-                               scope=ns.repass_scope)
+                               scope=ns.repass_scope, results_name=ns.results,
+                               sample_offset=ns.sample_offset,
+                               rebaseline=ns.rebaseline_oracle,
+                               diff_out=ns.diff_out, jobs=ns.jobs)
+    if ns.rebaseline_oracle:
+        return die(2, "--rebaseline-oracle needs --repass --repass-scope all")
 
     if ns.refresh_cli:
         return refresh_cli_only(repo, root, outdir, banner, ns.timeout)
@@ -747,7 +889,7 @@ def main() -> int:  # noqa: C901
     ungraded = len(rows) - graded
 
     print()
-    print(f"[real-roots] oracle : {banner}")
+    print(f"[real-roots] oracle : {banner} ({get_oracle().backend}:{ORACLE_IMAGE})")
     print(f"[real-roots] frame  : {len(frame)} papers, sampled {len(sample)} "
           f"by sha256(arxiv_id) ascending")
     for k in ("true-READY", "true-NOT-READY", "FALSE-READY", "false-NOT-READY",
@@ -790,7 +932,8 @@ def main() -> int:  # noqa: C901
     # the identity that matters for reproducibility is which corpus snapshot was
     # used, and the rest is one machine's home directory.
     corpus_tag = "/".join(root.parts[-3:])
-    result = {"oracle": ORACLE,
+    rec_oracle = oracle_record()
+    result = {"oracle": rec_oracle,
               "frame": {"corpus": corpus_tag, "frame_size": len(frame),
                         "selection": "sha256(arxiv_id) ascending", "n": len(sample)},
               "counts": dict(counts), "docs": rows}
@@ -799,7 +942,7 @@ def main() -> int:  # noqa: C901
         outdir.mkdir(parents=True, exist_ok=True)
         (outdir / "results.json").write_text(json.dumps(result, indent=1) + "\n")
         (outdir / "manifest.json").write_text(json.dumps(
-            {"oracle": ORACLE,
+            {"oracle": rec_oracle,
              "frame": result["frame"],
              "docs": [{k: d[k] for k in ("arxiv_id", "toplevel", "bytes",
                                          "sha256_toplevel", "sha256_tree",

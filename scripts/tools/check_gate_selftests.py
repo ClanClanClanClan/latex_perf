@@ -1147,8 +1147,10 @@ REGISTRY = [
                      r"Python gate silent-except: FAIL: "
                      r"scripts/tools/check_project_state\.py:\d+: broad "
                      r"`except Exception` produces a fallback and continues",
+                     # Re-anchored 2026-09-27 (OPEN-119): the read now loops
+                     # over results.json and results_sample3.json.
                      old='        except (json.JSONDecodeError, OSError) as exc:\n'
-                         '            findings.append(f"corpora/real_roots/results.json is unreadable: {exc}")\n'
+                         '            findings.append(f"corpora/real_roots/{rr.name} is unreadable: {exc}")\n'
                          '            sha, rr_data = "unreadable", None\n',
                      new='        except Exception:  # noqa: BLE001\n'
                          '            sha, rr_data = None, None\n'),

@@ -139,12 +139,30 @@ for f in "$CORPUS"/*.tex; do
   d=$(mktemp -d "${TMPDIR:-/tmp}/lp-oracle.XXXXXX"); cp "$f" "$d/"
   # Also copy any sibling _part.tex fragments so \input parents resolve.
   cp "$CORPUS"/*_part.tex "$d/" 2>/dev/null || true
-  if [ -n "$TIMEOUT" ]; then
-    ( cd "$d" && "$TIMEOUT" "$TEX_TIMEOUT" "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
+  # Free space BEFORE and AFTER, and the run's stdout for pdfTeX failing to
+  # write its OWN output (oracle_vet, _oracle.sh). MEASURED 2026-09-27: with
+  # the work root full, pdfTeX printed its banner, failed on its own .pdf and
+  # exited 1 with a log -- ran=yes, pdf=no, i.e. graded FAILS.
+  pout="$(mktemp "${TMPDIR:-/tmp}/lp-oracle-out.XXXXXX")"
+  envok=yes
+  oracle_vet "$d" 2>/dev/null || envok=no
+  if [ "$envok" = no ]; then
+    prc=125
+  elif [ -n "$TIMEOUT" ]; then
+    ( cd "$d" && "$TIMEOUT" "$TEX_TIMEOUT" "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >"$pout" 2>/dev/null )
+    prc=$?
   else
-    ( cd "$d" && "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
+    ( cd "$d" && "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >"$pout" 2>/dev/null )
+    prc=$?
   fi
-  prc=$?
+  if [ "$envok" = yes ] && ! oracle_vet "$d" "$pout" -interaction=nonstopmode -halt-on-error "$base" 2>/dev/null; then
+    envok=no
+  fi
+  rm -f "$pout"
+  if [ "$envok" = no ]; then
+    printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "ENVFAIL" "not graded (work root short of space, or pdfTeX could not write its own output)"
+    rm -rf "$d"; timeouts=$((timeouts+1)); continue
+  fi
   # The §B.4 predicate (STRICT_TIER_DESIGN.md, E0): COMPILES = rc 0 AND a PDF.
   # Grading by rc alone scored tolerated_write18.tex (rc 0, no PDF: its body
   # typesets nothing) COMPILES, i.e. a false-not-ready, where every other
@@ -197,7 +215,7 @@ echo "[diff-compile-check] false-not-ready (safe over-reject)=$false_notready"
 # First, before any verdict-shaped message: a run with ungraded documents has
 # no verdicts to report (the anti-vacuity message below would otherwise blame
 # the CLI for what the oracle did).
-[ "$timeouts" -eq 0 ] || die_infra "$timeouts document(s) not graded (timeout, oracle failure or no pdfTeX log); the classification is not trustworthy"
+[ "$timeouts" -eq 0 ] || die_infra "$timeouts document(s) not graded (timeout, oracle failure, no pdfTeX log, or a work root short of space / pdfTeX unable to write its own output); the classification is not trustworthy"
 
 # Allowlist staleness: an entry the CLI now catches is dead weight, and worse, it
 # would silently absorb the NEXT regression in that file. Warn, never fail.

@@ -29,6 +29,27 @@
 # Neither    exit 2 if REQUIRE=1 or ANY host pdflatex is on PATH (a host
 #            pdflatex is not the oracle, and skipping silently would hide that);
 #            a clean SKIP (exit 0) only where there is no TeX at all.
+# oracle_vet DIR                  BEFORE a run: is DIR's free space above the
+#                                  oracle's floor (_oracle.py MIN_FREE_MB)?
+# oracle_vet DIR OUTFILE ARGS...   AFTER a run: the same, AND does OUTFILE (the
+#                                  run's stdout) show pdfTeX failing to write
+#                                  its OWN output (fwrite() failed, "I can't
+#                                  write on file `<jobname>.<ext>'")?
+# Exit 0 = gradeable; non-zero = NOT a grade. MEASURED 2026-09-27 (OPEN-118
+# review round 3): with the work root full, pdfTeX prints its banner, fails on
+# its own .log/.pdf and exits 1, which passed every proof-of-run check here.
+# The Python side is the single definition of both checks; the container shim
+# applies them too, this covers the native backend and is defence in depth.
+oracle_vet() {
+  local d="$1"; shift
+  if [ $# -eq 0 ]; then
+    python3 "$ROOT/scripts/tools/_oracle.py" vet --dir "$d"
+  else
+    local f="$1"; shift
+    python3 "$ROOT/scripts/tools/_oracle.py" vet --dir "$d" --output "$f" -- "$@"
+  fi
+}
+
 oracle_setup() {
   local tag="$1" req="$2" py out
   py="$ROOT/scripts/tools/_oracle.py"

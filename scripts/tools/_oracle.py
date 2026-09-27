@@ -63,6 +63,10 @@ Usage as a tool:
                                   through the oracle; exit with its rc (124 on
                                   timeout, INFRA_RC=125 when the oracle itself
                                   failed). The shim the shell graders use.
+  _oracle.py vet --dir D [--output F -- ARGS...]
+                                  shell graders: refuse (INFRA_RC) a run when
+                                  D is short of space or F shows pdfTeX failing
+                                  to write its own output; exit 0 otherwise
   _oracle.py rm FILES...          delete work files through the oracle (see
                                   ContainerOracle.remove); exit 0, or 2
   _oracle.py stop                 remove the long-lived container
@@ -167,6 +171,7 @@ class OracleError(RuntimeError):
 #     per-run nonce line after pdflatex exits, not the docker client's rc. A lost
 #     daemon, a dead VM or an exec that never started leave no nonce line.
 # Anything else raises OracleError: unmeasured, never a grade (C-70).
+# NECESSARY, NOT SUFFICIENT: see the round-3 block below (a full disk passes it).
 PDFTEX_BANNER = b"This is pdfTeX"
 
 
@@ -176,6 +181,102 @@ def _require_pdftex_ran(rc: int, out: bytes, what: str) -> None:
             f"{what}: exit {rc} but the run's output carries no pdfTeX banner "
             f"({PDFTEX_BANNER.decode()!r}), so pdfTeX did not run; this rc is "
             f"not a grade. Output starts: {out[:300]!r}")
+
+
+# PROOF pdfTeX RAN IS NOT PROOF ITS rc IS A PROPERTY OF THE DOCUMENT (OPEN-118
+# review round 3, C-75 restated). MEASURED 2026-09-27 with an 8 MB disk image as
+# the work root, filled to leave 0-12 KB free, compiling a document that DOES
+# compile: pdfTeX printed its banner, then failed on its OWN output ("! I can't
+# write on file `t.log'." / "!pdfTeX error: pdflatex (file t.pdf): fwrite()
+# failed"), exited 1 inside the container, and every Python grader graded
+# FAILS; at 14 KB free the shell graders did too. So two further checks, both
+# raising OracleError (unmeasured, never a grade):
+#   * free space in the work directory is at least MIN_FREE_BYTES, checked
+#     BEFORE and AFTER every run (`_require_free_space`);
+#   * the run's output carries no failure of pdfTeX to write its OWN output
+#     (`_require_output_written`): "fwrite() failed", an OS "No space left on
+#     device"/"Disk quota exceeded", or "I can't write on file `<jobname>.<ext>'"
+#     keyed on THIS run's job name. A document's own \openout refused under
+#     openout_any=p names a different file (a parent/absolute/dot path), so it
+#     is still graded.
+# Neither closes the class: an environment can still alter an rc in ways no
+# output shows (OOM-kill inside the VM reads as rc 137 = timeout; see OPEN-118's
+# KNOWN LIMITS for the list).
+MIN_FREE_MB_DEFAULT = 256
+_OWN_WRITE_FAIL = re.compile(rb"fwrite\(\) failed|No space left on device|"
+                             rb"Disk quota exceeded")
+_CANT_WRITE = b"I can't write on file `"
+
+
+def min_free_bytes() -> int:
+    """The floor, in bytes. LP_ORACLE_MIN_FREE_MB overrides the default (the
+    kill-tests raise it to force a refusal); it cannot be set below 1 MB."""
+    raw = os.environ.get("LP_ORACLE_MIN_FREE_MB", str(MIN_FREE_MB_DEFAULT))
+    try:
+        mb = int(raw)
+    except ValueError:
+        raise OracleError(f"LP_ORACLE_MIN_FREE_MB={raw!r} is not an integer")
+    return max(mb, 1) * 1024 * 1024
+
+
+def _free_bytes(d: Path) -> int:
+    return shutil.disk_usage(d).free
+
+
+def _require_free_space(d: Path, when: str) -> None:
+    try:
+        free = _free_bytes(Path(d))
+    except OSError as e:
+        raise OracleError(f"cannot measure free space in {d} ({when} the run): {e}")
+    floor = min_free_bytes()
+    if free < floor:
+        raise OracleError(
+            f"only {free // 1024} KB free in the oracle work directory {d} "
+            f"{when} the run (floor {floor // (1024 * 1024)} MB). A full disk "
+            f"makes pdfTeX fail on its own output with rc 1, which reads as "
+            f"'the document does not compile'; this run is not a grade.")
+
+
+def jobname_of(args: list[str]) -> str | None:
+    """The job name pdflatex uses for ARGS: `-jobname=X`, else the stem of the
+    last non-option argument. None when it cannot be derived (a `\\input`-style
+    first line)."""
+    job = None
+    for a in args:
+        for pre in ("-jobname=", "--jobname="):
+            if a.startswith(pre):
+                return a[len(pre):].strip('"')
+    pos = [a for a in args if not a.startswith("-") and not a.startswith("&")]
+    if pos and not pos[-1].startswith("\\"):
+        job = Path(pos[-1]).name
+        if job.endswith(".tex"):
+            job = job[:-4]
+    return job or None
+
+
+def _require_output_written(out: bytes, args: list[str], what: str) -> None:
+    m = _OWN_WRITE_FAIL.search(out)
+    if m:
+        raise OracleError(
+            f"{what}: pdfTeX could not write its own output "
+            f"({m.group(0).decode()!r}); the work root is full or failing, so "
+            f"this rc is not a property of the document")
+    job = jobname_of(args)
+    i = out.find(_CANT_WRITE)
+    while i != -1:
+        # TeX hard-wraps terminal lines at max_print_line (79); concatenation,
+        # not a space, is the inverse of the wrap.
+        seg = out[i + len(_CANT_WRITE):i + len(_CANT_WRITE) + 800]
+        name = seg.replace(b"\n", b"").split(b"'", 1)[0].strip(b'"').decode(
+            errors="replace")
+        stem, dot, ext = name.rpartition(".")
+        own = (stem == job and dot and ext.isalnum()) if job else (
+            ext in ("log", "pdf", "aux") and "/" not in name)
+        if own:
+            raise OracleError(
+                f"{what}: pdfTeX could not write its own file {name!r} (job "
+                f"{job!r}); that is the environment, not the document")
+        i = out.find(_CANT_WRITE, i + 1)
 
 
 class OracleUnavailable(OracleError):
@@ -403,14 +504,18 @@ class NativeOracle(_Base):
         return self._fp
 
     def run_pdflatex(self, cwd, args, env, timeout):
+        _require_free_space(cwd, "before")
         try:
             p = subprocess.run(["pdflatex", *args], cwd=cwd, env=env,
                                capture_output=True, timeout=timeout)
         except subprocess.TimeoutExpired:
+            _require_free_space(cwd, "after")
             return 124, b"", True
         except OSError as e:  # no pdflatex at all: infrastructure, not a grade
             raise OracleError(f"cannot execute pdflatex: {e}") from e
         _require_pdftex_ran(p.returncode, p.stdout, "native pdflatex")
+        _require_output_written(p.stdout + p.stderr, args, "native pdflatex")
+        _require_free_space(cwd, "after")
         return p.returncode, p.stdout + p.stderr, False
 
 
@@ -591,6 +696,7 @@ class ContainerOracle(_Base):
                 f"{cwd} is outside the oracle work root {self.workroot}, so the "
                 f"container cannot see it. Create work directories with "
                 f"oracle.tempdir().")
+        _require_free_space(cwd, "before")
         cmd = ["exec", "-w", str(cwd), "-e", "HOME=/tmp"]
         for k, v in sorted((env or {}).items()):
             if _ENV_FORWARD.match(k):
@@ -631,11 +737,14 @@ class ContainerOracle(_Base):
         rc = int(m.group(1))
         err = p.stderr[:m.start()] + p.stderr[m.end():]
         if rc in (124, 137):
+            _require_free_space(cwd, "after")
             return rc, p.stdout + err, True
         if rc in (125, 126, 127):  # timeout(1) itself failed / pdflatex missing
             raise OracleError(f"in-container timeout/pdflatex failed rc={rc}: "
                               + err.decode(errors="replace")[:400])
         _require_pdftex_ran(rc, p.stdout, f"container {self.name}")
+        _require_output_written(p.stdout + err, args, f"container {self.name}")
+        _require_free_space(cwd, "after")
         return rc, p.stdout + err, False
 
     def stop(self):
@@ -714,6 +823,26 @@ def main(argv: list[str]) -> int:
         if cmd == "assert-native":
             NativeOracle()  # checks LP_ORACLE_IN_IMAGE == IMAGE, then the tree
             print(f"[oracle] native backend verified: {IMAGE}")
+            return 0
+        if cmd == "vet":
+            # The shell graders' form of the checks run_pdflatex applies:
+            #   vet --dir D                          free space only (BEFORE)
+            #   vet --dir D --output F -- ARGS...    free space AND F (the run's
+            #                                        stdout) for pdfTeX failing
+            #                                        to write its own output
+            # Exit 0 = gradeable; INFRA_RC = not a grade (message on stderr).
+            args = rest[rest.index("--") + 1:] if "--" in rest else []
+            opts = rest[:rest.index("--")] if "--" in rest else rest
+            d = Path(opts[opts.index("--dir") + 1])
+            outf = (Path(opts[opts.index("--output") + 1])
+                    if "--output" in opts else None)
+            try:
+                if outf is not None:
+                    _require_output_written(outf.read_bytes(), args, f"vet {d}")
+                _require_free_space(d, "after" if outf is not None else "before")
+            except (OracleError, OSError, ValueError) as e:
+                print(f"[oracle] NOT GRADED: {e}", file=sys.stderr)
+                return INFRA_RC
             return 0
         if cmd == "workroot":
             print(default_workroot().expanduser().resolve())

@@ -207,6 +207,9 @@ run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
   cmd+=("$base")
   rc=1
   out="$(mktemp)"
+  # Free space BEFORE the first pass (oracle_vet, _oracle.sh): a full work root
+  # makes pdfTeX fail on its own output, banner and all.
+  if ! oracle_vet "$wd" 2>/dev/null; then rm -f "$out"; echo "ENVFAIL no"; return; fi
   for i in 1 2; do
     if [ -n "$TIMEOUT" ]; then
       ( cd "$wd" && "$TIMEOUT" "$TEX_TIMEOUT" "${cmd[@]}" >"$out" 2>/dev/null )
@@ -219,6 +222,10 @@ run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
     # rather than masking it with a retry.
     case "$rc" in 124|125|126|127) break ;; esac
     if ! grep -q 'This is pdfTeX' "$out" 2>/dev/null; then rc=NOPROOF; break; fi
+    # Proof pdfTeX ran is not proof its rc is the document's: refuse a pass in
+    # which pdfTeX could not write its own output, or after which the work
+    # root is short of space.
+    if ! oracle_vet "$wd" "$out" "${cmd[@]}" 2>/dev/null; then rc=ENVFAIL; break; fi
   done
   rm -f "$out"
   [ -f "$wd/${base%.tex}.pdf" ] && pdf=yes || pdf=no
@@ -269,7 +276,7 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   # check used to read the nonstop pass's log, so a lost halt pass was invisible
   # (see run_pdflatex). Both the per-pass banner and the halt run's own log.
   case "$hrc" in
-    124|125|126|127|NOPROOF)
+    124|125|126|127|NOPROOF|ENVFAIL)
       printf '%-24s halt-protocol pdflatex could not be run (rc %s) — refusing to grade\n' "$id" "$hrc"
       rm -rf "$wd"; timeouts=$((timeouts+1)); continue ;;
   esac
@@ -293,7 +300,7 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   # like "failed with no PDF" = strong-fatal, which MATCHES the manifest for most
   # fixtures. A pdflatex that cannot run at all would have graded 21/21 `ok`.
   case "$hrc:$nrc" in
-    *124*|*125*|*126*|*127*|*NOPROOF*)
+    *124*|*125*|*126*|*127*|*NOPROOF*|*ENVFAIL*)
       printf '%-24s pdflatex could not be run (rc halt=%s nonstop=%s) — refusing to grade\n' \
         "$id" "$hrc" "$nrc"
       timeouts=$((timeouts+1)); continue ;;

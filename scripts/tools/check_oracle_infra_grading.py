@@ -20,6 +20,14 @@ only with POSITIVE PROOF that pdfTeX produced it -- pdfTeX's banner in that
 run's own output, and (container) the rc reported by a shell INSIDE the
 container on a per-run nonce line rather than the docker client's rc.
 
+Round 3 (2026-09-27): proof that pdfTeX RAN is not proof its rc is the
+DOCUMENT's. MEASURED: with the work root full, pdfTeX prints its banner, fails
+on its own output ("I can't write on file `t.log'", "fwrite() failed") and
+exits 1, which every grader graded FAILS. So a run is also refused when the
+work root is below a free-space floor (before and after the run) or pdfTeX
+could not write its own output; a document's own \\openout refusal is still
+graded. Known residuals are listed in OPEN-118 (OOM-as-timeout, clock, VM disk).
+
 This gate is PURE (no docker, no TeX): it drives the real grading code with
 FAKE docker/engine executables that reproduce each failure shape, including the
 re-reviewer's dead-socket one, and asserts each is refused, while a genuine
@@ -55,6 +63,12 @@ DEAD_MSG = ("failed to connect to the docker API at unix:///nonexistent.sock; "
 #   cut       banner on stdout, then the stream is lost: no nonce line, exit 1
 #   nobanner  nothing on stdout, nonce line rc=1 (something else exited 1)
 #   timeout   nonce line rc=124
+#   fwrite    banner, then pdfTeX failing to write its PDF, nonce line rc=1
+#             (the MEASURED disk-full shape, OPEN-118 review round 3)
+#   cantlog   banner, then "! I can't write on file `t.log'.", nonce rc=1
+#   openout   banner, then the DOCUMENT's own \openout refused under
+#             openout_any=p ("I can't write on file `../x.tex'"), nonce rc=1:
+#             a real document failure, must still be graded
 FAKE_DOCKER = r'''#!/usr/bin/env python3
 import os, sys
 a = sys.argv[1:]
@@ -84,6 +98,12 @@ elif mode == "nobanner":
     rcline(1)
 elif mode == "timeout":
     rcline(124)
+elif mode == "fwrite":
+    sys.stdout.write(banner + "!pdfTeX error: pdflatex (file t.pdf): fwrite() failed\n"); rcline(1)
+elif mode == "cantlog":
+    sys.stdout.write(banner + "! I can't write on file `t.log'.\n"); rcline(1)
+elif mode == "openout":
+    sys.stdout.write(banner + "! I can't write on file `../x.tex'.\n"); rcline(1)
 '''
 
 # A fake ENGINE for the shell grader's run_pdflatex: modes as above, stdout only.
@@ -95,6 +115,10 @@ case "${plan[$i]}" in
   ok)   echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"; exit 0 ;;
   fail) echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"; echo "! Undefined"; exit 1 ;;
   dead) echo "$DEAD_MSG" >&2; exit 1 ;;
+  fwrite) echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"
+          echo "!pdfTeX error: pdflatex (file t.pdf): fwrite() failed"; exit 1 ;;
+  openout) echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"
+          echo "! I can't write on file \`../x.tex'."; exit 1 ;;
   *)    exit 1 ;;
 esac
 '''
@@ -156,6 +180,47 @@ class Checker:
         self.expect("an in-container timeout (rc 124) is not reported as timed out",
                     err is None and got is not None and got[2] is True, f"{got!r} {err!r}")
 
+        # OPEN-118 review round 3: proof pdfTeX ran is not proof its rc is the
+        # document's. pdfTeX failing to write its OWN output (the measured
+        # disk-full shape) is refused; the document's own \openout refusal is
+        # still a grade.
+        for mode in ("fwrite", "cantlog"):
+            got, err = self.run_pdflatex(mode)
+            self.expect(f"ContainerOracle.run_pdflatex grades a '{mode}' run "
+                        f"(pdfTeX could not write its own output: disk full) "
+                        f"instead of raising OracleError", err is not None,
+                        f"returned {got!r}")
+        got, err = self.run_pdflatex("openout")
+        self.expect("a document's own \\openout refused under openout_any=p "
+                    "(banner, rc 1) is no longer graded rc 1",
+                    err is None and got is not None and got[0] == 1,
+                    f"{got!r} {err!r}")
+        # The free-space floor, BEFORE the run: nothing may even start.
+        saved = os.environ.get("LP_ORACLE_MIN_FREE_MB")
+        os.environ["LP_ORACLE_MIN_FREE_MB"] = str(10 ** 12)
+        try:
+            got, err = self.run_pdflatex("ok")
+            self.expect("ContainerOracle.run_pdflatex runs (and grades) with "
+                        "the work root below the free-space floor",
+                        err is not None and not self.count.exists(),
+                        f"returned {got!r}, engine started: {self.count.exists()}")
+        finally:
+            if saved is None:
+                os.environ.pop("LP_ORACLE_MIN_FREE_MB", None)
+            else:
+                os.environ["LP_ORACLE_MIN_FREE_MB"] = saved
+        # ... and AFTER it: space that runs out DURING a run.
+        real_free = _oracle._free_bytes
+        seq = iter([10 ** 15, 0])
+        _oracle._free_bytes = lambda _d: next(seq, 0)
+        try:
+            got, err = self.run_pdflatex("ok")
+            self.expect("ContainerOracle.run_pdflatex grades a run after which "
+                        "the work root is below the free-space floor",
+                        err is not None, f"returned {got!r}")
+        finally:
+            _oracle._free_bytes = real_free
+
         # The multi-pass protocol: pass 1 a real failure, pass 2 the daemon lost.
         for plan in ("fail,dead", "ok,dead", "dead"):
             o = self.oracle(plan)
@@ -168,7 +233,8 @@ class Checker:
 
         # check_apply_fixes_roundtrip.pdflatex_ok: None (not graded), never False.
         import check_apply_fixes_roundtrip as rt
-        for plan, want in (("dead", None), ("fail", False), ("cut", None)):
+        for plan, want in (("dead", None), ("fail", False), ("cut", None),
+                           ("fwrite", None), ("cantlog", None)):
             self.oracle(plan)
             got = _silenced(rt.pdflatex_ok, self.workroot, "t.tex", None)
             self.expect(f"check_apply_fixes_roundtrip.pdflatex_ok under '{plan}' "
@@ -178,7 +244,7 @@ class Checker:
         cwd = os.getcwd()
         os.chdir(self.workroot)
         try:
-            for plan in ("dead", "cut", "nobanner"):
+            for plan in ("dead", "cut", "nobanner", "fwrite"):
                 self.oracle(plan)
                 rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
                                               "-interaction=nonstopmode", "t.tex"])
@@ -213,14 +279,20 @@ class Checker:
         eng = self.td / "fake-engine"
         eng.write_text(FAKE_ENGINE)
         eng.chmod(0o755)
+        osh = (self.repo / "scripts/tools/_oracle.sh").read_text()
+        m = re.search(r"^oracle_vet\(\) \{.*?^\}$", osh, re.M | re.S)
+        if not m:
+            self.expect("_oracle.sh no longer defines oracle_vet()", False)
+            return
         lib = self.td / "fro_funcs.sh"
-        lib.write_text(funcs["run_pdflatex"] + "\n" + funcs["drift_class"] + "\n")
+        lib.write_text(f'ROOT="{self.repo}"\n' + m.group(0) + "\n"
+                       + funcs["run_pdflatex"] + "\n" + funcs["drift_class"] + "\n")
         wd = self.td / "wd"
         wd.mkdir(exist_ok=True)
 
-        def run(plan: str) -> str:
+        def run(plan: str, **extra) -> str:
             self.count.unlink(missing_ok=True)
-            env = dict(os.environ, FAKE_PLAN=plan, TMPDIR=str(self.td))
+            env = dict(os.environ, FAKE_PLAN=plan, TMPDIR=str(self.td), **extra)
             p = subprocess.run(
                 ["bash", "-c", f'source "{lib}"; PDFLATEX=("{eng}"); TIMEOUT=; '
                  f'run_pdflatex "{wd}" t.tex 1'], capture_output=True, text=True,
@@ -236,11 +308,40 @@ class Checker:
         got = run("fail")
         self.expect(f"run_pdflatex no longer grades a genuine failure rc 1 (got '{got}')",
                     got.split()[:1] == ["1"])
+        # OPEN-118 review round 3: banner present, then pdfTeX failing to write
+        # its own output (disk full) -- refused; the document's own \openout
+        # refusal -- still graded; a work root below the floor -- refused
+        # before any pass runs.
+        for plan in ("fwrite", "ok,fwrite"):
+            got = run(plan)
+            self.expect(f"false_ready_oracle.sh run_pdflatex graded plan '{plan}' "
+                        f"as '{got}' (pdfTeX could not write its own output)",
+                        got.startswith("ENVFAIL"))
+        got = run("openout")
+        self.expect(f"run_pdflatex no longer grades a document's own \\openout "
+                    f"refusal rc 1 (got '{got}')", got.split()[:1] == ["1"])
+        got = run("ok", LP_ORACLE_MIN_FREE_MB=str(10 ** 12))
+        self.expect(f"run_pdflatex graded a run with the work root below the "
+                    f"free-space floor as '{got}'", got.startswith("ENVFAIL")
+                    and not self.count.exists())
+        # diff_compile_check.sh: the run is inline, so pin the ORDER: a vet
+        # before the engine, a vet of the run's stdout after it, and the
+        # refusal before any grade is computed.
+        dcc = (self.repo / "scripts/tools/diff_compile_check.sh").read_text()
+        i_pre = dcc.find('oracle_vet "$d" 2>/dev/null || envok=no')
+        i_run = dcc.find('"${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >"$pout"')
+        i_post = dcc.find('! oracle_vet "$d" "$pout" -interaction=nonstopmode')
+        i_ref = dcc.find('"ENVFAIL" "not graded')
+        i_grade = dcc.find('then pl=COMPILES; else pl=FAILS; fi')
+        self.expect("diff_compile_check.sh no longer vets free space before the "
+                    "run AND the run's own output after it, before grading",
+                    -1 not in (i_pre, i_run, i_post, i_ref, i_grade)
+                    and i_pre < i_run < i_post < i_ref < i_grade)
         # The halt run's proof must be checked BEFORE its artefacts are deleted.
         i_halt = fro.find('read -r hrc hpdf <<<"$(run_pdflatex "$rundir" "$base" 1)"')
         i_rm = fro.find('"${ORACLE_RM[@]}" "$rundir/${base%.tex}.pdf"')
         i_chk = fro.find("grep -q 'This is pdfTeX' \"$rundir/${base%.tex}.log\"")
-        i_nop = fro.find("124|125|126|127|NOPROOF)")
+        i_nop = fro.find("124|125|126|127|NOPROOF|ENVFAIL)")
         self.expect("false_ready_oracle.sh checks the halt run's pdfTeX log and "
                     "NOPROOF only AFTER deleting it (or not at all)",
                     -1 not in (i_halt, i_rm, i_chk, i_nop)
@@ -291,9 +392,12 @@ def main() -> int:
             print(f"  - {f}", file=sys.stderr)
         return 1
     print(f"[oracle-infra] OK: {c.n} checks; every no-proof shape (dead daemon "
-          f"socket, daemon error, cut stream, no banner) is refused by the Python "
-          f"graders, the shim (INFRA_RC) and false_ready_oracle.sh, and a genuine "
-          f"pdfTeX failure is still graded")
+          f"socket, daemon error, cut stream, no banner) and every "
+          f"environment-failure shape (pdfTeX unable to write its own output, "
+          f"work root below the free-space floor before or after a run) is "
+          f"refused by the Python graders, the shim (INFRA_RC) and the shell "
+          f"graders, and a genuine pdfTeX failure (incl. a document's own "
+          f"\\openout refusal) is still graded")
     return 0
 
 

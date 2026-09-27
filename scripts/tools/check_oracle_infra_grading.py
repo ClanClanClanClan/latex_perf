@@ -266,7 +266,7 @@ def _silenced(fn, *a):
             return fn(*a)
         except SystemExit as e:
             return e.code
-        except BaseException as e:  # noqa: BLE001 -- an escape IS the finding
+        except ValueError as e:  # the injected bug below: escaping IS the finding
             return f"raised {type(e).__name__}"
 
 

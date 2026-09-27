@@ -2,7 +2,7 @@
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
     "measured_at_sha": "e6e82b1130741eab048ec9b4ca94f09810b6a3c5",
-    "measured_at_note": "Measured with the oracle tooling of branch feat/v27165-container-oracle (commit bc172774, which exists only on that branch) over the engine tree latex-parse/src = fe673dc1608eac5528314f23bea1bb50bcd5e433, identical to that tree at main commit e6e82b11; measured_at_sha is therefore stamped e6e82b11, so the provenance survives a squash merge (C-73). What the branch changes is the GRADING tool (scripts/tools/_oracle.py and the graders that call it), not the engine: the CLI verdicts are those of fe673dc1, the pdflatex grades are the pinned image's.",
+    "measured_at_note": "Re-measured 2026-09-27 (OPEN-118 review round 2) with the oracle tooling of branch feat/v27165-container-oracle at commit 27ef6444 (which exists only on that branch): positive proof that pdfTeX ran on every pass (banner + in-container rc line), compiles = rc 0 AND a PDF, by-products deleted inside the container. The engine tree latex-parse/src = fe673dc1608eac5528314f23bea1bb50bcd5e433 is identical to that tree at main commit e6e82b11, so measured_at_sha is stamped e6e82b11 and the provenance survives a squash merge (C-73). Every row is identical to the previous measurement (0 of 40 cells, 0 row fields); only the recorded protocol string changed. What the branch changes is the GRADING tool, not the engine.",
     "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433",
     "cli_sha256": "ba850a0edd832836cd3062f9d2884424a4a6f4845935168703c4507914c88956",
     "cli_platform": "Darwin-arm64",
@@ -18,7 +18,7 @@
       "engine": "pdflatex",
       "distribution": "TeX Live 2026",
       "version": "pdfTeX 3.141592653-2.6-1.40.29",
-      "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)",
+      "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint), PDF recorded (compiles = rc 0 AND a PDF)",
       "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
       "arch": "aarch64",
       "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",

@@ -1,0 +1,10 @@
+LPSEG:0
+LPSEG:1
+{globally changing \lpset=undefined}
+{into \lpset=macro:->a}
+LPSEG:2
+LPSEG:3
+LPSEG:4
+{changing \lpset=macro:->a}
+{into \lpset=macro:->c}
+{restoring \lpset=macro:->a}

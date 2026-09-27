@@ -178,6 +178,15 @@ jobs:
         # a string rewording (C-65). Pure: no CLI, no pdflatex.
         run: python3 scripts/tools/check_compile_check_consumers.py
 
+      - name: Contract generator parsers and committed-contract completeness (ADR-012 M1)
+        # Unit tests of scripts/tools/gen_contract.py's parsers on recorded
+        # logs, the pass protocol and the grading environment, plus the
+        # completeness evidence of the committed kernel file and contracts:
+        # every name the 2026-09-27 reviews found missing, and TeX's own hash
+        # count finding nothing outside the dumped universe. Pure: no docker;
+        # the TeX-running reproducibility gate stays local/nightly.
+        run: python3 scripts/tools/check_gen_contract_parsers.py
+
       - name: Release-only gates, now run per-PR (OPEN-091)
         # These four ran ONLY inside pre_release_check.py, i.e. only when a
         # human cut a release — and the gap between the last two releases was

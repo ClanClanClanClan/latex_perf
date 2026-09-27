@@ -6,9 +6,9 @@ first consumer is milestone M2 (`docs/v27/STRICT_TIER_DESIGN.md` §F).
 | file | what |
 |---|---|
 | `<name>.json` | one configuration contract (schema `lp-configuration-contract/1`), written by `scripts/tools/gen_contract.py generate` |
-| `kernel/<arch>-<fmt sha256 prefix>.json` | the kernel closed world for that `pdflatex.fmt`: every name the format defines, with its meaning kind |
+| `kernel/<arch>-<fmt sha256 prefix>.json` | the kernel closed world for that `pdflatex.fmt`: every name defined in format state, with its meaning kind, and the evidence that the set is complete (`coverage`: TeX's own hash-table count finds 0 names outside the candidates; `primitives`: the engine's primitives, counted against TeX's own count) |
 | `probes/<name>.json` | a probe-harness demonstration report (schema `lp-probe-report/1`), written by `gen_contract.py probes` |
-| `parser_fixtures/` | excerpts of real generator logs, the fixtures of `scripts/tools/selftest_gen_contract.py` |
+| `parser_fixtures/` | excerpts of real generator logs, the fixtures of `scripts/tools/check_gen_contract_parsers.py` (required `spec-drift`), which also checks the committed kernel file and contracts for completeness |
 
 Every TeX job ran inside the pinned image named by `TEX_IMAGE` in
 `.github/workflows/tex-oracle.yml` (ADR-012 decision 7), never the laptop TeX
@@ -43,3 +43,15 @@ synthesised:
 - `load.fls`: the `-recorder` file of that configuration's load run.
 - `kernel_meanings_excerpt.json`: a few format-state meanings from the kernel
   dump, one per meaning kind.
+- `trace_nullcs_excerpt.log`, `trace_eqname_excerpt.log`,
+  `trace_setin_excerpt.log`: the pass-1 traces of the three definer repros of
+  the 2026-09-27 reviews (the null control sequence, printed both as
+  `\csname\endcsname` and as `csnameendcsname`; a name holding `=`, with the
+  kernel's own `\__file_name=<file>` records; a group-local `\def` undone at
+  a group end), cut to the relevant records and markers.
+- `trace_tilde_excerpt.log`: records of the five-package trace where the
+  active `~`, printed under `\escapechar=-1`, reads like the control symbol
+  `\~`.
+- `review_missing_names.json`: the 24 names the 2026-09-27 reviews measured
+  as defined in format state and missing from the first kernel file; the
+  completeness check requires every one in the kernel file.

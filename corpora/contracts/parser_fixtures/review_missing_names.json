@@ -1,0 +1,29 @@
+{
+ "what": "names the two adversarial reviews of 2026-09-27 MEASURED (\\ifcsname in the pinned image) as defined in format state and missing from the kernel file of commit b87191be: 14 pdfTeX primitives (the mark primitives print with a trailing colon, \\nullfont is a font, the rest are assigned and referenced nowhere), 8 c_sys_* names and 2 sys_ names assigned only by \\everyjob",
+ "names": [
+  "topmark",
+  "splitfirstmark",
+  "splitbotmark",
+  "nullfont",
+  "pdfsnapy",
+  "pdfsnapycomp",
+  "pdfsnaprefpoint",
+  "pdfspacefont",
+  "pdfmovechars",
+  "pdfforcepagebox",
+  "pdfomitinfodict",
+  "pdfomitprocset",
+  "pdfoptionalwaysusepdfpagebox",
+  "pdfoptionpdfminorversion",
+  "c_sys_year_int",
+  "c_sys_month_int",
+  "c_sys_day_int",
+  "c_sys_hour_int",
+  "c_sys_minute_int",
+  "c_sys_timestamp_str",
+  "c_sys_jobname_str",
+  "c_sys_shell_escape_int",
+  "sys_rand_seed:",
+  "sys_gset_rand_seed:n"
+ ]
+}

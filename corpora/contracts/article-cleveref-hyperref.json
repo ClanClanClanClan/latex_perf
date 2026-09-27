@@ -4,6 +4,7 @@
   "latex": "LaTeX2e <2026-06-01>"
  },
  "complete": false,
+ "complete_scope": "configuration: the name set at body start of this configuration is exact (every name TeX's hash table holds there was asked); it attests no document's own names, which need a per-document self-check (M2)",
  "config_key": "3f907e1cb5234886ae9b55018c841c2b629ea9f029c77f6e9aecb06b0c4d6067",
  "configuration": {
   "class": "article",
@@ -52,20 +53,22 @@
  ],
  "generator": {
   "tool": "scripts/tools/gen_contract.py",
-  "version": "1"
+  "version": "2"
  },
  "incomplete_reasons": [
   "load_fatal: the configuration does not load, so no name set was generated"
  ],
  "kernel": {
-  "count": 23435,
+  "count": 23519,
   "file": "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json",
-  "meanings_sha256": "12c2090e0cac3337ca522af3489aba0766bdd4e4d39fac26a6d2bb2b42c90322"
+  "meanings_sha256": "4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e"
  },
  "load_outcome": {
   "error_class": "package_error:cleveref",
+  "first_pass_rc": 1,
   "load_index": 3,
   "message": "Package cleveref Error: cleveref must be loaded after hyperref!.",
+  "passes": 3,
   "rc": 1,
   "segment": "begin_document",
   "status": "fatal"
@@ -78,7 +81,9 @@
   "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe"
  },
  "provenance": {
+  "generator_version": "2",
   "load_tex_sha256": "234b64d9838fb46a9555d6e67989de0d2cb8bc0b4ec84e0da504bf0ef3ee1988",
+  "trace_log_sha256": "21b2ce12aac0063729bfba6da5fa7a6332caac7d951a2bdd7fc0a9b4af9ae55b",
   "trace_tex_sha256": "3cc349099a446867f7f4e9ca76c9e464cfe5aa90917c16c56fd29b18b6979360"
  },
  "schema": "lp-configuration-contract/1"

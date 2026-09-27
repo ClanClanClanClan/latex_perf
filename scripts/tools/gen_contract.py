@@ -13,24 +13,40 @@ Nothing in a contract is hand-listed. Every field comes from a TeX run:
 
   pin             engine banner, pdflatex.fmt sha256, texlive.tlpdb sha256,
                   image reference and architecture, LaTeX and L3 banners.
-  kernel          INITEX re-run of pdflatex.ini under \\tracingassigns and
-                  \\tracingrestores; every name it assigns, plus every name
-                  referenced from a kernel meaning, is then dumped in format
-                  state, and the defined ones are the kernel. Cached by fmt hash.
-  load_outcome    the configuration plus \\begin{document}\\end{document} under
-                  -interaction=nonstopmode -halt-on-error: ok, or the first
-                  `!` error and the load segment it happened in.
-  files_read      the .fls (-recorder) of that run, minus the files an empty
-                  format-state job reads, minus job-local files; with sha256.
+  kernel          every name defined in format state (a job after \\everyjob).
+                  Candidates: every string of the shipped format's string pool,
+                  the engine's primitives (virgin INITEX, counted against TeX's
+                  own cs_count), every name the INITEX run of pdflatex.ini and
+                  its \\everyjob replay assigns, all one-character names and the
+                  null name; dumped with \\meaning in format state, closed over
+                  referenced names. COMPLETE because TeX's own count of its hash
+                  table finds 0 entries outside the candidates (hash_coverage).
+                  Cached by fmt hash and generator source hash.
+  load_outcome    the configuration plus \\begin{document}\\end{document}
+                  under the GRADING environment and the oracle's pass protocol
+                  (run_to_fixpoint: to the first rc 0 in at most 3 runs, then a
+                  confirming run), -halt-on-error: ok, or the first `!` error
+                  of the last run, the pass count and the load segment. The
+                  same run under the forced date must agree.
+  files_read      the .fls (-recorder) of the forced run's first pass, minus the
+                  files an empty format-state job reads, minus job-local files;
+                  with sha256.
   defined_names   pass 1 traces every assignment from before \\documentclass
                   until after the begin-document hooks, with a marker between
-                  loads. Pass 2 dumps \\meaning of every kernel name and every
-                  traced name at body start (after AtBeginDocument), guarded
-                  by \\ifcsname so the dump defines nothing. A name is in
+                  loads. Pass 2 dumps \\meaning at body start (after
+                  AtBeginDocument), guarded by \\ifcsname, of the whole
+                  UNIVERSE: the kernel's candidates, every traced name (every
+                  reading of an ambiguous record), every name token of the files
+                  read and of the definers. hash_coverage checks the universe
+                  against TeX's own count at body start. A name is in
                   defined_names iff its body-start meaning differs from its
                   format-state meaning (class Undefined = the configuration
-                  removed a kernel name). Traced names whose meaning is back
-                  to the kernel's by body start are listed in reverted_names.
+                  removed a kernel name). Traced names whose meaning is back to
+                  the kernel's are listed in reverted_names; primitive
+                  parameters the configuration assigned are listed in
+                  parameters_assigned (values are not recorded). The dump is
+                  repeated on the later passes and under the real clock; the
+                  state must not change.
   catcodes        \\the\\catcode of bytes 0-255 at body start, where it
                   differs from format state.
   active_chars    \\meaning of each active character at body start, where it
@@ -43,19 +59,23 @@ Nothing in a contract is hand-listed. Every field comes from a TeX run:
   key_families    keyval families and keys from \\KV@<family>@<key> names,
                   and declared class/package options from \\ds@<option>.
   self_check      an independent run: \\ifcsname on a seeded 1% sample of the
-                  closed world, on every name referenced from a body-start
-                  meaning, and on any --use-names, must agree with membership.
-                  Any mismatch sets complete=false.
+                  whole universe (members and non-members), on every name
+                  referenced from a body-start meaning, and on any --use-names,
+                  must agree with membership. Any mismatch sets complete=false.
+  complete_scope  what complete=true attests: the configuration's name set,
+                  never a document's own names (M2's per-document check).
 
 Signature probes (the typed lattice) are M1 slice 2. This slice ships only the
-probe HARNESS (`probes` subcommand): solo -halt-on-error probe documents with a
-timeout, classified by error class (never by rc), and a batched run whose
-polarity is compared with the solo one.
+probe HARNESS (`probes` subcommand): solo -halt-on-error probe documents under
+the oracle's pass protocol with a timeout, classified by error class (never by
+rc), and a batched run whose polarity is compared with the solo one.
 
 Determinism: every job runs in a fresh directory mounted at a fixed container
-path, with SOURCE_DATE_EPOCH=0 and FORCE_SOURCE_DATE=1; output JSON is sorted;
-no timing is written into a contract. `check_contracts_reproducible.py`
-regenerates a committed contract and diffs it byte for byte.
+path. Name-set runs use SOURCE_DATE_EPOCH=0 and FORCE_SOURCE_DATE=1; the load
+outcome is attested without FORCE_SOURCE_DATE (the graders' environment) and
+must agree. Output JSON is sorted; no timing is written into a contract.
+`check_contracts_reproducible.py` regenerates a committed contract and diffs it
+byte for byte.
 
 Usage:
   gen_contract.py generate --class article --package amsmath --package hyperref \\
@@ -71,6 +91,7 @@ inside the container (colima mounts only $HOME by default), so it defaults to
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import math
@@ -78,8 +99,10 @@ import os
 import random
 import re
 import shutil
+import struct
 import subprocess
 import sys
+import tarfile
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -93,22 +116,47 @@ PROBE_SCHEMA = "lp-probe-report/1"
 # A semantic version, bumped by hand when the generator's OUTPUT changes on
 # purpose. Deliberately not a hash of this file: a comment edit must not
 # invalidate every committed contract (the C-68 lesson).
-GENERATOR_VERSION = "1"
+GENERATOR_VERSION = "2"
 
 REPO = Path(__file__).resolve().parent.parent.parent
 WORKFLOW = Path(".github/workflows/tex-oracle.yml")
 CONTRACT_DIR = Path("corpora/contracts")
 CONTAINER_WORK = "/lpwork"
+# The container's environment. It carries the grading environment of
+# diff_real_roots.py and gen_strict_battery.py (SOURCE_DATE_EPOCH=0,
+# openin_any/openout_any=p, private TEXMFHOME/TEXMFVAR), plus log-width
+# settings that change no outcome, plus FORCE_SOURCE_DATE=1, which the graders
+# do NOT set: it pins \\year, \\month, \\day and \\time to the epoch, so
+# name-set runs are byte-reproducible. Three environments are derived from it
+# (env_prefix): "forced" as is; "grading" without FORCE_SOURCE_DATE, the
+# oracle's own (real clock), under which the load outcome is attested; and
+# "second_date", another forced date, which finds the kernel's date-dependent
+# names. Every contract checks that the forced date changed nothing (review
+# defect R1.3: `\\ifnum\\year>2000` loaded under one and failed under the
+# other).
 TEX_ENV = {
     "HOME": "/tmp",
     # No log line wrapping, so a trace record or a dumped meaning is one line.
     "max_print_line": "1000000",
     "error_line": "254",
     "half_error_line": "238",
-    # Deterministic \\today, \\time and log banner.
     "SOURCE_DATE_EPOCH": "0",
+    "openin_any": "p",
+    "openout_any": "p",
+    "TEXMFHOME": "/tmp/lp-texmfhome",
+    "TEXMFVAR": "/tmp/lp-texmfvar",
     "FORCE_SOURCE_DATE": "1",
 }
+GRADING_UNSET = ["FORCE_SOURCE_DATE"]
+SECOND_EPOCH = "1790000000"
+# diff_real_roots.MAX_PASSES (the oracle's pass protocol, B.4); the parser
+# self-test asserts the two agree.
+MAX_PASSES = 3
+# What `complete` attests (review defect R1.4).
+COMPLETE_SCOPE = ("configuration: the name set at body start of this configuration "
+                  "is exact (every name TeX's hash table holds there was asked); "
+                  "it attests no document's own names, which need a per-document "
+                  "self-check (M2)")
 LONG_TIMEOUT = 600
 PROBE_TIMEOUT = 15
 TIMEOUT_RC = 124
@@ -212,7 +260,7 @@ def canonical_json(obj) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Log parsers (unit-tested on recorded fixtures by selftest_gen_contract.py)
+# Log parsers (unit-tested on recorded fixtures by check_gen_contract_parsers.py)
 # ---------------------------------------------------------------------------
 
 _REC_START = re.compile(
@@ -222,16 +270,103 @@ _QUANTITY = re.compile(
     rb"(?:count|dimen|skip|muskip|toks|box|catcode|lccode|uccode|sfcode|mathcode|"
     rb"delcode|textfont|scriptfont|scriptscriptfont)\d+")
 SEG_MARK = re.compile(rb"^LPSEG:(-?\d+)$")
+# set_in of a name whose value was restored to one from before the trace.
+SEG_BEFORE_TRACE = -2
+
+
+# What a traced value can start with (`print_cmd_chr` / `show_eqtb`), after the
+# escape character where one is printed. A `=` inside a name is legal, so a
+# record is split at every `=` whose remainder reads as a value, never only at
+# the first one (review defect 3: `\\lpa=b=macro:->x` was read as `lpa`).
+_VALUE_WORDS = (b"macro:", b"undefined", b"select font ", b"the letter ",
+                b"the character ", b"begin-group character ",
+                b"end-group character ", b"math shift character ",
+                b"alignment tab character ", b"macro parameter character ",
+                b"superscript character ", b"subscript character ", b"blank space ",
+                b"end of alignment template", b"outer endtemplate", b"[unknown",
+                b"long macro:", b"protected macro:", b"outer macro:",
+                b"protected long macro:", b"long outer macro:",
+                b"protected long outer macro:", b"protected outer macro:")
+_VALUE_NUM = re.compile(rb"^-?[0-9.]")
+# Name of the null control sequence as TeX prints it (`print_cs(null_cs)`):
+# esc + "csname" + esc + "endcsname"; with no escape character both are bare.
+NULL_CS = b""
+
+
+def _value_like(rest: bytes, esc: int) -> bool:
+    """Could `rest` be the printed value of a trace record? Under a negative
+    escape character a primitive meaning prints bare (`relax`), so every
+    remainder could be one."""
+    if not 0 <= esc <= 255:
+        return True
+    if rest == b"" or _VALUE_NUM.match(rest) or rest[:1] == bytes([esc]):
+        return True
+    return rest.startswith(_VALUE_WORDS)
+
+
+def _printed_names(dec: bytes, esc: int) -> list:
+    """(kind, name) readings of one printed name (already ^^-decoded)."""
+    out = []
+    if 0 <= esc <= 255:
+        e = bytes([esc])
+        if dec == e + b"csname" + e + b"endcsname":
+            out.append(("cs", NULL_CS))
+        if dec.startswith(e) and len(dec) > 1:
+            out.append(("cs", dec[1:]))
+        elif len(dec) == 1:
+            out.append(("active", dec))
+        else:
+            # printed with a different escape than we track: keep the
+            # whole string as a candidate name (the dump settles it).
+            out.append(("cs", dec))
+    else:
+        if dec == b"csnameendcsname":
+            out.append(("cs", NULL_CS))
+        out.append(("cs", dec))
+        if len(dec) == 1:
+            out.append(("active", dec))
+    return out
+
+
+def _same_value(a: bytes, b: bytes) -> bool:
+    """Two printed trace values (backslashes removed) that can be the same
+    value: equal, or equal up to where TeX truncated one with `ETC.` (the
+    truncation point moves with the escape character, so a value printed
+    under \\escapechar=-1 is truncated later than the same value under 92)."""
+    if a == b:
+        return True
+    ta, tb = a.endswith(b"ETC."), b.endswith(b"ETC.")
+    if ta:
+        a = a[:-4]
+    if tb:
+        b = b[:-4]
+    if ta and tb:
+        return a.startswith(b) or b.startswith(a)
+    if ta:
+        return b.startswith(a)
+    if tb:
+        return a.startswith(b)
+    return False
 
 
 def parse_trace(log: bytes):
     """Parse a \\tracingassigns/\\tracingrestores log.
 
     Returns a dict:
-      names      {(kind, name_bytes): last_segment}, kind is "cs" or "active";
-                 the segment is the index of the last LPSEG marker before the
-                 record that last set the name ("changing" records carry the
-                 old value and are not counted as setting it).
+      names      {(kind, name_bytes): segment}, kind is "cs" or "active"; the
+                 segment is the index of the last LPSEG marker before the
+                 assignment whose value the name holds at the end of the trace:
+                 `into`/`reassigning` set it; `changing` (the old value) and
+                 `retaining` (a global value kept at a group end) never do; a
+                 `restoring` record gives back the segment of the assignment
+                 whose value it restores (matched on the printed value), or
+                 SEG_BEFORE_TRACE when that value predates the trace (review
+                 defect 4: a local \\def inside a group used to win).
+      ambiguous  set of tuples of cs names: one record whose printed name has
+                 several readings (a `=` inside the name, or the null control
+                 sequence, which prints like the name `csname\\endcsname`).
+                 Every reading is in `names`; the dump settles which exists.
+      sure       set of cs names read from a record with exactly one reading
       records    number of trace records seen
       tracing_toggles  records that assign \\tracingassigns or
                  \\tracingrestores (the caller decides which are its own)
@@ -249,6 +384,12 @@ def parse_trace(log: bytes):
     esc = 92
     seg = -1
     names: dict = {}
+    history: dict = {}
+    current: dict = {}
+    pending: dict = {}
+    skipped: dict = {}
+    ambiguous = set()
+    sure = set()
     records = 0
     unparsed = 0
     toggles = []
@@ -285,17 +426,22 @@ def parse_trace(log: bytes):
         records += 1
         verb = m.group(2)
         body = line[m.end():-1] if line.endswith(b"}") else line[m.end():]
-        # A control symbol named `=` prints as `\==value`: skip its own `=`.
+        # A control symbol named `=` prints as `\\==value`: skip its own `=`.
         start = 2 if body[1:2] == b"=" and 0 <= esc <= 255 and body[:1] == bytes([esc]) else 0
-        eq = body.find(b"=", start)
-        if eq < 0:
+        eqs = [i for i in range(start, len(body)) if body[i:i + 1] == b"="]
+        if not eqs:
             unparsed += 1
             continue
-        printed, value = body[:eq], body[eq + 1:]
-        dec = decode_carets(printed)
+        # The first `=` is always a reading (a token-list parameter's value
+        # can start with anything); every later `=` whose remainder reads as a
+        # value is another.
+        splits = eqs[:1] + [i for i in eqs[1:] if _value_like(body[i + 1:], esc)]
+        first_printed = decode_carets(body[:splits[0]])
+        value = body[splits[0] + 1:]
+
         # escapechar bookkeeping: the "into" record is printed with the NEW
         # escape character, so match the bare name with any one-byte prefix.
-        def is_param(x):
+        def is_param(x, dec=first_printed):
             return dec.endswith(x) and len(dec) in (len(x), len(x) + 1)
         if is_param(b"escapechar"):
             if verb != b"changing":
@@ -308,32 +454,64 @@ def parse_trace(log: bytes):
             if is_param(bare):
                 toggles.append((seg, verb.decode(), bare.decode(),
                                 value.decode("utf-8", "replace")))
-        if dec == b"current font":
+        if first_printed == b"current font":
             continue
         cands = []
-        if 0 <= esc <= 255:
-            e = bytes([esc])
-            if dec.startswith(e) and len(dec) > 1:
-                cands.append(("cs", dec[1:]))
-            elif len(dec) == 1:
-                cands.append(("active", dec))
-            else:
-                # printed with a different escape than we track: keep the
-                # whole string as a candidate name (the dump settles it).
-                cands.append(("cs", dec))
-        else:
-            cands.append(("cs", dec))
-            if len(dec) == 1:
-                cands.append(("active", dec))
-        for kind, nm in cands:
-            if kind == "cs" and _QUANTITY.fullmatch(nm):
-                continue
-            key = (kind, nm)
+        for i in splits:
+            for kn in _printed_names(decode_carets(body[:i]), esc):
+                if kn[0] == "cs" and _QUANTITY.fullmatch(kn[1]):
+                    continue
+                if kn not in [c[0] for c in cands]:
+                    cands.append((kn, body[i + 1:]))
+        cs_names = tuple(dict.fromkeys(nm for (k, nm), _ in cands if k == "cs"))
+        if len(cs_names) > 1:
+            ambiguous.add(cs_names)
+        elif len(cs_names) == 1:
+            sure.add(cs_names[0])
+        # Values are compared without backslashes: a value printed while
+        # \\escapechar=-1 is the same value printed bare.
+        cands = [(key, val.replace(b"\\", b"")) for key, val in cands]
+        keys = tuple(key for key, _ in cands)
+        skip = set()
+        if len(cands) > 1:
+            # An ambiguous record (a one-byte name under \\escapechar=-1 is
+            # the active character or the control symbol): a reading whose
+            # known value is not the `changing` record's old value is not the
+            # one being assigned, so the `into` that follows skips it.
             if verb == b"changing":
-                names.setdefault(key, seg)
-            else:
+                excl = {k for k, v in cands if k in current and not _same_value(current[k], v)}
+                pending[keys] = excl if len(excl) < len(cands) else set()
+            elif verb in (b"into", b"reassigning"):
+                skip = pending.pop(keys, set())
+                skipped[keys] = skip
+            elif verb == b"restoring":
+                # ... and neither is the group end that undoes that `into`.
+                skip = skipped.pop(keys, set())
+        for key, val in cands:
+            if key in skip:
+                continue
+            if verb in (b"into", b"reassigning"):
                 names[key] = seg
-    return {"names": names, "records": records, "tracing_toggles": toggles,
+                current[key] = val
+                history.setdefault(key, []).append((val, seg))
+            elif verb == b"restoring":
+                back = [s for v, s in history.get(key, []) if _same_value(v, val)]
+                if back:
+                    names[key] = back[-1]
+                    current[key] = val
+                elif len(cands) == 1:
+                    names[key] = SEG_BEFORE_TRACE
+                    current[key] = val
+                else:
+                    # An ambiguous record restoring a value this reading
+                    # never had: this reading's value is now unknown.
+                    names.setdefault(key, SEG_BEFORE_TRACE)
+                    current.pop(key, None)
+            else:  # changing, retaining: not the assignment of the kept value
+                names.setdefault(key, seg)
+                current.setdefault(key, val)
+    return {"names": names, "ambiguous": ambiguous, "sure": sure,
+            "records": records, "tracing_toggles": toggles,
             "first_error": first_error, "unparsed": unparsed,
             "multiline": multiline}
 
@@ -568,8 +746,14 @@ def classify_meaning(name: bytes, m: bytes | None) -> dict:
                 "catcode_class": r.group(1).decode(), "char": name_str(r.group(2))}
     r = _PRIM.match(m)
     if r:
-        return {"kind": "Primitive", "primitive": name_str(r.group(1))}
+        return {"kind": "Primitive", "primitive": name_str(_unmark(r.group(1)))}
     return {"kind": "Other", "meaning": name_str(m)}
+
+
+def _unmark(prim: bytes) -> bytes:
+    """e-TeX prints the mark primitives with a trailing colon (`\\topmark:`,
+    the class-0 form of `\\topmarks`); the primitive's name has none."""
+    return prim[:-1] if prim.endswith(b":") and len(prim) > 1 else prim
 
 
 def short_kind(d: dict) -> str:
@@ -595,6 +779,13 @@ def referenced_names(meaning: bytes) -> set:
     # trailing space; this is how primitives reachable only through an alias
     # such as \tex_badness:D enter the kernel set.
     m = _PRIM.match(meaning)
+    if m:
+        # `\\topmark:` names the primitive `topmark` (review defect 1a).
+        out.add(decode_carets(m.group(1)))
+        out.add(decode_carets(_unmark(m.group(1))))
+    # A font identifier's meaning names its font (`select font nullfont`);
+    # for \\nullfont that name is the identifier itself (review defect 1b).
+    m = _FONT.match(meaning)
     if m:
         out.add(decode_carets(m.group(1)))
     return out
@@ -776,6 +967,20 @@ def read_image(repo: Path) -> str:
     return m.group(1)
 
 
+def env_prefix(env: str) -> list:
+    """argv prefix selecting one of the three environments (see TEX_ENV)."""
+    if env == "forced":
+        return []
+    if env == "grading":
+        out = ["env"]
+        for k in GRADING_UNSET:
+            out += ["-u", k]
+        return out
+    if env == "second_date":
+        return ["env", "SOURCE_DATE_EPOCH=" + SECOND_EPOCH]
+    raise ValueError(env)
+
+
 class Tex:
     def __init__(self, image: str, work: Path):
         self.image = image
@@ -805,28 +1010,35 @@ class Tex:
 
     def sh(self, cmd: str, timeout: int = 120):
         return subprocess.run(["docker", "exec", self.name, "bash", "-c", cmd],
-                               capture_output=True, text=True, timeout=timeout)
+                              capture_output=True, text=True, timeout=timeout)
 
     def job(self, name: str) -> Path:
-        d = self.host / name
-        if d.exists():
-            shutil.rmtree(d)
+        """A fresh job directory. Never a reused name: a directory deleted and
+        re-created under the same name on the host can reach the container
+        stale through the VM mount, and pdflatex then fails to write its log
+        (measured: an intermittent rc=1 with no log, in a loop that reused
+        one name)."""
+        self._jobs = getattr(self, "_jobs", 0) + 1
+        d = self.host / ("%s-%d" % (name, self._jobs))
         d.mkdir(parents=True)
         return d
 
-    def run(self, jobdir: Path, argv: list, timeout: int) -> tuple:
+    def cpath(self, jobdir: Path) -> str:
+        return "%s/%s" % (CONTAINER_WORK, jobdir.relative_to(self.host).as_posix())
+
+    def run(self, jobdir: Path, argv: list, timeout: int, env: str = "forced") -> tuple:
         """Run argv in the container in jobdir under coreutils `timeout`.
         Returns (rc, seconds). rc 124 = timed out."""
-        rel = jobdir.relative_to(self.host).as_posix()
         t0 = time.monotonic()
-        r = subprocess.run(["docker", "exec", "-w", "%s/%s" % (CONTAINER_WORK, rel),
-                            self.name, "timeout", str(timeout)] + argv,
+        r = subprocess.run(["docker", "exec", "-w", self.cpath(jobdir), self.name,
+                            "timeout", str(timeout)] + env_prefix(env) + argv,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                            timeout=timeout + 60)
         return r.returncode, time.monotonic() - t0
 
     def pdflatex(self, jobdir: Path, tex: bytes, *, halt: bool = True,
-                 recorder: bool = False, timeout: int = LONG_TIMEOUT) -> dict:
+                 recorder: bool = False, timeout: int = LONG_TIMEOUT,
+                 env: str = "forced") -> dict:
         (jobdir / "job.tex").write_bytes(tex)
         argv = ["pdflatex", "-interaction=nonstopmode"]
         if halt:
@@ -834,11 +1046,41 @@ class Tex:
         if recorder:
             argv.append("-recorder")
         argv.append("job.tex")
-        rc, secs = self.run(jobdir, argv, timeout)
+        rc, secs = self.run(jobdir, argv, timeout, env)
+        if not (jobdir / "job.log").exists() and rc != TIMEOUT_RC:
+            # pdflatex always writes a log; no log means docker or the
+            # container failed, which must never read as a TeX outcome.
+            raise SystemExit("gen_contract: INFRASTRUCTURE - pdflatex wrote no log "
+                             "in %s (rc=%d)" % (jobdir.name, rc))
         log = (jobdir / "job.log").read_bytes() if (jobdir / "job.log").exists() else b""
         fls = (jobdir / "job.fls").read_bytes() if (jobdir / "job.fls").exists() else b""
         return {"rc": rc, "secs": secs, "log": log, "fls": fls,
                 "pdf": (jobdir / "job.pdf").exists(), "tex_sha256": sha256_bytes(tex)}
+
+    def fixpoint(self, jobdir: Path, tex: bytes, *, env: str = "grading",
+                 recorder: bool = True, timeout: int = LONG_TIMEOUT) -> dict:
+        """The oracle's pass protocol, `diff_real_roots.run_to_fixpoint`, in
+        the container: run until the first rc 0 (at most MAX_PASSES runs),
+        then ONE confirming run in the same directory; the result is the last
+        run's. A document that succeeds and then breaks itself through a file
+        its own first pass wrote is caught by the confirming run (review
+        defect R1.2: the load run used to be a single pass). The first
+        pass's .fls and log are kept alongside."""
+        first = res = None
+        passes = 0
+        for _ in range(MAX_PASSES):
+            res = self.pdflatex(jobdir, tex, recorder=recorder, timeout=timeout, env=env)
+            passes += 1
+            first = first or res
+            if res["rc"] in (0, TIMEOUT_RC):
+                break
+        if res["rc"] == 0:
+            res = self.pdflatex(jobdir, tex, recorder=recorder, timeout=timeout, env=env)
+            passes += 1
+        out = dict(res)
+        out.update({"passes": passes, "first_fls": first["fls"],
+                    "first_log": first["log"], "first_rc": first["rc"]})
+        return out
 
     def close(self):
         subprocess.run(["docker", "rm", "-f", self.name], capture_output=True)
@@ -850,6 +1092,194 @@ class Tex:
 
     def __exit__(self, *a):
         self.close()
+
+
+# ---------------------------------------------------------------------------
+# The engine's own name lists: format string pools, primitives, TeX's hash count
+# ---------------------------------------------------------------------------
+
+def fmt_pool_strings(data: bytes) -> list:
+    """Every string of a web2c TeX format's string pool, in pool order.
+
+    A format dumps (web2c tex.ch, `Dump constants for consistency check` and
+    `Dump the string pool`, big-endian): the magic "W2TX", the engine name,
+    engine-specific constants, then pool_ptr, str_ptr, str_start[0..str_ptr]
+    and the pool bytes. Every multiletter control-sequence name in the
+    format's hash table IS one of these strings (`id_lookup` makes the name a
+    pool string), so the pool is a superset of the format's names by
+    construction. The offset of pool_ptr depends on the engine's constants,
+    so it is searched for, and accepted only where the whole structure
+    checks: str_start[0] = 0, non-decreasing, str_start[str_ptr] = pool_ptr,
+    and strings 0..255 are TeX's printable forms of the 256 characters."""
+    if data[:2] == b"\x1f\x8b":
+        data = gzip.decompress(data)
+    if data[:4] != b"W2TX":
+        raise ValueError("not a web2c format (no W2TX magic)")
+    for off in range(8, min(len(data) - 8, 16384), 4):
+        pool_ptr, str_ptr = struct.unpack_from(">ii", data, off)
+        if not (256 < str_ptr < 10 ** 7 and 0 < pool_ptr < 10 ** 9):
+            continue
+        base = off + 8
+        pool_at = base + 4 * (str_ptr + 1)
+        if pool_at + pool_ptr > len(data):
+            continue
+        if struct.unpack_from(">i", data, base)[0] != 0:
+            continue
+        if struct.unpack_from(">i", data, base + 4 * str_ptr)[0] != pool_ptr:
+            continue
+        ss = struct.unpack_from(">%di" % (str_ptr + 1), data, base)
+        if any(ss[i] > ss[i + 1] for i in range(str_ptr)):
+            continue
+        pool = data[pool_at:pool_at + pool_ptr]
+        strs = [pool[ss[i]:ss[i + 1]] for i in range(str_ptr)]
+        if all(decode_carets(strs[k]) == bytes([k]) for k in range(256)):
+            return strs
+    raise ValueError("no string pool found in the format")
+
+
+_CS_COUNT = re.compile(rb"(\d+) multiletter control sequences")
+
+
+def cs_count(log: bytes):
+    """TeX's `cs_count` as printed in the log's statistics (at the end of a
+    job run with \\tracingstats>0, and by \\dump): the number of multiletter
+    control sequences in the hash table."""
+    m = _CS_COUNT.findall(log)
+    return int(m[-1]) if m else None
+
+
+# Candidate names harvested from a TeX source file. A name token is `\\`
+# followed by letters, and which bytes are letters is the catcode table at
+# that point, which a file can change (`@`, expl3's `_` and `:`, pdfescape's
+# `!`, ...). So after every `\\`, take the run R of bytes that are not
+# white space, `\\`, a brace or `%` (at most 80), and every R[:j] where j is
+# the position of a byte that is not an ASCII letter (the name ends at the
+# first non-letter, whichever that is) or the end of R. An over-approximation
+# on purpose: a candidate that is not a name costs one `\\ifcsname`, and
+# hash_coverage says whether anything was still missed (measured: letters,
+# `@`, `_` and `:` alone missed `\\Gin@rule@*` and `\\!!stringa` in the
+# five-package configuration).
+_TOK_RUN = re.compile(rb"\\([^\s\\{}%]{1,80})")
+
+
+def source_names(data: bytes) -> set:
+    out = set()
+    for m in _TOK_RUN.finditer(data):
+        run = m.group(1)
+        for j, c in enumerate(run):
+            if not (65 <= c <= 90 or 97 <= c <= 122):
+                if j >= 2:
+                    out.add(run[:j])
+        if len(run) >= 2:
+            out.add(run)
+    return out
+
+
+def engine_primitives(tex: Tex) -> dict:
+    """The engine's primitives, derived from the engine alone.
+
+    A virgin INITEX run (`pdftex -ini -etex -translate-file=cp227.tcx`, the
+    fmtutil flags of pdflatex, and nothing read) dumps a format whose hash
+    table holds exactly the primitives. Its string pool (the engine's
+    compiled-in pool plus nothing) gives the candidates; a second virgin
+    INITEX run tests each with `\\ifcsname` and dumps its `\\meaning`, plus
+    all 256 one-character names and the null name. COMPLETE BECAUSE: the
+    number of multiletter candidates found defined must equal the virgin
+    dump's own count of multiletter control sequences (TeX's cs_count), and
+    the one-character names are enumerated exhaustively."""
+    jd = tex.job("virgin")
+    ini = ["pdftex", "-ini", "-etex", "-interaction=nonstopmode",
+           "-translate-file=cp227.tcx"]
+    rc, _ = tex.run(jd, ini + ["-jobname=lpvirgin", "\\dump"], LONG_TIMEOUT)
+    log = (jd / "lpvirgin.log").read_bytes() if (jd / "lpvirgin.log").exists() else b""
+    if rc != 0 or not (jd / "lpvirgin.fmt").exists():
+        raise SystemExit("gen_contract: virgin INITEX dump failed: rc=%d" % rc)
+    count = cs_count(log)
+    pool = fmt_pool_strings((jd / "lpvirgin.fmt").read_bytes())
+    cands = sorted({x for x in pool if len(x) >= 2}) + [bytes([b]) for b in range(256)] \
+        + [NULL_CS]
+    block, unw = dump_block(cands, actives=False, u8_sweep=False)
+    # Virgin INITEX has no brace characters; the catcode line needs them.
+    (jd / "prim.tex").write_bytes(b"\\catcode123=1 \\catcode125=2 \\relax\n" + block +
+                                  b"\\end\n")
+    rc2, _ = tex.run(jd, ini + ["-jobname=lpprim", "prim.tex"], LONG_TIMEOUT)
+    d = parse_dump((jd / "lpprim.log").read_bytes())
+    shutil.rmtree(jd, ignore_errors=True)
+    if rc2 != 0 or d["error"] is not None or unw:
+        raise SystemExit("gen_contract: virgin INITEX primitive dump failed: rc=%d %s %s"
+                         % (rc2, d["error"], unw[:3]))
+    prims = {}
+    for i, nm in enumerate(cands):
+        m = d["meanings"].get(i)
+        if m is not None:
+            prims[nm] = m
+    multi = sorted(n for n in prims if len(n) >= 2)
+    single = sorted(n for n in prims if len(n) < 2)
+    not_self = sorted(name_str(n) for n, m in prims.items()
+                      if classify_meaning(n, m)["kind"] not in ("Primitive", "Relax", "Font"))
+    reasons = []
+    if count is None or len(multi) != count:
+        reasons.append("virgin INITEX: %d multiletter primitives found, TeX counts %s"
+                       % (len(multi), count))
+    if not_self:
+        reasons.append("virgin INITEX names that are not primitives: %s" % not_self[:5])
+    return {"names": multi + single, "multiletter": len(multi),
+            "single": [name_str(n) for n in single], "tex_cs_count": count,
+            "pool_strings": len(pool), "complete": not reasons, "reasons": reasons}
+
+
+def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
+                  env: str = "forced") -> dict:
+    """Does `universe` hold every multiletter name in TeX's hash table at the
+    point `prefix` leaves a job in? Answered by TeX's own counter, so the
+    answer does not depend on how `universe` was built.
+
+    Job A is prefix + the dump regime + stop. Job B is the same with a
+    `\\csname` of every name of universe in between (inside groups, so
+    nothing survives): `\\csname` enters a name the table does not hold yet
+    and leaves one it holds alone. Both end with \\tracingstats=1, whose
+    statistics print cs_count. So count(B) - count(A) is the number of
+    universe names NOT in the table, universe minus that is the number of
+    table entries universe covers, and count(A) minus the covered number is
+    the number of table entries universe MISSES. 0 means complete; anything
+    else is incompleteness nobody listed, which is exactly what a check
+    built from the generator's own lists cannot see."""
+    ml = sorted({n for n in universe if len(n) >= 2})
+    head = prefix + b"\\tracingstats=1\\relax\n" + regime_open()
+
+    def body(names):
+        out = [head]
+        unw = []
+        for i, nm in enumerate(names):
+            if i % 500 == 0:
+                out.append(ESC + b"begingroup\n")
+            line = _name_line(nm, lambda n: _w(
+                ESC, b"expandafter", ESC, b"ifx", ESC, b"csname", SPACER, n,
+                ESC, b"endcsname", ESC, b"relax", ESC, b"fi\n"))
+            if line is None:
+                unw.append(nm)
+            else:
+                out.append(line)
+            if i % 500 == 499:
+                out.append(ESC + b"endgroup\n")
+        if len(names) % 500:
+            out.append(ESC + b"endgroup\n")
+        out.append(regime_close() + FMT_STOP)
+        return b"".join(out), unw
+
+    ta, _ = body([])
+    tb, unw = body(ml)
+    ra = tex.pdflatex(tex.job(jobname + "_a"), ta, env=env)
+    rb = tex.pdflatex(tex.job(jobname + "_b"), tb, env=env)
+    ka, kb = cs_count(ra["log"]), cs_count(rb["log"])
+    ea, eb = first_error(ra["log"]), first_error(rb["log"])
+    out = {"universe_multiletter": len(ml), "unwritable": len(unw)}
+    if ra["rc"] != 0 or rb["rc"] != 0 or ea or eb or ka is None or kb is None:
+        out["error"] = "coverage jobs failed: rc=%d/%d %s %s" % (ra["rc"], rb["rc"], ea, eb)
+        return out
+    covered = len(ml) - len(unw) - (kb - ka)
+    out.update({"hash_entries": ka, "covered": covered, "uncovered": ka - covered})
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -886,9 +1316,9 @@ FMT_STOP = b"\\csname @@end\\endcsname\n"
 
 
 def fmt_state_dump(tex: Tex, jobname: str, names: list, *, actives=False,
-                   u8_sweep=False, recorder=False) -> tuple:
+                   u8_sweep=False, recorder=False, env="forced") -> tuple:
     block, unw = dump_block(names, actives=actives, u8_sweep=u8_sweep)
-    res = tex.pdflatex(tex.job(jobname), block + FMT_STOP, recorder=recorder)
+    res = tex.pdflatex(tex.job(jobname), block + FMT_STOP, recorder=recorder, env=env)
     d = parse_dump(res["log"])
     if res["rc"] != 0 or d["error"] is not None:
         raise SystemExit("gen_contract: format-state dump %s failed: rc=%d %s" %
@@ -896,16 +1326,48 @@ def fmt_state_dump(tex: Tex, jobname: str, names: list, *, actives=False,
     return d, unw, res
 
 
-def build_kernel(tex: Tex, pin: dict, report: dict) -> dict:
-    """INITEX trace of pdflatex.ini, then format-state meaning dumps until the
-    set of names referenced from dumped meanings stops growing."""
+# The INITEX run intercepts latex.ltx's final \dump to replay \everyjob under
+# the same tracing first: \everyjob runs at the start of every job, before a
+# job's first line, so names it assigns (l3's c_sys_* constants, the
+# sys_if_shell conditionals it builds with \csname) are assigned in no trace a
+# job can take. The replay is a candidate source only; membership still comes
+# from the shipped format.
+# (Virgin INITEX has no brace characters, so the prefix makes them braces for
+# its \\def and gives them back: latex.ltx refuses to start if `{` is a brace.)
+INITEX_PREFIX = ("\\catcode123=1 \\catcode125=2 "
+                 "\\tracingassigns=1 \\tracingrestores=1 \\tracingonline=0 "
+                 "\\let\\lprealdump\\dump \\def\\dump{\\nonstopmode"
+                 "\\immediate\\write-1{LPSEG:1}\\the\\everyjob\\lprealdump}"
+                 "\\catcode123=12 \\catcode125=12 ")
+
+
+def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
+    """The kernel closed world: every name defined in format state (a job's
+    state after \\everyjob), with its meaning.
+
+    Candidates, from four independent sources: every string of the shipped
+    pdflatex.fmt's string pool (a superset of its hash table, see
+    fmt_pool_strings); the engine's primitives (engine_primitives); every
+    name the INITEX run of pdflatex.ini and its \\everyjob replay assigns;
+    all 256 one-character names and the null name. Each is dumped with
+    \\meaning in format state, then every name referenced from a dumped
+    meaning, until no new name appears. The defined ones are the kernel.
+
+    COMPLETE BECAUSE hash_coverage, TeX's own count of the hash table in
+    format state, must find 0 entries outside the candidates. `drop` removes
+    names from the candidates (the kill-test of that check)."""
     t0 = time.monotonic()
+    reasons = []
+    prim = engine_primitives(tex)
+    if not prim["complete"]:
+        reasons += prim["reasons"]
+    report["engine_primitives"] = prim["multiletter"] + len(prim["single"])
+
     jd = tex.job("kernel_initex")
     rc, secs = tex.run(jd, ["pdftex", "-ini", "-etex", "-interaction=nonstopmode",
                             "-jobname=lpkernel", "-progname=pdflatex",
                             "-translate-file=cp227.tcx",
-                            "\\tracingassigns=1 \\tracingrestores=1 \\tracingonline=0 "
-                            "\\input pdflatex.ini"], LONG_TIMEOUT)
+                            INITEX_PREFIX + "\\input pdflatex.ini"], LONG_TIMEOUT)
     log = (jd / "lpkernel.log").read_bytes()
     tr = parse_trace(log)
     if rc != 0 or tr["first_error"] is not None:
@@ -915,10 +1377,25 @@ def build_kernel(tex: Tex, pin: dict, report: dict) -> dict:
     report["kernel_initex_secs"] = round(secs, 1)
     report["kernel_trace_records"] = tr["records"]
     shutil.rmtree(jd)
-    cs = sorted(nm for (kind, nm) in tr["names"] if kind == "cs")
+    initex = {nm for (kind, nm) in tr["names"] if kind == "cs"}
+    everyjob = {nm for (kind, nm), seg in tr["names"].items() if kind == "cs" and seg == 1}
+
+    jd = tex.job("kernel_fmt")
+    r = tex.sh("cp '%s' %s/shipped.fmt" % (pin["fmt_path"], tex.cpath(jd)))
+    if r.returncode != 0:
+        raise SystemExit("gen_contract: cannot copy the format: %s" % r.stderr)
+    fmt_bytes = (jd / "shipped.fmt").read_bytes()
+    if sha256_bytes(fmt_bytes) != pin["fmt_sha256"]:
+        raise SystemExit("gen_contract: the copied format is not the pinned one")
+    pool = set(fmt_pool_strings(fmt_bytes))
+    shutil.rmtree(jd)
+
+    singles = {bytes([b]) for b in range(256)} | {NULL_CS}
+    universe = (pool | initex | set(prim["names"]) | singles) - set(drop)
+    report["kernel_universe"] = len(universe)
     meanings: dict = {}
     unwritable: set = set()
-    todo = cs
+    todo = sorted(universe)
     rounds = 0
     base = None
     while todo and rounds < 6:
@@ -936,37 +1413,86 @@ def build_kernel(tex: Tex, pin: dict, report: dict) -> dict:
         for m in d["meanings"].values():
             if m is not None:
                 new |= referenced_names(m)
-        todo = sorted(n for n in new if n not in meanings and n not in unwritable)
+        todo = sorted(n for n in new - set(drop) if n not in meanings and n not in unwritable)
+    if todo:
+        reasons.append("referenced-name closure did not converge in 6 rounds")
+    if unwritable:
+        reasons.append("%d kernel candidates could not be written into the dump"
+                       % len(unwritable))
     d1, res1 = base
     _, fls_inputs = parse_fls(res1["fls"])
+    universe = sorted(meanings)
+
+    cov = hash_coverage(tex, "kernel_cov", b"", universe)
+    if cov.get("error"):
+        reasons.append("kernel " + cov["error"])
+    elif cov["uncovered"] != 0:
+        reasons.append("TeX's hash table in format state holds %d names outside the "
+                       "kernel's candidates" % cov["uncovered"])
+
+    # Names whose format-state meaning depends on the date (\everyjob's
+    # c_sys_* constants): dumped again under a second forced date.
+    d2, _, _ = fmt_state_dump(tex, "kernel_date2", universe, env="second_date")
+    date_dep = sorted(nm for i, nm in enumerate(universe)
+                      if d2["meanings"].get(i) != meanings.get(nm))
+
     defined = {nm: m for nm, m in meanings.items() if m is not None}
+    prim_names = set(prim["names"])
     report["kernel_dump_rounds"] = rounds
     report["kernel_secs"] = round(time.monotonic() - t0, 1)
     return {
         "fmt_sha256": pin["fmt_sha256"],
         "banners": banners,
-        "initex_names": len(cs),
+        "initex_names": len(initex),
         "names": {name_str(k): name_str(v) for k, v in defined.items()},
+        "universe": [name_str(x) for x in universe],
         "actives": {str(b): name_str(m) for b, m in d1["actives"].items()},
         "catcodes": d1["catcodes"],
         "baseline_inputs": [p for p in fls_inputs if p.startswith("/")],
         "unwritable": sorted(name_str(x) for x in unwritable),
         "dump_rounds": rounds,
         "trace_unparsed": tr["unparsed"],
+        "sources": {"fmt_pool_strings": len(pool), "initex_traced": len(initex),
+                    "everyjob_replay": len(everyjob),
+                    "engine_primitives": len(prim_names),
+                    "one_character_and_null": len(singles),
+                    "universe": len(universe)},
+        "everyjob_names": sorted(name_str(x) for x in everyjob if x in defined),
+        "primitives": {"names": sorted(name_str(x) for x in prim_names),
+                       "multiletter": prim["multiletter"],
+                       "tex_cs_count": prim["tex_cs_count"],
+                       "virgin_pool_strings": prim["pool_strings"],
+                       "complete": prim["complete"],
+                       "undefined_in_format": sorted(name_str(x) for x in prim_names
+                                                     if x not in defined)},
+        "coverage": cov,
+        "date_dependent_names": [name_str(x) for x in date_dep],
+        "complete": not reasons,
+        "incomplete_reasons": reasons,
     }
+
+
+def generator_sha256() -> str:
+    """sha256 of this file. Keys the LOCAL kernel cache only (a behaviour
+    change cannot reuse a stale kernel, review defect R1.5); it is never
+    written into a committed file, where it would make a comment edit
+    invalidate every contract (the C-68 lesson)."""
+    return sha256_bytes(Path(__file__).read_bytes())
 
 
 def load_kernel(tex: Tex, pin: dict, cache: Path, fresh: bool, report: dict) -> dict:
     cache.mkdir(parents=True, exist_ok=True)
-    path = cache / ("kernel-%s.json" % pin["fmt_sha256"])
+    gsha = generator_sha256()
+    path = cache / ("kernel-%s-%s.json" % (pin["fmt_sha256"], gsha[:16]))
     if path.exists() and not fresh:
         k = json.loads(path.read_text(encoding="utf-8"))
-        if k.get("generator_version") == GENERATOR_VERSION:
+        if k.get("generator_sha256") == gsha:
             report["kernel_cache"] = "hit"
             return k
     report["kernel_cache"] = "miss"
     k = build_kernel(tex, pin, report)
     k["generator_version"] = GENERATOR_VERSION
+    k["generator_sha256"] = gsha
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(k, ensure_ascii=False, sort_keys=True), encoding="utf-8")
     tmp.replace(path)
@@ -974,7 +1500,8 @@ def load_kernel(tex: Tex, pin: dict, cache: Path, fresh: bool, report: dict) -> 
 
 
 def kernel_public(kernel: dict, pin: dict) -> dict:
-    """The committed kernel file: names and their meaning kinds (no bodies)."""
+    """The committed kernel file: names and their meaning kinds (no bodies),
+    and the evidence that the name set is complete."""
     names = {}
     for n, m in kernel["names"].items():
         nb = name_bytes(n)
@@ -984,13 +1511,25 @@ def kernel_public(kernel: dict, pin: dict) -> dict:
     return {"schema": KERNEL_SCHEMA, "generator_version": GENERATOR_VERSION,
             "pin": {k: pin[k] for k in ("image", "arch", "engine_banner", "fmt_sha256")},
             "banners": kernel["banners"],
-            "method": "INITEX pdftex -ini -etex pdflatex.ini under \\tracingassigns=1 "
-                      "\\tracingrestores=1; every traced name, and every name "
-                      "referenced from a dumped meaning, dumped with \\meaning in "
-                      "format state until no new name appears; the defined ones",
+            "method": "candidates = every string of the shipped pdflatex.fmt's string "
+                      "pool, every engine primitive (virgin INITEX), every name the "
+                      "INITEX run of pdflatex.ini and its \\everyjob replay assigns, "
+                      "every one-character name and the null name; each dumped with "
+                      "\\meaning in format state (a job after \\everyjob), then every "
+                      "name referenced from a dumped meaning until no new name "
+                      "appears; the defined ones. Completeness: TeX's own count of "
+                      "its hash table in format state finds 0 names outside the "
+                      "candidates (coverage.uncovered)",
             "initex_traced_names": kernel["initex_names"],
             "dump_rounds": kernel["dump_rounds"],
             "unwritable_names": kernel["unwritable"],
+            "candidate_sources": kernel["sources"],
+            "coverage": kernel["coverage"],
+            "primitives": kernel["primitives"],
+            "everyjob_names": kernel["everyjob_names"],
+            "date_dependent_names": kernel["date_dependent_names"],
+            "complete": kernel["complete"],
+            "incomplete_reasons": kernel["incomplete_reasons"],
             "meanings_sha256": digest,
             "count": len(names),
             "names": names}
@@ -1021,21 +1560,85 @@ def hash_files(tex: Tex, paths: list) -> dict:
     return out
 
 
+def read_files(tex: Tex, paths: list) -> dict:
+    """{path: bytes} of files inside the image (through a tar in the work dir)."""
+    if not paths:
+        return {}
+    (tex.host / "read_list.txt").write_text("\n".join(paths) + "\n", encoding="utf-8")
+    r = tex.sh("tar -cf %s/read.tar -P -T %s/read_list.txt" % (CONTAINER_WORK, CONTAINER_WORK),
+               timeout=300)
+    if r.returncode != 0:
+        raise SystemExit("gen_contract: cannot read files: %s" % r.stderr)
+    out = {}
+    with tarfile.open(tex.host / "read.tar") as t:
+        for m in t.getmembers():
+            if m.isfile():
+                out[m.name] = t.extractfile(m).read()
+    (tex.host / "read.tar").unlink()
+    return out
+
+
+def _dump_state(d: dict, names: list) -> dict:
+    """The comparable part of a body-start dump."""
+    return {"meanings": {nm: d["meanings"].get(i) for i, nm in enumerate(names)},
+            "actives": d["actives"], "catcodes": d["catcodes"], "u8": d["u8"]}
+
+
+def _state_diff(a: dict, b: dict, ignore=frozenset()) -> tuple:
+    """(membership, meaning_only) differences between two body-start dumps:
+    names defined in one and not the other (plus any active-character,
+    catcode or u8 difference), and names defined in both with different
+    meanings."""
+    member, meaning = [], []
+    for n, m in a["meanings"].items():
+        if n in ignore:
+            continue
+        o = b["meanings"].get(n)
+        if (m is None) != (o is None):
+            member.append(name_str(n))
+        elif m != o:
+            meaning.append(name_str(n))
+    member.sort()
+    meaning.sort()
+    if a["actives"] != b["actives"]:
+        member.append("<active characters>")
+    if a["catcodes"] != b["catcodes"]:
+        member.append("<catcodes>")
+    if a["u8"] != b["u8"]:
+        member.append("<u8 sweep>")
+    return member, meaning
+
+
 def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
-             report: dict) -> dict:
+             report: dict, *, universe_filter=None) -> dict:
+    """One configuration's contract. `universe_filter`, if given, drops names
+    from the dumped universe: the kill-test of the hash-coverage check."""
     cfg = normalize_config(cfg)
     labels = segment_labels(cfg)
     reasons = []
     t0 = time.monotonic()
     pre = preamble_tex(cfg)
-    provenance = {}
+    provenance = {"generator_version": GENERATOR_VERSION}
+    if not kernel.get("complete"):
+        reasons.append("the kernel is incomplete: %s"
+                       % "; ".join(kernel.get("incomplete_reasons") or ["unknown"]))
 
-    # R1: the load outcome, pristine configuration. This compile IS the attestation.
-    r1 = tex.pdflatex(tex.job("r1_load"), pre + b"\\begin{document}\n\\end{document}\n",
-                      recorder=True)
+    # R1: the load outcome, attested under the GRADING environment with the
+    # oracle's pass protocol. This compile IS the attestation.
+    load_doc = pre + b"\\begin{document}\n\\end{document}\n"
+    r1 = tex.fixpoint(tex.job("r1_load"), load_doc, env="grading")
     report["r1_secs"] = round(r1["secs"], 2)
     provenance["load_tex_sha256"] = r1["tex_sha256"]
     err1 = first_error(r1["log"])
+    # R1f: the same under the forced date; it must agree, and its first pass
+    # supplies files_read (deterministic).
+    r1f = tex.fixpoint(tex.job("r1f_load"), load_doc, env="forced")
+    errf = first_error(r1f["log"])
+    ok1 = r1["rc"] == 0 and err1 is None
+    if (ok1, err1, r1["passes"]) != (r1f["rc"] == 0 and errf is None, errf, r1f["passes"]):
+        reasons.append("date_dependent_load: the grading environment (real clock) gives "
+                       "rc=%d %r in %d passes, the forced date rc=%d %r in %d passes"
+                       % (r1["rc"], err1, r1["passes"], r1f["rc"], errf, r1f["passes"]))
 
     # R2: pass 1, the trace, with load-boundary markers.
     trace_tex = (b"\\tracingassigns=1 \\tracingrestores=1 \\tracingonline=0\n" +
@@ -1046,28 +1649,35 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     r2 = tex.pdflatex(tex.job("r2_trace"), trace_tex)
     report["r2_secs"] = round(r2["secs"], 2)
     provenance["trace_tex_sha256"] = r2["tex_sha256"]
+    provenance["trace_log_sha256"] = sha256_bytes(r2["log"])
     tr = parse_trace(r2["log"])
     report["trace_records"] = tr["records"]
 
     def seg_label(k):
+        if k == SEG_BEFORE_TRACE:
+            return "before_trace"
         if k < 0:
             return "before_class"
         return labels[k] if k < len(labels) else "body"
 
-    if r1["rc"] != 0 or err1 is not None:
+    if not ok1:
         seg = tr["first_error"][0] if tr["first_error"] else None
         if tr["first_error"] is None or tr["first_error"][1] != err1:
-            reasons.append("load and trace runs disagree on the fatal error")
-        load = {"status": "fatal", "rc": r1["rc"], "message": err1,
-                "error_class": classify_error(err1 or ""),
+            reasons.append("load and trace runs disagree on the fatal error (the "
+                           "trace is one pass; the load needed %d)" % r1["passes"])
+        load = {"status": "fatal", "rc": r1["rc"], "passes": r1["passes"],
+                "first_pass_rc": r1["first_rc"], "message": err1,
+                "error_class": ("timeout" if r1["rc"] == TIMEOUT_RC
+                                else classify_error(err1 or "")),
                 "load_index": seg, "segment": seg_label(seg) if seg is not None else None}
     else:
-        load = {"status": "ok"}
+        load = {"status": "ok", "passes": r1["passes"]}
         if r2["rc"] != 0 or tr["first_error"] is not None:
             reasons.append("trace run failed where the load run succeeded")
 
-    # files_read: R1 .fls minus the empty-job baseline minus job-local files.
-    _, inputs = parse_fls(r1["fls"])
+    # files_read: the forced run's first-pass .fls minus the empty-job
+    # baseline minus job-local files.
+    _, inputs = parse_fls(r1f["first_fls"])
     base = set(kernel["baseline_inputs"])
     reads = sorted(p for p in inputs if p.startswith("/") and p not in base
                    and not p.startswith(CONTAINER_WORK + "/"))
@@ -1088,9 +1698,10 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         "config_key": config_key,
         "pin": {k: pin[k] for k in ("image", "arch", "engine_banner", "fmt_sha256",
                                      "tlpdb_sha256")},
-        "banners": format_banners(r1["log"]),
+        "banners": format_banners(r1f["log"]),
         "load_outcome": load,
         "files_read": files_read,
+        "complete_scope": COMPLETE_SCOPE,
     }
     if contract["banners"].get("latex") != kernel["banners"].get("latex"):
         reasons.append("the INITEX kernel's LaTeX banner differs from the format's")
@@ -1104,10 +1715,9 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         return contract
 
     # Tracing must have stayed on from our first line to our last.
-    own = [t for t in tr["tracing_toggles"]]
     # Ours: the first line (segment -1) switches both on; the line after the
     # last marker switches \tracingassigns off (printed as its "changing").
-    foreign = [t for t in own if not (
+    foreign = [t for t in tr["tracing_toggles"] if not (
         t[0] == -1 or (t[1] == "changing" and t[2] == "tracingassigns"
                        and t[0] == len(labels)))]
     if foreign:
@@ -1122,13 +1732,31 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     traced_active = {nm[0]: seg for (kind, nm), seg in tr["names"].items()
                      if kind == "active"}
     kernel_names = {name_bytes(n): name_bytes(m) for n, m in kernel["names"].items()}
-    universe = sorted(set(kernel_names) | set(traced))
+    kernel_universe = {name_bytes(n) for n in kernel["universe"]}
 
-    # R4: format-state meanings of traced names the kernel does not have.
-    extra = sorted(n for n in traced if n not in kernel_names)
+    # The universe dumped at body start: the kernel's candidates, every traced
+    # name (every reading of an ambiguous record), every name token of the
+    # files the configuration read and of its definers, and every
+    # one-character name and the null name. hash_coverage below checks it
+    # against TeX's own count.
+    sources = read_files(tex, reads)
+    file_names = set()
+    for data in sources.values():
+        file_names |= source_names(data)
+    for it in cfg["preamble"]:
+        if "definer" in it:
+            file_names |= source_names(it["definer"].encode("utf-8"))
+    singles = {bytes([b]) for b in range(256)} | {NULL_CS}
+    universe = sorted(kernel_universe | set(traced) | file_names | singles)
+    if universe_filter is not None:
+        universe = [n for n in universe if universe_filter(n)]
+
+    # R4: format-state meanings of universe names outside the kernel's
+    # candidates. The kernel is complete, so every one must be undefined.
+    extra = sorted(n for n in universe if n not in kernel_universe)
     fmt_meaning = dict(kernel_names)
     if extra:
-        d4, _, r4 = fmt_state_dump(tex, "r4_fmt_extra", extra)
+        d4, unw4, r4 = fmt_state_dump(tex, "r4_fmt_extra", extra)
         provenance["fmt_extra_tex_sha256"] = r4["tex_sha256"]
         kernel_gaps = []
         for i, nm in enumerate(extra):
@@ -1138,21 +1766,52 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
                 kernel_gaps.append(name_str(nm))
         if kernel_gaps:
             contract["kernel_gaps"] = sorted(kernel_gaps)
+            reasons.append("%d names defined in format state are missing from the "
+                           "kernel: %s" % (len(kernel_gaps), sorted(kernel_gaps)[:5]))
 
-    # R3: pass 2, the body-start meaning dump (after the begin-document hooks).
+    # R3: the body-start meaning dump (after the begin-document hooks), run
+    # for as many passes as the load needed, in one directory: the state must
+    # not depend on the pass.
     block, unw = dump_block(universe, actives=True, u8_sweep=True)
-    r3 = tex.pdflatex(tex.job("r3_dump"), pre + b"\\begin{document}\n" + block +
-                      b"\\end{document}\n")
+    dump_doc = pre + b"\\begin{document}\n" + block + b"\\end{document}\n"
+    jd3 = tex.job("r3_dump")
+    r3 = tex.pdflatex(jd3, dump_doc)
     report["r3_secs"] = round(r3["secs"], 2)
     provenance["dump_tex_sha256"] = r3["tex_sha256"]
+    provenance["dump_log_sha256"] = sha256_bytes(r3["log"])
     d3 = parse_dump(r3["log"])
     if r3["rc"] != 0 or d3["error"] is not None:
         reasons.append("body-start dump failed: rc=%d %s" % (r3["rc"], d3["error"]))
+    # A name whose MEANING differs between passes while it stays defined (an
+    # .aux checksum such as rerunfilecheck's \\ReFiCh@1) is recorded as
+    # pass-dependent; a MEMBERSHIP difference makes the contract incomplete.
+    state1 = _dump_state(d3, universe)
+    pass_dep = set()
+    for k in range(2, max(2, r1f["passes"]) + 1):
+        rk = tex.pdflatex(jd3, dump_doc)
+        member, meaning = _state_diff(state1, _dump_state(parse_dump(rk["log"]), universe))
+        pass_dep.update(meaning)
+        if rk["rc"] != 0 or member:
+            reasons.append("pass_dependent_state: the body-start name set on pass %d "
+                           "differs from pass 1 (rc=%d): %s" % (k, rk["rc"], member[:5]))
+            break
+    # R3g: pass 1 under the grading environment (real clock): the forced
+    # date must change nothing beyond the kernel's date-dependent names.
+    rg = tex.pdflatex(tex.job("r3g_dump"), dump_doc, env="grading")
+    date_dep = {name_bytes(n) for n in kernel.get("date_dependent_names", [])}
+    member, meaning = _state_diff(state1, _dump_state(parse_dump(rg["log"]), universe),
+                                  date_dep)
+    if rg["rc"] != 0 or member or meaning:
+        reasons.append("date_dependent_state: the body-start state under the real clock "
+                       "differs (rc=%d): %s" % (rg["rc"], (member + meaning)[:5]))
+
     bad_prims = sorted(p for p, m in d3["prims"].items() if m != "\\" + p)
     if bad_prims or len(d3["prims"]) != len(DUMP_PRIMITIVES):
         reasons.append("dump primitives redefined or missing: %s" % bad_prims)
     if unw:
         contract["unwritable_names"] = sorted(name_str(n) for n in unw)
+        reasons.append("%d universe names could not be written into the dump, so their "
+                       "membership is unknown" % len(unw))
     body = {}
     for i, nm in enumerate(universe):
         if nm in unw:
@@ -1162,22 +1821,53 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
             continue
         body[nm] = d3["meanings"][i]
 
-    defined, reverted, untraced = {}, [], []
+    # Coverage: TeX's own count of its hash table at body start against the
+    # dumped universe. A name the universe misses is a name the contract
+    # would call undefined without having asked.
+    cov = hash_coverage(tex, "r6_cov", pre + b"\\begin{document}\n", universe)
+    if cov.get("error"):
+        reasons.append("body-start " + cov["error"])
+    elif cov["uncovered"] != 0:
+        reasons.append("TeX's hash table at body start holds %d names outside the "
+                       "dumped universe" % cov["uncovered"])
+
+    # Readings of an ambiguous trace record that name nothing: when one
+    # reading exists (in format state or at body start) the others are
+    # phantoms; when none does, the first reading is kept.
+    def exists(n):
+        return body.get(n) is not None or fmt_meaning.get(n) is not None
+    phantoms = set()
+    for grp in tr["ambiguous"]:
+        real = [n for n in grp if exists(n)]
+        keep = set(real) if real else {grp[0]}
+        phantoms |= {n for n in grp if n not in keep and n not in tr["sure"]}
+
+    defined, reverted, params, untraced = {}, [], [], []
     for nm, bm in body.items():
         km = fmt_meaning.get(nm)
         if bm == km:
-            if nm in traced:
-                reverted.append(name_str(nm))
+            if nm in traced and nm not in phantoms:
+                c = classify_meaning(nm, bm) if bm is not None else {"kind": "Undefined"}
+                if c["kind"] == "Primitive" and name_bytes(c["primitive"]) == nm:
+                    params.append(name_str(nm))
+                else:
+                    reverted.append(name_str(nm))
             continue
         if nm not in traced:
             untraced.append(name_str(nm))
         d = classify_meaning(nm, bm)
         d["meaning_sha256"] = sha256_bytes(bm or b"undefined")[:16]
         d["set_in"] = seg_label(traced[nm]) if nm in traced else "untraced"
+        if name_str(nm) in pass_dep:
+            d["pass_dependent"] = True
         defined[name_str(nm)] = d
     if untraced:
         reasons.append("%d names changed meaning without a traced assignment: %s"
                        % (len(untraced), sorted(untraced)[:5]))
+    lost = sorted(n for n, d in defined.items() if d["set_in"] == "before_trace")
+    if lost:
+        reasons.append("%d names whose surviving assignment the trace does not show: %s"
+                       % (len(lost), lost[:5]))
     members = {nm for nm, bm in body.items() if bm is not None}
 
     # Active characters and catcodes, against format state.
@@ -1251,11 +1941,13 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         elif nm.startswith(b"ds@") and len(nm) > 3:
             options.append(name_str(nm[3:]))
 
-    # R5: the closure self-check, an independent run.
+    # R5: the closure self-check, an independent run. The sample is drawn
+    # from the whole dumped UNIVERSE, members and non-members alike, so the
+    # non-member direction is tested too (review defect 5); hash_coverage
+    # above is the check that does not depend on the universe at all.
     rng = random.Random(int(config_key[:16], 16))
-    member_list = sorted(members)
-    k = max(1, math.ceil(0.01 * len(member_list)))
-    sample = sorted(rng.sample(member_list, k))
+    k = max(1, math.ceil(0.01 * len(universe)))
+    sample = sorted(rng.sample(universe, k))
     refs = set()
     for nm, bm in body.items():
         if bm is not None:
@@ -1268,10 +1960,13 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
                       b"\\end{document}\n")
     report["r5_secs"] = round(r5["secs"], 2)
     provenance["selfcheck_tex_sha256"] = r5["tex_sha256"]
+    provenance["selfcheck_log_sha256"] = sha256_bytes(r5["log"])
     d5 = parse_dump(r5["log"])
     if r5["rc"] != 0 or d5["error"] is not None:
         reasons.append("self-check run failed: rc=%d %s" % (r5["rc"], d5["error"]))
     unw5 = set(unw5)
+    if unw5:
+        reasons.append("%d self-check names could not be written" % len(unw5))
     mismatches = []
     for i, nm in enumerate(tests):
         if nm in unw5:
@@ -1283,7 +1978,9 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     mismatches.sort(key=lambda d: d["name"])
     self_check = {
         "sample_fraction": 0.01, "sample_seed": config_key[:16],
-        "sampled_members": len(sample),
+        "sample_from": "universe",
+        "sampled": len(sample),
+        "sampled_members": sum(1 for n in sample if n in members),
         "referenced_names": len(ref_list),
         "referenced_non_members": sum(1 for n in ref_list if n not in members),
         "use_names": len(given), "use_names_list": [name_str(n) for n in given],
@@ -1296,9 +1993,15 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
 
     contract.update({
         "closed_world": {"kernel_names": len(kernel_names), "members": len(members),
-                         "traced_names": len(traced), "universe": len(universe)},
+                         "traced_names": len(traced), "universe": len(universe),
+                         "file_token_names": len(file_names),
+                         "ambiguous_trace_records": len(tr["ambiguous"]),
+                         "phantom_readings": len(phantoms)},
+        "coverage": cov,
         "defined_names": defined,
         "reverted_names": sorted(reverted),
+        "parameters_assigned": sorted(params),
+        "pass_dependent_meanings": sorted(pass_dep),
         "active_chars": active_diff,
         "catcodes": cat_diff,
         "unicode": unicode,
@@ -1339,11 +2042,36 @@ def probe_family(name: str, d: dict) -> list:
     return fam
 
 
+def batch_polarity(log: bytes, idxs: list, rc: int) -> dict:
+    """Polarity of each probe of a batched run: an error in a probe's segment
+    (between its LPPROBE marker and the next) makes it fatal. An error is a
+    `! ` line followed by TeX's location context, the SAME test as the solo
+    classifier's first_error (review defect R1.8: the batch counted any line
+    starting `! `, so a printed meaning holding `! LaTeX Error` read as a
+    fatal here and as nothing in the solo run)."""
+    lines = log.split(b"\n")
+    seen: dict = {}
+    cur = None
+    for n, raw in enumerate(lines):
+        m = re.match(rb"^LPPROBE:(\d+|end)$", raw.rstrip(b"\r"))
+        if m:
+            cur = None if m.group(1) == b"end" else int(m.group(1))
+            if cur is not None:
+                seen.setdefault(cur, [])
+            continue
+        if cur is not None and raw.startswith(b"! ") and _has_context(lines, n + 1):
+            seen[cur].append(raw[2:].decode("utf-8", "replace").strip())
+    return {i: ("timeout" if rc == TIMEOUT_RC else
+                ("unreached" if i not in seen else
+                 ("fatal" if seen[i] else "ok"))) for i in idxs}
+
+
 def run_probes(tex: Tex, contract: dict, names: list, workers: int, report: dict,
                texmf_root: str, kernel: dict):
     cfg = contract["configuration"]
     base_fls = None
-    r = tex.pdflatex(tex.job("probe_base"), probe_doc(cfg, ""), recorder=True)
+    r = tex.pdflatex(tex.job("probe_base"), probe_doc(cfg, ""), recorder=True,
+                     env="grading")
     _, base_inputs = parse_fls(r["fls"])
     base_fls = set(base_inputs)
     probes = []
@@ -1363,12 +2091,15 @@ def run_probes(tex: Tex, contract: dict, names: list, workers: int, report: dict
     probes.sort(key=lambda p: p["id"])
 
     def solo(i_p):
+        # The oracle's predicate (B.4): grading environment, the pass
+        # protocol of run_to_fixpoint, ok = rc 0 AND a PDF on the last pass.
         i, p = i_p
         jd = tex.job("probe_%04d" % i)
-        res = tex.pdflatex(jd, probe_doc(cfg, p["snippet"]), recorder=True,
+        res = tex.fixpoint(jd, probe_doc(cfg, p["snippet"]), env="grading",
                            timeout=PROBE_TIMEOUT)
         out = classify_outcome(res["rc"], res["log"], res["pdf"])
-        _, ins = parse_fls(res["fls"])
+        out["passes"] = res["passes"]
+        _, ins = parse_fls(res["first_fls"])
         lazy = sorted(texmf_rel(x, texmf_root) for x in ins
                       if x.startswith("/") and x not in base_fls
                       and not x.startswith(CONTAINER_WORK + "/"))
@@ -1401,22 +2132,9 @@ def run_probes(tex: Tex, contract: dict, names: list, workers: int, report: dict
         lines.append("\\immediate\\write-1{LPPROBE:end}")
         jd = tex.job("batch_" + hashlib.sha256(nm.encode()).hexdigest()[:10])
         res = tex.pdflatex(jd, probe_doc(cfg, "\n".join(lines)), halt=False,
-                           timeout=PROBE_TIMEOUT * 4)
-        seen = {}
-        cur = None
-        for raw in res["log"].split(b"\n"):
-            m = re.match(rb"^LPPROBE:(\d+|end)$", raw.rstrip(b"\r"))
-            if m:
-                cur = None if m.group(1) == b"end" else int(m.group(1))
-                if cur is not None:
-                    seen.setdefault(cur, [])
-                continue
-            if cur is not None and raw.startswith(b"! "):
-                seen[cur].append(raw[2:].decode("utf-8", "replace").strip())
+                           timeout=PROBE_TIMEOUT * 4, env="grading")
         shutil.rmtree(jd, ignore_errors=True)
-        return {i: ("timeout" if res["rc"] == TIMEOUT_RC else
-                    ("unreached" if i not in seen else
-                     ("fatal" if seen[i] else "ok"))) for i in idxs}
+        return batch_polarity(res["log"], idxs, res["rc"])
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
         for part in ex.map(batch, sorted(by_name.items())):
@@ -1446,12 +2164,16 @@ def run_probes(tex: Tex, contract: dict, names: list, workers: int, report: dict
         "configuration": contract["configuration"],
         "pin": contract["pin"],
         "protocol": {"solo": "pdflatex -interaction=nonstopmode -halt-on-error -recorder, "
-                             "fresh directory, coreutils timeout %ds; ok = rc 0 and a PDF; "
-                             "otherwise the error class of the first `!` line" % PROBE_TIMEOUT,
+                             "fresh directory, grading environment, the oracle's pass "
+                             "protocol (to the first rc 0 in at most %d runs, then one "
+                             "confirming run), coreutils timeout %ds per run; ok = rc 0 "
+                             "and a PDF on the last run; otherwise the error class of "
+                             "its first `!` line" % (MAX_PASSES, PROBE_TIMEOUT),
                      "batch": "every probe of one command in one -interaction=nonstopmode "
                               "run (no -halt-on-error), each in \\begingroup...\\par\\endgroup "
-                              "after a marker; polarity = any `!` line in its segment",
-                     "lazy_files": "solo .fls INPUT files minus those of the same "
+                              "after a marker; polarity = a `!` line with TeX's location "
+                              "context in its segment (the solo test)",
+                     "lazy_files": "first-run .fls INPUT files minus those of the same "
                                    "configuration with an empty body"},
         "commands": sorted(set(p["name"] for p in probes)),
         "probes": probes,

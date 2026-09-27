@@ -1,0 +1,21 @@
+LPSEG:0
+{changing \escapechar=92}
+{into escapechar=-1}
+{changing csnameendcsname=undefined}
+{into csnameendcsname=relax}
+{changing csnameendcsname=relax}
+{into csnameendcsname=macro:->csnameendcsname }
+{restoring csnameendcsname=undefined}
+{restoring \escapechar=92}
+LPSEG:1
+{changing \csname\endcsname=undefined}
+{into \csname\endcsname=\relax}
+{changing \csname\endcsname=\relax}
+{into \csname\endcsname=macro:->nullcs}
+LPSEG:2
+{changing \escapechar=92}
+{into escapechar=-1}
+{changing csnameendcsname=macro:->nullcs}
+{into csnameendcsname=macro:->csnameendcsname }
+{restoring csnameendcsname=macro:->nullcs}
+{restoring \escapechar=92}

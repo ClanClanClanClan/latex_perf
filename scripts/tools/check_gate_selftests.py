@@ -516,7 +516,52 @@ def flip_polyglossia(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def kernel_drop_topmark(text: str) -> str:
+    """The 2026-09-27 review's first missing name, removed from the committed
+    kernel file (count kept consistent, so only the completeness arm fires)."""
+    d = json.loads(text)
+    assert "topmark" in d["names"], "kernel file drifted; update registry"
+    del d["names"]["topmark"]
+    d["count"] = len(d["names"])
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def kernel_uncover_one(text: str) -> str:
+    """TeX's hash count reporting one name outside the kernel's candidates."""
+    d = json.loads(text)
+    assert d["coverage"]["uncovered"] == 0, "kernel file drifted; update registry"
+    d["coverage"]["uncovered"] = 1
+    d["coverage"]["covered"] -= 1
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+KERNEL_FILE = "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json"
+
 REGISTRY = [
+    GateTest(
+        "check_gen_contract_parsers",
+        [PY, f"{TOOLS}/check_gen_contract_parsers.py"],
+        "pure",
+        [
+            # Review defect 2 (2026-09-27): the null control sequence read as
+            # the literal name `csname\endcsname`. Reverting the reading must
+            # fail the recorded-trace test.
+            Mutation("null cs no longer read as the empty name",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL null cs",
+                     old='        if dec == e + b"csname" + e + b"endcsname":\n'
+                         '            out.append(("cs", NULL_CS))\n',
+                     new='        if dec == e + b"csname" + e + b"endcsname":\n'
+                         '            pass\n'),
+            # Review defect 1: a kernel name the reviewers found missing.
+            Mutation("kernel file loses topmark",
+                     KERNEL_FILE, r"FAIL kernel \S+ holds topmark",
+                     transform=kernel_drop_topmark),
+            # The completeness evidence itself must be read, not just present.
+            Mutation("kernel hash coverage reports one uncovered name",
+                     KERNEL_FILE, r"FAIL kernel \S+: TeX's hash count finds no name",
+                     transform=kernel_uncover_one),
+        ]),
     GateTest(
         "check_fix_type_consistency", [PY, f"{TOOLS}/check_fix_type_consistency.py"],
         "pure",

@@ -1,0 +1,12 @@
+LPSEG:4
+{changing \~=macro:->\T1-cmd \~\T1\~ }
+{into \~=macro:->\PD1-cmd \~\PD1\~ }
+{changing \~=macro:->\PD1-cmd \~\PD1\~ }
+{into \~=macro:->\PU-cmd \~\PU\~ }
+LPSEG:6
+{changing \escapechar=92}
+{into escapechar=-1}
+{changing ~=protected macro:->ifincsname expandafter ~else expandafter ETC.}
+{into ~=macro:->~}
+{restoring ~=protected macro:->ifincsname expandafter ~else expandafter ETC.}
+{restoring \escapechar=92}

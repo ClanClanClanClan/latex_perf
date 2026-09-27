@@ -1,0 +1,19 @@
+; The strict-tier kernel L_S0 (ADR-012, milestone M2 phase 1). Deliberately a
+; separate library that no product executable links: in phase 1 the kernel runs
+; only in its evidence (the generated differential and the signature probes),
+; and the CLI's strict tier stays a stub.
+
+(library
+ (name strict_kernel)
+ (wrapped false)
+ (modules strict_kernel_extracted))
+
+(executable
+ (name strict_decide)
+ (modules strict_decide)
+ (libraries strict_kernel yojson))
+
+(test
+ (name test_strict_kernel)
+ (modules test_strict_kernel)
+ (libraries strict_kernel))

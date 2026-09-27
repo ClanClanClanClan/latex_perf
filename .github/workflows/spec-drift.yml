@@ -187,6 +187,15 @@ jobs:
         # the TeX-running reproducibility gate stays local/nightly.
         run: python3 scripts/tools/check_gen_contract_parsers.py
 
+      - name: Strict kernel L_S0 and its evidence (ADR-012 M2 phase 1)
+        # Every Runs constructor of proofs/Strict/Semantics.v is probe-tagged
+        # and its family in corpora/strict_s0/rule_probes.json agrees with the
+        # oracle; the rule probes, the generated differential and the
+        # signature file ran the committed extraction and contract; no
+        # disagreement; no control-word name written into the Coq kernel.
+        # Pure: reads committed files only (the TeX runs are local/nightly).
+        run: python3 scripts/tools/check_strict_kernel.py --repo .
+
       # ADR-012 decision 7 / OPEN-118: the ONE pdflatex oracle is the pinned
       # TeX Live image. Pure: every graded artefact must name that image, the
       # tree fingerprints must be measured for the pinned digest, and no script

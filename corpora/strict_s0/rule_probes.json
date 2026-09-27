@@ -1,0 +1,5184 @@
+{
+ "schema": "lp-strict-differential/1",
+ "generator": "scripts/tools/strict_differential.py",
+ "generator_version": "1",
+ "mode": "rules",
+ "seed": 1,
+ "source": {
+  "kernel": "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json",
+  "kernel_sha256": "081f68ae16b3c9a6e066e9079f271060907d80279dfa58710ce5a926fd64d236",
+  "kernel_meanings_sha256": "4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e",
+  "contract": "corpora/contracts/article.json",
+  "contract_sha256": "6de6d4c0d7f98c979c83ebd3c46792d4b96cbf42d4470f96a43e18f274e4f932",
+  "contract_config_key": "80abd84bd7677c84ab1478ba239e32daad1374056a5328722dcec5a70e9ced12"
+ },
+ "signatures_sha256": "afe3402b8c87701a3014b9d8d64d66694ff59ed0db955b9a25ee2f876ba32ee5",
+ "kernel_extract_sha256": "59d0f0d2f0f670b1098354851d54fefcf9b2d776ca88839c6b6388d16c423554",
+ "oracle": {
+  "engine": "pdflatex",
+  "distribution": "TeX Live 2026",
+  "version": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+  "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+  "arch": "aarch64",
+  "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+  "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+  "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+  "backend": "container",
+  "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes: run to the first rc 0, then ONE confirming pass whose rc is authoritative; PDF recorded (compiles = rc 0 AND a PDF, STRICT_TIER_DESIGN.md B.4 E0)"
+ },
+ "agreement_rule": "_strict_s0.agrees: READY iff rc 0 and a PDF; E0 iff rc 0 and no PDF; any other reason iff rc != 0, the first ! message is in _strict_s0.expected_messages(reason, token, mode), and the fatal token's line equals the oracle's l.N",
+ "summary": {
+  "documents": 108,
+  "graded": 108,
+  "agree": 108,
+  "disagree": 0,
+  "not_strict_generated": 0,
+  "oracle_infrastructure_failures": 0,
+  "oracle_timeouts": 0,
+  "by_class": {
+   "E0": {
+    "n": 3,
+    "agree": 3
+   },
+   "E1": {
+    "n": 3,
+    "agree": 3
+   },
+   "E3": {
+    "n": 9,
+    "agree": 9
+   },
+   "E4": {
+    "n": 4,
+    "agree": 4
+   },
+   "E5": {
+    "n": 40,
+    "agree": 40
+   },
+   "E6": {
+    "n": 6,
+    "agree": 6
+   },
+   "READY": {
+    "n": 43,
+    "agree": 43
+   }
+  },
+  "rules_never_exercised": []
+ },
+ "by_rule": {
+  "R_eof": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_end_ok": {
+   "docs": 43,
+   "agree": 43
+  },
+  "R_end_empty": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_end_math": {
+   "docs": 5,
+   "agree": 5
+  },
+  "R_char_text": {
+   "docs": 22,
+   "agree": 22
+  },
+  "R_char_math": {
+   "docs": 58,
+   "agree": 58
+  },
+  "R_space": {
+   "docs": 8,
+   "agree": 8
+  },
+  "R_par_text": {
+   "docs": 4,
+   "agree": 4
+  },
+  "R_par_math": {
+   "docs": 6,
+   "agree": 6
+  },
+  "R_open_text": {
+   "docs": 8,
+   "agree": 8
+  },
+  "R_open_math": {
+   "docs": 9,
+   "agree": 9
+  },
+  "R_close_simple": {
+   "docs": 7,
+   "agree": 7
+  },
+  "R_close_group": {
+   "docs": 6,
+   "agree": 6
+  },
+  "R_close_shift": {
+   "docs": 2,
+   "agree": 2
+  },
+  "R_close_top": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_dollar_display_open": {
+   "docs": 26,
+   "agree": 26
+  },
+  "R_dollar_inline_open": {
+   "docs": 41,
+   "agree": 41
+  },
+  "R_dollar_inline_close": {
+   "docs": 21,
+   "agree": 21
+  },
+  "R_dollar_display_close": {
+   "docs": 7,
+   "agree": 7
+  },
+  "R_dollar_display_undef": {
+   "docs": 1,
+   "agree": 1
+  },
+  "R_dollar_display_bad": {
+   "docs": 8,
+   "agree": 8
+  },
+  "R_dollar_display_eof": {
+   "docs": 1,
+   "agree": 1
+  },
+  "R_dollar_group": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_mopen_inline": {
+   "docs": 5,
+   "agree": 5
+  },
+  "R_mopen_inline_bad": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_mclose_inline": {
+   "docs": 4,
+   "agree": 4
+  },
+  "R_mclose_inline_bad": {
+   "docs": 4,
+   "agree": 4
+  },
+  "R_mopen_display": {
+   "docs": 8,
+   "agree": 8
+  },
+  "R_mopen_display_bad": {
+   "docs": 4,
+   "agree": 4
+  },
+  "R_mclose_display": {
+   "docs": 4,
+   "agree": 4
+  },
+  "R_mclose_display_bad": {
+   "docs": 4,
+   "agree": 4
+  },
+  "R_script_text": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_script_double": {
+   "docs": 4,
+   "agree": 4
+  },
+  "R_script_char": {
+   "docs": 13,
+   "agree": 13
+  },
+  "R_script_group": {
+   "docs": 6,
+   "agree": 6
+  },
+  "R_cs_undefined": {
+   "docs": 2,
+   "agree": 2
+  },
+  "R_cs_text_material": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_cs_text_noop": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_cs_text_fatal": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_cs_math_noad": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_cs_math_noop": {
+   "docs": 3,
+   "agree": 3
+  },
+  "R_cs_math_fatal": {
+   "docs": 3,
+   "agree": 3
+  }
+ },
+ "disagreements": [],
+ "infrastructure_failures": [],
+ "by_family": {
+  "R_eof": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_end_ok": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_end_empty": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_end_math": {
+   "n": 5,
+   "agree": 5,
+   "exercised": 5
+  },
+  "R_char_text": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_char_math": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_space": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_par_text": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_par_math": {
+   "n": 6,
+   "agree": 6,
+   "exercised": 6
+  },
+  "R_open_text": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_open_math": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_close_simple": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_close_group": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_close_shift": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_close_top": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_dollar_display_open": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_dollar_inline_open": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_dollar_inline_close": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_dollar_display_close": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_dollar_display_undef": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_dollar_display_bad": {
+   "n": 7,
+   "agree": 7,
+   "exercised": 7
+  },
+  "R_dollar_display_eof": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_dollar_group": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_mopen_inline": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_mopen_inline_bad": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_mclose_inline": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 1
+  },
+  "R_mclose_inline_bad": {
+   "n": 5,
+   "agree": 5,
+   "exercised": 4
+  },
+  "R_mopen_display": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_mopen_display_bad": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_mclose_display": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 1
+  },
+  "R_mclose_display_bad": {
+   "n": 4,
+   "agree": 4,
+   "exercised": 3
+  },
+  "R_script_text": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_script_double": {
+   "n": 4,
+   "agree": 4,
+   "exercised": 4
+  },
+  "R_script_char": {
+   "n": 1,
+   "agree": 1,
+   "exercised": 1
+  },
+  "R_script_group": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_cs_undefined": {
+   "n": 2,
+   "agree": 2,
+   "exercised": 2
+  },
+  "R_cs_text_material": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_cs_text_noop": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_cs_text_fatal": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_cs_math_noad": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_cs_math_noop": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  },
+  "R_cs_math_fatal": {
+   "n": 3,
+   "agree": 3,
+   "exercised": 3
+  }
+ },
+ "probes": [
+  {
+   "i": 0,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "e0c1cdb2005dc573",
+   "oracle": [
+    1,
+    false,
+    "! Emergency stop.",
+    null
+   ],
+   "model": [
+    "E5",
+    "eof",
+    "text",
+    null
+   ],
+   "family": "R_eof",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "x"
+      ]
+     ],
+     "has_end": false
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_eof"
+   ]
+  },
+  {
+   "i": 1,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "44b6197071084939",
+   "oracle": [
+    1,
+    false,
+    "! Emergency stop.",
+    null
+   ],
+   "model": [
+    "E5",
+    "eof",
+    "text",
+    null
+   ],
+   "family": "R_eof",
+   "doc": {
+    "doc": {
+     "body": [],
+     "has_end": false
+    }
+   },
+   "rules": [
+    "R_eof"
+   ]
+  },
+  {
+   "i": 2,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "a86fc4091a625e8f",
+   "oracle": [
+    1,
+    false,
+    "! Emergency stop.",
+    null
+   ],
+   "model": [
+    "E5",
+    "eof",
+    "text",
+    null
+   ],
+   "family": "R_eof",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "group",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "y"
+        ]
+       ]
+      ]
+     ],
+     "has_end": false
+    }
+   },
+   "rules": [
+    "R_open_text",
+    "R_char_text",
+    "R_close_simple",
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_eof"
+   ]
+  },
+  {
+   "i": 3,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "bac5f3486f538664",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_end_ok",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "x"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 4,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "2ec796f9f754def6",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_end_ok",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "group",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "space"
+      ],
+      [
+       "par",
+       false
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_open_text",
+    "R_char_text",
+    "R_close_simple",
+    "R_space",
+    "R_par_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 5,
+   "class": "E0",
+   "agree": true,
+   "tex_sha256": "0e69ef7426214d07",
+   "oracle": [
+    0,
+    false,
+    "",
+    null
+   ],
+   "model": [
+    "E0",
+    "end",
+    "text",
+    3
+   ],
+   "family": "R_end_empty",
+   "doc": {
+    "doc": {
+     "body": [],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_end_empty"
+   ]
+  },
+  {
+   "i": 6,
+   "class": "E0",
+   "agree": true,
+   "tex_sha256": "14d57d6329f62927",
+   "oracle": [
+    0,
+    false,
+    "",
+    null
+   ],
+   "model": [
+    "E0",
+    "end",
+    "text",
+    6
+   ],
+   "family": "R_end_empty",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "space"
+      ],
+      [
+       "par",
+       false
+      ],
+      [
+       "par",
+       true
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_space",
+    "R_par_text",
+    "R_end_empty"
+   ]
+  },
+  {
+   "i": 7,
+   "class": "E0",
+   "agree": true,
+   "tex_sha256": "49c97f8c57e75481",
+   "oracle": [
+    0,
+    false,
+    "",
+    null
+   ],
+   "model": [
+    "E0",
+    "end",
+    "text",
+    7
+   ],
+   "family": "R_end_empty",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "group",
+       [
+        [
+         "group",
+         [
+          [
+           "space"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_open_text",
+    "R_space",
+    "R_close_simple",
+    "R_end_empty"
+   ]
+  },
+  {
+   "i": 8,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "66f45b919552ad93",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    3
+   ],
+   "model": [
+    "E5",
+    "end",
+    "math",
+    3
+   ],
+   "family": "R_end_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       []
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_end_math"
+   ]
+  },
+  {
+   "i": 9,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "db2104d532fd6bf3",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    5
+   ],
+   "model": [
+    "E5",
+    "end",
+    "math",
+    5
+   ],
+   "family": "R_end_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "a"
+      ],
+      [
+       "math",
+       "dollar",
+       []
+      ],
+      [
+       "text",
+       "b"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_end_math"
+   ]
+  },
+  {
+   "i": 10,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "ab0efd993f5fe202",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E5",
+    "end",
+    "math",
+    4
+   ],
+   "family": "R_end_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "math",
+       "dollar",
+       []
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_dollar_display_open",
+    "R_end_math"
+   ]
+  },
+  {
+   "i": 11,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "6721093d507de628",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_char_text",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "Az09.,;:!?()/+-="
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 12,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "e724febd7f951b61",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_char_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "a+b=c-(d/e)"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 13,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "4ea4d94f02cbca53",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_space",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "space"
+      ],
+      [
+       "text",
+       "x"
+      ],
+      [
+       "space"
+      ],
+      [
+       "space"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_space",
+    "R_char_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 14,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "32a05f64802db95b",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_space",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "space"
+        ],
+        [
+         "text",
+         "x"
+        ],
+        [
+         "space"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_space",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 15,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "d98587abd0bc1c74",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_par_text",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "x"
+      ],
+      [
+       "par",
+       false
+      ],
+      [
+       "text",
+       "y"
+      ],
+      [
+       "par",
+       true
+      ],
+      [
+       "text",
+       "z"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_par_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 16,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "6726c15d1ff26db9",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_par_text",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "group",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "par",
+         false
+        ],
+        [
+         "text",
+         "y"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_open_text",
+    "R_char_text",
+    "R_par_text",
+    "R_close_simple",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 17,
+   "class": "E6",
+   "agree": true,
+   "tex_sha256": "ca08410a3b5aebc9",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E6",
+    "blank_line",
+    "math",
+    4
+   ],
+   "family": "R_par_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "par",
+         false
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_par_math"
+   ]
+  },
+  {
+   "i": 18,
+   "class": "E6",
+   "agree": true,
+   "tex_sha256": "fd0dcf2537d974f9",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E6",
+    "par",
+    "math",
+    4
+   ],
+   "family": "R_par_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "par",
+         true
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_par_math"
+   ]
+  },
+  {
+   "i": 19,
+   "class": "E6",
+   "agree": true,
+   "tex_sha256": "0bf4ac74997034cc",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E6",
+    "blank_line",
+    "math",
+    4
+   ],
+   "family": "R_par_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "par",
+         false
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_par_math"
+   ]
+  },
+  {
+   "i": 20,
+   "class": "E6",
+   "agree": true,
+   "tex_sha256": "70c65ae502fae1e2",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E6",
+    "blank_line",
+    "math",
+    4
+   ],
+   "family": "R_par_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "group",
+         [
+          [
+           "par",
+           false
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_open_math",
+    "R_par_math"
+   ]
+  },
+  {
+   "i": 21,
+   "class": "E6",
+   "agree": true,
+   "tex_sha256": "e61ac289502eb818",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    6
+   ],
+   "model": [
+    "E6",
+    "blank_line",
+    "math",
+    6
+   ],
+   "family": "R_par_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "group",
+          [
+           [
+            "par",
+            false
+           ]
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_group",
+    "R_par_math"
+   ]
+  },
+  {
+   "i": 22,
+   "class": "E6",
+   "agree": true,
+   "tex_sha256": "7595d9af13bcd616",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E6",
+    "blank_line",
+    "math",
+    4
+   ],
+   "family": "R_par_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "space"
+        ],
+        [
+         "space"
+        ],
+        [
+         "par",
+         false
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_space",
+    "R_par_math"
+   ]
+  },
+  {
+   "i": 23,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "da9b8ebb5940356b",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_open_text",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "group",
+       [
+        [
+         "group",
+         [
+          [
+           "text",
+           "x"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_open_text",
+    "R_char_text",
+    "R_close_simple",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 24,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "2dc33cc32d84446d",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_open_math",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "group",
+         []
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_open_math",
+    "R_close_group",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 25,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "3859d011b3a1c3dc",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_close_simple",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "group",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "group",
+       []
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_open_text",
+    "R_char_text",
+    "R_close_simple",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 26,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "292c9f5e49ac7a03",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_close_group",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "group",
+         [
+          [
+           "text",
+           "x"
+          ]
+         ]
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_open_math",
+    "R_char_math",
+    "R_close_group",
+    "R_script_char",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 27,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "fe652e70112f9723",
+   "oracle": [
+    1,
+    false,
+    "! Extra }, or forgotten $.",
+    4
+   ],
+   "model": [
+    "E5",
+    "close",
+    "math",
+    4
+   ],
+   "family": "R_close_shift",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "stray"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_close_shift"
+   ]
+  },
+  {
+   "i": 28,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "189f928316f0dfc8",
+   "oracle": [
+    1,
+    false,
+    "! Extra }, or forgotten $.",
+    3
+   ],
+   "model": [
+    "E5",
+    "close",
+    "math",
+    3
+   ],
+   "family": "R_close_shift",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "stray"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_close_shift"
+   ]
+  },
+  {
+   "i": 29,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "6d9b68ae69eaf30a",
+   "oracle": [
+    1,
+    false,
+    "! Too many }'s.",
+    3
+   ],
+   "model": [
+    "E5",
+    "close",
+    "text",
+    3
+   ],
+   "family": "R_close_top",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "stray"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_close_top"
+   ]
+  },
+  {
+   "i": 30,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "f8eabf0dbbf3e7d7",
+   "oracle": [
+    1,
+    false,
+    "! Too many }'s.",
+    4
+   ],
+   "model": [
+    "E5",
+    "close",
+    "text",
+    4
+   ],
+   "family": "R_close_top",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "x"
+      ],
+      [
+       "stray"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_close_top"
+   ]
+  },
+  {
+   "i": 31,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "dc8004f4effa7c7b",
+   "oracle": [
+    1,
+    false,
+    "! Too many }'s.",
+    5
+   ],
+   "model": [
+    "E5",
+    "close",
+    "text",
+    5
+   ],
+   "family": "R_close_top",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "group",
+       [
+        [
+         "stray"
+        ]
+       ]
+      ],
+      [
+       "text",
+       "x"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_open_text",
+    "R_close_simple",
+    "R_close_top"
+   ]
+  },
+  {
+   "i": 32,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "b9c9b2ea4baa655c",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_display_open",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 33,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "e84d9577ed28cf17",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_display_open",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "a"
+      ],
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "text",
+       "b"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 34,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "0d631ba023a2686a",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_inline_open",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 35,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "12a46ee0d38d10d3",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_inline_open",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "space"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_space",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 36,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "da5daf2c9e071547",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_inline_close",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "y"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 37,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "5b41d308a6b2c3af",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_inline_close",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "paren",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_inline",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_dollar_inline_open",
+    "R_mclose_inline",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 38,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "eb88e5907fa5ba75",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_display_close",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "y"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 39,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "e074ac289c5be278",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    5
+   ],
+   "model": [
+    "E5",
+    "close_bracket",
+    "text",
+    5
+   ],
+   "family": "R_dollar_display_close",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "bracket",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_display",
+    "R_char_math",
+    "R_dollar_display_close",
+    "R_mclose_display_bad"
+   ]
+  },
+  {
+   "i": 40,
+   "class": "E1",
+   "agree": true,
+   "tex_sha256": "22a36846db6d2775",
+   "oracle": [
+    1,
+    false,
+    "! Undefined control sequence.",
+    4
+   ],
+   "model": [
+    "E1",
+    "cs",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_undef",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         [
+          [
+           "cmd",
+           "AQlxJSXR"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_undef"
+   ]
+  },
+  {
+   "i": 41,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "25aed7dc26a4c960",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         [
+          [
+           "text",
+           "y"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 42,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "d061f5b25689d4a4",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         [
+          [
+           "space"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 43,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "dbd3f3d076c354ff",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         [
+          [
+           "group",
+           []
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 44,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "41c92f1fc0b41e1e",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         [
+          [
+           "par",
+           false
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 45,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "17d68622853cd403",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "bracket",
+       [
+        [
+         "math",
+         "dollar",
+         [
+          [
+           "text",
+           "x"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_display",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 46,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "5d0cf86c75c6e311",
+   "oracle": [
+    1,
+    false,
+    "! Missing } inserted.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_group",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "group",
+         [
+          [
+           "math",
+           "dollar",
+           [
+            [
+             "text",
+             "x"
+            ]
+           ]
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_open_math",
+    "R_dollar_group"
+   ]
+  },
+  {
+   "i": 47,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "5d00b2cf5ca96e4b",
+   "oracle": [
+    1,
+    false,
+    "! Missing } inserted.",
+    6
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    6
+   ],
+   "family": "R_dollar_group",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "group",
+          [
+           [
+            "math",
+            "dollar",
+            []
+           ]
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_group",
+    "R_dollar_group"
+   ]
+  },
+  {
+   "i": 48,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "fb06287eb502b3f4",
+   "oracle": [
+    1,
+    false,
+    "! Missing } inserted.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_group",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "group",
+         [
+          [
+           "math",
+           "dollar",
+           []
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_open_math",
+    "R_dollar_group"
+   ]
+  },
+  {
+   "i": 49,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "ffeae283ccd8666e",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_mopen_inline",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "paren",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_inline",
+    "R_char_math",
+    "R_mclose_inline",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 50,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "fe070229380cfdb3",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_mopen_inline",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "paren",
+       []
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_inline",
+    "R_mclose_inline",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 51,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "54bcff3a4cab5352",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    3
+   ],
+   "model": [
+    "E5",
+    "open_paren",
+    "math",
+    3
+   ],
+   "family": "R_mopen_inline_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "math",
+         "paren",
+         [
+          [
+           "text",
+           "x"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_mopen_inline_bad"
+   ]
+  },
+  {
+   "i": 52,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "89394f167888cf3d",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    3
+   ],
+   "model": [
+    "E5",
+    "open_paren",
+    "math",
+    3
+   ],
+   "family": "R_mopen_inline_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "math",
+         "paren",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_mopen_inline_bad"
+   ]
+  },
+  {
+   "i": 53,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "2382576a317b8d48",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    4
+   ],
+   "model": [
+    "E5",
+    "open_paren",
+    "math",
+    4
+   ],
+   "family": "R_mclose_inline",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "paren",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_mopen_inline_bad"
+   ]
+  },
+  {
+   "i": 54,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "74c0b9f55c8c3c15",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_mclose_inline_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "paren",
+       [
+        [
+         "math",
+         "dollar",
+         []
+        ],
+        [
+         "math",
+         "dollar",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_inline",
+    "R_dollar_inline_close",
+    "R_dollar_display_open",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 55,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "97e5dc56d96bf944",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_mopen_display",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "bracket",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_display",
+    "R_char_math",
+    "R_mclose_display",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 56,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "6d49550bb59cfff6",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_mopen_display",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "a"
+      ],
+      [
+       "math",
+       "bracket",
+       []
+      ],
+      [
+       "text",
+       "b"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_mopen_display",
+    "R_mclose_display",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 57,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "7e760a2ba55eaa8c",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    3
+   ],
+   "model": [
+    "E5",
+    "open_bracket",
+    "math",
+    3
+   ],
+   "family": "R_mopen_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "math",
+         "bracket",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_mopen_display_bad"
+   ]
+  },
+  {
+   "i": 58,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "ca59a02ee655780e",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    3
+   ],
+   "model": [
+    "E5",
+    "open_bracket",
+    "math",
+    3
+   ],
+   "family": "R_mopen_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "math",
+         "bracket",
+         [
+          [
+           "text",
+           "x"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_mopen_display_bad"
+   ]
+  },
+  {
+   "i": 59,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "e2a1bda855c90dd0",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    4
+   ],
+   "model": [
+    "E5",
+    "open_bracket",
+    "math",
+    4
+   ],
+   "family": "R_mclose_display",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "bracket",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_mopen_display_bad"
+   ]
+  },
+  {
+   "i": 60,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "fdb512d5375f0c2c",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    7
+   ],
+   "model": [
+    "E5",
+    "close_bracket",
+    "text",
+    7
+   ],
+   "family": "R_mclose_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "bracket",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "math",
+         "dollar",
+         []
+        ],
+        [
+         "math",
+         "bracket",
+         []
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_mopen_display",
+    "R_char_math",
+    "R_dollar_display_close",
+    "R_mclose_display",
+    "R_mclose_display_bad"
+   ]
+  },
+  {
+   "i": 61,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "275e1867ecace60d",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    4
+   ],
+   "model": [
+    "E5",
+    "open_bracket",
+    "math",
+    4
+   ],
+   "family": "R_mclose_display_bad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "group",
+         [
+          [
+           "math",
+           "bracket",
+           []
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_open_math",
+    "R_mopen_display_bad"
+   ]
+  },
+  {
+   "i": 62,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "83aeb04b100f6b6d",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E3",
+    "sup",
+    "text",
+    4
+   ],
+   "family": "R_script_text",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "x"
+      ],
+      [
+       "script",
+       true,
+       [
+        "text",
+        "a"
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_script_text"
+   ]
+  },
+  {
+   "i": 63,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "37102d6616d3f6a6",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    3
+   ],
+   "model": [
+    "E3",
+    "sub",
+    "text",
+    3
+   ],
+   "family": "R_script_text",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "script",
+       false,
+       [
+        "group",
+        [
+         [
+          "text",
+          "x"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_script_text"
+   ]
+  },
+  {
+   "i": 64,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "126db9985b35c923",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E3",
+    "sup",
+    "text",
+    4
+   ],
+   "family": "R_script_text",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ]
+       ]
+      ],
+      [
+       "script",
+       true,
+       [
+        "text",
+        "a"
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_script_text"
+   ]
+  },
+  {
+   "i": 65,
+   "class": "E4",
+   "agree": true,
+   "tex_sha256": "697070fb3d856253",
+   "oracle": [
+    1,
+    false,
+    "! Double superscript.",
+    6
+   ],
+   "model": [
+    "E4",
+    "sup",
+    "math",
+    6
+   ],
+   "family": "R_script_double",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_script_double"
+   ]
+  },
+  {
+   "i": 66,
+   "class": "E4",
+   "agree": true,
+   "tex_sha256": "5293eedeaba4b443",
+   "oracle": [
+    1,
+    false,
+    "! Double subscript.",
+    10
+   ],
+   "model": [
+    "E4",
+    "sub",
+    "math",
+    10
+   ],
+   "family": "R_script_double",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         false,
+         [
+          "group",
+          [
+           [
+            "text",
+            "x"
+           ]
+          ]
+         ]
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "x"
+         ]
+        ],
+        [
+         "script",
+         false,
+         [
+          "text",
+          "x"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_group",
+    "R_close_group",
+    "R_script_char",
+    "R_script_double"
+   ]
+  },
+  {
+   "i": 67,
+   "class": "E4",
+   "agree": true,
+   "tex_sha256": "e76fc6da3c9dd5b3",
+   "oracle": [
+    1,
+    false,
+    "! Double superscript.",
+    6
+   ],
+   "model": [
+    "E4",
+    "sup",
+    "math",
+    6
+   ],
+   "family": "R_script_double",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "script",
+         true,
+         [
+          "group",
+          []
+         ]
+        ],
+        [
+         "script",
+         true,
+         [
+          "group",
+          []
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_script_group",
+    "R_close_group",
+    "R_script_double"
+   ]
+  },
+  {
+   "i": 68,
+   "class": "E4",
+   "agree": true,
+   "tex_sha256": "2326a118a7aacb1b",
+   "oracle": [
+    1,
+    false,
+    "! Double superscript.",
+    6
+   ],
+   "model": [
+    "E4",
+    "sup",
+    "math",
+    6
+   ],
+   "family": "R_script_double",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "space"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_space",
+    "R_script_double"
+   ]
+  },
+  {
+   "i": 69,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "2e30892694b6e004",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_script_char",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "script",
+         false,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 70,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "9ad32e3d948b6ffc",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_script_group",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "group",
+          [
+           [
+            "text",
+            "a"
+           ],
+           [
+            "script",
+            true,
+            [
+             "text",
+             "b"
+            ]
+           ]
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_group",
+    "R_script_char",
+    "R_close_group",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 71,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "60a06304e98a7e5d",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_script_group",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "display",
+       [
+        [
+         "script",
+         false,
+         [
+          "group",
+          []
+         ]
+        ],
+        [
+         "script",
+         true,
+         [
+          "group",
+          [
+           [
+            "text",
+            "x"
+           ]
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_script_group",
+    "R_close_group",
+    "R_char_math",
+    "R_dollar_display_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 72,
+   "class": "E1",
+   "agree": true,
+   "tex_sha256": "70bbbc49d2225fb9",
+   "oracle": [
+    1,
+    false,
+    "! Undefined control sequence.",
+    3
+   ],
+   "model": [
+    "E1",
+    "cs",
+    "text",
+    3
+   ],
+   "family": "R_cs_undefined",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "cmd",
+       "AQlxJSXR"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_cs_undefined"
+   ]
+  },
+  {
+   "i": 73,
+   "class": "E1",
+   "agree": true,
+   "tex_sha256": "130abaef2122f3e0",
+   "oracle": [
+    1,
+    false,
+    "! Undefined control sequence.",
+    4
+   ],
+   "model": [
+    "E1",
+    "cs",
+    "math",
+    4
+   ],
+   "family": "R_cs_undefined",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "cmd",
+         "AQlxJSXR"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_cs_undefined"
+   ]
+  },
+  {
+   "i": 74,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "ba117a124533dcba",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_eof",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "dollar"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_eof"
+   ]
+  },
+  {
+   "i": 75,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "0d46c89d891ac340",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    3
+   ],
+   "model": [
+    "E5",
+    "close_paren",
+    "text",
+    3
+   ],
+   "family": "R_mclose_inline_bad",
+   "doc": {
+    "toks": [
+     [
+      "close_paren"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_mclose_inline_bad"
+   ]
+  },
+  {
+   "i": 76,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "05d8875dd1c55b67",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    3
+   ],
+   "model": [
+    "E5",
+    "close_paren",
+    "math",
+    3
+   ],
+   "family": "R_mclose_inline_bad",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "close_paren"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_mclose_inline_bad"
+   ]
+  },
+  {
+   "i": 77,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "c85fc586bf462ec4",
+   "oracle": [
+    1,
+    false,
+    "! Missing } inserted.",
+    4
+   ],
+   "model": [
+    "E5",
+    "close_paren",
+    "math",
+    4
+   ],
+   "family": "R_mclose_inline_bad",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "open"
+     ],
+     [
+      "close_paren"
+     ],
+     [
+      "close"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_open_math",
+    "R_mclose_inline_bad"
+   ]
+  },
+  {
+   "i": 78,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "9598c42ab815b77e",
+   "oracle": [
+    1,
+    false,
+    "! Missing } inserted.",
+    4
+   ],
+   "model": [
+    "E5",
+    "close_paren",
+    "math",
+    4
+   ],
+   "family": "R_mclose_inline_bad",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "open"
+     ],
+     [
+      "close_paren"
+     ],
+     [
+      "close"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_open_math",
+    "R_mclose_inline_bad"
+   ]
+  },
+  {
+   "i": 79,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "593893eba09647a8",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    5
+   ],
+   "model": [
+    "E5",
+    "end",
+    "math",
+    5
+   ],
+   "family": "R_end_math",
+   "doc": {
+    "toks": [
+     [
+      "open_bracket"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_mopen_display",
+    "R_char_math",
+    "R_end_math"
+   ]
+  },
+  {
+   "i": 80,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "47a30f02edcbe67b",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    5
+   ],
+   "model": [
+    "E5",
+    "end",
+    "math",
+    5
+   ],
+   "family": "R_end_math",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "open"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_open_math",
+    "R_char_math",
+    "R_end_math"
+   ]
+  },
+  {
+   "i": 81,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "484f808eb83a0cf6",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_end_ok",
+   "doc": {
+    "toks": [
+     [
+      "open"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_open_text",
+    "R_char_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 82,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "34dee7225b7ffd85",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_display_close",
+   "doc": {
+    "toks": [
+     [
+      "open_bracket"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_mopen_display",
+    "R_char_math",
+    "R_dollar_display_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 83,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "1ca3fc3e71cbb988",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_mclose_display",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "close_bracket"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_mclose_display",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 84,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "7e462c9c250ef7d0",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_mclose_inline",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "close_paren"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_mclose_inline",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 85,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "4bb4b383480b1efb",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_dollar_inline_close",
+   "doc": {
+    "toks": [
+     [
+      "open_paren"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_mopen_inline",
+    "R_char_math",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 86,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "1315e932cc343ba2",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    5
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    5
+   ],
+   "family": "R_dollar_display_bad",
+   "doc": {
+    "toks": [
+     [
+      "open_bracket"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "close_bracket"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_mopen_display",
+    "R_char_math",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 87,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "c82ede072fbfd5c5",
+   "oracle": [
+    1,
+    false,
+    "! Display math should end with $$.",
+    4
+   ],
+   "model": [
+    "E5",
+    "dollar",
+    "math",
+    4
+   ],
+   "family": "R_dollar_display_bad",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "dollar"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_display_open",
+    "R_char_math",
+    "R_dollar_display_bad"
+   ]
+  },
+  {
+   "i": 88,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "24807d9471278698",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    3
+   ],
+   "model": [
+    "E5",
+    "close_bracket",
+    "text",
+    3
+   ],
+   "family": "R_mclose_display_bad",
+   "doc": {
+    "toks": [
+     [
+      "close_bracket"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_mclose_display_bad"
+   ]
+  },
+  {
+   "i": 89,
+   "class": "E5",
+   "agree": true,
+   "tex_sha256": "ae65d1fbc2bd1683",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Bad math environment delimiter.",
+    4
+   ],
+   "model": [
+    "E5",
+    "close_bracket",
+    "math",
+    4
+   ],
+   "family": "R_mclose_display_bad",
+   "doc": {
+    "toks": [
+     [
+      "dollar"
+     ],
+     [
+      "char",
+      "x"
+     ],
+     [
+      "close_bracket"
+     ],
+     [
+      "end"
+     ]
+    ]
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_mclose_display_bad"
+   ]
+  },
+  {
+   "i": 90,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "97b047cfd6545a45",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_text_material",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "cmd",
+       "IJ"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_cs_text_material",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 91,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "3ea99298cb679dab",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_text_material",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "cmd",
+       "SS"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_cs_text_material",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 92,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "f6060967246ca934",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_text_material",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "cmd",
+       "arraystretch"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_cs_text_material",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 93,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "1e4217e37dc91b62",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_text_noop",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "cmd",
+       "CurrentOption"
+      ],
+      [
+       "text",
+       "x"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_cs_text_noop",
+    "R_char_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 94,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "9deeae463c925293",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_text_noop",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "cmd",
+       "LinkTargetOff"
+      ],
+      [
+       "text",
+       "x"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_cs_text_noop",
+    "R_char_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 95,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "28de44d62d9a673b",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_text_noop",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "cmd",
+       "USenglishhyphenmins"
+      ],
+      [
+       "text",
+       "x"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_cs_text_noop",
+    "R_char_text",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 96,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "960df2d4644369bc",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E3",
+    "cs",
+    "text",
+    4
+   ],
+   "family": "R_cs_text_fatal",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "a"
+      ],
+      [
+       "cmd",
+       "Arrowvert"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_cs_text_fatal"
+   ]
+  },
+  {
+   "i": 97,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "abdc651242d09291",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E3",
+    "cs",
+    "text",
+    4
+   ],
+   "family": "R_cs_text_fatal",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "a"
+      ],
+      [
+       "cmd",
+       "Delta"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_cs_text_fatal"
+   ]
+  },
+  {
+   "i": 98,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "f973e4dc1c4c1f3d",
+   "oracle": [
+    1,
+    false,
+    "! Missing $ inserted.",
+    4
+   ],
+   "model": [
+    "E3",
+    "cs",
+    "text",
+    4
+   ],
+   "family": "R_cs_text_fatal",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "text",
+       "a"
+      ],
+      [
+       "cmd",
+       "Leftarrow"
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_char_text",
+    "R_cs_text_fatal"
+   ]
+  },
+  {
+   "i": 99,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "d95bd635de456710",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_math_noad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "cmd",
+         "Arrowvert"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_cs_math_noad",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 100,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "279d397be87fd6b9",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_math_noad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "cmd",
+         "Delta"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_cs_math_noad",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 101,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "378d6b4332d92f64",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_math_noad",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "cmd",
+         "IJ"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_cs_math_noad",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 102,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "4f51313498048a4f",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_math_noop",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "cmd",
+         "CurrentOption"
+        ],
+        [
+         "script",
+         false,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_cs_math_noop",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 103,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "07743088a60f8be3",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_math_noop",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "cmd",
+         "LinkTargetOff"
+        ],
+        [
+         "script",
+         false,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_cs_math_noop",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 104,
+   "class": "READY",
+   "agree": true,
+   "tex_sha256": "85356ee4b62a059f",
+   "oracle": [
+    0,
+    true,
+    "",
+    null
+   ],
+   "family": "R_cs_math_noop",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "script",
+         true,
+         [
+          "text",
+          "a"
+         ]
+        ],
+        [
+         "cmd",
+         "USenglishhyphenmins"
+        ],
+        [
+         "script",
+         false,
+         [
+          "text",
+          "b"
+         ]
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_script_char",
+    "R_cs_math_noop",
+    "R_dollar_inline_close",
+    "R_end_ok"
+   ]
+  },
+  {
+   "i": 105,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "bfbac74c1630bdd3",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Command \\upshape invalid in math mode.",
+    4
+   ],
+   "model": [
+    "E3",
+    "cs",
+    "math",
+    4
+   ],
+   "family": "R_cs_math_fatal",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "cmd",
+         "eminnershape"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_cs_math_fatal"
+   ]
+  },
+  {
+   "i": 106,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "d628f3d28e7e574e",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Command \\end{document} invalid in math mode.",
+    4
+   ],
+   "model": [
+    "E3",
+    "cs",
+    "math",
+    4
+   ],
+   "family": "R_cs_math_fatal",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "cmd",
+         "endflushright"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_cs_math_fatal"
+   ]
+  },
+  {
+   "i": 107,
+   "class": "E3",
+   "agree": true,
+   "tex_sha256": "bbe5a9b02d61e4bd",
+   "oracle": [
+    1,
+    false,
+    "! LaTeX Error: Command \\end{document} invalid in math mode.",
+    4
+   ],
+   "model": [
+    "E3",
+    "cs",
+    "math",
+    4
+   ],
+   "family": "R_cs_math_fatal",
+   "doc": {
+    "doc": {
+     "body": [
+      [
+       "math",
+       "dollar",
+       [
+        [
+         "text",
+         "x"
+        ],
+        [
+         "cmd",
+         "endlist"
+        ]
+       ]
+      ]
+     ],
+     "has_end": true
+    }
+   },
+   "rules": [
+    "R_dollar_inline_open",
+    "R_char_math",
+    "R_cs_math_fatal"
+   ]
+  }
+ ]
+}

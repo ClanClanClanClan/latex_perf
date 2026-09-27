@@ -1,6 +1,6 @@
 # Design: the contract-bounded proven tier
 
-**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestone M0 (§F) is implemented; nothing is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestones M0 and M1 slice 1 (§F) are implemented. M2 phase 1, the Coq kernel of the fragment L_S0 (§I.3), is proved and attested, but no product verdict uses it: the CLI's strict tier is still a stub, so nothing a user sees is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
 
 **Paths.** Repository paths below are relative to the repository root. A `file:line` reference gives the line as of commit `978601ee` and may have moved since. Anything marked *(scratch-only)* was produced by the design spikes in a private scratch area and is **not in the repository**; it is cited as evidence for a measured figure, not as a file you can open.
 
@@ -813,3 +813,120 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 - The §B.2 attestation of `files_read` (re-run with the file hidden; the expected fatal must appear) is not implemented.
 - `complete` is configuration-scoped (above); the per-document self-check is M2's.
 - The file-token reading of the universe is an over-approximation checked by the hash count, not a proof by itself; a configuration whose count is not 0 is reported incomplete rather than guessed.
+
+### I.3 M2 phase 1: the Coq kernel of L_S0 (2026-09-27)
+
+The kernel is proved and attested. Nothing in the product uses it: the CLI's
+strict tier is still the M0 stub, and `--require-proof` still exits 4 on every
+document. Ledger row: OPEN-121 in [PROJECT_STATE.md](PROJECT_STATE.md).
+
+| deliverable | where |
+|---|---|
+| node grammar, token stream (`flatten_doc`), the exact bytes given to pdflatex (`render`) | `proofs/Strict/Syntax.v` |
+| contract record, a parameter of every theorem (`c_defined`, `c_sig`); fatal reasons E0, E1, E3, E4, E5, E6 | `proofs/Strict/Contract.v` |
+| the declarative semantics `Runs`: 42 constructors, one per construct and failure mode, each commented with its probe family `S0/<constructor>` | `proofs/Strict/Semantics.v` |
+| the decider (`step` iterated by `run`; `decide`), membership `in_strict_doc`, and the theorems | `proofs/Strict/Decide.v` |
+| `Faithful` (a `Definition`) and the bridge `strict_ready_iff_pdflatex` | `proofs/Strict/Bridge.v` |
+| extraction and its regeneration | `proofs/Strict/Extract.v`, `scripts/tools/regen_strict_kernel_extract.sh`, committed as `latex-parse/strict/strict_kernel_extracted.ml` (checked by `scripts/tools/check_extract_identity.py`) |
+| harness driver (trusted, T5: builds the contract record from the committed files) and unit tests | `latex-parse/strict/strict_decide.ml`, `latex-parse/strict/test_strict_kernel.ml` |
+| probe-attested signatures | `scripts/tools/gen_strict_signatures.py`, `corpora/contracts/strict/article-s0-signatures.json` |
+| rule probes and the generated differential v1 | `scripts/tools/strict_differential.py`, `scripts/tools/_strict_s0.py`, `corpora/strict_s0/` |
+| pure gate over the kernel and its evidence (spec-drift, six kill-tests) | `scripts/tools/check_strict_kernel.py` |
+
+**Theorems** (all `Qed`; `Print Assumptions` is Closed for each, registered in
+`scripts/tools/check_print_assumptions.py`, which also pins the bridge's
+statement textually so that `Faithful` stays its only premise about the
+world):
+
+- `strict_decider_exact`: for a strict document, `decide C d = ProvenReady`
+  iff `Runs C init (flatten_doc d) Compiles`, and `decide C d =
+  ProvenNotReady r l` iff `Runs … (Fatal r l)`. Proved from `run_sound` and
+  `run_complete`, a refinement in both directions.
+- `runs_deterministic`: proved by induction on `Runs` itself, not through the
+  decider.
+- `runs_total` and `decide_total`: a strict document always has an outcome,
+  so the decider never answers `NotStrict` inside the tier.
+- `in_strict_dec`.
+- `strict_ready_iff_pdflatex : Faithful oracle_ok C -> in_strict_doc C d ->
+  (decide C d = ProvenReady <-> oracle_ok (render d))`, and its NOT-READY
+  corollary `strict_not_ready_pdflatex`.
+- Not a tautology, measured: changing one case of `step` (a paragraph break in
+  math reported as E3 instead of E6) makes `run_sound_n` fail to compile.
+
+**The fragment.** Characters (letters, digits, `. , ; : ! ? ( ) / + - =`),
+spaces, paragraph breaks (a blank line or `\par`), brace groups and stray
+`}`, the four math delimiters, `^`/`_` with a character or a group argument,
+and control words (ASCII letters) with no argument. A control word is decided E1 when it is
+outside the configuration's closed world, and is otherwise inside the tier
+only if it has a signature. The configuration is `article` with no packages.
+
+**Why the semantics runs on tokens, not on the tree.** TeX executes a token
+stream, and the tree nesting is not TeX's nesting. The byte-level lesson of
+the semantics-first spike is a rule of `Runs`, not a property of a lexer: `$`
+outside math looks at the next token, so an empty inline formula printed as
+`$$` opens display math (`R_dollar_display_open`). Likewise `{}}` is a group
+and a stray brace, `$x$$y$` is two inline formulas, and inside a math brace
+group TeX is in non-display math even within a display.
+
+**Rendering.** `render` puts a line feed after every token except a space and
+`$`, so pdfTeX's `l.N` locates the token that failed; the differential checks
+the line of every fatal. The header comment of `proofs/Strict/Syntax.v` says
+why each inserted line feed is harmless.
+
+**Signatures.** A defined control word gets `text` in {material, noop, fatal
+E3} and `math` in {noad, noop, fatal E3, fatal E6} only by probes: 15
+documents per name (8 in text, 7 in math) are graded once by the oracle, and
+the name is admitted iff exactly one of the 12 hypotheses makes the EXTRACTED
+decider agree with the oracle on all 15 (verdict, message class and line).
+The candidates are a rule, not a list: the article closed world's control
+words minus `par`, `begin` and `end`, in sha256 order, the first 400.
+Measured (generator version 2): 150 admitted and 250 rejected (no hypothesis
+fits: they take arguments, look ahead, fail elsewhere, or are registers and
+primitives with syntax of their own); one probe of `\pdfcopyfont` timed out,
+and that name is among the rejected. Admitted classes: fatal E3/noad 51 (math
+symbols), material/noad 54, noop/noop 32, noop/fatal E3 4, material/fatal E6
+3, noop/fatal E6 3, noop/noad 2, material/noop 1. Version 1 had 13 probes and
+admitted 152: the two extra were `\expandafter` and `\ExplSyntaxOn`, both
+noop/noop, both look-ahead or catcode changers that the two look-ahead probes
+of version 2 reject (C-84).
+
+**Evidence.**
+
+- Rule probes (`corpora/strict_s0/rule_probes.json`): 108 directed documents,
+  1 to 7 per constructor, 16 of them raw token streams for rules no tree
+  reaches; 108 of 108 agree with the oracle, and every one of the 42
+  constructors is used by at least one agreeing probe.
+- Generated differential v1 (`corpora/strict_s0/differential_v1.json`):
+  1,200 seeded documents (seed 1), 1,200 of 1,200 agree with the oracle on verdict, message class and line: READY 527, E0 160, E1 92, E3 136, E4 57, E5 183, E6 45; 0 oracle timeouts or infrastructure failures. The exact one-sided 95% upper bound on the disagreement rate is 0.25% overall and 0.57% on READY verdicts. 39 of the 42 constructors are used by generated documents; the three that are not (`R_dollar_display_eof`, `R_mclose_inline_bad`, `R_mclose_display_bad`) are not reachable, or only rarely, from trees, and are attested by the token-level rule probes.
+- The first run of the token-level rule probes found one F-defect, in the
+  semantics: `R_dollar_display_eof` said that a `$` ending a display at the end
+  of a file reads past the end ("Emergency stop"); pdfTeX appends an
+  end-of-line to the last line, so the look-ahead meets a space ("Display math
+  should end with $$" at the `$`). The rule was corrected (C-83 in
+  [PROJECT_STATE.md](PROJECT_STATE.md)).
+- The first full run of the differential (on the version-1 signatures) found
+  a second F-defect, in the CONTRACT: 1,199 of 1,200 agreed, and the one that
+  did not was `\(\expandafter` + blank line + `P\)`, where pdfTeX reported the
+  paragraph break one line later than the kernel because `\expandafter` had
+  read the token after it. The semantics was right; the signature was wrong
+  (C-84). The signatures were regenerated with two look-ahead probes and both
+  evidence files re-run on them; the figures above are the re-run's.
+
+**Deviations from §C.3, and what is not done.**
+
+- No parser: documents are trees, printed by `render`. `parse`, `parse_exact`
+  and the bytes-level form of the bridge are phase 2; so is
+  `no_turing_construct`.
+- The fatal-reason set is phase 1's (E0, E1, E3, E4, E5, E6). E2, E7 and E11
+  need environments, arguments and Unicode, which the fragment does not have.
+  Unclosed math at `\end{document}` and a missing `\end{document}` are
+  labelled E5 (stack discipline).
+- The differential is 1,200 documents, not the 10,000 that §F asks of M2; the
+  harness is seeded and reruns with `--random N`.
+- `complete_scope` (§I.2): the contract attests the configuration's name set,
+  not a document's. In phase 1 every E1 verdict of the differential is itself
+  graded by the oracle; the per-document self-check before a PROVEN verdict is
+  still to do, with the wiring into the product.
+- A signature is attested in the 13 probed contexts only. The differential
+  places attested names in many others, which is where a context-dependent
+  name would show up as a disagreement.

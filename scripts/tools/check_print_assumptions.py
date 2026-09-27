@@ -120,6 +120,54 @@ CAPSTONES = [
         "LaTeXPerfectionist.LanguageContract",
         "the LP-Core tier decision is sound (feature-list -> tier step).",
     ),
+    # The strict-tier kernel L_S0 (ADR-012, milestone M2 phase 1; proofs/Strict).
+    (
+        "LaTeXPerfectionist.Strict.Decide.strict_decider_exact",
+        "LaTeXPerfectionist.Strict.Decide",
+        "ADR-012 trust layer (2): the extracted decider equals the declarative "
+        "semantics Runs in BOTH directions (READY iff Runs Compiles; NOT-READY r l "
+        "iff Runs Fatal r l). Every PROVEN verdict of the strict tier rests on it.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.runs_deterministic",
+        "LaTeXPerfectionist.Strict.Decide",
+        "the semantics Runs gives a document at most one outcome (proved on the "
+        "relation itself, not through the decider).",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.runs_total",
+        "LaTeXPerfectionist.Strict.Decide",
+        "every strict document has an outcome, so the decider never answers "
+        "NotStrict inside the tier.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.in_strict_dec",
+        "LaTeXPerfectionist.Strict.Decide",
+        "membership in the strict fragment is decidable.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Bridge.strict_ready_iff_pdflatex",
+        "LaTeXPerfectionist.Strict.Bridge",
+        "ADR-012 bridge: under the named premise Faithful (a Definition, never an "
+        "Axiom), PROVEN READY iff the oracle compiles. An Axiom here would make "
+        "faithfulness an unstated assumption of every strict verdict.",
+    ),
+]
+
+# The bridge corollary's STATEMENT, pinned (design §0: "a new gate checks the
+# corollary's statement textually, so that Faithful is its only non-structural
+# premise"). Print Assumptions cannot see a premise: a premise is part of the
+# statement, and a Closed theorem may still assume anything in its hypotheses.
+# `Check` prints the statement; whitespace is normalised before comparing.
+STATEMENT_PINS = [
+    (
+        "LaTeXPerfectionist.Strict.Bridge.strict_ready_iff_pdflatex",
+        "LaTeXPerfectionist.Strict.Syntax LaTeXPerfectionist.Strict.Contract "
+        "LaTeXPerfectionist.Strict.Decide LaTeXPerfectionist.Strict.Bridge",
+        "forall (oracle_ok : list Ascii.ascii -> Prop) (C : contract) (d : doc), "
+        "Faithful oracle_ok C -> in_strict_doc C d -> "
+        "decide C d = ProvenReady <-> oracle_ok (render d)",
+    ),
 ]
 
 
@@ -196,6 +244,26 @@ def main() -> int:
                     f"      why this theorem matters: {why}\n"
                     f"      Coq reported:\n      {reported}"
                 )
+
+        for idx, (thm, module, want) in enumerate(STATEMENT_PINS):
+            src = workdir / f"ST{idx}.v"
+            src.write_text(f"Require Import {module}.\nCheck {thm}.\n", encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            out = proc.stdout or ""  # Coq's warnings go to stderr
+            # `Check` prints "<name>\n     : <statement>"; keep the statement.
+            got = " ".join(out.split(":", 1)[1].split()) if ":" in out else ""
+            if proc.returncode != 0 or got != " ".join(want.split()):
+                failures.append(
+                    f"{thm}: statement is not the pinned one (the bridge's premises "
+                    f"changed; Faithful must stay its only non-structural premise).\n"
+                    f"      pinned: {' '.join(want.split())}\n      Coq:    {got or out.strip()[:400]}"
+                )
+            else:
+                print(f"[print-assumptions] OK   {thm}: statement pinned")
 
     if failures:
         print("\n[print-assumptions] FAIL — capstone(s) depend on unproved assumptions:\n")

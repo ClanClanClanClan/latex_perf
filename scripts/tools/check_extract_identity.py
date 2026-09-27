@@ -10,6 +10,10 @@ Three generated files are compiled into the shipped binary:
     latex-parse/src/compile_guarantee_extracted.ml     (CompileGuaranteeExtract.v)
     latex-parse/src/language_contract_extracted.ml     (LanguageContractExtract.v)
 
+A fourth, latex-parse/strict/strict_kernel_extracted.ml (proofs/Strict/Extract.v),
+is not in the shipped binary: it is the strict-tier kernel the generated
+differential runs (ADR-012 M2 phase 1), checked here for the same reason.
+
 They are the ONLY link between the Coq proofs and the running code: the capstone
 `compile_safe_of_source` is about `body_of_source`, and the thing that actually
 runs is `Body_token_frontend_extracted.body_of_source`. If the committed .ml
@@ -90,6 +94,16 @@ EXTRACTS = [
         "scripts/tools/regen_language_contract_extract.sh",
         "latex-parse/src/language_contract_extracted.ml",
         "proofs/LanguageContractExtract.v",
+    ),
+    (
+        # The strict-tier kernel (ADR-012 M2 phase 1). Not linked into the
+        # shipped binary yet: it is what the generated differential runs, so a
+        # stale copy would make the differential test code the proofs are not
+        # about.
+        "strict_kernel",
+        "scripts/tools/regen_strict_kernel_extract.sh",
+        "latex-parse/strict/strict_kernel_extracted.ml",
+        "proofs/Strict/Extract.v",
     ),
 ]
 

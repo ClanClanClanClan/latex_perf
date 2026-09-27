@@ -561,7 +561,73 @@ def contract_drop_grading_pass3(text: str) -> str:
 
 KERNEL_FILE = "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json"
 
+
+def strict_family_one_disagrees(text: str) -> str:
+    """ADR-012 M2: a Runs constructor whose probe family has one probe the
+    oracle disagrees with."""
+    d = json.loads(text)
+    f = d["by_family"]["R_script_double"]
+    assert f["agree"] == f["n"] >= 1, "rule_probes drifted; update registry"
+    f["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_differential_one_disagreement(text: str) -> str:
+    d = json.loads(text)
+    assert d["summary"]["disagree"] == 0, "differential drifted; update registry"
+    d["summary"]["disagree"] = 1
+    d["summary"]["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_signature_candidate_dropped(text: str) -> str:
+    """A rejected candidate silently removed: the candidate set no longer is
+    the selection rule's."""
+    d = json.loads(text)
+    assert d["rejected"], "signature file drifted; update registry"
+    d["rejected"].pop(sorted(d["rejected"])[0])
+    return json.dumps(d, indent=1) + "\n"
+
+
 REGISTRY = [
+    GateTest(
+        "check_strict_kernel",
+        [PY, f"{TOOLS}/check_strict_kernel.py", "--repo", "."],
+        "pure",
+        [
+            # The review rule of design §C.3: every Runs constructor cites
+            # its probe family.
+            Mutation("a Runs constructor loses its probe tag",
+                     "proofs/Strict/Semantics.v",
+                     r"FAIL Semantics\.v: constructor R_close_top has no",
+                     old="(* probe S0/R_close_top: }",
+                     new="(* S0/R_close_top: }"),
+            Mutation("a probe family has a disagreeing probe",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL rule_probes: family R_script_double: 1 of",
+                     transform=strict_family_one_disagrees),
+            Mutation("the differential reports a disagreement",
+                     "corpora/strict_s0/differential_v1.json",
+                     r"FAIL differential_v1: 1 disagreement",
+                     transform=strict_differential_one_disagreement),
+            Mutation("the signature candidates are not the selection rule's",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: candidate set differs",
+                     transform=strict_signature_candidate_dropped),
+            # A semantics change without re-running the evidence.
+            Mutation("the committed extraction changes under the evidence",
+                     "latex-parse/strict/strict_kernel_extracted.ml",
+                     r"FAIL rule_probes: ran another extraction",
+                     old="[@@@warning \"-a\"]\n",
+                     new="[@@@warning \"-a\"]\n\nlet _lp_kill = ()\n"),
+            # A name written into the kernel instead of the contract.
+            Mutation("a control-word name is written into the Coq kernel",
+                     "proofs/Strict/Semantics.v",
+                     r"FAIL proofs/Strict/Semantics\.v: string literal 'alpha'",
+                     old="Definition init : state := mkState [] false 0.\n",
+                     new="Definition init : state := mkState [] false 0.\n"
+                         "Definition lp_kill := \"alpha\".\n"),
+        ]),
     GateTest(
         "check_gen_contract_parsers",
         [PY, f"{TOOLS}/check_gen_contract_parsers.py"],

@@ -1,7 +1,8 @@
 {
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "bc172774c3b9d2dae052bc56de5da3cc79a34052",
+    "measured_at_sha": "e6e82b1130741eab048ec9b4ca94f09810b6a3c5",
+    "measured_at_note": "Measured with the oracle tooling of branch feat/v27165-container-oracle (commit bc172774, which exists only on that branch) over the engine tree latex-parse/src = fe673dc1608eac5528314f23bea1bb50bcd5e433, identical to that tree at main commit e6e82b11; measured_at_sha is therefore stamped e6e82b11, so the provenance survives a squash merge (C-73). What the branch changes is the GRADING tool (scripts/tools/_oracle.py and the graders that call it), not the engine: the CLI verdicts are those of fe673dc1, the pdflatex grades are the pinned image's.",
     "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433",
     "cli_sha256": "ba850a0edd832836cd3062f9d2884424a4a6f4845935168703c4507914c88956",
     "cli_platform": "Darwin-arm64",

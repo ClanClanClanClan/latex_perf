@@ -340,6 +340,14 @@ compile-FAILURE classes (`fail_*`), and pdflatex-TOLERATED sloppiness (`tolerate
 
 Total = 34 + 20 + 8 + 3 = 65.
 
+**Re-measured 2026-09-27 under the pinned image and the §B.4 predicate (OPEN-118): 36 / 21 / 8 / 0.**
+The table above is kept as recorded. `diff_compile_check.sh` now scores COMPILES only for
+rc 0 **and** a PDF (`docs/v27/STRICT_TIER_DESIGN.md` §B.4, E0), as every other grader
+does. Exactly one cell moved: `tolerated_write18.tex` exits 0 but typesets nothing, so
+it produces no PDF, and it is now a correct NOT-READY rather than the corpus's only
+false-not-ready. The other two over-rejections listed above had already moved to
+true-READY before this re-measure (the CLI now accepts them).
+
 **Re-measured 2026-07-28 (was 35/20/8/2).** `fail_duplicate_label.tex` moved from true-READY to
 over-rejection, and the cause is worth recording because it is a *consequence of a fix*, not a
 regression. pdflatex only WARNS on a duplicate `\label` and exits 0. The verified model's T4
@@ -457,9 +465,11 @@ pre-check deliberately does not cross.
   compile-prediction. The residual over-rejection comes from the T0 parser flagging the
   unclosed group; DELIM-001 stays compile-blocking on purpose (a fatal consumed-brace case
   it cannot cheaply distinguish is the dangerous direction).
-- **`\write18` shell-escape (a false-NOT-READY).** `tolerated_write18.tex` is reported
-  NOT-READY (LP-Foreign) but pdflatex tolerates it in restricted-shell-escape mode. This
-  over-rejection is intentional: shell-escape is genuinely out of the safe subset.
+- **`\write18` shell-escape (a false-NOT-READY until 2026-09-27).** `tolerated_write18.tex` is reported
+  NOT-READY (LP-Foreign). pdflatex exits 0 on it in restricted-shell-escape mode, but its
+  body typesets nothing, so no PDF is produced. Under the §B.4 predicate (rc 0 AND a PDF)
+  it does not compile, and the NOT-READY is correct. It was scored a false-not-ready
+  only while `diff_compile_check.sh` graded by rc alone (OPEN-118).
 
 
 ## Model-connected verdict — the `MODEL-CONNECTED` line (v27.1.53)

@@ -2920,6 +2920,7 @@
    "pdflatex_pdf": true
   }
  ],
- "oracle_regraded_at_sha": "bc172774c3b9d2dae052bc56de5da3cc79a34052",
+ "oracle_regraded_at_sha": "e6e82b1130741eab048ec9b4ca94f09810b6a3c5",
+ "measured_at_note": "Measured with the oracle tooling of branch feat/v27165-container-oracle (commit bc172774, which exists only on that branch) over the engine tree latex-parse/src = fe673dc1608eac5528314f23bea1bb50bcd5e433, identical to that tree at main commit e6e82b11; measured_at_sha is therefore stamped e6e82b11, so the provenance survives a squash merge (C-73). What the branch changes is the GRADING tool (scripts/tools/_oracle.py and the graders that call it), not the engine: the CLI verdicts are those of fe673dc1, the pdflatex grades are the pinned image's.",
  "measured_at": "ORACLE-BASELINE CHANGE (ADR-012 decision 7): every row re-graded under the pinned TeX Live image texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b (aarch64, container backend); multi-pass re-grade, scope=all: every row, regardless of prior grade (<= 3 passes, 200/200 rows now carry a pdflatex_passes count); CLI verdicts carried forward from the prior run"
 }

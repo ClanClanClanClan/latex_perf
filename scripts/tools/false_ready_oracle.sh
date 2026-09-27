@@ -356,7 +356,7 @@ done < "$TSV"
 if [ "$n" -ne "$EXPECT_N" ]; then
   die_infra "processed $n of $EXPECT_N fixtures — refusing to report success"
 fi
-[ "$timeouts" -eq 0 ] || die_infra "$timeouts fixture(s) not graded (timeout, oracle failure or no proof pdfTeX ran); grades are not trustworthy"
+[ "$timeouts" -eq 0 ] || die_infra "$timeouts fixture(s) not graded (timeout, oracle failure, a full work root, or no proof pdfTeX ran); grades are not trustworthy"
 
 echo "[fr-oracle] checked $n fixtures; hard=$hard soft=$soft (engine: $GOT_ENGINE; oracle: $ORACLE_BACKEND)"
 if [ "$hard" -ne 0 ]; then

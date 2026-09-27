@@ -189,25 +189,56 @@ EXPECT_N="$(wc -l < "$TSV" | tr -d ' ')"
 # A healthy document therefore costs 2 runs, not 1; the reported rc is the
 # CONFIRMING run's when it disagrees, because the last state is the one a real
 # build tool would leave the author in.
+#
+# POSITIVE PROOF, PER PASS (OPEN-118 review round 2). An rc counts only when
+# THAT pass's own output carries pdfTeX's banner ("This is pdfTeX", printed
+# under -interaction=nonstopmode before the document is read). MEASURED
+# 2026-09-27: with a docker wrapper that sent only the -halt-on-error passes to
+# a dead daemon socket, the docker CLI exited 1 on every halt pass, this
+# function returned "1 no", every fixture graded error-halt and the run was
+# RC 0 "hard=0 soft=19" with 66 `ok` rows although no halt-protocol pdflatex
+# had run: the only proof-of-run check read the NONSTOP pass's log, after the
+# halt pass's log had been deleted. A pass without the banner now reports rc
+# NOPROOF, which the caller refuses to grade.
 run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
-  local wd="$1" base="$2" halt="$3" rc pdf i
+  local wd="$1" base="$2" halt="$3" rc pdf i out
   local -a cmd=("${PDFLATEX[@]}" -interaction=nonstopmode)
   [ "$halt" = 1 ] && cmd+=(-halt-on-error)
   cmd+=("$base")
   rc=1
+  out="$(mktemp)"
   for i in 1 2; do
     if [ -n "$TIMEOUT" ]; then
-      ( cd "$wd" && "$TIMEOUT" "$TEX_TIMEOUT" "${cmd[@]}" >/dev/null 2>&1 )
+      ( cd "$wd" && "$TIMEOUT" "$TEX_TIMEOUT" "${cmd[@]}" >"$out" 2>/dev/null )
     else
-      ( cd "$wd" && "${cmd[@]}" >/dev/null 2>&1 )
+      ( cd "$wd" && "${cmd[@]}" >"$out" 2>/dev/null )
     fi
     rc=$?
-    # A timeout kill (124) or a broken `timeout` (125-127) is not a property of
-    # the document; surface it immediately rather than masking it with a retry.
+    # A timeout kill (124) or a broken `timeout` (125-127, also _oracle.py's
+    # INFRA_RC) is not a property of the document; surface it immediately
+    # rather than masking it with a retry.
     case "$rc" in 124|125|126|127) break ;; esac
+    if ! grep -q 'This is pdfTeX' "$out" 2>/dev/null; then rc=NOPROOF; break; fi
   done
+  rm -f "$out"
   [ -f "$wd/${base%.tex}.pdf" ] && pdf=yes || pdf=no
   echo "$rc $pdf"
+}
+
+# The drift class of one fixture: $1 = this run's grade, $2 = the manifest's.
+# A function so check_oracle_infra_grading.py can test it without an oracle.
+#   hard-compiles  pdflatex compiles a fixture the manifest records as rejected
+#   hard-rejects   pdflatex rejects a fixture the manifest records as compiles.
+#                  This used to fall through to `soft` under the message "both
+#                  are rejections", which is false for a `compiles` fixture, and
+#                  the run exited 0 (OPEN-118 review round 2, defect 5)
+#   soft           strong-fatal <-> error-halt: both still rejections
+#   ok             equal
+drift_class() {
+  if [ "$1" = "$2" ]; then echo ok
+  elif [ "$1" = compiles ]; then echo hard-compiles
+  elif [ "$2" = compiles ]; then echo hard-rejects
+  else echo soft; fi
 }
 
 hard=0; soft=0; n=0; timeouts=0
@@ -234,6 +265,18 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   # rewritten by a run that gets far enough, so a nonstop-first ordering makes the
   # second run see a repaired .aux and grade `compiles`. Do not reorder.
   read -r hrc hpdf <<<"$(run_pdflatex "$rundir" "$base" 1)"
+  # Check the HALT pass BEFORE its artefacts are deleted: the only proof-of-run
+  # check used to read the nonstop pass's log, so a lost halt pass was invisible
+  # (see run_pdflatex). Both the per-pass banner and the halt run's own log.
+  case "$hrc" in
+    124|125|126|127|NOPROOF)
+      printf '%-24s halt-protocol pdflatex could not be run (rc %s) — refusing to grade\n' "$id" "$hrc"
+      rm -rf "$wd"; timeouts=$((timeouts+1)); continue ;;
+  esac
+  if ! grep -q 'This is pdfTeX' "$rundir/${base%.tex}.log" 2>/dev/null; then
+    printf '%-24s no pdfTeX log from the halt run — pdflatex did not really run; refusing to grade\n' "$id"
+    rm -rf "$wd"; timeouts=$((timeouts+1)); continue
+  fi
   # Clear artefacts between protocols: a PDF left by the halt run would be
   # attributed to the nonstop run and silently convert strong-fatal -> error-halt.
   # Through the oracle, not a host `rm`: see ORACLE_RM in _oracle.sh.
@@ -250,13 +293,13 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   # like "failed with no PDF" = strong-fatal, which MATCHES the manifest for most
   # fixtures. A pdflatex that cannot run at all would have graded 21/21 `ok`.
   case "$hrc:$nrc" in
-    *124*|*125*|*126*|*127*)
+    *124*|*125*|*126*|*127*|*NOPROOF*)
       printf '%-24s pdflatex could not be run (rc halt=%s nonstop=%s) — refusing to grade\n' \
         "$id" "$hrc" "$nrc"
       timeouts=$((timeouts+1)); continue ;;
   esac
   # Affirmative proof that TeX actually ran, rather than inference from a failure.
-  if [ ! -s "$logfile" ] || ! grep -qi 'pdftex\|pdflatex' "$logfile" 2>/dev/null; then
+  if [ ! -s "$logfile" ] || ! grep -q 'This is pdfTeX' "$logfile" 2>/dev/null; then
     printf '%-24s no pdfTeX log produced — pdflatex did not really run; refusing to grade\n' "$id"
     timeouts=$((timeouts+1)); continue
   fi
@@ -283,11 +326,14 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   # for them `compiles` is the expected steady state, and the drift signal is
   # the opposite one: such a fixture STOPPING compiling is graded below like
   # any other mismatch.
-  if [ "$grade" = compiles ] && [ "$pdfl" != compiles ]; then
-    status="HARD DRIFT: pdflatex now COMPILES this fixture (cli=$cli)"; hard=$((hard+1))
-  elif [ "$grade" != "$pdfl" ]; then
-    status="soft drift: grade $grade != manifest $pdfl (both are rejections)"; soft=$((soft+1))
-  fi
+  case "$(drift_class "$grade" "$pdfl")" in
+    hard-compiles)
+      status="HARD DRIFT: pdflatex now COMPILES this fixture (cli=$cli)"; hard=$((hard+1)) ;;
+    hard-rejects)
+      status="HARD DRIFT: pdflatex now REJECTS ($grade) a fixture the manifest records as compiles (cli=$cli)"; hard=$((hard+1)) ;;
+    soft)
+      status="soft drift: grade $grade != manifest $pdfl (both are rejections)"; soft=$((soft+1)) ;;
+  esac
   # F1: the cli column was computed and never checked. A CLI that answers READY to
   # everything (i.e. every round-7 fix reverted) graded 21/21 `ok`.
   if [ -n "${exp_cli:-}" ] && [ "$cli" != "$exp_cli" ]; then
@@ -303,7 +349,7 @@ done < "$TSV"
 if [ "$n" -ne "$EXPECT_N" ]; then
   die_infra "processed $n of $EXPECT_N fixtures — refusing to report success"
 fi
-[ "$timeouts" -eq 0 ] || die_infra "$timeouts fixture(s) timed out; grades are not trustworthy"
+[ "$timeouts" -eq 0 ] || die_infra "$timeouts fixture(s) not graded (timeout, oracle failure or no proof pdfTeX ran); grades are not trustworthy"
 
 echo "[fr-oracle] checked $n fixtures; hard=$hard soft=$soft (engine: $GOT_ENGINE; oracle: $ORACLE_BACKEND)"
 if [ "$hard" -ne 0 ]; then

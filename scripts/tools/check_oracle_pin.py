@@ -32,16 +32,27 @@ and checks four things:
      The rules, each with a kill-test in check_gate_selftests.py:
        Python  every string literal that names an engine, found by the
                tokenizer (so a list split over lines is still one list), is a
-               finding unless it is data: a dict key (`"pdflatex": ...`), a
-               dict value (`...: "pdflatex"`), a subscript (`x["pdflatex"]`),
-               an argument of .get/.setdefault/.pop, or an operand of
-               ==, !=, in. That catches `["timeout", "60", "pdflatex", t]`,
-               `("pdflatex", t)`, `ENGINE = "pdflatex"`,
-               `shutil.which("pdflatex")`, and a shell string such as
-               `f"pdflatex {t}"` or `"pdflatex main.tex"`.
+               finding unless it is data: a dict key (`"pdflatex": ...`), the
+               value of a recorded-metadata key (`"engine": "pdflatex"`, the
+               keys in DATA_KEYS only: any other dict value is a finding,
+               because `E = {"tex": "pdflatex"}; run([E["tex"], t])` evaded
+               the old blanket dict-value exemption), a subscript
+               (`x["pdflatex"]`), an argument of .get/.setdefault/.pop, or an
+               operand of ==, !=, in. Bytes literals are scanned like str
+               ones, and adjacent literals are joined first (`"pdf" "latex"`
+               is one literal to Python). That catches
+               `["timeout", "60", "pdflatex", t]`, `("pdflatex", t)`,
+               `ENGINE = "pdflatex"`, `shutil.which("pdflatex")`, and a shell
+               string such as `f"pdflatex {t}"` or `"pdflatex main.tex"`.
        shell   a bare engine token anywhere on a code line (comments
-               stripped), except inside an echo/printf message. That catches
-               `pdflatex main.tex`, `PDF=pdflatex`, `cmd=(pdflatex ...)`.
+               stripped), except inside an echo/printf message. The message
+               exemption covers ONE command: the line is split at `;`, `&&`,
+               `||` and `|` outside quotes first, so `echo x && pdflatex t`
+               and `printf t | xargs pdflatex` are findings. An engine name
+               assembled from a variable (`${P}latex`, `pdf$X`) is a finding.
+               .zsh/.ksh files are scanned as shell.
+       other   in a tracked .c/.h/.rs/.js/.ts/.rb/.pl/.go/.lua file, a
+               quoted literal that is an engine or an engine command line.
        OCaml   a file that spawns processes (Sys.command, Unix.create_process,
                Unix.open_process*, Unix.exec*) must not name an engine in a
                string literal.
@@ -116,6 +127,16 @@ SH_MESSAGE = re.compile(r"^\s*(echo|printf|die_infra|die|warn|log)\b")
 ML_SPAWN = re.compile(r"Sys\.command|create_process|open_process|Unix\.exec")
 ML_LITERAL = re.compile(rf'"[^"\n]*\b({_ENG_ALT})\b[^"\n]*"')
 DATA_CALLS = {"get", "setdefault", "pop"}
+# Dict keys whose engine-valued VALUE is recorded metadata, not a command.
+DATA_KEYS = {"engine", "declared_compiler", "compiler", "protocol"}
+# An engine name assembled at run time in shell: `${P}latex`, `$P"latex"`,
+# `pdf${X}`, `pdf$X`.
+SH_BUILT = re.compile(r"(\$\{?[A-Za-z_][A-Za-z0-9_]*\}?|\$\([^)]*\))[\"']?(la)?tex(mk)?\b"
+                      r"|\b(pdf|xe|lua)[\"']?\$\{?[A-Za-z_(]")
+SH_SPLIT = re.compile(r"&&|\|\||;|\|")
+OTHER_CODE_EXT = (".c", ".h", ".rs", ".js", ".mjs", ".ts", ".rb", ".pl",
+                  ".pm", ".go", ".lua", ".java")
+OTHER_LITERAL = re.compile(r"\"((?:[^\"\\\n]|\\.)*)\"|'((?:[^'\\\n]|\\.)*)'")
 COMPARE_OPS = {"==", "!=", "in"}
 # Workflow lines that run an engine INSIDE the pinned image (the oracle
 # itself). Exact stripped lines, pinned by count: a new one fails.
@@ -134,8 +155,10 @@ def _py_string_value(tok: str) -> str | None:
     """The text of a string token, prefixes and quotes removed. f-strings
     keep their `{...}` fields verbatim, which is what ENGINE_CMDLINE needs."""
     m = re.match(r"^([rRbBuUfF]*)('\'\'|\"\"\"|'|\")(.*)\2$", tok, re.S)
-    if not m or "b" in m.group(1).lower():
+    if not m:
         return None
+    # Bytes literals are scanned too: `subprocess.run([b"pdflatex", t])`
+    # starts an engine exactly as the str literal does.
     return m.group(3)
 
 
@@ -182,6 +205,20 @@ def scan_python(text: str) -> list[tuple[int, str]]:
             continue
         sig.append(t)
         j += 1
+    # Implicit concatenation: `"pdf" "latex"` is ONE literal to Python, so
+    # adjacent string units are joined before matching (quotes re-added so
+    # _py_string_value can strip them).
+    joined = []
+    for t in sig:
+        if (t.type == tokenize.STRING and joined
+                and joined[-1].type == tokenize.STRING):
+            a = _py_string_value(joined[-1].string)
+            b = _py_string_value(t.string)
+            if a is not None and b is not None:
+                joined[-1] = _U(tokenize.STRING, '"' + a + b + '"', joined[-1].start)
+                continue
+        joined.append(t)
+    sig = joined
     hits = []
     for i, t in enumerate(sig):
         if t.type != tokenize.STRING:
@@ -195,8 +232,9 @@ def scan_python(text: str) -> list[tuple[int, str]]:
         if True:  # data positions exempt both an engine name and a command line
             if nxt == ":" and prev in ("{", ","):
                 continue                       # dict key
-            if prev == ":":
-                continue                       # dict value
+            if (prev == ":" and i >= 2 and sig[i - 2].type == tokenize.STRING
+                    and _py_string_value(sig[i - 2].string) in DATA_KEYS):
+                continue                       # recorded metadata {"engine": ...}
             if prev == "[" and nxt == "]" and before_prev not in ("", "=", "(", ",", "[", "return"):
                 continue                       # subscript x["pdflatex"]
             if prev == "(" and before_prev in DATA_CALLS:
@@ -220,23 +258,56 @@ def scan_shell(text: str, allow: tuple = ()) -> list[tuple[int, str]]:
     hits = []
     for n, line in enumerate(text.split("\n"), 1):
         code = line.split("#", 1)[0] if not line.lstrip().startswith("#") else ""
-        if not code.strip() or SH_MESSAGE.match(code):
+        if not code.strip():
             continue
         if re.match(r"^\s*-?\s*name:", code):
             continue                           # a workflow step's display name
         if line.strip() in allow:
             continue
-        unquoted = SH_QUOTED.sub('""', code)
-        hit = bool(BARE_TOKEN.search(unquoted))
-        for m in SH_QUOTED.finditer(code):
-            inner = m.group(0)[1:-1]
-            subscript = (code[:m.start()].endswith("[")
-                         and code[m.end():].startswith("]"))
-            if not subscript and (ENGINE_LITERAL.match(inner)
-                                  or ENGINE_CMDLINE.match(inner)):
+        hit = False
+        for seg in _sh_commands(code):
+            if SH_MESSAGE.match(seg):
+                continue                       # this ONE command is a message
+            unquoted = SH_QUOTED.sub('""', seg)
+            if BARE_TOKEN.search(unquoted) or SH_BUILT.search(
+                    SH_QUOTED.sub(lambda m: m.group(0) if m.group(0).startswith('"')
+                                  else "''", seg)):
                 hit = True
+            for m in SH_QUOTED.finditer(seg):
+                inner = m.group(0)[1:-1]
+                subscript = (seg[:m.start()].endswith("[")
+                             and seg[m.end():].startswith("]"))
+                if not subscript and (ENGINE_LITERAL.match(inner)
+                                      or ENGINE_CMDLINE.match(inner)):
+                    hit = True
         if hit:
             hits.append((n, line.strip()))
+    return hits
+
+
+def _sh_commands(code: str) -> list[str]:
+    """Split a shell line into its commands at `;`, `&&`, `||`, `|` that lie
+    OUTSIDE quotes. The echo/printf exemption then applies per command: it
+    used to exempt the whole line, so `echo x && pdflatex t.tex` passed."""
+    masked = SH_QUOTED.sub(lambda m: "\0" * len(m.group(0)), code)
+    out, last = [], 0
+    for m in SH_SPLIT.finditer(masked):
+        out.append(code[last:m.start()])
+        last = m.end()
+    out.append(code[last:])
+    return [c for c in out if c.strip()]
+
+
+def scan_other(text: str) -> list[tuple[int, str]]:
+    """C, Rust, JS, Ruby, Perl, Go, Lua, Java: a quoted literal that IS an
+    engine or an engine command line."""
+    hits = []
+    for n, line in enumerate(text.split("\n"), 1):
+        for m in OTHER_LITERAL.finditer(line):
+            inner = m.group(1) if m.group(1) is not None else m.group(2)
+            if ENGINE_LITERAL.match(inner) or ENGINE_CMDLINE.match(inner):
+                hits.append((n, line.strip()))
+                break
     return hits
 
 
@@ -351,8 +422,10 @@ def main() -> int:
         name = p.name
         if rel.endswith(".py"):
             scan = scan_python
-        elif rel.endswith((".sh", ".bash", ".mk")) or name == "Makefile":
+        elif rel.endswith((".sh", ".bash", ".zsh", ".ksh", ".mk")) or name == "Makefile":
             scan = scan_shell
+        elif rel.endswith(OTHER_CODE_EXT):
+            scan = scan_other
         elif rel.endswith(".ml"):
             scan = scan_ocaml
         elif rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")):

@@ -150,8 +150,11 @@ for f in "$CORPUS"/*.tex; do
   # typesets nothing) COMPILES, i.e. a false-not-ready, where every other
   # grader in the repo scores it FAILS.
   [ -s "$d/${base%.tex}.pdf" ] && pdf=yes || pdf=no
-  # Affirmative proof that pdfTeX ran, as false_ready_oracle.sh requires.
-  if [ -s "$d/${base%.tex}.log" ] && grep -qi 'pdftex' "$d/${base%.tex}.log" 2>/dev/null; then
+  # Affirmative proof that pdfTeX ran, as false_ready_oracle.sh requires: the
+  # banner pdfTeX writes as the first line of the log. $d is fresh per document
+  # and the protocol here is ONE pass, so a log carrying it can only be this
+  # run's. (It used to match 'pdftex' anywhere, case-insensitively.)
+  if [ -s "$d/${base%.tex}.log" ] && grep -q 'This is pdfTeX' "$d/${base%.tex}.log" 2>/dev/null; then
     ran=yes
   else
     ran=no

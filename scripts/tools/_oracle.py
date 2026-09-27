@@ -149,6 +149,32 @@ class OracleError(RuntimeError):
     """The oracle cannot give a trustworthy answer. Never caught to fall back."""
 
 
+# POSITIVE PROOF THAT pdfTeX RAN (OPEN-118 review round 2). An exit code counts
+# as a grade only when the run carries evidence that pdfTeX itself produced it.
+# Recognising oracle failures by their rc/stderr shape ("Error response from
+# daemon", rc 125-127) was a blacklist, and it missed one realistic shape:
+# MEASURED 2026-09-27 with a docker wrapper that points `docker exec` at a dead
+# socket (colima restarting, the VM gone), the CLI prints "failed to connect to
+# the docker API ..." and exits 1 -- which passed through as pdflatex's own rc 1
+# and was graded "fails" by every Python grader. So the rule is now a whitelist:
+#   * pdfTeX's banner "This is pdfTeX" must be in the run's stdout. Every
+#     grader runs `-interaction=nonstopmode`, where pdfTeX prints it before it
+#     reads a byte of the document, so no document can suppress it;
+#   * (container) the rc is the one a shell INSIDE the container reports on a
+#     per-run nonce line after pdflatex exits, not the docker client's rc. A lost
+#     daemon, a dead VM or an exec that never started leave no nonce line.
+# Anything else raises OracleError: unmeasured, never a grade (C-70).
+PDFTEX_BANNER = b"This is pdfTeX"
+
+
+def _require_pdftex_ran(rc: int, out: bytes, what: str) -> None:
+    if PDFTEX_BANNER not in out:
+        raise OracleError(
+            f"{what}: exit {rc} but the run's output carries no pdfTeX banner "
+            f"({PDFTEX_BANNER.decode()!r}), so pdfTeX did not run; this rc is "
+            f"not a grade. Output starts: {out[:300]!r}")
+
+
 class OracleUnavailable(OracleError):
     """No pinned-image backend is reachable from this process."""
 
@@ -221,6 +247,19 @@ def _check_search_path(k: str, v: str, inside) -> None:
         raise OracleError(f"{k}={v!r} has no empty component, so it would replace "
                           f"the pinned image's own search path; refusing to grade")
     for c in comps:
+        # kpathsea expands `~` to the container's HOME (/tmp, which persists
+        # across runs in the long-lived container) and `$VAR`/`{a,b}` to
+        # anything; `!!` forces an ls-R lookup in an arbitrary tree; a relative
+        # `..` climbs out of the work directory into the image tree or another
+        # run's directory. None can be checked against the work root, so all
+        # are refused (OPEN-118 review round 2, defect 4).
+        if c and (c.lstrip("!").startswith("~") or c.startswith("!!")
+                  or "$" in c or "{" in c
+                  or ".." in Path(c.rstrip("/") or "/").parts):
+            raise OracleError(f"{k} component {c!r} uses ~, !!, $, {{}} or '..'; "
+                              f"only plain paths inside the work root (or "
+                              f"relative ones below the run directory) may "
+                              f"shape a grade")
         if c and os.path.isabs(c) and not inside(Path(c.rstrip("/") or "/")):
             raise OracleError(f"{k} component {c!r} is outside the oracle work "
                               f"root; a host path must not shape a grade")
@@ -368,6 +407,7 @@ class NativeOracle(_Base):
             return 124, b"", True
         except OSError as e:  # no pdflatex at all: infrastructure, not a grade
             raise OracleError(f"cannot execute pdflatex: {e}") from e
+        _require_pdftex_ran(p.returncode, p.stdout, "native pdflatex")
         return p.returncode, p.stdout + p.stderr, False
 
 
@@ -551,26 +591,49 @@ class ContainerOracle(_Base):
         cmd = ["exec", "-w", str(cwd), "-e", "HOME=/tmp"]
         for k, v in sorted((env or {}).items()):
             if _ENV_FORWARD.match(k):
-                if k.startswith("TEXMF") and not self._inside(Path(v)):
-                    raise OracleError(f"{k}={v} is outside the oracle work root")
+                if k.startswith("TEXMF") and (
+                        not os.path.isabs(v) or any(ch in v for ch in "~$!{:,")
+                        or not self._inside(Path(v))):
+                    # Absolute, a single plain path, inside the work root:
+                    # kpathsea would expand ~ (the container's persistent
+                    # HOME), $VAR, {a,b} and !! itself.
+                    raise OracleError(f"{k}={v} is not one plain absolute path "
+                                      f"inside the oracle work root")
                 if k in _SEARCH_PATHS:
                     _check_search_path(k, v, self._inside)
                 cmd += ["-e", f"{k}={v}"]
         # The timeout runs INSIDE the container: killing the docker client on
-        # the host would leave pdflatex running in the container.
-        cmd += [self.name, "timeout", "-k", "10", str(int(timeout)), "pdflatex", *args]
+        # the host would leave pdflatex running in the container. A shell
+        # inside the container reports pdflatex's rc on a line tagged with a
+        # per-run nonce; that line, not the docker CLI's exit code, is the rc
+        # (see PDFTEX_BANNER above for why).
+        nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
+        script = ('n=$1; t=$2; shift 2; timeout -k 10 "$t" pdflatex "$@"; '
+                  'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
+        cmd += [self.name, "sh", "-c", script, "sh", nonce, str(int(timeout)), *args]
         try:
             p = subprocess.run([self.docker, *cmd], capture_output=True,
                                timeout=timeout + 90)
         except subprocess.TimeoutExpired:
-            return 124, b"", True
-        if p.returncode in (124, 137):
-            return p.returncode, p.stdout + p.stderr, True
-        if p.returncode in (125, 126, 127) or (
-                p.returncode != 0 and b"Error response from daemon" in p.stderr):
-            raise OracleError("docker exec failed: "
-                              + p.stderr.decode(errors="replace")[:400])
-        return p.returncode, p.stdout + p.stderr, False
+            # The docker client hung past the inner timeout's own kill: the
+            # oracle did not answer. Unmeasured, not a pdflatex timeout.
+            raise OracleError(f"docker exec did not return within {timeout + 90}s")
+        m = re.search(rb"^" + nonce.encode() + rb"=(\d+)$", p.stderr, re.M)
+        if m is None:
+            raise OracleError(
+                f"docker exec exited {p.returncode} without the in-container rc "
+                f"line, so pdflatex's exit status is unknown (daemon lost, VM "
+                f"gone, or exec never started); this is not a grade: "
+                + p.stderr.decode(errors="replace").strip()[:400])
+        rc = int(m.group(1))
+        err = p.stderr[:m.start()] + p.stderr[m.end():]
+        if rc in (124, 137):
+            return rc, p.stdout + err, True
+        if rc in (125, 126, 127):  # timeout(1) itself failed / pdflatex missing
+            raise OracleError(f"in-container timeout/pdflatex failed rc={rc}: "
+                              + err.decode(errors="replace")[:400])
+        _require_pdftex_ran(rc, p.stdout, f"container {self.name}")
+        return rc, p.stdout + err, False
 
     def stop(self):
         self._dk("rm", "-f", self.name)
@@ -682,10 +745,14 @@ def main(argv: list[str]) -> int:
                 rc, out, to = o.run_pdflatex(Path.cwd(), rest, env, timeout)
             sys.stdout.buffer.write(out)
             return 124 if to else rc
-    except OracleError as e:
-        print(f"[oracle] FATAL: {e}", file=sys.stderr)
+    except BaseException as e:  # noqa: BLE001 -- every exception, see below
+        if isinstance(e, SystemExit) and e.code in (0, None):
+            raise
+        print(f"[oracle] FATAL: {type(e).__name__}: {e}", file=sys.stderr)
         # The pdflatex shim must not exit with a code a pdflatex failure could
-        # have produced: the shell graders would grade it (see INFRA_RC).
+        # have produced: the shell graders would grade it (see INFRA_RC). That
+        # holds for EVERY exception, not only OracleError: an uncaught
+        # ValueError/KeyboardInterrupt used to exit 1, i.e. "pdflatex failed".
         return INFRA_RC if cmd == "pdflatex" else 2
     print(f"[oracle] unknown command {cmd!r}", file=sys.stderr)
     return 2

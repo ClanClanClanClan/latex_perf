@@ -88,7 +88,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _oracle import availability, get_oracle, host_has_pdflatex  # noqa: E402
+from _oracle import OracleError, availability, get_oracle, host_has_pdflatex  # noqa: E402
 
 CORPORA = ["corpora/compile_check", "corpora/apply_fixes"]
 MANIFEST = "corpora/apply_fixes/manifest.json"
@@ -125,7 +125,8 @@ def find_timeout() -> str | None:
     return shutil.which("gtimeout") or shutil.which("timeout")
 
 
-def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 60) -> bool | None:
+def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 60,
+                also_remove: tuple[str, ...] = ()) -> bool | None:
     """True=compiles, False=fails, None=could not be graded (timeout/not run).
 
     One pass under `-halt-on-error`, as this gate has always graded, run by the
@@ -137,9 +138,20 @@ def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 6
     # PDF. rc alone scored an rc-0 run that typeset nothing as compiling. A PDF
     # left from an earlier run must not count, so it is removed first.
     pdf = Path(workdir) / (Path(base).stem + ".pdf")
-    get_oracle().remove([pdf])  # through the oracle: see ContainerOracle.remove
-    rc, timed_out = get_oracle().run_once(workdir, base, dict(os.environ), secs)
-    if timed_out or rc in (124, 125, 126, 127):
+    # An OracleError (docker daemon lost, no pdfTeX banner, no in-container rc
+    # line) means pdfTeX's answer is unknown: None = NOT GRADED, never False.
+    # MEASURED 2026-09-27 before this catch existed in its current form: with
+    # `docker exec` pointed at a dead socket the docker CLI exited 1, the oracle
+    # passed that through, and this function returned False ("fails").
+    try:
+        # through the oracle: see ContainerOracle.remove
+        get_oracle().remove([pdf] + [Path(workdir) / f"{Path(base).stem}.{j}"
+                                     for j in also_remove])
+        rc, timed_out = get_oracle().run_once(workdir, base, dict(os.environ), secs)
+    except OracleError as e:
+        print(f"[fixer-roundtrip] NOT GRADED ({base}): {e}", file=sys.stderr)
+        return None
+    if timed_out:
         return None
     return rc == 0 and pdf.is_file()
 
@@ -304,9 +316,8 @@ def main() -> int:
                     # b4 was graded once per document above.
                     broke = False
                     if have_tex:
-                        get_oracle().remove([stage / f"{base[:-4]}.{junk}"
-                                             for junk in ("aux", "log", "pdf", "out")])
-                        af = pdflatex_ok(stage, base, timeout_bin)
+                        af = pdflatex_ok(stage, base, timeout_bin,
+                                         also_remove=("aux", "log", "out"))
                         if b4 is None or af is None:
                             ungraded += 1
                             findings.append(f"{key} [{mode}]: pdflatex could not be graded")

@@ -185,6 +185,12 @@ jobs:
       - name: Oracle pin (graded artefacts name the pinned image)
         run: python3 scripts/tools/check_oracle_pin.py --repo .
 
+      # OPEN-118 review round 2: a run with no proof that pdfTeX ran (a lost
+      # docker daemon exits 1, exactly like a pdflatex failure) must never be
+      # graded. Pure: drives the real graders with fake docker/engine binaries.
+      - name: Oracle infrastructure failures are not grades
+        run: python3 scripts/tools/check_oracle_infra_grading.py --repo .
+
       - name: Release-only gates, now run per-PR (OPEN-091)
         # These four ran ONLY inside pre_release_check.py, i.e. only when a
         # human cut a release — and the gap between the last two releases was

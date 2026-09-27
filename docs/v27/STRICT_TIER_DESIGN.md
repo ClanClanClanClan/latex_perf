@@ -501,15 +501,28 @@ forced date and failed under the graders'.
   its sha256.
 - `defined_names`: two passes.
   - Pass 1 traces every assignment from the first line to after the
-    begin-document hooks, with a marker before every load.
+    begin-document hooks, with a marker before every load. The trace is then
+    repeated in the same directory for the later passes of the oracle's
+    protocol (at least 2 in all), because a later pass reads what an earlier
+    one wrote: `\usepackage{lastpage}` defines `\r@LastPage` only on pass 2,
+    from `\newlabel{LastPage}` in the `.aux`, and that name is a token of no
+    file (re-review defect 1).
   - Pass 2 dumps the body-start `\meaning` of every name of the UNIVERSE: the
-    kernel's candidates, every traced name, every name token of the files read
-    and of the definers, and every one-character name and the null name. Each
+    kernel's candidates, every name any trace pass assigned, every name token
+    of the files read, of the definers and of the files the job itself wrote
+    (`.aux`, `.out`, ..., with their `\csname ...\endcsname` literals), and
+    every one-character name and the null name. Each
     is inside an `\ifcsname` guard, in a catcode regime where any byte string
     can be written inside `\csname`; names holding the regime's reserved bytes
     or line feeds go through `\lowercase` with placeholder bytes.
   - The same hash-count check runs at body start against the universe: a name
     the universe misses would be called undefined without having been asked.
+    It runs twice: on pass 1 (a fresh directory, field `coverage`) and on the
+    LAST pass, with the files the dump's own passes wrote in place
+    (`coverage_last_pass`). The first version counted on pass 1 only, so a
+    name created from the `.aux` on pass 2 was outside every check and the
+    contract still said `complete` (re-review defect 1, measured on
+    `lastpage`).
     It found two such names in the five-package configuration before the
     file-token reading was widened (`\Gin@rule@*`, `\!!stringa`: a package's
     own catcodes make `*` and `!` letters); the reading now takes, after each
@@ -525,7 +538,16 @@ forced date and failed under the graders'.
   - `set_in` is the load segment of the assignment whose value the name keeps:
     a `restoring` record gives back the segment of the assignment it restores
     (values matched up to TeX's `ETC.` truncation), never the local assignment
-    a group end undid.
+    a group end undid. The restored value is looked up first in a per-name
+    stack of the values local assignments replaced (innermost first), then in
+    the name's history. The first version took the last history entry with the
+    same printed value, which is the in-group assignment itself when that
+    re-set the same value; MEASURED once: hyperref's `\WriteBookmarks` (set to
+    `0` by hyperref, re-set to `0` in a begin-document group) read
+    `begin_document`, and is `package:hyperref`. The trace shows no group
+    levels, so two local assignments at one level of which the first re-sets
+    the level's starting value are still attributed to that first one (same
+    meaning; only the label can be off).
   - Traced names whose meaning at body start is back to the kernel's are
     listed in `reverted_names`. Primitive parameters the configuration
     assigned (`\baselineskip`, ...) are listed separately in
@@ -534,7 +556,17 @@ forced date and failed under the graders'.
   - The dump is repeated on the later passes (in one directory) and under the
     grading environment. A name-set difference makes the contract incomplete;
     a meaning that differs between passes while the name stays defined is
-    recorded in `pass_dependent_meanings` and flagged on the name.
+    recorded in `pass_dependent_meanings` and flagged on the name. So a
+    configuration whose `.aux` defines a name on pass 2 (`lastpage`) is
+    reported incomplete, with the name, rather than described by its pass-1
+    state.
+  - Every job is named `job` (field `jobname`), and some meanings hold the job
+    name. Pass 1 is dumped again under a second job name: a name-set
+    difference makes the contract incomplete, and the meanings that differ are
+    listed in `jobname_dependent_meanings` and flagged on the name, so a
+    consumer compares meaning hashes under `job` (re-review LOW item b). The
+    kernel file lists the format-state meanings that change with the job name
+    the same way (`jobname_dependent_names`).
 - `meaning`: one of `Undefined`, `Relax`, `Primitive`, `Char`, `MathChar`,
   `Register`, `Font`, or `Macro` with the fields `long`, `protected`,
   `outer`, `robust`, `ltcmd_spec`, `params` and `arity_hint`. `arity_hint` is
@@ -572,8 +604,11 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 - No universe name is defined in format state yet missing from the kernel.
 - No name was unwritable into a dump.
 - The dump primitives were intact.
-- TeX's hash count at body start finds no name outside the universe.
-- The body-start name set is the same on every pass and under the real clock.
+- TeX's hash count at body start finds no name outside the universe, on
+  pass 1 and on the last pass (with the job's `.aux` in place).
+- Every trace pass ran clean.
+- The body-start name set is the same on every pass, under the real clock and
+  under a second job name.
 - The `u8:` sweep agreed with the names.
 - The self-check passed.
 
@@ -612,13 +647,25 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
     plus `\ `, `\/` and `\-`; every one is defined in format state.
   - Date-dependent kernel names: the six `c_sys_{year,month,day,hour,minute}`
     and `c_sys_timestamp_str` constants.
+  - Job-name-dependent kernel meanings: none. `\c_sys_jobname_str` and
+    `\g_file_curr_name_str` are `\let` to the `\jobname` primitive in format
+    state, so their meaning does not hold the name. At body start four
+    meanings do (`\@curr@file`, `\@curr@file@reqd`, `\g_file_curr_name_str`,
+    `\l__file_tmp_tl`: the last file read, the `.aux`); `amsart` has the
+    last two.
 - **Three contracts, all complete.**
 
-  | configuration | defined names | reverted | parameters assigned | universe | hash entries at body start (all covered) | self-check (sampled from the universe, of which members; + referenced) | size |
+  | configuration | defined names | reverted | parameters assigned | universe | hash entries at body start, pass 1 / last pass (all covered) | self-check (sampled from the universe, of which members; + referenced) | size |
   |---|---|---|---|---|---|---|---|
-  | `article` | 762 | 118 | 19 | 34,573 | 29,846 | 346 (239) + 10,736 | 167 KB |
-  | article + amsmath, amssymb, amsthm, graphicx, hyperref | 9,215 | 733 | 26 | 57,444 | 38,909 | 575 (299) + 14,992 | 1.9 MB |
-  | `amsart` | 1,979 | 248 | 25 | 38,321 | 30,931 | 384 (252) + 11,377 | 398 KB |
+  | `article` | 762 | 118 | 19 | 34,574 | 29,846 / 29,847 | 346 (243) + 10,736 | 167 KB |
+  | article + amsmath, amssymb, amsthm, graphicx, hyperref | 9,215 | 733 | 26 | 57,446 | 38,909 / 38,911 | 575 (313) + 14,992 | 1.9 MB |
+  | `amsart` | 1,979 | 248 | 25 | 38,322 | 30,931 / 30,932 | 384 (249) + 11,377 | 398 KB |
+
+  Re-review regeneration (generator version 3): no defined name was added or
+  removed and no meaning changed. The last-pass count holds 1-2 more entries
+  than pass 1 in each; all are in the universe (the later-pass trace added 1,
+  2 and 1 names, the job-written files 1, 16 and 2 name tokens) and none is
+  defined at body start. One `set_in` changed (`\WriteBookmarks`, above).
 
   Each self-check had 0 mismatches; each load needed 2 runs (success, then
   the confirming run). The first version's contracts under-reported
@@ -635,6 +682,20 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 - **Byte-identical regeneration.** Two independent runs of each contract, each
   from a kernel rebuilt from INITEX, gave identical bytes, and so did the
   kernel file.
+- **Re-review defect 1, measured.** Before the fix,
+  `gen_contract.py generate --class article --package lastpage` gave
+  `complete: true` with `\r@LastPage` absent (pass-1 count 29,921 entries,
+  uncovered 0). After: the later-pass trace puts `\r@LastPage` in the
+  universe, the pass-2 dump finds it defined where pass 1 did not, and the
+  contract is incomplete with `pass_dependent_state: ... ['r@LastPage']`;
+  the last-pass count is 29,923 entries, uncovered 0. With `\r@LastPage`
+  dropped from the universe, the last-pass count reports uncovered 1 while
+  the pass-1 count still reports 0: the pass-1 count alone cannot see it.
+  The synthetic shape (a definer's `\AtEndDocument` writing
+  `\expandafter\gdef\csname lpq7\endcsname{}` to the `.aux`) behaves the
+  same: incomplete naming `lpq7`, and uncovered 1 on the last pass only when
+  it is dropped. The committed contracts were not affected (as the re-review
+  predicted): each stays complete with 0 uncovered on both passes.
 - **Kill-tests and review repros** (`check_contracts_reproducible.py`, every
   invocation): the hidden-`\def` definer trips both the tracing-toggle check
   and the self-check; the hash count sees one name dropped from the kernel
@@ -644,7 +705,10 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
   at the group end does not move `set_in`; the `.aux`-writing definer is a
   fatal load on the confirming pass; the `\year` definer is a fatal load
   under the real clock and flagged `date_dependent_load`; the reviewers' 24
-  names as use-names on plain `article` give 0 mismatches.
+  names as use-names on plain `article` give 0 mismatches; `lastpage` and the
+  `lpq7` definer are each incomplete, naming the pass-2 name, and each with
+  that name dropped from the universe is seen by the last-pass count
+  (uncovered 1) and not by the pass-1 count (0).
 - **Surprises.**
   - The `amsfonts` lazy files (`umsa.fd`, `umsb.fd`, the msam/msbm metrics) are read at the first math-mode use of anything in article + amssymb, not at `\mathbb` in particular.
   - `amsart` already reads them in its load run.

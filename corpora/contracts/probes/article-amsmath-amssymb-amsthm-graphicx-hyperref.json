@@ -62,7 +62,7 @@
  },
  "generator": {
   "tool": "scripts/tools/gen_contract.py",
-  "version": "2"
+  "version": "3"
  },
  "pin": {
   "arch": "aarch64",

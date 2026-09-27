@@ -8,11 +8,14 @@
  "closed_world": {
   "ambiguous_trace_records": 9,
   "file_token_names": 1298,
+  "job_written_names": 1,
   "kernel_names": 23519,
+  "later_pass_traced_names": 1,
   "members": 23968,
+  "passes": 2,
   "phantom_readings": 6,
   "traced_names": 905,
-  "universe": 34573
+  "universe": 34574
  },
  "complete": true,
  "complete_scope": "configuration: the name set at body start of this configuration is exact (every name TeX's hash table holds there was asked); it attests no document's own names, which need a per-document self-check (M2)",
@@ -54,7 +57,15 @@
   "covered": 29846,
   "hash_entries": 29846,
   "uncovered": 0,
-  "universe_multiletter": 34316,
+  "universe_multiletter": 34317,
+  "unwritable": 0
+ },
+ "coverage_last_pass": {
+  "covered": 29847,
+  "hash_entries": 29847,
+  "pass": 2,
+  "uncovered": 0,
+  "universe_multiletter": 34317,
   "unwritable": 0
  },
  "declared_options": [
@@ -94,8 +105,8 @@
   "@check@eq": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"6ecbde5c725f83d3","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "@classoptionslist": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"class:article"},
   "@cls@pkg": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"6ecbde5c725f83d3","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
-  "@curr@file": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"8409a301206ba373","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
-  "@curr@file@reqd": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"8409a301206ba373","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
+  "@curr@file": {"arity_hint":0,"delimited":false,"jobname_dependent":true,"kind":"Macro","long":false,"meaning_sha256":"8409a301206ba373","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
+  "@curr@file@reqd": {"arity_hint":0,"delimited":false,"jobname_dependent":true,"kind":"Macro","long":false,"meaning_sha256":"8409a301206ba373","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "@currentmetafamily": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"a55dc0bcc01e1106","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "@currnamestack": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"6ecbde5c725f83d3","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "@curroptions": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"class:article"},
@@ -627,7 +638,7 @@
   "g__pdf_init_bool": {"code":1,"form":"chardef","kind":"Char","meaning_sha256":"eda932b5dc754f15","set_in":"begin_document"},
   "g__sys_backend_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"9396349b17e548f4","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "g__sys_finalize_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
-  "g_file_curr_name_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"d85c825ffbc002d8","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
+  "g_file_curr_name_str": {"arity_hint":0,"delimited":false,"jobname_dependent":true,"kind":"Macro","long":false,"meaning_sha256":"d85c825ffbc002d8","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "get@cdp": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"6ecbde5c725f83d3","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "glb@currsize": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "group@elt": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"6ecbde5c725f83d3","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
@@ -661,7 +672,7 @@
   "l__color_backend_stack_int": {"index":284,"kind":"Register","meaning_sha256":"42da44e389ae0438","register":"count","set_in":"begin_document"},
   "l__color_backend_stroke_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"15b3200c1e8fdf57","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__file_ext_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"2654a76aab7c8018","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
-  "l__file_tmp_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"c51911048f295957","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
+  "l__file_tmp_tl": {"arity_hint":0,"delimited":false,"jobname_dependent":true,"kind":"Macro","long":false,"meaning_sha256":"c51911048f295957","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__graphics_attr_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__graphics_backend_dir_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__graphics_backend_ext_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
@@ -851,9 +862,16 @@
  ],
  "generator": {
   "tool": "scripts/tools/gen_contract.py",
-  "version": "2"
+  "version": "3"
  },
  "incomplete_reasons": [],
+ "jobname": "job",
+ "jobname_dependent_meanings": [
+  "@curr@file",
+  "@curr@file@reqd",
+  "g_file_curr_name_str",
+  "l__file_tmp_tl"
+ ],
  "kernel": {
   "count": 23519,
   "file": "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json",
@@ -894,13 +912,13 @@
   "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe"
  },
  "provenance": {
-  "dump_log_sha256": "8325143bde9753ef815d1d6ea5a52a6e988244cb1dd3b0f4db7a9c8f6b56e5c1",
-  "dump_tex_sha256": "9121f1dfb0db7d63c23c580b08785ae3b1f78cb4bd886b89b165d19046d5acf3",
-  "fmt_extra_tex_sha256": "c5d208eaae8604a74d375fee96e079a6722f70991079a18575bd2d0c702d98a9",
-  "generator_version": "2",
+  "dump_log_sha256": "3d07505271d5a3fd935c362ce09c7b09383fcdc6e22146ca5e1f192a5ea12ea8",
+  "dump_tex_sha256": "3efdef3cfb96863d5707b786be7d5092e1499a0b9c187c381dd3dceb6eb8d358",
+  "fmt_extra_tex_sha256": "5ac9bcd28b65c83239262e610dc4c42c29d97eca16a4fc5f90f0b6c8587ee194",
+  "generator_version": "3",
   "load_tex_sha256": "0e69ef7426214d078f5ea82efa518e5000397e66e90a22d726c56321f5f7b22f",
-  "selfcheck_log_sha256": "d8791fd89c90ab93d4b566be3d064c77e84d75117e741c662e501911fd6ee161",
-  "selfcheck_tex_sha256": "20a183d038e60199174c9f194a51d04ca71326fe04aa6e6fdd06401fe259bbd4",
+  "selfcheck_log_sha256": "cad9a163843f365091e35d4eac8f8b6dc1a3bcaf70ce0f3c9e436630d7080521",
+  "selfcheck_tex_sha256": "fbb915b7f3983a80f9596c4902d10dcd7c073b590a1ab5d73063dcb753da17cf",
   "trace_log_sha256": "993b978d8257fe4c8c70cf2168d78a2c903c568a6463f61f6989175bbeb27b49",
   "trace_tex_sha256": "09f7f351e92d74621d07aba38eec4ae080f5ce355342ae4a63729bd0ca143160"
  },
@@ -1035,7 +1053,7 @@
   "sample_from": "universe",
   "sample_seed": "80abd84bd7677c84",
   "sampled": 346,
-  "sampled_members": 239,
+  "sampled_members": 243,
   "unwritable": 0,
   "use_names": 0,
   "use_names_list": []

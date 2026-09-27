@@ -10,11 +10,14 @@
  "closed_world": {
   "ambiguous_trace_records": 31,
   "file_token_names": 5354,
+  "job_written_names": 2,
   "kernel_names": 23519,
+  "later_pass_traced_names": 1,
   "members": 24967,
+  "passes": 2,
   "phantom_readings": 23,
   "traced_names": 2275,
-  "universe": 38321
+  "universe": 38322
  },
  "complete": true,
  "complete_scope": "configuration: the name set at body start of this configuration is exact (every name TeX's hash table holds there was asked); it attests no document's own names, which need a per-document self-check (M2)",
@@ -58,7 +61,15 @@
   "covered": 30931,
   "hash_entries": 30931,
   "uncovered": 0,
-  "universe_multiletter": 38064,
+  "universe_multiletter": 38065,
+  "unwritable": 0
+ },
+ "coverage_last_pass": {
+  "covered": 30932,
+  "hash_entries": 30932,
+  "pass": 2,
+  "uncovered": 0,
+  "universe_multiletter": 38065,
   "unwritable": 0
  },
  "declared_options": [
@@ -1303,7 +1314,7 @@
   "g__pdf_init_bool": {"code":1,"form":"chardef","kind":"Char","meaning_sha256":"eda932b5dc754f15","set_in":"begin_document"},
   "g__sys_backend_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"9396349b17e548f4","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "g__sys_finalize_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
-  "g_file_curr_name_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"d85c825ffbc002d8","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
+  "g_file_curr_name_str": {"arity_hint":0,"delimited":false,"jobname_dependent":true,"kind":"Macro","long":false,"meaning_sha256":"d85c825ffbc002d8","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "gather": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"441493776091dc5e","outer":false,"params":"","protected":false,"robust":false,"set_in":"class:amsart"},
   "gather*": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"71b54dc699a64a22","outer":false,"params":"","protected":false,"robust":false,"set_in":"class:amsart"},
   "gather*@qed": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cac135ed14cf0740","outer":false,"params":"","protected":false,"robust":false,"set_in":"class:amsart"},
@@ -1420,7 +1431,7 @@
   "l__color_backend_stack_int": {"index":296,"kind":"Register","meaning_sha256":"94738bf83d04111d","register":"count","set_in":"begin_document"},
   "l__color_backend_stroke_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"15b3200c1e8fdf57","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__file_ext_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"2654a76aab7c8018","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
-  "l__file_tmp_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"c51911048f295957","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
+  "l__file_tmp_tl": {"arity_hint":0,"delimited":false,"jobname_dependent":true,"kind":"Macro","long":false,"meaning_sha256":"c51911048f295957","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__graphics_attr_tl": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__graphics_backend_dir_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
   "l__graphics_backend_ext_str": {"arity_hint":0,"delimited":false,"kind":"Macro","long":false,"meaning_sha256":"cef2d4520f52a409","outer":false,"params":"","protected":false,"robust":false,"set_in":"begin_document"},
@@ -2111,9 +2122,14 @@
  ],
  "generator": {
   "tool": "scripts/tools/gen_contract.py",
-  "version": "2"
+  "version": "3"
  },
  "incomplete_reasons": [],
+ "jobname": "job",
+ "jobname_dependent_meanings": [
+  "g_file_curr_name_str",
+  "l__file_tmp_tl"
+ ],
  "kernel": {
   "count": 23519,
   "file": "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json",
@@ -2160,13 +2176,13 @@
   "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe"
  },
  "provenance": {
-  "dump_log_sha256": "d9c5f6fb912e50c8cfaa0dc887a092a9f4ac3f1a51f5396563f93cedd0b5e144",
-  "dump_tex_sha256": "4a3f4b99fb918ef0af3733ee71b32d81ff0a4e846eac443cb5bfefd52451a225",
-  "fmt_extra_tex_sha256": "141082d00e828be42f81eab1529959fb83572e858a9a407cbc374b3900777628",
-  "generator_version": "2",
+  "dump_log_sha256": "4b58856e53ec5577cf0d251c8868b42fdf2d479aecfea989fd4df536921eaaa2",
+  "dump_tex_sha256": "984b31117ba5d625c985c0767289487d5165c3595680b06c67296b70045494f4",
+  "fmt_extra_tex_sha256": "993156556a53268b960fbbe792107893c1186eaa93cf7ade3bed3c90e1f8f0dc",
+  "generator_version": "3",
   "load_tex_sha256": "39d08fbde977488bc38eb3089a9dd22504360a85b318f33fc3aa646cdc4aa6d4",
-  "selfcheck_log_sha256": "b1607d78125fc977a4bb78f2394d105ae8de14cab3ee80dc63a6eb2ff50765fa",
-  "selfcheck_tex_sha256": "5b8ec2c9167ce69cf479ec3423c65339605dd5958d87dbad51d6bb6d1a968372",
+  "selfcheck_log_sha256": "73f1346d7cb557188e7882a7d5f18b73873f3f9a2f5866b5ef10926579f86372",
+  "selfcheck_tex_sha256": "f24b965e22e31daf55737566b3f8c0164f354f3b65f943de22e9160b820a93fa",
   "trace_log_sha256": "fa1be5b68958d9f995800b3b9e9f2e30c968fe70b5ac076afd71aec2f795454c",
   "trace_tex_sha256": "7b719355e9bf751a219a22f7b5a7db2005d99577faf6b2152c074600f3210423"
  },
@@ -2431,7 +2447,7 @@
   "sample_from": "universe",
   "sample_seed": "b48962649f6ef84c",
   "sampled": 384,
-  "sampled_members": 252,
+  "sampled_members": 249,
   "unwritable": 0,
   "use_names": 0,
   "use_names_list": []

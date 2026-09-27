@@ -33,12 +33,17 @@ Nothing in a contract is hand-listed. Every field comes from a TeX run:
                   with sha256.
   defined_names   pass 1 traces every assignment from before \\documentclass
                   until after the begin-document hooks, with a marker between
-                  loads. Pass 2 dumps \\meaning at body start (after
-                  AtBeginDocument), guarded by \\ifcsname, of the whole
-                  UNIVERSE: the kernel's candidates, every traced name (every
-                  reading of an ambiguous record), every name token of the files
-                  read and of the definers. hash_coverage checks the universe
-                  against TeX's own count at body start. A name is in
+                  loads; the trace is repeated for the later passes of the
+                  protocol in the same directory (a later pass reads the .aux
+                  an earlier one wrote). Pass 2 dumps \\meaning at body start
+                  (after AtBeginDocument), guarded by \\ifcsname, of the whole
+                  UNIVERSE: the kernel's candidates, every name any trace pass
+                  assigned (every reading of an ambiguous record), every name
+                  token of the files read, of the definers and of the files
+                  the job wrote (with their \\csname literals). hash_coverage
+                  checks the universe against TeX's own count at body start,
+                  on pass 1 AND on the last pass with the job's .aux in place
+                  (coverage_last_pass). A name is in
                   defined_names iff its body-start meaning differs from its
                   format-state meaning (class Undefined = the configuration
                   removed a kernel name). Traced names whose meaning is back to
@@ -46,7 +51,10 @@ Nothing in a contract is hand-listed. Every field comes from a TeX run:
                   parameters the configuration assigned are listed in
                   parameters_assigned (values are not recorded). The dump is
                   repeated on the later passes and under the real clock; the
-                  state must not change.
+                  name set must not change. It is also run under a second job
+                  name: every job is named `job` (field `jobname`), and the
+                  meanings that hold the job name are listed in
+                  jobname_dependent_meanings.
   catcodes        \\the\\catcode of bytes 0-255 at body start, where it
                   differs from format state.
   active_chars    \\meaning of each active character at body start, where it
@@ -116,7 +124,7 @@ PROBE_SCHEMA = "lp-probe-report/1"
 # A semantic version, bumped by hand when the generator's OUTPUT changes on
 # purpose. Deliberately not a hash of this file: a comment edit must not
 # invalidate every committed contract (the C-68 lesson).
-GENERATOR_VERSION = "2"
+GENERATOR_VERSION = "3"
 
 REPO = Path(__file__).resolve().parent.parent.parent
 WORKFLOW = Path(".github/workflows/tex-oracle.yml")
@@ -149,6 +157,12 @@ TEX_ENV = {
 }
 GRADING_UNSET = ["FORCE_SOURCE_DATE"]
 SECOND_EPOCH = "1790000000"
+# Every job's name. Some meanings hold it (l3's \\c_sys_jobname_str, the file
+# currently read, ...), so a contract is exact under this job name only; the
+# names whose meaning changes with it are found by a run under the second one
+# (review LOW item b) and listed, so a consumer compares meanings under `job`.
+JOBNAME = "job"
+SECOND_JOBNAME = "lpotherjob"
 # diff_real_roots.MAX_PASSES (the oracle's pass protocol, B.4); the parser
 # self-test asserts the two agree.
 MAX_PASSES = 3
@@ -359,9 +373,15 @@ def parse_trace(log: bytes):
                  `into`/`reassigning` set it; `changing` (the old value) and
                  `retaining` (a global value kept at a group end) never do; a
                  `restoring` record gives back the segment of the assignment
-                 whose value it restores (matched on the printed value), or
-                 SEG_BEFORE_TRACE when that value predates the trace (review
-                 defect 4: a local \\def inside a group used to win).
+                 whose value it restores, or SEG_BEFORE_TRACE when that value
+                 predates the trace (review defect 4: a local \\def inside a
+                 group used to win). The restored value is looked up first in
+                 a per-name stack of the values local `into`s replaced, top
+                 down, then in the name's history (matched on the printed
+                 value). The trace shows no group levels, so two local
+                 assignments at ONE level of which the first re-sets the value
+                 the level started with are still attributed to that first
+                 one: same meaning, only the label can be off.
       ambiguous  set of tuples of cs names: one record whose printed name has
                  several readings (a `=` inside the name, or the null control
                  sequence, which prints like the name `csname\\endcsname`).
@@ -385,6 +405,8 @@ def parse_trace(log: bytes):
     seg = -1
     names: dict = {}
     history: dict = {}
+    saves: dict = {}
+    before: dict = {}
     current: dict = {}
     pending: dict = {}
     skipped: dict = {}
@@ -487,16 +509,39 @@ def parse_trace(log: bytes):
             elif verb == b"restoring":
                 # ... and neither is the group end that undoes that `into`.
                 skip = skipped.pop(keys, set())
+        glob = m.group(1) is not None
         for key, val in cands:
             if key in skip:
                 continue
             if verb in (b"into", b"reassigning"):
+                prior = before.pop(key, None)
+                if verb == b"into" and not glob:
+                    # A local assignment: TeX may save the value it replaces
+                    # for the group end to restore. `reassigning` saves
+                    # nothing (e-TeX returns before eq_save), nor does a
+                    # global one.
+                    saves.setdefault(key, []).append(
+                        prior or (current.get(key), names.get(key, SEG_BEFORE_TRACE)))
                 names[key] = seg
                 current[key] = val
                 history.setdefault(key, []).append((val, seg))
             elif verb == b"restoring":
-                back = [s for v, s in history.get(key, []) if _same_value(v, val)]
-                if back:
+                # The value restored is one a local assignment replaced: the
+                # innermost saved entry holding it (review LOW item a: the
+                # last history entry with that printed value could be the
+                # in-group assignment itself, when it re-set the same value).
+                stack = saves.get(key) or []
+                hit = None
+                while stack:
+                    v, sg = stack.pop()
+                    if v is not None and _same_value(v, val):
+                        hit = sg
+                        break
+                back = [sg for v, sg in history.get(key, []) if _same_value(v, val)]
+                if hit is not None:
+                    names[key] = hit
+                    current[key] = val
+                elif back:
                     names[key] = back[-1]
                     current[key] = val
                 elif len(cands) == 1:
@@ -508,6 +553,13 @@ def parse_trace(log: bytes):
                     names.setdefault(key, SEG_BEFORE_TRACE)
                     current.pop(key, None)
             else:  # changing, retaining: not the assignment of the kept value
+                if verb == b"changing":
+                    # the value (and its segment) the `into` that follows
+                    # replaces
+                    before[key] = (val, names[key] if key in names else SEG_BEFORE_TRACE)
+                elif saves.get(key):
+                    # a group end keeping a global value drops its save entry
+                    saves[key].pop()
                 names.setdefault(key, seg)
                 current.setdefault(key, val)
     return {"names": names, "ambiguous": ambiguous, "sure": sure,
@@ -1038,24 +1090,31 @@ class Tex:
 
     def pdflatex(self, jobdir: Path, tex: bytes, *, halt: bool = True,
                  recorder: bool = False, timeout: int = LONG_TIMEOUT,
-                 env: str = "forced") -> dict:
+                 env: str = "forced", jobname: str = JOBNAME) -> dict:
+        """One pdflatex run of `tex` (written as job.tex) in jobdir. The job
+        name is `job` unless `jobname` says otherwise (the jobname-dependence
+        check); every output file is named after it."""
         (jobdir / "job.tex").write_bytes(tex)
         argv = ["pdflatex", "-interaction=nonstopmode"]
         if halt:
             argv.append("-halt-on-error")
         if recorder:
             argv.append("-recorder")
+        if jobname != JOBNAME:
+            argv.append("-jobname=" + jobname)
         argv.append("job.tex")
         rc, secs = self.run(jobdir, argv, timeout, env)
-        if not (jobdir / "job.log").exists() and rc != TIMEOUT_RC:
+        logp, flsp = jobdir / (jobname + ".log"), jobdir / (jobname + ".fls")
+        if not logp.exists() and rc != TIMEOUT_RC:
             # pdflatex always writes a log; no log means docker or the
             # container failed, which must never read as a TeX outcome.
             raise SystemExit("gen_contract: INFRASTRUCTURE - pdflatex wrote no log "
                              "in %s (rc=%d)" % (jobdir.name, rc))
-        log = (jobdir / "job.log").read_bytes() if (jobdir / "job.log").exists() else b""
-        fls = (jobdir / "job.fls").read_bytes() if (jobdir / "job.fls").exists() else b""
+        log = logp.read_bytes() if logp.exists() else b""
+        fls = flsp.read_bytes() if flsp.exists() else b""
         return {"rc": rc, "secs": secs, "log": log, "fls": fls,
-                "pdf": (jobdir / "job.pdf").exists(), "tex_sha256": sha256_bytes(tex)}
+                "pdf": (jobdir / (jobname + ".pdf")).exists(),
+                "tex_sha256": sha256_bytes(tex)}
 
     def fixpoint(self, jobdir: Path, tex: bytes, *, env: str = "grading",
                  recorder: bool = True, timeout: int = LONG_TIMEOUT) -> dict:
@@ -1175,6 +1234,31 @@ def source_names(data: bytes) -> set:
     return out
 
 
+# `\csname <text>\endcsname` as a job writes it into its own files (an .aux
+# line such as `\expandafter\gdef\csname lpq7\endcsname{}`): the text is a
+# name that is no `\`-token.
+_CSNAME_LIT = re.compile(rb"\\csname *([^\\{}%\r\n]{1,200})\\endcsname")
+# Files a job leaves that are not written by the document: the source, the
+# log, the recorder file and the PDF.
+_NOT_JOB_WRITTEN = {".tex", ".log", ".fls", ".pdf"}
+
+
+def job_written_names(jobdir: Path) -> set:
+    """Candidate names from the files the job itself wrote (.aux, .out, ...):
+    their name tokens and `\\csname` literals. A name that a later pass
+    creates by reading one of them (`\\newlabel{LastPage}` builds
+    `\\r@LastPage`) is often neither; the later-pass trace and the last
+    pass's hash count are what see those (review defect 1)."""
+    out = set()
+    for f in sorted(jobdir.iterdir()):
+        if not f.is_file() or f.suffix in _NOT_JOB_WRITTEN or f.name == "mount_probe":
+            continue
+        data = f.read_bytes()
+        out |= source_names(data)
+        out |= set(_CSNAME_LIT.findall(data))
+    return out
+
+
 def engine_primitives(tex: Tex) -> dict:
     """The engine's primitives, derived from the engine alone.
 
@@ -1229,7 +1313,7 @@ def engine_primitives(tex: Tex) -> dict:
 
 
 def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
-                  env: str = "forced") -> dict:
+                  env: str = "forced", seed_dir: Path | None = None) -> dict:
     """Does `universe` hold every multiletter name in TeX's hash table at the
     point `prefix` leaves a job in? Answered by TeX's own counter, so the
     answer does not depend on how `universe` was built.
@@ -1243,7 +1327,12 @@ def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
     table entries universe covers, and count(A) minus the covered number is
     the number of table entries universe MISSES. 0 means complete; anything
     else is incompleteness nobody listed, which is exactly what a check
-    built from the generator's own lists cannot see."""
+    built from the generator's own lists cannot see.
+
+    `seed_dir`: a job directory whose job-written files (.aux, .out, ...)
+    are copied into both jobs first, so the count is taken on the pass that
+    reads them (review defect 1: a name created from the .aux on pass 2 was
+    outside a pass-1 count)."""
     ml = sorted({n for n in universe if len(n) >= 2})
     head = prefix + b"\\tracingstats=1\\relax\n" + regime_open()
 
@@ -1267,10 +1356,18 @@ def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
         out.append(regime_close() + FMT_STOP)
         return b"".join(out), unw
 
+    def seeded(name):
+        jd = tex.job(name)
+        if seed_dir is not None:
+            for f in sorted(seed_dir.iterdir()):
+                if f.is_file() and f.suffix not in _NOT_JOB_WRITTEN:
+                    shutil.copyfile(f, jd / f.name)
+        return jd
+
     ta, _ = body([])
     tb, unw = body(ml)
-    ra = tex.pdflatex(tex.job(jobname + "_a"), ta, env=env)
-    rb = tex.pdflatex(tex.job(jobname + "_b"), tb, env=env)
+    ra = tex.pdflatex(seeded(jobname + "_a"), ta, env=env)
+    rb = tex.pdflatex(seeded(jobname + "_b"), tb, env=env)
     ka, kb = cs_count(ra["log"]), cs_count(rb["log"])
     ea, eb = first_error(ra["log"]), first_error(rb["log"])
     out = {"universe_multiletter": len(ml), "unwritable": len(unw)}
@@ -1316,9 +1413,11 @@ FMT_STOP = b"\\csname @@end\\endcsname\n"
 
 
 def fmt_state_dump(tex: Tex, jobname: str, names: list, *, actives=False,
-                   u8_sweep=False, recorder=False, env="forced") -> tuple:
+                   u8_sweep=False, recorder=False, env="forced",
+                   tex_jobname: str = JOBNAME) -> tuple:
     block, unw = dump_block(names, actives=actives, u8_sweep=u8_sweep)
-    res = tex.pdflatex(tex.job(jobname), block + FMT_STOP, recorder=recorder, env=env)
+    res = tex.pdflatex(tex.job(jobname), block + FMT_STOP, recorder=recorder, env=env,
+                       jobname=tex_jobname)
     d = parse_dump(res["log"])
     if res["rc"] != 0 or d["error"] is not None:
         raise SystemExit("gen_contract: format-state dump %s failed: rc=%d %s" %
@@ -1435,6 +1534,12 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
     d2, _, _ = fmt_state_dump(tex, "kernel_date2", universe, env="second_date")
     date_dep = sorted(nm for i, nm in enumerate(universe)
                       if d2["meanings"].get(i) != meanings.get(nm))
+    # ... and whose format-state meaning holds the job name (review LOW item
+    # b): dumped again under a second job name.
+    dj, _, _ = fmt_state_dump(tex, "kernel_jobname2", universe,
+                              tex_jobname=SECOND_JOBNAME)
+    job_dep = sorted(nm for i, nm in enumerate(universe)
+                     if dj["meanings"].get(i) != meanings.get(nm))
 
     defined = {nm: m for nm, m in meanings.items() if m is not None}
     prim_names = set(prim["names"])
@@ -1467,6 +1572,8 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
                                                      if x not in defined)},
         "coverage": cov,
         "date_dependent_names": [name_str(x) for x in date_dep],
+        "jobname": JOBNAME,
+        "jobname_dependent_names": [name_str(x) for x in job_dep],
         "complete": not reasons,
         "incomplete_reasons": reasons,
     }
@@ -1528,6 +1635,8 @@ def kernel_public(kernel: dict, pin: dict) -> dict:
             "primitives": kernel["primitives"],
             "everyjob_names": kernel["everyjob_names"],
             "date_dependent_names": kernel["date_dependent_names"],
+            "jobname": kernel["jobname"],
+            "jobname_dependent_names": kernel["jobname_dependent_names"],
             "complete": kernel["complete"],
             "incomplete_reasons": kernel["incomplete_reasons"],
             "meanings_sha256": digest,
@@ -1646,7 +1755,8 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
                  b"\\begin{document}\n\\immediate\\write-1{LPSEG:%d}\n"
                  b"\\tracingassigns=0 \\tracingrestores=0\n\\end{document}\n"
                  % (len(labels)))
-    r2 = tex.pdflatex(tex.job("r2_trace"), trace_tex)
+    jd2 = tex.job("r2_trace")
+    r2 = tex.pdflatex(jd2, trace_tex)
     report["r2_secs"] = round(r2["secs"], 2)
     provenance["trace_tex_sha256"] = r2["tex_sha256"]
     provenance["trace_log_sha256"] = sha256_bytes(r2["log"])
@@ -1729,6 +1839,28 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     for (kind, nm), seg in tr["names"].items():
         if kind == "cs":
             traced[nm] = seg
+
+    # The later passes (review defect 1). The oracle grades the LAST pass of
+    # its protocol, and a later pass reads what earlier ones wrote: a name
+    # built from the .aux (\newlabel{LastPage} makes \r@LastPage) exists
+    # there and nowhere in pass 1, and is often no token of any file. So the
+    # trace is repeated in its own directory for as many passes as the dump
+    # below, and every name any pass assigns, and every name token and
+    # \csname literal of the files the job wrote, joins the universe. Only
+    # pass 1's trace supplies set_in; the last pass's hash count below is the
+    # check that does not depend on any of this.
+    npass = max(2, r1f["passes"])
+    written = job_written_names(jd2)
+    later_traced = set()
+    for k in range(2, npass + 1):
+        rk = tex.pdflatex(jd2, trace_tex)
+        trk = parse_trace(rk["log"])
+        if rk["rc"] != 0 or trk["first_error"] is not None:
+            reasons.append("trace pass %d failed (rc=%d): %s"
+                           % (k, rk["rc"], trk["first_error"]))
+        later_traced |= {nm for (kind, nm) in trk["names"] if kind == "cs"}
+        written |= job_written_names(jd2)
+    later_traced -= set(traced)
     traced_active = {nm[0]: seg for (kind, nm), seg in tr["names"].items()
                      if kind == "active"}
     kernel_names = {name_bytes(n): name_bytes(m) for n, m in kernel["names"].items()}
@@ -1747,7 +1879,8 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         if "definer" in it:
             file_names |= source_names(it["definer"].encode("utf-8"))
     singles = {bytes([b]) for b in range(256)} | {NULL_CS}
-    universe = sorted(kernel_universe | set(traced) | file_names | singles)
+    universe = sorted(kernel_universe | set(traced) | later_traced | file_names |
+                      written | singles)
     if universe_filter is not None:
         universe = [n for n in universe if universe_filter(n)]
 
@@ -1770,8 +1903,8 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
                            "kernel: %s" % (len(kernel_gaps), sorted(kernel_gaps)[:5]))
 
     # R3: the body-start meaning dump (after the begin-document hooks), run
-    # for as many passes as the load needed, in one directory: the state must
-    # not depend on the pass.
+    # for as many passes as the load needed (at least 2), in one directory:
+    # the state must not depend on the pass.
     block, unw = dump_block(universe, actives=True, u8_sweep=True)
     dump_doc = pre + b"\\begin{document}\n" + block + b"\\end{document}\n"
     jd3 = tex.job("r3_dump")
@@ -1787,8 +1920,10 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     # pass-dependent; a MEMBERSHIP difference makes the contract incomplete.
     state1 = _dump_state(d3, universe)
     pass_dep = set()
-    for k in range(2, max(2, r1f["passes"]) + 1):
+    last_pass = 1
+    for k in range(2, npass + 1):
         rk = tex.pdflatex(jd3, dump_doc)
+        last_pass = k
         member, meaning = _state_diff(state1, _dump_state(parse_dump(rk["log"]), universe))
         pass_dep.update(meaning)
         if rk["rc"] != 0 or member:
@@ -1804,6 +1939,17 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     if rg["rc"] != 0 or member or meaning:
         reasons.append("date_dependent_state: the body-start state under the real clock "
                        "differs (rc=%d): %s" % (rg["rc"], (member + meaning)[:5]))
+    # R3j: pass 1 under a second job name (review LOW item b). The contract
+    # is exact under the job name `job`; meanings that hold the job name are
+    # listed (and flagged on the name) so that a consumer compares meaning
+    # hashes under `job`; a membership difference makes it incomplete.
+    rj = tex.pdflatex(tex.job("r3j_dump"), dump_doc, jobname=SECOND_JOBNAME)
+    job_dep_k = {name_bytes(n) for n in kernel.get("jobname_dependent_names", [])}
+    member, job_dep = _state_diff(state1, _dump_state(parse_dump(rj["log"]), universe),
+                                  job_dep_k)
+    if rj["rc"] != 0 or member:
+        reasons.append("jobname_dependent_state: the body-start name set under job name "
+                       "%s differs (rc=%d): %s" % (SECOND_JOBNAME, rj["rc"], member[:5]))
 
     bad_prims = sorted(p for p, m in d3["prims"].items() if m != "\\" + p)
     if bad_prims or len(d3["prims"]) != len(DUMP_PRIMITIVES):
@@ -1830,6 +1976,18 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     elif cov["uncovered"] != 0:
         reasons.append("TeX's hash table at body start holds %d names outside the "
                        "dumped universe" % cov["uncovered"])
+    # ... and on the LAST pass, with the files the dump's own passes wrote
+    # (.aux, ...) in place, which is the pass the oracle grades (review
+    # defect 1: the count above runs in a fresh directory, i.e. on pass 1,
+    # and cannot see a name the .aux creates).
+    cov_last = hash_coverage(tex, "r7_cov_last", pre + b"\\begin{document}\n", universe,
+                             seed_dir=jd3)
+    cov_last["pass"] = last_pass
+    if cov_last.get("error"):
+        reasons.append("last-pass body-start " + cov_last["error"])
+    elif cov_last["uncovered"] != 0:
+        reasons.append("TeX's hash table at body start on pass %d holds %d names outside "
+                       "the dumped universe" % (last_pass, cov_last["uncovered"]))
 
     # Readings of an ambiguous trace record that name nothing: when one
     # reading exists (in format state or at body start) the others are
@@ -1860,6 +2018,8 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         d["set_in"] = seg_label(traced[nm]) if nm in traced else "untraced"
         if name_str(nm) in pass_dep:
             d["pass_dependent"] = True
+        if name_str(nm) in job_dep or nm in job_dep_k:
+            d["jobname_dependent"] = True
         defined[name_str(nm)] = d
     if untraced:
         reasons.append("%d names changed meaning without a traced assignment: %s"
@@ -1994,14 +2154,21 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     contract.update({
         "closed_world": {"kernel_names": len(kernel_names), "members": len(members),
                          "traced_names": len(traced), "universe": len(universe),
+                         "later_pass_traced_names": len(later_traced),
+                         "job_written_names": len(written),
+                         "passes": npass,
                          "file_token_names": len(file_names),
                          "ambiguous_trace_records": len(tr["ambiguous"]),
                          "phantom_readings": len(phantoms)},
         "coverage": cov,
+        "coverage_last_pass": cov_last,
         "defined_names": defined,
         "reverted_names": sorted(reverted),
         "parameters_assigned": sorted(params),
         "pass_dependent_meanings": sorted(pass_dep),
+        "jobname": JOBNAME,
+        "jobname_dependent_meanings": sorted(set(job_dep) | {
+            name_str(n) for n in job_dep_k if body.get(n) is not None}),
         "active_chars": active_diff,
         "catcodes": cat_diff,
         "unicode": unicode,

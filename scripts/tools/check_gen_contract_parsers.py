@@ -246,6 +246,34 @@ check("set_in: a value truncated with ETC. still matches its restore",
       gc._same_value(b"macro:#1.def@nil ->def reserved@a {ETC.",
                      b"macro:#1.def@nil ->def reserved@a {#1}")
       and not gc._same_value(b"macro:->a", b"macro:->b"))
+# Re-review LOW item a (SYNTHETIC traces, in TeX's record format): the value a
+# group end restores is looked up in the stack of values local assignments
+# replaced, not as the last history entry with the same printed value.
+t_same = gc.parse_trace(b"LPSEG:1\n{changing \\x=undefined}\n{into \\x=macro:->a}\n"
+                        b"LPSEG:3\n{changing \\x=macro:->a}\n{into \\x=macro:->a}\n"
+                        b"{restoring \\x=macro:->a}\n")
+check("set_in: an in-group re-set of the same value is not the restored one",
+      t_same["names"].get(("cs", b"x")) == 1, t_same["names"].get(("cs", b"x")))
+t_nest = gc.parse_trace(b"LPSEG:1\n{globally changing \\y=undefined}\n"
+                        b"{globally into \\y=macro:->A}\n"
+                        b"LPSEG:2\n{changing \\y=macro:->A}\n{into \\y=macro:->B}\n"
+                        b"LPSEG:3\n{changing \\y=macro:->B}\n{into \\y=macro:->A}\n"
+                        b"{restoring \\y=macro:->B}\n{restoring \\y=macro:->A}\n")
+check("set_in: nested groups restore through the save stack",
+      t_nest["names"].get(("cs", b"y")) == 1, t_nest["names"].get(("cs", b"y")))
+t_ret = gc.parse_trace(b"LPSEG:1\n{changing \\z=undefined}\n{into \\z=macro:->A}\n"
+                       b"LPSEG:2\n{changing \\z=macro:->A}\n{into \\z=macro:->B}\n"
+                       b"LPSEG:3\n{globally changing \\z=macro:->B}\n"
+                       b"{globally into \\z=macro:->C}\n{retaining \\z=macro:->C}\n")
+check("set_in: a global value retained at a group end keeps its own segment",
+      t_ret["names"].get(("cs", b"z")) == 3, t_ret["names"].get(("cs", b"z")))
+# ... and the real hit, RECORDED: hyperref's \WriteBookmarks, set to `0` by
+# the package (segment 5), re-set to `0` inside a begin-document group
+# (segment 6) and restored at its end. The value it keeps is the package's.
+t_wb = gc.parse_trace(rd("trace_resetsame_excerpt.log"))
+check("set_in: hyperref's \\WriteBookmarks keeps the package's segment (recorded)",
+      t_wb["names"].get(("cs", b"WriteBookmarks")) == 5,
+      t_wb["names"].get(("cs", b"WriteBookmarks")))
 # Found while regenerating: under \escapechar=-1 the active `~` prints like
 # the control symbol `\~`; its assignment and group end must not move the
 # control symbol's set_in (hyperref's \~ is set in segment 4, not 6).
@@ -263,6 +291,22 @@ check("mark primitive: classified as the primitive topmark",
       {"kind": "Primitive", "primitive": "topmark"})
 check("font: select font nullfont names nullfont",
       b"nullfont" in gc.referenced_names(b"select font nullfont"))
+
+# --- re-review defect 1: names from the files a job wrote ------------------------------
+import tempfile  # noqa: E402
+with tempfile.TemporaryDirectory() as td:
+    tdp = Path(td)
+    # SYNTHETIC job directory: the .aux line the re-review's lpq7 definer
+    # writes, and a log whose tokens must NOT be read (it is not job-written).
+    (tdp / "job.aux").write_bytes(b"\\relax \n\\expandafter\\gdef\\csname lpq7\\endcsname{}\n"
+                                  b"\\newlabel{LastPage}{{}{1}{}{}{}}\n")
+    (tdp / "job.log").write_bytes(b"\\lpfromthelog \\csname lplog\\endcsname\n")
+    (tdp / "job.tex").write_bytes(b"\\lpfromthetex\n")
+    jw = gc.job_written_names(tdp)
+check("job-written names: a \\csname literal of the .aux", b"lpq7" in jw, sorted(jw))
+check("job-written names: tokens of the .aux", {b"newlabel", b"gdef"} <= jw, sorted(jw))
+check("job-written names: the log and the source are not job-written",
+      not {b"lpfromthelog", b"lplog", b"lpfromthetex"} & jw, sorted(jw))
 
 # --- review defect R1.8: the batch classifier uses the solo test ----------------------
 dump_log = rd("dump_excerpt.log")
@@ -372,6 +416,14 @@ for kf in kfiles:
           % kf.name, not missing_prims, missing_prims[:5])
     check("kernel %s: complete, and says so" % kf.name, k.get("complete") is True and
           k.get("incomplete_reasons") == [], k.get("incomplete_reasons"))
+    # MEASURED: 0 format-state meanings change with the job name (the l3
+    # names that hold it, \c_sys_jobname_str and \g_file_curr_name_str, are
+    # \let to the \jobname primitive, so their MEANING is job-independent).
+    check("kernel %s: job-name-dependent meanings are listed, under job name `job`"
+          % kf.name, k.get("jobname") == "job" and
+          isinstance(k.get("jobname_dependent_names"), list) and
+          k.get("names", {}).get("c_sys_jobname_str") == "Primitive",
+          (k.get("jobname"), k.get("jobname_dependent_names")))
     check("kernel %s: \\everyjob names are recorded" % kf.name,
           "sys_if_shell:TF" in k.get("everyjob_names", []))
     check("kernel %s: count matches its names" % kf.name,
@@ -400,6 +452,11 @@ if not ARGS.kernel:
         cov = c.get("coverage") or {}
         check("contract %s: TeX's hash count at body start finds nothing undumped"
               % cf.name, cov.get("uncovered") == 0 and cov.get("unwritable") == 0, cov)
+        cl = c.get("coverage_last_pass") or {}
+        check("contract %s: ... and on the last pass, with the job's .aux read"
+              % cf.name, cl.get("uncovered") == 0 and cl.get("unwritable") == 0 and
+              cl.get("pass", 0) >= 2 and isinstance(cl.get("hash_entries"), int), cl)
+        check("contract %s: states its job name" % cf.name, c.get("jobname") == "job")
         sc = c["self_check"]
         check("contract %s: the self-check samples the universe, both directions"
               % cf.name, sc.get("sample_from") == "universe" and

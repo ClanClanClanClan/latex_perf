@@ -49,6 +49,10 @@ synthesised:
   `\csname\endcsname` and as `csnameendcsname`; a name holding `=`, with the
   kernel's own `\__file_name=<file>` records; a group-local `\def` undone at
   a group end), cut to the relevant records and markers.
+- `trace_resetsame_excerpt.log`: the markers and the `\WriteBookmarks`
+  records of the five-package trace: hyperref sets it to `0`, a
+  begin-document group re-sets the same value and a group end restores it
+  (the re-review's LOW item a; its `set_in` is `package:hyperref`).
 - `trace_tilde_excerpt.log`: records of the five-package trace where the
   active `~`, printed under `\escapechar=-1`, reads like the control symbol
   `\~`.

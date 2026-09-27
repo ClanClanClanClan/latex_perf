@@ -535,6 +535,16 @@ def kernel_uncover_one(text: str) -> str:
     return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
 
 
+def contract_last_pass_uncover_one(text: str) -> str:
+    """The re-review's defect 1: TeX's count on the LAST pass (the job's .aux
+    read) reporting one name outside a complete contract's universe."""
+    d = json.loads(text)
+    assert d["coverage_last_pass"]["uncovered"] == 0, "contract drifted; update registry"
+    d["coverage_last_pass"]["uncovered"] = 1
+    d["coverage_last_pass"]["covered"] -= 1
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
 KERNEL_FILE = "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json"
 
 REGISTRY = [
@@ -561,6 +571,19 @@ REGISTRY = [
             Mutation("kernel hash coverage reports one uncovered name",
                      KERNEL_FILE, r"FAIL kernel \S+: TeX's hash count finds no name",
                      transform=kernel_uncover_one),
+            # Re-review defect 1 (2026-09-27): the completeness evidence of the
+            # pass the oracle grades must be read.
+            Mutation("contract last-pass hash coverage reports one uncovered name",
+                     "corpora/contracts/article.json",
+                     r"FAIL contract article\.json: \.\.\. and on the last pass",
+                     transform=contract_last_pass_uncover_one),
+            # Re-review LOW item a: set_in through the save stack. Disabling
+            # the stack lookup must fail the recorded \WriteBookmarks test.
+            Mutation("set_in no longer looked up in the save stack",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL set_in: hyperref's",
+                     old="                stack = saves.get(key) or []\n",
+                     new="                stack = []\n"),
         ]),
     GateTest(
         "check_fix_type_consistency", [PY, f"{TOOLS}/check_fix_type_consistency.py"],

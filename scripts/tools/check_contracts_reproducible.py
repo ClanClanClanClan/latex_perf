@@ -22,7 +22,9 @@ own hash-table count, which must see one name dropped from the kernel's
 candidates or from a contract's universe) and the repros of the 2026-09-27
 adversarial reviews (null control sequence, a name holding `=`, set_in
 through a group, a fatal only on the confirming pass, a date-dependent load,
-the reviewers' 24 missing kernel names).
+the reviewers' 24 missing kernel names), and of the re-review's defect 1 (a
+name created from the job's own .aux on pass 2, which only the later-pass
+trace and TeX's count on the last pass can see).
 
 Exit codes: 0 every selected contract reproduced; 1 a difference (printed);
 2 cannot check here (no docker, no image, or a different architecture) -
@@ -83,6 +85,11 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
     - the null control sequence, a name holding `=`, set_in through a group,
       a fatal that appears only on pass 2, and a load that depends on the
       date must each come out right;
+    - a name created from the job's own .aux on pass 2 (lastpage's
+      \\r@LastPage; a definer's \\AtEndDocument-written \\gdef of lpq7) must
+      make the contract incomplete, named; and with the name dropped from the
+      universe, TeX's count on the last pass must see it (1) where the
+      pass-1 count sees nothing (the re-review's defect 1);
     - the reviewers' 24 names as use-names on plain article: complete, 0
       mismatches."""
     review = json.loads((gc.REPO / gc.CONTRACT_DIR / "parser_fixtures" /
@@ -175,6 +182,35 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
                        c["load_outcome"]["status"] == "fatal" and
                        any(x.startswith("date_dependent_load")
                            for x in c["incomplete_reasons"])))
+
+        # Re-review defect 1: a name the configuration's own .aux creates on
+        # pass 2, in no source file. The completeness checks used to run on
+        # pass 1 only, so both shapes came out complete=true without it.
+        lastpage = {"class": "article", "preamble": [{"package": "lastpage"}]}
+        lpq7 = {"class": "article", "preamble": [{"definer":
+            "\\makeatletter\\AtEndDocument{\\immediate\\write\\@auxout{\\string"
+            "\\expandafter\\string\\gdef\\string\\csname\\space lpq\\number7 "
+            "\\string\\endcsname{}}}\\makeatother"}]}
+        for label, cfg, nm in [("lastpage", lastpage, "r@LastPage"), ("lpq7", lpq7, "lpq7")]:
+            # The later-pass trace puts the name in the universe, so the
+            # pass-to-pass state comparison names it.
+            c = gc.generate(cfg, tex, pin, kernel, [], {})
+            r = " | ".join(c["incomplete_reasons"])
+            checks.append(("%s: pass-2 name %s makes the contract incomplete, named" %
+                           (label, nm), c["complete"] is False and
+                           "pass_dependent_state" in r and nm in r and
+                           c["coverage_last_pass"].get("uncovered") == 0))
+            # Without it in the universe, only TeX's count on the LAST pass
+            # (the .aux in place) sees it; the pass-1 count cannot.
+            c = gc.generate(cfg, tex, pin, kernel, [], {},
+                            universe_filter=lambda n, nm=nm: n != gc.name_bytes(nm))
+            r = " | ".join(c["incomplete_reasons"])
+            checks.append(("%s: last-pass hash count sees %s missing (uncovered 1), "
+                           "the pass-1 count does not" % (label, nm),
+                           c["complete"] is False and
+                           c["coverage_last_pass"].get("uncovered") == 1 and
+                           c["coverage"].get("uncovered") == 0 and
+                           "on pass 2 holds 1 names outside" in r))
 
         c = gc.generate(art, tex, pin, kernel, review, {})
         checks.append(("the reviewers' 24 names on plain article: complete, 0 mismatches",

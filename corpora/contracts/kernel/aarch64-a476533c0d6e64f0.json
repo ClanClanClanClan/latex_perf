@@ -60,9 +60,11 @@
   "sys_if_shell_unrestricted_p:",
   "sys_rand_seed:"
  ],
- "generator_version": "2",
+ "generator_version": "3",
  "incomplete_reasons": [],
  "initex_traced_names": 27700,
+ "jobname": "job",
+ "jobname_dependent_names": [],
  "meanings_sha256": "4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e",
  "method": "candidates = every string of the shipped pdflatex.fmt's string pool, every engine primitive (virgin INITEX), every name the INITEX run of pdflatex.ini and its \\everyjob replay assigns, every one-character name and the null name; each dumped with \\meaning in format state (a job after \\everyjob), then every name referenced from a dumped meaning until no new name appears; the defined ones. Completeness: TeX's own count of its hash table in format state finds 0 names outside the candidates (coverage.uncovered)",
  "names": {

@@ -53,7 +53,7 @@
  ],
  "generator": {
   "tool": "scripts/tools/gen_contract.py",
-  "version": "2"
+  "version": "3"
  },
  "incomplete_reasons": [
   "load_fatal: the configuration does not load, so no name set was generated"
@@ -81,7 +81,7 @@
   "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe"
  },
  "provenance": {
-  "generator_version": "2",
+  "generator_version": "3",
   "load_tex_sha256": "234b64d9838fb46a9555d6e67989de0d2cb8bc0b4ec84e0da504bf0ef3ee1988",
   "trace_log_sha256": "21b2ce12aac0063729bfba6da5fa7a6332caac7d951a2bdd7fc0a9b4af9ae55b",
   "trace_tex_sha256": "3cc349099a446867f7f4e9ca76c9e464cfe5aa90917c16c56fd29b18b6979360"

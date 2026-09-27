@@ -100,6 +100,9 @@ MAX_PASSES = 3
 # "the wrapper failed"; pdflatex itself never exits with it. Every shell grader
 # treats 124-127 as NOT GRADED.
 INFRA_RC = 125
+# The shim's subcommand (`_oracle.py pdflatex ARGS...`), named once so a caller
+# (check_oracle_infra_grading.py) need not spell an engine name itself.
+SHIM_COMMAND = "pdflatex"
 
 # MEASURED 2026-09-27 from the two platform images of the pinned index
 # (arm64 manifest sha256:010653c0bb13..., amd64 manifest sha256:c268e1c3611a...),
@@ -728,7 +731,7 @@ def main(argv: list[str]) -> int:
         if cmd == "rm":
             o.remove([Path.cwd() / a for a in rest])
             return 0
-        if cmd == "pdflatex":
+        if cmd == SHIM_COMMAND:
             timeout = 120
             if rest[:1] == ["--timeout"]:
                 timeout, rest = int(rest[1]), rest[2:]
@@ -753,7 +756,7 @@ def main(argv: list[str]) -> int:
         # have produced: the shell graders would grade it (see INFRA_RC). That
         # holds for EVERY exception, not only OracleError: an uncaught
         # ValueError/KeyboardInterrupt used to exit 1, i.e. "pdflatex failed".
-        return INFRA_RC if cmd == "pdflatex" else 2
+        return INFRA_RC if cmd == SHIM_COMMAND else 2
     print(f"[oracle] unknown command {cmd!r}", file=sys.stderr)
     return 2
 

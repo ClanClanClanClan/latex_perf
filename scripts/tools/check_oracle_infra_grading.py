@@ -180,7 +180,7 @@ class Checker:
         try:
             for plan in ("dead", "cut", "nobanner"):
                 self.oracle(plan)
-                rc = _silenced(_oracle.main, ["pdflatex", "--timeout", "60",
+                rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
                                               "-interaction=nonstopmode", "t.tex"])
                 self.expect(f"the _oracle.py shim exits {rc} under '{plan}', not "
                             f"INFRA_RC={_oracle.INFRA_RC}", rc == _oracle.INFRA_RC)
@@ -189,12 +189,12 @@ class Checker:
             def boom(*_a, **_k):
                 raise ValueError("an unexpected bug in the oracle")
             o.run_pdflatex = boom
-            rc = _silenced(_oracle.main, ["pdflatex", "-interaction=nonstopmode", "t.tex"])
+            rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "-interaction=nonstopmode", "t.tex"])
             self.expect(f"the shim exits {rc} on a non-OracleError exception, not "
                         f"INFRA_RC={_oracle.INFRA_RC} (1 would read as 'pdflatex "
                         f"failed')", rc == _oracle.INFRA_RC)
             self.oracle("fail")
-            rc = _silenced(_oracle.main, ["pdflatex", "-interaction=nonstopmode", "t.tex"])
+            rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "-interaction=nonstopmode", "t.tex"])
             self.expect(f"the shim exits {rc} on a genuine pdfTeX failure, not 1", rc == 1)
         finally:
             os.chdir(cwd)

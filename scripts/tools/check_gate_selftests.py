@@ -670,6 +670,18 @@ REGISTRY = [
                      r"starts a TeX engine directly",
                      old="  cp \"$CORPUS\"/*_part.tex \"$d/\" 2>/dev/null || true\n",
                      new="  cp \"$CORPUS\"/*_part.tex \"$d/\" 2>/dev/null || true\n  P=pdf; ${P}latex \"$base\"\n"),
+            # Review round 3: the shell dequotes a word before running it, so
+            # an engine assembled from quoted/escaped pieces is still an engine.
+            Mutation("an engine name split by shell quotes",
+                     "scripts/tools/diff_compile_check.sh",
+                     r"starts a TeX engine directly",
+                     old="  cp \"$CORPUS\"/*_part.tex \"$d/\" 2>/dev/null || true\n",
+                     new="  cp \"$CORPUS\"/*_part.tex \"$d/\" 2>/dev/null || true\n  \"pdf\"latex \"$base\"\n"),
+            Mutation("an engine name split by a shell backslash",
+                     "scripts/tools/diff_compile_check.sh",
+                     r"starts a TeX engine directly",
+                     old="  cp \"$CORPUS\"/*_part.tex \"$d/\" 2>/dev/null || true\n",
+                     new="  cp \"$CORPUS\"/*_part.tex \"$d/\" 2>/dev/null || true\n  pdf\\latex \"$base\"\n"),
             Mutation("an engine as a bytes literal",
                      "scripts/tools/ablate_fix_classes.py",
                      r"starts a TeX engine directly",

@@ -49,8 +49,11 @@ and checks four things:
                exemption covers ONE command: the line is split at `;`, `&&`,
                `||` and `|` outside quotes first, so `echo x && pdflatex t`
                and `printf t | xargs pdflatex` are findings. An engine name
-               assembled from a variable (`${P}latex`, `pdf$X`) is a finding.
-               .zsh/.ksh files are scanned as shell.
+               assembled from a variable (`${P}latex`, `pdf$X`) is a finding,
+               and so is one the shell assembles by dequoting one word
+               (`"pdf"latex`, `pdf\\latex`). .zsh/.ksh files are scanned as
+               shell. KNOWN RESIDUALS (OPEN-118): Python `"pdf" + "latex"`
+               and a DATA_KEYS value later used as argv are not findings.
        other   in a tracked .c/.h/.rs/.js/.ts/.rb/.pl/.go/.lua file, a
                quoted literal that is an engine or an engine command line.
        OCaml   a file that spawns processes (Sys.command, Unix.create_process,
@@ -273,6 +276,8 @@ def scan_shell(text: str, allow: tuple = ()) -> list[tuple[int, str]]:
                     SH_QUOTED.sub(lambda m: m.group(0) if m.group(0).startswith('"')
                                   else "''", seg)):
                 hit = True
+            if _sh_assembled_engine(seg):
+                hit = True
             for m in SH_QUOTED.finditer(seg):
                 inner = m.group(0)[1:-1]
                 subscript = (seg[:m.start()].endswith("[")
@@ -283,6 +288,33 @@ def scan_shell(text: str, allow: tuple = ()) -> list[tuple[int, str]]:
         if hit:
             hits.append((n, line.strip()))
     return hits
+
+
+def _sh_assembled_engine(seg: str) -> bool:
+    """An engine name the SHELL assembles from quoted or escaped pieces of one
+    word: `"pdf"latex`, `pdf\\latex`, `'pdf'"latex"`, `cmd=("pdf"latex -x)`.
+    The shell removes the quotes and backslashes and runs `pdflatex`, yet the
+    raw text never holds the name, so neither the bare-token nor the
+    quoted-literal rule saw it (OPEN-118 review round 3; the shell counterpart
+    of Python's adjacent-literal join). A word counts only when its DEQUOTED
+    form holds an engine token its RAW form does not, so a pattern such as
+    `grep 'pdftex\\|pdflatex'` (the name intact inside quotes) is untouched."""
+    import shlex
+    for raw in SH_WORD.findall(seg):
+        if not any(c in raw for c in "\"'\\"):
+            continue
+        try:
+            w = "".join(shlex.split(raw, posix=True))
+        except ValueError:
+            continue
+        m = BARE_TOKEN.search(w)
+        if m and m.group(2) not in raw:
+            return True
+    return False
+
+
+# One shell word, quotes and escapes kept: the unit the shell dequotes.
+SH_WORD = re.compile(r"""(?:"(?:[^"\\]|\\.)*"|'[^']*'|\\.|[^\s"'\\])+""")
 
 
 def _sh_commands(code: str) -> list[str]:

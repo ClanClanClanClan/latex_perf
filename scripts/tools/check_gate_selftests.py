@@ -618,6 +618,32 @@ REGISTRY = [
                      transform=afr_scope_default),
         ]),
     GateTest(
+        "check_oracle_pin",
+        [PY, f"{TOOLS}/check_oracle_pin.py"],
+        "pure",
+        [
+            # ADR-012 decision 7 / OPEN-118: a tool that shells out to a host
+            # pdflatex again must fail the gate, not grade with the laptop.
+            Mutation("a grader calls a host pdflatex directly again",
+                     "scripts/tools/ablate_fix_classes.py",
+                     r"starts pdflatex directly",
+                     old="        rc, timed_out = get_oracle().run_once(pathlib.Path(work), top, env, 180)\n",
+                     new="        rc, timed_out = subprocess.run([\"pdflatex\", top]).returncode, False\n"),
+            # A graded artefact whose oracle block loses the image is a
+            # host-graded artefact again.
+            Mutation("a graded artefact stops naming the pinned image",
+                     "corpora/strict_battery/manifest.json",
+                     r"not the pinned image",
+                     old='"image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b"',
+                     new='"image": null'),
+            # A re-pin that forgets to re-measure the tree fingerprints.
+            Mutation("tex-oracle.yml re-pinned without re-measuring the tree",
+                     ".github/workflows/tex-oracle.yml",
+                     r"fingerprints were measured for",
+                     old="  TEX_IMAGE: texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b\n",
+                     new="  TEX_IMAGE: texlive/texlive@sha256:0000000000000000000000000000000000000000000000000000000000000000\n"),
+        ]),
+    GateTest(
         "check_compile_check_consumers",
         [PY, f"{TOOLS}/check_compile_check_consumers.py"],
         "pure",

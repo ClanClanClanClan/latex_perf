@@ -1,0 +1,655 @@
+{
+ "what": "The oracle-baseline change of ADR-012 decision 7 (OPEN-118): every committed pdflatex-graded artefact re-graded under the pinned TeX Live image through scripts/tools/_oracle.py. Measured 2026-09-27.",
+ "oracle": {
+  "engine": "pdflatex",
+  "distribution": "TeX Live 2026",
+  "version": "pdfTeX 3.141592653-2.6-1.40.29",
+  "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint) \u2014 APPLIED TO ALL 200/200 rows",
+  "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+  "arch": "aarch64",
+  "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+  "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+  "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+  "backend": "container"
+ },
+ "tree_comparison": {
+  "method": "per-package `name revision` pairs from each tlpdb, excluding per-architecture binary packages and 00texlive.installation",
+  "image_macro_layer_packages": 4935,
+  "host_macro_layer_packages": 4848,
+  "image_arm64_vs_amd64_macro_layer": "identical (27089de6...)",
+  "host_vs_image_packages_differing": 190,
+  "host_newer_revision": [
+   {
+    "package": "academicons",
+    "host": "80218",
+    "image": "79395"
+   },
+   {
+    "package": "babel",
+    "host": "80223",
+    "image": "80042"
+   },
+   {
+    "package": "beamertheme-tcolorbox",
+    "host": "80351",
+    "image": "77380"
+   },
+   {
+    "package": "beamerthemecelestia",
+    "host": "80325",
+    "image": "80070"
+   },
+   {
+    "package": "beebe",
+    "host": "80189",
+    "image": "80120"
+   },
+   {
+    "package": "berenisadf",
+    "host": "80371",
+    "image": "77682"
+   },
+   {
+    "package": "bibcop",
+    "host": "80258",
+    "image": "80125"
+   },
+   {
+    "package": "biblatex",
+    "host": "80368",
+    "image": "79978"
+   },
+   {
+    "package": "changepage",
+    "host": "80279",
+    "image": "79461"
+   },
+   {
+    "package": "chemfig",
+    "host": "80326",
+    "image": "78296"
+   },
+   {
+    "package": "chinesechess",
+    "host": "80172",
+    "image": "78101"
+   },
+   {
+    "package": "ciad-beamertheme",
+    "host": "80201",
+    "image": "79091"
+   },
+   {
+    "package": "circuitikz",
+    "host": "80247",
+    "image": "79172"
+   },
+   {
+    "package": "codebox",
+    "host": "80171",
+    "image": "76924"
+   },
+   {
+    "package": "collection-fontsextra",
+    "host": "80219",
+    "image": "80088"
+   },
+   {
+    "package": "collection-games",
+    "host": "80153",
+    "image": "80072"
+   },
+   {
+    "package": "collection-langarabic",
+    "host": "80372",
+    "image": "79885"
+   },
+   {
+    "package": "collection-langother",
+    "host": "80200",
+    "image": "78607"
+   },
+   {
+    "package": "collection-luatex",
+    "host": "80340",
+    "image": "79926"
+   },
+   {
+    "package": "context-legacy",
+    "host": "80243",
+    "image": "80089"
+   },
+   {
+    "package": "creationboites",
+    "host": "80278",
+    "image": "80051"
+   },
+   {
+    "package": "cstypo",
+    "host": "80239",
+    "image": "41986"
+   },
+   {
+    "package": "customenvs",
+    "host": "80255",
+    "image": "80103"
+   },
+   {
+    "package": "datatool",
+    "host": "80133",
+    "image": "79847"
+   },
+   {
+    "package": "dtk-bibliography",
+    "host": "80158",
+    "image": "78985"
+   },
+   {
+    "package": "elegantnote",
+    "host": "80155",
+    "image": "78191"
+   },
+   {
+    "package": "epcqrcode",
+    "host": "80180",
+    "image": "76924"
+   },
+   {
+    "package": "erewhon-math",
+    "host": "80211",
+    "image": "80114"
+   },
+   {
+    "package": "expltools",
+    "host": "80366",
+    "image": "79469"
+   },
+   {
+    "package": "fhj-script",
+    "host": "80221",
+    "image": "79844"
+   },
+   {
+    "package": "fitch",
+    "host": "80253",
+    "image": "77682"
+   },
+   {
+    "package": "gbt7714",
+    "host": "80281",
+    "image": "79717"
+   },
+   {
+    "package": "href-ul",
+    "host": "80295",
+    "image": "79622"
+   },
+   {
+    "package": "hyperref",
+    "host": "80357",
+    "image": "79408"
+   },
+   {
+    "package": "inlinegraphicx",
+    "host": "80277",
+    "image": "79494"
+   },
+   {
+    "package": "install-latex-guide-zh-cn",
+    "host": "80157",
+    "image": "79570"
+   },
+   {
+    "package": "intexgral",
+    "host": "80350",
+    "image": "79860"
+   },
+   {
+    "package": "jsonparse",
+    "host": "80276",
+    "image": "79374"
+   },
+   {
+    "package": "keytheorems",
+    "host": "80303",
+    "image": "79254"
+   },
+   {
+    "package": "kotex-oblivoir",
+    "host": "80209",
+    "image": "79618"
+   },
+   {
+    "package": "l3build",
+    "host": "80222",
+    "image": "79890"
+   },
+   {
+    "package": "l3kernel",
+    "host": "80334",
+    "image": "80015"
+   },
+   {
+    "package": "latex-amsmath-dev",
+    "host": "80282",
+    "image": "79901"
+   },
+   {
+    "package": "latex-base-dev",
+    "host": "80282",
+    "image": "79901"
+   },
+   {
+    "package": "latex-firstaid-dev",
+    "host": "80291",
+    "image": "79901"
+   },
+   {
+    "package": "latex-graphics-dev",
+    "host": "80282",
+    "image": "79901"
+   },
+   {
+    "package": "latex-lab",
+    "host": "80377",
+    "image": "79404"
+   },
+   {
+    "package": "latex-lab-dev",
+    "host": "80369",
+    "image": "79901"
+   },
+   {
+    "package": "latex-tagging-status",
+    "host": "80289",
+    "image": "80085"
+   },
+   {
+    "package": "latex-tools-dev",
+    "host": "80282",
+    "image": "79901"
+   },
+   {
+    "package": "lete-sans-math",
+    "host": "80210",
+    "image": "80087"
+   },
+   {
+    "package": "linguexx",
+    "host": "80349",
+    "image": "79843"
+   },
+   {
+    "package": "lt3luabridge",
+    "host": "80381",
+    "image": "76924"
+   },
+   {
+    "package": "ltx-talk",
+    "host": "80348",
+    "image": "80084"
+   },
+   {
+    "package": "lua-unicode-math",
+    "host": "80357",
+    "image": "79839"
+   },
+   {
+    "package": "luciole",
+    "host": "80312",
+    "image": "79625"
+   },
+   {
+    "package": "lyluatex",
+    "host": "80321",
+    "image": "79159"
+   },
+   {
+    "package": "markdown",
+    "host": "80370",
+    "image": "79410"
+   },
+   {
+    "package": "menukeys",
+    "host": "80367",
+    "image": "79013"
+   },
+   {
+    "package": "mptopdf",
+    "host": "80243",
+    "image": "80089"
+   },
+   {
+    "package": "neoschool",
+    "host": "80324",
+    "image": "80044"
+   },
+   {
+    "package": "nicematrix",
+    "host": "80335",
+    "image": "80094"
+   },
+   {
+    "package": "nodepthtext",
+    "host": "80199",
+    "image": "73069"
+   },
+   {
+    "package": "nxtlatex",
+    "host": "80379",
+    "image": "79618"
+   },
+   {
+    "package": "parstat",
+    "host": "80132",
+    "image": "77123"
+   },
+   {
+    "package": "pas-tableur",
+    "host": "80185",
+    "image": "78983"
+   },
+   {
+    "package": "pgf-periodictable",
+    "host": "80265",
+    "image": "78931"
+   },
+   {
+    "package": "polyglossia",
+    "host": "80238",
+    "image": "79752"
+   },
+   {
+    "package": "postit",
+    "host": "80261",
+    "image": "75925"
+   },
+   {
+    "package": "proflycee",
+    "host": "80330",
+    "image": "80028"
+   },
+   {
+    "package": "ps2eps",
+    "host": "80374",
+    "image": "76924"
+   },
+   {
+    "package": "regulatory",
+    "host": "80233",
+    "image": "72197"
+   },
+   {
+    "package": "retosmatematicos",
+    "host": "80143",
+    "image": "76358"
+   },
+   {
+    "package": "rpgicons",
+    "host": "80274",
+    "image": "78857"
+   },
+   {
+    "package": "show-pdf-tags",
+    "host": "80363",
+    "image": "77604"
+   },
+   {
+    "package": "simpleicons",
+    "host": "80306",
+    "image": "79907"
+   },
+   {
+    "package": "siunitx",
+    "host": "80302",
+    "image": "80082"
+   },
+   {
+    "package": "suanpan-l3",
+    "host": "80166",
+    "image": "79954"
+   },
+   {
+    "package": "tagpdf",
+    "host": "80360",
+    "image": "80060"
+   },
+   {
+    "package": "tex4ht",
+    "host": "80383",
+    "image": "80101"
+   },
+   {
+    "package": "texlive-scripts",
+    "host": "80384",
+    "image": "80127"
+   },
+   {
+    "package": "tkz-grapheur",
+    "host": "80327",
+    "image": "79754"
+   },
+   {
+    "package": "tocloft",
+    "host": "80246",
+    "image": "80045"
+   },
+   {
+    "package": "tugboat",
+    "host": "80272",
+    "image": "79461"
+   },
+   {
+    "package": "tugboat-plain",
+    "host": "80251",
+    "image": "75521"
+   },
+   {
+    "package": "unibidi-lua",
+    "host": "80322",
+    "image": "79055"
+   },
+   {
+    "package": "unicode-data",
+    "host": "80380",
+    "image": "79913"
+   },
+   {
+    "package": "uspace",
+    "host": "80271",
+    "image": "63123"
+   },
+   {
+    "package": "zref",
+    "host": "80301",
+    "image": "79461"
+   }
+  ],
+  "absent_from_host_tlpdb": [
+   "aidisclose",
+   "arara",
+   "arcs2",
+   "ascii-emoticon",
+   "atomicreactions",
+   "attinormativi",
+   "autoaffil",
+   "bithesis",
+   "brandstyler",
+   "callout-itembox",
+   "causalmodels",
+   "chatui",
+   "cmgraded",
+   "collection-latexextra",
+   "collection-mathscience",
+   "collection-pictures",
+   "collection-pstricks",
+   "collection-publishers",
+   "comment2tex",
+   "concrete-vec",
+   "context",
+   "cssyntax",
+   "dental-palmer",
+   "dfg-crc",
+   "dirtreex",
+   "docext",
+   "easter",
+   "ecnuthesis",
+   "enslyonreview",
+   "enslyonstage",
+   "europasscv2025",
+   "exam-ltr",
+   "exam-rtl",
+   "ffcode",
+   "firstindexletter",
+   "fontools",
+   "geist-font",
+   "graph-theory-symbol",
+   "handstroke",
+   "hawkdraw",
+   "hexdumptikz",
+   "hust-beamer",
+   "inspirehep",
+   "iptconf",
+   "jiffy",
+   "kbordermatrix",
+   "l3kernel-dev",
+   "lua-list-hyphen",
+   "luadraw",
+   "luamplib",
+   "mathformule",
+   "matrixdiagrams",
+   "modernclassnotes",
+   "morse-simple",
+   "na-list",
+   "nehgs-register",
+   "numodel-bundle",
+   "nwafupaper",
+   "orbitals",
+   "paracolrule",
+   "pdfmanagement",
+   "pdfmathaccents",
+   "phosphoricons",
+   "phtitration",
+   "pl46-fonts",
+   "printfilelist",
+   "promec-ufrgs",
+   "proofgraph",
+   "propositions",
+   "pst-art",
+   "pst-chladni",
+   "pst-electrolysis",
+   "pst-ellipsoid",
+   "pst-hertz",
+   "pst-hyperboloid",
+   "pst-hypertiling",
+   "pst-titration",
+   "realdentalcosts-data",
+   "relatese",
+   "revbadge",
+   "robotkarol",
+   "setbuilder",
+   "siicusp-abstracts",
+   "smileghost",
+   "substnote",
+   "talkpal",
+   "texecole",
+   "tikz-chemlab",
+   "tikzphysics",
+   "trainmap",
+   "tvthesis",
+   "westlakethesis",
+   "xlistings",
+   "yb-book"
+  ],
+  "absent_from_image_tlpdb": [
+   "arabtex-granada",
+   "babel-malagasy",
+   "luatagging",
+   "mahjonggame",
+   "malagasy-numberwords",
+   "scheme-bookpub",
+   "unipersian"
+  ],
+  "note": "Packages absent from the host tlpdb can still have files on disk with no owner (pdfmanagement is one: the host loads pdfmanagement-init 2026-05-17 v0.97b from texmf-dist while its database has no pdfmanagement entry). The host tlpdb was last written 2026-09-26; the image's 2026-08-30."
+ },
+ "harness_equivalence": {
+  "documents": 97,
+  "agree": 97,
+  "disagree": 0,
+  "failing_documents": 54,
+  "compiling_documents": 43
+ },
+ "per_call_overhead": {
+  "docker_exec_round_trip_median_s": 0.066,
+  "trivial_document_container_from_host_median_s": 0.461,
+  "trivial_document_native_inside_container_median_s": 0.362,
+  "note": "15 runs each, load average 8-40; about 0.1 s per pdflatex run"
+ },
+ "artefacts": {
+  "corpora/real_roots/results.json (sample 1)": {
+   "rows": 200,
+   "outcome_changed": 0,
+   "diff": "corpora/oracle_baseline/diff_real_roots_sample1.json"
+  },
+  "corpora/real_roots/results_sample2.json (sample 2)": {
+   "rows": 200,
+   "outcome_changed": 0,
+   "reason_changed_class_i": 1,
+   "diff": "corpora/oracle_baseline/diff_real_roots_sample2.json"
+  },
+  "corpora/real_roots/proven_coverage_sample{1,2}.json": {
+   "outcome_changed": 0,
+   "note": "not pdflatex-graded itself: it joins the results cells, which did not move; regenerating it reproduced every row, so it was left at its main-branch measurement (C-73)"
+  },
+  "corpora/apply_fixes_real/results.json (offset 2000)": {
+   "rows": 40,
+   "outcome_changed": 0,
+   "broken": "0/38",
+   "diff": "corpora/oracle_baseline/diff_apply_fixes_real_results.json"
+  },
+  "corpora/apply_fixes_real/results_virgin.json (offset 2100)": {
+   "rows": 40,
+   "outcome_changed": 0,
+   "broken": "1/39",
+   "diff": "corpora/oracle_baseline/diff_apply_fixes_real_results_virgin.json"
+  },
+  "corpora/apply_fixes_real/results_fresh.json (offset 2300)": {
+   "rows": 40,
+   "outcome_changed": 0,
+   "broken": "6/38",
+   "diff": "corpora/oracle_baseline/diff_apply_fixes_real_results_fresh.json"
+  },
+  "corpora/strict_battery/manifest.json": {
+   "rows": 22,
+   "outcome_changed": 0,
+   "diff": "corpora/oracle_baseline/diff_strict_battery.json"
+  },
+  "corpora/false_ready/manifest.json": {
+   "fixtures": 85,
+   "hard_drift": 0,
+   "soft_drift": 0,
+   "run": "REQUIRE_PDFLATEX=1 false_ready_oracle.sh, container backend"
+  },
+  "corpora/apply_fixes/manifest.json": {
+   "documents": 78,
+   "cells": 8,
+   "known_broken_reproduced": 3,
+   "result": "PASS",
+   "run": "REQUIRE_PDFLATEX=1 check_apply_fixes_roundtrip.py, container backend"
+  },
+  "corpora/compile_check (diff_compile_check.sh; no committed grades)": {
+   "documents": 65,
+   "false_ready_known": 8,
+   "false_ready_new": 0,
+   "false_not_ready": 1,
+   "note": "tolerated_write18.tex: rc 0 with NO PDF on both backends; this script grades by rc alone, so it scores COMPILES, while the STRICT_TIER_DESIGN B.4 predicate (rc 0 AND a PDF) scores it FAILS (E0). A protocol difference, not an oracle one."
+  }
+ },
+ "not_regraded": {
+  "corpora/apply_fixes_real/rule_attribution_400_719.json": "per-rule bisection, 320 papers",
+  "corpora/apply_fixes_real/guard_simulation.json": "simulation of an unbuilt guard",
+  "corpora/apply_fixes_real/policy_confirmation_2600.json": "allow-list confirmation window",
+  "corpora/apply_fixes_real/fix_meaning_audit.json": "per-rule PDF meaning audit",
+  "why": "research artefacts whose conclusions are per-rule decisions already taken; pinned in check_oracle_pin.PRE_BASELINE under OPEN-118"
+ }
+}

@@ -15,8 +15,12 @@
 # native     only when LP_ORACLE_IN_IMAGE is set (tex-oracle.yml sets it to the
 #            image) AND `_oracle.py assert-native` verifies the TeX tree's
 #            fingerprint; a mismatch is exit 2.
-# container  otherwise; TMPDIR is exported to the oracle work root so that every
-#            `mktemp -d` work directory is visible inside the container.
+# container  otherwise; TMPDIR is exported to the oracle work root, and every
+#            work directory must be made with an EXPLICIT template,
+#            `mktemp -d "${TMPDIR:-/tmp}/lp-oracle.XXXXXX"`: macOS's BSD mktemp
+#            ignored TMPDIR without one and returned /var/folders/..., which
+#            the container cannot see (measured 2026-09-27: the shim refused
+#            every run, loudly, which is how it was found).
 # Neither    exit 2 if REQUIRE=1 or ANY host pdflatex is on PATH (a host
 #            pdflatex is not the oracle, and skipping silently would hide that);
 #            a clean SKIP (exit 0) only where there is no TeX at all.

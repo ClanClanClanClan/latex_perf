@@ -705,6 +705,13 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                     f"{rec_oracle['backend']} backend); " + measured)
     res["measured_at"] = measured
     results_path.write_text(json.dumps(res, indent=1) + "\n")
+    if rebaseline and sample_offset is None:
+        # The frame manifest carries the same oracle block; it names who
+        # graded the sample, so it moves with the re-grade.
+        mdoc = json.loads(manifest_path.read_text())
+        mdoc["oracle"] = dict(rec_oracle, protocol=mdoc["oracle"].get(
+            "protocol", rec_oracle["protocol"]))
+        manifest_path.write_text(json.dumps(mdoc, indent=2) + "\n")
     if diff_out:
         Path(diff_out).parent.mkdir(parents=True, exist_ok=True)
         Path(diff_out).write_text(json.dumps({
@@ -783,6 +790,9 @@ def main() -> int:  # noqa: C901
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--corpus-root", default=os.environ.get("LP_REAL_CORPUS"))
     ap.add_argument("--n", type=int, default=200)
+    ap.add_argument("--offset", type=int, default=0,
+                    help="first frame rank of the sample (0 = sample 1; sample 2 "
+                         "is 200; sample 3, the virgin North-Star sample, is 400)")
     ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--repo", default=".")
     ap.add_argument("--record", action="store_true",
@@ -864,11 +874,24 @@ def main() -> int:  # noqa: C901
         return refresh_cli_only(repo, root, outdir, banner, ns.timeout)
 
     frame = build_frame(root)
-    if len(frame) < ns.n:
-        return die(2, f"frame has only {len(frame)} papers, need {ns.n}")
-    sample = select(frame, ns.n)
+    if len(frame) < ns.offset + ns.n:
+        return die(2, f"frame has only {len(frame)} papers, need "
+                      f"{ns.offset + ns.n}")
+    sample = select(frame, ns.offset + ns.n)[ns.offset:]
 
-    manifest_path = outdir / "manifest.json"
+    # A sample other than sample 1 gets its OWN results and manifest files, and
+    # recording never overwrites one: a drawn sample is graded exactly once
+    # (ADR-012 decision 7 -- sample 3 is the virgin North-Star sample).
+    if ns.offset:
+        if ns.results == "results.json":
+            return die(2, "--offset needs its own --results file, e.g. "
+                          "results_sample3.json; results.json is sample 1")
+        manifest_path = outdir / ns.results.replace("results", "manifest", 1)
+        if ns.record and ((outdir / ns.results).exists() or manifest_path.exists()):
+            return die(2, f"{ns.results} or {manifest_path.name} already exists; "
+                          f"a drawn sample is graded once and never re-drawn")
+    else:
+        manifest_path = outdir / "manifest.json"
     prior = json.loads(manifest_path.read_text()) if manifest_path.is_file() else None
 
     rows = []
@@ -935,13 +958,16 @@ def main() -> int:  # noqa: C901
     rec_oracle = oracle_record()
     result = {"oracle": rec_oracle,
               "frame": {"corpus": corpus_tag, "frame_size": len(frame),
-                        "selection": "sha256(arxiv_id) ascending", "n": len(sample)},
+                        "selection": "sha256(arxiv_id) ascending", "n": len(sample),
+                        "offset": ns.offset},
               "counts": dict(counts), "docs": rows}
 
     if ns.record:
         outdir.mkdir(parents=True, exist_ok=True)
-        (outdir / "results.json").write_text(json.dumps(result, indent=1) + "\n")
-        (outdir / "manifest.json").write_text(json.dumps(
+        result["measured_at_sha"] = git_head(repo)
+        result["src_tree_sha"] = engine_tree(repo)
+        (outdir / ns.results).write_text(json.dumps(result, indent=1) + "\n")
+        manifest_path.write_text(json.dumps(
             {"oracle": rec_oracle,
              "frame": result["frame"],
              "docs": [{k: d[k] for k in ("arxiv_id", "toplevel", "bytes",

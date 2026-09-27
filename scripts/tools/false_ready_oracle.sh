@@ -218,7 +218,7 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   # and a missing input also fails to compile, so they look identical. #506 already
   # lost a fixture to .gitignore once.
   [ -e "$FRDIR/$path" ] || die_infra "fixture input missing on disk: $path (id=$id)"
-  wd="$(mktemp -d)"
+  wd="$(mktemp -d "${TMPDIR:-/tmp}/lp-oracle.XXXXXX")"
   if [ "$kind" = single ]; then
     cp "$FRDIR/$path" "$wd/" || die_infra "cannot stage fixture $id"
     base="$(basename "$path")"; rundir="$wd"

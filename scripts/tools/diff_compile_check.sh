@@ -134,7 +134,7 @@ for f in "$CORPUS"/*.tex; do
   esac
   total=$((total+1))
   if "$CLI" --compile-check "$f" >/dev/null 2>&1; then cc=READY; else cc=NOT-READY; fi
-  d=$(mktemp -d); cp "$f" "$d/"
+  d=$(mktemp -d "${TMPDIR:-/tmp}/lp-oracle.XXXXXX"); cp "$f" "$d/"
   # Also copy any sibling _part.tex fragments so \input parents resolve.
   cp "$CORPUS"/*_part.tex "$d/" 2>/dev/null || true
   if [ -n "$TIMEOUT" ]; then

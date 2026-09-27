@@ -13,7 +13,14 @@
     "protocols": [
       "-interaction=nonstopmode -halt-on-error"
     ],
-    "note": "Mirrors corpora/false_ready/manifest.json's oracle block, which tex-oracle.yml pin-asserts. This corpus had pdflatex_graded=true and NOTHING ELSE: no engine, no version, no protocol, and nothing asserting any of them. A TeX Live upgrade would silently change what property (b) means for these rows and no gate would notice. Recorded now because it is VERIFIED rather than assumed: the first CI run of property (b) against the pinned image (tex-oracle run 30834930925) reproduced this baseline exactly \u2014 72 documents x 4 cells, the same 5 known_broken rows, PASS."
+    "note": "Mirrors corpora/false_ready/manifest.json's oracle block, which tex-oracle.yml pin-asserts. This corpus had pdflatex_graded=true and NOTHING ELSE: no engine, no version, no protocol, and nothing asserting any of them. A TeX Live upgrade would silently change what property (b) means for these rows and no gate would notice. Recorded now because it is VERIFIED rather than assumed: the first CI run of property (b) against the pinned image (tex-oracle run 30834930925) reproduced this baseline exactly — 72 documents x 4 cells, the same 5 known_broken rows, PASS.",
+    "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+    "arch": "aarch64",
+    "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+    "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+    "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+    "backend": "container",
+    "baseline_note": "Oracle-baseline change (ADR-012 decision 7, OPEN-118): re-graded 2026-09-27 under the pinned image through scripts/tools/_oracle.py (container backend, aarch64) with check_apply_fixes_roundtrip.py REQUIRE_PDFLATEX=1: 78 documents x 8 cells, the 3 known_broken rows reproduced exactly, PASS."
   },
   "known_broken": [
     {

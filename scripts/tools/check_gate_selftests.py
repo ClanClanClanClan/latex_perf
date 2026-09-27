@@ -516,7 +516,112 @@ def flip_polyglossia(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def kernel_drop_topmark(text: str) -> str:
+    """The 2026-09-27 review's first missing name, removed from the committed
+    kernel file (count kept consistent, so only the completeness arm fires)."""
+    d = json.loads(text)
+    assert "topmark" in d["names"], "kernel file drifted; update registry"
+    del d["names"]["topmark"]
+    d["count"] = len(d["names"])
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def kernel_uncover_one(text: str) -> str:
+    """TeX's hash count reporting one name outside the kernel's candidates."""
+    d = json.loads(text)
+    assert d["coverage"]["uncovered"] == 0, "kernel file drifted; update registry"
+    d["coverage"]["uncovered"] = 1
+    d["coverage"]["covered"] -= 1
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def contract_pass4_uncover_one(text: str) -> str:
+    """Re-review 2: TeX's count on pass 4 (after two failing passes and one
+    that completed, the last pass the protocol can grade) reporting one name
+    outside a complete contract's universe."""
+    d = json.loads(text)
+    hit = [x for x in d["coverage_passes"] if x["history"] == "FFS"
+           and x["env"] == "forced" and x["jobname"] == "job"]
+    assert len(hit) == 1 and hit[0]["uncovered"] == 0, "contract drifted; update registry"
+    hit[0]["uncovered"] = 1
+    hit[0]["covered"] -= 1
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def contract_drop_grading_pass3(text: str) -> str:
+    """Re-review 2: the count of pass 3 after F S under the graders'
+    environment silently missing."""
+    d = json.loads(text)
+    n = len(d["coverage_passes"])
+    d["coverage_passes"] = [x for x in d["coverage_passes"] if not (
+        x["history"] == "FS" and x["env"] == "grading" and x["jobname"] == "job")]
+    assert len(d["coverage_passes"]) == n - 1, "contract drifted; update registry"
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+KERNEL_FILE = "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json"
+
 REGISTRY = [
+    GateTest(
+        "check_gen_contract_parsers",
+        [PY, f"{TOOLS}/check_gen_contract_parsers.py"],
+        "pure",
+        [
+            # Review defect 2 (2026-09-27): the null control sequence read as
+            # the literal name `csname\endcsname`. Reverting the reading must
+            # fail the recorded-trace test.
+            Mutation("null cs no longer read as the empty name",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL null cs",
+                     old='        if dec == e + b"csname" + e + b"endcsname":\n'
+                         '            out.append(("cs", NULL_CS))\n',
+                     new='        if dec == e + b"csname" + e + b"endcsname":\n'
+                         '            pass\n'),
+            # Review defect 1: a kernel name the reviewers found missing.
+            Mutation("kernel file loses topmark",
+                     KERNEL_FILE, r"FAIL kernel \S+ holds topmark",
+                     transform=kernel_drop_topmark),
+            # The completeness evidence itself must be read, not just present.
+            Mutation("kernel hash coverage reports one uncovered name",
+                     KERNEL_FILE, r"FAIL kernel \S+: TeX's hash count finds no name",
+                     transform=kernel_uncover_one),
+            # Re-review defect 1 (2026-09-27): the completeness evidence of the
+            # pass the oracle grades must be read.
+            Mutation("contract pass-4 hash coverage reports one uncovered name",
+                     "corpora/contracts/article.json",
+                     r"FAIL contract article\.json: \.\.\. and it finds nothing undumped",
+                     transform=contract_pass4_uncover_one),
+            Mutation("contract loses the grading-environment count of pass 3",
+                     "corpora/contracts/article.json",
+                     r"FAIL contract article\.json: TeX's hash count on every pass",
+                     transform=contract_drop_grading_pass3),
+            # Re-review 2 defect 1: the pass histories must reach pass 4.
+            Mutation("pass histories stop after the first failing pass",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL pass histories: exactly",
+                     old="    for j in range(max_passes):\n",
+                     new="    for j in range(1):\n"),
+            # Re-review LOW item a: set_in through the save stack. Disabling
+            # the stack lookup must fail the recorded \WriteBookmarks test.
+            Mutation("set_in no longer looked up in the save stack",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL set_in: hyperref's",
+                     old="                stack = saves.get(key) or []\n",
+                     new="                stack = []\n"),
+            # One oracle TeX environment (_oracle.ORACLE_TEX_VARS). A grader
+            # that restates it, or a generator environment that drifts from
+            # base + its documented overrides, must fail the gate.
+            Mutation("a grader restates the oracle's TeX environment",
+                     "scripts/tools/confirm_fix_policy.py",
+                     r"FAIL env: no tool restates the oracle's TeX environment",
+                     old="    return oracle_tex_env(td)\n",
+                     new='    return dict(oracle_tex_env(td), openin_any="p")\n'),
+            Mutation("the generator's grading environment forces the date",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL env grading: exactly the oracle's environment",
+                     old='    if env == "grading":\n        return out\n',
+                     new='    if env == "grading":\n        return dict(out, **FORCE_DATE)\n'),
+        ]),
     GateTest(
         "check_fix_type_consistency", [PY, f"{TOOLS}/check_fix_type_consistency.py"],
         "pure",
@@ -729,6 +834,19 @@ REGISTRY = [
         [PY, f"{TOOLS}/check_oracle_infra_grading.py"],
         "pure",
         [
+            # The contract generator is an oracle client (run_engine): the
+            # engine it names must be the one that runs, and on the native
+            # backend no host TeX variable may cross into its jobs.
+            Mutation("the in-container script runs a fixed engine, not the given one",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*runs the engine run_engine names",
+                     old='timeout -k 10 "$t" "$e" "$@"',
+                     new='timeout -k 10 "$t" pdflatex "$@"'),
+            Mutation("native run_engine lets the host's TeX variables through",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*no host TeX variable",
+                     old="                      if not _ENV_FORWARD.match(k)}, **(env or {})}",
+                     new="                      }, **(env or {})}"),
             Mutation("the container oracle drops the pdfTeX-banner proof",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*'nobanner' run",

@@ -72,6 +72,8 @@ DEAD_MSG = ("failed to connect to the docker API at unix:///nonexistent.sock; "
 FAKE_DOCKER = r'''#!/usr/bin/env python3
 import os, sys
 a = sys.argv[1:]
+if os.environ.get("FAKE_ARGV"):
+    open(os.environ["FAKE_ARGV"], "w").write("\0".join(a))
 if a[:1] == ["exec"] and "-c" not in a:
     sys.exit(0)                       # `exec NAME rm -f -- ...`
 plan = os.environ["FAKE_PLAN"].split(",")
@@ -266,6 +268,119 @@ class Checker:
             os.chdir(cwd)
             _oracle._ORACLE = None
 
+    # ------------------------------------------------ the contract generator
+    def generator_client(self) -> None:
+        """gen_contract.py is a CLIENT of the oracle (run_engine), not a runner
+        of its own: its jobs get the same proof-of-run refusals, the engine it
+        names reaches the container, exactly the TeX variables it passes cross
+        (on the native backend too: no host TeX variable leaks in), and an
+        oracle failure stops the generator instead of reading as a TeX
+        outcome."""
+        tv = _oracle.oracle_tex_vars(self.workroot / "tx")
+        for mode in ("dead", "daemonerr", "cut", "nobanner", "fwrite"):
+            o = self.oracle(mode)
+            try:
+                got = o.run_engine(self.workroot, _oracle.ENGINE_PDFTEX,
+                                   ["-ini", "-jobname=t", "\\dump"], tv, 60)
+                self.expect(f"run_engine returned {got!r} for a '{mode}' run "
+                            f"instead of raising OracleError", False)
+            except _oracle.OracleError:
+                self.expect("-", True)
+        argv_file = self.td / "argv"
+        os.environ["FAKE_ARGV"] = str(argv_file)
+        try:
+            o = self.oracle("fail")
+            got = o.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini", "t.tex"],
+                               dict(tv, FORCE_SOURCE_DATE="1"), 60)
+            a = argv_file.read_text().split("\0")
+            i = a.index("-c")
+            fwd = sorted(a[j + 1] for j in range(len(a) - 1)
+                         if a[j] == "-e" and j < i)
+            want = sorted(["HOME=/tmp"] + [f"{k}={v}" for k, v in
+                                           dict(tv, FORCE_SOURCE_DATE="1").items()])
+            self.expect("run_engine: a genuine failure is rc 1, the engine reaches "
+                        "the container after the nonce and timeout, and exactly "
+                        "the caller's TeX variables are forwarded",
+                        got[0] == 1 and a[i + 5] == _oracle.ENGINE_PDFTEX
+                        and a[i + 6:] == ["-ini", "t.tex"] and fwd == want,
+                        f"{got!r} {a[i + 3:]} {fwd}")
+            # Run the in-container script itself (a fake `timeout` that drops
+            # its options, an engine path that proves it ran): the script must
+            # start the engine it was GIVEN, not a name of its own.
+            tb = self.td / "tbin"
+            tb.mkdir(exist_ok=True)
+            (tb / "timeout").write_text('#!/bin/sh\nshift 3\nexec "$@"\n')
+            (tb / "timeout").chmod(0o755)
+            probe = tb / "given-engine"
+            probe.write_text("#!/bin/sh\necho GIVEN-ENGINE-RAN \"$@\"\n")
+            probe.chmod(0o755)
+            r = subprocess.run(["sh", "-c", a[i + 1], "sh", "N", "60", str(probe), "x.tex"],
+                               capture_output=True, text=True,
+                               env=dict(os.environ, PATH=f"{tb}:/usr/bin:/bin"))
+            self.expect("the in-container script runs the engine run_engine names",
+                        "GIVEN-ENGINE-RAN x.tex" in r.stdout and "N=0" in r.stderr,
+                        f"{r.stdout!r} {r.stderr!r}")
+        finally:
+            os.environ.pop("FAKE_ARGV", None)
+        for bad_engine, bad_vars in (("tex", tv), (_oracle.ENGINE_PDFTEX,
+                                                   dict(tv, PATH="/host/bin"))):
+            o = self.oracle("ok")
+            try:
+                o.run_engine(self.workroot, bad_engine, ["t.tex"], bad_vars, 60)
+                self.expect(f"run_engine accepted engine {bad_engine!r} with "
+                            f"variables {sorted(bad_vars)}", False)
+            except _oracle.OracleError:
+                self.expect("-", True)
+        try:
+            self.oracle("ok").image_command([_oracle.ENGINE_PDFLATEX, "t.tex"])
+            self.expect("image_command started a TeX engine", False)
+        except _oracle.OracleError:
+            self.expect("-", True)
+        # Native backend: the host's TeX variables never cross into a
+        # run_engine job; only the caller's do. A fake engine on PATH dumps
+        # the environment it received.
+        bindir = self.td / "bin"
+        bindir.mkdir(exist_ok=True)
+        fake = bindir / _oracle.ENGINE_PDFTEX
+        envdump = self.td / "envdump"
+        fake.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
+                        f"env > '{envdump}'\nexit 0\n")
+        fake.chmod(0o755)
+        saved = {k: os.environ.get(k) for k in ("PATH", "openin_any", "max_print_line")}
+        os.environ.update(PATH=f"{bindir}:{os.environ.get('PATH', '')}",
+                          openin_any="a", max_print_line="79")
+        try:
+            n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
+            _oracle._Base.__init__(n)
+            rc, _, _ = n.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["t.tex"], tv, 60)
+            got = dict(x.split("=", 1) for x in envdump.read_text().splitlines()
+                       if "=" in x)
+            self.expect("native run_engine: the caller's TeX variables and no host "
+                        "TeX variable", rc == 0 and got.get("openin_any") == "p"
+                        and "max_print_line" not in got
+                        and all(got.get(k) == v for k, v in tv.items()),
+                        str({k: got.get(k) for k in ("openin_any", "max_print_line")}))
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+        # The generator itself: an oracle failure is never a TeX outcome.
+        import gen_contract as gc
+        o = self.oracle("dead")
+        tex = gc.Tex(_oracle.IMAGE, oracle=o)
+        try:
+            tex.pdflatex(tex.job("x"), b"\\relax\n")
+            self.expect("gen_contract.Tex.pdflatex returned a result for a "
+                        "'dead' run", False)
+        except SystemExit as e:
+            self.expect("gen_contract.Tex.pdflatex: a 'dead' run is not reported "
+                        "as INFRASTRUCTURE", "INFRASTRUCTURE" in str(e.code), str(e.code))
+        finally:
+            tex.close()
+            _oracle._ORACLE = None
+
     # ----------------------------------------------------------------- shell
     def shell_grader(self) -> None:
         fro = (self.repo / "scripts/tools/false_ready_oracle.sh").read_text()
@@ -379,6 +494,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="oracle-infra-") as td:
         c = Checker(repo, Path(td))
         c.python_graders()
+        c.generator_client()
         c.shell_grader()
     for k, v in saved.items():
         if v is None:

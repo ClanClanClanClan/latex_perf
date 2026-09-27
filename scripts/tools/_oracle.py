@@ -149,6 +149,50 @@ _ENV_FORWARD = re.compile(
 # component (`:` at either end, or `::`) so the image's default path stays.
 _SEARCH_PATHS = ("TEXINPUTS", "BIBINPUTS", "BSTINPUTS")
 
+# THE ORACLE'S TeX ENVIRONMENT: the ONE definition. Every grader (through
+# `tex_env()` / `oracle_tex_env()`) and the contract generator
+# (gen_contract.py, through `oracle_tex_vars()`) import it; nobody restates it.
+# Before this existed the values were spelled out in eight graders and, a
+# third time, in gen_contract.py, whose parser gate then checked the copy
+# against the graders' SOURCE TEXT -- and broke (three false FAILs) the day
+# #617 moved the graders' copy here, without anything having changed.
+# check_gen_contract_parsers.py asserts that no other tool restates it.
+#   openin_any/openout_any=p   paranoid file access (no parent or absolute
+#                              writes, no dot files)
+#   SOURCE_DATE_EPOCH=0        a fixed \pdfcreationdate/ID. It does NOT fix
+#                              \year/\month/\day/\time: those follow the real
+#                              clock unless FORCE_SOURCE_DATE=1, which the
+#                              graders do not set (gen_contract.py sets it on
+#                              its name-set runs, as a documented override).
+ORACLE_TEX_VARS = {"openin_any": "p", "openout_any": "p", "SOURCE_DATE_EPOCH": "0"}
+
+
+def private_texmf_vars(td) -> dict:
+    """A private TEXMFHOME/TEXMFVAR below the work directory `td`, so no state
+    (fonts made by mktexpk, caches) crosses from one run to the next."""
+    td = Path(td)
+    return {"TEXMFHOME": str(td / "th"), "TEXMFVAR": str(td / "tv")}
+
+
+def oracle_tex_vars(td) -> dict:
+    """ONLY the variables that shape a graded run (no host environment)."""
+    return {**private_texmf_vars(td), **ORACLE_TEX_VARS}
+
+
+def oracle_tex_env(td) -> dict:
+    """The per-run environment a Python grader passes: the host environment
+    (for PATH on the native backend; the container backend forwards only the
+    `_ENV_FORWARD` variables) with `oracle_tex_vars(td)` on top."""
+    return dict(os.environ, **oracle_tex_vars(td))
+
+
+# The TeX engines the oracle runs. `pdflatex` is the grading engine; `pdftex`
+# is the same binary without a format, which gen_contract.py runs as INITEX
+# (`pdftex -ini`) to enumerate the engine's primitives and trace the kernel.
+ENGINE_PDFLATEX = "pdflatex"
+ENGINE_PDFTEX = "pdftex"
+ENGINES = (ENGINE_PDFLATEX, ENGINE_PDFTEX)
+
 _DOCKER_CANDIDATES = ("docker", "/opt/homebrew/bin/docker", "/usr/local/bin/docker")
 
 
@@ -436,10 +480,8 @@ class _Base:
 
     def tex_env(self, td) -> dict:
         """The recorded per-run environment: private TEXMFHOME/TEXMFVAR,
-        paranoid file access, a fixed SOURCE_DATE_EPOCH."""
-        td = Path(td)
-        return dict(os.environ, TEXMFHOME=str(td / "th"), TEXMFVAR=str(td / "tv"),
-                    openin_any="p", openout_any="p", SOURCE_DATE_EPOCH="0")
+        paranoid file access, a fixed SOURCE_DATE_EPOCH (ORACLE_TEX_VARS)."""
+        return oracle_tex_env(td)
 
     def remove(self, paths) -> None:
         """Delete files in a work directory that pdflatex will write again.
@@ -447,10 +489,62 @@ class _Base:
         for p in paths:
             Path(p).unlink(missing_ok=True)
 
+    def mkdtemp(self, prefix: str = "lp-oracle-") -> Path:
+        """A work directory the oracle can run in that outlives a `with`
+        block (the caller removes it). Container: under the work root."""
+        return Path(tempfile.mkdtemp(prefix=prefix))
+
     # -- running ----------------------------------------------------------
     def run_pdflatex(self, cwd: Path, args: list[str], env: dict | None,
                      timeout: int) -> tuple[int, bytes, bool]:
         """ONE pdflatex run. Returns (rc, combined output, timed_out)."""
+        return self._exec(Path(cwd), ENGINE_PDFLATEX, args, env, timeout)
+
+    def _exec(self, cwd: Path, engine: str, args: list[str], env: dict | None,
+              timeout: int) -> tuple[int, bytes, bool]:
+        raise NotImplementedError
+
+    def run_engine(self, cwd: Path, engine: str, args: list[str], tex_vars: dict,
+                   timeout: int) -> tuple[int, bytes, bool]:
+        """ONE run of a TeX `engine` (one of ENGINES) with argv `args` in
+        `cwd`, for a client that is not a document grader: gen_contract.py's
+        pdflatex jobs and its INITEX (`pdftex -ini`) kernel jobs.
+
+        Same guarantees as run_pdflatex -- the pinned image, a verified tree,
+        the rc read inside the container, positive proof pdfTeX ran (its
+        banner, which INITEX prints too), the free-space floor before and
+        after, pdfTeX's own write failures refused (OracleError: not a
+        result) -- with ONE difference: the environment is EXACTLY
+        `tex_vars`, on both backends. No host variable shapes the run (the
+        native backend keeps the host's non-TeX variables, e.g. PATH, and
+        drops every `_ENV_FORWARD` one the caller did not pass), and a key
+        that is not a TeX-shaping variable is refused rather than ignored.
+        Start from `oracle_tex_vars(td)` and state any override explicitly.
+        Returns (rc, combined output, timed_out)."""
+        if engine not in ENGINES:
+            raise OracleError(f"engine {engine!r} is not one of {ENGINES}")
+        bad = sorted(k for k in tex_vars if not _ENV_FORWARD.match(k))
+        if bad:
+            raise OracleError(f"run_engine: {bad} are not TeX-shaping variables "
+                              f"the oracle forwards (_ENV_FORWARD)")
+        return self._exec(Path(cwd), engine, list(args), dict(tex_vars), timeout,
+                          exact_env=True)
+
+    def image_command(self, argv: list[str], cwd: Path | None = None,
+                      timeout: int = 300) -> tuple[int, bytes, bytes]:
+        """Run a NON-TeX command of the pinned image (kpsewhich, sha256sum,
+        cp, tar) to read the image's own files: gen_contract.py hashes the
+        files a configuration read and copies the shipped format. Never a
+        grade and never a TeX job (an engine is refused: use run_engine).
+        Returns (rc, stdout, stderr); a caller must treat a non-zero rc as a
+        failure of the oracle, never as data."""
+        if not argv or Path(argv[0]).name in ENGINES + ("latexmk", "xelatex",
+                                                        "lualatex", "tex", "etex"):
+            raise OracleError(f"image_command runs no TeX engine: {argv[:1]}; "
+                              f"use run_engine")
+        return self._image_command(list(argv), cwd, timeout)
+
+    def _image_command(self, argv, cwd, timeout):
         raise NotImplementedError
 
     def run_once(self, work: Path, toplevel: str, env: dict | None, timeout: int,
@@ -503,20 +597,30 @@ class NativeOracle(_Base):
             self._fp = fp
         return self._fp
 
-    def run_pdflatex(self, cwd, args, env, timeout):
+    def _exec(self, cwd, engine, args, env, timeout, exact_env=False):
+        if exact_env:  # run_engine: the host's TeX variables never cross
+            env = {**{k: v for k, v in os.environ.items()
+                      if not _ENV_FORWARD.match(k)}, **(env or {})}
         _require_free_space(cwd, "before")
         try:
-            p = subprocess.run(["pdflatex", *args], cwd=cwd, env=env,
+            p = subprocess.run([engine, *args], cwd=cwd, env=env,
                                capture_output=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             _require_free_space(cwd, "after")
             return 124, b"", True
-        except OSError as e:  # no pdflatex at all: infrastructure, not a grade
-            raise OracleError(f"cannot execute pdflatex: {e}") from e
-        _require_pdftex_ran(p.returncode, p.stdout, "native pdflatex")
-        _require_output_written(p.stdout + p.stderr, args, "native pdflatex")
+        except OSError as e:  # no engine at all: infrastructure, not a grade
+            raise OracleError(f"cannot execute {engine}: {e}") from e
+        _require_pdftex_ran(p.returncode, p.stdout, f"native {engine}")
+        _require_output_written(p.stdout + p.stderr, args, f"native {engine}")
         _require_free_space(cwd, "after")
         return p.returncode, p.stdout + p.stderr, False
+
+    def _image_command(self, argv, cwd, timeout):
+        try:
+            p = subprocess.run(argv, cwd=cwd, capture_output=True, timeout=timeout)
+        except (subprocess.TimeoutExpired, OSError) as e:
+            raise OracleError(f"image command {argv[:1]} failed: {e}") from e
+        return p.returncode, p.stdout, p.stderr
 
 
 class HostDiagnostic(NativeOracle):
@@ -689,7 +793,26 @@ class ContainerOracle(_Base):
         for p in paths:
             p.unlink(missing_ok=True)
 
-    def run_pdflatex(self, cwd, args, env, timeout):
+    def mkdtemp(self, prefix: str = "lp-oracle-") -> Path:
+        return Path(tempfile.mkdtemp(prefix=prefix, dir=self.workroot))
+
+    def _image_command(self, argv, cwd, timeout):
+        cmd = ["exec", "-e", "HOME=/tmp"]
+        if cwd is not None:
+            if not self._inside(Path(cwd)):
+                raise OracleError(f"{cwd} is outside the oracle work root")
+            cmd += ["-w", str(Path(cwd).resolve())]
+        try:
+            p = subprocess.run([self.docker, *cmd, self.name, *argv],
+                               capture_output=True, timeout=timeout)
+        except subprocess.TimeoutExpired as e:
+            raise OracleError(f"image command {argv[:1]} timed out") from e
+        return p.returncode, p.stdout, p.stderr
+
+    def _exec(self, cwd, engine, args, env, timeout, exact_env=False):
+        # exact_env (run_engine) needs nothing more here: only _ENV_FORWARD
+        # variables ever cross into the container, and run_engine passes no
+        # others.
         cwd = Path(cwd).resolve()
         if not self._inside(cwd):
             raise OracleError(
@@ -717,9 +840,10 @@ class ContainerOracle(_Base):
         # per-run nonce; that line, not the docker CLI's exit code, is the rc
         # (see PDFTEX_BANNER above for why).
         nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
-        script = ('n=$1; t=$2; shift 2; timeout -k 10 "$t" pdflatex "$@"; '
+        script = ('n=$1; t=$2; e=$3; shift 3; timeout -k 10 "$t" "$e" "$@"; '
                   'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
-        cmd += [self.name, "sh", "-c", script, "sh", nonce, str(int(timeout)), *args]
+        cmd += [self.name, "sh", "-c", script, "sh", nonce, str(int(timeout)), engine,
+                *args]
         try:
             p = subprocess.run([self.docker, *cmd], capture_output=True,
                                timeout=timeout + 90)
@@ -739,8 +863,8 @@ class ContainerOracle(_Base):
         if rc in (124, 137):
             _require_free_space(cwd, "after")
             return rc, p.stdout + err, True
-        if rc in (125, 126, 127):  # timeout(1) itself failed / pdflatex missing
-            raise OracleError(f"in-container timeout/pdflatex failed rc={rc}: "
+        if rc in (125, 126, 127):  # timeout(1) itself failed / engine missing
+            raise OracleError(f"in-container timeout/{engine} failed rc={rc}: "
                               + err.decode(errors="replace")[:400])
         _require_pdftex_ran(rc, p.stdout, f"container {self.name}")
         _require_output_written(p.stdout + err, args, f"container {self.name}")

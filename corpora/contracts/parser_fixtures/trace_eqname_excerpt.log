@@ -1,0 +1,13 @@
+LPSEG:0
+{changing \__file_name=article.cls=undefined}
+{into \__file_name=article.cls=\relax}
+{changing __file_name=size10.clo=undefined}
+{into __file_name=size10.clo=relax}
+{restoring __file_name=size10.clo=undefined}
+LPSEG:1
+{changing \lpa=b=undefined}
+{into \lpa=b=\relax}
+{changing \lpa=b=\relax}
+{into \lpa=b=macro:->x}
+LPSEG:2
+LPSEG:3

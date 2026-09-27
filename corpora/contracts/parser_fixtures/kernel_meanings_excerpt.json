@@ -1,0 +1,23 @@
+{
+ "meanings": {
+  "@M": "\\mathchar\"2710",
+  "@circlefnt": "select font lcircle10",
+  "@gobble@om": "macro:->\\__cmd_start_expandable:nNNNNn {+o+m}\\@gobble@om  \\@gobble@om  \\@gobble@om code ?{\\__cmd_expandable_grab_D:w \\@gobble@om (arg 1) []\\__cmd_expandable_grab_m_long:w }",
+  "@tempcnta": "\\count144",
+  "AddToHook": "\\protected macro:->\\__cmd_start:nNNnnn {mo+m}\\AddToHook  \\AddToHook code {\\__cmd_grab_m_1:w \\__cmd_grab_D:w []\\__cmd_grab_m_long:w }{}{}",
+  "NewDocumentCommand": "\\protected\\long macro:#1#2#3->\\__cmd_check_definable:nNT {#1}\\NewDocumentCommand {\\cs_if_exist:NTF #1{\\msg_error:nnee {cmd}{already-defined}{\\use:nnn \\token_to_str:N #1{}}{\\token_to_str:N \\NewDocumentCommand }}{\\__cmd_declare_cmd:Nnn #1{#2}{#3}}}",
+  "^^0d": "macro:->\\ ",
+  "bgroup": "begin-group character {",
+  "dospecials": "macro:->\\do \\ \\do \\\\\\do \\{\\do \\}\\do \\$\\do \\&\\do \\#\\do \\^\\do \\_\\do \\%\\do \\~\\do \\^^09",
+  "sp": "superscript character ^",
+  "tex_badness:D": "\\badness",
+  "tex_relax:D": "\\relax",
+  "tex_space:D": "\\ ",
+  "textbf": "macro:->\\protect \\textbf  ",
+  "textbf ": "\\long macro:#1->\\ifmmode \\nfss@text {\\bfseries #1}\\else \\hmode@bgroup \\text@command {#1}\\bfseries \\check@icl #1\\check@icr \\expandafter \\egroup \\fi ",
+  "toks@": "\\toks0",
+  "u8:é": "macro:->\\IeC {\\@tabacckludge 'e}",
+  "z@": "\\dimen12"
+ },
+ "source": "format-state \\meaning dump of the kernel (gen_contract.py build_kernel), pdflatex.fmt sha256 a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3"
+}

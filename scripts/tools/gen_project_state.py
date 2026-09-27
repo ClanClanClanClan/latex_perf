@@ -446,8 +446,9 @@ def build(repo: Path) -> str:
               f"image `{o3.get('image', '?')}` ({o3.get('arch', '?')}, "
               f"{o3.get('backend', '?')} backend), protocol "
               f"`{o3.get('protocol', '?')}`. **This is the heuristic tier's "
-              "first reading on documents nothing in this project was fitted "
-              "to.** It is sealed: no failure on it is inspected, fixed or "
+              "first reading on documents no windowed experiment was fitted to; "
+              "10 of its ids were named by whole-corpus sweeps before the draw "
+              "and are split out below.** It is sealed: no failure on it is inspected, fixed or "
               "triaged, and a change is validated on other documents before "
               "this sample is re-measured (OPEN-119). The rows beside it are "
               "NOT virgin and are shown only for comparison.", "",

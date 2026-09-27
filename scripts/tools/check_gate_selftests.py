@@ -535,13 +535,27 @@ def kernel_uncover_one(text: str) -> str:
     return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
 
 
-def contract_last_pass_uncover_one(text: str) -> str:
-    """The re-review's defect 1: TeX's count on the LAST pass (the job's .aux
-    read) reporting one name outside a complete contract's universe."""
+def contract_pass4_uncover_one(text: str) -> str:
+    """Re-review 2: TeX's count on pass 4 (after two failing passes and one
+    that completed, the last pass the protocol can grade) reporting one name
+    outside a complete contract's universe."""
     d = json.loads(text)
-    assert d["coverage_last_pass"]["uncovered"] == 0, "contract drifted; update registry"
-    d["coverage_last_pass"]["uncovered"] = 1
-    d["coverage_last_pass"]["covered"] -= 1
+    hit = [x for x in d["coverage_passes"] if x["history"] == "FFS"
+           and x["env"] == "forced" and x["jobname"] == "job"]
+    assert len(hit) == 1 and hit[0]["uncovered"] == 0, "contract drifted; update registry"
+    hit[0]["uncovered"] = 1
+    hit[0]["covered"] -= 1
+    return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def contract_drop_grading_pass3(text: str) -> str:
+    """Re-review 2: the count of pass 3 after F S under the graders'
+    environment silently missing."""
+    d = json.loads(text)
+    n = len(d["coverage_passes"])
+    d["coverage_passes"] = [x for x in d["coverage_passes"] if not (
+        x["history"] == "FS" and x["env"] == "grading" and x["jobname"] == "job")]
+    assert len(d["coverage_passes"]) == n - 1, "contract drifted; update registry"
     return json.dumps(d, indent=1, ensure_ascii=False) + "\n"
 
 
@@ -573,10 +587,20 @@ REGISTRY = [
                      transform=kernel_uncover_one),
             # Re-review defect 1 (2026-09-27): the completeness evidence of the
             # pass the oracle grades must be read.
-            Mutation("contract last-pass hash coverage reports one uncovered name",
+            Mutation("contract pass-4 hash coverage reports one uncovered name",
                      "corpora/contracts/article.json",
-                     r"FAIL contract article\.json: \.\.\. and on the last pass",
-                     transform=contract_last_pass_uncover_one),
+                     r"FAIL contract article\.json: \.\.\. and it finds nothing undumped",
+                     transform=contract_pass4_uncover_one),
+            Mutation("contract loses the grading-environment count of pass 3",
+                     "corpora/contracts/article.json",
+                     r"FAIL contract article\.json: TeX's hash count on every pass",
+                     transform=contract_drop_grading_pass3),
+            # Re-review 2 defect 1: the pass histories must reach pass 4.
+            Mutation("pass histories stop after the first failing pass",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL pass histories: exactly",
+                     old="    for j in range(max_passes):\n",
+                     new="    for j in range(1):\n"),
             # Re-review LOW item a: set_in through the save stack. Disabling
             # the stack lookup must fail the recorded \WriteBookmarks test.
             Mutation("set_in no longer looked up in the save stack",

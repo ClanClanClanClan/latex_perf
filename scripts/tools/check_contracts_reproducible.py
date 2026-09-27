@@ -24,7 +24,9 @@ adversarial reviews (null control sequence, a name holding `=`, set_in
 through a group, a fatal only on the confirming pass, a date-dependent load,
 the reviewers' 24 missing kernel names), and of the re-review's defect 1 (a
 name created from the job's own .aux on pass 2, which only the later-pass
-trace and TeX's count on the last pass can see).
+trace and TeX's count on a later pass can see), and of re-review 2 (a
+name defined only on pass 3, after a failing pass 1; a date or job-name
+dependence that reaches the state on pass 2 through the .aux).
 
 Exit codes: 0 every selected contract reproduced; 1 a difference (printed);
 2 cannot check here (no docker, no image, or a different architecture) -
@@ -88,8 +90,14 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
     - a name created from the job's own .aux on pass 2 (lastpage's
       \\r@LastPage; a definer's \\AtEndDocument-written \\gdef of lpq7) must
       make the contract incomplete, named; and with the name dropped from the
-      universe, TeX's count on the last pass must see it (1) where the
-      pass-1 count sees nothing (the re-review's defect 1);
+      universe, TeX's count on pass 2 must see it (1) where the pass-1 count
+      sees nothing (the re-review's defect 1);
+    - re-review 2: a name defined from pass 3 on (thirdB: after F S, the
+      protocol's graded pass 3) must make the contract incomplete, named on
+      pass 3 and not on pass 2; a digit-built one dropped from the universe
+      (thirdB2) must be seen by TeX's count on passes 3 and 4 only, labelled
+      with those passes; a date (dateC) or job name (jobD) that reaches the
+      state through the .aux on pass 2 must make it incomplete, named;
     - the reviewers' 24 names as use-names on plain article: complete, 0
       mismatches."""
     review = json.loads((gc.REPO / gc.CONTRACT_DIR / "parser_fixtures" /
@@ -191,6 +199,15 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
             "\\makeatletter\\AtEndDocument{\\immediate\\write\\@auxout{\\string"
             "\\expandafter\\string\\gdef\\string\\csname\\space lpq\\number7 "
             "\\string\\endcsname{}}}\\makeatother"}]}
+        def cov_at(c, hist, env="forced", jobname="job"):
+            hit = [x for x in c.get("coverage_passes", []) if x["history"] == hist and
+                   x["env"] == env and x["jobname"] == jobname]
+            return hit[0].get("uncovered") if len(hit) == 1 else None
+
+        def all_cov_zero(c):
+            return bool(c.get("coverage_passes")) and all(
+                x.get("uncovered") == 0 for x in c["coverage_passes"])
+
         for label, cfg, nm in [("lastpage", lastpage, "r@LastPage"), ("lpq7", lpq7, "lpq7")]:
             # The later-pass trace puts the name in the universe, so the
             # pass-to-pass state comparison names it.
@@ -198,19 +215,79 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
             r = " | ".join(c["incomplete_reasons"])
             checks.append(("%s: pass-2 name %s makes the contract incomplete, named" %
                            (label, nm), c["complete"] is False and
-                           "pass_dependent_state" in r and nm in r and
-                           c["coverage_last_pass"].get("uncovered") == 0))
-            # Without it in the universe, only TeX's count on the LAST pass
+                           "pass_dependent_state" in r and nm in r and all_cov_zero(c)))
+            # Without it in the universe, only TeX's count on a later pass
             # (the .aux in place) sees it; the pass-1 count cannot.
             c = gc.generate(cfg, tex, pin, kernel, [], {},
                             universe_filter=lambda n, nm=nm: n != gc.name_bytes(nm))
             r = " | ".join(c["incomplete_reasons"])
-            checks.append(("%s: last-pass hash count sees %s missing (uncovered 1), "
+            checks.append(("%s: the pass-2 hash count sees %s missing (uncovered 1), "
                            "the pass-1 count does not" % (label, nm),
-                           c["complete"] is False and
-                           c["coverage_last_pass"].get("uncovered") == 1 and
-                           c["coverage"].get("uncovered") == 0 and
-                           "on pass 2 holds 1 names outside" in r))
+                           c["complete"] is False and cov_at(c, "S") == 1 and
+                           cov_at(c, "none") == 0 and c["coverage"].get("uncovered") == 0
+                           and "on pass 2 after history S holds 1 names outside" in r))
+
+        # Re-review 2 (2026-09-27): the checks covered passes 1 and 2 only,
+        # but the protocol grades pass 3 after a failing pass 1 (F S S) and
+        # pass 4 after two (F F S S). thirdB: a counter the .aux carries from
+        # pass to pass defines lpthird from pass 3 on.
+        cnt = ("\\makeatletter\\newcount\\lpc\\def\\lpcnt#1{\\global\\lpc=#1\\relax}"
+               "\\AtBeginDocument{\\ifnum\\lpc>1 %s\\fi\\immediate\\write\\@auxout"
+               "{\\string\\lpcnt{\\the\\numexpr\\lpc+1\\relax}}}\\makeatother")
+        third_b = {"class": "article", "preamble": [{"definer": cnt % "\\gdef\\lpthird{}"}]}
+        c = gc.generate(third_b, tex, pin, kernel, [], {})
+        r = " | ".join(c["incomplete_reasons"])
+        checks.append(("thirdB: a name defined from pass 3 on makes the contract "
+                       "incomplete, named on pass 3 after F S, not on pass 2",
+                       c["complete"] is False and "lpthird" not in c["defined_names"] and
+                       "pass 3 after history FS differs from pass 1: ['lpthird']" in r and
+                       "pass 2 after history S differs" not in r and all_cov_zero(c)))
+        # thirdB2: the name is built from digits (lpt2 on pass 3, lpt3 on
+        # pass 4) in a group with tracing off, and dropped from the universe:
+        # only TeX's count on passes 3 and 4 sees it, and it is labelled with
+        # the pass it describes (re-review 2 defect 2: the pass-3 count was
+        # labelled pass 2).
+        third_b2 = {"class": "article", "preamble": [{"definer": cnt % (
+            "\\begingroup\\tracingassigns=0 \\expandafter\\xdef\\csname lpt\\number"
+            "\\lpc\\endcsname{}\\endgroup")}]}
+        c = gc.generate(third_b2, tex, pin, kernel, [], {},
+                        universe_filter=lambda n: n not in (b"lpt2", b"lpt3"))
+        r = " | ".join(c["incomplete_reasons"])
+        checks.append(("thirdB2: TeX's count sees the digit-built name on passes 3 and 4 "
+                       "only, labelled pass 3 / pass 4",
+                       c["complete"] is False and
+                       [cov_at(c, h) for h in ("none", "F", "S", "FF", "FS", "FFS")] ==
+                       [0, 0, 0, 1, 1, 1] and
+                       "on pass 3 after history FS holds 1 names outside" in r and
+                       "on pass 4 after history FFS holds 1 names outside" in r and
+                       "on pass 2 after history S holds" not in r))
+        # dateC: the date reaches the state through the .aux, on pass 2: the
+        # date check used to run on pass 1 only.
+        date_c = {"class": "article", "preamble": [{"definer":
+            "\\makeatletter\\def\\lpyr#1{\\ifnum#1>2000 \\gdef\\lpgrade{}\\fi}"
+            "\\AtBeginDocument{\\immediate\\write\\@auxout{\\string\\lpyr{\\the\\year}}}"
+            "\\makeatother"}]}
+        c = gc.generate(date_c, tex, pin, kernel, [], {})
+        r = " | ".join(c["incomplete_reasons"])
+        checks.append(("dateC: a date dependence on pass 2 makes the contract incomplete, "
+                       "named, and pass 1 shows none",
+                       c["complete"] is False and
+                       "date_dependent_state: the body-start state on pass 2 after history "
+                       "S under the real clock differs from the forced date: ['lpgrade']"
+                       in r and "pass 1 after history none under the real clock" not in r))
+        # jobD: the job name reaches the state through the .aux, on pass 2.
+        job_d = {"class": "article", "preamble": [{"definer":
+            "\\makeatletter\\def\\lpjn#1{\\def\\lpa{#1}\\def\\lpb{job}\\ifx\\lpa\\lpb"
+            "\\else\\gdef\\lpnotjob{}\\fi}\\AtBeginDocument{\\immediate\\write\\@auxout"
+            "{\\string\\lpjn{\\jobname}}}\\makeatother"}]}
+        c = gc.generate(job_d, tex, pin, kernel, [], {})
+        r = " | ".join(c["incomplete_reasons"])
+        checks.append(("jobD: a job-name dependence on pass 2 makes the contract "
+                       "incomplete, named, and pass 1 shows none",
+                       c["complete"] is False and
+                       "jobname_dependent_state: the body-start name set on pass 2 after "
+                       "history S under job name lpotherjob differs: ['lpnotjob']" in r and
+                       "pass 1 after history none under job name" not in r))
 
         c = gc.generate(art, tex, pin, kernel, review, {})
         checks.append(("the reviewers' 24 names on plain article: complete, 0 mismatches",

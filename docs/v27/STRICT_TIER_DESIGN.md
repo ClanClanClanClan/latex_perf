@@ -499,15 +499,37 @@ forced date and failed under the graders'.
 - `files_read`: the `.fls` INPUT lines of the forced run's first pass, minus
   those of an empty format-state job, minus job-local files. Each file carries
   its sha256.
-- `defined_names`: two passes.
+- `defined_names`: a trace, then a dump, on every pass the protocol can run.
+  - **Pass histories.** The oracle's protocol runs up to 3 passes until one
+    completes, then one confirming pass: `F^j S S` (j < 3) or `F F F`, where
+    S is a pass that completed and F one that failed. A pass's state at body
+    start depends only on the files earlier passes wrote, so the states the
+    protocol can grade are those after the histories `''`, `F`, `S`, `FF`,
+    `FS`, `FFS` (passes 1 to 4; `protocol_histories`, derived in the parser
+    gate from `Tex.fixpoint` itself by running every rc sequence through it).
+    Each history is run as a tree of job directories: the pass after `h`
+    runs on a copy of the files the passes of `h` wrote, and an F pass is
+    the same document failing (`\errmessage`) just before `\end{document}`,
+    so it writes what the configuration writes at `\begin{document}` and not
+    what it writes at `\end{document}`. Re-review 2 (defect 1): the previous
+    version checked passes 1 and 2 of an all-completing run only, and a
+    counter the `.aux` carries from pass to pass (`thirdB`) defined a name
+    from pass 3 on, which the protocol grades after `F S`.
+  - **Three environments.** Every pass of every history is run under the
+    forced date with job name `job` (the reference), under the graders' real
+    clock with `job`, and under the real clock with a second job name.
+    Re-review 2 (defect 3): the date and job-name checks ran on pass 1 only,
+    and a definer that writes `\the\year` or `\jobname` to the `.aux` changed
+    the state on pass 2.
   - Pass 1 traces every assignment from the first line to after the
-    begin-document hooks, with a marker before every load. The trace is then
-    repeated in the same directory for the later passes of the oracle's
-    protocol (at least 2 in all), because a later pass reads what an earlier
-    one wrote: `\usepackage{lastpage}` defines `\r@LastPage` only on pass 2,
-    from `\newlabel{LastPage}` in the `.aux`, and that name is a token of no
-    file (re-review defect 1).
-  - Pass 2 dumps the body-start `\meaning` of every name of the UNIVERSE: the
+    begin-document hooks, with a marker before every load. The trace is
+    repeated on every pass of every history in all three environments,
+    because a later pass reads what an earlier one wrote:
+    `\usepackage{lastpage}` defines `\r@LastPage` only on pass 2, from
+    `\newlabel{LastPage}` in the `.aux`, and that name is a token of no file
+    (re-review defect 1); and a job named otherwise creates other names (l3's
+    `\csname` lookups of `__file_seen_<jobname>.aux:`).
+  - The dump takes the body-start `\meaning` of every name of the UNIVERSE: the
     kernel's candidates, every name any trace pass assigned, every name token
     of the files read, of the definers and of the files the job itself wrote
     (`.aux`, `.out`, ..., with their `\csname ...\endcsname` literals), and
@@ -517,12 +539,15 @@ forced date and failed under the graders'.
     or line feeds go through `\lowercase` with placeholder bytes.
   - The same hash-count check runs at body start against the universe: a name
     the universe misses would be called undefined without having been asked.
-    It runs twice: on pass 1 (a fresh directory, field `coverage`) and on the
-    LAST pass, with the files the dump's own passes wrote in place
-    (`coverage_last_pass`). The first version counted on pass 1 only, so a
-    name created from the `.aux` on pass 2 was outside every check and the
-    contract still said `complete` (re-review defect 1, measured on
-    `lastpage`).
+    It runs on every pass of every history in all three environments
+    (`coverage_passes`, 18 records; pass 1 of the reference is also
+    `coverage`), each count seeded with the same files as the dump of that
+    pass and labelled with the pass it describes. The first version counted
+    on pass 1 only, so a name created from the `.aux` on pass 2 was outside
+    every check and the contract still said `complete` (re-review defect 1,
+    measured on `lastpage`); the second counted once more, seeded with pass
+    2's files, i.e. on pass 3, but labelled it pass 2, and never counted
+    pass 2 itself (re-review 2, defect 2).
     It found two such names in the five-package configuration before the
     file-token reading was widened (`\Gin@rule@*`, `\!!stringa`: a package's
     own catcodes make `*` and `!` letters); the reading now takes, after each
@@ -553,20 +578,40 @@ forced date and failed under the graders'.
     assigned (`\baselineskip`, ...) are listed separately in
     `parameters_assigned`: the contract compares meanings, not values, so
     their values are not recorded.
-  - The dump is repeated on the later passes (in one directory) and under the
-    grading environment. A name-set difference makes the contract incomplete;
-    a meaning that differs between passes while the name stays defined is
-    recorded in `pass_dependent_meanings` and flagged on the name. So a
-    configuration whose `.aux` defines a name on pass 2 (`lastpage`) is
-    reported incomplete, with the name, rather than described by its pass-1
-    state.
+  - Every pass of the reference is compared with its pass 1: a name-set
+    difference makes the contract incomplete (`pass_dependent_state`, naming
+    the pass and history); a meaning that differs while the name stays
+    defined is recorded in `pass_dependent_meanings` and flagged on the name.
+    So a configuration whose `.aux` defines a name on a later pass
+    (`lastpage`, `thirdB`) is reported incomplete, with the name, rather than
+    described by its pass-1 state. Two runs of the same pass (the S and F
+    documents of one history) must agree too (`nondeterministic_state`).
+  - Each pass under the real clock is compared with the same pass under the
+    forced date: any difference outside the kernel's date-dependent names
+    makes the contract incomplete (`date_dependent_state`).
   - Every job is named `job` (field `jobname`), and some meanings hold the job
-    name. Pass 1 is dumped again under a second job name: a name-set
-    difference makes the contract incomplete, and the meanings that differ are
+    name. Each pass under the second job name is compared with the same pass
+    under `job` (both real clock): a name-set difference makes the contract
+    incomplete (`jobname_dependent_state`), and the meanings that differ are
     listed in `jobname_dependent_meanings` and flagged on the name, so a
-    consumer compares meaning hashes under `job` (re-review LOW item b). The
-    kernel file lists the format-state meanings that change with the job name
-    the same way (`jobname_dependent_names`).
+    consumer compares meaning hashes under `job` (re-review LOW item b). No
+    name is translated between job names, so a configuration that defines a
+    name holding the job name is incomplete (`glossaries`:
+    `__file_name=job.glsdefs`). The kernel file lists the format-state
+    meanings that change with the job name the same way
+    (`jobname_dependent_names`).
+  - **Known limits (re-review 2, recorded, not fixed).** (a) An F pass here
+    fails at the end of the body; a real failing pass fails somewhere in it,
+    so its `.aux` holds the begin-document writes plus whatever the document
+    wrote before the failure. The two extremes (fails at once: F; completes:
+    S) are checked, not the states between, which depend on the document
+    (M2's per-document check). (b) The second job name is one name
+    (`lpotherjob`); a configuration that tests for one particular job name
+    other than `job` is not excluded. (c) The real clock is the clock of the
+    generation run; a configuration that changes state on one date only is
+    not excluded. Repro of each: the `jobD` / `dateC` definers of
+    `check_contracts_reproducible.py` with `job`/`2000` replaced by the
+    specific value.
 - `meaning`: one of `Undefined`, `Relax`, `Primitive`, `Char`, `MathChar`,
   `Register`, `Font`, or `Macro` with the fields `long`, `protected`,
   `outer`, `robust`, `ltcmd_spec`, `params` and `arity_hint`. `arity_hint` is
@@ -605,10 +650,11 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 - No name was unwritable into a dump.
 - The dump primitives were intact.
 - TeX's hash count at body start finds no name outside the universe, on
-  pass 1 and on the last pass (with the job's `.aux` in place).
-- Every trace pass ran clean.
-- The body-start name set is the same on every pass, under the real clock and
-  under a second job name.
+  every pass of every pass history (passes 1 to 4), in all three
+  environments.
+- Every trace pass ran clean, and every F pass failed at the forced failure.
+- The body-start name set is the same on every pass of every history, under
+  the real clock (state, not only names) and under a second job name.
 - The `u8:` sweep agreed with the names.
 - The self-check passed.
 
@@ -655,11 +701,22 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
     last two.
 - **Three contracts, all complete.**
 
-  | configuration | defined names | reverted | parameters assigned | universe | hash entries at body start, pass 1 / last pass (all covered) | self-check (sampled from the universe, of which members; + referenced) | size |
+  | configuration | defined names | reverted | parameters assigned | universe | hash entries at body start, pass 1 / passes 2-4 (every history, all covered) | self-check (sampled from the universe, of which members; + referenced) | size |
   |---|---|---|---|---|---|---|---|
-  | `article` | 762 | 118 | 19 | 34,574 | 29,846 / 29,847 | 346 (243) + 10,736 | 167 KB |
-  | article + amsmath, amssymb, amsthm, graphicx, hyperref | 9,215 | 733 | 26 | 57,446 | 38,909 / 38,911 | 575 (313) + 14,992 | 1.9 MB |
-  | `amsart` | 1,979 | 248 | 25 | 38,322 | 30,931 / 30,932 | 384 (249) + 11,377 | 398 KB |
+  | `article` | 762 | 118 | 19 | 34,577 | 29,846 / 29,847 | 346 (243) + 10,736 | 167 KB |
+  | article + amsmath, amssymb, amsthm, graphicx, hyperref | 9,215 | 733 | 26 | 57,452 | 38,909 / 38,911 | 575 (313) + 14,992 | 1.9 MB |
+  | `amsart` | 1,979 | 248 | 25 | 38,325 | 30,931 / 30,932 | 384 (249) + 11,377 | 398 KB |
+
+  Re-review 2 regeneration (generator version 4, every pass of every pass
+  history in three environments): no defined name was added or removed, no
+  meaning, `set_in`, pass-dependent or job-name-dependent meaning changed.
+  The universe grew by 3, 6 and 3 names (later-pass traces, in the other
+  environments: e.g. `__file_seen_lpotherjob.aux:`), none defined at body
+  start. All 18 counts of each contract find 0 names outside the universe;
+  under the forced date every pass after the first holds the same count
+  (the previous version's "last pass" count, 29,847 / 38,911 / 30,932, was
+  in fact pass 3's). Generation time: 17-20 s (`article`), 26-34 s
+  (`amsart`), 70-81 s (five packages).
 
   Re-review regeneration (generator version 3): no defined name was added or
   removed and no meaning changed. The last-pass count holds 1-2 more entries
@@ -696,6 +753,27 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
   same: incomplete naming `lpq7`, and uncovered 1 on the last pass only when
   it is dropped. The committed contracts were not affected (as the re-review
   predicted): each stays complete with 0 uncovered on both passes.
+- **Re-review 2, measured (2026-09-27, under the image, arm64).** Before
+  the fix (generator version 3) each of the reviewer's synthetic shapes gave
+  `complete: true`. After:
+  - `thirdB` (a counter the `.aux` carries defines `\lpthird` from pass 3 on):
+    incomplete, `pass_dependent_state` on pass 3 after `FS` and `FF` and pass
+    4 after `FFS`, naming `lpthird`; nothing on pass 2.
+  - `thirdB2` (the name is `lpt\number\lpc`, built in a group with tracing
+    off; `lpt2`/`lpt3` dropped from the universe): TeX's count reports
+    uncovered 0, 0, 0, 1, 1, 1 on the histories `''`, `F`, `S`, `FF`, `FS`,
+    `FFS`, labelled passes 1, 2, 2, 3, 3, 4. Undropped, the later-pass trace
+    names `lpt2` and `lpt3`.
+  - `dateC` (`\the\year` written to the `.aux`): incomplete,
+    `date_dependent_state` from pass 2 on, naming `lpgrade`; pass 1 shows
+    nothing, which is what the pass-1 check saw.
+  - `jobD` (`\jobname` written to the `.aux`): incomplete,
+    `jobname_dependent_state` from pass 2 on, naming `lpnotjob`.
+  - Real packages: `hyperref` complete; `lastpage` incomplete naming
+    `r@LastPage` (passes 2, 3, 4 after `S`, `FS`, `FFS`; not after `F`,
+    since it is written at `\end{document}`); `glossaries` incomplete (job
+    name: `__file_name=job.glsdefs`; one name outside the universe on every
+    pass, as before).
 - **Kill-tests and review repros** (`check_contracts_reproducible.py`, every
   invocation): the hidden-`\def` definer trips both the tracing-toggle check
   and the self-check; the hash count sees one name dropped from the kernel
@@ -707,8 +785,9 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
   under the real clock and flagged `date_dependent_load`; the reviewers' 24
   names as use-names on plain `article` give 0 mismatches; `lastpage` and the
   `lpq7` definer are each incomplete, naming the pass-2 name, and each with
-  that name dropped from the universe is seen by the last-pass count
-  (uncovered 1) and not by the pass-1 count (0).
+  that name dropped from the universe is seen by the pass-2 count
+  (uncovered 1) and not by the pass-1 count (0); and the four re-review 2
+  shapes above (`thirdB`, `thirdB2`, `dateC`, `jobD`) come out as stated.
 - **Surprises.**
   - The `amsfonts` lazy files (`umsa.fd`, `umsb.fd`, the msam/msbm metrics) are read at the first math-mode use of anything in article + amssymb, not at `\mathbb` in particular.
   - `amsart` already reads them in its load run.

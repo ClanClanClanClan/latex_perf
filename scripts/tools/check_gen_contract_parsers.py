@@ -343,6 +343,55 @@ for rcs, want in [([0, 0], (0, 2)), ([1, 0, 0], (0, 3)), ([0, 1], (1, 2)),
     check("fixpoint %s -> rc,passes %s" % (rcs, want), (r["rc"], r["passes"]) == want and
           ft.calls == want[1] and r["first_fls"] == b"1", (r["rc"], r["passes"]))
 
+# --- re-review 2 defect 1: every pass the protocol can grade (SYNTHETIC runner) --------
+# The pass histories are derived from the fixpoint implementation itself: every
+# rc sequence is run through Tex.fixpoint, and the history (S = rc 0, F = not)
+# before each pass it runs must be one of protocol_histories(), and each of
+# those must occur.
+seen_hist = set()
+for n in range(1, gc.MAX_PASSES + 2):
+    for bits in range(2 ** n):
+        rcs = [(bits >> i) & 1 for i in range(n)]
+        ft = FakeTex(rcs + [0] * (gc.MAX_PASSES + 2))
+        r = ft.fixpoint(Path("."), b"")
+        ran = "".join("S" if rc == 0 else "F" for rc in ft.rcs[:ft.calls])
+        seen_hist |= {ran[:i] for i in range(len(ran))}
+check("pass histories: exactly the histories the fixpoint can run a pass after",
+      set(gc.protocol_histories()) == seen_hist, (gc.protocol_histories(), sorted(seen_hist)))
+check("pass histories: '', F, S, FF, FS, FFS, i.e. passes 1 to MAX_PASSES+1",
+      gc.protocol_histories() == ["", "F", "S", "FF", "FS", "FFS"] and
+      max(len(h) for h in gc.protocol_histories()) + 1 == gc.MAX_PASSES + 1,
+      gc.protocol_histories())
+fv = gc.failing_variant(b"pre\\begin{document}\nX\n\\end{document}\n")
+check("pass histories: the failing variant fails after the body, before \\end{document}",
+      fv == b"pre\\begin{document}\nX\n" + gc.FAIL_LINE + b"\\end{document}\n", fv)
+
+
+class TreeTex(gc.Tex):
+    """SYNTHETIC: each run reads the history job.aux holds and appends its own
+    letter (F when the document is the failing variant)."""
+    def __init__(self, host):
+        self.host, self._jobs = host, 0
+        import threading
+        self._lock = threading.Lock()
+
+    def pdflatex(self, jobdir, tex, **kw):
+        aux = jobdir / "job.aux"
+        hist = aux.read_bytes() if aux.exists() else b""
+        aux.write_bytes(hist + (b"F" if gc.FAIL_LINE in tex else b"S"))
+        (jobdir / "job.log").write_bytes(hist)
+        return {"rc": 1 if gc.FAIL_LINE in tex else 0, "log": hist, "fls": b"",
+                "pdf": False, "secs": 0.0, "tex_sha256": ""}
+
+
+with tempfile.TemporaryDirectory() as td:
+    tree = gc.run_history_tree(TreeTex(Path(td)), "t", b"\\begin{document}\n\\end{document}\n",
+                               gc.protocol_histories())
+    got = {h: node["S"]["log"].decode() for h, node in tree.items()}
+    check("pass-history tree: each pass runs on the files its history wrote",
+          got == {h: h for h in gc.protocol_histories()} and
+          all(node["pass"] == len(h) + 1 for h, node in tree.items()), got)
+
 # --- review defect R1.3: the grading environment is the graders' ----------------------
 drr_src = (HERE / "diff_real_roots.py").read_text(encoding="utf-8")
 battery_src = (HERE / "gen_strict_battery.py").read_text(encoding="utf-8")
@@ -452,10 +501,23 @@ if not ARGS.kernel:
         cov = c.get("coverage") or {}
         check("contract %s: TeX's hash count at body start finds nothing undumped"
               % cf.name, cov.get("uncovered") == 0 and cov.get("unwritable") == 0, cov)
-        cl = c.get("coverage_last_pass") or {}
-        check("contract %s: ... and on the last pass, with the job's .aux read"
-              % cf.name, cl.get("uncovered") == 0 and cl.get("unwritable") == 0 and
-              cl.get("pass", 0) >= 2 and isinstance(cl.get("hash_entries"), int), cl)
+        # Re-review 2: TeX's count on EVERY pass the protocol can grade, in
+        # the forced, grading and second-job-name environments.
+        cps = c.get("coverage_passes") or []
+        want = {(e, j, gc.hist_label(h)) for e, j in
+                [("forced", "job"), ("grading", "job"), ("grading", gc.SECOND_JOBNAME)]
+                for h in gc.protocol_histories()}
+        have = {(x.get("env"), x.get("jobname"), x.get("history")) for x in cps}
+        check("contract %s: TeX's hash count on every pass of every pass history, in "
+              "all three environments" % cf.name, have == want and len(cps) == len(want),
+              sorted(want - have))
+        bad_cp = [x for x in cps if x.get("uncovered") != 0 or "error" in x or
+                  (x.get("env") == "forced" and x.get("jobname") == "job" and
+                   (x.get("unwritable") != 0 or not isinstance(x.get("hash_entries"), int)))]
+        check("contract %s: ... and it finds nothing undumped on any of them" % cf.name,
+              not bad_cp, bad_cp[:2])
+        check("contract %s: ... up to pass MAX_PASSES+1" % cf.name,
+              max((x.get("pass", 0) for x in cps), default=0) == gc.MAX_PASSES + 1)
         check("contract %s: states its job name" % cf.name, c.get("jobname") == "job")
         sc = c["self_check"]
         check("contract %s: the self-check samples the universe, both directions"

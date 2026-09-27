@@ -33,28 +33,35 @@ Nothing in a contract is hand-listed. Every field comes from a TeX run:
                   with sha256.
   defined_names   pass 1 traces every assignment from before \\documentclass
                   until after the begin-document hooks, with a marker between
-                  loads; the trace is repeated for the later passes of the
-                  protocol in the same directory (a later pass reads the .aux
-                  an earlier one wrote). Pass 2 dumps \\meaning at body start
-                  (after AtBeginDocument), guarded by \\ifcsname, of the whole
-                  UNIVERSE: the kernel's candidates, every name any trace pass
-                  assigned (every reading of an ambiguous record), every name
+                  loads. The body-start state is then taken on EVERY pass the
+                  oracle's protocol can run (protocol_histories: after the
+                  histories '', F, S, FF, FS, FFS of completed (S) and failed
+                  (F) passes, i.e. passes 1 to MAX_PASSES+1; a pass after
+                  history h runs on the files the passes of h wrote), in
+                  three environments: forced date / job name `job` (the
+                  reference), the graders' real clock / `job`, and the real
+                  clock / a second job name. On each pass of each: a trace
+                  (every name it assigns joins the UNIVERSE, with every name
                   token of the files read, of the definers and of the files
-                  the job wrote (with their \\csname literals). hash_coverage
-                  checks the universe against TeX's own count at body start,
-                  on pass 1 AND on the last pass with the job's .aux in place
-                  (coverage_last_pass). A name is in
-                  defined_names iff its body-start meaning differs from its
-                  format-state meaning (class Undefined = the configuration
-                  removed a kernel name). Traced names whose meaning is back to
-                  the kernel's are listed in reverted_names; primitive
-                  parameters the configuration assigned are listed in
-                  parameters_assigned (values are not recorded). The dump is
-                  repeated on the later passes and under the real clock; the
-                  name set must not change. It is also run under a second job
-                  name: every job is named `job` (field `jobname`), and the
-                  meanings that hold the job name are listed in
-                  jobname_dependent_meanings.
+                  the jobs wrote, and the kernel's candidates), a guarded
+                  \\meaning dump of the whole universe at body start, and
+                  hash_coverage, TeX's own count of its hash table, seeded
+                  with the same files and labelled with the pass it
+                  describes (coverage_passes). The contract's state is pass
+                  1 of the reference. Membership must be the same on every
+                  pass and in every environment, and no count may find a name
+                  outside the universe, or the contract is incomplete
+                  (pass_dependent_state / date_dependent_state /
+                  jobname_dependent_state). A name is in defined_names iff
+                  its body-start meaning differs from its format-state
+                  meaning (class Undefined = the configuration removed a
+                  kernel name). Meanings that differ between passes are
+                  pass_dependent_meanings; between job names,
+                  jobname_dependent_meanings (compare meanings under `job`).
+                  Traced names whose meaning is back to the kernel's are
+                  listed in reverted_names; primitive parameters the
+                  configuration assigned are listed in parameters_assigned
+                  (values are not recorded).
   catcodes        \\the\\catcode of bytes 0-255 at body start, where it
                   differs from format state.
   active_chars    \\meaning of each active character at body start, where it
@@ -111,6 +118,7 @@ import struct
 import subprocess
 import sys
 import tarfile
+import threading
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -124,7 +132,7 @@ PROBE_SCHEMA = "lp-probe-report/1"
 # A semantic version, bumped by hand when the generator's OUTPUT changes on
 # purpose. Deliberately not a hash of this file: a comment edit must not
 # invalidate every committed contract (the C-68 lesson).
-GENERATOR_VERSION = "3"
+GENERATOR_VERSION = "4"
 
 REPO = Path(__file__).resolve().parent.parent.parent
 WORKFLOW = Path(".github/workflows/tex-oracle.yml")
@@ -1042,6 +1050,9 @@ class Tex:
             raise SystemExit("gen_contract: work dir %s is not under $HOME; colima "
                              "mounts only $HOME by default" % work)
         self.host = work / ("run-" + uuid.uuid4().hex[:12])
+        # Jobs are numbered under a lock: the pass-history trees run in threads.
+        self._lock = threading.Lock()
+        self._jobs = 0
         self.host.mkdir(parents=True)
         self.name = "lp-contract-" + self.host.name
         env = []
@@ -1070,8 +1081,9 @@ class Tex:
         stale through the VM mount, and pdflatex then fails to write its log
         (measured: an intermittent rc=1 with no log, in a loop that reused
         one name)."""
-        self._jobs = getattr(self, "_jobs", 0) + 1
-        d = self.host / ("%s-%d" % (name, self._jobs))
+        with self._lock:
+            self._jobs += 1
+            d = self.host / ("%s-%d" % (name, self._jobs))
         d.mkdir(parents=True)
         return d
 
@@ -1313,7 +1325,8 @@ def engine_primitives(tex: Tex) -> dict:
 
 
 def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
-                  env: str = "forced", seed_dir: Path | None = None) -> dict:
+                  env: str = "forced", seed_dir: Path | None = None,
+                  tex_jobname: str = JOBNAME) -> dict:
     """Does `universe` hold every multiletter name in TeX's hash table at the
     point `prefix` leaves a job in? Answered by TeX's own counter, so the
     answer does not depend on how `universe` was built.
@@ -1332,7 +1345,9 @@ def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
     `seed_dir`: a job directory whose job-written files (.aux, .out, ...)
     are copied into both jobs first, so the count is taken on the pass that
     reads them (review defect 1: a name created from the .aux on pass 2 was
-    outside a pass-1 count)."""
+    outside a pass-1 count). The count therefore describes the pass AFTER
+    the one that wrote seed_dir's files; `tex_jobname` must be the job name
+    they were written under."""
     ml = sorted({n for n in universe if len(n) >= 2})
     head = prefix + b"\\tracingstats=1\\relax\n" + regime_open()
 
@@ -1358,16 +1373,13 @@ def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
 
     def seeded(name):
         jd = tex.job(name)
-        if seed_dir is not None:
-            for f in sorted(seed_dir.iterdir()):
-                if f.is_file() and f.suffix not in _NOT_JOB_WRITTEN:
-                    shutil.copyfile(f, jd / f.name)
+        _copy_job_files(seed_dir, jd)
         return jd
 
     ta, _ = body([])
     tb, unw = body(ml)
-    ra = tex.pdflatex(seeded(jobname + "_a"), ta, env=env)
-    rb = tex.pdflatex(seeded(jobname + "_b"), tb, env=env)
+    ra = tex.pdflatex(seeded(jobname + "_a"), ta, env=env, jobname=tex_jobname)
+    rb = tex.pdflatex(seeded(jobname + "_b"), tb, env=env, jobname=tex_jobname)
     ka, kb = cs_count(ra["log"]), cs_count(rb["log"])
     ea, eb = first_error(ra["log"]), first_error(rb["log"])
     out = {"universe_multiletter": len(ml), "unwritable": len(unw)}
@@ -1718,6 +1730,96 @@ def _state_diff(a: dict, b: dict, ignore=frozenset()) -> tuple:
     return member, meaning
 
 
+# The line a FAILING pass of a pass history ends its body with (see
+# protocol_histories): after everything the pass is run for, so the pass
+# still writes what the configuration writes at \begin{document}, and not
+# what it writes at \end{document}.
+FAIL_MSG = "lp forced failing pass"
+FAIL_LINE = b"\\errmessage{" + FAIL_MSG.encode() + b"}\n"
+END_DOC = b"\\end{document}\n"
+
+
+def protocol_histories(max_passes: int = MAX_PASSES) -> list:
+    """Every history of earlier passes that the oracle's pass protocol
+    (`Tex.fixpoint`, diff_real_roots.run_to_fixpoint) can run a pass after,
+    as a string of S (a pass that completed) and F (a pass that failed),
+    shortest first. A pass's state at body start depends only on the files
+    earlier passes wrote, so these are all the states the protocol can
+    GRADE (review re-review 2, defect 1: the checks covered passes 1 and 2
+    only, and pass 3 after F S is graded).
+
+    The protocol runs up to max_passes passes until the first one that
+    completes, then one confirming pass: F^j S S for j < max_passes, or
+    F^max_passes. The histories are the proper prefixes of those runs:
+    for 3, '', F, S, FF, FS, FFS, i.e. passes 1 to max_passes+1."""
+    out = set()
+    for j in range(max_passes):
+        run = "F" * j + "SS"
+        out |= {run[:i] for i in range(len(run))}
+    run = "F" * max_passes
+    out |= {run[:i] for i in range(len(run))}
+    return sorted(out, key=lambda h: (len(h), h))
+
+
+def failing_variant(doc: bytes) -> bytes:
+    """`doc` (ending with \\end{document}) failing just before its end."""
+    if not doc.endswith(END_DOC):
+        raise SystemExit("gen_contract: a pass-history document must end with "
+                         "\\end{document}")
+    return doc[:-len(END_DOC)] + FAIL_LINE + END_DOC
+
+
+def _copy_job_files(src: Path | None, dst: Path) -> None:
+    """Copy the files a job wrote (.aux, .out, ...) into another job dir."""
+    if src is None:
+        return
+    for f in sorted(src.iterdir()):
+        if f.is_file() and f.suffix not in _NOT_JOB_WRITTEN:
+            shutil.copyfile(f, dst / f.name)
+
+
+def hist_label(h: str) -> str:
+    return h or "none"
+
+
+def run_history_tree(tex: Tex, label: str, doc: bytes, histories: list, *,
+                     env: str = "forced", jobname: str = JOBNAME,
+                     count_prefix: bytes | None = None, universe=None) -> dict:
+    """Run `doc` on every pass of the protocol's pass histories, as a tree:
+    the pass after history h runs in a fresh directory holding the files the
+    passes of h wrote. At each history `doc` itself is run (the S run; its
+    log is that pass's log) and, when a longer history needs it, its failing
+    variant (the F run). With count_prefix, TeX's hash count (hash_coverage)
+    is taken on that pass too, seeded with the same files, so the count is
+    labelled with the pass it describes (review re-review 2, defect 2).
+
+    Returns {h: {"pass": len(h)+1, "S": run, "F": run or None, "S_dir",
+    "F_dir", "coverage": dict or None}}."""
+    hs = set(histories)
+    seed: dict = {"": None}
+    out: dict = {}
+    fail_doc = failing_variant(doc)
+    for h in histories:
+        if h not in seed:
+            raise SystemExit("gen_contract: pass history %r has no parent" % h)
+        node = {"pass": len(h) + 1, "F": None, "F_dir": None, "coverage": None}
+        for x, d in (("S", doc), ("F", fail_doc)):
+            if x == "F" and h + "F" not in hs:
+                continue
+            jd = tex.job("%s_%s_%s" % (label, hist_label(h), x))
+            _copy_job_files(seed[h], jd)
+            node[x] = tex.pdflatex(jd, d, env=env, jobname=jobname)
+            node[x + "_dir"] = jd
+            if h + x in hs:
+                seed[h + x] = jd
+        if count_prefix is not None:
+            node["coverage"] = hash_coverage(
+                tex, "%s_cov_%s" % (label, hist_label(h)), count_prefix, universe,
+                env=env, seed_dir=seed[h], tex_jobname=jobname)
+        out[h] = node
+    return out
+
+
 def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
              report: dict, *, universe_filter=None) -> dict:
     """One configuration's contract. `universe_filter`, if given, drops names
@@ -1755,8 +1857,20 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
                  b"\\begin{document}\n\\immediate\\write-1{LPSEG:%d}\n"
                  b"\\tracingassigns=0 \\tracingrestores=0\n\\end{document}\n"
                  % (len(labels)))
-    jd2 = tex.job("r2_trace")
-    r2 = tex.pdflatex(jd2, trace_tex)
+    # The trace runs on every pass of the protocol's pass histories (review
+    # defect 1, and re-review 2 defect 1: pass 3 after a failing pass 1 is
+    # graded), in each of the three environments the body-start state is
+    # checked in (R3 below): a name that exists only under the real clock or
+    # only under another job name (l3's \csname lookups of
+    # `__file_seen_<jobname>.aux:`) must be in the universe too. The
+    # contract's pass 1 is the S run of the empty history, forced, `job`.
+    histories = protocol_histories()
+    envs = [("forced", JOBNAME), ("grading", JOBNAME), ("grading", SECOND_JOBNAME)]
+    with ThreadPoolExecutor(max_workers=len(envs)) as ex:
+        futs = [ex.submit(run_history_tree, tex, "r2_trace_%s_%s" % (e, j), trace_tex,
+                          histories, env=e, jobname=j) for e, j in envs]
+        trace_trees = [f.result() for f in futs]
+    r2 = trace_trees[0][""]["S"]
     report["r2_secs"] = round(r2["secs"], 2)
     provenance["trace_tex_sha256"] = r2["tex_sha256"]
     provenance["trace_log_sha256"] = sha256_bytes(r2["log"])
@@ -1840,26 +1954,34 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         if kind == "cs":
             traced[nm] = seg
 
-    # The later passes (review defect 1). The oracle grades the LAST pass of
+    # The later passes (review defect 1). The oracle grades the last pass of
     # its protocol, and a later pass reads what earlier ones wrote: a name
     # built from the .aux (\newlabel{LastPage} makes \r@LastPage) exists
-    # there and nowhere in pass 1, and is often no token of any file. So the
-    # trace is repeated in its own directory for as many passes as the dump
-    # below, and every name any pass assigns, and every name token and
-    # \csname literal of the files the job wrote, joins the universe. Only
-    # pass 1's trace supplies set_in; the last pass's hash count below is the
-    # check that does not depend on any of this.
-    npass = max(2, r1f["passes"])
-    written = job_written_names(jd2)
+    # there and nowhere in pass 1, and is often no token of any file. So
+    # every name any pass of any history assigns, and every name token and
+    # \csname literal of the files any pass wrote, joins the universe. Only
+    # pass 1's trace supplies set_in; TeX's hash count on every pass below is
+    # the check that does not depend on any of this.
+    written = set()
     later_traced = set()
-    for k in range(2, npass + 1):
-        rk = tex.pdflatex(jd2, trace_tex)
-        trk = parse_trace(rk["log"])
-        if rk["rc"] != 0 or trk["first_error"] is not None:
-            reasons.append("trace pass %d failed (rc=%d): %s"
-                           % (k, rk["rc"], trk["first_error"]))
-        later_traced |= {nm for (kind, nm) in trk["names"] if kind == "cs"}
-        written |= job_written_names(jd2)
+    for (env, jobname), trace_tree in zip(envs, trace_trees):
+        where = "" if (env, jobname) == envs[0] else " (%s, job name %s)" % (env, jobname)
+        for h, node in trace_tree.items():
+            for x in ("S", "F"):
+                rk = node[x]
+                if rk is None:
+                    continue
+                written |= job_written_names(node[x + "_dir"])
+                if rk is r2:
+                    continue
+                trk = parse_trace(rk["log"])
+                err = trk["first_error"][1] if trk["first_error"] else None
+                at = "trace pass %d after history %s%s" % (node["pass"], hist_label(h), where)
+                if x == "S" and (rk["rc"] != 0 or err is not None):
+                    reasons.append("%s failed (rc=%d): %s" % (at, rk["rc"], err))
+                if x == "F" and (err is None or FAIL_MSG not in err):
+                    reasons.append("%s did not fail at the forced failure: %s" % (at, err))
+                later_traced |= {nm for (kind, nm) in trk["names"] if kind == "cs"}
     later_traced -= set(traced)
     traced_active = {nm[0]: seg for (kind, nm), seg in tr["names"].items()
                      if kind == "active"}
@@ -1902,54 +2024,101 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
             reasons.append("%d names defined in format state are missing from the "
                            "kernel: %s" % (len(kernel_gaps), sorted(kernel_gaps)[:5]))
 
-    # R3: the body-start meaning dump (after the begin-document hooks), run
-    # for as many passes as the load needed (at least 2), in one directory:
-    # the state must not depend on the pass.
+    # R3: the body-start meaning dump (after the begin-document hooks), with
+    # TeX's own hash count, on EVERY pass of the protocol's pass histories
+    # (passes 1 to MAX_PASSES+1), in three environments (review re-review 2,
+    # defects 1 to 3: membership and the count covered passes 1 and 2 only,
+    # the count on pass 3 was labelled pass 2, and the date and job-name
+    # checks covered pass 1 only):
+    #   forced/job     the reference: the contract's state is pass 1 of it;
+    #   grading/job    the graders' environment (real clock), compared with
+    #                  forced/job pass by pass: any difference outside the
+    #                  kernel's date-dependent names is date_dependent_state;
+    #   grading/<2nd>  the graders' environment under a second job name,
+    #                  compared with grading/job pass by pass: a membership
+    #                  difference is jobname_dependent_state, a meaning
+    #                  difference is listed in jobname_dependent_meanings.
+    # On every pass TeX's hash count must find no name outside the universe.
     block, unw = dump_block(universe, actives=True, u8_sweep=True)
-    dump_doc = pre + b"\\begin{document}\n" + block + b"\\end{document}\n"
-    jd3 = tex.job("r3_dump")
-    r3 = tex.pdflatex(jd3, dump_doc)
+    dump_doc = pre + b"\\begin{document}\n" + block + END_DOC
+    count_prefix = pre + b"\\begin{document}\n"
+    with ThreadPoolExecutor(max_workers=len(envs)) as ex:
+        futs = [ex.submit(run_history_tree, tex, "r3_%s_%s" % (e, j), dump_doc, histories,
+                          env=e, jobname=j, count_prefix=count_prefix, universe=universe)
+                for e, j in envs]
+        trees = [f.result() for f in futs]
+    r3 = trees[0][""]["S"]
     report["r3_secs"] = round(r3["secs"], 2)
     provenance["dump_tex_sha256"] = r3["tex_sha256"]
     provenance["dump_log_sha256"] = sha256_bytes(r3["log"])
     d3 = parse_dump(r3["log"])
-    if r3["rc"] != 0 or d3["error"] is not None:
-        reasons.append("body-start dump failed: rc=%d %s" % (r3["rc"], d3["error"]))
+    date_dep = {name_bytes(n) for n in kernel.get("date_dependent_names", [])}
+    job_dep_k = {name_bytes(n) for n in kernel.get("jobname_dependent_names", [])}
+    states = []
+    coverage_passes = []
+    for (env, jobname), tree in zip(envs, trees):
+        where = "" if (env, jobname) == envs[0] else " (%s, job name %s)" % (env, jobname)
+        st = {}
+        for h, node in tree.items():
+            at = "pass %d after history %s%s" % (node["pass"], hist_label(h), where)
+            rs = node["S"]
+            ds = d3 if rs is r3 else parse_dump(rs["log"])
+            if rs["rc"] != 0 or ds["error"] is not None:
+                reasons.append("body-start dump failed on %s: rc=%d %s"
+                               % (at, rs["rc"], ds["error"]))
+            st[h] = _dump_state(ds, universe)
+            rf = node["F"]
+            if rf is not None:
+                ef = first_error(rf["log"])
+                if rf["rc"] == 0 or ef is None or FAIL_MSG not in ef:
+                    reasons.append("the failing run of %s did not fail at the forced "
+                                   "failure (rc=%d): %s" % (at, rf["rc"], ef))
+                member, meaning = _state_diff(st[h], _dump_state(parse_dump(rf["log"]),
+                                                                 universe), date_dep)
+                if member or meaning:
+                    reasons.append("nondeterministic_state: two runs of %s differ: %s"
+                                   % (at, (member + meaning)[:5]))
+            cv = node["coverage"]
+            if cv.get("error"):
+                reasons.append("body-start %s on %s" % (cv["error"], at))
+            elif cv["uncovered"] != 0:
+                reasons.append("TeX's hash table at body start on %s holds %d names "
+                               "outside the dumped universe" % (at, cv["uncovered"]))
+            rec = {"env": env, "jobname": jobname, "history": hist_label(h),
+                   "pass": node["pass"]}
+            if (env, jobname) == envs[0]:
+                rec.update(cv)
+            else:
+                rec.update({k: cv[k] for k in ("uncovered", "error") if k in cv})
+            coverage_passes.append(rec)
+        states.append(st)
+    forced, grading, second = states
+    cov = dict(trees[0][""]["coverage"])
     # A name whose MEANING differs between passes while it stays defined (an
     # .aux checksum such as rerunfilecheck's \\ReFiCh@1) is recorded as
     # pass-dependent; a MEMBERSHIP difference makes the contract incomplete.
-    state1 = _dump_state(d3, universe)
     pass_dep = set()
-    last_pass = 1
-    for k in range(2, npass + 1):
-        rk = tex.pdflatex(jd3, dump_doc)
-        last_pass = k
-        member, meaning = _state_diff(state1, _dump_state(parse_dump(rk["log"]), universe))
-        pass_dep.update(meaning)
-        if rk["rc"] != 0 or member:
-            reasons.append("pass_dependent_state: the body-start name set on pass %d "
-                           "differs from pass 1 (rc=%d): %s" % (k, rk["rc"], member[:5]))
-            break
-    # R3g: pass 1 under the grading environment (real clock): the forced
-    # date must change nothing beyond the kernel's date-dependent names.
-    rg = tex.pdflatex(tex.job("r3g_dump"), dump_doc, env="grading")
-    date_dep = {name_bytes(n) for n in kernel.get("date_dependent_names", [])}
-    member, meaning = _state_diff(state1, _dump_state(parse_dump(rg["log"]), universe),
-                                  date_dep)
-    if rg["rc"] != 0 or member or meaning:
-        reasons.append("date_dependent_state: the body-start state under the real clock "
-                       "differs (rc=%d): %s" % (rg["rc"], (member + meaning)[:5]))
-    # R3j: pass 1 under a second job name (review LOW item b). The contract
-    # is exact under the job name `job`; meanings that hold the job name are
-    # listed (and flagged on the name) so that a consumer compares meaning
-    # hashes under `job`; a membership difference makes it incomplete.
-    rj = tex.pdflatex(tex.job("r3j_dump"), dump_doc, jobname=SECOND_JOBNAME)
-    job_dep_k = {name_bytes(n) for n in kernel.get("jobname_dependent_names", [])}
-    member, job_dep = _state_diff(state1, _dump_state(parse_dump(rj["log"]), universe),
-                                  job_dep_k)
-    if rj["rc"] != 0 or member:
-        reasons.append("jobname_dependent_state: the body-start name set under job name "
-                       "%s differs (rc=%d): %s" % (SECOND_JOBNAME, rj["rc"], member[:5]))
+    job_dep = set()
+    for h in histories:
+        n = len(h) + 1
+        if h:
+            member, meaning = _state_diff(forced[""], forced[h])
+            pass_dep.update(meaning)
+            if member:
+                reasons.append("pass_dependent_state: the body-start name set on pass %d "
+                               "after history %s differs from pass 1: %s"
+                               % (n, hist_label(h), member[:5]))
+        member, meaning = _state_diff(forced[h], grading[h], date_dep)
+        if member or meaning:
+            reasons.append("date_dependent_state: the body-start state on pass %d after "
+                           "history %s under the real clock differs from the forced "
+                           "date: %s" % (n, hist_label(h), (member + meaning)[:5]))
+        member, meaning = _state_diff(grading[h], second[h], date_dep | job_dep_k)
+        job_dep.update(meaning)
+        if member:
+            reasons.append("jobname_dependent_state: the body-start name set on pass %d "
+                           "after history %s under job name %s differs: %s"
+                           % (n, hist_label(h), SECOND_JOBNAME, member[:5]))
 
     bad_prims = sorted(p for p, m in d3["prims"].items() if m != "\\" + p)
     if bad_prims or len(d3["prims"]) != len(DUMP_PRIMITIVES):
@@ -1966,28 +2135,6 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
             reasons.append("dump lost name %s" % name_str(nm))
             continue
         body[nm] = d3["meanings"][i]
-
-    # Coverage: TeX's own count of its hash table at body start against the
-    # dumped universe. A name the universe misses is a name the contract
-    # would call undefined without having asked.
-    cov = hash_coverage(tex, "r6_cov", pre + b"\\begin{document}\n", universe)
-    if cov.get("error"):
-        reasons.append("body-start " + cov["error"])
-    elif cov["uncovered"] != 0:
-        reasons.append("TeX's hash table at body start holds %d names outside the "
-                       "dumped universe" % cov["uncovered"])
-    # ... and on the LAST pass, with the files the dump's own passes wrote
-    # (.aux, ...) in place, which is the pass the oracle grades (review
-    # defect 1: the count above runs in a fresh directory, i.e. on pass 1,
-    # and cannot see a name the .aux creates).
-    cov_last = hash_coverage(tex, "r7_cov_last", pre + b"\\begin{document}\n", universe,
-                             seed_dir=jd3)
-    cov_last["pass"] = last_pass
-    if cov_last.get("error"):
-        reasons.append("last-pass body-start " + cov_last["error"])
-    elif cov_last["uncovered"] != 0:
-        reasons.append("TeX's hash table at body start on pass %d holds %d names outside "
-                       "the dumped universe" % (last_pass, cov_last["uncovered"]))
 
     # Readings of an ambiguous trace record that name nothing: when one
     # reading exists (in format state or at body start) the others are
@@ -2156,12 +2303,13 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
                          "traced_names": len(traced), "universe": len(universe),
                          "later_pass_traced_names": len(later_traced),
                          "job_written_names": len(written),
-                         "passes": npass,
+                         "passes": MAX_PASSES + 1,
+                         "pass_histories": [hist_label(h) for h in histories],
                          "file_token_names": len(file_names),
                          "ambiguous_trace_records": len(tr["ambiguous"]),
                          "phantom_readings": len(phantoms)},
         "coverage": cov,
-        "coverage_last_pass": cov_last,
+        "coverage_passes": coverage_passes,
         "defined_names": defined,
         "reverted_names": sorted(reverted),
         "parameters_assigned": sorted(params),

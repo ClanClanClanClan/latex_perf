@@ -10,12 +10,20 @@
   "file_token_names": 1298,
   "job_written_names": 1,
   "kernel_names": 23519,
-  "later_pass_traced_names": 1,
+  "later_pass_traced_names": 4,
   "members": 23968,
-  "passes": 2,
+  "pass_histories": [
+   "none",
+   "F",
+   "S",
+   "FF",
+   "FS",
+   "FFS"
+  ],
+  "passes": 4,
   "phantom_readings": 6,
   "traced_names": 905,
-  "universe": 34574
+  "universe": 34577
  },
  "complete": true,
  "complete_scope": "configuration: the name set at body start of this configuration is exact (every name TeX's hash table holds there was asked); it attests no document's own names, which need a per-document self-check (M2)",
@@ -57,17 +65,161 @@
   "covered": 29846,
   "hash_entries": 29846,
   "uncovered": 0,
-  "universe_multiletter": 34317,
+  "universe_multiletter": 34320,
   "unwritable": 0
  },
- "coverage_last_pass": {
-  "covered": 29847,
-  "hash_entries": 29847,
-  "pass": 2,
-  "uncovered": 0,
-  "universe_multiletter": 34317,
-  "unwritable": 0
- },
+ "coverage_passes": [
+  {
+   "covered": 29846,
+   "env": "forced",
+   "hash_entries": 29846,
+   "history": "none",
+   "jobname": "job",
+   "pass": 1,
+   "uncovered": 0,
+   "universe_multiletter": 34320,
+   "unwritable": 0
+  },
+  {
+   "covered": 29847,
+   "env": "forced",
+   "hash_entries": 29847,
+   "history": "F",
+   "jobname": "job",
+   "pass": 2,
+   "uncovered": 0,
+   "universe_multiletter": 34320,
+   "unwritable": 0
+  },
+  {
+   "covered": 29847,
+   "env": "forced",
+   "hash_entries": 29847,
+   "history": "S",
+   "jobname": "job",
+   "pass": 2,
+   "uncovered": 0,
+   "universe_multiletter": 34320,
+   "unwritable": 0
+  },
+  {
+   "covered": 29847,
+   "env": "forced",
+   "hash_entries": 29847,
+   "history": "FF",
+   "jobname": "job",
+   "pass": 3,
+   "uncovered": 0,
+   "universe_multiletter": 34320,
+   "unwritable": 0
+  },
+  {
+   "covered": 29847,
+   "env": "forced",
+   "hash_entries": 29847,
+   "history": "FS",
+   "jobname": "job",
+   "pass": 3,
+   "uncovered": 0,
+   "universe_multiletter": 34320,
+   "unwritable": 0
+  },
+  {
+   "covered": 29847,
+   "env": "forced",
+   "hash_entries": 29847,
+   "history": "FFS",
+   "jobname": "job",
+   "pass": 4,
+   "uncovered": 0,
+   "universe_multiletter": 34320,
+   "unwritable": 0
+  },
+  {
+   "env": "grading",
+   "history": "none",
+   "jobname": "job",
+   "pass": 1,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "F",
+   "jobname": "job",
+   "pass": 2,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "S",
+   "jobname": "job",
+   "pass": 2,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "FF",
+   "jobname": "job",
+   "pass": 3,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "FS",
+   "jobname": "job",
+   "pass": 3,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "FFS",
+   "jobname": "job",
+   "pass": 4,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "none",
+   "jobname": "lpotherjob",
+   "pass": 1,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "F",
+   "jobname": "lpotherjob",
+   "pass": 2,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "S",
+   "jobname": "lpotherjob",
+   "pass": 2,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "FF",
+   "jobname": "lpotherjob",
+   "pass": 3,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "FS",
+   "jobname": "lpotherjob",
+   "pass": 3,
+   "uncovered": 0
+  },
+  {
+   "env": "grading",
+   "history": "FFS",
+   "jobname": "lpotherjob",
+   "pass": 4,
+   "uncovered": 0
+  }
+ ],
  "declared_options": [
   "10pt",
   "11pt",
@@ -862,7 +1014,7 @@
  ],
  "generator": {
   "tool": "scripts/tools/gen_contract.py",
-  "version": "3"
+  "version": "4"
  },
  "incomplete_reasons": [],
  "jobname": "job",
@@ -912,13 +1064,13 @@
   "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe"
  },
  "provenance": {
-  "dump_log_sha256": "3d07505271d5a3fd935c362ce09c7b09383fcdc6e22146ca5e1f192a5ea12ea8",
-  "dump_tex_sha256": "3efdef3cfb96863d5707b786be7d5092e1499a0b9c187c381dd3dceb6eb8d358",
-  "fmt_extra_tex_sha256": "5ac9bcd28b65c83239262e610dc4c42c29d97eca16a4fc5f90f0b6c8587ee194",
-  "generator_version": "3",
+  "dump_log_sha256": "a1116067e49a98161a47066e1d045fa1328dde6c4e92321061393dea5bdc5da8",
+  "dump_tex_sha256": "f4319d5d1483c6e0c7c0bb284a38752fc9aa4730f3dd4f9339fa5b7a2f2e440c",
+  "fmt_extra_tex_sha256": "32bb7e9f472ae4a5a9a12762436869c4f06136bc521808994318c5c65484fb65",
+  "generator_version": "4",
   "load_tex_sha256": "0e69ef7426214d078f5ea82efa518e5000397e66e90a22d726c56321f5f7b22f",
-  "selfcheck_log_sha256": "cad9a163843f365091e35d4eac8f8b6dc1a3bcaf70ce0f3c9e436630d7080521",
-  "selfcheck_tex_sha256": "fbb915b7f3983a80f9596c4902d10dcd7c073b590a1ab5d73063dcb753da17cf",
+  "selfcheck_log_sha256": "03e2563c52b50988d37440b2e152a4c2855fc46e6bd74f6aaddcb8d82bdf583b",
+  "selfcheck_tex_sha256": "0a38c3a83b5738419f54b31c413668135cbd3c788ce0f6b231cc0dbf2f1bbba9",
   "trace_log_sha256": "993b978d8257fe4c8c70cf2168d78a2c903c568a6463f61f6989175bbeb27b49",
   "trace_tex_sha256": "09f7f351e92d74621d07aba38eec4ae080f5ce355342ae4a63729bd0ca143160"
  },
@@ -1053,7 +1205,7 @@
   "sample_from": "universe",
   "sample_seed": "80abd84bd7677c84",
   "sampled": 346,
-  "sampled_members": 243,
+  "sampled_members": 238,
   "unwritable": 0,
   "use_names": 0,
   "use_names_list": []

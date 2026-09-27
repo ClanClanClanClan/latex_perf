@@ -1,0 +1,73 @@
+LPC:15,13,13,13,13,13,13,13,13,10,12,13,13,5,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,10,12,12,6,3,14,4,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,12,0,12,7,8,12,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,1,12,2,13,15,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,
+LPP:ifcsname:\ifcsname
+LPP:endcsname:\endcsname
+LPP:csname:\csname
+LPP:immediate:\immediate
+LPP:write:\write
+LPP:expandafter:\expandafter
+LPP:meaning:\meaning
+LPP:else:\else
+LPP:fi:\fi
+LPP:begingroup:\begingroup
+LPP:endgroup:\endgroup
+LPP:lccode:\lccode
+LPP:lowercase:\lowercase
+LPP:catcode:\catcode
+LPP:the:\the
+LPM:0:macro:->\ |lpe
+LPM:1:macro:->\ |lpe
+LPM:2:\ |lpe
+LPM:3:macro:->|lpe
+LPM:4:macro:->\x@protect \!\protect \!  |lpe
+LPM:5:macro:->\tmspace -\thinmuskip {.1667em}|lpe
+LPM:6:macro:->|lpe
+LPM:7:macro:#1->\csname \@@MP 0\number #1\endcsname |lpe
+LPM:8:macro:#1->\csname \@@MP \the \nofMPsegments \number #1\endcsname |lpe
+LPM:9:macro:->\PU-cmd \"\PU\" |lpe
+LPM:10:\char"23|lpe
+LPM:11:macro:->\x@protect \$\protect \$  |lpe
+LPM:12:macro:->\ifmmode \mathdollar \else \textdollar \fi |lpe
+LPM:13:\char"25|lpe
+LPM:14:\char"26|lpe
+LPM:15:macro:->\PU-cmd \'\PU\' |lpe
+LPM:16:macro:->\x@protect \(\protect \(  |lpe
+LPM:17:macro:->\relax \ifmmode \@badmath \else $\fi |lpe
+LPM:18:macro:->\x@protect \)\protect \)  |lpe
+LPM:19:macro:->\relax \ifmmode \ifinner $\else \@badmath \fi \else \@badmath \fi |lpe
+LPM:20:macro:->\x@protect \*\protect \*  |lpe
+LPM:21:macro:->\discretionary {\thinspace \the \textfont 2\char 2}{}{}|lpe
+LPM:22:macro:->\x@protect \,\protect \,  |lpe
+LPM:23:macro:->\tmspace +\thinmuskip {.1667em}|lpe
+LPM:24:macro:->\x@protect \-\protect \-  |lpe
+LPU:309
+LPU:392
+LPU:395
+LPU:397
+LPU:400
+LPM:738:\protected\long macro:->\cs_gset_eq:NN \__hook_update_hook_code:n \__hook_initialize_hook_code:n \__hook_debug:n {\prop_gclear:N \g__hook_used_prop }\seq_map_inline:Nn \g__hook_all_seq {\tl_if_empty:cTF {c__hook_##1_parameter_tl}{\__hook_replacing_args_false: }{\__hook_replacing_args_true: }\__hook_update_hook_code:n {##1}\__hook_replacing_args_reset: }\__hook_debug:n {\iow_term:e {
+[lthooks] All initialized (non-empty) hooks:}\prop_map_inline:Nn \g__hook_used_prop {\iow_term:e {
+ ##1 -> \cs_replacement_spec:c {__hook ##1} }}}\__hook_post_initialization_defs: |lpe
+LPM:1062:macro:#1#2->\typeout {
+! LaTeX Error: File `#1.#2' not found.
+
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: #2)
+}\message {Enter file name: }{\endlinechar \m@ne \global \read \m@ne to\@gtempa }\ifx \@gtempa \@empty \let \@missingfile@area \@empty \let \@missingfile@base \@empty \def \@missingfile@ext {tex}\else \def \reserved@b {\batchmode \read -1 to \reserved@a }\def \reserved@a {x}\ifx \reserved@a \@gtempa \reserved@b \fi \def \reserved@a {X}\ifx \reserved@a \@gtempa \reserved@b \fi \filename@parse \@gtempa \edef \filename@ext {\ifx \filename@ext \relax #2\else \filename@ext \fi }\edef \reserved@a {\noexpand \IfFileExists {\filename@area \filename@base .\filename@ext }{\def \noexpand \@missingfile@area {\filename@area }\def \noexpand \@missingfile@base {\filename@base }\def \noexpand \@missingfile@ext {\filename@ext }}{\noexpand \@missingfileerror {\filename@area \filename@base }{\filename@ext }}}\reserved@a \fi |lpe
+lpa:120:undefined|lpe
+lpa:121:undefined|lpe
+lpa:122:undefined|lpe
+lpa:123:undefined|lpe
+lpa:124:undefined|lpe
+lpa:125:undefined|lpe
+lpa:126:\protected macro:->\ifincsname \expandafter ~\else \expandafter \nobreakspace \fi |lpe
+lpa:127:undefined|lpe
+lpa:128:\protected macro:->\UTFviii@invalid@err Ä|lpe
+lpa:129:\protected macro:->\UTFviii@invalid@err Å|lpe
+LPX:a0
+LPX:a1
+LPX:a2
+LPX:a3
+LPX:a4
+LPX:a5
+LPX:a6
+LPX:a7

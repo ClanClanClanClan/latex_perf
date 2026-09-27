@@ -1,0 +1,18 @@
+LPSEG:0
+LPSEG:1
+LPSEG:2
+LPSEG:3
+! Package cleveref Error: cleveref must be loaded after hyperref!.
+
+See the cleveref package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...e  Package cleveref Error: cleveref must be loaded after hyperref!.
+
+See the cleveref package documentation for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+                                                                                                                                                                                                                                              
+l.9 \begin{document}
+                    
+Package load order is wrong: load cleveref *after* hyperref.
+
+ 

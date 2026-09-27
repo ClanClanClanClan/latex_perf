@@ -1,0 +1,53 @@
+{into \tracingassigns=1}
+LPSEG:0
+{globally changing \@classoptionslist=\relax}
+{restoring \reserved@a=macro:->\@onefilewithoptions article[{\ETC.}
+{changing \escapechar=92}
+{into escapechar=-1}
+{changing protect=relax}
+{into protect=string}
+{changing ~=protected macro:->ifincsname expandafter ~else expandafter ETC.}
+{into ~=macro:->~}
+{changing csnameendcsname=undefined}
+{into csnameendcsname=relax}
+{changing csnameendcsname=relax}
+{into csnameendcsname=macro:->csnameendcsname }
+{changing if@tempswa=iftrue}
+{into if@tempswa=iffalse}
+{changing article.cls=undefined}
+{into article.cls=relax}
+{globally changing @curr@file=macro:->latex2e-first-aid-for-externalETC.}
+{into @curr@file=macro:->article.cls}
+{globally changing @curr@file@reqd=macro:->latex2e-first-aid-for-externalETC.}
+{into @curr@file@reqd=macro:->article.cls}
+{restoring article.cls=undefined}
+{restoring if@tempswa=iftrue}
+{restoring csnameendcsname=undefined}
+{restoring ~=protected macro:->ifincsname expandafter ~else expandafter ETC.}
+{restoring protect=relax}
+{restoring \escapechar=92}
+{changing ~=protected macro:->ifincsname expandafter ~else expandafter ETC.}
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls{changing \reserved@a=macro:->article.cls}
+{changing \count255=255}
+){changing \CurrentFilePathUsed=macro:->}
+LPSEG:1
+{changing \tag cannot be used at this point. If you don't understand why
+you should consult the documentation.
+But don't worry: just continue, and I'll forget what happened.=undefined}
+{into \tag cannot be used at this point. If you don't understand why
+you should consult the documentation.
+But don't worry: just continue, and I'll forget what happened.=\relax}
+{changing \toks18=}
+{into \toks18=\tag cannot be used at this point. If you don't understand why
+you should consult the documentation.
+But don't worry: just continue, and I'll forget what happened. }
+{changing \gobble@tag=undefined}
+LPSEG:2
+LPSEG:3
+LPSEG:4
+LPSEG:5
+{changing \==macro:->\T1-cmd \=\T1\= }
+{into \==macro:->\PD1-cmd \=\PD1\= }
+LPSEG:6
+LPSEG:7
+{changing \tracingassigns=1}

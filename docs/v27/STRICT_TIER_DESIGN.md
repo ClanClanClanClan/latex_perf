@@ -388,7 +388,9 @@ Anything a PROVEN verdict depends on that Coq does not check:
 
 ---
 
-## I. M0 as built (2026-09-26)
+## I. As built
+
+### I.1 M0 (2026-09-26)
 
 What the M0 pull request implemented, with where to find it. The numbers are
 not restated here; each lives in the artefact named.
@@ -412,3 +414,128 @@ is the old scrape, byte for byte); `scripts/tools/gen_proven_coverage.py` also
 records the tier tokens and refuses output without them. Every other consumer
 reads the exit code, the `MODEL-CONNECTED` line or lines that start with `T0`
 to `T5`, and the new lines match none of those.
+
+### I.2 M1 slice 1: the contract generator (2026-09-27)
+
+Data only: nothing reads a contract yet. Signature probes (the typed lattice,
+§B.2 `signature`) are slice 2; this slice ships the probe harness alone.
+
+| deliverable | where |
+|---|---|
+| generator, one configuration per run | `scripts/tools/gen_contract.py generate` |
+| probe harness (solo, batched, error classes) | `scripts/tools/gen_contract.py probes` |
+| reproducibility gate, with a kill-test of the completeness guards | `scripts/tools/check_contracts_reproducible.py` (local/nightly) |
+| parser unit tests on recorded logs | `scripts/tools/selftest_gen_contract.py`, fixtures in `corpora/contracts/parser_fixtures/` |
+| committed contracts, kernel file, probe demonstration | `corpora/contracts/` (see its `README.md`) |
+
+**Where TeX runs.** Every job runs in the image named by `TEX_IMAGE` in
+`.github/workflows/tex-oracle.yml`; the generator reads the reference from that
+file. It starts one long-lived container per invocation and runs each job with
+`docker exec`, in a fresh directory mounted at a fixed container path, with
+`SOURCE_DATE_EPOCH=0`, `FORCE_SOURCE_DATE=1` and `max_print_line=1000000`. The
+laptop TeX Live is never used. The work directory must sit under `$HOME`,
+because colima mounts only that.
+
+**How each §B.2 field is generated.**
+
+- `pin`: the engine banner, the image reference, `uname -m` inside the image,
+  and the sha256 of `pdflatex.fmt` and of `texlive.tlpdb`.
+- `kernel`: cached by fmt hash and committed under `corpora/contracts/kernel/`.
+  - An INITEX run, `pdftex -ini -etex pdflatex.ini` under `\tracingassigns=1`
+    and `\tracingrestores=1`, supplies candidate names only.
+  - Membership comes from the shipped format. Every candidate, and every name
+    referenced from a dumped meaning, is dumped with `\meaning` in format
+    state, repeating until no new name appears. The defined ones are the
+    kernel.
+  - The INITEX run is not trusted for membership because an INITEX rebuild
+    does not reproduce the shipped `pdflatex.fmt` byte for byte. Measured: six
+    build times on the format's build date were tried and none matched.
+- `load_outcome`: the configuration plus `\begin{document}\end{document}`,
+  under `-interaction=nonstopmode -halt-on-error`. A fatal records the first
+  `!` message, its error class, and the load segment of the trace run in which
+  it occurred.
+- `files_read`: the `.fls` INPUT lines of that run, minus those of an empty
+  format-state job, minus job-local files. Each file carries its sha256.
+- `defined_names`: two passes.
+  - Pass 1 traces every assignment from the first line to after the
+    begin-document hooks, with a marker before every load.
+  - Pass 2 dumps the body-start `\meaning` of every kernel name and every
+    traced name, each inside an `\ifcsname` guard. The dump runs in a catcode
+    regime where any byte string can be written inside `\csname`. Names that
+    hold the regime's reserved bytes or line feeds go through `\lowercase`
+    with placeholder bytes.
+  - A name is listed iff its body-start meaning differs from its format-state
+    meaning. Class `Undefined` means the configuration removed a kernel name.
+  - `set_in` is the load segment of the name's last traced assignment.
+  - Traced names whose meaning at body start is back to the kernel's are
+    listed in `reverted_names`.
+- `meaning`: one of `Undefined`, `Relax`, `Primitive`, `Char`, `MathChar`,
+  `Register`, `Font`, or `Macro` with the fields `long`, `protected`,
+  `outer`, `robust`, `ltcmd_spec`, `params` and `arity_hint`. `arity_hint` is
+  the static `#n` count and is only a hint.
+- `catcodes` and `active_chars`: the differences from format state at body
+  start.
+- `unicode`: an `\ifcsname u8:…` sweep of U+0080..U+FFFF (minus surrogates),
+  cross-checked against the `u8:` names in the closed world.
+- `counters`: each counter with its `\theX` and its `cl@X` reset list.
+- `key_families`: from the `\KV@<family>@<key>` names.
+- `declared_options`: from the `\ds@<option>` names.
+- `self_check`: a separate run. `\ifcsname` must agree with membership on a
+  seeded 1% sample of members, on every name referenced from a body-start
+  meaning, and on any `--use-names`.
+
+**When a contract is incomplete.** `complete` is true only if all of the
+following hold. Otherwise `incomplete_reasons` lists every failing check.
+
+- The load succeeded.
+- The trace parsed and tracing was never switched by the configuration.
+- No name changed meaning without a traced assignment.
+- The dump primitives were intact.
+- The `u8:` sweep agreed with the names.
+- The self-check passed.
+
+**How the parsers read TeX's log.**
+
+- `cp227.tcx` prints a line feed literally, so trace records and dumped
+  meanings can run over several log lines. Trace records are re-joined
+  across those lines. Dumped meanings are framed by an end sentinel.
+- The escape character is tracked from the trace itself. The class-loading
+  code runs with `\escapechar=-1`.
+- A `!` line counts as an error only when TeX's location context follows it.
+
+**Measured (2026-09-27, under the image, arm64).**
+
+- **Kernel.** INITEX takes 27 to 46 s and produces 1,418,314 trace records and 27,504 traced control-sequence names. **23,435** of them are defined in format state, after 2 dump rounds. That count is not the spike's 26,369, which counted traced names.
+- **Three contracts, all complete.**
+
+  | configuration | defined names | reverted | self-check (sampled + referenced) | size |
+  |---|---|---|---|---|
+  | `article` | 758 | 138 | 239 + 10,686 | 166 KB |
+  | article + amsmath, amssymb, amsthm, graphicx, hyperref | 9,145 | 760 | 319 + 14,943 | 1.9 MB |
+  | `amsart` | 1,969 | 272 | 249 + 11,310 | 396 KB |
+
+  Each self-check had 0 mismatches. Each contract took 3 to 8 s to generate once the kernel was cached.
+- **A fourth contract with a fatal load.** article + cleveref + hyperref records a fatal load outcome. Its message is `cleveref must be loaded after hyperref`, and it is attributed to segment `begin_document`, not to the cleveref load.
+- **Byte-identical regeneration.** Two independent runs of each contract gave identical bytes, and so did two runs of the kernel file, each rebuilt from INITEX.
+- **The self-check caught a generator defect.** The first version missed every primitive that is reachable only through an alias such as `\tex_badness:D`, whose meaning prints as `\badness` with no trailing space. The self-check reported 53 mismatches on the five-package configuration and 8 on `amsart`. The fix adds the named primitive from such meanings.
+- **The untraced-change check caught a parser defect.** The control symbol `\=` prints as `\==value`, and the parser had split the name at the wrong `=`.
+- **Kill-test of the completeness guards.** A definer `\tracingassigns=0 \def\lphidden{x}\tracingassigns=1` makes the contract incomplete through both guards: the tracing-toggle check fires, and the self-check names `lphidden`. The same use-names on plain `article` pass. `check_contracts_reproducible.py` runs this kill-test on every invocation.
+- **Surprises.**
+  - The `amsfonts` lazy files (`umsa.fd`, `umsb.fd`, the msam/msbm metrics) are read at the first math-mode use of anything in article + amssymb, not at `\mathbb` in particular.
+  - `amsart` already reads them in its load run.
+  - amssymb removes the kernel's robust inner names `\angle `, `\hbar ` and `\rightleftharpoons `.
+  - No configuration changes a catcode at body start.
+  - `amsart` changes the active `~`.
+  - All three configurations define 349 `u8:` slots.
+  - hyperref defines 171 `Hyp` keys, where the spike counted 161.
+- **Probe harness.** 30 sampled public macros of the five-package contract, plus `\mathbb` and `\frac`, gave 80 solo probes. The results are in `corpora/contracts/probes/`.
+  - Solo and batched polarity agreed on 80 of 80, with 0 timeouts.
+  - Each solo probe took 1.5 s on average on 4 workers, against the spike's 0.11 s on 6 workers.
+  - 24 of the 80 probes stop on `Command … unavailable in encoding OT1`: hyperref defines those names, but they cannot be used in this configuration. A name being defined is not the same as it being usable, and this is what slice 2's signatures must record.
+  - The static arity of `\mathbb` is 0, because it takes its argument by lookahead. This is the §B.2 warning, measured.
+
+**Open.**
+
+- The committed contracts are arm64. CI's tex-oracle job runs the same multi-arch digest on amd64, which is a separately built image. Whether its `pdflatex.fmt`, and so every contract, is byte-identical to the arm64 one is **not measured**. Until it is, the reproducibility gate stays local and refuses (exit 2) on an architecture that differs from the contract's.
+- The error-class table is a first cut. It is normalised from the first `!` line.
+- Per-mode `u8:` coverage, `decl_templates`, `definer_rules`, `load_delta` kinds, `limits` and `graphics` are slice 2 or later.

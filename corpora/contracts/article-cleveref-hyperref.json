@@ -1,0 +1,85 @@
+{
+ "banners": {
+  "l3": "L3 programming layer <2026-08-10>",
+  "latex": "LaTeX2e <2026-06-01>"
+ },
+ "complete": false,
+ "config_key": "3f907e1cb5234886ae9b55018c841c2b629ea9f029c77f6e9aecb06b0c4d6067",
+ "configuration": {
+  "class": "article",
+  "class_options": [],
+  "preamble": [
+   {
+    "options": [],
+    "package": "cleveref"
+   },
+   {
+    "options": [],
+    "package": "hyperref"
+   }
+  ]
+ },
+ "files_read": [
+  {"path":"texmf-dist/tex/generic/bigintcalc/bigintcalc.sty","sha256":"050f2ad3a3671a1f4f9bcf97784836301bc751507e7ada546632379406aea103"},
+  {"path":"texmf-dist/tex/generic/bitset/bitset.sty","sha256":"af5c7196c69dc9d28225189169b60c9b9039125bc1756c04d54886f0a3e1891e"},
+  {"path":"texmf-dist/tex/generic/gettitlestring/gettitlestring.sty","sha256":"26ab10fd43fd5a90f98bcbed3a99978808da8878eb73835db4e0346371aee41e"},
+  {"path":"texmf-dist/tex/generic/iftex/iftex.sty","sha256":"0dc0cefe2131f82330a3b8e62034c184455329d7d9bb94abe21e740821630381"},
+  {"path":"texmf-dist/tex/generic/infwarerr/infwarerr.sty","sha256":"8c3e23b8bb7d940ff26cb0cf96e0151f540acf55020dc3c1aa8bcdb2eb66305c"},
+  {"path":"texmf-dist/tex/generic/intcalc/intcalc.sty","sha256":"1343ba1b10b245bfd199c22947249af1d756808690c7811c90f07fe0a3772080"},
+  {"path":"texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty","sha256":"c42f0c2628dc5fbd95b535cf8cd3cc964347653c099d38c0d416f896d84e8240"},
+  {"path":"texmf-dist/tex/generic/ltxcmds/ltxcmds.sty","sha256":"8fea89995d37ba4c69137186faafc589c470edcc5026d8a31aadbe5cef47dcb4"},
+  {"path":"texmf-dist/tex/generic/pdfescape/pdfescape.sty","sha256":"b3f0e56366c11b85dae521f9a48a6fd415dec1ce8c83152fde813a9f64445b49"},
+  {"path":"texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty","sha256":"2df7e0bd148c99d8097352b8ac9948dccf91d61ba360dcf43f82206933b6045b"},
+  {"path":"texmf-dist/tex/generic/stringenc/stringenc.sty","sha256":"b134a7bba648a6987afc83ddfb6a3fcdad43bcae6b616e533eb484306d56ac45"},
+  {"path":"texmf-dist/tex/generic/uniquecounter/uniquecounter.sty","sha256":"9d11c81501953d689787ff14c073d2f1eda5874068db9e882b8dbbf9a9d863b0"},
+  {"path":"texmf-dist/tex/latex/base/article.cls","sha256":"c09f5982893f8a092e69435caa151eef0d3cb4d7495abf23f08b640191cf81f6"},
+  {"path":"texmf-dist/tex/latex/base/size10.clo","sha256":"7a5ab9aa1794b8864e2963db211ca03b48a455c706190c7f85124c6ca9714183"},
+  {"path":"texmf-dist/tex/latex/cleveref/cleveref.sty","sha256":"58d7e2b67b8b165ec1c7e12dd2ea6edc807d5a61f68cb316267cea44fe128ef9"},
+  {"path":"texmf-dist/tex/latex/etoolbox/etoolbox.sty","sha256":"e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4"},
+  {"path":"texmf-dist/tex/latex/graphics/keyval.sty","sha256":"e82c9ff41e9f97190a716024e89f3afdc65bf40bace3a2c6cbb5f517bacee322"},
+  {"path":"texmf-dist/tex/latex/hycolor/hycolor.sty","sha256":"8acaa03eda19a8158780356701e905e354e1dc47dc736e6e26fc860c12a15e14"},
+  {"path":"texmf-dist/tex/latex/hyperref/hpdftex.def","sha256":"18763a72b43d1e02cbe5ea514e6b5af52f14ca5616c4ec6dce5b2ee8df050cc1"},
+  {"path":"texmf-dist/tex/latex/hyperref/hyperref.sty","sha256":"da65dca8a44a4946284e6344ed731c9c1c6629bf7bd636b176a0cb2ea50af0cb"},
+  {"path":"texmf-dist/tex/latex/hyperref/nameref.sty","sha256":"567afe6847e20afcd0cbc5898274b815055cf96db3bee2fc74b97b310d17f602"},
+  {"path":"texmf-dist/tex/latex/hyperref/pd1enc.def","sha256":"6b33f39f29b44db26efbe3e173a4c30c12e5fb8f66fece93750aa616e64f4170"},
+  {"path":"texmf-dist/tex/latex/hyperref/puenc.def","sha256":"2e89cb339ac037594b6eb96233e879a6aaf2fffe78e2c02325c598f664847359"},
+  {"path":"texmf-dist/tex/latex/kvoptions/kvoptions.sty","sha256":"70595629ec990ba8c0b6e6a54afcff2603464e6fce380a54a98549a78d2fc74a"},
+  {"path":"texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty","sha256":"e3fcf7f3372a27bb478eb9488eca1e25ed382480d02a6898f190bd955388e055"},
+  {"path":"texmf-dist/tex/latex/l3kernel/l3backend-pdftex.def","sha256":"f700f4fca20bb229c1545482679bb630dedf1df6d7e6da300ab0012496e87c2b"},
+  {"path":"texmf-dist/tex/latex/refcount/refcount.sty","sha256":"1bd5d42025520bef74f8808af99cf3f3be7d2e3774b9931bf85c11ba81bb6cab"},
+  {"path":"texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty","sha256":"7771d8fb8f76147d1d6fc5b205c8989feb270bafccd6021570cd7e5152ead1d6"},
+  {"path":"texmf-dist/tex/latex/url/url.sty","sha256":"2373f56849ac606473e77053e5c1d14c92aba312b3f684e02a130eaf36f2de47"}
+ ],
+ "generator": {
+  "tool": "scripts/tools/gen_contract.py",
+  "version": "1"
+ },
+ "incomplete_reasons": [
+  "load_fatal: the configuration does not load, so no name set was generated"
+ ],
+ "kernel": {
+  "count": 23435,
+  "file": "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json",
+  "meanings_sha256": "12c2090e0cac3337ca522af3489aba0766bdd4e4d39fac26a6d2bb2b42c90322"
+ },
+ "load_outcome": {
+  "error_class": "package_error:cleveref",
+  "load_index": 3,
+  "message": "Package cleveref Error: cleveref must be loaded after hyperref!.",
+  "rc": 1,
+  "segment": "begin_document",
+  "status": "fatal"
+ },
+ "pin": {
+  "arch": "aarch64",
+  "engine_banner": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+  "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+  "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+  "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe"
+ },
+ "provenance": {
+  "load_tex_sha256": "234b64d9838fb46a9555d6e67989de0d2cb8bc0b4ec84e0da504bf0ef3ee1988",
+  "trace_tex_sha256": "3cc349099a446867f7f4e9ca76c9e464cfe5aa90917c16c56fd29b18b6979360"
+ },
+ "schema": "lp-configuration-contract/1"
+}

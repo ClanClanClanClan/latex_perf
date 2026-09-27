@@ -1,0 +1,19 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.8.30)  1 JAN 1970 00:00
+entering extended mode
+ restricted \write18 enabled.
+LaTeX Font Info:    ... okay on input line 4.
+
+! Package cleveref Error: cleveref must be loaded after hyperref!.
+
+See the cleveref package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...e  Package cleveref Error: cleveref must be loaded after hyperref!.
+
+See the cleveref package documentation for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+                                                                                                                                                                                                                                              
+l.4 \begin{document}
+                    
+Package load order is wrong: load cleveref *after* hyperref.
+
+ 

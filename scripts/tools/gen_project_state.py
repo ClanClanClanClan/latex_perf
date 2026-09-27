@@ -293,7 +293,8 @@ def build(repo: Path) -> str:
               "design-seen since ADR-012. The headline figure will come from "
               "sample 3 (ranks 401-600), drawn and graded only after every "
               "graded artefact has been re-graded under the frozen oracle, "
-              "CI's digest-pinned TeX Live image (ADR-012 decision 7). "
+              "CI's digest-pinned TeX Live image (ADR-012 decision 7); that "
+              "re-grade is done and moved no cell (OPEN-118). "
               "Definitions: "
               "`docs/v27/STRICT_TIER_DESIGN.md` §E and "
               "`docs/v27/adr/ADR-012-contract-bounded-proven-tier.md`.", "",

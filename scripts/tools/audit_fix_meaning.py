@@ -33,7 +33,7 @@ from concurrent.futures import ThreadPoolExecutor
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, run_to_fixpoint  # noqa: E402
-from _oracle import OracleError, get_oracle  # noqa: E402
+from _oracle import OracleError, get_oracle, oracle_tex_env  # noqa: E402
 import _measurement_provenance as _mp  # noqa: E402
 
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
@@ -60,9 +60,8 @@ def oracle_banner() -> str:
         sys.exit(f"FATAL: the pinned-image oracle is unavailable: {e}")
 
 def tex_env(td):
-    return dict(os.environ, TEXMFHOME=str(pathlib.Path(td) / "th"),
-                TEXMFVAR=str(pathlib.Path(td) / "tv"),
-                openin_any="p", openout_any="p", SOURCE_DATE_EPOCH="0")
+    # The oracle's ONE TeX environment (_oracle.ORACLE_TEX_VARS), never restated.
+    return oracle_tex_env(td)
 
 
 def build(pkg, top, rule, timeout):

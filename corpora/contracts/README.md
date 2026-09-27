@@ -12,11 +12,14 @@ first consumer is milestone M2 (`docs/v27/STRICT_TIER_DESIGN.md` §F).
 
 Every TeX job ran inside the pinned image named by `TEX_IMAGE` in
 `.github/workflows/tex-oracle.yml` (ADR-012 decision 7), never the laptop TeX
-Live. The contracts record the image's architecture (`pin.arch`, arm64 here).
+Live, through the one oracle entry point `scripts/tools/_oracle.py`
+(`run_engine`, under the graders' own TeX environment
+`_oracle.ORACLE_TEX_VARS` plus the generator's documented overrides; C-79). The contracts record the image's architecture (`pin.arch`, arm64 here).
 The digest is a multi-arch index, so another architecture runs a separately
 built image; whether its `pdflatex.fmt` is byte-identical is not measured.
 
-Regenerate and diff (needs docker and the image; local or nightly only):
+Regenerate and diff (needs the oracle: docker and the pinned image; local or
+nightly only):
 
     python3 scripts/tools/check_contracts_reproducible.py --all
 
@@ -28,7 +31,8 @@ To add a configuration:
 ## parser_fixtures
 
 Cut from the logs of real runs of the generator under the pinned image, not
-synthesised:
+synthesised (before C-79, when the generator ran its own container with the
+work directory at `/lpwork`, which is the `PWD` `load.fls` records):
 
 - `trace_excerpt.log`: the pass-1 trace of article + amsmath, amssymb, amsthm,
   graphicx, hyperref (load markers, a record printed mid-line after a

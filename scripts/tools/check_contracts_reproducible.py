@@ -8,8 +8,8 @@ This gate regenerates each selected contract from the configuration recorded
 inside it, rebuilding the kernel from INITEX (unless --cached-kernel), and
 compares both the contract and the committed kernel-names file.
 
-LOCAL / NIGHTLY ONLY. It needs docker and the pinned TeX Live image, and the
-committed contracts record the image's architecture (arm64): CI's tex-oracle
+LOCAL / NIGHTLY ONLY. It needs the oracle (_oracle.py: docker and the pinned
+image), and the committed contracts record the image's architecture (arm64): CI's tex-oracle
 job runs the same multi-arch digest on amd64, a separately built image whose
 pdflatex.fmt has not been compared with the arm64 one. It is therefore not
 wired into any workflow, and it refuses (exit 2) on an architecture other than
@@ -43,7 +43,6 @@ import argparse
 import difflib
 import json
 import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -306,19 +305,20 @@ def main(argv=None) -> int:
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--cached-kernel", action="store_true",
                     help="reuse the cached kernel instead of re-running INITEX")
-    ap.add_argument("--work", default="~/.cache/lp-oracle/contracts/work")
+    ap.add_argument("--work", default=None,
+                    help="a directory under the oracle work root (default: the "
+                         "oracle work root)")
     a = ap.parse_args(argv)
     repo = Path(a.repo).resolve()
 
-    if shutil.which("docker") is None:
-        print("check_contracts_reproducible: CANNOT CHECK - docker is not available "
-              "(this is not a pass)")
-        return 2
     image = gc.read_image(repo)
-    if subprocess.run(["docker", "image", "inspect", image],
-                      capture_output=True).returncode != 0:
-        print("check_contracts_reproducible: CANNOT CHECK - the pinned image %s is "
-              "not pulled (this is not a pass)" % image)
+    # The generator is a client of the one oracle (_oracle.py); if the oracle
+    # is unavailable (no docker, image not pulled, a wrong tree) nothing here
+    # can be checked.
+    ok, why = gc._oracle.availability()
+    if not ok:
+        print("check_contracts_reproducible: CANNOT CHECK - the oracle is unavailable: "
+              "%s (this is not a pass)" % why)
         return 2
 
     if a.all:
@@ -329,9 +329,12 @@ def main(argv=None) -> int:
         print("check_contracts_reproducible: no contracts selected")
         return 1
 
-    work = Path(a.work).expanduser()
-    work.mkdir(parents=True, exist_ok=True)
-    tmp = Path(tempfile.mkdtemp(prefix="check-", dir=work))
+    work = Path(a.work).expanduser() if a.work else None
+    if work is not None:
+        work.mkdir(parents=True, exist_ok=True)
+        tmp = Path(tempfile.mkdtemp(prefix="check-", dir=work))
+    else:
+        tmp = gc._oracle.get_oracle().mkdtemp(prefix="check-")
     failures = 0
     cache = (tmp / "cache" if not a.cached_kernel
              else Path("~/.cache/lp-oracle/contracts/cache").expanduser())

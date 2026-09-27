@@ -393,15 +393,64 @@ with tempfile.TemporaryDirectory() as td:
           all(node["pass"] == len(h) + 1 for h, node in tree.items()), got)
 
 # --- review defect R1.3: the grading environment is the graders' ----------------------
-drr_src = (HERE / "diff_real_roots.py").read_text(encoding="utf-8")
-battery_src = (HERE / "gen_strict_battery.py").read_text(encoding="utf-8")
-for k, v in [("SOURCE_DATE_EPOCH", "0"), ("openin_any", "p"), ("openout_any", "p")]:
-    check("env: %s=%s as the graders set it" % (k, v), gc.TEX_ENV.get(k) == v and
-          '%s="%s"' % (k, v) in drr_src and '%s="%s"' % (k, v) in battery_src)
-check("env: the graders do not force the date, and grading drops it",
-      "FORCE_SOURCE_DATE" not in drr_src and "FORCE_SOURCE_DATE" not in battery_src
-      and gc.env_prefix("grading") == ["env", "-u", "FORCE_SOURCE_DATE"]
-      and gc.env_prefix("forced") == [])
+# There is ONE definition of the oracle's TeX environment, _oracle.ORACLE_TEX_VARS
+# (with the private TEXMFHOME/TEXMFVAR of oracle_tex_vars). The graders get it
+# through _oracle's tex_env/oracle_tex_env and the generator through
+# oracle_tex_vars; each check below reads that single source, never a copy.
+# (The previous form compared gen_contract.TEX_ENV with the graders' SOURCE
+# TEXT, and failed three checks the day #617 moved the graders' copy into
+# _oracle.py although no environment had changed.)
+import re  # noqa: E402
+import _oracle  # noqa: E402
+W = "/lp-work-root/run"
+base = _oracle.oracle_tex_vars(W)
+check("env: the oracle's one TeX environment is the recorded protocol "
+      "(openin_any=p, openout_any=p, SOURCE_DATE_EPOCH=0, no forced date)",
+      _oracle.ORACLE_TEX_VARS == {"openin_any": "p", "openout_any": "p",
+                                  "SOURCE_DATE_EPOCH": "0"}, _oracle.ORACLE_TEX_VARS)
+check("env: a private TEXMFHOME/TEXMFVAR below the work directory",
+      {k: base.get(k) for k in ("TEXMFHOME", "TEXMFVAR")} ==
+      {"TEXMFHOME": W + "/th", "TEXMFVAR": W + "/tv"}, base)
+grader_env = _oracle._Base.tex_env(None, W)
+check("env: the graders' tex_env carries the one environment",
+      all(grader_env.get(k) == v for k, v in base.items()), base)
+want_over = {"grading": dict(gc.LOG_WIDTH),
+             "forced": dict(gc.LOG_WIDTH, **gc.FORCE_DATE),
+             "second_date": dict(gc.LOG_WIDTH, **gc.FORCE_DATE,
+                                 SOURCE_DATE_EPOCH=gc.SECOND_EPOCH)}
+for env in gc.ENVS:
+    v = gc.tex_vars(env, W)
+    over = {k: x for k, x in v.items() if base.get(k) != x}
+    check("env %s: exactly the oracle's environment plus its documented overrides"
+          % env, set(base) <= set(v) and over == want_over[env], over)
+check("env: the grading environment does not force the date",
+      "FORCE_SOURCE_DATE" not in gc.tex_vars("grading", W) and "FORCE_SOURCE_DATE" not in base)
+check("env: the log-width overrides change no graded variable",
+      not set(gc.LOG_WIDTH) & set(base) and not set(gc.LOG_WIDTH) & {"FORCE_SOURCE_DATE"})
+check("env: every generator variable is one the oracle forwards",
+      all(_oracle._ENV_FORWARD.match(k) for e in gc.ENVS for k in gc.tex_vars(e, W)))
+# No tool restates the environment: an assignment of one of these variables to
+# a literal anywhere under scripts/ but _oracle.py is a second definition that
+# can drift. (Explicit overrides by NAME, like gen_contract's
+# SOURCE_DATE_EPOCH=SECOND_EPOCH, are not literals.)
+_PY_RESTATE = re.compile(r"""\b(openin_any|openout_any|SOURCE_DATE_EPOCH)\s*=\s*[rbuRBU]?["']"""
+                         r"""|["'](openin_any|openout_any|SOURCE_DATE_EPOCH)["']\s*:""")
+_SH_RESTATE = re.compile(r"^[^#]*\b(openin_any|openout_any|SOURCE_DATE_EPOCH)=")
+# Skipped: the definition itself; this gate and the selftest harness (their
+# kill-test payloads are restatements, written out); check_oracle_infra_grading
+# (it sets a HOSTILE host value, openin_any=a, to prove it does NOT cross).
+_SKIP = {"_oracle.py", "check_gen_contract_parsers.py", "check_gate_selftests.py",
+         "check_oracle_infra_grading.py"}
+restated = []
+for f in sorted((REPO / "scripts").rglob("*")):
+    if not f.is_file() or f.name in _SKIP or f.suffix not in (".py", ".sh", ".bash"):
+        continue
+    rx = _PY_RESTATE if f.suffix == ".py" else _SH_RESTATE
+    for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").split("\n"), 1):
+        if rx.search(line):
+            restated.append("%s:%d" % (f.relative_to(REPO), n))
+check("env: no tool restates the oracle's TeX environment (one definition, _oracle.py)",
+      not restated, restated[:10])
 
 # --- the engine's own name lists ----------------------------------------------------------
 check("cs_count: the statistics line", gc.cs_count(

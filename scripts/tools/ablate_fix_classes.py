@@ -11,7 +11,7 @@ after-number is compatible with the change having helped, hurt, or done nothing
 import json, os, pathlib, re, shutil, subprocess, sys, difflib
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from _oracle import get_oracle  # noqa: E402
+from _oracle import get_oracle, oracle_tex_env  # noqa: E402
 
 CLI = pathlib.Path("_build/default/latex-parse/src/validators_cli.exe").resolve()
 ROOT = pathlib.Path(os.environ["LP_REAL_CORPUS"])
@@ -80,9 +80,7 @@ def build(work, preds, revert_all=False):
 
 
 def compile_rc(work, top, td):
-    env = dict(os.environ, TEXMFHOME=str(pathlib.Path(td) / "th"),
-               TEXMFVAR=str(pathlib.Path(td) / "tv"), openin_any="p",
-               openout_any="p", SOURCE_DATE_EPOCH="0")
+    env = oracle_tex_env(td)  # the oracle's ONE TeX environment
     # This tool's own (older) two-pass protocol, unchanged; the runs go
     # through the pinned-image oracle (ADR-012 decision 7).
     rc = None

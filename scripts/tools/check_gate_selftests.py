@@ -608,6 +608,19 @@ REGISTRY = [
                      r"FAIL set_in: hyperref's",
                      old="                stack = saves.get(key) or []\n",
                      new="                stack = []\n"),
+            # One oracle TeX environment (_oracle.ORACLE_TEX_VARS). A grader
+            # that restates it, or a generator environment that drifts from
+            # base + its documented overrides, must fail the gate.
+            Mutation("a grader restates the oracle's TeX environment",
+                     "scripts/tools/confirm_fix_policy.py",
+                     r"FAIL env: no tool restates the oracle's TeX environment",
+                     old="    return oracle_tex_env(td)\n",
+                     new='    return dict(oracle_tex_env(td), openin_any="p")\n'),
+            Mutation("the generator's grading environment forces the date",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL env grading: exactly the oracle's environment",
+                     old='    if env == "grading":\n        return out\n',
+                     new='    if env == "grading":\n        return dict(out, **FORCE_DATE)\n'),
         ]),
     GateTest(
         "check_fix_type_consistency", [PY, f"{TOOLS}/check_fix_type_consistency.py"],
@@ -821,6 +834,19 @@ REGISTRY = [
         [PY, f"{TOOLS}/check_oracle_infra_grading.py"],
         "pure",
         [
+            # The contract generator is an oracle client (run_engine): the
+            # engine it names must be the one that runs, and on the native
+            # backend no host TeX variable may cross into its jobs.
+            Mutation("the in-container script runs a fixed engine, not the given one",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*runs the engine run_engine names",
+                     old='timeout -k 10 "$t" "$e" "$@"',
+                     new='timeout -k 10 "$t" pdflatex "$@"'),
+            Mutation("native run_engine lets the host's TeX variables through",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*no host TeX variable",
+                     old="                      if not _ENV_FORWARD.match(k)}, **(env or {})}",
+                     new="                      }, **(env or {})}"),
             Mutation("the container oracle drops the pdfTeX-banner proof",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*'nobanner' run",

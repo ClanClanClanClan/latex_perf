@@ -6,8 +6,10 @@ of package loads (each with options) and, optionally, preamble definer lines
 interleaved with them. The contract records what that exact configuration does
 under the oracle, which ADR-012 decision 7 freezes as CI's digest-pinned image
 (`TEX_IMAGE` in .github/workflows/tex-oracle.yml, read from there, never
-restated here). Every TeX job runs inside that image through docker; the laptop
-TeX Live is never used.
+restated here). Every TeX job runs inside that image through the ONE oracle
+entry point, scripts/tools/_oracle.py (`run_engine`, `image_command`); this
+file starts no engine and no container of its own (check_oracle_pin.py). The
+laptop TeX Live is never used.
 
 Nothing in a contract is hand-listed. Every field comes from a TeX run:
 
@@ -85,10 +87,11 @@ probe HARNESS (`probes` subcommand): solo -halt-on-error probe documents under
 the oracle's pass protocol with a timeout, classified by error class (never by
 rc), and a batched run whose polarity is compared with the solo one.
 
-Determinism: every job runs in a fresh directory mounted at a fixed container
-path. Name-set runs use SOURCE_DATE_EPOCH=0 and FORCE_SOURCE_DATE=1; the load
-outcome is attested without FORCE_SOURCE_DATE (the graders' environment) and
-must agree. Output JSON is sorted; no timing is written into a contract.
+Determinism: every job runs in a fresh directory under the oracle's work root.
+The TeX environment is the graders' own (`_oracle.oracle_tex_vars`, one
+definition) plus explicit overrides (see LOG_WIDTH): name-set runs add
+FORCE_SOURCE_DATE=1; the load outcome is attested without it (the graders'
+environment) and must agree. Output JSON is sorted; no timing is written into a contract.
 `check_contracts_reproducible.py` regenerates a committed contract and diffs it
 byte for byte.
 
@@ -99,9 +102,9 @@ Usage:
   gen_contract.py probes --contract corpora/contracts/NAME.json --sample 30 \\
       [--names mathbb,frac] --out corpora/contracts/probe_demo_NAME.json
 
-Needs docker with the pinned image pulled. The work directory must be visible
-inside the container (colima mounts only $HOME by default), so it defaults to
-~/.cache/lp-oracle/contracts/work.
+Needs the oracle (_oracle.py: docker with the pinned image pulled, or the
+pinned image itself). Work directories lie under the oracle's work root, which
+the container sees (colima mounts only $HOME by default).
 """
 from __future__ import annotations
 
@@ -115,16 +118,17 @@ import random
 import re
 import shutil
 import struct
-import subprocess
 import sys
 import tarfile
+import tempfile
 import threading
 import time
-import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _oracle  # noqa: E402  (the ONE oracle entry point, ADR-012 decision 7)
 
 SCHEMA = "lp-configuration-contract/1"
 KERNEL_SCHEMA = "lp-kernel-names/1"
@@ -137,34 +141,30 @@ GENERATOR_VERSION = "4"
 REPO = Path(__file__).resolve().parent.parent.parent
 WORKFLOW = Path(".github/workflows/tex-oracle.yml")
 CONTRACT_DIR = Path("corpora/contracts")
-CONTAINER_WORK = "/lpwork"
-# The container's environment. It carries the grading environment of
-# diff_real_roots.py and gen_strict_battery.py (SOURCE_DATE_EPOCH=0,
-# openin_any/openout_any=p, private TEXMFHOME/TEXMFVAR), plus log-width
-# settings that change no outcome, plus FORCE_SOURCE_DATE=1, which the graders
-# do NOT set: it pins \\year, \\month, \\day and \\time to the epoch, so
-# name-set runs are byte-reproducible. Three environments are derived from it
-# (env_prefix): "forced" as is; "grading" without FORCE_SOURCE_DATE, the
-# oracle's own (real clock), under which the load outcome is attested; and
-# "second_date", another forced date, which finds the kernel's date-dependent
-# names. Every contract checks that the forced date changed nothing (review
-# defect R1.3: `\\ifnum\\year>2000` loaded under one and failed under the
-# other).
-TEX_ENV = {
-    "HOME": "/tmp",
-    # No log line wrapping, so a trace record or a dumped meaning is one line.
-    "max_print_line": "1000000",
-    "error_line": "254",
-    "half_error_line": "238",
-    "SOURCE_DATE_EPOCH": "0",
-    "openin_any": "p",
-    "openout_any": "p",
-    "TEXMFHOME": "/tmp/lp-texmfhome",
-    "TEXMFVAR": "/tmp/lp-texmfvar",
-    "FORCE_SOURCE_DATE": "1",
-}
-GRADING_UNSET = ["FORCE_SOURCE_DATE"]
+# THE TeX ENVIRONMENT. Every job runs through the oracle (`_oracle.run_engine`)
+# under EXACTLY the variables `tex_vars(env, td)` returns, built on the ONE
+# definition of the graders' environment, `_oracle.oracle_tex_vars(td)`
+# (openin_any/openout_any=p, SOURCE_DATE_EPOCH=0, a private TEXMFHOME/TEXMFVAR
+# below td), which this file never restates. The overrides, each explicit:
+#   LOG_WIDTH           every job: no log line wrapping, so a trace record or a
+#                       dumped meaning is one line (changes no outcome);
+#   FORCE_DATE          "forced" and "second_date": FORCE_SOURCE_DATE=1, which
+#                       the graders do NOT set: it pins \\year, \\month, \\day
+#                       and \\time to SOURCE_DATE_EPOCH, so name-set runs are
+#                       byte-reproducible;
+#   SECOND_EPOCH        "second_date" only: another forced date, which finds
+#                       the kernel's date-dependent names.
+# "grading" is the base plus LOG_WIDTH only: the oracle's own environment (real
+# clock), under which the load outcome is attested. Every contract checks that
+# the forced date changed nothing (review defect R1.3: `\\ifnum\\year>2000`
+# loaded under one and failed under the other). check_gen_contract_parsers.py
+# asserts each environment is exactly base + these overrides.
+LOG_WIDTH = {"max_print_line": "1000000", "error_line": "254",
+             "half_error_line": "238"}
+FORCE_DATE = {"FORCE_SOURCE_DATE": "1"}
 SECOND_EPOCH = "1790000000"
+ENVS = ("forced", "grading", "second_date")
+PRIVATE_TEXMF = "<private-texmf>"
 # Every job's name. Some meanings hold it (l3's \\c_sys_jobname_str, the file
 # currently read, ...), so a contract is exact under this job name only; the
 # names whose meaning changes with it are found by a run under the second one
@@ -1016,7 +1016,7 @@ def preamble_tex(cfg: dict, *, markers: bool = False) -> bytes:
 
 
 # ---------------------------------------------------------------------------
-# The TeX runner: one long-lived container per invocation, jobs via docker exec
+# The TeX runner: a client of the one oracle (_oracle.py), never its own engine
 # ---------------------------------------------------------------------------
 
 def read_image(repo: Path) -> str:
@@ -1027,53 +1027,88 @@ def read_image(repo: Path) -> str:
     return m.group(1)
 
 
-def env_prefix(env: str) -> list:
-    """argv prefix selecting one of the three environments (see TEX_ENV)."""
-    if env == "forced":
-        return []
+def tex_vars(env: str, td) -> dict:
+    """The exact TeX variables of one of the three environments (see
+    LOG_WIDTH): the oracle's shared base for work directory `td`, plus the
+    documented overrides."""
+    out = dict(_oracle.oracle_tex_vars(td), **LOG_WIDTH)
     if env == "grading":
-        out = ["env"]
-        for k in GRADING_UNSET:
-            out += ["-u", k]
         return out
+    if env == "forced":
+        return dict(out, **FORCE_DATE)
     if env == "second_date":
-        return ["env", "SOURCE_DATE_EPOCH=" + SECOND_EPOCH]
+        return dict(out, **FORCE_DATE, SOURCE_DATE_EPOCH=SECOND_EPOCH)
     raise ValueError(env)
 
 
 class Tex:
-    def __init__(self, image: str, work: Path):
+    """The generator's TeX runner: a CLIENT of the one oracle (ADR-012
+    decision 7, OPEN-118). Every TeX job -- the pdflatex runs, the INITEX
+    (`pdftex -ini`) kernel jobs, the \\meaning dumps, the probes and the
+    hash-coverage jobs -- goes through `_oracle.run_engine`, so it runs in the
+    oracle's container (or natively inside the pinned image) with the
+    oracle's guarantees: a verified tree fingerprint, the rc read inside the
+    container, positive proof pdfTeX ran, the free-space floor, pdfTeX's own
+    write failures refused. The image's own files (the shipped format, the
+    files a configuration read) are read through `_oracle.image_command`.
+
+    Work directories lie under the oracle's work root, which the container
+    sees at the same absolute path (colima mounts only $HOME). One invocation
+    gets one run directory: `jobs/` holds a fresh directory per job and
+    `texmf/` the private TEXMFHOME/TEXMFVAR every job of the invocation
+    shares (`_oracle.private_texmf_vars`)."""
+
+    def __init__(self, image: str, work: Path | None = None, oracle=None):
+        try:
+            self.oracle = oracle or _oracle.get_oracle()
+        except _oracle.OracleError as e:
+            raise SystemExit("gen_contract: the oracle is unavailable: %s" % e)
+        if image != _oracle.IMAGE:
+            raise SystemExit("gen_contract: asked for %s but the oracle is %s"
+                             % (image, _oracle.IMAGE))
         self.image = image
-        home = Path.home().resolve()
-        work = work.resolve()
-        if home not in work.parents and work != home:
-            raise SystemExit("gen_contract: work dir %s is not under $HOME; colima "
-                             "mounts only $HOME by default" % work)
-        self.host = work / ("run-" + uuid.uuid4().hex[:12])
+        if work is None:
+            self.base = self.oracle.mkdtemp(prefix="contract-run-")
+        else:
+            work = Path(work).expanduser().resolve()
+            work.mkdir(parents=True, exist_ok=True)
+            inside = getattr(self.oracle, "_inside", None)
+            if inside is not None and not inside(work):
+                raise SystemExit("gen_contract: work dir %s is outside the oracle work "
+                                 "root %s, which the container cannot see (set "
+                                 "LP_ORACLE_WORKROOT or omit --work)"
+                                 % (work, self.oracle.workroot))
+            self.base = Path(tempfile.mkdtemp(prefix="contract-run-", dir=work))
+        self.host = self.base / "jobs"
+        self.texmf = self.base / "texmf"
+        self.host.mkdir()
+        self.texmf.mkdir()
         # Jobs are numbered under a lock: the pass-history trees run in threads.
         self._lock = threading.Lock()
         self._jobs = 0
-        self.host.mkdir(parents=True)
-        self.name = "lp-contract-" + self.host.name
-        env = []
-        for k, v in TEX_ENV.items():
-            env += ["-e", "%s=%s" % (k, v)]
-        r = subprocess.run(["docker", "run", "-d", "--rm", "--name", self.name,
-                            "-v", "%s:%s" % (self.host, CONTAINER_WORK)] + env +
-                           [image, "sleep", "infinity"], capture_output=True, text=True)
-        if r.returncode != 0:
-            shutil.rmtree(self.host, ignore_errors=True)
-            raise SystemExit("gen_contract: cannot start the pinned image: %s" % r.stderr)
-        # The mount must be live: a file written on the host must be visible.
-        (self.host / "mount_probe").write_text("ok")
-        r = self.sh("cat %s/mount_probe" % CONTAINER_WORK)
-        if r.stdout.strip() != "ok":
-            self.close()
-            raise SystemExit("gen_contract: work dir is not visible in the container")
 
-    def sh(self, cmd: str, timeout: int = 120):
-        return subprocess.run(["docker", "exec", self.name, "bash", "-c", cmd],
-                              capture_output=True, text=True, timeout=timeout)
+    def image_command(self, argv: list, timeout: int = 300) -> tuple:
+        """(rc, stdout text, stderr text) of a non-TeX command in the image."""
+        try:
+            rc, out, err = self.oracle.image_command(argv, timeout=timeout)
+        except _oracle.OracleError as e:
+            raise SystemExit("gen_contract: INFRASTRUCTURE - %s" % e)
+        return rc, out.decode("utf-8", "surrogateescape"), err.decode("utf-8", "replace")
+
+    def is_job_path(self, path: str) -> bool:
+        """A file of this invocation's own jobs (job.tex, .aux, ...)."""
+        return path.startswith(str(self.host) + "/")
+
+    def stable_path(self, path: str) -> str:
+        """`path` with this invocation's private TEXMFHOME/TEXMFVAR directory
+        replaced by the fixed token PRIVATE_TEXMF, so that a file read from
+        there (a font mktexpk made) is named the same in every invocation and
+        the kernel's cached baseline still subtracts it. (Before the generator
+        became an oracle client these trees were the fixed container paths
+        /tmp/lp-texmfhome and /tmp/lp-texmfvar; no committed contract reads a
+        file from either.)"""
+        root = str(self.texmf) + "/"
+        return PRIVATE_TEXMF + "/" + path[len(root):] if path.startswith(root) else path
 
     def job(self, name: str) -> Path:
         """A fresh job directory. Never a reused name: a directory deleted and
@@ -1087,18 +1122,20 @@ class Tex:
         d.mkdir(parents=True)
         return d
 
-    def cpath(self, jobdir: Path) -> str:
-        return "%s/%s" % (CONTAINER_WORK, jobdir.relative_to(self.host).as_posix())
-
-    def run(self, jobdir: Path, argv: list, timeout: int, env: str = "forced") -> tuple:
-        """Run argv in the container in jobdir under coreutils `timeout`.
-        Returns (rc, seconds). rc 124 = timed out."""
+    def run(self, jobdir: Path, engine: str, args: list, timeout: int,
+            env: str = "forced") -> tuple:
+        """One `engine` run with `args` in jobdir through the oracle, under
+        the TeX variables of `env` (tex_vars). Returns (rc, seconds); rc
+        TIMEOUT_RC = timed out. An oracle failure is never a TeX outcome: it
+        stops the generator."""
         t0 = time.monotonic()
-        r = subprocess.run(["docker", "exec", "-w", self.cpath(jobdir), self.name,
-                            "timeout", str(timeout)] + env_prefix(env) + argv,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                           timeout=timeout + 60)
-        return r.returncode, time.monotonic() - t0
+        try:
+            rc, _, timed_out = self.oracle.run_engine(
+                jobdir, engine, args, tex_vars(env, self.texmf), timeout)
+        except _oracle.OracleError as e:
+            raise SystemExit("gen_contract: INFRASTRUCTURE - %s (job %s)"
+                             % (e, jobdir.name))
+        return (TIMEOUT_RC if timed_out else rc), time.monotonic() - t0
 
     def pdflatex(self, jobdir: Path, tex: bytes, *, halt: bool = True,
                  recorder: bool = False, timeout: int = LONG_TIMEOUT,
@@ -1107,15 +1144,15 @@ class Tex:
         name is `job` unless `jobname` says otherwise (the jobname-dependence
         check); every output file is named after it."""
         (jobdir / "job.tex").write_bytes(tex)
-        argv = ["pdflatex", "-interaction=nonstopmode"]
+        args = ["-interaction=nonstopmode"]
         if halt:
-            argv.append("-halt-on-error")
+            args.append("-halt-on-error")
         if recorder:
-            argv.append("-recorder")
+            args.append("-recorder")
         if jobname != JOBNAME:
-            argv.append("-jobname=" + jobname)
-        argv.append("job.tex")
-        rc, secs = self.run(jobdir, argv, timeout, env)
+            args.append("-jobname=" + jobname)
+        args.append("job.tex")
+        rc, secs = self.run(jobdir, _oracle.ENGINE_PDFLATEX, args, timeout, env)
         logp, flsp = jobdir / (jobname + ".log"), jobdir / (jobname + ".fls")
         if not logp.exists() and rc != TIMEOUT_RC:
             # pdflatex always writes a log; no log means docker or the
@@ -1154,9 +1191,10 @@ class Tex:
         return out
 
     def close(self):
-        subprocess.run(["docker", "rm", "-f", self.name], capture_output=True)
+        # The oracle's container is long-lived and shared: only this
+        # invocation's run directory is removed.
         if os.environ.get("LP_CONTRACT_KEEP_WORK") != "1":
-            shutil.rmtree(self.host, ignore_errors=True)
+            shutil.rmtree(self.base, ignore_errors=True)
 
     def __enter__(self):
         return self
@@ -1284,9 +1322,9 @@ def engine_primitives(tex: Tex) -> dict:
     dump's own count of multiletter control sequences (TeX's cs_count), and
     the one-character names are enumerated exhaustively."""
     jd = tex.job("virgin")
-    ini = ["pdftex", "-ini", "-etex", "-interaction=nonstopmode",
-           "-translate-file=cp227.tcx"]
-    rc, _ = tex.run(jd, ini + ["-jobname=lpvirgin", "\\dump"], LONG_TIMEOUT)
+    initex = _oracle.ENGINE_PDFTEX
+    ini = ["-ini", "-etex", "-interaction=nonstopmode", "-translate-file=cp227.tcx"]
+    rc, _ = tex.run(jd, initex, ini + ["-jobname=lpvirgin", "\\dump"], LONG_TIMEOUT)
     log = (jd / "lpvirgin.log").read_bytes() if (jd / "lpvirgin.log").exists() else b""
     if rc != 0 or not (jd / "lpvirgin.fmt").exists():
         raise SystemExit("gen_contract: virgin INITEX dump failed: rc=%d" % rc)
@@ -1298,7 +1336,7 @@ def engine_primitives(tex: Tex) -> dict:
     # Virgin INITEX has no brace characters; the catcode line needs them.
     (jd / "prim.tex").write_bytes(b"\\catcode123=1 \\catcode125=2 \\relax\n" + block +
                                   b"\\end\n")
-    rc2, _ = tex.run(jd, ini + ["-jobname=lpprim", "prim.tex"], LONG_TIMEOUT)
+    rc2, _ = tex.run(jd, initex, ini + ["-jobname=lpprim", "prim.tex"], LONG_TIMEOUT)
     d = parse_dump((jd / "lpprim.log").read_bytes())
     shutil.rmtree(jd, ignore_errors=True)
     if rc2 != 0 or d["error"] is not None or unw:
@@ -1396,18 +1434,20 @@ def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
 # ---------------------------------------------------------------------------
 
 def get_pin(tex: Tex, image: str) -> dict:
-    r = tex.sh("set -e; pdflatex --version | head -1; uname -m; "
-               "f=$(kpsewhich -engine=pdftex pdflatex.fmt); echo \"$f\"; "
-               "sha256sum \"$f\" | cut -d' ' -f1; "
-               "root=$(kpsewhich -var-value TEXMFROOT); echo \"$root\"; "
-               "sha256sum \"$root/tlpkg/texlive.tlpdb\" | cut -d' ' -f1")
-    lines = r.stdout.strip().split("\n")
-    if r.returncode != 0 or len(lines) != 6:
-        raise SystemExit("gen_contract: cannot read the pin: %s %s" % (r.stdout, r.stderr))
-    banner, arch, fmt_path, fmt_sha, root, tlpdb = lines
-    return {"image": image, "arch": arch, "engine_banner": banner,
-            "fmt_path": fmt_path, "fmt_sha256": fmt_sha, "texmf_root": root,
-            "tlpdb_sha256": tlpdb}
+    """The pin, from the oracle's own VERIFIED tree fingerprint (banner, arch,
+    format and tlpdb hashes, TEXMFROOT; `_oracle.tree_fingerprint`) plus the
+    format's path, which the kernel job copies."""
+    try:
+        fp = tex.oracle.fingerprint()
+    except _oracle.OracleError as e:
+        raise SystemExit("gen_contract: cannot read the pin: %s" % e)
+    rc, out, err = tex.image_command(["kpsewhich", "-engine=pdftex", "pdflatex.fmt"])
+    fmt_path = out.strip()
+    if rc != 0 or not fmt_path or not fp.get("fmt_sha256"):
+        raise SystemExit("gen_contract: cannot read the pin: %s %s" % (out, err))
+    return {"image": image, "arch": fp["arch"], "engine_banner": fp["banner"],
+            "fmt_path": fmt_path, "fmt_sha256": fp["fmt_sha256"],
+            "texmf_root": fp["texmfroot"], "tlpdb_sha256": fp["tlpdb_sha256"]}
 
 
 def format_banners(log: bytes) -> dict:
@@ -1475,10 +1515,11 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
     report["engine_primitives"] = prim["multiletter"] + len(prim["single"])
 
     jd = tex.job("kernel_initex")
-    rc, secs = tex.run(jd, ["pdftex", "-ini", "-etex", "-interaction=nonstopmode",
-                            "-jobname=lpkernel", "-progname=pdflatex",
-                            "-translate-file=cp227.tcx",
-                            INITEX_PREFIX + "\\input pdflatex.ini"], LONG_TIMEOUT)
+    rc, secs = tex.run(jd, _oracle.ENGINE_PDFTEX,
+                       ["-ini", "-etex", "-interaction=nonstopmode",
+                        "-jobname=lpkernel", "-progname=pdflatex",
+                        "-translate-file=cp227.tcx",
+                        INITEX_PREFIX + "\\input pdflatex.ini"], LONG_TIMEOUT)
     log = (jd / "lpkernel.log").read_bytes()
     tr = parse_trace(log)
     if rc != 0 or tr["first_error"] is not None:
@@ -1492,9 +1533,9 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
     everyjob = {nm for (kind, nm), seg in tr["names"].items() if kind == "cs" and seg == 1}
 
     jd = tex.job("kernel_fmt")
-    r = tex.sh("cp '%s' %s/shipped.fmt" % (pin["fmt_path"], tex.cpath(jd)))
-    if r.returncode != 0:
-        raise SystemExit("gen_contract: cannot copy the format: %s" % r.stderr)
+    rc, _, err = tex.image_command(["cp", pin["fmt_path"], str(jd / "shipped.fmt")])
+    if rc != 0:
+        raise SystemExit("gen_contract: cannot copy the format: %s" % err)
     fmt_bytes = (jd / "shipped.fmt").read_bytes()
     if sha256_bytes(fmt_bytes) != pin["fmt_sha256"]:
         raise SystemExit("gen_contract: the copied format is not the pinned one")
@@ -1565,7 +1606,7 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
         "universe": [name_str(x) for x in universe],
         "actives": {str(b): name_str(m) for b, m in d1["actives"].items()},
         "catcodes": d1["catcodes"],
-        "baseline_inputs": [p for p in fls_inputs if p.startswith("/")],
+        "baseline_inputs": [tex.stable_path(p) for p in fls_inputs if p.startswith("/")],
         "unwritable": sorted(name_str(x) for x in unwritable),
         "dump_rounds": rounds,
         "trace_unparsed": tr["unparsed"],
@@ -1668,11 +1709,12 @@ def texmf_rel(path: str, root: str) -> str:
 def hash_files(tex: Tex, paths: list) -> dict:
     if not paths:
         return {}
-    listing = tex.host / "hash_list.txt"
+    listing = tex.base / "hash_list.txt"
     listing.write_text("\n".join(paths) + "\n", encoding="utf-8")
-    r = tex.sh("xargs -d '\\n' -a %s/hash_list.txt sha256sum" % CONTAINER_WORK)
+    _, stdout, _ = tex.image_command(["xargs", "-d", "\\n", "-a", str(listing),
+                                      "sha256sum"])
     out = {}
-    for line in r.stdout.splitlines():
+    for line in stdout.splitlines():
         h, _, p = line.partition("  ")
         out[p] = h
     missing = [p for p in paths if p not in out]
@@ -1685,17 +1727,17 @@ def read_files(tex: Tex, paths: list) -> dict:
     """{path: bytes} of files inside the image (through a tar in the work dir)."""
     if not paths:
         return {}
-    (tex.host / "read_list.txt").write_text("\n".join(paths) + "\n", encoding="utf-8")
-    r = tex.sh("tar -cf %s/read.tar -P -T %s/read_list.txt" % (CONTAINER_WORK, CONTAINER_WORK),
-               timeout=300)
-    if r.returncode != 0:
-        raise SystemExit("gen_contract: cannot read files: %s" % r.stderr)
+    (tex.base / "read_list.txt").write_text("\n".join(paths) + "\n", encoding="utf-8")
+    rc, _, err = tex.image_command(["tar", "-cf", str(tex.base / "read.tar"), "-P", "-T",
+                                    str(tex.base / "read_list.txt")], timeout=300)
+    if rc != 0:
+        raise SystemExit("gen_contract: cannot read files: %s" % err)
     out = {}
-    with tarfile.open(tex.host / "read.tar") as t:
+    with tarfile.open(tex.base / "read.tar") as t:
         for m in t.getmembers():
             if m.isfile():
                 out[m.name] = t.extractfile(m).read()
-    (tex.host / "read.tar").unlink()
+    (tex.base / "read.tar").unlink()
     return out
 
 
@@ -1903,11 +1945,11 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     # baseline minus job-local files.
     _, inputs = parse_fls(r1f["first_fls"])
     base = set(kernel["baseline_inputs"])
-    reads = sorted(p for p in inputs if p.startswith("/") and p not in base
-                   and not p.startswith(CONTAINER_WORK + "/"))
+    reads = sorted(p for p in inputs if p.startswith("/") and tex.stable_path(p) not in base
+                   and not tex.is_job_path(p))
     hashes = hash_files(tex, reads)
-    files_read = [{"path": texmf_rel(p, pin["texmf_root"]), "sha256": hashes[p]}
-                  for p in reads]
+    files_read = [{"path": texmf_rel(tex.stable_path(p), pin["texmf_root"]),
+                   "sha256": hashes[p]} for p in reads]
     files_read.sort(key=lambda d: d["path"])
 
     key_material = canonical_json({"configuration": cfg, "fmt_sha256": pin["fmt_sha256"],
@@ -2415,9 +2457,9 @@ def run_probes(tex: Tex, contract: dict, names: list, workers: int, report: dict
         out = classify_outcome(res["rc"], res["log"], res["pdf"])
         out["passes"] = res["passes"]
         _, ins = parse_fls(res["first_fls"])
-        lazy = sorted(texmf_rel(x, texmf_root) for x in ins
+        lazy = sorted(texmf_rel(tex.stable_path(x), texmf_root) for x in ins
                       if x.startswith("/") and x not in base_fls
-                      and not x.startswith(CONTAINER_WORK + "/"))
+                      and not tex.is_job_path(x))
         shutil.rmtree(jd, ignore_errors=True)
         return i, out, lazy, res["secs"]
 
@@ -2478,12 +2520,13 @@ def run_probes(tex: Tex, contract: dict, names: list, workers: int, report: dict
         "config_key": contract["config_key"],
         "configuration": contract["configuration"],
         "pin": contract["pin"],
-        "protocol": {"solo": "pdflatex -interaction=nonstopmode -halt-on-error -recorder, "
+        "protocol": {"solo": "%s -interaction=nonstopmode -halt-on-error -recorder, "
                              "fresh directory, grading environment, the oracle's pass "
                              "protocol (to the first rc 0 in at most %d runs, then one "
                              "confirming run), coreutils timeout %ds per run; ok = rc 0 "
                              "and a PDF on the last run; otherwise the error class of "
-                             "its first `!` line" % (MAX_PASSES, PROBE_TIMEOUT),
+                             "its first `!` line" % (_oracle.ENGINE_PDFLATEX, MAX_PASSES,
+                                                     PROBE_TIMEOUT),
                      "batch": "every probe of one command in one -interaction=nonstopmode "
                               "run (no -halt-on-error), each in \\begingroup...\\par\\endgroup "
                               "after a marker; polarity = a `!` line with TeX's location "
@@ -2547,7 +2590,7 @@ def cmd_generate(a) -> int:
         use_names = [ln for ln in Path(a.use_names).read_text(encoding="utf-8").splitlines()
                      if ln.strip()]
     report = {}
-    with Tex(image, Path(a.work).expanduser()) as tex:
+    with Tex(image, Path(a.work).expanduser() if a.work else None) as tex:
         pin = get_pin(tex, image)
         kernel = load_kernel(tex, pin, Path(a.cache).expanduser(), a.fresh_kernel, report)
         contract = generate(cfg, tex, pin, kernel, use_names, report)
@@ -2579,7 +2622,7 @@ def cmd_probes(a) -> int:
         if n and n not in names:
             names.append(n)
     report = {}
-    with Tex(image, Path(a.work).expanduser()) as tex:
+    with Tex(image, Path(a.work).expanduser() if a.work else None) as tex:
         pin = get_pin(tex, image)
         if pin["fmt_sha256"] != contract["pin"]["fmt_sha256"]:
             raise SystemExit("gen_contract: the image's format differs from the contract's")
@@ -2598,7 +2641,9 @@ def cmd_probes(a) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo", default=str(REPO))
-    ap.add_argument("--work", default="~/.cache/lp-oracle/contracts/work")
+    ap.add_argument("--work", default=None,
+                    help="a directory under the oracle work root (default: the "
+                         "oracle work root itself, _oracle.py workroot)")
     ap.add_argument("--cache", default="~/.cache/lp-oracle/contracts/cache")
     sub = ap.add_subparsers(dest="cmd", required=True)
     g = sub.add_parser("generate")

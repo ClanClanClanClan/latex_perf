@@ -578,5 +578,101 @@ if not ARGS.kernel:
         check("contract %s: load outcome attested with the pass protocol" % cf.name,
               c["load_outcome"].get("passes", 0) >= 2)
 
+# --- M1 slice 2: signature probes (contract_signatures.py) ---------------------------
+import contract_signatures as sg  # noqa: E402
+# The sentinel's error, as TeX prints it (recorded in the probe runs of
+# 2026-09-27; the message text is TeX's, the classes are ours).
+check("sig: the sentinel taken as an argument is a grab",
+      gc.classify_error("Forbidden control sequence found while scanning use of \\@xdblarg.")
+      == "forbidden_cs_use" and sg.outcome_of({"outcome": "fatal", "error_class":
+      "forbidden_cs_use", "message": "x"})["o"] == "grab")
+check("sig: any other scan meeting it is not a grab",
+      gc.classify_error("Forbidden control sequence found while scanning definition of \\x.")
+      == "forbidden_cs" and sg.outcome_of({"outcome": "fatal", "error_class":
+      "forbidden_cs", "message": "x"})["o"] == "fatal")
+check("sig: a letter after the sentinel is separated (\\lpstopa is another name)",
+      sg.build_use("\\begin{x}", [], stop=True, tail="a\\end{x}") ==
+      "\\begin{x}\\lpstop a\\end{x}" and
+      sg.build_use("\\begin{x}", [], stop=True, tail="\\item a") == "\\begin{x}\\lpstop\\item a")
+check("sig: argument syntax per kind",
+      sg.build_use("\\c", [("opt", "a"), ("req", "b"), ("gopt", "c")], star=True) ==
+      "\\c*[a]{b}{c}")
+pre = b"\\documentclass{article}\n"
+d1 = sg.cell_doc(pre, "text", "\\c{a}\\lpstop")
+d2 = sg.cell_doc(pre, "math", "\\c{a}")
+d3 = sg.cell_doc(pre, "text", "\\c{a}\\lpstopx")
+d4 = sg.cell_doc(pre, "preamble", "\\c\\lpstop")
+check("sig: the sentinel is defined iff the use names it",
+      d1.count(b"\\outer\\def\\lpstop{}") == 1 and b"\\outer" not in d2 and
+      b"\\outer" not in d3 and d4.index(b"\\outer") < d4.index(b"\\begin{document}"))
+check("sig: cells place the use", b"x \\c{a}\\lpstop y" in d1 and b"x $\\c{a}$" in d2 and
+      d4.endswith(b"\\begin{document}\nx\n\\end{document}\n"))
+LET = set(range(65, 91)) | set(range(97, 123))
+check("sig: names a body can type (letters run, or one non-letter byte)",
+      sg.user_facing("textbf", LET) and sg.user_facing("\\", LET) and sg.user_facing("i", LET)
+      and not sg.user_facing("@gobble", LET) and not sg.user_facing("c@page", LET)
+      and not sg.user_facing("cs_new:Npn", LET) and not sg.user_facing("", LET))
+check("sig: content kinds", [sg.content_kind("text", m, t) for m, t in
+      ((True, True), (False, False), (True, False), (False, True))] ==
+      ["opaque", "restricted", "math", "text"])
+check("sig: argty table", [sg.argty_of(k) for k in (
+      {"text": "text", "math": "text"}, {"text": "text", "math": "math"},
+      {"math": "math"}, {"text": "opaque", "math": "opaque"}, {"text": "math", "math": "math"},
+      {"text": "text", "list": "math"}, {"text": "restricted"}, {})] ==
+      ["TyText", "TyInherit", "TyMath", "TyLabel", "TyMath", None, None, None])
+# SYNTHETIC meanings in TeX's printed form: hints only, never attestation.
+mh = {"x": b"macro:->\\protect \\x  ", "x ": b"\\long macro:#1->\\textbf {#1}",
+      "y": b"macro:->\\@ifstar \\ys \\yn ", "z": b"macro:->\\@protected@testopt \\z \\\\z {}"}
+check("sig: meaning hints (robust inner, star, optional)",
+      sg.meaning_hint("x", mh)["arity"] == 1 and sg.meaning_hint("x", mh)["via"] == "x "
+      and sg.meaning_hint("y", mh)["star"] and sg.meaning_hint("z", mh)["opt"]
+      and sg.meaning_hint("q", {})["source"] == "undefined")
+
+# The committed sidecars: bound to their contract's bytes, every attested
+# shape backed by its own probe log, the summary recomputed.
+SDIR = REPO / sg.SIG_DIR
+sidecars = sorted(SDIR.glob("*.json")) if SDIR.is_dir() else []
+for sf in sidecars:
+    side = json.loads(sf.read_text(encoding="utf-8"))
+    cp = REPO / side.get("contract", "")
+    probs = sg.check_sidecar(side, cp.read_bytes() if cp.is_file() else None)
+    check("sidecar %s: consistent with its contract and its own probe log" % sf.name,
+          not probs, probs[:5])
+    check("sidecar %s: solo count = name/environment probes + definer rows" % sf.name,
+          side["solo"]["probes"] == side["summary"]["solo_probes"] + len(side["definer_rules"]),
+          (side["solo"], side["summary"]["solo_probes"], len(side["definer_rules"])))
+    check("sidecar %s: covers its whole scope" % sf.name,
+          side["scope"].get("names") != "subset" and side["summary"]["names"] > 0)
+    # In-gate kill-tests of check_sidecar itself: each claim, broken, is seen.
+    att = sorted(n for n, r in side["signatures"].items() if r["status"] == "attested"
+                 and any(a["kind"] == "req" for a in r["variants"][0]["args"]))
+    if att:
+        import copy  # noqa: E402
+        n0 = att[0]
+        bad = copy.deepcopy(side)
+        bad["signatures"][n0]["probes"] = [p for p in bad["signatures"][n0]["probes"]
+                                           if p[2] != "grab"]
+        check("sidecar kill: dropping %s's grab probes is seen" % n0,
+              any("grab" in x for x in sg.check_sidecar(bad, cp.read_bytes())))
+        bad = copy.deepcopy(side)
+        v0 = bad["signatures"][n0]["variants"][0]
+        c0 = sorted(v0["cells"])[0]
+        v0["cells"][c0]["allowed"] = "fatal" if v0["cells"][c0]["allowed"] == "ok" else "ok"
+        check("sidecar kill: a flipped cell verdict is seen",
+              any("cell %s" % c0 in x for x in sg.check_sidecar(bad, cp.read_bytes())))
+        check("sidecar kill: a stale contract is seen",
+              any("stale" in x for x in sg.check_sidecar(side, cp.read_bytes() + b" ")))
+DFILE = REPO / sg.DECL_DIR / "newtheorem.json"
+if DFILE.is_file():
+    dt = json.loads(DFILE.read_text(encoding="utf-8"))
+    check("decl templates: schema and the three owner combinations",
+          dt.get("schema") == sg.DECL_SCHEMA and
+          sorted(dt["owners"]) == sorted(o for o, _ in sg.DECL_OWNERS))
+    for owner, ent in dt["owners"].items():
+        check("decl templates %s: every form from two complete closed worlds" % owner,
+              ent["base_complete"] and all(f["complete"] or "load_outcome" in f
+                                           for f in ent["forms"].values()),
+              {k: f.get("incomplete_reasons") for k, f in ent["forms"].items()})
+
 print("check_gen_contract_parsers: %d checks, %d failed" % (count, fails))
 sys.exit(1 if fails else 0)

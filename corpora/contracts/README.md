@@ -8,6 +8,8 @@ first consumer is milestone M2 (`docs/v27/STRICT_TIER_DESIGN.md` §F).
 | `<name>.json` | one configuration contract (schema `lp-configuration-contract/1`), written by `scripts/tools/gen_contract.py generate` |
 | `kernel/<arch>-<fmt sha256 prefix>.json` | the kernel closed world for that `pdflatex.fmt`: every name defined in format state, with its meaning kind, and the evidence that the set is complete (`coverage`: TeX's own hash-table count finds 0 names outside the candidates; `primitives`: the engine's primitives, counted against TeX's own count) |
 | `probes/<name>.json` | a probe-harness demonstration report (schema `lp-probe-report/1`), written by `gen_contract.py probes` |
+| `signatures/<name>.json` | the signature sidecar of contract `<name>.json` (schema `lp-contract-signatures/1`, M1 slice 2), written by `scripts/tools/gen_contract.py signatures`: for every name a body can type, its attested argument shape and per-cell outcome, with the solo probe log behind each fact; the environments; the definer probe table; the batched-triage agreement. Bound to its contract by `contract_sha256` (a contract with other bytes makes it stale) |
+| `decl_templates/newtheorem.json` | `\newtheorem` per owner combination (kernel, amsthm, amsthm+thmtools): the names each form defines (the difference of two complete closed worlds) and a collision matrix (schema `lp-decl-templates/1`), written by `gen_contract.py decl-templates` |
 | `parser_fixtures/` | excerpts of real generator logs, the fixtures of `scripts/tools/check_gen_contract_parsers.py` (required `spec-drift`), which also checks the committed kernel file and contracts for completeness |
 
 Every TeX job ran inside the pinned image named by `TEX_IMAGE` in
@@ -22,6 +24,17 @@ Regenerate and diff (needs the oracle: docker and the pinned image; local or
 nightly only):
 
     python3 scripts/tools/check_contracts_reproducible.py --all
+
+Regenerate a signature sidecar and diff it too (long: every name is probed
+again):
+
+    python3 scripts/tools/check_contracts_reproducible.py --signatures
+
+Signatures of a few names on demand (M3's use-based attestation; cached by
+contract sha256, name and cell under `~/.cache/lp-oracle/contracts/signatures`):
+
+    python3 scripts/tools/gen_contract.py probe-names \
+        --contract corpora/contracts/article.json --names textbf,frac --cells text,math
 
 To add a configuration:
 

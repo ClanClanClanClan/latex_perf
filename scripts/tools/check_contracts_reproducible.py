@@ -36,6 +36,13 @@ Usage:
   check_contracts_reproducible.py [--repo .]                 article.json only
   check_contracts_reproducible.py --all                      every contract
   check_contracts_reproducible.py --contract corpora/contracts/amsart.json
+  check_contracts_reproducible.py --signatures               + article's signature sidecar
+
+M1 slice 2 adds kill-tests of the signature probes (contract_signatures.py):
+shapes whose \\meaning misleads (a wrapper of a one-argument macro reads as
+arity 0; an optional argument; a star flag; a delimited parameter; a brace
+group taken only by a peek; a text-only body) must come out as they behave,
+and probe_names must answer from its cache without TeX.
 """
 from __future__ import annotations
 
@@ -292,10 +299,119 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
         checks.append(("the reviewers' 24 names on plain article: complete, 0 mismatches",
                        c["complete"] and c["self_check"]["mismatch_count"] == 0 and
                        c["self_check"]["use_names"] == 24))
+
+        # M1 slice 2: the signature probes on shapes whose \meaning misleads.
+        checks += signature_kills(tex, pin, kernel, work)
     for label, ok in checks:
         print("%s adversarial: %s" % ("OK  " if ok else "FAIL", label))
         bad += 0 if ok else 1
     return bad
+
+
+SIG_DEFINERS = (
+    # The \meaning says arity 0; the behaviour takes one argument.
+    "\\newcommand{\\lpsb}[1]{#1}\\newcommand{\\lpsa}{\\lpsb}",
+    # An optional argument before a mandatory one.
+    "\\newcommand{\\lpsc}[2][d]{#1#2}",
+    # A star flag, each variant taking one argument.
+    "\\makeatletter\\newcommand{\\lpsd}{\\@ifstar{\\textbf}{\\textit}}\\makeatother",
+    # A delimited parameter: no brace count attests it.
+    "\\def\\lpse#1.{#1}",
+    # A brace group taken only if present (a peek, as \\input does).
+    "\\makeatletter\\newcommand{\\lpsf}{\\@ifnextchar\\bgroup{\\textbf}{}}\\makeatother",
+    # Text-only: fails in math before taking its argument.
+    "\\newcommand{\\lpsg}[1]{\\ifmmode\\lpundefinedsg\\fi#1}",
+)
+
+
+def signature_kills(tex, pin, kernel, work) -> list:
+    """Each shape the \\meaning hint gets wrong or cannot see must come out
+    attested as it behaves (or unresolved where no brace count describes it)."""
+    import contract_signatures as sg
+    cfg = {"class": "article", "preamble": [{"definer": d} for d in SIG_DEFINERS]}
+    c = gc.generate(cfg, tex, pin, kernel, [], {})
+    gc.attach_kernel_ref(c, kernel, pin)
+    tmpd = Path(tempfile.mkdtemp(prefix="sigkill-", dir=str(tex.base)))
+    cp = tmpd / "sigkill.json"
+    cp.write_text(gc.canonical_json(c), encoding="utf-8")
+    res = sg.probe_names(cp, ["lpsa", "lpsc", "lpsd", "lpse", "lpsf", "lpsg", "lpnotaname"],
+                         cache=tmpd / "cache", work=work)
+
+    def shape(n, i=0):
+        r = res[n]
+        if r.get("status") != "attested" or len(r["variants"]) <= i:
+            return None
+        return [a["kind"] for a in r["variants"][i]["args"]]
+    out = [
+        ("sig: the probe contract is complete", c["complete"]),
+        ("sig: \\lpsa (hint arity 0) is attested as one mandatory argument",
+         shape("lpsa") == ["req"] and res["lpsa"]["hint"].get("arity") == 0),
+        ("sig: \\lpsc is [opt, req]", shape("lpsc") == ["opt", "req"]),
+        ("sig: \\lpsd has a star flag and two one-argument variants",
+         res["lpsd"].get("star") is True and shape("lpsd") == ["req"] and
+         shape("lpsd", 1) == ["star", "req"]),
+        ("sig: \\lpse (delimited) is unresolved", res["lpse"].get("status") == "unresolved"),
+        ("sig: \\lpsf's peeked group is an argument (gopt), not typeset text",
+         shape("lpsf") == ["gopt"]),
+        ("sig: \\lpsg compiles in text and is fatal in math",
+         shape("lpsg") == ["req"] and
+         res["lpsg"]["variants"][0]["cells"]["text"]["allowed"] == "ok" and
+         res["lpsg"]["variants"][0]["cells"]["math"]["allowed"] == "fatal"),
+        ("sig: a name outside the closed world is E1, with no probe",
+         res["lpnotaname"] == {"status": "undefined"}),
+    ]
+    # The cache answers the second call without TeX.
+    rep: dict = {}
+    again = sg.probe_names(cp, ["lpsa"], cells=("text",), cache=tmpd / "cache", work=work,
+                           report=rep)
+    out.append(("sig: probe_names serves a cached (contract, name, cell) without TeX",
+                rep.get("lpsa") == "cache" and list(again["lpsa"]["variants"][0]["cells"])
+                == ["text"]))
+    return out
+
+
+def check_sidecars(repo: Path, paths: list, work, tmp: Path, sample: int = 0) -> int:
+    """Regenerate each selected contract's signature sidecar (if committed) and
+    diff it byte for byte. Long: the whole scope is probed again. With
+    `sample` > 0, only a seeded sample of names is regenerated and each
+    regenerated name's record (its canonical JSON line) is compared with the
+    committed one: a partial check, valid because every name's probes are
+    independent of every other name's."""
+    import contract_signatures as sg
+    import random
+    failures = 0
+    for path in paths:
+        side = sg.sidecar_path(repo, path)
+        if not side.exists():
+            continue
+        if sample:
+            old = json.loads(side.read_text(encoding="utf-8"))
+            names = sorted(random.Random(old["config_key"]).sample(
+                sorted(old["signatures"]), min(sample, len(old["signatures"]))))
+            with gc.Tex(gc.read_image(repo), work) as tex:
+                new = sg.generate_signatures(tex, repo, path, workers=8, batch=False,
+                                             names=names)
+            bad = [n for n in names if json.dumps(new["signatures"][n], sort_keys=True) !=
+                   json.dumps(old["signatures"][n], sort_keys=True)]
+            if bad:
+                failures += 1
+                print("DIFF %s: %d of %d sampled names do not reproduce: %s"
+                      % (side.relative_to(repo), len(bad), len(names), bad[:10]))
+            else:
+                print("OK   %s: %d sampled names reproduced record for record"
+                      % (side.relative_to(repo), len(names)))
+            continue
+        with gc.Tex(gc.read_image(repo), work) as tex:
+            new = sg.generate_signatures(tex, repo, path, workers=8, batch=True)
+        out = tmp / ("sig-" + path.name)
+        out.write_text(gc.canonical_json(new), encoding="utf-8")
+        if out.read_bytes() == side.read_bytes():
+            print("OK   %s reproduced byte for byte" % side.relative_to(repo))
+        else:
+            failures += 1
+            print("DIFF %s does not reproduce:" % side.relative_to(repo))
+            _show_diff(side, out)
+    return failures
 
 
 def main(argv=None) -> int:
@@ -303,6 +419,11 @@ def main(argv=None) -> int:
     ap.add_argument("--repo", default=str(gc.REPO))
     ap.add_argument("--contract", action="append", default=[])
     ap.add_argument("--all", action="store_true")
+    ap.add_argument("--signatures", action="store_true",
+                    help="also regenerate each selected contract's signature sidecar "
+                         "(corpora/contracts/signatures/) and diff it (long)")
+    ap.add_argument("--signatures-sample", type=int, default=0,
+                    help="with --signatures: regenerate only this many seeded names")
     ap.add_argument("--cached-kernel", action="store_true",
                     help="reuse the cached kernel instead of re-running INITEX")
     ap.add_argument("--work", default=None,
@@ -379,6 +500,8 @@ def main(argv=None) -> int:
                         kfile.relative_to(repo), "" if kfile.exists() else " (missing)"))
                     if kfile.exists():
                         _show_diff(kfile, kout)
+        if a.signatures:
+            failures += check_sidecars(repo, paths, work, tmp, a.signatures_sample)
         failures += adversarial(image, work, cache)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

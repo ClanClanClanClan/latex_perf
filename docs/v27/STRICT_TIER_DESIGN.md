@@ -809,7 +809,180 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 
 - The committed contracts are arm64. CI's tex-oracle job runs the same multi-arch digest on amd64, which is a separately built image. Whether its `pdflatex.fmt`, and so every contract, is byte-identical to the arm64 one is **not measured**. Until it is, the reproducibility gate stays local and refuses (exit 2) on an architecture that differs from the contract's.
 - The error-class table is a first cut. It is normalised from the first `!` line.
-- Not generated yet, deferred to slice 2 or later: `lazy_files` (the probe harness records first-run `.fls` deltas per probe, but no contract field), `environments`, per-mode `u8:` coverage, `decl_templates`, `definer_rules`, `load_delta` kinds, `limits` and `graphics`.
+- Not generated yet, deferred to slice 2 or later: `lazy_files` (the probe harness records first-run `.fls` deltas per probe, but no contract field), `environments`, per-mode `u8:` coverage, `decl_templates`, `definer_rules`, `load_delta` kinds, `limits` and `graphics`. Slice 2 (§I.3) generates `signature`, `environments`, `definer_rules` and `decl_templates`; the others are still open.
 - The §B.2 attestation of `files_read` (re-run with the file hidden; the expected fatal must appear) is not implemented.
 - `complete` is configuration-scoped (above); the per-document self-check is M2's.
 - The file-token reading of the universe is an over-approximation checked by the hash count, not a proof by itself; a configuration whose count is not 0 is reported incomplete rather than guessed.
+
+### I.3 M1 slice 2: signature probes (2026-09-27)
+
+Data only: nothing reads a signature yet (M2 is the first consumer). Ledger row
+OPEN-120.
+
+| deliverable | where |
+|---|---|
+| signature probes, environments, definer table, batched triage | `scripts/tools/contract_signatures.py`, run as `gen_contract.py signatures --contract C` |
+| the on-demand API for M3's use-based attestation | `contract_signatures.probe_names(contract, names, cells=…)`, CLI `gen_contract.py probe-names`; cached per (contract sha256, name, cell) |
+| `\newtheorem` declaration templates per owner combination | `gen_contract.py decl-templates` → `corpora/contracts/decl_templates/newtheorem.json` |
+| the committed `article` signature sidecar | `corpora/contracts/signatures/article.json` (schema `lp-contract-signatures/1`) |
+| pure checks (unit tests; every attested shape re-derived from its own probe log; binding to the contract's sha256; in-gate kill-tests) | `scripts/tools/check_gen_contract_parsers.py` (required `spec-drift`), three new kill-tests in `check_gate_selftests.py` |
+| regeneration and TeX kill-tests | `scripts/tools/check_contracts_reproducible.py --signatures [--signatures-sample N]` (local/nightly) |
+
+**Storage.** The signatures live in a sidecar next to the contract, not
+inside it. The sidecar names its contract by the sha256 of the contract's
+bytes, so a regenerated contract with other bytes makes the sidecar stale
+(the parser gate fails on it). Keeping the name-set contract unchanged means
+`GENERATOR_VERSION` did not move and the four committed contracts still
+reproduce as before; the sidecar carries its own `signature_version`.
+
+**What a signature is, and how each part is attested.** Every fact is a
+solo probe under the oracle's own predicate (grading environment, the pass
+protocol, `-halt-on-error`, a fresh directory, a 15 s timeout per run),
+classified by error class. The mechanism is an `\outer` sentinel,
+`\outer\def\lpstop{}`: a macro that tries to take `\lpstop` as an argument
+stops with `Forbidden control sequence found while scanning use of`
+(class `forbidden_cs_use`, outcome `grab`); a `\futurelet` peek does not.
+
+- *Scope.* Every control sequence a body can type under the body-start
+  catcodes (read from TeX, not assumed): a run of catcode-11 bytes, or one
+  byte that is not one, that is a member of the contract's closed world.
+  2,148 names for `article`. A non-member is E1 and needs no signature.
+- *Shape*, in the first cell (text, math, vertical, list, preamble) where a
+  use compiles: the mandatory count (`\cs{a}^k\lpstop` stops grabbing at
+  k = r); payload types by a search over the lattice, then minimised (a slot
+  keeps a non-text payload only if `a` there fails, and that failure is
+  recorded as its negative); **exactness**, attested by three probes: the
+  canonical use compiles, the canonical use followed by `\lpstop` does not
+  grab, and without its last mandatory argument it grabs; optional
+  arguments at every position (a count argument: before mandatory argument
+  j, `[a]` fills three mandatory slots unless an optional argument consumes
+  it); a star flag at position 0; and a brace group taken only if present,
+  as `\input` does (`\cs A{\lpstop}` grabs iff it is consumed: kind `gopt`).
+- *Per cell* (`text`, `math`, `vertical`, `list`, `preamble`): the canonical
+  use's outcome, `ok` or the fatal class and message; outside the base cell,
+  `shape_checked` records that nothing more is consumed there.
+- *Argument types.* A slot that accepts `a` is typed by what its payload is
+  typeset as, one variable each: `a^b` (math-only material) and `$a$`
+  (text-only material) in the text and math cells, giving TyText, TyMath,
+  TyInherit, or TyLabel when both are accepted (the payload is not typeset
+  by the use: a label, a key, a heading's table-of-contents text). Other
+  slots are typed by the lattice payload that made the use compile: TyNumber
+  `1`, TyDimen `1pt`, TyCounter (the configuration's first counter with
+  `\theX`), TyFile `lpprobe` (`lpprobe.tex` and `lpprobe.sty` sit in every
+  probe directory), TyCsName `\lpprobecs`, TyNewName `lpq` (both undefined),
+  TyEnvName, TyKV `width=1cm`, TyUrl `http://x`. `a\par b` in the base cell
+  gives `long`.
+- A name whose shape no cell attests is `unresolved`, with every cell's
+  outcome of the bare use: its uses are outside the strict tier. §B.2 allows
+  this (signature coverage need not be complete; the name set must be).
+- *Environments*: X letters with an optional `*`, `\X` and `\endX` members.
+  Begin-arguments by the same method with head `\begin{X}` and body `a`
+  (then `\item a`); body mode and pushed contexts from one-variable body
+  probes (`a^b`, `$a$`, `\item a`, `a\par b`, `\caption{a}`, `a&b`).
+- *Definer rules*: a table of 124 probes, each definer on targets derived
+  from the closed world (the first name of each meaning kind), in the
+  preamble and in the body.
+- *Declaration templates*: per owner combination (kernel = `article`,
+  `article`+amsthm, `article`+amsthm+thmtools) and `\newtheorem` form (plain,
+  shared counter, within, `*`), the names the declaration defines are the
+  difference of two COMPLETE contracts (the base, and the base with the
+  declaration as a definer): the slice-1 completeness machinery, reused. Plus
+  a collision matrix of solo probes.
+- *Batched probes are triage only*: each name's solo probes are re-run in one
+  nonstop document (each in a group after a marker); nothing in a signature
+  comes from a batch.
+
+**Measured (2026-09-27, under the image, arm64; the `article` contract).**
+
+- **2,148 names**: 1,343 attested, 805 unresolved. By meaning kind: macros
+  1,026 attested / 264 unresolved; primitives 78 / 468; registers 0 / 70
+  (their use is an assignment, which has no brace form); math characters
+  179 / 0; chars 17 / 3; `\relax`-meaning names 38 / 0; fonts 5 / 0. Most
+  unresolved names fail in every cell before any argument (318 with
+  `missing_number`, 56 `missing_open`, 46 `wrong_mode`), or take argument
+  types outside the lattice (page styles, font encodings, column specs).
+- Base cell of the attested: text 992, math 298, preamble 43, vertical 9,
+  list 1 (`\item`). Mandatory counts: 917 take none, 234 one, 112 two, 55
+  three, 25 four or more. 53 have attested optional arguments; 24 have a star
+  flag (e.g. `\section`, `\\`, `\hspace`, `\vspace`, `\ref`, `\newcommand`),
+  319 attested no star, 1,000 unknown (a zero-argument name whose starred
+  use cannot be told apart by a grab). One `gopt`: `\input`.
+- Typed slots: TyLabel 442, TyText 95, TyInherit 74, TyNumber 61, TyCsName
+  31, TyDimen 25, TyMath 20, TyCounter 20, TyFile 5, TyNewName 4, untyped 66.
+  Long: 252 slots long, 317 not, 128 whose `\par` fails for another reason.
+- **The \meaning hint predicted the wrong mandatory count for 237 of 1,026
+  attested names (23.1%)**; the spike measured 121/405 (30%). Examples:
+  `\section` (hint 0, attested `[opt]{req}`, and a starred variant
+  `*{req}`), `\AtBeginDocument` (hint 0, attested 1), `\DeclareRobustCommand`
+  (hint 0, attested 2), `\"` (hint 0, attested 1).
+- Cells: text ok for 993 attested names, math 1,148, list 990, vertical 989,
+  preamble 494; every accepting cell outside the base re-checked its shape
+  (4,705 of 4,705).
+- **Environments: 30 of 41 attested.** Unresolved: `tabular`, `tabular*`,
+  `array`, `picture` (argument types outside the lattice: column specs,
+  coordinates, M4), `document`, `filecontents`, `filecontents*`, and the
+  non-environments `L`, `csname`, `input`, `line` (a name X with `\endX`
+  defined is not always an environment).
+- **Probe counts and cost**: 49,052 solo probes (129,544 engine runs: 2 per
+  compiling probe, 3 per failing one), 5.2 hours wall on 8 workers, measured
+  while other work held the machine's load average between 100 and 300 (an
+  unloaded run was measured at 0.13-0.16 s wall per probe on 6 workers, which
+  puts the whole scope near 2 hours). One timeout: `\font` in the vertical
+  cell (`\font\lpstop\par x` asks mktextfm to build a font named `x`, the
+  §B.2 hang class).
+- **Batched vs solo polarity: 41,151 agree, 1,167 disagree (97.2% of the
+  conclusive), 6,610 inconclusive** (a batch that stopped or swallowed the
+  marker). 881 disagreements are solo-fatal / batch-ok (a group, or error
+  recovery, masks the failure) and 286 solo-ok / batch-fatal (an earlier
+  probe of the same batch left state behind: e.g. `\newtheorem{lpq}` defined
+  twice). The spike measured 142/143. This is why the batch is triage only.
+- **Definer table (124 probes), surprises at the pin.** `\newcommand` on a
+  `\relax`-meaning name compiles (confirming §B.2) while `\renewcommand` on
+  the same name fails `Command \MessageBreak undefined`; `\providecommand` on
+  a macro, a primitive or a chardef compiles (it keeps the old meaning);
+  `\newcommand{\endlpq}` fails `already defined` although `\endlpq` is
+  undefined, and so does `\providecommand{\endlpq}`; `\newcounter{lpq}` after
+  `\newcommand{\lpq}` compiles; `\newenvironment` on a `\relax`-meaning name
+  compiles; `\newtheorem*` in the kernel takes `*` as the theorem's name
+  (`Command \* already defined`); `\theoremstyle` and
+  `\DeclareMathOperator` are undefined in `article` (E1).
+- **Declaration templates.** Kernel: `\newcounter{lemma}` then
+  `\newtheorem{lemma}{Lemma}` compiles (confirming §B.2). **amsthm alone
+  already fails with `Command \c@lemma already defined`**, not only
+  amsthm+thmtools as §B.2 reads; the templates of the two amsthm
+  combinations differ in the names they define (the plain form defines 8
+  names under amsthm and 25 under amsthm+thmtools, among them `thmt@`,
+  `l@zzq`, `ll@zzq` and `zzqautorefname`). **Under amsthm+thmtools every
+  shared-counter form is fatal on pass 1**, including the common
+  `\newtheorem{thm}{T}\newtheorem{zzq}[thm]{Zzq}`
+  (`Command \c@zzq already defined`, measured with the counters `section`,
+  `thm`, `enumi`, `page` and `equation`; thmtools v0.76 2023/05/04, amsthm
+  v2.20.6). INFERRED, not measured: the kernel's own shared-counter form now
+  defines `\alias@ctr@zzq` (the kernel template shows it), and thmtools'
+  2023 code does not expect that.
+- **Reproducibility.** `decl_templates/newtheorem.json` regenerated byte for
+  byte (a full second run). The `article` sidecar was checked on a seeded
+  sample of 60 names, each record identical (a full second run was not
+  made: it takes hours here; every name's probes are independent of every
+  other name's, which is what makes a sampled check meaningful). The
+  `article` contract and the kernel file still reproduce byte for byte, and
+  every slice-1 kill-test passes, plus eight signature kill-tests: a
+  wrapper that reads as arity 0 is attested as one argument, `[opt]{req}`,
+  a star flag with two variants, a delimited parameter unresolved, a
+  peeked brace group as `gopt`, a text-only macro fatal in math, a
+  non-member answered as E1 without a probe, and a cached answer without
+  TeX.
+
+**Known limits (recorded, not fixed).**
+
+- Argument types are attested by one payload per type (a parametricity
+  assumption, §G.1 risk 1); `\setlength{a}{a}` compiles (it typesets), so its
+  slots are not typed as a length and a dimension, and the type stays
+  unattested (None). The differential (M2) is what tests the assumption.
+- Optional-argument positions and the star flag are attested in the base
+  cell only; other cells check only that nothing more is consumed.
+- The preamble cell's names are the body-start closed world; a name defined
+  in the preamble and removed by `\begin{document}` is not probed there.
+- Only `article` carries a full sidecar; `amsart` was not generated (the
+  full scope takes hours on this machine under load).
+- The sidecar is 4.5 MB (the probe log of every name is kept as evidence).

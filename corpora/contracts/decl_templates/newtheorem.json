@@ -1,0 +1,599 @@
+{
+ "declaration": "newtheorem",
+ "generator": {
+  "module": "scripts/tools/contract_signatures.py",
+  "signature_version": "1",
+  "tool": "scripts/tools/gen_contract.py decl-templates",
+  "version": "4"
+ },
+ "method": "per owner combination (the base configuration article plus the owner packages): a complete contract of the base, and one per form with the declaration as a preamble definer; `defines` etc. are the difference of the two closed worlds. `collisions`: solo probes (grading environment, the oracle's pass protocol) of the declaration after a prior definition of its name, and of unknown counter arguments",
+ "owners": {
+  "amsthm": {
+   "base_complete": true,
+   "collisions": [
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "id": "none",
+     "outcome": "ok",
+     "preamble": "\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-counter",
+     "message": "LaTeX Error: Command \\c@zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newcounter{zzq}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-macro",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newcommand{\\zzq}{x}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-environment",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newenvironment{zzq}{}{}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-theorem",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}{Z}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{lemma}a\\end{lemma} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-counter-lemma",
+     "message": "LaTeX Error: Command \\c@lemma already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newcounter{lemma}\\newtheorem{lemma}{Lemma}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "latex_error",
+     "id": "shared-unknown-counter",
+     "message": "LaTeX Error: No counter 'xzzq' defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}[xzzq]{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "latex_error",
+     "id": "within-unknown-counter",
+     "message": "LaTeX Error: No counter 'xzzq' defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}{Zzq}[xzzq]"
+    },
+    {
+     "body": "x",
+     "context": "preamble",
+     "id": "star-unused",
+     "outcome": "ok",
+     "preamble": "\\newtheorem*{zzq}{Zzq}"
+    }
+   ],
+   "config_key": "93e42686d5b6cb8dfa5903b47e9d89161f2ac19f462e786f2b3ab76d073891be",
+   "configuration": {
+    "class": "article",
+    "class_options": [],
+    "preamble": [
+     {
+      "options": [],
+      "package": "amsthm"
+     }
+    ]
+   },
+   "counter_argument": "enumi",
+   "forms": {
+    "plain": {
+     "changes": [
+      "@tempa",
+      "cl@@ckpt",
+      "l__color_backend_stack_int"
+     ],
+     "complete": true,
+     "config_key": "657a7bbb70a46154648af9fb8fdbc4a034c07ce9131e674437614fdeb5f11950",
+     "declaration": "\\newtheorem{zzq}{Zzq}",
+     "defines": {
+      "@let@token": "Primitive",
+      "c@zzq": "Register:count",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "zzq": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    },
+    "shared": {
+     "changes": [
+      "@tempa"
+     ],
+     "complete": true,
+     "config_key": "f0f44461c08951f0accea485405f575306bbf87296ee50f2c19d51b2224b8513",
+     "declaration": "\\newtheorem{zzq}[enumi]{Zzq}",
+     "defines": {
+      "@let@token": "Char",
+      "alias@ctr@zzq": "Macro",
+      "c@zzq": "Register:count",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "zzq": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    },
+    "star": {
+     "changes": [
+      "@tempa"
+     ],
+     "complete": true,
+     "config_key": "3d896cea41c11f859b652a56147b9747be46c77daa952e4d2675d7f24148ef71",
+     "declaration": "\\newtheorem*{zzq}{Zzq}",
+     "defines": {
+      "@let@token": "Char",
+      "endzzq": "Macro",
+      "reserved@d": "Char",
+      "zzq": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    },
+    "within": {
+     "changes": [
+      "@tempa",
+      "cl@@ckpt",
+      "l__color_backend_stack_int"
+     ],
+     "complete": true,
+     "config_key": "c1226cf793784c2d0fa55d1e3a2bdfee691917c98590bd3c0277ba76cee8f578",
+     "declaration": "\\newtheorem{zzq}{Zzq}[enumi]",
+     "defines": {
+      "@let@token": "Char",
+      "c@zzq": "Register:count",
+      "cl@enumi": "Macro",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "zzq": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    }
+   },
+   "probe_documents_sha256": "f07e18eb338293b7bbeb4a40fdb3370f10d9cda91ae7456db61648935fcb1f48"
+  },
+  "amsthm+thmtools": {
+   "base_complete": true,
+   "collisions": [
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "id": "none",
+     "outcome": "ok",
+     "preamble": "\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-counter",
+     "message": "LaTeX Error: Command \\c@zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newcounter{zzq}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-macro",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newcommand{\\zzq}{x}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-environment",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newenvironment{zzq}{}{}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-theorem",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}{Z}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{lemma}a\\end{lemma} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-counter-lemma",
+     "message": "LaTeX Error: Command \\c@lemma already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newcounter{lemma}\\newtheorem{lemma}{Lemma}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "latex_error",
+     "id": "shared-unknown-counter",
+     "message": "LaTeX Error: No counter 'xzzq' defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}[xzzq]{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "latex_error",
+     "id": "within-unknown-counter",
+     "message": "LaTeX Error: No counter 'xzzq' defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}{Zzq}[xzzq]"
+    },
+    {
+     "body": "x",
+     "context": "preamble",
+     "id": "star-unused",
+     "outcome": "ok",
+     "preamble": "\\newtheorem*{zzq}{Zzq}"
+    }
+   ],
+   "config_key": "d2cc14101f7c0a4d502479cf905d1bfd78902d36ab8943ca25e28b6b052414ea",
+   "configuration": {
+    "class": "article",
+    "class_options": [],
+    "preamble": [
+     {
+      "options": [],
+      "package": "amsthm"
+     },
+     {
+      "options": [],
+      "package": "thmtools"
+     }
+    ]
+   },
+   "counter_argument": "enumi",
+   "forms": {
+    "plain": {
+     "changes": [
+      "@gtempa",
+      "@tempa",
+      "cl@@ckpt",
+      "l__color_backend_stack_int",
+      "thmt@allenvs"
+     ],
+     "complete": true,
+     "config_key": "d65d66a315a64f26139394c111672e72ef26535d6dea1dd5dbcc27e6c6841e2d",
+     "declaration": "\\newtheorem{zzq}{Zzq}",
+     "defines": {
+      "@@reallyparse": "Macro",
+      "@parsecmd": "Macro",
+      "c@zzq": "Register:count",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "l@zzq": "Macro",
+      "ll@zzq": "Macro",
+      "p@tmp": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "thmt@args": "Macro",
+      "thmt@autoreffix": "Relax",
+      "thmt@contentsline@zzq": "Macro",
+      "thmt@envname": "Macro",
+      "thmt@original@endzzq": "Macro",
+      "thmt@original@zzq": "Macro",
+      "thmt@thmname": "Macro",
+      "thmt@tmp": "Macro",
+      "thmt@zzq@postfoothook": "Macro",
+      "thmt@zzq@postheadhook": "Macro",
+      "thmt@zzq@prefoothook": "Macro",
+      "thmt@zzq@preheadhook": "Macro",
+      "zzq": "Macro",
+      "zzqautorefname": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    },
+    "shared": {
+     "complete": false,
+     "config_key": "9771667bfa399b3b22f19dbcf15c0a3a71edcfe6a2e4f12fb6c76b16f828a320",
+     "declaration": "\\newtheorem{zzq}[enumi]{Zzq}",
+     "incomplete_reasons": [
+      "load_fatal: the configuration does not load, so no name set was generated"
+     ],
+     "load_outcome": {
+      "error_class": "already_defined",
+      "message": "LaTeX Error: Command \\c@zzq already defined.",
+      "status": "fatal"
+     }
+    },
+    "star": {
+     "changes": [
+      "@gtempa",
+      "@tempa",
+      "ifthmt@isstarred",
+      "thmt@allenvs"
+     ],
+     "complete": true,
+     "config_key": "70aed9b3b7e4f83de46ffce10733c5c90c530c9c576ade0ee4999f418e2d126c",
+     "declaration": "\\newtheorem*{zzq}{Zzq}",
+     "defines": {
+      "@@reallyparse": "Macro",
+      "@parsecmd": "Macro",
+      "endzzq": "Macro",
+      "l@zzq": "Macro",
+      "ll@zzq": "Macro",
+      "p@tmp": "Macro",
+      "thezzq": "Macro",
+      "thmt@args": "Macro",
+      "thmt@autoreffix": "Relax",
+      "thmt@contentsline@zzq": "Macro",
+      "thmt@envname": "Macro",
+      "thmt@original@endzzq": "Macro",
+      "thmt@original@zzq": "Macro",
+      "thmt@thmname": "Macro",
+      "thmt@tmp": "Macro",
+      "thmt@zzq@postfoothook": "Macro",
+      "thmt@zzq@postheadhook": "Macro",
+      "thmt@zzq@prefoothook": "Macro",
+      "thmt@zzq@preheadhook": "Macro",
+      "zzq": "Macro",
+      "zzqautorefname": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    },
+    "within": {
+     "changes": [
+      "@gtempa",
+      "@tempa",
+      "cl@@ckpt",
+      "ifthmt@hasparent",
+      "l__color_backend_stack_int",
+      "thmt@allenvs"
+     ],
+     "complete": true,
+     "config_key": "c2203a20e727afc74da7e6bc429f0b6138797d2213c128abb7cf7b3a7502b891",
+     "declaration": "\\newtheorem{zzq}{Zzq}[enumi]",
+     "defines": {
+      "@@reallyparse": "Macro",
+      "@parsecmd": "Macro",
+      "c@zzq": "Register:count",
+      "cl@enumi": "Macro",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "l@zzq": "Macro",
+      "ll@zzq": "Macro",
+      "p@tmp": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "thmt@args": "Macro",
+      "thmt@autoreffix": "Relax",
+      "thmt@contentsline@zzq": "Macro",
+      "thmt@envname": "Macro",
+      "thmt@original@endzzq": "Macro",
+      "thmt@original@zzq": "Macro",
+      "thmt@parent": "Macro",
+      "thmt@thmname": "Macro",
+      "thmt@tmp": "Macro",
+      "thmt@zzq@postfoothook": "Macro",
+      "thmt@zzq@postheadhook": "Macro",
+      "thmt@zzq@prefoothook": "Macro",
+      "thmt@zzq@preheadhook": "Macro",
+      "zzq": "Macro",
+      "zzqautorefname": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    }
+   },
+   "probe_documents_sha256": "a771da6873d14d4731b893eed4e597ec398719edbe3f2a856202c19d7fc5d160"
+  },
+  "kernel": {
+   "base_complete": true,
+   "collisions": [
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "id": "none",
+     "outcome": "ok",
+     "preamble": "\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "id": "prior-counter",
+     "outcome": "ok",
+     "preamble": "\\newcounter{zzq}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-macro",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newcommand{\\zzq}{x}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-environment",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newenvironment{zzq}{}{}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "prior-theorem",
+     "message": "LaTeX Error: Command \\zzq already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}{Z}\\newtheorem{zzq}{Zzq}"
+    },
+    {
+     "body": "\\begin{lemma}a\\end{lemma} x",
+     "context": "preamble",
+     "id": "prior-counter-lemma",
+     "outcome": "ok",
+     "preamble": "\\newcounter{lemma}\\newtheorem{lemma}{Lemma}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "latex_error",
+     "id": "shared-unknown-counter",
+     "message": "LaTeX Error: No counter 'xzzq' defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}[xzzq]{Zzq}"
+    },
+    {
+     "body": "\\begin{zzq}a\\end{zzq} x",
+     "context": "preamble",
+     "error_class": "latex_error",
+     "id": "within-unknown-counter",
+     "message": "LaTeX Error: No counter 'xzzq' defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem{zzq}{Zzq}[xzzq]"
+    },
+    {
+     "body": "x",
+     "context": "preamble",
+     "error_class": "already_defined",
+     "id": "star-unused",
+     "message": "LaTeX Error: Command \\* already defined.",
+     "outcome": "fatal",
+     "preamble": "\\newtheorem*{zzq}{Zzq}"
+    }
+   ],
+   "config_key": "80abd84bd7677c84ab1478ba239e32daad1374056a5328722dcec5a70e9ced12",
+   "configuration": {
+    "class": "article",
+    "class_options": [],
+    "preamble": []
+   },
+   "counter_argument": "enumi",
+   "forms": {
+    "plain": {
+     "changes": [
+      "cl@@ckpt",
+      "l__color_backend_stack_int"
+     ],
+     "complete": true,
+     "config_key": "de4caadc8459460803d70cc31ba35e4f816bfcfdfc0a78f7e4326b863ff80b9b",
+     "declaration": "\\newtheorem{zzq}{Zzq}",
+     "defines": {
+      "@let@token": "Macro+protected",
+      "c@zzq": "Register:count",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "zzq": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    },
+    "shared": {
+     "changes": [],
+     "complete": true,
+     "config_key": "9e63197f6af42696ed7c84eb0b89014f1312fe439a2b965b09671f7188225c80",
+     "declaration": "\\newtheorem{zzq}[enumi]{Zzq}",
+     "defines": {
+      "@let@token": "Char",
+      "alias@ctr@zzq": "Macro",
+      "c@zzq": "Register:count",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "zzq": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    },
+    "star": {
+     "complete": false,
+     "config_key": "034e07f90fc8972c97896dca81596c0e9fbf2de555ec94e9da27364bf1bf28ad",
+     "declaration": "\\newtheorem*{zzq}{Zzq}",
+     "incomplete_reasons": [
+      "load_fatal: the configuration does not load, so no name set was generated"
+     ],
+     "load_outcome": {
+      "error_class": "already_defined",
+      "message": "LaTeX Error: Command \\* already defined.",
+      "status": "fatal"
+     }
+    },
+    "within": {
+     "changes": [
+      "cl@@ckpt",
+      "l__color_backend_stack_int"
+     ],
+     "complete": true,
+     "config_key": "16aed1ac07cef9a00855307e23d58d6a0dd12d94a289bc4e0cf2c72c72c05507",
+     "declaration": "\\newtheorem{zzq}{Zzq}[enumi]",
+     "defines": {
+      "@let@token": "Char",
+      "c@zzq": "Register:count",
+      "cl@enumi": "Macro",
+      "cl@zzq": "Macro",
+      "endzzq": "Macro",
+      "p@zzq": "Macro",
+      "theHzzq": "Macro",
+      "thezzq": "Macro",
+      "zzq": "Macro"
+     },
+     "reverts_to_kernel": [],
+     "undefines_kernel_names": []
+    }
+   },
+   "probe_documents_sha256": "0ac3cf8558c2886b36ad64d4fe6e7482f429c22a5cbc2d5aed7e18964699476f"
+  }
+ },
+ "pin": {
+  "arch": "aarch64",
+  "engine_banner": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+  "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+  "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+  "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe"
+ },
+ "schema": "lp-decl-templates/1"
+}

@@ -244,7 +244,7 @@ def sha256_bytes(b: bytes) -> str:
 
 # Top-level maps written one entry per line (they hold thousands of entries).
 LINE_PER_ENTRY = ("defined_names", "names", "active_chars", "counters", "files_read",
-                  "probes")
+                  "probes", "signatures", "environments", "definer_rules")
 
 
 def canonical_json(obj) -> str:
@@ -668,6 +668,11 @@ def first_error(log: bytes):
 # a probe outcome is compared on; the return code is never used for it.
 _ERROR_CLASSES = [
     (r"^Undefined control sequence\.", "undefined_cs"),
+    # The signature probes' \outer sentinel taken as a macro argument (a
+    # "grab", contract_signatures.py); any other scan that meets it is
+    # forbidden_cs.
+    (r"^Forbidden control sequence found while scanning use of", "forbidden_cs_use"),
+    (r"^Forbidden control sequence found", "forbidden_cs"),
     (r"^LaTeX Error: Environment .* undefined\.", "undefined_env"),
     (r"^LaTeX Error: File `.*' not found\.", "missing_file"),
     (r"^LaTeX Error: .*Unicode character", "unicode_undefined"),
@@ -2665,7 +2670,28 @@ def main(argv=None) -> int:
     p.add_argument("--names", help="comma-separated extra names to probe")
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--out", required=True)
+    # M1 slice 2 (contract_signatures.py): signature probes, the on-demand
+    # API, and the \newtheorem declaration templates.
+    s = sub.add_parser("signatures", help="write the signature sidecar of a contract")
+    s.add_argument("--contract", required=True)
+    s.add_argument("--names", help="comma-separated subset (default: the whole scope)")
+    s.add_argument("--workers", type=int, default=6)
+    s.add_argument("--no-batch", action="store_true", help="skip the batched triage")
+    s.add_argument("--out")
+    q = sub.add_parser("probe-names", help="signatures of some names, cached (M3's API)")
+    q.add_argument("--contract", required=True)
+    q.add_argument("--names", required=True)
+    q.add_argument("--cells", help="comma-separated cells (default: all)")
+    q.add_argument("--sig-cache", default="~/.cache/lp-oracle/contracts/signatures")
+    q.add_argument("--workers", type=int, default=6)
+    t = sub.add_parser("decl-templates", help="the \\newtheorem declaration templates")
+    t.add_argument("--workers", type=int, default=6)
+    t.add_argument("--out")
     a = ap.parse_args(argv)
+    if a.cmd in ("signatures", "probe-names", "decl-templates"):
+        import contract_signatures as cs_mod
+        return {"signatures": cs_mod.cmd_signatures, "probe-names": cs_mod.cmd_probe_names,
+                "decl-templates": cs_mod.cmd_decl_templates}[a.cmd](a)
     return cmd_generate(a) if a.cmd == "generate" else cmd_probes(a)
 
 

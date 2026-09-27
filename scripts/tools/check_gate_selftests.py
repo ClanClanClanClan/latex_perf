@@ -616,6 +616,25 @@ REGISTRY = [
                      r"FAIL env: no tool restates the oracle's TeX environment",
                      old="    return oracle_tex_env(td)\n",
                      new='    return dict(oracle_tex_env(td), openin_any="p")\n'),
+            # M1 slice 2 (contract_signatures.py). The sentinel's error must
+            # read as a grab; a letter after the sentinel must be separated
+            # (\lpstopa is another name: every environment probe broke on it);
+            # and the committed sidecar's check must see a missing grab probe.
+            Mutation("the sentinel's error no longer reads as a grab",
+                     "scripts/tools/contract_signatures.py",
+                     r"FAIL sig: the sentinel taken as an argument is a grab",
+                     old='    o = {"o": "grab" if c.get("error_class") == GRAB_CLASS else "fatal",\n',
+                     new='    o = {"o": "fatal",\n'),
+            Mutation("a letter after the sentinel is no longer separated",
+                     "scripts/tools/contract_signatures.py",
+                     r"FAIL sig: a letter after the sentinel is separated",
+                     old='        if tail[:1].isalpha():\n            s += " "\n',
+                     new='        pass\n'),
+            Mutation("the sidecar check stops requiring the missing-argument grab",
+                     "scripts/tools/contract_signatures.py",
+                     r"FAIL sidecar kill: dropping \S+'s grab probes is seen",
+                     old='            bad.append("dropping the last mandatory argument is not recorded as a grab")\n',
+                     new='            pass\n'),
             Mutation("the generator's grading environment forces the date",
                      "scripts/tools/gen_contract.py",
                      r"FAIL env grading: exactly the oracle's environment",

@@ -11,38 +11,44 @@
     "shared",
     "IPC"
   ],
-  "pending_ci": [
-    "cold_check_ms",
-    "structural_ms"
-  ],
+  "pending_ci": [],
   "pending_ci_note": "OPEN-104. cold_check_ms (validators_cli --compile-check, whole process, wall clock, median per band) and the keystroke structural_ms column are MEASURED and printed on every perf-ci run but have no recorded value yet, because ADR-011 allows a baseline only from an idle CI runner and none existed when the mechanism landed. Until they are adopted the gate cannot fail on them. To record: from a green perf-ci run on main, run 'gh run download RUN_ID -n keystroke-budget-measured -D DIR', then 'python3 scripts/tools/check_keystroke_budget.py --adopt DIR/keystroke_budget_measured.json', and commit this file. --adopt refuses a file without a CI run id or measured above load 4.0, and writes only the pending metrics.",
   "keystroke": {
     "4": {
       "bytes": 4125,
       "parse_ms": 0.0,
       "fastrun_ms": 4.2,
-      "rules_ms": 4.2
+      "rules_ms": 4.2,
+      "structural_ms": 0.8
     },
     "50": {
       "bytes": 49936,
       "parse_ms": 1.4,
       "fastrun_ms": 51.5,
-      "rules_ms": 50.0
+      "rules_ms": 50.0,
+      "structural_ms": 9.4
     },
     "100": {
       "bytes": 99981,
       "parse_ms": 3.3,
       "fastrun_ms": 98.7,
-      "rules_ms": 95.4
+      "rules_ms": 95.4,
+      "structural_ms": 19.1
     },
     "300": {
       "bytes": 300008,
       "parse_ms": 10.5,
       "fastrun_ms": 294.5,
-      "rules_ms": 284.0
+      "rules_ms": 284.0,
+      "structural_ms": 55.9
     }
   },
-  "cold_check_ms": "pending-CI",
+  "cold_check_ms": {
+    "4": 28.4,
+    "50": 191.6,
+    "100": 367.7,
+    "300": 1105.4
+  },
   "batch_ms": {
     "4": 111.3,
     "50": 1109.2,
@@ -51,9 +57,11 @@
   },
   "spec_gap_300kb": {
     "parse": 0.26,
-    "rules": 9.47
+    "rules": 9.47,
+    "structural": 3.73
   },
   "reps": 9,
   "loadavg_1min": 1.0,
-  "recorded_from": "TRANSCRIBED from the perf-ci step of GitHub Actions run 30811194180's predecessor 30765865249 (sha 3543095b, ubuntu-latest, load average 1.0), NOT produced by --record on this machine. The gate refuses to --record above load 4.0 and no developer machine here is ever that quiet, so the authoritative environment is CI. Re-derive by reading the 'Keystroke + batch latency budget (R-BUDGET)' step of any green perf-ci run on main."
+  "recorded_from": "TRANSCRIBED from the perf-ci step of GitHub Actions run 30811194180's predecessor 30765865249 (sha 3543095b, ubuntu-latest, load average 1.0), NOT produced by --record on this machine. The gate refuses to --record above load 4.0 and no developer machine here is ever that quiet, so the authoritative environment is CI. Re-derive by reading the 'Keystroke + batch latency budget (R-BUDGET)' step of any green perf-ci run on main.",
+  "pending_ci_recorded_from": "ADOPTED from the perf-ci artefact of GitHub Actions run 36237548434 (sha a658af37, Linux/X64, load average 1.05) by check_keystroke_budget.py --adopt."
 }

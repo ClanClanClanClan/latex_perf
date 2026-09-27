@@ -131,9 +131,10 @@ fi
 # different problems with different fixes, and conflating them is how a gate gets
 # switched off instead of understood.
 # FR_EXPECT_ENGINE lets the caller supply the pin directly. Without it we parse
-# the manifest with python3 — but the TeX container deliberately has no python3,
-# so relying on that alone made the pin FAIL OPEN exactly where it ships: a
-# skewed engine would have been graded silently. The workflow passes it in.
+# the manifest with python3. The TeX image this ran in when that was written had
+# no python3, so relying on the parse alone made the pin FAIL OPEN exactly where
+# it ships; the pinned image of ADR-012 decision 7 does have /usr/bin/python3
+# (the native oracle backend needs it), but the workflow still passes the pin in.
 MAN_ENGINE="${FR_EXPECT_ENGINE:-}"
 if [ -z "$MAN_ENGINE" ]; then
   MAN_ENGINE="$(python3 -c "
@@ -232,17 +233,20 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   # ORDERING IS LOAD-BEARING: halt-on-error FIRST. fr_corrupt_aux's doc.aux is
   # rewritten by a run that gets far enough, so a nonstop-first ordering makes the
   # second run see a repaired .aux and grade `compiles`. Do not reorder.
-  read -r hrc _hpdf <<<"$(run_pdflatex "$rundir" "$base" 1)"
+  read -r hrc hpdf <<<"$(run_pdflatex "$rundir" "$base" 1)"
   # Clear artefacts between protocols: a PDF left by the halt run would be
   # attributed to the nonstop run and silently convert strong-fatal -> error-halt.
-  rm -f "$rundir/${base%.tex}.pdf" "$rundir/${base%.tex}.log"
+  # Through the oracle, not a host `rm`: see ORACLE_RM in _oracle.sh.
+  "${ORACLE_RM[@]}" "$rundir/${base%.tex}.pdf" "$rundir/${base%.tex}.log" \
+    || die_infra "cannot clear the halt run's artefacts for $id"
   read -r nrc npdf  <<<"$(run_pdflatex "$rundir" "$base" 0)"
   logfile="$(mktemp)"
   cp "$rundir/${base%.tex}.log" "$logfile" 2>/dev/null || : > "$logfile"
   rm -rf "$wd"
 
   # 124 = timeout kill; 125/126/127 = timeout itself failed / not executable /
-  # not found. None is a property of the DOCUMENT, yet all of them look exactly
+  # not found, and 125 is also _oracle.py's INFRA_RC (the container oracle
+  # failed: docker unreachable, container gone, a refused environment). None is a property of the DOCUMENT, yet all of them look exactly
   # like "failed with no PDF" = strong-fatal, which MATCHES the manifest for most
   # fixtures. A pdflatex that cannot run at all would have graded 21/21 `ok`.
   case "$hrc:$nrc" in
@@ -257,8 +261,15 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
     timeouts=$((timeouts+1)); continue
   fi
 
+  # `compiles` is the §B.4 predicate (STRICT_TIER_DESIGN.md, E0): rc 0 AND a
+  # PDF under the halt protocol. It used to be "hrc 0" alone, so an rc-0 run
+  # that typeset nothing (no PDF) graded `compiles`. Such a run is now graded
+  # like the failure it is: strong-fatal when nonstop produced no PDF either,
+  # error-halt otherwise. The first two branches are unchanged.
   if [ "$nrc" != 0 ] && [ "$npdf" = no ]; then grade=strong-fatal
   elif [ "$hrc" != 0 ]; then grade=error-halt
+  elif [ "$hpdf" != yes ]; then
+    if [ "$npdf" = no ]; then grade=strong-fatal; else grade=error-halt; fi
   else grade=compiles; fi
 
   status=ok

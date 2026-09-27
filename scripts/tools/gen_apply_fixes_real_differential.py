@@ -148,15 +148,20 @@ def run_one(rec, root, cli, timeout, scope="all"):
             # A timeout is UNMEASURED, not "did not compile" (C-70's rule).
             out["cell"] = "instrument-error-timeout"
             return out
-        if rc0 != 0:
+        # The §B.4 predicate (STRICT_TIER_DESIGN.md, E0): rc 0 AND a PDF.
+        if not run0.compiles:
             out["cell"] = "excluded-did-not-compile"
             return out
         # Delete exactly what pdflatex created, so the post-fix compile cannot
         # inherit state the fixed document never produced.
-        for q in sorted((x for x in work.rglob("*") if x.is_file()),
-                        key=lambda x: -len(x.parts)):
-            if q.relative_to(work) not in shipped:
-                q.unlink(missing_ok=True)
+        # Through the oracle (inside the container), not a host unlink: a
+        # host-side delete leaves the container's view stale for about a
+        # second and pdflatex then cannot re-create its log (measured,
+        # _oracle.ContainerOracle.remove).
+        get_oracle().remove(sorted(
+            (x for x in work.rglob("*")
+             if x.is_file() and x.relative_to(work) not in shipped),
+            key=lambda x: -len(x.parts)))
         failures: list = []
         out["changed_files"] = apply_fixes_tree(work, cli, timeout, failures,
                                                 scope)
@@ -178,7 +183,7 @@ def run_one(rec, root, cli, timeout, scope="all"):
         if run1.timed_out:
             out["cell"] = "instrument-error-timeout"
             return out
-        out["cell"] = "preserved" if rc1 == 0 else "broken"
+        out["cell"] = "preserved" if run1.compiles else "broken"
     return out
 
 

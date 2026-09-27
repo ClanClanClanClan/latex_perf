@@ -291,7 +291,7 @@ def build(repo: Path) -> str:
               "The North Star is defined on a VIRGIN sample, and neither row "
               "below is one: sample 1 is tuned and sample 2 has been "
               "design-seen since ADR-012. The headline figure will come from "
-              "sample 3 (ranks 401-600), drawn and graded only after every "
+              "sample 3 (frame offset 720, ranks 721-920), drawn and graded only after every "
               "graded artefact has been re-graded under the frozen oracle, "
               "CI's digest-pinned TeX Live image (ADR-012 decision 7); that "
               "re-grade is done and moved no cell (OPEN-118). "

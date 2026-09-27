@@ -133,10 +133,15 @@ def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 6
     the container elsewhere. `timeout_bin` is kept for the precondition check;
     the oracle enforces the timeout itself (inside the container, so a hung
     pdflatex is killed where it runs)."""
+    # COMPILES is the §B.4 predicate (STRICT_TIER_DESIGN.md, E0): rc 0 AND a
+    # PDF. rc alone scored an rc-0 run that typeset nothing as compiling. A PDF
+    # left from an earlier run must not count, so it is removed first.
+    pdf = Path(workdir) / (Path(base).stem + ".pdf")
+    get_oracle().remove([pdf])  # through the oracle: see ContainerOracle.remove
     rc, timed_out = get_oracle().run_once(workdir, base, dict(os.environ), secs)
     if timed_out or rc in (124, 125, 126, 127):
         return None
-    return rc == 0
+    return rc == 0 and pdf.is_file()
 
 
 def main() -> int:
@@ -299,8 +304,8 @@ def main() -> int:
                     # b4 was graded once per document above.
                     broke = False
                     if have_tex:
-                        for junk in ("aux", "log", "pdf", "out"):
-                            (stage / f"{base[:-4]}.{junk}").unlink(missing_ok=True)
+                        get_oracle().remove([stage / f"{base[:-4]}.{junk}"
+                                             for junk in ("aux", "log", "pdf", "out")])
                         af = pdflatex_ok(stage, base, timeout_bin)
                         if b4 is None or af is None:
                             ungraded += 1

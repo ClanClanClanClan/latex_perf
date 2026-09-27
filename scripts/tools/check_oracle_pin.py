@@ -17,13 +17,41 @@ and checks four things:
      tex-oracle.yml pins, for both platform images (arm64 and amd64), and the
      two agree on the macro layer. A re-pin that forgets to re-measure fails.
   2. Every graded artefact in GRADED records `image` equal to the pinned
-     digest (and the pinned engine version). An artefact still carrying a
-     host-graded block fails, unless it is in PRE_BASELINE with the ledger row
-     that removes it.
+     digest, the pinned engine version, a `backend` in {container, native},
+     and, for its recorded `arch`, the `tlpdb_sha256`, `macro_layer_sha256`
+     and `fmt_sha256` that `_oracle.TREE_FINGERPRINTS` holds for that
+     architecture. The image string alone is not evidence: two of these
+     blocks were stamped by hand, and a hand edit of `image` satisfied the
+     old check. An artefact still carrying a host-graded block fails, unless
+     it is in PRE_BASELINE with the ledger row that removes it.
   3. PRE_BASELINE is pinned to its exact contents: widening it silently fails,
      and an entry whose artefact has since been re-graded fails too.
-  4. No tool calls a host `pdflatex` directly: outside `_oracle.py` and
-     `_oracle.sh`, no Python list or shell command starts a pdflatex run.
+  4. No tracked code starts a TeX engine (pdflatex, latexmk, xelatex,
+     lualatex) outside `_oracle.py` and `_oracle.sh`. Scanned: every tracked
+     .py, .sh/.bash, Makefile/.mk, .ml and workflow file, not only scripts/.
+     The rules, each with a kill-test in check_gate_selftests.py:
+       Python  every string literal that names an engine, found by the
+               tokenizer (so a list split over lines is still one list), is a
+               finding unless it is data: a dict key (`"pdflatex": ...`), a
+               dict value (`...: "pdflatex"`), a subscript (`x["pdflatex"]`),
+               an argument of .get/.setdefault/.pop, or an operand of
+               ==, !=, in. That catches `["timeout", "60", "pdflatex", t]`,
+               `("pdflatex", t)`, `ENGINE = "pdflatex"`,
+               `shutil.which("pdflatex")`, and a shell string such as
+               `f"pdflatex {t}"` or `"pdflatex main.tex"`.
+       shell   a bare engine token anywhere on a code line (comments
+               stripped), except inside an echo/printf message. That catches
+               `pdflatex main.tex`, `PDF=pdflatex`, `cmd=(pdflatex ...)`.
+       OCaml   a file that spawns processes (Sys.command, Unix.create_process,
+               Unix.open_process*, Unix.exec*) must not name an engine in a
+               string literal.
+       workflow  as shell, minus `name:` keys, with an exact allow-list of the
+               in-image canary lines of tex-oracle.yml (they run INSIDE the
+               pinned image, which is the oracle).
+     This is a static scan and cannot be complete (an engine name built at
+     run time evades it); it closes the shapes measured to evade the previous
+     regex, which matched only a Python list whose FIRST element was the
+     literal "pdflatex", and only under scripts/.
 
 Run: python3 scripts/tools/check_oracle_pin.py --repo .
 """
@@ -71,10 +99,161 @@ PRE_BASELINE = {
 }
 PRE_BASELINE_SIZE = 4
 
-# Files allowed to start pdflatex: the oracle itself.
+# Files allowed to start pdflatex: the oracle itself. And files not scanned
+# because they NAME engines as data about this scan: this gate (its ENGINES
+# tuple) and the selftest harness (its kill-test payloads are the evasion
+# shapes, written out).
 ORACLE_FILES = {"scripts/tools/_oracle.py", "scripts/tools/_oracle.sh"}
-PY_DIRECT = re.compile(r"""\[\s*["']pdflatex["']\s*,""")
-SH_DIRECT = re.compile(r"""(^|[\s;&|(`$])pdflatex\s+(-|--version|\$|")""")
+SCANNER_FILES = {"scripts/tools/check_oracle_pin.py",
+                 "scripts/tools/check_gate_selftests.py"}
+ENGINES = ("pdflatex", "latexmk", "xelatex", "lualatex")
+_ENG_ALT = "|".join(ENGINES)
+ENGINE_LITERAL = re.compile(rf"^(\S*/)?({_ENG_ALT})$")
+# A string that is a shell command line starting with an engine.
+ENGINE_CMDLINE = re.compile(rf"^\s*(\S*/)?({_ENG_ALT})\s+(-|\S+\.tex\b|\{{|\$|\"|')")
+BARE_TOKEN = re.compile(rf"(^|[^A-Za-z0-9_./-])({_ENG_ALT})([^A-Za-z0-9_.-]|$)")
+SH_MESSAGE = re.compile(r"^\s*(echo|printf|die_infra|die|warn|log)\b")
+ML_SPAWN = re.compile(r"Sys\.command|create_process|open_process|Unix\.exec")
+ML_LITERAL = re.compile(rf'"[^"\n]*\b({_ENG_ALT})\b[^"\n]*"')
+DATA_CALLS = {"get", "setdefault", "pop"}
+COMPARE_OPS = {"==", "!=", "in"}
+# Workflow lines that run an engine INSIDE the pinned image (the oracle
+# itself). Exact stripped lines, pinned by count: a new one fails.
+WORKFLOW_ALLOW = {
+    ".github/workflows/tex-oracle.yml": (
+        'got=$(docker run --rm "$TEX_IMAGE" pdflatex --version | head -1)',
+        'if ! pdflatex -interaction=nonstopmode -halt-on-error canary.tex >canary.stdout 2>&1 \\',
+        '&& pdflatex -interaction=nonstopmode -halt-on-error t.tex >t.log 2>&1 \\',
+    ),
+}
+FINGERPRINT_KEYS = ("tlpdb_sha256", "macro_layer_sha256", "fmt_sha256")
+BACKENDS = {"container", "native"}
+
+
+def _py_string_value(tok: str) -> str | None:
+    """The text of a string token, prefixes and quotes removed. f-strings
+    keep their `{...}` fields verbatim, which is what ENGINE_CMDLINE needs."""
+    m = re.match(r"^([rRbBuUfF]*)('\'\'|\"\"\"|'|\")(.*)\2$", tok, re.S)
+    if not m or "b" in m.group(1).lower():
+        return None
+    return m.group(3)
+
+
+def scan_python(text: str) -> list[tuple[int, str]]:
+    """(line, literal) for every engine literal in executable position."""
+    import io
+    import tokenize
+    try:
+        toks = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (tokenize.TokenError, SyntaxError, IndentationError):
+        # Untokenizable file: fall back to a line scan for engine literals.
+        return [(n, m.group(0)) for n, line in enumerate(text.split("\n"), 1)
+                for m in [re.search(rf"[\"']({_ENG_ALT})[\s\"']", line)] if m
+                and not line.lstrip().startswith("#")]
+    skip = (tokenize.NL, tokenize.NEWLINE, tokenize.COMMENT, tokenize.INDENT,
+            tokenize.DEDENT)
+    raw = [t for t in toks if t.type not in skip]
+    # Python >= 3.12 tokenizes an f-string as FSTRING_START ... FSTRING_END;
+    # collapse each into ONE string unit carrying its source text, so
+    # `f"pdflatex {t}"` is seen exactly as it is on 3.11.
+    fs_start = getattr(tokenize, "FSTRING_START", None)
+    fs_end = getattr(tokenize, "FSTRING_END", None)
+    lines = text.split("\n")
+
+    def src(a, b):
+        (l0, c0), (l1, c1) = a, b
+        if l0 == l1:
+            return lines[l0 - 1][c0:c1]
+        return "\n".join([lines[l0 - 1][c0:]] + lines[l0:l1 - 1] + [lines[l1 - 1][:c1]])
+
+    class _U:
+        def __init__(self, type_, string, start):
+            self.type, self.string, self.start = type_, string, start
+    sig, j = [], 0
+    while j < len(raw):
+        t = raw[j]
+        if fs_start is not None and t.type == fs_start:
+            depth, k = 1, j + 1
+            while k < len(raw) and depth:
+                depth += (raw[k].type == fs_start) - (raw[k].type == fs_end)
+                k += 1
+            sig.append(_U(tokenize.STRING, src(t.start, raw[k - 1].end), t.start))
+            j = k
+            continue
+        sig.append(t)
+        j += 1
+    hits = []
+    for i, t in enumerate(sig):
+        if t.type != tokenize.STRING:
+            continue
+        val = _py_string_value(t.string)
+        if val is None or not (ENGINE_LITERAL.match(val) or ENGINE_CMDLINE.match(val)):
+            continue
+        prev = sig[i - 1].string if i else ""
+        nxt = sig[i + 1].string if i + 1 < len(sig) else ""
+        before_prev = sig[i - 2].string if i >= 2 else ""
+        if True:  # data positions exempt both an engine name and a command line
+            if nxt == ":" and prev in ("{", ","):
+                continue                       # dict key
+            if prev == ":":
+                continue                       # dict value
+            if prev == "[" and nxt == "]" and before_prev not in ("", "=", "(", ",", "[", "return"):
+                continue                       # subscript x["pdflatex"]
+            if prev == "(" and before_prev in DATA_CALLS:
+                continue                       # d.get("pdflatex")
+            if prev in COMPARE_OPS or nxt in COMPARE_OPS or (prev == "not" and nxt != ","):
+                continue                       # comparison operand
+        hits.append((t.start[0], val))
+    return hits
+
+
+SH_QUOTED = re.compile(r"""\"(?:[^\"\\]|\\.)*\"|'[^']*'""")
+
+
+def scan_shell(text: str, allow: tuple = ()) -> list[tuple[int, str]]:
+    """A shell line starts an engine when the engine is a bare word OUTSIDE
+    quotes (`pdflatex x.tex`, `PDF=pdflatex`, `cmd=(pdflatex -x)`), or when a
+    quoted word IS an engine or an engine command line (`PDF="pdflatex"`,
+    `sh -c 'pdflatex x.tex'`). An engine named inside a longer quoted string
+    is a message or a pattern (`echo "... pdflatex failed"`, `grep 'pdftex\\|
+    pdflatex'`), and `x['pdflatex']` is a subscript."""
+    hits = []
+    for n, line in enumerate(text.split("\n"), 1):
+        code = line.split("#", 1)[0] if not line.lstrip().startswith("#") else ""
+        if not code.strip() or SH_MESSAGE.match(code):
+            continue
+        if re.match(r"^\s*-?\s*name:", code):
+            continue                           # a workflow step's display name
+        if line.strip() in allow:
+            continue
+        unquoted = SH_QUOTED.sub('""', code)
+        hit = bool(BARE_TOKEN.search(unquoted))
+        for m in SH_QUOTED.finditer(code):
+            inner = m.group(0)[1:-1]
+            subscript = (code[:m.start()].endswith("[")
+                         and code[m.end():].startswith("]"))
+            if not subscript and (ENGINE_LITERAL.match(inner)
+                                  or ENGINE_CMDLINE.match(inner)):
+                hit = True
+        if hit:
+            hits.append((n, line.strip()))
+    return hits
+
+
+def scan_ocaml(text: str) -> list[tuple[int, str]]:
+    if not ML_SPAWN.search(text):
+        return []
+    return [(n, m.group(0)) for n, line in enumerate(text.split("\n"), 1)
+            for m in [ML_LITERAL.search(line)] if m]
+
+
+def tracked_files(repo: Path) -> list[str]:
+    import subprocess
+    r = subprocess.run(["git", "-C", str(repo), "ls-files"], capture_output=True,
+                       text=True)
+    if r.returncode != 0:
+        raise RuntimeError(f"git ls-files failed: {r.stderr.strip()}")
+    return r.stdout.split("\n")
 
 
 def dig(d, path):
@@ -107,7 +286,7 @@ def main() -> int:
                         "DIFFERENT macro layers: a local grade would not be the "
                         "CI grade")
     for arch, fp in fps.items():
-        for k in ("tlpdb_sha256", "macro_layer_sha256"):
+        for k in FINGERPRINT_KEYS:
             if not re.fullmatch(r"[0-9a-f]{64}", str(fp.get(k, ""))):
                 findings.append(f"_oracle.TREE_FINGERPRINTS[{arch}][{k}] is not a sha256")
 
@@ -140,6 +319,20 @@ def main() -> int:
         if version not in str(block.get("version", "")):
             findings.append(f"{rel}: oracle version {block.get('version')!r} is not "
                             f"the pin {version!r}")
+        if block.get("backend") not in BACKENDS:
+            findings.append(f"{rel}: oracle backend {block.get('backend')!r} is not "
+                            f"one of {sorted(BACKENDS)}")
+        want = fps.get(block.get("arch"))
+        if want is None:
+            findings.append(f"{rel}: oracle arch {block.get('arch')!r} has no "
+                            f"recorded tree fingerprint")
+        else:
+            for k in FINGERPRINT_KEYS:
+                if block.get(k) != want.get(k):
+                    findings.append(
+                        f"{rel}: oracle {k} {block.get(k)!r} is not the pinned "
+                        f"image's {block.get('arch')} tree fingerprint "
+                        f"{want.get(k)!r}")
     for rel in sorted(PRE_BASELINE):
         f = repo / rel
         if not f.is_file():
@@ -149,30 +342,48 @@ def main() -> int:
             findings.append(f"{rel} now records the pinned image but is still in "
                             f"PRE_BASELINE; move it to GRADED")
 
-    # 4. nothing else starts pdflatex
-    for p in sorted((repo / "scripts").rglob("*")):
-        if p.suffix not in (".py", ".sh") or not p.is_file():
+    # 4. nothing else starts a TeX engine
+    scanned = 0
+    for rel in sorted(tracked_files(repo)):
+        if not rel or rel in ORACLE_FILES or rel in SCANNER_FILES:
             continue
-        rel = str(p.relative_to(repo))
-        if rel in ORACLE_FILES:
+        p = repo / rel
+        name = p.name
+        if rel.endswith(".py"):
+            scan = scan_python
+        elif rel.endswith((".sh", ".bash", ".mk")) or name == "Makefile":
+            scan = scan_shell
+        elif rel.endswith(".ml"):
+            scan = scan_ocaml
+        elif rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")):
+            allow = WORKFLOW_ALLOW.get(rel, ())
+            scan = (lambda t, a=allow: scan_shell(t, a))
+        else:
             continue
-        for n, line in enumerate(p.read_text(errors="replace").split("\n"), 1):
-            code = line.split("#", 1)[0] if p.suffix == ".sh" else line
-            if code.lstrip().startswith("#"):
-                continue
-            rx = PY_DIRECT if p.suffix == ".py" else SH_DIRECT
-            if rx.search(code):
-                findings.append(f"{rel}:{n}: starts pdflatex directly; go through "
-                                f"scripts/tools/_oracle.py (the host TeX Live is "
-                                f"not the oracle)")
+        if not p.is_file():
+            continue
+        scanned += 1
+        for n, what in scan(p.read_text(errors="replace")):
+            findings.append(f"{rel}:{n}: starts a TeX engine directly ({what[:60]!r}); "
+                            f"go through scripts/tools/_oracle.py (the host TeX "
+                            f"Live is not the oracle)")
+    for rel, lines in WORKFLOW_ALLOW.items():
+        f = repo / rel
+        text = f.read_text() if f.is_file() else ""
+        stripped = {ln.strip() for ln in text.split("\n")}
+        for ln in lines:
+            if ln not in stripped:
+                findings.append(f"{rel}: allow-listed in-image line no longer "
+                                f"present, prune WORKFLOW_ALLOW: {ln[:60]!r}")
 
     if findings:
         print("[oracle-pin] FAIL:", file=sys.stderr)
         for f in findings:
             print(f"  - {f}", file=sys.stderr)
         return 1
-    print(f"[oracle-pin] OK: {len(GRADED)} graded artefacts name {image}; "
-          f"{len(PRE_BASELINE)} pre-baseline artefacts pinned; no direct pdflatex")
+    print(f"[oracle-pin] OK: {len(GRADED)} graded artefacts name {image} with "
+          f"its tree fingerprints; {len(PRE_BASELINE)} pre-baseline artefacts "
+          f"pinned; {scanned} tracked code files start no TeX engine directly")
     return 0
 
 

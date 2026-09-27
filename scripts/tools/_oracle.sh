@@ -7,6 +7,11 @@
 #   PDFLATEX        array: the command to run INSTEAD of `pdflatex`
 #   ORACLE_BACKEND  native | container
 #   ORACLE_BANNER   the oracle's `pdflatex --version` first line
+#   ORACLE_RM       array: the command that deletes work files pdflatex will
+#                   write again (container: through `_oracle.py rm`, because a
+#                   host-side delete leaves the container's view of the
+#                   directory stale for about a second, and pdflatex then
+#                   cannot create its log; see ContainerOracle.remove)
 #   ORACLE_TIMEOUT_INSIDE  1 when the command enforces TEX_TIMEOUT itself
 #                   (container: the timeout runs INSIDE the container, because
 #                   killing the docker client on the host would leave pdflatex
@@ -33,6 +38,7 @@ oracle_setup() {
     fi
     ORACLE_BACKEND=native
     PDFLATEX=(pdflatex)
+    ORACLE_RM=(rm -f --)
     ORACLE_TIMEOUT_INSIDE=0
     ORACLE_BANNER="$(pdflatex --version 2>/dev/null | head -1)"
     return 0
@@ -40,6 +46,7 @@ oracle_setup() {
   if command -v python3 >/dev/null 2>&1 && out="$(python3 "$py" version 2>&1)"; then
     ORACLE_BACKEND=container
     PDFLATEX=(python3 "$py" pdflatex --timeout "$TEX_TIMEOUT")
+    ORACLE_RM=(python3 "$py" rm)
     ORACLE_TIMEOUT_INSIDE=1
     ORACLE_BANNER="$(printf '%s\n' "$out" | tail -1)"
     TMPDIR="$(python3 "$py" workroot)" || { echo "[$tag] FATAL: no oracle work root" >&2; exit 2; }

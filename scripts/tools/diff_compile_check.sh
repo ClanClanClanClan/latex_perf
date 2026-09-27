@@ -22,7 +22,8 @@
 # whole macro universe) are expected and do NOT fail the run; a genuinely new
 # soundness miss does.
 #
-# Requires pdflatex on PATH. Runs locally and in CI's tex-oracle workflow, where
+# pdflatex COMPILES means rc 0 AND a PDF (STRICT_TIER_DESIGN.md §B.4, E0).
+# Requires the pinned-image oracle (_oracle.sh). Runs locally and in CI's tex-oracle workflow, where
 # it is ADVISORY (continue-on-error): its exit condition is a measurement of the
 # soundness residual, and it needs a large, correctness-critical TeX install — an
 # incomplete one manufactures spurious FALSE-READY(NEW!) rows. It is also blind to
@@ -31,7 +32,8 @@
 # (CLI-only, monotone) and false_ready_oracle.sh (pdflatex, HARD drift only).
 #
 # EXIT CODES: 0 clean | 1 a NEW false-READY beyond the allowlist | 2 infrastructure
-# (no pdflatex, no CLI, too few docs, a timeout, or a vacuous run) | 3 engine skew
+# (no oracle, no CLI, too few docs, a timeout or oracle failure on ANY document,
+# or a vacuous run) | 3 engine skew
 # | 4 over-rejection budget exceeded (SAFE direction — never conflate with 1).
 #
 # ENV: REQUIRE_PDFLATEX=1 makes every precondition an error instead of a skip;
@@ -143,12 +145,33 @@ for f in "$CORPUS"/*.tex; do
     ( cd "$d" && "${PDFLATEX[@]}" -interaction=nonstopmode -halt-on-error "$base" >/dev/null 2>&1 )
   fi
   prc=$?
+  # The §B.4 predicate (STRICT_TIER_DESIGN.md, E0): COMPILES = rc 0 AND a PDF.
+  # Grading by rc alone scored tolerated_write18.tex (rc 0, no PDF: its body
+  # typesets nothing) COMPILES, i.e. a false-not-ready, where every other
+  # grader in the repo scores it FAILS.
+  [ -s "$d/${base%.tex}.pdf" ] && pdf=yes || pdf=no
+  # Affirmative proof that pdfTeX ran, as false_ready_oracle.sh requires.
+  if [ -s "$d/${base%.tex}.log" ] && grep -qi 'pdftex' "$d/${base%.tex}.log" 2>/dev/null; then
+    ran=yes
+  else
+    ran=no
+  fi
   rm -rf "$d"
-  if [ "$prc" = 124 ]; then
-    printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "TIMEOUT" "not graded"
+  # 124 = timeout; 125 = the oracle itself failed (_oracle.py INFRA_RC: docker
+  # unreachable, container gone, a refused environment); 126/127 = a wrapper
+  # could not execute. None is a property of the DOCUMENT. Grading them as
+  # FAILS turned an infrastructure failure into FALSE-READY(NEW!) rows against
+  # the CLI and silently counted every NOT-READY row as a correct rejection.
+  case "$prc" in
+    124|125|126|127)
+      printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "rc=$prc" "not graded (timeout/oracle failure)"
+      timeouts=$((timeouts+1)); continue ;;
+  esac
+  if [ "$ran" = no ]; then
+    printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "NO-LOG" "not graded (no pdfTeX log: pdflatex did not run)"
     timeouts=$((timeouts+1)); continue
   fi
-  if [ "$prc" = 0 ]; then pl=COMPILES; else pl=FAILS; fi
+  if [ "$prc" = 0 ] && [ "$pdf" = yes ]; then pl=COMPILES; else pl=FAILS; fi
   cls=ok
   if   [ "$cc" = READY ]     && [ "$pl" = FAILS ];    then
     cls="FALSE-READY"; false_ready=$((false_ready+1)); false_ready_files="$false_ready_files $base"
@@ -168,6 +191,10 @@ echo "[diff-compile-check] FALSE-READY (cc=READY,pdflatex FAILS) total=$false_re
 echo "[diff-compile-check]   of which KNOWN-limitation (allowlisted)=$((false_ready-new_false_ready))"
 echo "[diff-compile-check]   of which NEW (regression)=$new_false_ready :$new_false_ready_files"
 echo "[diff-compile-check] false-not-ready (safe over-reject)=$false_notready"
+# First, before any verdict-shaped message: a run with ungraded documents has
+# no verdicts to report (the anti-vacuity message below would otherwise blame
+# the CLI for what the oracle did).
+[ "$timeouts" -eq 0 ] || die_infra "$timeouts document(s) not graded (timeout, oracle failure or no pdfTeX log); the classification is not trustworthy"
 
 # Allowlist staleness: an entry the CLI now catches is dead weight, and worse, it
 # would silently absorb the NEXT regression in that file. Warn, never fail.
@@ -191,7 +218,6 @@ fi
 if [ "$tp" -eq 0 ]; then
   die_infra "ZERO documents were both READY and compiled — the CLI is rejecting everything; these numbers are meaningless"
 fi
-[ "$timeouts" -eq 0 ] || die_infra "$timeouts document(s) timed out; the classification is not trustworthy"
 # Headroom on purpose. Every fix train in this repo is add-NOT-READY-only by
 # construction, so a cap sitting exactly at today's measurement (3) would trip on
 # the very next conservative detector and misreport routine work as breakage.

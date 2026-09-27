@@ -61,7 +61,10 @@ Usage as a tool:
   _oracle.py pdflatex [--timeout S] ARGS...
                                   run ONE pdflatex in the current directory
                                   through the oracle; exit with its rc (124 on
-                                  timeout). The shim the shell graders use.
+                                  timeout, INFRA_RC=125 when the oracle itself
+                                  failed). The shim the shell graders use.
+  _oracle.py rm FILES...          delete work files through the oracle (see
+                                  ContainerOracle.remove); exit 0, or 2
   _oracle.py stop                 remove the long-lived container
 """
 from __future__ import annotations
@@ -89,6 +92,15 @@ PROTOCOL = ("-interaction=nonstopmode -halt-on-error, restricted shell-escape "
             "recorded (compiles = rc 0 AND a PDF, STRICT_TIER_DESIGN.md B.4 E0)")
 MAX_PASSES = 3
 
+# The shim's exit code when the ORACLE failed (docker unreachable, container
+# gone, a refused environment), as opposed to pdflatex failing. It used to be 2,
+# which the shell graders could not tell from a pdflatex error exit, so an
+# infrastructure failure was graded as "does not compile" (C-70's rule broken:
+# unmeasured is not a failure). 125 is what `docker exec` and `timeout` use for
+# "the wrapper failed"; pdflatex itself never exits with it. Every shell grader
+# treats 124-127 as NOT GRADED.
+INFRA_RC = 125
+
 # MEASURED 2026-09-27 from the two platform images of the pinned index
 # (arm64 manifest sha256:010653c0bb13..., amd64 manifest sha256:c268e1c3611a...),
 # by `_oracle.py fingerprint` run inside each. A re-pin of TEX_IMAGE must
@@ -100,12 +112,20 @@ TREE_FINGERPRINTS = {
     "aarch64": {
         "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
         "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+        "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
     },
     "x86_64": {
         "tlpdb_sha256": "48e01be17878c251ee82c881bb0d94d83120956da8339b52defcee2d5cd7e677",
         "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+        "fmt_sha256": "5a9dfc4e27b5c67c737d9bb2bd7d623c6470a4fd9740ff0376d4b871e3a9afc2",
     },
 }
+# fmt_sha256 is per-architecture (a dumped format is a memory image), MEASURED
+# 2026-09-27 as `sha256sum $(kpsewhich -engine=pdftex pdflatex.fmt)` in
+# `docker run --platform linux/{arm64,amd64}` of the pinned digest. It is
+# compared so that a container mutated by an `fmtutil`/`tlmgr` run inside it
+# cannot keep grading: the base image is pinned by digest, a live container is
+# not.
 
 # Environment variables that shape a pdflatex run and are forwarded into the
 # container. Nothing else from the host crosses: in particular not PATH, HOME
@@ -114,6 +134,13 @@ _ENV_FORWARD = re.compile(
     r"^(TEXMFHOME|TEXMFVAR|TEXMFCONFIG|openin_any|openout_any|"
     r"SOURCE_DATE_EPOCH|FORCE_SOURCE_DATE|max_print_line|error_line|"
     r"half_error_line|TEXINPUTS|BIBINPUTS|BSTINPUTS|L0_VALIDATORS)$")
+# Search-path variables. A host value would change a grade silently: without an
+# empty component it REPLACES the image's own search path (every document then
+# fails), and an absolute component outside the work root points at a
+# directory the container cannot see or, worse, one it can. So each absolute
+# component must lie inside the work root, and the value must keep an empty
+# component (`:` at either end, or `::`) so the image's default path stays.
+_SEARCH_PATHS = ("TEXINPUTS", "BIBINPUTS", "BSTINPUTS")
 
 _DOCKER_CANDIDATES = ("docker", "/opt/homebrew/bin/docker", "/usr/local/bin/docker")
 
@@ -188,6 +215,17 @@ def tree_fingerprint(texmfroot: str | None = None) -> dict:
     }
 
 
+def _check_search_path(k: str, v: str, inside) -> None:
+    comps = v.split(":")
+    if "" not in comps:
+        raise OracleError(f"{k}={v!r} has no empty component, so it would replace "
+                          f"the pinned image's own search path; refusing to grade")
+    for c in comps:
+        if c and os.path.isabs(c) and not inside(Path(c.rstrip("/") or "/")):
+            raise OracleError(f"{k} component {c!r} is outside the oracle work "
+                              f"root; a host path must not shape a grade")
+
+
 def _check_fingerprint(fp: dict, where: str) -> None:
     if IMAGE != FINGERPRINTED_IMAGE:
         raise OracleError(
@@ -201,7 +239,7 @@ def _check_fingerprint(fp: dict, where: str) -> None:
     if EXPECT_VERSION not in fp["banner"]:
         raise OracleError(f"{where}: banner {fp['banner']!r} is not the pin "
                           f"{EXPECT_VERSION!r}")
-    for k in ("tlpdb_sha256", "macro_layer_sha256"):
+    for k in ("tlpdb_sha256", "macro_layer_sha256", "fmt_sha256"):
         if fp[k] != want[k]:
             raise OracleError(
                 f"{where}: {k} = {fp[k]} but the pinned image's {fp['arch']} tree "
@@ -260,6 +298,12 @@ class _Base:
         return dict(os.environ, TEXMFHOME=str(td / "th"), TEXMFVAR=str(td / "tv"),
                     openin_any="p", openout_any="p", SOURCE_DATE_EPOCH="0")
 
+    def remove(self, paths) -> None:
+        """Delete files in a work directory that pdflatex will write again.
+        See ContainerOracle.remove for why this must go through the oracle."""
+        for p in paths:
+            Path(p).unlink(missing_ok=True)
+
     # -- running ----------------------------------------------------------
     def run_pdflatex(self, cwd: Path, args: list[str], env: dict | None,
                      timeout: int) -> tuple[int, bytes, bool]:
@@ -301,6 +345,12 @@ class NativeOracle(_Base):
 
     def __init__(self):
         super().__init__()
+        # The same equality check on EVERY native path (get_oracle() and the
+        # shell graders' `assert-native`), not only the Python one.
+        got = os.environ.get("LP_ORACLE_IN_IMAGE", "")
+        if got != IMAGE:
+            raise OracleError(f"LP_ORACLE_IN_IMAGE={got!r} but tex-oracle.yml "
+                              f"pins {IMAGE!r}")
         self.fingerprint()  # verify eagerly: a wrong tree fails at construction
 
     def fingerprint(self) -> dict:
@@ -316,6 +366,8 @@ class NativeOracle(_Base):
                                capture_output=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             return 124, b"", True
+        except OSError as e:  # no pdflatex at all: infrastructure, not a grade
+            raise OracleError(f"cannot execute pdflatex: {e}") from e
         return p.returncode, p.stdout + p.stderr, False
 
 
@@ -383,6 +435,11 @@ class ContainerOracle(_Base):
         self.name = ("lp-oracle-" + IMAGE.split("sha256:")[-1][:12] + "-"
                      + hashlib.sha256(wr.encode()).hexdigest()[:8])
         self._ensure_container()
+        # Verify the tree EAGERLY, as NativeOracle does. Lazily (only when a
+        # caller asked for provenance) meant graders that never did --
+        # check_apply_fixes_roundtrip, ablate_fix_classes, regrade_sample --
+        # graded in a long-lived container whose tree was never checked.
+        self.fingerprint()
 
     def _dk(self, *args, timeout=120, check=False, input=None):
         try:
@@ -462,6 +519,28 @@ class ContainerOracle(_Base):
         except ValueError:
             return False
 
+    def remove(self, paths) -> None:
+        """Delete files INSIDE the container, then on the host.
+
+        MEASURED 2026-09-27 (colima 'default', docker runtime, virtiofs): a file
+        the container created and the HOST then deleted cannot be re-created
+        by the container for about a second -- `echo two > f.log` fails with
+        "Directory nonexistent" -- because the guest's dentry cache is stale.
+        pdflatex then cannot open its log, exits 1 and leaves no log.
+        false_ready_oracle.sh deletes the halt run's .pdf/.log between its two
+        protocols, so it hit this on most fixtures (57 of 85 "no pdfTeX log
+        produced", reproduced with the pre-fix script too). A deletion made
+        through the container keeps the guest cache coherent (measured)."""
+        paths = [Path(p).resolve() for p in paths]
+        outside = [str(p) for p in paths if not self._inside(p)]
+        if outside:
+            raise OracleError(f"refusing to delete outside the work root: {outside[:3]}")
+        for i in range(0, len(paths), 200):
+            self._dk("exec", self.name, "rm", "-f", "--",
+                     *[str(p) for p in paths[i:i + 200]], check=True)
+        for p in paths:
+            p.unlink(missing_ok=True)
+
     def run_pdflatex(self, cwd, args, env, timeout):
         cwd = Path(cwd).resolve()
         if not self._inside(cwd):
@@ -474,6 +553,8 @@ class ContainerOracle(_Base):
             if _ENV_FORWARD.match(k):
                 if k.startswith("TEXMF") and not self._inside(Path(v)):
                     raise OracleError(f"{k}={v} is outside the oracle work root")
+                if k in _SEARCH_PATHS:
+                    _check_search_path(k, v, self._inside)
                 cmd += ["-e", f"{k}={v}"]
         # The timeout runs INSIDE the container: killing the docker client on
         # the host would leave pdflatex running in the container.
@@ -565,7 +646,7 @@ def main(argv: list[str]) -> int:
             print(json.dumps(tree_fingerprint(), indent=1))
             return 0
         if cmd == "assert-native":
-            NativeOracle()
+            NativeOracle()  # checks LP_ORACLE_IN_IMAGE == IMAGE, then the tree
             print(f"[oracle] native backend verified: {IMAGE}")
             return 0
         if cmd == "workroot":
@@ -581,16 +662,31 @@ def main(argv: list[str]) -> int:
         if cmd == "version":
             print(o.banner)
             return 0
+        if cmd == "rm":
+            o.remove([Path.cwd() / a for a in rest])
+            return 0
         if cmd == "pdflatex":
             timeout = 120
             if rest[:1] == ["--timeout"]:
                 timeout, rest = int(rest[1]), rest[2:]
-            rc, out, to = o.run_pdflatex(Path.cwd(), rest, dict(os.environ), timeout)
+            # The shell graders pass the HOST environment. Give each run the
+            # same private TEXMFHOME/TEXMFVAR the Python graders get from
+            # tex_env(), unless the caller set its own (validated inside the
+            # work root): otherwise the container's default TEXMFVAR
+            # (/tmp/.texlive2026 with HOME=/tmp) would carry state, e.g. fonts
+            # generated by mktexpk, from one run and one grader to the next.
+            env = dict(os.environ)
+            with o.tempdir(prefix="lp-oracle-shim-") as td:
+                env.setdefault("TEXMFHOME", str(Path(td) / "th"))
+                env.setdefault("TEXMFVAR", str(Path(td) / "tv"))
+                rc, out, to = o.run_pdflatex(Path.cwd(), rest, env, timeout)
             sys.stdout.buffer.write(out)
             return 124 if to else rc
     except OracleError as e:
         print(f"[oracle] FATAL: {e}", file=sys.stderr)
-        return 2
+        # The pdflatex shim must not exit with a code a pdflatex failure could
+        # have produced: the shell graders would grade it (see INFRA_RC).
+        return INFRA_RC if cmd == "pdflatex" else 2
     print(f"[oracle] unknown command {cmd!r}", file=sys.stderr)
     return 2
 

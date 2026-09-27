@@ -145,10 +145,11 @@ def trial(pkg, toplevel, rules, timeout=240):
         rc0, _ = run_to_fixpoint(work, toplevel, env, timeout)
         if rc0 != 0:
             return rc0, None, first_error(work, toplevel), []
-        for q in sorted((x for x in work.rglob("*") if x.is_file()),
-                        key=lambda x: -len(x.parts)):
-            if q.relative_to(work) not in shipped:
-                q.unlink(missing_ok=True)
+        # Through the oracle, not a host unlink (_oracle.ContainerOracle.remove).
+        get_oracle().remove(sorted(
+            (x for x in work.rglob("*")
+             if x.is_file() and x.relative_to(work) not in shipped),
+            key=lambda x: -len(x.parts)))
         changed = apply_rules(work, rules)
         rc1, _ = run_to_fixpoint(work, toplevel, env, timeout)
         return rc0, rc1, first_error(work, toplevel), changed

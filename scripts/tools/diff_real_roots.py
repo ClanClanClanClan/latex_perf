@@ -55,8 +55,12 @@ ORACLE = {
     "engine": "pdflatex",
     "distribution": "TeX Live 2026",
     "version": PIN,
-    "protocol": ("-interaction=nonstopmode -halt-on-error, "
-                 "up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"),
+    # Restricted shell-escape is pdflatex's default and has been the protocol
+    # since OPEN-053; it was missing from this string (review of 2026-09-27).
+    "protocol": ("-interaction=nonstopmode -halt-on-error, restricted "
+                 "shell-escape (the pdflatex default, OPEN-053), up to 3 passes "
+                 "(LaTeX is multi-pass; see run_to_fixpoint), PDF recorded "
+                 "(compiles = rc 0 AND a PDF)"),
 }
 
 
@@ -792,7 +796,8 @@ def main() -> int:  # noqa: C901
     ap.add_argument("--n", type=int, default=200)
     ap.add_argument("--offset", type=int, default=0,
                     help="first frame rank of the sample (0 = sample 1; sample 2 "
-                         "is 200; sample 3, the virgin North-Star sample, is 400)")
+                         "is 200; sample 3, the virgin North-Star sample, is 720: "
+                         "400-719 is the OPEN-110 fixer window, see OPEN-118)")
     ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--repo", default=".")
     ap.add_argument("--record", action="store_true",

@@ -1,11 +1,12 @@
 {
   "provenance": {
     "produced_by": "scripts/tools/gen_apply_fixes_real_differential.py",
-    "measured_at_sha": "d6e3c40b2b5e6564416e88af6063ff9489f2b7a3",
+    "measured_at_sha": "e6e82b1130741eab048ec9b4ca94f09810b6a3c5",
+    "measured_at_note": "Re-measured 2026-09-27 (OPEN-118 review round 2) with the oracle tooling of branch feat/v27165-container-oracle at commit 27ef6444 (which exists only on that branch): positive proof that pdfTeX ran on every pass (banner + in-container rc line), compiles = rc 0 AND a PDF, by-products deleted inside the container. The engine tree latex-parse/src = fe673dc1608eac5528314f23bea1bb50bcd5e433 is identical to that tree at main commit e6e82b11, so measured_at_sha is stamped e6e82b11 and the provenance survives a squash merge (C-73). Every row is identical to the previous measurement (0 of 40 cells, 0 row fields); only the recorded protocol string changed. What the branch changes is the GRADING tool, not the engine.",
     "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433",
-    "cli_sha256": "a74f04639415fd903b99be59e71905eff4bae5c92430f462482cc91f17c15ae5",
+    "cli_sha256": "ba850a0edd832836cd3062f9d2884424a4a6f4845935168703c4507914c88956",
     "cli_platform": "Darwin-arm64",
-    "cli_build_root": "d6925567eb805c29ee3e88e5331d8cf15e64b34ddfcf1145d605614e98fcfe8e",
+    "cli_build_root": "a9f792bbf72a30a50d6d3dbec77dddc634da52f234c1758ce44b20600862f675",
     "frame": {
       "corpus": "papers",
       "frame_size": 2719,
@@ -17,7 +18,13 @@
       "engine": "pdflatex",
       "distribution": "TeX Live 2026",
       "version": "pdfTeX 3.141592653-2.6-1.40.29",
-      "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"
+      "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint), PDF recorded (compiles = rc 0 AND a PDF)",
+      "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+      "arch": "aarch64",
+      "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+      "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+      "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+      "backend": "container"
     },
     "fix_scope": "every .tex in the tree, root and children",
     "fixer_scope": "all"
@@ -34,6 +41,7 @@
       "arxiv_id": "2507.08729v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex",
@@ -44,6 +52,7 @@
         "sec/4_experiment.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -51,11 +60,13 @@
       "arxiv_id": "2506.19462v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -63,12 +74,14 @@
       "arxiv_id": "2507.08248v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex",
         "sections/00_main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -76,6 +89,7 @@
       "arxiv_id": "2507.06789v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "Appendix/bound_for_Gamma_function.tex",
@@ -86,6 +100,7 @@
         "Section/introduction.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -93,11 +108,13 @@
       "arxiv_id": "2507.05786v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -105,11 +122,13 @@
       "arxiv_id": "2507.09487v1",
       "toplevel": "elsarticle-template-num.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "elsarticle-template-num.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -117,11 +136,13 @@
       "arxiv_id": "2507.02260v2",
       "toplevel": "cycle-count-3.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "cycle-count-3.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -129,11 +150,13 @@
       "arxiv_id": "2507.01730v2",
       "toplevel": "GMcKbije24.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "GMcKbije24.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -141,6 +164,7 @@
       "arxiv_id": "2507.05326v1",
       "toplevel": "main.tex",
       "rc_before": 1,
+      "pdf_before": false,
       "first_error_before": "! Missing $ inserted.",
       "cell": "excluded-did-not-compile"
     },
@@ -148,6 +172,7 @@
       "arxiv_id": "2507.09815v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex",
@@ -160,6 +185,7 @@
         "sec/9_quantitative_example.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -167,11 +193,13 @@
       "arxiv_id": "2507.10668v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 1,
+      "pdf_after": false,
       "first_error_after": "! Package amsmath Error: Multiple \\label's: label 'rho_time_1B1' will be lost.",
       "cell": "broken"
     },
@@ -179,11 +207,13 @@
       "arxiv_id": "2507.09172v1",
       "toplevel": "time_limit_EPJ_V2.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "time_limit_EPJ_V2.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -191,11 +221,13 @@
       "arxiv_id": "2506.24091v1",
       "toplevel": "minimal_regular_snc_models.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "minimal_regular_snc_models.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -203,9 +235,11 @@
       "arxiv_id": "2507.09979v1",
       "toplevel": "HBGL2Q.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -213,11 +247,13 @@
       "arxiv_id": "2506.19755v1",
       "toplevel": "xreg_main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "xreg_main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -225,11 +261,13 @@
       "arxiv_id": "2507.07635v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -237,11 +275,13 @@
       "arxiv_id": "2507.00448v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -249,11 +289,13 @@
       "arxiv_id": "2507.10688v1",
       "toplevel": "apssamp.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "apssamp.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -261,11 +303,13 @@
       "arxiv_id": "2507.10385v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -273,11 +317,13 @@
       "arxiv_id": "2507.04362v1",
       "toplevel": "main_arXiv.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main_arXiv.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -285,11 +331,13 @@
       "arxiv_id": "2507.00325v1",
       "toplevel": "QUE-PrimePow.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "QUE-PrimePow.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -297,11 +345,13 @@
       "arxiv_id": "2506.24028v1",
       "toplevel": "groebner.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "groebner.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -309,11 +359,13 @@
       "arxiv_id": "2506.18408v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -321,11 +373,13 @@
       "arxiv_id": "2507.10656v1",
       "toplevel": "HA2025.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "HA2025.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -333,11 +387,13 @@
       "arxiv_id": "2507.08767v1",
       "toplevel": "Main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "Main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -345,11 +401,13 @@
       "arxiv_id": "2507.09206v1",
       "toplevel": "multi_ot_arxiv.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "multi_ot_arxiv.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -357,11 +415,13 @@
       "arxiv_id": "2507.04273v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -369,11 +429,13 @@
       "arxiv_id": "2507.10615v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -381,11 +443,13 @@
       "arxiv_id": "2507.10735v1",
       "toplevel": "1-v2-Newsvendoer-2025.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "1-v2-Newsvendoer-2025.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -393,11 +457,13 @@
       "arxiv_id": "2506.16917v1",
       "toplevel": "Garcia_John_Novo.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "Garcia_John_Novo.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -405,6 +471,7 @@
       "arxiv_id": "2506.17838v1",
       "toplevel": "main_FBS_CSR_ver1.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "algo/algo_CSR_FBS.tex",
@@ -425,6 +492,7 @@
         "table_tex/result_abr.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -432,11 +500,13 @@
       "arxiv_id": "2507.04065v1",
       "toplevel": "fg-ac-lie-xv1.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "fg-ac-lie-xv1.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -444,11 +514,13 @@
       "arxiv_id": "2507.10222v1",
       "toplevel": "New_IEEEtran_how-to.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "New_IEEEtran_how-to.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -456,11 +528,13 @@
       "arxiv_id": "2507.06516v1",
       "toplevel": "uai2025-template.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "uai2025-template.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -468,11 +542,13 @@
       "arxiv_id": "2506.23633v1",
       "toplevel": "saturation.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "saturation.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -480,12 +556,14 @@
       "arxiv_id": "2507.11002v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex",
         "supplementary.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -493,11 +571,13 @@
       "arxiv_id": "2507.10171v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -505,11 +585,13 @@
       "arxiv_id": "2507.06873v1",
       "toplevel": "arxiv_version.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "arxiv_version.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -517,6 +599,7 @@
       "arxiv_id": "2507.11352v1",
       "toplevel": "neurips_2025.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "figure/vll-example.tex",
@@ -532,6 +615,7 @@
         "tex/package.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     },
@@ -539,6 +623,7 @@
       "arxiv_id": "2507.09595v1",
       "toplevel": "main.tex",
       "rc_before": 0,
+      "pdf_before": true,
       "first_error_before": "",
       "changed_files": [
         "main.tex",
@@ -549,6 +634,7 @@
         "sections/5_Appendix.tex"
       ],
       "rc_after": 0,
+      "pdf_after": true,
       "first_error_after": "",
       "cell": "preserved"
     }

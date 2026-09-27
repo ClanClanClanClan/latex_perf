@@ -84,6 +84,20 @@ joined against) was taken under the laptop pin `pdfTeX 3.141592653-2.6-1.40.29`,
 is **pre-baseline** and is re-graded with everything else. Sample 2 has been used for
 design statistics and is design-seen; it is never labelled virgin again.
 
+**Decision 7 as implemented (2026-09-27, OPEN-118).** The oracle has ONE entry point,
+`scripts/tools/_oracle.py`, which reads the digest from tex-oracle.yml and runs pdflatex
+in a container of that image on a workstation and natively only inside the image in CI
+(selected by `LP_ORACLE_IN_IMAGE` and verified against the recorded TeX-tree
+fingerprint). It never falls back to a host `pdflatex`. The digest is a multi-arch index;
+its arm64 and amd64 images were measured to carry the same macro layer (4,935 packages at
+identical revisions), so a local grade and a CI grade differ at most in the engine
+binary's architecture. The container backend was measured equivalent to the native
+backend on 97 of 97 documents. The one-time re-grade moved no cell in any re-graded
+artefact; the per-artefact diffs are in `corpora/oracle_baseline/`. Every pdflatex grade
+listed above as pre-baseline is therefore now a baseline grade, except four fixer
+research artefacts pinned as pre-baseline in `check_oracle_pin.py`. Sample 3 is drawn by
+one command, named in OPEN-118, and has not been drawn.
+
 ## What milestone M0 ships (this ADR's PR)
 
 M0 is the honesty change. **Nothing is proven yet**: the strict-tier membership

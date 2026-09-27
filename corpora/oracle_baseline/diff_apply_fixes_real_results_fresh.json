@@ -1,0 +1,20 @@
+{
+ "artefact": "corpora/apply_fixes_real/results_fresh.json",
+ "before_rev": "origin/main",
+ "before_oracle": "host TeX Live (no image recorded)",
+ "after_oracle": {
+  "engine": "pdflatex",
+  "distribution": "TeX Live 2026",
+  "version": "pdfTeX 3.141592653-2.6-1.40.29",
+  "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)",
+  "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+  "arch": "aarch64",
+  "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+  "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+  "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+  "backend": "container"
+ },
+ "rows": 40,
+ "outcome_moved": [],
+ "first_error_changed_only": []
+}

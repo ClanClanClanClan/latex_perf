@@ -261,8 +261,22 @@ is the single authoritative home of that pin.
 | distribution | TeX Live 2026 |
 | version | `pdfTeX 3.141592653-2.6-1.40.29` |
 | CI image | `texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b` |
-| — equivalently | `registry.gitlab.com/islandoftex/images/texlive:TL2026-2026-07-26-medium` (immutable dated tag) |
-| scheme | `scheme-medium` |
+| platform images | arm64 `sha256:010653c0bb13…`, amd64 `sha256:c268e1c3611a…` (the digest is a multi-arch index) |
+| scheme | full (the OPEN-040/C-38 re-pin of 2026-09-04; the `scheme-medium` / `TL2026-2026-07-26-medium` identity this row used to carry described the PREVIOUS digest) |
+| macro layer | 4,935 TeX Live packages, `macro_layer_sha256` `27089de6…`, identical on both platform images (measured 2026-09-27; `scripts/tools/_oracle.py`) |
+
+**The oracle is the image, not the banner (ADR-012 decision 7, 2026-09-26).** The
+`--version` banner pins the engine binary and nothing else. Measured 2026-09-27: the
+maintainer's laptop printed exactly the pinned banner while its TeX Live package
+database differed from the image's in 190 packages: 89 at newer revisions (among
+them `l3kernel`, `latex-lab`, `hyperref`, `tagpdf`, `biblatex`, `siunitx`), 94
+absent from its database (among them `pdfmanagement` and whole collections such as
+`collection-latexextra`, whose files are on disk with no owner), and 7 present only
+on the laptop. Every grade is therefore taken through ONE entry point,
+`scripts/tools/_oracle.py`: a container of the pinned image on a workstation, the
+image itself in CI, and never a host `pdflatex`. `check_oracle_pin.py` (spec-drift)
+fails when a graded artefact does not record the image, or when any script starts
+`pdflatex` directly.
 
 **READY oracle.** A document is READY iff a clean single pass of the pinned engine
 produces no LaTeX Error. Two false-READY classes are knowingly admitted by a
@@ -275,7 +289,9 @@ rendering `??`, duplicate `\label`, overfull `\hbox`).
 rejections; the distinction tracks the font/error-recovery install, not soundness,
 which is why `false_ready_oracle.sh` fails HARD only on a fixture that *compiles*.
 
-**Where it is enforced.** `.github/workflows/tex-oracle.yml` runs
+**Where it is enforced.** Before grading, tex-oracle.yml runs
+`_oracle.py assert-native` inside the image, which checks the TeX tree's fingerprint
+against the one recorded for that platform. It then runs
 `scripts/tools/false_ready_oracle.sh` (blocking within that workflow) and
 `scripts/tools/diff_compile_check.sh` (advisory) inside the pinned image on every PR.
 The digest above is the multi-arch OCI *index* digest, not a per-arch manifest digest.
@@ -291,7 +307,12 @@ install canary in the workflow.
 2. re-run `scripts/tools/false_ready_oracle.sh` with `STRICT_GRADE=1` and re-record
    `corpora/false_ready/manifest.json` (`oracle` block plus any changed grades);
 3. re-run `scripts/tools/diff_compile_check.sh` and re-derive `KNOWN_FALSE_READY`;
-4. update this section and `specs/v26/compilation_profiles.yaml`.
+4. re-measure `TREE_FINGERPRINTS` in `scripts/tools/_oracle.py` inside BOTH platform
+   images (`_oracle.py fingerprint`) and set `FINGERPRINTED_IMAGE`;
+   `check_oracle_pin.py` fails until you do;
+5. re-grade every artefact `check_oracle_pin.py` lists, and publish the diffs as an
+   oracle-baseline change (the tooling is named in `docs/v27/PROJECT_STATE.md`, OPEN-118);
+6. update this section and `specs/v26/compilation_profiles.yaml`.
 
 A version mismatch reports as **PIN MISMATCH** (exit 3), never as drift — they are
 different problems with different fixes, and conflating them is how a gate gets
@@ -318,6 +339,14 @@ compile-FAILURE classes (`fail_*`), and pdflatex-TOLERATED sloppiness (`tolerate
 | false-not-ready (cc=NOT-READY, pdflatex COMPILES) | 3 | safe conservative over-rejection: a bare unclosed `{` group pdflatex auto-closes, a `\write18` doc pdflatex tolerates in restricted mode (shell-escape is genuinely LP-Foreign), and `fail_duplicate_label.tex` (below) |
 
 Total = 34 + 20 + 8 + 3 = 65.
+
+**Re-measured 2026-09-27 under the pinned image and the §B.4 predicate (OPEN-118): 36 / 21 / 8 / 0.**
+The table above is kept as recorded. `diff_compile_check.sh` now scores COMPILES only for
+rc 0 **and** a PDF (`docs/v27/STRICT_TIER_DESIGN.md` §B.4, E0), as every other grader
+does. Exactly one cell moved: `tolerated_write18.tex` exits 0 but typesets nothing, so
+it produces no PDF, and it is now a correct NOT-READY rather than the corpus's only
+false-not-ready. The other two over-rejections listed above had already moved to
+true-READY before this re-measure (the CLI now accepts them).
 
 **Re-measured 2026-07-28 (was 35/20/8/2).** `fail_duplicate_label.tex` moved from true-READY to
 over-rejection, and the cause is worth recording because it is a *consequence of a fix*, not a
@@ -436,9 +465,11 @@ pre-check deliberately does not cross.
   compile-prediction. The residual over-rejection comes from the T0 parser flagging the
   unclosed group; DELIM-001 stays compile-blocking on purpose (a fatal consumed-brace case
   it cannot cheaply distinguish is the dangerous direction).
-- **`\write18` shell-escape (a false-NOT-READY).** `tolerated_write18.tex` is reported
-  NOT-READY (LP-Foreign) but pdflatex tolerates it in restricted-shell-escape mode. This
-  over-rejection is intentional: shell-escape is genuinely out of the safe subset.
+- **`\write18` shell-escape (a false-NOT-READY until 2026-09-27).** `tolerated_write18.tex` is reported
+  NOT-READY (LP-Foreign). pdflatex exits 0 on it in restricted-shell-escape mode, but its
+  body typesets nothing, so no PDF is produced. Under the §B.4 predicate (rc 0 AND a PDF)
+  it does not compile, and the NOT-READY is correct. It was scored a false-not-ready
+  only while `diff_compile_check.sh` graded by rc alone (OPEN-118).
 
 
 ## Model-connected verdict — the `MODEL-CONNECTED` line (v27.1.53)

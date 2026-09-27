@@ -87,6 +87,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _oracle import OracleError, availability, get_oracle, host_has_pdflatex  # noqa: E402
+
 CORPORA = ["corpora/compile_check", "corpora/apply_fixes"]
 MANIFEST = "corpora/apply_fixes/manifest.json"
 # TWO ORTHOGONAL AXES, and both matter:
@@ -122,15 +125,35 @@ def find_timeout() -> str | None:
     return shutil.which("gtimeout") or shutil.which("timeout")
 
 
-def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 60) -> bool | None:
-    """True=compiles, False=fails, None=could not be graded (timeout/not run)."""
-    cmd = ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", base]
-    if timeout_bin:
-        cmd = [timeout_bin, str(secs)] + cmd
-    p = subprocess.run(cmd, cwd=workdir, capture_output=True)
-    if p.returncode in (124, 125, 126, 127):
+def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 60,
+                also_remove: tuple[str, ...] = ()) -> bool | None:
+    """True=compiles, False=fails, None=could not be graded (timeout/not run).
+
+    One pass under `-halt-on-error`, as this gate has always graded, run by the
+    ONE oracle (ADR-012 decision 7): natively inside CI's pinned image, through
+    the container elsewhere. `timeout_bin` is kept for the precondition check;
+    the oracle enforces the timeout itself (inside the container, so a hung
+    pdflatex is killed where it runs)."""
+    # COMPILES is the §B.4 predicate (STRICT_TIER_DESIGN.md, E0): rc 0 AND a
+    # PDF. rc alone scored an rc-0 run that typeset nothing as compiling. A PDF
+    # left from an earlier run must not count, so it is removed first.
+    pdf = Path(workdir) / (Path(base).stem + ".pdf")
+    # An OracleError (docker daemon lost, no pdfTeX banner, no in-container rc
+    # line) means pdfTeX's answer is unknown: None = NOT GRADED, never False.
+    # MEASURED 2026-09-27 before this catch existed in its current form: with
+    # `docker exec` pointed at a dead socket the docker CLI exited 1, the oracle
+    # passed that through, and this function returned False ("fails").
+    try:
+        # through the oracle: see ContainerOracle.remove
+        get_oracle().remove([pdf] + [Path(workdir) / f"{Path(base).stem}.{j}"
+                                     for j in also_remove])
+        rc, timed_out = get_oracle().run_once(workdir, base, dict(os.environ), secs)
+    except OracleError as e:
+        print(f"[fixer-roundtrip] NOT GRADED ({base}): {e}", file=sys.stderr)
         return None
-    return p.returncode == 0
+    if timed_out:
+        return None
+    return rc == 0 and pdf.is_file()
 
 
 def main() -> int:
@@ -153,9 +176,19 @@ def main() -> int:
         return die("the CLI did not produce its usage banner — it cannot execute here")
 
     require_tex = args.require_pdflatex or os.environ.get("REQUIRE_PDFLATEX") == "1"
-    have_tex = shutil.which("pdflatex") is not None
+    # The ONE oracle (ADR-012 decision 7). A host pdflatex is never used: in
+    # an environment with no TeX at all (ci.yml's build job) property (b) is
+    # skipped as before, but a host pdflatex WITHOUT the pinned-image oracle is
+    # a loud failure, because silently skipping there would hide that the
+    # grader someone expected is not the one that would have run.
+    have_tex, why = availability()
     if require_tex and not have_tex:
-        return die("REQUIRE_PDFLATEX=1 but pdflatex is not on PATH")
+        return die(f"REQUIRE_PDFLATEX=1 but the pinned-image oracle is unavailable: {why}")
+    if not have_tex and host_has_pdflatex():
+        return die(f"a host pdflatex is on PATH but the pinned-image oracle is "
+                   f"unavailable ({why}); the host TeX Live is not the oracle, so "
+                   f"property (b) would be graded by the wrong engine. Start the "
+                   f"container, or run with pdflatex off PATH to skip (b).")
     timeout_bin = find_timeout()
     if have_tex and not timeout_bin and require_tex:
         return die("pdflatex present but no gtimeout/timeout; a hang would be scored as a failure")
@@ -239,7 +272,7 @@ def main() -> int:
             # actually takes today.
             b4: bool | None = None
             if have_tex:
-                with tempfile.TemporaryDirectory(prefix="fixer-rt-pristine-") as ptmp:
+                with get_oracle().tempdir(prefix="fixer-rt-pristine-") as ptmp:
                     pristine = Path(ptmp) / "p"
                     shutil.copytree(corpus, pristine)
                     b4 = pdflatex_ok(pristine, base, timeout_bin)
@@ -249,7 +282,8 @@ def main() -> int:
                 env = {**os.environ, **penv}
                 # Stage the WHOLE directory: \input{sibling} resolves relative to
                 # the file, so a bare temp dir manufactures T2 failures.
-                with tempfile.TemporaryDirectory(prefix="fixer-rt-") as tmp:
+                with (get_oracle().tempdir(prefix="fixer-rt-") if have_tex
+                      else tempfile.TemporaryDirectory(prefix="fixer-rt-")) as tmp:
                     stage = Path(tmp) / "c"
                     shutil.copytree(corpus, stage)
                     # BYTES, not text. The corpus deliberately contains
@@ -282,9 +316,8 @@ def main() -> int:
                     # b4 was graded once per document above.
                     broke = False
                     if have_tex:
-                        for junk in ("aux", "log", "pdf", "out"):
-                            (stage / f"{base[:-4]}.{junk}").unlink(missing_ok=True)
-                        af = pdflatex_ok(stage, base, timeout_bin)
+                        af = pdflatex_ok(stage, base, timeout_bin,
+                                         also_remove=("aux", "log", "out"))
                         if b4 is None or af is None:
                             ungraded += 1
                             findings.append(f"{key} [{mode}]: pdflatex could not be graded")

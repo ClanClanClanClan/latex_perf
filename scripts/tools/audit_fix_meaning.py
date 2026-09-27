@@ -27,12 +27,13 @@ import sys
 sys.dont_write_bytecode = True
 
 import argparse, collections, difflib, hashlib, json, os, pathlib, re, shutil
-import subprocess, tempfile
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, run_to_fixpoint  # noqa: E402
+from _oracle import OracleError, get_oracle  # noqa: E402
 import _measurement_provenance as _mp  # noqa: E402
 
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
@@ -49,6 +50,15 @@ IMPLICATED = {
 WORD = re.compile(r"\S+")
 
 
+
+def oracle_banner() -> str:
+    """The pinned-image oracle's banner, or exit 2 loudly: a host pdflatex is
+    never a substitute (ADR-012 decision 7)."""
+    try:
+        return get_oracle().banner
+    except OracleError as e:
+        sys.exit(f"FATAL: the pinned-image oracle is unavailable: {e}")
+
 def tex_env(td):
     return dict(os.environ, TEXMFHOME=str(pathlib.Path(td) / "th"),
                 TEXMFVAR=str(pathlib.Path(td) / "tv"),
@@ -57,7 +67,7 @@ def tex_env(td):
 
 def build(pkg, top, rule, timeout):
     """Fresh copy -> (optionally) LP_FIX_ONLY=rule fixer -> compile -> text."""
-    with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+    with get_oracle().tempdir() as td:
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
         edits = 0
@@ -116,8 +126,7 @@ def main() -> int:
     ns = ap.parse_args()
 
     root = pathlib.Path(os.environ["LP_REAL_CORPUS"]).resolve()
-    banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                            text=True).stdout.split("\n")[0]
+    banner = oracle_banner()  # the pinned image (ADR-012 decision 7)
     if PIN not in banner:
         sys.exit(f"FATAL: engine skew {banner!r}")
     for k in ("LP_FIX_ONLY", "LP_FIX_EXCLUDE", "LP_FIX_TRACE"):
@@ -177,7 +186,7 @@ def main() -> int:
             "src_tree_sha": subprocess.run(
                 ["git", "--no-optional-locks", "rev-parse", "HEAD:latex-parse/src"],
                 cwd=REPO, capture_output=True, text=True).stdout.strip(),
-            "engine": banner, "k": ns.k, "rules": rules,
+            "engine": banner, "oracle": get_oracle().provenance(), "k": ns.k, "rules": rules,
             "sample": "papers 'preserved' in rule_attribution_400_719.json, "
                       "top-k by edits of the rule"}
     pathlib.Path(ns.out).write_text(json.dumps(

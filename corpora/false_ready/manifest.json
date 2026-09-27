@@ -8,7 +8,14 @@
     "protocols": [
       "-interaction=nonstopmode -halt-on-error",
       "-interaction=nonstopmode"
-    ]
+    ],
+    "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+    "arch": "aarch64",
+    "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+    "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+    "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+    "backend": "container",
+    "baseline_note": "Oracle-baseline change (ADR-012 decision 7, OPEN-118): re-graded 2026-09-27 under the pinned image through scripts/tools/_oracle.py (container backend, aarch64) with false_ready_oracle.sh REQUIRE_PDFLATEX=1: 85/85 fixtures graded, hard drift 0, soft drift 0 -- every recorded grade reproduced. CI's tex-oracle job grades the same image natively on amd64 on every PR. Re-run 2026-09-27 after the adversarial review, with the COMMITTED script of that date: 85/85 graded, hard 0, soft 0, every grade reproduced, now under the STRICT_TIER_DESIGN B.4 predicate (compiles = rc 0 AND a PDF under the halt protocol) and with the halt run's .pdf/.log deleted through the container (_oracle.py rm). Before that fix the same machine gave 57 of 85 'no pdfTeX log produced' with the pre-review script too: a host-side delete left colima's virtiofs view stale and pdflatex could not re-create its log (OPEN-118)."
   },
   "baseline": {
     "false_ready_total": 17,

@@ -37,17 +37,27 @@ from __future__ import annotations
 import sys
 sys.dont_write_bytecode = True
 
-import argparse, hashlib, json, os, pathlib, shutil, subprocess, tempfile
+import argparse, hashlib, json, os, pathlib, shutil, subprocess
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+from _oracle import OracleError, get_oracle  # noqa: E402
 import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import first_error  # noqa: E402
 
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
 MAX_CULPRITS = 6
 
+
+
+def oracle_banner() -> str:
+    """The pinned-image oracle's banner, or exit 2 loudly: a host pdflatex is
+    never a substitute (ADR-012 decision 7)."""
+    try:
+        return get_oracle().banner
+    except OracleError as e:
+        sys.exit(f"FATAL: the pinned-image oracle is unavailable: {e}")
 
 def tex_env(td):
     return dict(os.environ, TEXMFHOME=str(pathlib.Path(td) / "th"),
@@ -64,7 +74,7 @@ class Arm:
     def run(self, fix_env=None, fix=True):
         """fix_env: extra env for the fixer (LP_FIX_ONLY/EXCLUDE). Returns
         (rc, first_error, applied_rules_count_dict, changed_files)."""
-        with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+        with get_oracle().tempdir() as td:
             work = pathlib.Path(td) / "w"
             shutil.copytree(self.pkg, work)
             trace = pathlib.Path(td) / "trace.tsv"
@@ -171,8 +181,7 @@ def main() -> int:
     ns = ap.parse_args()
 
     root = pathlib.Path(os.environ["LP_REAL_CORPUS"]).resolve()
-    banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                            text=True).stdout.split("\n")[0]
+    banner = oracle_banner()  # the pinned image (ADR-012 decision 7)
     if PIN not in banner:
         sys.exit(f"FATAL: engine skew {banner!r}")
     for k in ("LP_FIX_ONLY", "LP_FIX_EXCLUDE", "LP_FIX_TRACE"):
@@ -193,6 +202,7 @@ def main() -> int:
     prov = {"frame_size": len(frame), "selection": "sha256(arxiv_id) ascending",
             "offset": ns.offset, "n": ns.n, "only_ids": ns.only_ids or None,
             "engine": banner,
+            "oracle": get_oracle().provenance(),
             "cli_sha256": hashlib.sha256(CLI.read_bytes()).hexdigest(),
             "cli_platform": _mp.cli_platform(),
             "cli_build_root": _mp.cli_build_root(CLI),  # C-72

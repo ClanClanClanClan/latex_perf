@@ -23,12 +23,13 @@ import sys
 sys.dont_write_bytecode = True
 
 import argparse, collections, difflib, hashlib, json, os, pathlib, re, shutil
-import subprocess, tempfile
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+from _oracle import OracleError, get_oracle  # noqa: E402
 import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import first_error  # noqa: E402
 
@@ -37,6 +38,15 @@ WORD = re.compile(r"\S+")
 ARMS = {"CTRL": None, "ALL": "--apply-fixes-all", "DEFAULT": "--apply-fixes"}
 
 
+
+def oracle_banner() -> str:
+    """The pinned-image oracle's banner, or exit 2 loudly: a host pdflatex is
+    never a substitute (ADR-012 decision 7)."""
+    try:
+        return get_oracle().banner
+    except OracleError as e:
+        sys.exit(f"FATAL: the pinned-image oracle is unavailable: {e}")
+
 def tex_env(td):
     return dict(os.environ, TEXMFHOME=str(pathlib.Path(td) / "th"),
                 TEXMFVAR=str(pathlib.Path(td) / "tv"),
@@ -44,7 +54,7 @@ def tex_env(td):
 
 
 def arm(pkg, top, flag, timeout):
-    with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+    with get_oracle().tempdir() as td:
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
         rules = collections.Counter()
@@ -96,8 +106,7 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=240)
     ns = ap.parse_args()
     root = pathlib.Path(os.environ["LP_REAL_CORPUS"]).resolve()
-    banner = subprocess.run(["pdflatex", "--version"], capture_output=True,
-                            text=True).stdout.split("\n")[0]
+    banner = oracle_banner()  # the pinned image (ADR-012 decision 7)
     if PIN not in banner:
         sys.exit(f"FATAL: engine skew {banner!r}")
     for k in ("LP_FIX_ONLY", "LP_FIX_EXCLUDE", "LP_FIX_TRACE", "L0_APPLY_FIXES"):
@@ -144,6 +153,7 @@ def main() -> int:
         summ[f"{name}_papers_edited"] = sum(1 for r in m if r[name]["rules"])
     prov = {"frame_size": len(frame), "offset": ns.offset, "n": ns.n,
             "selection": "sha256(arxiv_id) ascending", "engine": banner,
+            "oracle": get_oracle().provenance(),
             "cli_sha256": hashlib.sha256(CLI.read_bytes()).hexdigest(),
             "cli_platform": _mp.cli_platform(),
             "cli_build_root": _mp.cli_build_root(CLI),  # C-72

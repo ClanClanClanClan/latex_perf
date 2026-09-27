@@ -84,11 +84,22 @@ Definition mark_script (up : bool) (fs : list frame) : list frame :=
 Definition not_dollar_head (ts : list tok) : Prop :=
   match ts with TDollar :: _ => False | _ => True end.
 
-(** After a [$] in display math, TeX expands the next token looking for the
+(** After a [$] in display math, TeX EXPANDS the next token looking for the
     second [$] (tex.web §1197, [get_x_token]).  A space, a character, a
-    brace, a paragraph break, [\end] or an attested control word is not
-    one; an undefined control word raises its own error first
-    ([R_dollar_display_undef]). *)
+    brace, a paragraph break or [\end] is not one; an undefined control word
+    raises its own error first ([R_dollar_display_undef]).
+
+    A defined control word is a bad follower here ONLY because the contract
+    admits no name that expansion can see through.  Being attested is not
+    enough (correction C-85): a macro that expands to nothing ([\empty],
+    [\iftrue], [\theenumiii]) is transparent to [get_x_token], so TeX reads
+    the token AFTER it, and [$$z $\empty $$] closes the display.  The
+    semantics has no rule for a transparent name; instead the signature
+    generator probes every candidate in this position (families D-FOLLOW-*
+    of gen_strict_signatures.py) and rejects the ones that are not bad
+    followers, and check_strict_kernel.py fails on an admitted name without
+    that evidence.  The premise below is therefore a claim about the
+    contract's names, attested per name, not about every defined name. *)
 Definition display_bad_follower (C : contract) (t : tok) : Prop :=
   match t with
   | TDollar => False
@@ -245,7 +256,10 @@ Inductive Runs (C : contract) : state -> list tok -> outcome -> Prop :=
       (Fatal E1 (S p))
 
 (* probe S0/R_dollar_display_bad: $ in display math followed by anything
-   but $: "! Display math should end with $$." at the $. *)
+   but $ (an admitted control word included, see [display_bad_follower]):
+   "! Display math should end with $$." at the $.  The follower is on the
+   $'s line ([render] puts no line feed after [TDollar]), which is why the
+   line of the $ is the line pdfTeX reports. *)
 | R_dollar_display_bad : forall fs o p sp sb t rest,
     display_bad_follower C t ->
     Runs C (mkState (FShift true sp sb :: fs) o p) (TDollar :: t :: rest) (Fatal E5 p)

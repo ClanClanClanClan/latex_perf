@@ -84,16 +84,61 @@ Fixpoint scripts_ok (ts : list tok) : bool :=
 Definition in_strict_toks (C : contract) (ts : list tok) : Prop :=
   Forall (fun t => tok_ok C t = true) ts /\ scripts_ok ts = true.
 
+(** ** TeX's global capacities (correction C-86)
+
+    pdfTeX has fixed capacities that no rule of [Runs] models, and a document
+    that exceeds one stops with "! TeX capacity exceeded" whatever [Runs]
+    says.  MEASURED under the pinned oracle (2026-09-27): 253 nested brace
+    groups compile and 254 give "[grouping levels=255]", in text, in math
+    and in nested script groups; a formula of 1,000,000 characters, and
+    100,000 occurrences of an attested math name in one formula, give
+    "[main memory size=5000000]".  The fragment is therefore BOUNDED: the
+    brace nesting of a strict document is at most [max_brace_depth] and its
+    token stream has at most [max_tokens] tokens.  Both bounds leave a
+    margin under the measured limits (the margin absorbs the groups LaTeX
+    opens internally, e.g. at a paragraph start); every attested name is
+    probed at both bounds (families R-NEST-* and R-BIG-* of
+    gen_strict_signatures.py) and the structure at the bounds by the rule
+    probes (S0/bounds), so the margin is attested, not assumed.  A document
+    beyond a bound is outside the tier: never a verdict. *)
+
+(* Written as products so that the extraction (nat = OCaml int, successor
+   chains for literals) stays short: 200 and 20,000. *)
+Definition ten : nat := 10.
+Definition max_brace_depth : nat := Nat.mul 2 (Nat.mul ten ten).
+Definition max_tokens : nat := Nat.mul max_brace_depth (Nat.mul ten ten).
+
+Example max_brace_depth_is_200 : max_brace_depth = 200.
+Proof. reflexivity. Qed.
+
+Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100.
+Proof. reflexivity. Qed.
+
+(** The deepest brace nesting a stream reaches, counted from [k] open
+    braces, is within [max_brace_depth].  A [}] with no [{] open is a fatal
+    of the semantics (it stops the run), so the count never goes below 0. *)
+Fixpoint depth_ok_from (k : nat) (ts : list tok) : bool :=
+  match ts with
+  | [] => true
+  | TOpen :: r => Nat.ltb k max_brace_depth && depth_ok_from (S k) r
+  | TClose :: r => depth_ok_from (Nat.pred k) r
+  | _ :: r => depth_ok_from k r
+  end.
+
+Definition bounded (ts : list tok) : bool :=
+  Nat.leb (length ts) max_tokens && depth_ok_from 0 ts.
+
 Definition in_strict_doc (C : contract) (d : doc) : Prop :=
-  in_strict_toks C (flatten_doc d).
+  in_strict_toks C (flatten_doc d) /\ bounded (flatten_doc d) = true.
 
 Definition in_strict_b (C : contract) (d : doc) : bool :=
-  forallb (tok_ok C) (flatten_doc d) && scripts_ok (flatten_doc d).
+  forallb (tok_ok C) (flatten_doc d) && scripts_ok (flatten_doc d)
+  && bounded (flatten_doc d).
 
 Lemma in_strict_b_spec : forall C d, in_strict_b C d = true <-> in_strict_doc C d.
 Proof.
   intros C d. unfold in_strict_b, in_strict_doc, in_strict_toks.
-  rewrite andb_true_iff, forallb_forall, Forall_forall. tauto.
+  rewrite !andb_true_iff, forallb_forall, Forall_forall. tauto.
 Qed.
 
 Theorem in_strict_dec : forall C d, {in_strict_doc C d} + {~ in_strict_doc C d}.
@@ -514,7 +559,7 @@ Qed.
 Theorem runs_total : forall C d,
   in_strict_doc C d -> exists o, Runs C init (flatten_doc d) o.
 Proof.
-  intros C d Hs.
+  intros C d [Hs _].
   destruct (run C init (flatten_doc d)) as [o|] eqn:E.
   - exists o. apply run_sound. exact E.
   - exfalso. eapply run_total_n; [apply le_n|exact Hs|exact E].
@@ -525,5 +570,5 @@ Proof.
   intros C d Hs. pose proof Hs as Hs'. apply in_strict_b_spec in Hs'.
   unfold decide. rewrite Hs'.
   destruct (run C init (flatten_doc d)) as [[|r l]|] eqn:E; simpl; try discriminate.
-  intros _. eapply run_total_n; [apply le_n|exact Hs|exact E].
+  intros _. eapply run_total_n; [apply le_n|exact (proj1 Hs)|exact E].
 Qed.

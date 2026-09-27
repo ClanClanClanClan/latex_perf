@@ -131,6 +131,20 @@ let () =
   check "cs script arg"
     (doc [ dollar [ t "x"; sup (cmd "alpha") ] ])
     "not_strict";
+  (* the capacity bounds (Decide.v [bounded], C-86): 200 nested groups are
+     inside the tier, 201 are not (MEASURED: 254 overflow TeX's grouping
+     levels); 20,000 tokens are inside, 20,001 are not (MEASURED: 100,000
+     attested math names overflow main memory) *)
+  let rec nest k inner =
+    if k = 0 then inner else [ K.NGroup (nest (k - 1) inner) ]
+  in
+  check "nesting at the bound" (doc (nest 200 [ t "x" ])) "ready";
+  check "nesting past the bound" (doc (nest 201 [ t "x" ])) "not_strict";
+  check "nesting past the bound, fatal inside"
+    (doc (nest 201 [ K.NStrayClose ]))
+    "not_strict";
+  check "tokens at the bound" (doc [ t (String.make 19999 'x') ]) "ready";
+  check "tokens past the bound" (doc [ t (String.make 20000 'x') ]) "not_strict";
   (* the renderer: exact bytes *)
   let bytes = str (K.render (doc [ dollar [ t "x" ] ])) in
   let want =

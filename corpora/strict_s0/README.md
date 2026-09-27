@@ -11,8 +11,8 @@ one oracle (`scripts/tools/_oracle.py`, the pinned image).
 
 | file | what |
 |---|---|
-| `rule_probes.json` | directed probes, a few per `Runs` constructor (family = constructor name, cited in each constructor's comment in `proofs/Strict/Semantics.v`), each graded and compared; `by_family` says how many probes each family has, how many agree, and how many actually used the constructor |
-| `differential_v1.json` | the generated differential v1: seeded random documents of the fragment, weighted toward boundaries; per verdict class and per constructor, every disagreement in full |
+| `rule_probes.json` | directed probes, a few per `Runs` constructor (family = constructor name, cited in each constructor's comment in `proofs/Strict/Semantics.v`); the BRANCH MATRIX (family `MATRIX`: every innermost frame x every token class, and for `$`, `^`, `_`, whose rules read the next token, x every follower class; each probe records the `head\|token\|follower\|tail` cells it passed, C-85); the BOUND family (the structure at the capacity bounds of `Decide.v`, C-86); and, under `outside_tier`, the documents built to be outside the tier (`MATRIX-OUT`: a script without its argument; `BOUND-OUT`: one past a bound), recorded and never graded |
+| `differential_v2.json` | the generated differential v2 (generator version 2, seed 2): seeded random documents of the fragment, weighted toward boundaries, and since v2 also a `$` in display math followed by a name, runs of names repeated up to 300 times and brace nesting up to the bound; per verdict class and per constructor, every disagreement in full. Its `upper_bound_95` is a bound over THIS generator's distribution, not over L_S0 (C-85). v1 (1,200 documents) is in git history; it drew none of those shapes |
 
 The agreement rule (`scripts/tools/_strict_s0.py`, `agrees`): READY iff rc 0
 and a PDF; E0 iff rc 0 and no PDF; any other reason iff rc is not 0, the first
@@ -21,11 +21,12 @@ and the line of the fatal token equals the oracle's `l.N`. A wrong reason or
 a wrong line is a disagreement (ADR-012 decision 6).
 
 `scripts/tools/check_strict_kernel.py` (pure) checks that every constructor
-has an agreeing, exercised family here, that both files ran the committed
-extraction, signature file, kernel and contract, and that neither reports a
-disagreement.
+has an agreeing, exercised family here, that every branch-matrix cell the
+grammar allows is covered, that the BOUND family agrees, that both files ran
+the committed extraction, signature file, kernel and contract, and that
+neither reports a disagreement.
 
 Regenerate (needs docker and the pinned image; local or nightly only):
 
     python3 scripts/tools/strict_differential.py --rules
-    python3 scripts/tools/strict_differential.py --random 1200 --seed 1
+    python3 scripts/tools/strict_differential.py --random 3000 --seed 2

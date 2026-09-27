@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The generated differential of the strict kernel L_S0, v1 (ADR-012, M2 phase 1).
+"""The generated differential of the strict kernel L_S0, v2 (ADR-012, M2 phase 1).
 
 WHAT IT MEASURES. Trust layer (3) of the design (STRICT_TIER_DESIGN.md §0):
 that the semantics `Runs` (proofs/Strict/Semantics.v) describes real pdflatex.
@@ -25,15 +25,29 @@ the driver).
 
 Two modes:
   --rules            the directed probe families of Semantics.v (a few
-                     documents per constructor), written to
+                     documents per constructor), the BRANCH MATRIX (every
+                     innermost frame x every token class x, for the tokens
+                     whose step reads the next token, every follower class;
+                     C-85) and the BOUND family (the structure at the
+                     capacity bounds of Decide.v; C-86), written to
                      corpora/strict_s0/rule_probes.json
   --random N         N generated documents (seeded, reproducible), written to
-                     corpora/strict_s0/differential_v1.json
+                     corpora/strict_s0/differential_v2.json
+
+WHAT THE RANDOM MODE'S NUMBER MEANS. Its upper bound on the disagreement rate
+is a bound over the documents THIS GENERATOR draws (its version, weights and
+seed), not over the fragment L_S0: a class of documents the generator never
+draws is not bounded at all. Version 1 drew no `$` in display math followed by
+a name and no name repeated, and its 1,200/1,200 coexisted with two classes of
+wrong verdicts (C-85). Version 2 adds those shapes (a display-$ follower,
+runs of one to three names repeated up to 300 times, deep brace nesting up to
+the bound) in clean and in failing documents; any class it still does not
+draw is equally unbounded.
 
 Needs the oracle (docker and the pinned image); local or nightly, never in the
 pure CI jobs (the OPEN-101 lesson). Usage:
     python3 scripts/tools/strict_differential.py --rules
-    python3 scripts/tools/strict_differential.py --random 1000 --seed 1
+    python3 scripts/tools/strict_differential.py --random 3000 --seed 2
 """
 from __future__ import annotations
 
@@ -53,8 +67,13 @@ import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
 from _strict_s0 import cmd, doc, group, par, script, space, stray, text  # noqa: E402
 
-GENERATOR_VERSION = "1"
+GENERATOR_VERSION = "2"
 OUT_DIR = S.REPO / "corpora/strict_s0"
+DIFFERENTIAL = OUT_DIR / "differential_v2.json"
+MAX_BRACE_DEPTH, MAX_TOKENS = S.MAX_BRACE_DEPTH, S.MAX_TOKENS
+# Families whose documents are OUTSIDE the tier by design (recorded, never
+# graded): the bound's other side, and the matrix cells membership excludes.
+EXPECT_NOT_STRICT = {"BOUND-OUT", "MATRIX-OUT"}
 RULES = [
     "R_eof", "R_end_ok", "R_end_empty", "R_end_math", "R_char_text", "R_char_math",
     "R_space", "R_par_text", "R_par_math", "R_open_text", "R_open_math",
@@ -236,7 +255,112 @@ def rule_docs(nm: Names) -> list[tuple[str, dict]]:
     ):
         for n in nm.by[key][:3]:
             fam.append((rule, mk(n)))
+    fam += bound_docs()
+    fam += matrix_docs(nm)
     return [(f, r if "toks" in r else {"doc": r}) for f, r in fam]
+
+
+def _nest(depth: int, inner: list) -> list:
+    node = inner
+    for _ in range(depth):
+        node = [group(*node)]
+    return node
+
+
+def _script_nest(depth: int) -> list:
+    node = [text("x")]
+    for _ in range(depth):
+        node = [text("x"), sup(group(*node))]
+    return node
+
+
+def bound_docs() -> list[tuple[str, dict]]:
+    """The structure AT the capacity bounds of Decide.v (inside the tier,
+    graded) and one past them (outside the tier, recorded as such; C-86)."""
+    B, L = MAX_BRACE_DEPTH, MAX_TOKENS
+    x = text("x")
+    return [
+        ("BOUND", doc(*_nest(B, [x]))),
+        ("BOUND", doc(x, *_nest(B, [x]))),
+        ("BOUND", doc(dollar(*_nest(B, [x])))),
+        ("BOUND", doc(display(*_nest(B, [x])))),
+        ("BOUND", doc(dollar(*_script_nest(B)))),
+        ("BOUND", doc(*_nest(B, [dollar(x), par(), x]))),
+        ("BOUND", doc(text("x" * (L - 1)))),
+        ("BOUND", doc(paren(text("x" * (L - 3))))),
+        ("BOUND", doc(*[m for _ in range(L // 3) for m in (dollar(x),)][: L // 3 - 1])),
+        ("BOUND-OUT", doc(*_nest(B + 1, [x]))),
+        ("BOUND-OUT", doc(dollar(*_script_nest(B + 1)))),
+        ("BOUND-OUT", doc(text("x" * L))),
+    ]
+
+
+# The BRANCH MATRIX (C-85; check_strict_kernel.py check 7). One token prefix
+# per innermost frame class and tail state, then the token under test, then
+# (for the tokens whose step reads the next token) the follower, then the
+# frames the model has open, closed, and \end{document} (strict_decide.ml
+# "close"). The cell labels are strict_decide.ml's `branch_of`.
+MATRIX_HEADS = {
+    "top0": [],
+    "top1": [("char", "p")],
+    "simple": [("char", "p"), "open"],
+    "inline-": ["open_paren", ("char", "q")],
+    "inline+": ["open_paren", ("char", "q"), "sup", ("char", "a"), "sub", ("char", "b")],
+    "display-": ["open_bracket", ("char", "q")],
+    "display+": ["dollar", "dollar", ("char", "q"), "sup", ("char", "a"), "sub", ("char", "b")],
+    "mgroup-": ["open_paren", "open", ("char", "q")],
+    "mgroup+": ["open_paren", ("char", "q"), "sup", "open", ("char", "q"), "sup",
+                ("char", "a"), "sub", ("char", "b")],
+}
+MATRIX_TOKENS = [("char", "x"), "space", ("par", False), ("par", True), "open", "close",
+                 "dollar", "open_paren", "close_paren", "open_bracket",
+                 "close_bracket", "sup", "sub", "end"]
+READS_NEXT = {"dollar", "sup", "sub"}
+
+
+def _mcls(beh) -> str:
+    return beh if isinstance(beh, str) else "fatal." + beh[1]
+
+
+def matrix_docs(nm: "Names") -> list[tuple[str, dict]]:
+    sig, u = nm.sigs, nm.undefined[0]
+    text_rep, math_rep, pair_rep = {}, {}, {}
+    for n in sorted(sig):
+        text_rep.setdefault(_mcls(sig[n]["text"]), n)
+        math_rep.setdefault(_mcls(sig[n]["math"]), n)
+        pair_rep.setdefault((_mcls(sig[n]["text"]), _mcls(sig[n]["math"])), n)
+    followers = MATRIX_TOKENS + [("cs", u)] + [("cs", n) for n in pair_rep.values()] + [None]
+    out = []
+
+    def tok(t):
+        return list(t) if isinstance(t, tuple) else [t]
+
+    for hname, prefix in MATRIX_HEADS.items():
+        math = hname[0] in "idm"
+        cs_toks = [("cs", u)] + [("cs", n) for n in (math_rep if math else text_rep).values()]
+        for t in MATRIX_TOKENS + cs_toks:
+            tl = t if isinstance(t, str) else t[0]
+            fl = followers if tl in READS_NEXT else ["-"]
+            for f in fl:
+                toks = [tok(q) for q in prefix] + [tok(t)]
+                if f == "-":
+                    close = tl != "end"
+                elif f is None:
+                    close = False  # end of file right after the token
+                else:
+                    toks.append(tok(f))
+                    close = (f if isinstance(f, str) else f[0]) != "end"
+                    if f in ("sup", "sub"):
+                        # a script needs its argument (Decide.v scripts_ok)
+                        toks.append(["char", "a"])
+                req = {"toks": toks}
+                if close:
+                    req["close"] = True
+                ft = f if isinstance(f, (str, type(None))) else f[0]
+                outside = tl in ("sup", "sub") and ft not in ("char",) and \
+                    not (ft == "open")
+                out.append(("MATRIX-OUT" if outside else "MATRIX", req))
+    return out
 
 
 # ---------------------------------------------------------- generated ---
@@ -269,14 +393,72 @@ class Gen:
         return self.r.choice(pool or self.nm.all)
 
     def seq(self, depth: int, mode: str, clean: bool, lo=0, hi=5) -> list:
-        return [self.node(depth, mode, clean) for _ in range(self.r.randint(lo, hi))]
+        out = []
+        for _ in range(self.r.randint(lo, hi)):
+            if self.r.random() < 0.06:
+                out += self.run(mode, clean)
+            else:
+                out.append(self.node(depth, mode, clean))
+        return out
+
+    # Version 2 shapes (C-85): runs of one to three names repeated up to 300
+    # times (a global resource shows only under repetition), with or without
+    # a character between them.
+    RUN_LENGTHS = [(30, 2), (20, 3), (15, 5), (12, 10), (8, 20), (6, 50),
+                   (4, 100), (3, 200), (2, 300)]
+
+    def run(self, mode: str, clean: bool) -> list:
+        m = "text" if mode == "text" else "math"
+        names = [self.name(m, clean) for _ in range(self.r.randint(1, 3))]
+        k = self.pick(self.RUN_LENGTHS)
+        sep = self.r.random() < 0.4
+        out = []
+        for i in range(k):
+            out.append(cmd(names[i % len(names)]))
+            if sep:
+                out.append(text(self.word(1, 1)))
+        return out
 
     def math_node(self, depth: int, clean: bool):
         kind = self.pick([(4, "dollar"), (2, "display"), (2, "paren"), (2, "bracket")])
-        return S.math(kind, *self.seq(depth + 1, "math", clean, 0, 5))
+        mode = "dmath" if kind in ("display", "bracket") else "math"
+        return S.math(kind, *self.seq(depth + 1, mode, clean, 0, 5))
+
+    def display_follower(self, clean: bool):
+        """A `$` in display math and what follows it (Semantics.v
+        display_bad_follower, the look-ahead version 1 never drew): a name,
+        an undefined word, a character, a group, or nothing."""
+        ch = self.pick([(6, "cmd"), (2, "undef"), (2, "text"), (1, "group"),
+                        (1, "empty")])
+        if ch == "cmd":
+            first = [cmd(self.name("math", True))]
+        elif ch == "undef":
+            first = [cmd(self.r.choice(self.nm.undefined))]
+        elif ch == "text":
+            first = [text(self.word(1, 1))]
+        elif ch == "group":
+            first = [group(text(self.word(1, 1)))]
+        else:
+            first = []
+        return S.math("dollar", *first, *self.seq(3, "math", clean, 0, 2))
+
+    def nest(self, clean: bool):
+        """Deep brace nesting, up to the bound of Decide.v (C-86)."""
+        k = self.pick([(6, 10), (4, 50), (3, 120), (2, MAX_BRACE_DEPTH - 1)])
+        inner = self.seq(3, "text", clean, 1, 3)
+        node = inner
+        for _ in range(k):
+            node = [group(*node)]
+        return node[0]
 
     def node(self, depth: int, mode: str, clean: bool):
         deep = depth >= 3
+        if mode == "dmath" and not deep and self.r.random() < (0.05 if clean else 0.15):
+            return self.display_follower(clean)
+        if mode == "dmath":
+            mode = "math"
+        if mode == "text" and depth == 0 and self.r.random() < 0.02:
+            return self.nest(clean)
         if mode == "text":
             ch = self.pick([
                 (20, "text"), (7, "space"), (5, "par"), (0 if deep else 7, "group"),
@@ -295,6 +477,7 @@ class Gen:
         if ch == "par":
             return par(self.r.random() < 0.3)
         if ch == "group":
+            # inside a math brace group TeX is in non-display math
             return group(*self.seq(depth + 1, mode, clean, 0, 4))
         if ch == "stray":
             return stray()
@@ -325,8 +508,10 @@ def run_all(requests: list[dict], sig_path: Path, workers: int, label: str):
     t0, done = time.time(), [0]
 
     def g(m):
+        if m["verdict"] == "not_strict":
+            return {"not_strict": True}  # outside the tier: nothing to grade
         try:
-            r = S.grade(oracle, m["tex"])
+            r = S.grade(oracle, m["tex"], timeout=300)
         except _oracle.OracleError as e:
             r = {"infra": str(e)[:300]}
         done[0] += 1
@@ -345,10 +530,21 @@ def tally(docs, models, grades, families=None):
     by_rule = {r: {"docs": 0, "agree": 0} for r in RULES}
     by_family = defaultdict(lambda: {"n": 0, "agree": 0, "exercised": 0})
     disagreements, records, infra = [], [], []
+    outside = []
     for i, (d, m, g) in enumerate(zip(docs, models, grades)):
         if "infra" in g:
             infra.append({"i": i, "error": g["infra"]})
             continue
+        f = families[i] if families is not None else None
+        if "not_strict" in g:
+            # Outside the tier. Expected for the families built to be outside
+            # (recorded with their branches); anywhere else it is a harness
+            # defect (the generator drew a non-strict document).
+            if f in EXPECT_NOT_STRICT:
+                outside.append({"i": i, "family": f, "doc": d,
+                                "branches": m.get("branches", [])})
+                continue
+            g = {"rc": None, "pdf": None, "timed_out": False, "error": "", "line": None}
         ok, why = S.agrees(m, g)
         cls = S.verdict_class(m)
         by_class[cls]["n"] += 1
@@ -363,13 +559,13 @@ def tally(docs, models, grades, families=None):
         if m["verdict"] == "not_ready":
             rec["model"] = [m["reason"], m["loc_tok"], m["loc_mode"], m["loc_line"]]
         if families is not None:
-            f = families[i]
             by_family[f]["n"] += 1
             by_family[f]["agree"] += ok
             by_family[f]["exercised"] += f in m.get("rules", [])
             rec["family"] = f
             rec["doc"] = d
             rec["rules"] = m.get("rules", [])
+            rec["branches"] = m.get("branches", [])
         records.append(rec)
         if not ok:
             disagreements.append({"i": i, "why": why, "doc": d, "tex": m["tex"],
@@ -377,14 +573,14 @@ def tally(docs, models, grades, families=None):
                                       "verdict", "reason", "loc", "loc_tok",
                                       "loc_mode", "loc_line", "rules")},
                                   "oracle": g})
-    return by_class, by_rule, by_family, disagreements, records, infra
+    return by_class, by_rule, by_family, disagreements, records, infra, outside
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--rules", action="store_true")
     ap.add_argument("--random", type=int, default=0)
-    ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--seed", type=int, default=2)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--signatures", default=str(S.SIGNATURES))
     ap.add_argument("--out")
@@ -401,14 +597,15 @@ def main() -> int:
         gen = Gen(random.Random(args.seed), nm)
         docs = [{"doc": gen.document()} for _ in range(args.random)]
         families = None
-        label, default_out = "random", OUT_DIR / "differential_v1.json"
+        label, default_out = "random", DIFFERENTIAL
     else:
         ap.error("give --rules or --random N")
     kern, oracle, models, grades = run_all(docs, sig_path, args.workers, label)
     not_strict = [i for i, m in enumerate(models) if m["verdict"] == "not_strict"]
-    by_class, by_rule, by_family, dis, records, infra = tally(
+    by_class, by_rule, by_family, dis, records, infra, outside = tally(
         docs, models, grades, families)
     graded = sum(v["n"] for v in by_class.values())
+    ready_n = by_class.get("READY", {}).get("n", 0)
     summary = {
         "documents": len(docs),
         "graded": graded,
@@ -419,9 +616,19 @@ def main() -> int:
         "oracle_timeouts": sum(1 for g in grades if g.get("timed_out")),
         "by_class": {k: by_class[k] for k in sorted(by_class)},
         "rules_never_exercised": [r for r in RULES if by_rule.get(r, {}).get("docs", 0) == 0],
+        "outside_tier_by_design": len(outside),
     }
+    if not dis and graded:
+        # Exact one-sided 95% (Clopper-Pearson) upper bound for 0 failures in n.
+        summary["upper_bound_95"] = {
+            "all": round(1 - 0.05 ** (1 / graded), 6),
+            "ready": round(1 - 0.05 ** (1 / ready_n), 6) if ready_n else None,
+            "scope": "the disagreement rate over documents drawn by THIS generator "
+                     "(version, weights, seed), not over L_S0: a class of documents "
+                     "the generator does not draw is not bounded (C-85)",
+        }
     out = {
-        "schema": "lp-strict-differential/1",
+        "schema": "lp-strict-differential/2",
         "generator": "scripts/tools/strict_differential.py",
         "generator_version": GENERATOR_VERSION,
         "mode": label,
@@ -440,8 +647,10 @@ def main() -> int:
         "infrastructure_failures": infra,
     }
     if families is not None:
-        out["by_family"] = {f: by_family[f] for f in RULES if f in by_family}
+        out["by_family"] = {f: by_family[f] for f in RULES + ["BOUND", "MATRIX"]
+                            if f in by_family}
         out["probes"] = records
+        out["outside_tier"] = outside
     else:
         out["documents"] = records
     path = Path(args.out) if args.out else default_out

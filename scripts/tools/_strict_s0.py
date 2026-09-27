@@ -32,6 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
+from check_strict_kernel import MAX_BRACE_DEPTH, MAX_TOKENS  # noqa: E402,F401
 
 REPO = Path(__file__).resolve().parents[2]
 CONTRACT = REPO / "corpora/contracts/article.json"
@@ -61,6 +62,13 @@ def members() -> set[str]:
         else:
             m.add(n)
     return m
+
+
+def primitives() -> set[str]:
+    """The engine's primitives, from the kernel file (gen_contract.py counts
+    them against TeX's own count)."""
+    k = json.loads(kernel_path().read_text())
+    return set(k["primitives"]["names"])
 
 
 def source_block() -> dict:

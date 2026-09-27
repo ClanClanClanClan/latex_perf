@@ -306,22 +306,118 @@ let rule_of c s t nx res =
               | K.TxNoop -> "R_cs_text_noop"
               | K.TxFatal _ -> "R_cs_text_fatal"))
 
+(* The BRANCH each step took, for COVERAGE REPORTING ONLY (like [rule_of]):
+   "<head>|<token>|<follower>|<tail>", where <head> is the innermost frame (top,
+   simple, inline, display, mgroup), <token> the token's class (a control word
+   by its behaviour in the current mode: cs:undef, cs:t.<text behaviour>,
+   cs:m.<math behaviour>), <follower> the class of the NEXT token for the tokens
+   whose step reads it ($, ^, _; a control word by its whole signature,
+   cs:<text>/<math>; eof at the end of the stream) and "-" otherwise, and <tail>
+   whether the tail noad already has the script (^ and _ only).
+   check_strict_kernel.py requires every cell of this matrix that the grammar
+   allows to be exercised by an agreeing rule probe (C-85: the follower of a
+   look-ahead was the class nobody had probed). *)
+let head_label = function
+  | [] -> "top"
+  | K.FSimple :: _ -> "simple"
+  | K.FShift (false, _, _) :: _ -> "inline"
+  | K.FShift (true, _, _) :: _ -> "display"
+  | K.FMGroup _ :: _ -> "mgroup"
+
+let text_cls = function
+  | K.TxMaterial -> "material"
+  | K.TxNoop -> "noop"
+  | K.TxFatal r -> "fatal." ^ string_of_reason r
+
+let math_cls = function
+  | K.MxNoad -> "noad"
+  | K.MxNoop -> "noop"
+  | K.MxFatal r -> "fatal." ^ string_of_reason r
+
+let cs_label c math n =
+  if not (c.K.c_defined n) then "cs:undef"
+  else
+    match c.K.c_sig n with
+    | None -> "cs:nosig"
+    | Some sg ->
+        if math then "cs:m." ^ math_cls sg.K.sig_math
+        else "cs:t." ^ text_cls sg.K.sig_text
+
+let follower_label c = function
+  | None -> "eof"
+  | Some (K.TCs n) -> (
+      if not (c.K.c_defined n) then "cs:undef"
+      else
+        match c.K.c_sig n with
+        | None -> "cs:nosig"
+        | Some sg ->
+            "cs:" ^ text_cls sg.K.sig_text ^ "/" ^ math_cls sg.K.sig_math)
+  | Some t -> tok_name t
+
+let branch_of c s t nx =
+  let fs = s.K.s_frames in
+  let math = K.in_math fs in
+  let tok = match t with K.TCs n -> cs_label c math n | _ -> tok_name t in
+  let reads_next =
+    match t with K.TDollar | K.TScript _ -> true | _ -> false
+  in
+  let tail =
+    match t with
+    | K.TScript up -> if K.tail_has up fs then "tail+" else "tail-"
+    | _ -> "-"
+  in
+  String.concat "|"
+    [
+      head_label fs;
+      tok;
+      (if reads_next then follower_label c nx else "-");
+      tail;
+    ]
+
 let rules_used c toks =
-  let acc = ref [] in
+  let acc = ref [] and br = ref [] in
   let add r = if not (List.mem r !acc) then acc := r :: !acc in
+  let addb b = if not (List.mem b !br) then br := b :: !br in
   let rec walk s = function
     | [] -> add "R_eof"
     | t :: rest -> (
         let nx = match rest with x :: _ -> Some x | [] -> None in
         let res = K.step c s t nx in
         add (rule_of c s t nx res);
+        addb (branch_of c s t nx);
         match res with
         | K.Go1 s' -> walk s' rest
         | K.Go2 s' -> ( match rest with _ :: r -> walk s' r | [] -> ())
         | K.Stop _ | K.Stuck -> ())
   in
   walk K.init toks;
-  List.rev !acc
+  (List.rev !acc, List.rev !br)
+
+(* A token prefix completed by the frames the EXTRACTED run has open at its end,
+   innermost first, then [\end{document}] (request field "close": true; the rule
+   probes' branch matrix). If the run stops or leaves the tier inside the
+   prefix, only [\end{document}] is appended. The closer is computed from the
+   model's own state, so a model that is wrong about the state closes the wrong
+   frames and the oracle disagrees. *)
+let close_toks c toks =
+  let rec walk s = function
+    | [] -> Some s
+    | t :: rest -> (
+        match
+          K.step c s t (match rest with x :: _ -> Some x | [] -> None)
+        with
+        | K.Go1 s' -> walk s' rest
+        | K.Go2 s' -> ( match rest with _ :: r -> walk s' r | [] -> None)
+        | K.Stop _ | K.Stuck -> None)
+  in
+  let closer = function
+    | K.FSimple | K.FMGroup _ -> K.TClose
+    | K.FShift (false, _, _) -> K.TMCloseInline
+    | K.FShift (true, _, _) -> K.TMCloseDisplay
+  in
+  match walk K.init toks with
+  | Some s -> toks @ List.map closer s.K.s_frames @ [ K.TEnd ]
+  | None -> toks @ [ K.TEnd ]
 
 (* The mode in force when the fatal at token [l] is raised: the state the
    extracted [step] reaches when it stops (trusted harness use of extracted
@@ -403,10 +499,26 @@ let () =
               match member "toks" j with
               | `List ts ->
                   let toks = List.map tok_of ts in
+                  let toks =
+                    match member "close" j with
+                    | `Bool true -> close_toks c toks
+                    | _ -> toks
+                  in
+                  (* Token-level requests pass the same membership as documents:
+                     [in_strict_toks] (every token admitted, every script with
+                     its argument) and the capacity bounds ([bounded],
+                     Decide.v). The extracted [tok_ok], [scripts_ok] and
+                     [bounded] are the functions [in_strict_b] is made of. *)
+                  let strict =
+                    List.for_all (fun t -> K.tok_ok c t) toks
+                    && K.scripts_ok toks
+                    && K.bounded toks
+                  in
                   ( toks,
                     string_of_chars (K.header @ K.render_toks toks),
-                    true,
-                    K.verdict_of (K.run c K.init toks) )
+                    strict,
+                    if strict then K.verdict_of (K.run c K.init toks)
+                    else K.NotStrict )
               | _ ->
                   let d = doc_of (member "doc" j) in
                   ( K.flatten_doc d,
@@ -415,14 +527,15 @@ let () =
                     K.decide c d )
             in
             let ntoks = List.length toks in
+            let rules, branches = rules_used c toks in
             let base =
               [
                 ("id", id);
                 ("tex", `String tex);
                 ("ntoks", `Int ntoks);
                 ("in_strict", `Bool strict);
-                ( "rules",
-                  `List (List.map (fun r -> `String r) (rules_used c toks)) );
+                ("rules", `List (List.map (fun r -> `String r) rules));
+                ("branches", `List (List.map (fun b -> `String b) branches));
               ]
             in
             match verdict with

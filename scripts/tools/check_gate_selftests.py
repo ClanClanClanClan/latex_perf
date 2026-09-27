@@ -580,6 +580,70 @@ def strict_differential_one_disagreement(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def _first_admitted(d: dict, text_ok: bool = False) -> str:
+    for n, h in sorted(d["signatures"].items()):
+        if not text_ok or not isinstance(h["text"], list):
+            return n
+    raise AssertionError("signature file drifted; update registry")
+
+
+def strict_admitted_not_inert(text: str) -> str:
+    """C-85 / R-INERT: an admitted name whose recorded meaning is a
+    conditional primitive."""
+    d = json.loads(text)
+    d["meanings"][_first_admitted(d)] = "\\iftrue"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_transparent(text: str) -> str:
+    """C-85: an admitted name that is transparent after a $ in display math
+    (its display-follower grade compiles)."""
+    d = json.loads(text)
+    d["evidence"][_first_admitted(d)]["D-FOLLOW-DOLLAR"] = [0, True, "", None]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_global_resource(text: str) -> str:
+    """C-85: an admitted name that fails under repetition (\\tableofcontents)."""
+    d = json.loads(text)
+    d["evidence"][_first_admitted(d, text_ok=True)]["R-TEXT"] = [
+        1, False, "! No room for a new \\write .", 16]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_family_missing(text: str) -> str:
+    d = json.loads(text)
+    d["evidence"][_first_admitted(d)].pop("D-FOLLOW-CHAR")
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_interleave_disagrees(text: str) -> str:
+    d = json.loads(text)
+    r = d["interleaving"]["rounds"]
+    assert r and r[-1]["disagree"] == 0, "signature file drifted; update registry"
+    r[-1]["disagree"] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_matrix_cell_dropped(text: str) -> str:
+    """C-85 / check 7: no probe exercises `$` in display math followed by a
+    character."""
+    d = json.loads(text)
+    cell = "display|dollar|char|-"
+    before = len(d["probes"])
+    d["probes"] = [r for r in d["probes"] if cell not in r.get("branches", [])]
+    assert len(d["probes"]) < before, "rule_probes drifted; update registry"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_bound_scope_dropped(text: str) -> str:
+    d = json.loads(text)
+    assert "not over L_S0" in d["summary"]["upper_bound_95"]["scope"], \
+        "differential drifted; update registry"
+    d["summary"]["upper_bound_95"]["scope"] = "the disagreement rate"
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_signature_candidate_dropped(text: str) -> str:
     """A rejected candidate silently removed: the candidate set no longer is
     the selection rule's."""
@@ -607,9 +671,56 @@ REGISTRY = [
                      r"FAIL rule_probes: family R_script_double: 1 of",
                      transform=strict_family_one_disagrees),
             Mutation("the differential reports a disagreement",
-                     "corpora/strict_s0/differential_v1.json",
-                     r"FAIL differential_v1: 1 disagreement",
+                     "corpora/strict_s0/differential_v2.json",
+                     r"FAIL differential: 1 disagreement",
                      transform=strict_differential_one_disagreement),
+            # C-85: the published bound must be one over the generator's
+            # distribution, not over L_S0.
+            Mutation("the differential's bound drops its scope",
+                     "corpora/strict_s0/differential_v2.json",
+                     r"FAIL differential: the upper bound does not state",
+                     transform=strict_bound_scope_dropped),
+            # C-85 / R-INERT: a non-inert name admitted.
+            Mutation("an admitted name is a conditional (not inert)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' is not inert: conditional",
+                     transform=strict_admitted_not_inert),
+            # C-85: a name transparent to the display-$ look-ahead admitted.
+            Mutation("an admitted name is transparent after a display $",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' is not a bad display-\$ follower",
+                     transform=strict_admitted_transparent),
+            # C-85: a name consuming a global resource admitted.
+            Mutation("an admitted name fails under repetition",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' does not compile under R-TEXT",
+                     transform=strict_admitted_global_resource),
+            Mutation("an admitted name lacks a display-follower probe",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' lacks probe families",
+                     transform=strict_admitted_family_missing),
+            Mutation("the last interleaving round disagrees",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: no interleaving round with 0 disagreements",
+                     transform=strict_interleave_disagrees),
+            # C-85 / check 7: a follower class of a look-ahead unprobed.
+            Mutation("a branch-matrix cell is not exercised",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL branch matrix: cell display\|dollar\|char\|- is not",
+                     transform=strict_matrix_cell_dropped),
+            # check 7 derives the look-ahead tokens from Runs: a rule that
+            # starts reading the next token must bring its follower cells.
+            Mutation("a Runs rule starts reading the next token",
+                     "proofs/Strict/Semantics.v",
+                     r"FAIL branch matrix: cell \w+\|end\|char\|- is not",
+                     old="    Runs C (mkState fs true p) (TEnd :: rest) Compiles",
+                     new="    Runs C (mkState fs true p) (TEnd :: TChar c :: rest) Compiles"),
+            # C-86: the capacity bounds dropped from membership.
+            Mutation("membership no longer requires the capacity bounds",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: in_strict_doc no longer requires `bounded`",
+                     old="  in_strict_toks C (flatten_doc d) /\\ bounded (flatten_doc d) = true.",
+                     new="  in_strict_toks C (flatten_doc d)."),
             Mutation("the signature candidates are not the selection rule's",
                      "corpora/contracts/strict/article-s0-signatures.json",
                      r"FAIL signatures: candidate set differs",

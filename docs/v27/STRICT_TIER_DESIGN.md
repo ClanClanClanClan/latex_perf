@@ -830,8 +830,8 @@ document. Ledger row: OPEN-121 in [PROJECT_STATE.md](PROJECT_STATE.md).
 | extraction and its regeneration | `proofs/Strict/Extract.v`, `scripts/tools/regen_strict_kernel_extract.sh`, committed as `latex-parse/strict/strict_kernel_extracted.ml` (checked by `scripts/tools/check_extract_identity.py`) |
 | harness driver (trusted, T5: builds the contract record from the committed files) and unit tests | `latex-parse/strict/strict_decide.ml`, `latex-parse/strict/test_strict_kernel.ml` |
 | probe-attested signatures | `scripts/tools/gen_strict_signatures.py`, `corpora/contracts/strict/article-s0-signatures.json` |
-| rule probes and the generated differential v1 | `scripts/tools/strict_differential.py`, `scripts/tools/_strict_s0.py`, `corpora/strict_s0/` |
-| pure gate over the kernel and its evidence (spec-drift, six kill-tests) | `scripts/tools/check_strict_kernel.py` |
+| rule probes (with the branch matrix and the bound family) and the generated differential v2 | `scripts/tools/strict_differential.py`, `scripts/tools/_strict_s0.py`, `corpora/strict_s0/` |
+| pure gate over the kernel and its evidence, and the home of RULE R-INERT (spec-drift, 15 kill-tests) | `scripts/tools/check_strict_kernel.py` |
 
 **Theorems** (all `Qed`; `Print Assumptions` is Closed for each, registered in
 `scripts/tools/check_print_assumptions.py`, which also pins the bridge's
@@ -859,6 +859,17 @@ spaces, paragraph breaks (a blank line or `\par`), brace groups and stray
 and control words (ASCII letters) with no argument. A control word is decided E1 when it is
 outside the configuration's closed world, and is otherwise inside the tier
 only if it has a signature. The configuration is `article` with no packages.
+The fragment is BOUNDED (C-86): brace nesting at most 200 and at most 20,000
+tokens (`Decide.v` `max_brace_depth`, `max_tokens`, part of `in_strict_doc`).
+MEASURED under the pinned oracle: 253 nested groups compile and 254 give
+"TeX capacity exceeded [grouping levels=255]" in text, math and script
+groups; a formula of 1,000,000 characters, and 100,000 occurrences of
+`\Longleftarrow`, `\arcsin`, `\dots` or `\mathstrut` in one formula, give
+"[main memory size=5000000]". Before the bound the kernel answered PROVEN
+READY on such documents. The margins are attested per name (families R-NEST-*
+and R-BIG-* below) and for the structure (rule-probe family BOUND); that
+different names' memory costs ADD UP in one document is INFERRED, not
+measured.
 
 **Why the semantics runs on tokens, not on the tree.** TeX executes a token
 stream, and the tree nesting is not TeX's nesting. The byte-level lesson of
@@ -873,44 +884,110 @@ group TeX is in non-display math even within a display.
 the line of every fatal. The header comment of `proofs/Strict/Syntax.v` says
 why each inserted line feed is harmless.
 
-**Signatures.** A defined control word gets `text` in {material, noop, fatal
-E3} and `math` in {noad, noop, fatal E3, fatal E6} only by probes: 15
-documents per name (8 in text, 7 in math) are graded once by the oracle, and
-the name is admitted iff exactly one of the 12 hypotheses makes the EXTRACTED
-decider agree with the oracle on all 15 (verdict, message class and line).
+**Signatures (generator version 3, C-85).** A defined control word gets
+`text` in {material, noop, fatal E3} and `math` in {noad, noop, fatal E3,
+fatal E6} only through five stages (`scripts/tools/gen_strict_signatures.py`,
+docstring):
+
+0. **RULE R-INERT** (stated and implemented in
+   `scripts/tools/check_strict_kernel.py`, applied by the generator and
+   re-applied by the gate to every admitted name): the name's `\meaning` at
+   body start, and the meanings of every name of letters and `@` its
+   expansion texts reach (transitively; 1,110 meanings for the 400
+   candidates), are read from the pinned image. A name is not inert, and
+   never admitted, when it is a conditional primitive (`\if*`, `\else`,
+   `\fi`, `\or`, `\unless`), an expansion-control primitive (`\expandafter`,
+   `\noexpand`, `\futurelet`, `\csname`, ...), a prefix (`\immediate`,
+   `\global`, ...), an interaction-mode changer (`\nonstopmode`, ...), an
+   I/O, diagnostic, tracing, code-table (`\catcode`, ...), deferred-execution
+   (`\aftergroup`, `\everypar`, ...) or definition primitive, a register, a
+   name `\let` to a structural character; or a macro whose expansion text is
+   empty (transparent to expansion), has unbalanced conditionals, or whose
+   expansion closure reaches a primitive of the state-changing classes
+   (`\tracingall` reaches `\tracingstats` through `\loggingall`,
+   `\tableofcontents` reaches `\input` and `\write`). The closure does not
+   follow names holding other characters (`\T1\IJ`, `\?-cmd`): it is a
+   screen, not a proof, and the probes below remain the behavioural check.
+1. **Base probes**: the 15 of version 2 (X in text and math next to each
+   construct the kernel models, and the two look-ahead probes of C-84).
+2. **Follower, display-follower and repetition families**, 43 documents per
+   name: X immediately followed by every token class of the fragment in text
+   and in math (every one of its 74 characters, space, blank line, `\par`,
+   braces, `$`, `$$`, `\(` `\)` `\[` `\]`, `^`, `_`, an undefined word,
+   `\end{document}`, end of file); X right after a `$` in display math
+   (D-FOLLOW-*: the position `Semantics.display_bad_follower` reads with
+   expansion, tex.web §1197); X 300 times in text, in math, alternating with
+   a character, in 300 paragraphs, groups, formulas and displays; X at the
+   nesting bound (alone and at every one of the 200 levels) and repeated to
+   the token bound in one paragraph and in one formula.
+3. **Admission**: exactly one of the 12 hypotheses makes the EXTRACTED
+   decider agree with the oracle on all 58 probes (verdict, message class,
+   line).
+4. **Interleaving**: seeded documents interleaving all admitted names (text
+   names in text, with and without characters between, across paragraphs and
+   in groups; math names in inline and display math and across formulas), at
+   least 300 occurrences each, graded against the kernel with the final
+   signature set; a disagreement is reduced by delta debugging to a minimal
+   set of names, all of which are rejected, until a round agrees.
+
 The candidates are a rule, not a list: the article closed world's control
 words minus `par`, `begin` and `end`, in sha256 order, the first 400.
-Measured (generator version 2): 150 admitted and 250 rejected (no hypothesis
-fits: they take arguments, look ahead, fail elsewhere, or are registers and
-primitives with syntax of their own); one probe of `\pdfcopyfont` timed out,
-and that name is among the rejected. Admitted classes: fatal E3/noad 51 (math
-symbols), material/noad 54, noop/noop 32, noop/fatal E3 4, material/fatal E6
-3, noop/fatal E6 3, noop/noad 2, material/noop 1. Version 1 had 13 probes and
-admitted 152: the two extra were `\expandafter` and `\ExplSyntaxOn`, both
-noop/noop, both look-ahead or catcode changers that the two look-ahead probes
-of version 2 reject (C-84).
+MEASURED (generator version 3): 130 admitted, 270 rejected (83 by R-INERT,
+184 by the base probes, 3 by stage 2, 0 by interleaving; 24 interleaving
+documents in one round, 0 disagreeing). 5,743 documents were graded for
+this run; the 6,000 base-probe grades of version 2 were reused for
+byte-identical documents under the same oracle provenance (the tool refuses
+reuse across any provenance difference). Admitted classes: fatal E3/noad 50,
+material/noad 53, noop/noop 20, noop/fatal E6 2, noop/noad 2, material/noop
+1, material/fatal E6 1, noop/fatal E3 1. Version 2 admitted 150; the 20 it
+admitted and version 3 does not are the whole finding of the adversarial
+review (C-85): `\empty`, `\CurrentOption`, `\UnusedTemplateKeys` (empty
+expansion), `\iftrue`, `\immediate`, `\nonstopmode`, `\tracingall`,
+`\loggingall`, `\tracingnone`, `\hideoutput`, `\tableofcontents`,
+`\titlepage`, `\flushright`, `\endflushright`, `\endlist`, `\endverse`,
+`\footnotemark` (R-INERT); `\theenumiii` and `\LinkTargetOff` (transparent
+after a display `$`: D-FOLLOW-DOLLAR compiles); `\cong` (exceeds main memory at the
+token bound: R-BIG-MATH gives "main memory size"). Version 3 admits no name
+version 2 rejected.
 
 **Evidence.**
 
-- Rule probes (`corpora/strict_s0/rule_probes.json`): 108 directed documents,
-  1 to 7 per constructor, 16 of them raw token streams for rules no tree
-  reaches; 108 of 108 agree with the oracle, and every one of the 42
-  constructors is used by at least one agreeing probe.
-- Generated differential v1 (`corpora/strict_s0/differential_v1.json`):
-  1,200 seeded documents (seed 1), 1,200 of 1,200 agree with the oracle on verdict, message class and line: READY 527, E0 160, E1 92, E3 136, E4 57, E5 183, E6 45; 0 oracle timeouts or infrastructure failures. The exact one-sided 95% upper bound on the disagreement rate is 0.25% overall and 0.57% on READY verdicts. 39 of the 42 constructors are used by generated documents; the three that are not (`R_dollar_display_eof`, `R_mclose_inline_bad`, `R_mclose_display_bad`) are not reachable, or only rarely, from trees, and are attested by the token-level rule probes.
-- The first run of the token-level rule probes found one F-defect, in the
-  semantics: `R_dollar_display_eof` said that a `$` ending a display at the end
-  of a file reads past the end ("Emergency stop"); pdfTeX appends an
-  end-of-line to the last line, so the look-ahead meets a space ("Display math
-  should end with $$" at the `$`). The rule was corrected (C-83 in
-  [PROJECT_STATE.md](PROJECT_STATE.md)).
-- The first full run of the differential (on the version-1 signatures) found
-  a second F-defect, in the CONTRACT: 1,199 of 1,200 agreed, and the one that
-  did not was `\(\expandafter` + blank line + `P\)`, where pdfTeX reported the
-  paragraph break one line later than the kernel because `\expandafter` had
-  read the token after it. The semantics was right; the signature was wrong
-  (C-84). The signatures were regenerated with two look-ahead probes and both
-  evidence files re-run on them; the figures above are the re-run's.
+- Rule probes (`corpora/strict_s0/rule_probes.json`): 510 graded documents,
+  510 agree with the oracle; every one of the 42 constructors is used by at
+  least one agreeing probe. Of them, 393 form the BRANCH MATRIX (every
+  innermost frame x every token class, and for `$`, `^`, `_` x every follower
+  class including every admitted signature pair, undefined and end of file),
+  covering all 230 cells the grammar admits in the tier; the 352 cells
+  membership excludes (a script without its argument) are covered by 396
+  documents the extracted decider places outside the tier. 9 BOUND documents
+  at the bounds agree; 3 one past them are outside the tier.
+  `check_strict_kernel.py` derives the look-ahead tokens from the `Runs`
+  conclusions, the token and frame classes from `Syntax.v`/`Semantics.v` and
+  the signature classes from the signature file, so a new look-ahead rule or
+  token class without matrix coverage fails the gate (kill-tested).
+- Generated differential v2 (`corpora/strict_s0/differential_v2.json`):
+  4,000 seeded documents (seed 2), 4,000 of 4,000 agree with the oracle on verdict, message class and line: READY 1,572, E0 543, E1 429, E3 616, E4 127, E5 608, E6 105; 0 oracle timeouts or infrastructure failures; exact one-sided 95% upper bound on the disagreement rate 0.075% overall and 0.19% on READY verdicts, OVER THIS GENERATOR'S DISTRIBUTION. Of the 4,000, 100 put an admitted name right after a `$` in display math and 21 an undefined one, 298 have at least 100 tokens and 86 at least 300 (runs of repeated names; 31 of those are READY). A first run of the same size, made with a generator bug that let text-fatal and math-fatal names into clean documents (a helper shadowed by a second function of the same name), also agreed 4,000 of 4,000; it is not committed because the fixed code does not reproduce it; 40 of 42 constructors are used (`R_dollar_display_eof` and `R_mclose_inline_bad` only by the token-level rule probes). Sized at 4,000, not 10,000, because the shared oracle was loaded (about 2 documents per second).
+  The upper bound is a bound over the documents THIS generator draws, not
+  over L_S0 (C-85): version 1 drew no `$` in display math followed by a name
+  and no repeated name, and its 1,200 of 1,200 coexisted with both classes of
+  wrong verdict below. A class version 2 does not draw is equally unbounded.
+- Findings of the evidence, each an F-defect fixed at its source:
+  - C-83 (semantics): `R_dollar_display_eof` said a `$` ending a display at
+    the end of a file reads past the end; pdfTeX appends an end-of-line to
+    the last line, so the look-ahead meets a space.
+  - C-84 (contract): `\expandafter` passed 13 probes as noop/noop and read the
+    token after the next.
+  - C-85 (contract, found by adversarial review): 6 admitted names are
+    transparent after a display `$` (false NOT-READY with a wrong location:
+    `$$z $\empty $$$$$` compiles), and a name attested once per occurrence can
+    consume a global resource (`\tableofcontents` twenty times: model READY,
+    oracle "No room for a new \write", false READY). Fixed by stages 0, 2 and
+    4 above, the branch matrix and the generator's new shapes; both
+    reviewers' scripts re-run: 0 of 130 admitted names disagree in the
+    display-follower repro, and of the 50 adversarial documents 32 agree and
+    18 are outside the tier (they use names no longer admitted).
+  - C-86 (semantics): the kernel had no capacity bounds (false READY at 254
+    nested groups and on memory exhaustion); fixed by the bounded fragment.
 
 **Deviations from §C.3, and what is not done.**
 
@@ -921,12 +998,17 @@ of version 2 reject (C-84).
   need environments, arguments and Unicode, which the fragment does not have.
   Unclosed math at `\end{document}` and a missing `\end{document}` are
   labelled E5 (stack discipline).
-- The differential is 1,200 documents, not the 10,000 that §F asks of M2; the
-  harness is seeded and reruns with `--random N`.
 - `complete_scope` (§I.2): the contract attests the configuration's name set,
   not a document's. In phase 1 every E1 verdict of the differential is itself
   graded by the oracle; the per-document self-check before a PROVEN verdict is
   still to do, with the wiring into the product.
-- A signature is attested in the 13 probed contexts only. The differential
-  places attested names in many others, which is where a context-dependent
-  name would show up as a disagreement.
+- A signature is attested in the probed contexts, under the rule R-INERT
+  screen, and in the interleavings; a context none of them builds is covered
+  only by the differential. Letters and digits after a name are probed one by
+  one (FT-CHARS, FM-CHARS) but in one document, so a look-ahead that silently
+  swallows one character without changing the outcome is not observable
+  (and does not matter to the verdict: READY iff compiles).
+- The kernel's own signature generator (`gen_strict_signatures.py`)
+  duplicates M1 slice 2's `contract_signatures.py` (branch
+  `feat/v27165-contract-signatures`); the two must converge onto one
+  signature source before M3 (OPEN-121).

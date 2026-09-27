@@ -17,11 +17,34 @@
 
 let negb = function true -> false | false -> true
 
+let length x =
+  let rec length0 = function
+    | [] -> 0
+    | _ :: l' -> Stdlib.Int.succ (length0 l')
+  in
+  length0 x
+
 let app x =
   let rec app0 l m = match l with [] -> m | a :: l1 -> a :: app0 l1 m in
   app0 x
 
 type comparison = Eq | Lt | Gt
+
+let pred n = Stdlib.max 0 (n - 1)
+let rec mul = ( * )
+
+let rec leb n0 m =
+  (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+    (fun _ -> true)
+    (fun n' ->
+      (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+        (fun _ -> false)
+        (fun m' -> leb n' m')
+        m)
+    n0
+
+let ltb n0 m = leb (Stdlib.Int.succ n0) m
+
 type positive = XI of positive | XO of positive | XH
 type n = N0 | Npos of positive
 
@@ -382,8 +405,42 @@ let rec scripts_ok = function
       | TCs _ -> scripts_ok rest
       | TEnd -> scripts_ok rest)
 
+let ten =
+  Stdlib.Int.succ
+    (Stdlib.Int.succ
+       (Stdlib.Int.succ
+          (Stdlib.Int.succ
+             (Stdlib.Int.succ
+                (Stdlib.Int.succ
+                   (Stdlib.Int.succ
+                      (Stdlib.Int.succ (Stdlib.Int.succ (Stdlib.Int.succ 0)))))))))
+
+let max_brace_depth = mul (Stdlib.Int.succ (Stdlib.Int.succ 0)) (mul ten ten)
+let max_tokens = mul max_brace_depth (mul ten ten)
+
+let rec depth_ok_from k = function
+  | [] -> true
+  | t :: r -> (
+      match t with
+      | TChar _ -> depth_ok_from k r
+      | TSpace -> depth_ok_from k r
+      | TPar _ -> depth_ok_from k r
+      | TOpen -> ltb k max_brace_depth && depth_ok_from (Stdlib.Int.succ k) r
+      | TClose -> depth_ok_from (pred k) r
+      | TDollar -> depth_ok_from k r
+      | TMOpenInline -> depth_ok_from k r
+      | TMCloseInline -> depth_ok_from k r
+      | TMOpenDisplay -> depth_ok_from k r
+      | TMCloseDisplay -> depth_ok_from k r
+      | TScript _ -> depth_ok_from k r
+      | TCs _ -> depth_ok_from k r
+      | TEnd -> depth_ok_from k r)
+
+let bounded ts = leb (length ts) max_tokens && depth_ok_from 0 ts
+
 let in_strict_b c d =
-  forallb (tok_ok c) (flatten_doc d) && scripts_ok (flatten_doc d)
+  (forallb (tok_ok c) (flatten_doc d) && scripts_ok (flatten_doc d))
+  && bounded (flatten_doc d)
 
 type step_res = Go1 of state | Go2 of state | Stop of outcome | Stuck
 

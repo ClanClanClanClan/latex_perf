@@ -95,7 +95,7 @@ GRADED = (
     # The strict kernel L_S0's evidence (ADR-012 M2 phase 1, OPEN-121).
     ("corpora/contracts/strict/article-s0-signatures.json", ("oracle",)),
     ("corpora/strict_s0/rule_probes.json", ("oracle",)),
-    ("corpora/strict_s0/differential_v1.json", ("oracle",)),
+    ("corpora/strict_s0/differential_v2.json", ("oracle",)),
 )
 
 # Graded artefacts NOT re-graded in the oracle-baseline change, each with the

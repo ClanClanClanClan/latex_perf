@@ -1,0 +1,1829 @@
+{
+ "provenance": {
+  "produced_by": "scripts/tools/gen_proven_coverage.py",
+  "results_source": "corpora/real_roots/results_sample3.json",
+  "cli_sha256": "4fbfb7a632de2f1084f5ff7a9343372491ad1ad2e6d8bb22dded1e8a6ef4eb29",
+  "cli_platform": "Darwin-arm64",
+  "cli_build_root": "e838f29e71efebbb4e06ef5758d8b17a5874debf03ad81ffd656fb753ecdc967",
+  "measured_at_sha": "ca7c48093ec0c289e6345d66230c216f0dadd192",
+  "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433",
+  "state_vocabulary": [
+   "PREMISE-CERTIFIED",
+   "PREMISE-REJECTED"
+  ],
+  "tier_vocabulary": [
+   "foreign",
+   "heuristic",
+   "proven"
+  ]
+ },
+ "summary": {
+  "n": 200,
+  "premise_certified_and_compiles": 178,
+  "lp_core_certified_and_compiles": 89,
+  "strict_tier_matches_oracle": 0,
+  "strict_wrong": 0
+ },
+ "rows": [
+  {
+   "id": "2507.10104v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09721v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11424v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05689v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09271v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11136v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05393v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11005v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09767v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07779v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04008v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.02003v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.19796v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10538v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09590v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.00660v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10335v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08676v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-foreign",
+   "verdict_tier": "foreign",
+   "verdict_kind": "FOREIGN"
+  },
+  {
+   "id": "2507.10425v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05005v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.00633v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.00736v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08136v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01761v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10707v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.20935v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.00451v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.06865v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09991v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.18508v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.17464v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.22578v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11538v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23099v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.12342v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09524v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05815v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08287v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10549v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23619v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11138v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05647v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.06120v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04103v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.10926v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.12918v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01473v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05656v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.11459v4",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09560v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09880v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04973v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.03453v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.19274v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09674v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2506.20928v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.20350v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04441v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.03784v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.20406v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07994v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23184v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05428v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2506.18249v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.03772v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01353v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.07516v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09865v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11153v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01291v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04179v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.00398v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.02999v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08262v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23533v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.03121v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11023v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11032v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.03207v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2506.23790v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2506.12999v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07022v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.02437v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01831v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.22918v2",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2506.13633v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.16961v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.15747v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.20173v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.19234v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23892v1",
+   "cell": "FALSE-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10203v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.00871v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.02769v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.03379v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11415v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11441v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09773v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07940v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10048v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09122v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08520v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01295v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10904v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.03264v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08574v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.13733v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.01806v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09944v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09511v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01565v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.15064v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.00426v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.17471v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08271v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "foreign",
+   "verdict_kind": "FOREIGN"
+  },
+  {
+   "id": "2507.05034v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.20940v1",
+   "cell": "FALSE-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01608v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09131v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04361v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07828v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.02377v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23950v3",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.12451v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07860v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05905v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09181v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23354v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10544v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10913v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.16457v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.00073v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.06390v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08757v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04402v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08347v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08150v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.22826v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05725v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08692v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.09480v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10088v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08114v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.06268v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.17796v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.14152v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.18356v1",
+   "cell": "FALSE-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.19726v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10626v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05037v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.03828v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08956v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05806v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09881v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09873v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08441v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.21851v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11207v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08309v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2506.17549v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11228v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.18332v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.22615v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05027v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.06169v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.17874v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09304v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10714v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09034v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04572v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.22292v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09851v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.15165v1",
+   "cell": "FALSE-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07812v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.16750v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.05441v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.18187v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08913v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.02248v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09093v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.04254v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.10752v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08494v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.13554v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10805v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.07222v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2506.20206v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.11262v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10037v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.08205v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.09514v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.18058v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.14455v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.17092v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.16045v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10778v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.01891v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2506.23033v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-OK"
+  },
+  {
+   "id": "2507.10050v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  },
+  {
+   "id": "2507.03163v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended",
+   "verdict_tier": "heuristic",
+   "verdict_kind": "LIKELY-FAIL"
+  }
+ ]
+}

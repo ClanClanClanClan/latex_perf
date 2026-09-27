@@ -127,8 +127,12 @@ def main() -> int:
     # It is a RATCHET, not a treadmill. Failing on every source change would
     # train people to refresh without reading, which is the failure mode C-13
     # records. The threshold allows normal churn and stops long-term decay.
-    rr = repo / "corpora/real_roots/results.json"
-    if rr.is_file():
+    # Sample 3 (OPEN-119) carries the same protocol string and the same
+    # per-row pdflatex_passes, so the same claim check applies to it.
+    for rr in (repo / "corpora/real_roots/results.json",
+               repo / "corpora/real_roots/results_sample3.json"):
+        if not rr.is_file():
+            continue
         # Catch only what can genuinely go wrong with reading a JSON file. A
         # bare `except Exception` here swallowed a NameError (json was not
         # imported) and reported "no measured_at_sha" — a WRONG diagnostic that
@@ -138,7 +142,7 @@ def main() -> int:
             rr_data = json.loads(rr.read_text())
             sha = rr_data.get("measured_at_sha")
         except (json.JSONDecodeError, OSError) as exc:
-            findings.append(f"corpora/real_roots/results.json is unreadable: {exc}")
+            findings.append(f"corpora/real_roots/{rr.name} is unreadable: {exc}")
             sha, rr_data = "unreadable", None
 
         # ── CLAIM PROVENANCE: a published protocol must be recomputable from
@@ -169,12 +173,12 @@ def main() -> int:
                 k, n = int(m.group(1)), int(m.group(2))
                 if k != with_passes or n != len(docs):
                     findings.append(
-                        f"results.json protocol claims 'APPLIED TO {k}/{n}' but "
+                        f"{rr.name} protocol claims 'APPLIED TO {k}/{n}' but "
                         f"the rows say {with_passes}/{len(docs)} — the published "
                         f"claim does not match the recorded measurement")
             elif "passes" in proto and docs and with_passes < len(docs):
                 findings.append(
-                    f"results.json protocol claims multi-pass wholesale but only "
+                    f"{rr.name} protocol claims multi-pass wholesale but only "
                     f"{with_passes}/{len(docs)} rows carry pdflatex_passes — "
                     f"either re-measure the rest or scope the claim with an "
                     f"'APPLIED TO k/n rows' clause")
@@ -208,6 +212,19 @@ def main() -> int:
          "python3 scripts/tools/gen_proven_coverage.py --results "
          "corpora/real_roots/results_sample2.json --out "
          "corpora/real_roots/proven_coverage_sample2.json --corpus $LP_REAL_CORPUS "
+         "--cli _build/default/latex-parse/src/validators_cli.exe"),
+        # Sample 3, the VIRGIN sample (OPEN-119). Its pdflatex grades are
+        # permanent (a drawn sample is graded once); only the CLI side is
+        # refreshed, and only after a change was validated elsewhere.
+        ("corpora/real_roots/results_sample3.json", ("measured_at_sha",),
+         "python3 scripts/tools/diff_real_roots.py --repo . --refresh-cli "
+         "--results results_sample3.json (OPEN-119: validate the change on "
+         "other documents FIRST; this sample is sealed for measurement)"),
+        ("corpora/real_roots/proven_coverage_sample3.json",
+         ("provenance", "measured_at_sha"),
+         "python3 scripts/tools/gen_proven_coverage.py --results "
+         "corpora/real_roots/results_sample3.json --out "
+         "corpora/real_roots/proven_coverage_sample3.json --corpus $LP_REAL_CORPUS "
          "--cli _build/default/latex-parse/src/validators_cli.exe"),
     )
     # Artefacts that CANNOT yet carry provenance, each with the ledger row that
@@ -321,7 +338,7 @@ def main() -> int:
         v = str(row.get("pdflatex_verdict") or "").lower()
         return True if v == "compiles" else False if v == "fails" else None
 
-    for name in ("results.json", "results_sample2.json"):
+    for name in ("results.json", "results_sample2.json", "results_sample3.json"):
         f = repo / "corpora/real_roots" / name
         if not f.is_file():
             continue

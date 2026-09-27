@@ -18,6 +18,7 @@ Sources, one owner per fact:
   corpora/false_ready/manifest.json     fixture baseline           (quantity b)
   corpora/apply_fixes/manifest.json     fixer residual damage
   corpora/real_roots/results.json       real-paper matrix          (quantity c)
+  corpora/real_roots/results_sample3.json  the VIRGIN sample (OPEN-119)
   scripts/tools/diff_compile_check.sh   differential allowlist     (quantity a)
   governance/project_facts.yaml         version, proof counts
   .github/required-status-checks.json   required CI contexts
@@ -39,6 +40,23 @@ from pathlib import Path
 BEGIN = "<!-- BEGIN GENERATED: measured-position -->"
 END = "<!-- END GENERATED: measured-position -->"
 DOC = Path("docs/v27/PROJECT_STATE.md")
+
+# The ten sample-3 ids that the repo already NAMES (OPEN-118's pre-draw check):
+# each was found by a WHOLE-CORPUS sweep, never by a windowed experiment, so
+# the window is untouched by windowed work but not virgin in the strict sense.
+# They are published as their own split so the reader can see whether they
+# move the reading. Fixed BEFORE the draw; never extend this list after
+# looking at sample-3 outcomes (OPEN-119).
+SAMPLE3_NAMED_IDS = frozenset({
+    # fix_meaning_review.json (the fixer meaning review)
+    "2506.14455v1", "2506.23790v1", "2507.08441v1", "2507.08520v1",
+    "2507.08692v1", "2507.09560v1", "2507.09851v1",
+    # verdict-channel findings in the ledger (2507.08692v1 is in both sets)
+    "2507.04008v1", "2507.08309v1", "2507.08913v1",
+})
+SAMPLE3_LABEL = "**sample 3 (VIRGIN; sealed, OPEN-119)**"
+CELLS = ("true-READY", "true-NOT-READY", "FALSE-READY", "false-NOT-READY",
+         "ungraded-infra", "ungraded-timeout")
 
 
 def allowlist_count(repo: Path) -> int:
@@ -275,6 +293,31 @@ def build(repo: Path) -> str:
     # North Star's virgin sample is sample 3 (ADR-012 decision 7).
     sr += strict_row("corpora/real_roots/proven_coverage_sample2.json",
                      "sample 2 (design-seen since ADR-012)")
+    s3_strict = strict_row("corpora/real_roots/proven_coverage_sample3.json",
+                           SAMPLE3_LABEL)
+    sr += s3_strict
+    if s3_strict:
+        virgin_prose = (
+            "The North Star is defined on a VIRGIN sample, and that is "
+            "sample 3 (frame offset 720, ranks 721-920), drawn and graded "
+            "once, under the frozen oracle (CI's digest-pinned TeX Live "
+            "image, ADR-012 decision 7), after every earlier graded artefact "
+            "had been re-graded under it (OPEN-118). It is SEALED for "
+            "measurement only (OPEN-119): nothing is fixed, tuned or triaged "
+            "on it, and a future fix is validated elsewhere before sample 3 "
+            "is re-measured. Samples 1 and 2 are shown for comparison and "
+            "are not virgin: sample 1 is tuned and sample 2 has been "
+            "design-seen since ADR-012. ")
+    else:
+        virgin_prose = (
+            "The North Star is defined on a VIRGIN sample, and neither row "
+            "below is one: sample 1 is tuned and sample 2 has been "
+            "design-seen since ADR-012. The headline figure will come from "
+            "sample 3 (frame offset 720, ranks 721-920), drawn and graded "
+            "only after every graded artefact has been re-graded under the "
+            "frozen oracle, CI's digest-pinned TeX Live image (ADR-012 "
+            "decision 7); that re-grade is done and moved no cell "
+            "(OPEN-118). ")
     if sr:
         L += ["### Strict-tier coverage — THE North-Star metric (ADR-012)", "",
               "A document counts only when the CLI prints a **PROVEN** verdict "
@@ -288,13 +331,7 @@ def build(repo: Path) -> str:
               "number is weak evidence. **In milestone M0 the strict-tier "
               "membership predicate is a stub that returns false, so no "
               "verdict is proven and this number is zero by measurement.** "
-              "The North Star is defined on a VIRGIN sample, and neither row "
-              "below is one: sample 1 is tuned and sample 2 has been "
-              "design-seen since ADR-012. The headline figure will come from "
-              "sample 3 (frame offset 720, ranks 721-920), drawn and graded only after every "
-              "graded artefact has been re-graded under the frozen oracle, "
-              "CI's digest-pinned TeX Live image (ADR-012 decision 7); that "
-              "re-grade is done and moved no cell (OPEN-118). "
+              + virgin_prose +
               "Definitions: "
               "`docs/v27/STRICT_TIER_DESIGN.md` §E and "
               "`docs/v27/adr/ADR-012-contract-bounded-proven-tier.md`.", "",
@@ -307,6 +344,8 @@ def build(repo: Path) -> str:
                       "sample 1 (tuned)")
     pb += proven_block("corpora/real_roots/proven_coverage_sample2.json",
                        "**sample 2 (untuned; design-seen since ADR-012)**")
+    pb += proven_block("corpora/real_roots/proven_coverage_sample3.json",
+                       SAMPLE3_LABEL)
     if pb:
         L += ["### Heuristic-tier statistic: premise-certified coverage (NOT a proof)", "",
               "**This is a heuristic-tier statistic, not the North Star and not "
@@ -330,7 +369,9 @@ def build(repo: Path) -> str:
         ce = (cert_error_row("corpora/real_roots/proven_coverage_sample1.json",
                              "sample 1 (tuned)")
               + cert_error_row("corpora/real_roots/proven_coverage_sample2.json",
-                               "**sample 2 (untuned; design-seen since ADR-012)**"))
+                               "**sample 2 (untuned; design-seen since ADR-012)**")
+              + cert_error_row("corpora/real_roots/proven_coverage_sample3.json",
+                               SAMPLE3_LABEL))
         if ce:
             L += ["#### Heuristic tier: how often the certificate is wrong", "",
                   "Certified documents that pdflatex nevertheless REJECTS. This "
@@ -366,6 +407,73 @@ def build(repo: Path) -> str:
               f"- **False-READY: {c2.get('FALSE-READY',0)}/{g2} = "
               f"{100*c2.get('FALSE-READY',0)/g2:.1f}%** — the in-sample zero "
               f"does NOT generalise (OPEN-034)", ""]
+
+    # ── THE VIRGIN POSITION (sample 3, OPEN-119) ────────────────────────
+    s3_path = repo / "corpora/real_roots/results_sample3.json"
+    if s3_path.is_file():
+        s3 = json.loads(s3_path.read_text())
+        ids3 = {d["arxiv_id"] for d in s3["docs"]}
+        if not SAMPLE3_NAMED_IDS <= ids3:
+            raise SystemExit(
+                f"FATAL: SAMPLE3_NAMED_IDS names ids outside sample 3: "
+                f"{sorted(SAMPLE3_NAMED_IDS - ids3)}")
+
+        def conf_row(label, counts):
+            g = sum(v for k, v in counts.items() if not k.startswith("ungraded"))
+            ok = counts.get("true-READY", 0) + counts.get("true-NOT-READY", 0)
+            ung = sum(v for k, v in counts.items() if k.startswith("ungraded"))
+
+            def pct(k):
+                return f"{k}/{g} = {100*k/g:.1f}%" if g else f"{k}/0"
+            return (f"| {label} | {g} | {pct(ok)} "
+                    f"| {pct(counts.get('FALSE-READY', 0))} "
+                    f"| {pct(counts.get('false-NOT-READY', 0))} "
+                    f"| {counts.get('true-NOT-READY', 0)} | {ung} |")
+
+        def counts_of(docs):
+            out = {}
+            for d in docs:
+                out[d["cell"]] = out.get(d["cell"], 0) + 1
+            return out
+
+        o3, f3 = s3["oracle"], s3["frame"]
+        L += ["### Virgin position (sample 3 — sealed for measurement, OPEN-119)", "",
+              f"Frame offset {f3['offset']}, ranks {f3['offset'] + 1}-"
+              f"{f3['offset'] + f3['n']} of the same deterministic ordering "
+              f"(frame {f3['frame_size']}); pdflatex grades taken ONCE, CLI "
+              f"verdicts measured at "
+              f"`{str(s3.get('measured_at_sha', '?'))[:8]}`, under the pinned "
+              f"image `{o3.get('image', '?')}` ({o3.get('arch', '?')}, "
+              f"{o3.get('backend', '?')} backend), protocol "
+              f"`{o3.get('protocol', '?')}`. **This is the heuristic tier's "
+              "first reading on documents nothing in this project was fitted "
+              "to.** It is sealed: no failure on it is inspected, fixed or "
+              "triaged, and a change is validated on other documents before "
+              "this sample is re-measured (OPEN-119). The rows beside it are "
+              "NOT virgin and are shown only for comparison.", "",
+              "| sample | graded | correct | FALSE-READY | false-NOT-READY "
+              "| true-NOT-READY | ungraded |",
+              "|---|---|---|---|---|---|---|"]
+        if rr:
+            L.append(conf_row("sample 1 (tuned)", rr["counts"]))
+        if s2_path.is_file():
+            L.append(conf_row("sample 2 (design-seen)",
+                              json.loads(s2_path.read_text())["counts"]))
+        L.append(conf_row(SAMPLE3_LABEL, s3["counts"]))
+        rest = [d for d in s3["docs"] if d["arxiv_id"] not in SAMPLE3_NAMED_IDS]
+        named = [d for d in s3["docs"] if d["arxiv_id"] in SAMPLE3_NAMED_IDS]
+        L.append(conf_row(f"sample 3 without the {len(named)} repo-named ids",
+                          counts_of(rest)))
+        L.append(conf_row(f"sample 3, the {len(named)} repo-named ids only",
+                          counts_of(named)))
+        L += ["", "| sample 3 cell | n |", "|---|---|"]
+        for k in CELLS:
+            L.append(f"| {k} | {s3['counts'].get(k, 0)} |")
+        L += ["",
+              f"The {len(named)} repo-named ids were named by whole-corpus "
+              "sweeps before the draw (OPEN-118) and are split out so their "
+              "effect is visible; the list was fixed before the draw and is "
+              "never extended after looking at outcomes.", ""]
 
     L += ["### Fixer residual (auto-fix channel)", "",
           "| property | rows |", "|---|---|"]

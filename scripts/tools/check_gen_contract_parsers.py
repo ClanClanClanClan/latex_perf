@@ -772,12 +772,14 @@ check("sig: a key slot (not typeset, processed at the use, no consumer typesets 
 r_title = fake_sig(fake_macro(1, pay=label_pay(cons_none="misplaced_tab")))
 a_title = r_title["variants"][0]["args"][0]
 check("sig: a slot a consumer typesets later (\\title, \\section[..]) is not TyLabel "
-      "(review HIGH-2)", a_title["argty"] is None and a_title["refuted"]["argty"] == "TyLabel"
-      and a_title["refuted"]["by"][0].startswith(sg.CONS), a_title)
+      "(review HIGH-2)", a_title["argty"] is None and
+      (a_title.get("refuted") or {}).get("argty") == "TyLabel"
+      and (a_title.get("refuted") or {}).get("by", [""])[0].startswith(sg.CONS), a_title)
 r_blank = fake_sig(fake_macro(1, pay=label_pay(stored="ok")))
 a_blank = r_blank["variants"][0]["args"][0]
 check("sig: a slot whose payload is stored or discarded (a branch not taken) is not TyLabel",
-      a_blank["argty"] is None and a_blank["refuted"]["by"][1] == "\\lpx{\\lpnocs}", a_blank)
+      a_blank["argty"] is None and
+      (a_blank.get("refuted") or {}).get("by", ["", ""])[1] == "\\lpx{\\lpnocs}", a_blank)
 
 
 def math_pay(cell, p, cons):
@@ -800,7 +802,7 @@ check("sig: replay re-derives the synthetic records exactly",
 m_label = copy.deepcopy(r_label)
 m_label["variants"][0]["args"][0]["argty"] = "TyText"
 m_title = copy.deepcopy(r_title)
-del m_title["variants"][0]["args"][0]["refuted"]
+m_title["variants"][0]["args"][0].pop("refuted", None)
 m_title["variants"][0]["args"][0]["argty"] = "TyLabel"
 check("sig: replay sees a changed argty and an erased refutation",
       sg.replay(m_label, "\\lpx", []) != [] and sg.replay(m_title, "\\lpx", []) != [])
@@ -930,7 +932,7 @@ for sf in sidecars:
     check("sidecar kill: a failed calibration premise is seen",
           any(x.startswith("calibration") for x in fl), fl[:3])
     check("sidecar kill: a definer row flipped to fatal with no class is seen",
-          any(x.startswith("definer") for x in fl), fl[:3])
+          any(x.startswith("definer") and "without an error class" in x for x in fl), fl[:3])
     check("sidecar kill: a stale contract is seen",
           cbytes is not None and any("stale" in x for x in sg.check_sidecar(side, cbytes + b" ")))
     print("check_gen_contract_parsers: sidecar %s checked in %.1f s"

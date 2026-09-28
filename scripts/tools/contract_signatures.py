@@ -1711,10 +1711,10 @@ def check_definer_row(row: dict) -> list:
         m = row.get("message")
         if not row.get("error_class"):
             bad.append("fatal without an error class")
-        elif m is not None and row["error_class"] != refine_class(gc.classify_error(m), m):
+        elif m is not None and row.get("error_class") != refine_class(gc.classify_error(m), m):
             bad.append("error class %r is not the class of its message %r"
-                       % (row["error_class"], m))
-        elif m is None and row["error_class"] not in ("no_pdf", "no_error_line"):
+                       % (row.get("error_class"), m))
+        elif m is None and row.get("error_class") not in ("no_pdf", "no_error_line"):
             bad.append("fatal without a message")
     return bad
 

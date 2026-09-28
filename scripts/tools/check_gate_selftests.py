@@ -766,6 +766,20 @@ REGISTRY = [
                      old="Definition Faithful (oracle_ok",
                      new="Local Notation flatten_doc := flatten_doc.\n"
                          "Definition Faithful (oracle_ok"),
+            # OPEN-121 re-review MEDIUM-1, the repro verbatim: a shadow module
+            # on the Require line. coqc's Print still showed Semantics.Runs
+            # and a line-start definer scan never looked there.
+            Mutation("a shadow Module Semantics on Bridge.v's Require line",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful: "
+                     r"\[\('Module', 'Semantics'\), \('Definition', 'Runs'\)",
+                     old="From LaTeXPerfectionist.Strict Require Import Syntax "
+                         "Contract Semantics Decide.\n",
+                     new="From LaTeXPerfectionist.Strict Require Import Syntax "
+                         "Contract Semantics Decide. Module Semantics. Definition "
+                         "Runs (C : contract) (s : Semantics.state) (ts : list tok) "
+                         "(o : outcome) : Prop := run C s ts = Some o. End "
+                         "Semantics. Import Semantics.\n"),
             # A name written into the kernel instead of the contract.
             Mutation("a control-word name is written into the Coq kernel",
                      "proofs/Strict/Semantics.v",

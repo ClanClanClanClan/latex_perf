@@ -15,7 +15,10 @@
     design §B.4 (nonstopmode, halt-on-error, run to the first rc 0 then one
     confirming pass), exits 0 AND writes a PDF on these bytes, within the
     oracle timeout" (scripts/tools/_oracle.py, [OracleRun.compiles]; the
-    timeout is 300 s, design §B.4, so a run that times out is not ok).
+    timeout is 300 s PER PASS, design §B.4: [run_to_fixpoint] runs up to
+    MAX_PASSES = 3 passes plus one confirming pass, each bounded by 300 s,
+    so the wall-clock bound on [oracle_ok] is (3+1) x 300 s = 1200 s, and a
+    run with a pass that times out is not ok).
     The bridge covers READY iff compiles ONLY: the reason and line of a
     NOT-READY are exact against [Runs], and agree with pdfTeX by the probes
     and the differential, not by this file.  The BODY of [Faithful] is

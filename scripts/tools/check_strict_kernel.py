@@ -70,6 +70,9 @@ longer belong together:
      pin, the body must mention `Runs` and none of `decide`/`run`/`step`
      (the decider must never be smuggled into the premise), and Bridge.v may
      define nothing but Faithful (no shadowing Definition/Notation/...).
+     That definer scan reads every Coq SENTENCE (a `Module` on the Require
+     line is a sentence too, re-review MEDIUM-1) and admits only the pinned
+     Require sentence, Faithful and the two bridge Corollaries.
      check_print_assumptions.py pins the ELABORATED body too (coqc `Print`).
 
 Run: python3 scripts/tools/check_strict_kernel.py [--repo .]
@@ -430,18 +433,58 @@ FAITHFUL_HEAD = ("Definition Faithful (oracle_ok : list Ascii.ascii -> Prop) "
                  "(C : contract) : Prop :=")
 # Identifiers the premise must never mention: the decider and its machinery.
 FAITHFUL_FORBIDDEN = ("decide", "run", "step")
-# Vernacular that could define or shadow a name inside Bridge.v.
+# Vernacular that could define, shadow or re-resolve a name inside Bridge.v.
+# It is matched at the start of every Coq SENTENCE, not of every line: the
+# OPEN-121 re-review (MEDIUM-1) put `Module Semantics. Definition Runs ... End
+# Semantics. Import Semantics.` on the Require line, where a line-start scan
+# never looked.
 _DEFINERS = r"Definition|Fixpoint|CoFixpoint|Let|Notation|Infix|Instance|" \
-    r"Inductive|CoInductive|Record|Structure|Class|Axiom|Axioms|Parameter|" \
-    r"Parameters|Hypothesis|Hypotheses|Variable|Variables|Conjecture|" \
-    r"Coercion|Canonical|Ltac|Module|Section|Context|Program|Local|Global"
+    r"Inductive|CoInductive|Variant|Record|Structure|Class|Axiom|Axioms|" \
+    r"Parameter|Parameters|Hypothesis|Hypotheses|Variable|Variables|" \
+    r"Conjecture|Coercion|Canonical|Ltac|Ltac2|Module|Section|End|Context|" \
+    r"Program|Local|Global|Polymorphic|Monomorphic|Theorem|Lemma|Corollary|" \
+    r"Proposition|Fact|Remark|Example|Property|Function|Equations|Scheme|" \
+    r"Primitive|Register|Include|Import|Export|Open|Require|From|Load|" \
+    r"Declare|Set|Unset|Arguments|Hint|Existing|Opaque|Transparent|Strategy|" \
+    r"Reserved|Delimit|Bind|Tactic|Abbreviation"
+# The only definer sentences Bridge.v may contain: the Require sentence
+# exactly (whitespace normalised), and Faithful and the two bridge
+# Corollaries by their first two words.
+_BRIDGE_REQUIRE = ("From LaTeXPerfectionist.Strict Require Import "
+                   "Syntax Contract Semantics Decide")
+_BRIDGE_DEFINES = {("Definition", "Faithful"),
+                   ("Corollary", "strict_ready_iff_pdflatex"),
+                   ("Corollary", "strict_not_ready_pdflatex")}
+
+
+def coq_sentences(code: str) -> list[str]:
+    """Split comment-stripped Coq into sentences: a `.` followed by whitespace
+    or the end ends one (a `.` inside a qualified name such as Ascii.ascii
+    does not). Leading bullets and braces are dropped: they are not part of
+    the sentence that follows them."""
+    out = []
+    for sent in re.split(r"\.(?=\s|$)", code):
+        sent = " ".join(re.sub(r"^[\s\-+*{}]*", "", sent).split())
+        if sent:
+            out.append(sent)
+    return out
 
 
 def faithful_findings(bridge: str) -> list[str]:
     code = strip_coq_comments(bridge)
     out: list[str] = []
-    defs = re.findall(rf"(?m)^\s*({_DEFINERS})\b\s*(\S*)", code)
-    if [d for d in defs if d != ("Definition", "Faithful")]:
+    defs = []
+    for sent in coq_sentences(code):
+        if sent.startswith("#["):
+            defs.append(("#[", sent[:60]))
+            continue
+        m = re.match(rf"({_DEFINERS})\b\s*(\S*)", sent)
+        if not m:
+            continue
+        if sent == _BRIDGE_REQUIRE or (m.group(1), m.group(2)) in _BRIDGE_DEFINES:
+            continue
+        defs.append((m.group(1), m.group(2)))
+    if defs:
         out.append(f"Bridge.v: defines more than Faithful: {defs} (a name defined here "
                    f"could shadow what Faithful's body reads; OPEN-121 review M-1)")
     head = " ".join(FAITHFUL_HEAD.split())

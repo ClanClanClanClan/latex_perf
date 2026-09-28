@@ -37,10 +37,17 @@ The body pin exists because a pinned statement cannot see what a premise
 MEANS: the OPEN-121 final review redefined Faithful as `oracle_ok (render d)
 <-> decide C d = ProvenReady` (the corollary then proves decide = decide),
 and `Check` printed the same statement while Print Assumptions stayed Closed.
-`Print` shows the ELABORATED body with qualified names, so a local shadowing
-of `Runs` or `flatten_doc` also changes the output; the body must further
+`Print` shows the ELABORATED body with SHORTEST unambiguous names, so a
+top-level local shadowing of `Runs` or `flatten_doc` changes the output but a
+shadow MODULE named `Semantics` does not (C-87); the body must further
 mention Semantics.Runs and no Decide.* constant. The textual twin of this pin
 (pure, kill-tested) is check 10 of check_strict_kernel.py.
+
+`Print` resolves names but prints them SHORT, so a shadow module named
+`Semantics` inside Bridge.v prints `Semantics.Runs` too (re-review MEDIUM-1).
+The last arm (CONVERTIBILITY_PINS) therefore asks the KERNEL: `eq_refl :
+Faithful = <term>` with every name fully qualified, in a file that Requires
+the library without Importing it.
 
 USAGE
     python3 scripts/tools/check_print_assumptions.py [--repo .] [--build]
@@ -202,6 +209,29 @@ BODY_PINS = [
     ),
 ]
 
+# (constant, module to Require WITHOUT Import, the term it must be convertible
+#  to, every name FULLY QUALIFIED). The printed body pin above is not enough:
+# the OPEN-121 re-review (MEDIUM-1) put `Module Semantics. Definition Runs ...
+# := run C s ts = Some o. End Semantics. Import Semantics.` on Bridge.v's
+# Require line, and coqc's `Print` still showed `Semantics.Runs` -- resolved to
+# the shadow LaTeXPerfectionist.Strict.Bridge.Semantics.Runs. A kernel
+# `eq_refl` against fully qualified names cannot be satisfied by a shadow: the
+# shadow's constant is a different constant, and it unfolds to the decider.
+CONVERTIBILITY_PINS = [
+    (
+        "LaTeXPerfectionist.Strict.Bridge.Faithful",
+        "LaTeXPerfectionist.Strict.Bridge",
+        "fun (oracle_ok : Coq.Init.Datatypes.list Coq.Strings.Ascii.ascii -> Prop) "
+        "(C : LaTeXPerfectionist.Strict.Contract.contract) => "
+        "forall d, LaTeXPerfectionist.Strict.Decide.in_strict_doc C d -> "
+        "(oracle_ok (LaTeXPerfectionist.Strict.Syntax.render d) <-> "
+        "LaTeXPerfectionist.Strict.Semantics.Runs C "
+        "LaTeXPerfectionist.Strict.Semantics.init "
+        "(LaTeXPerfectionist.Strict.Syntax.flatten_doc d) "
+        "LaTeXPerfectionist.Strict.Semantics.Compiles)",
+    ),
+]
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -330,6 +360,30 @@ def main() -> int:
             if bad:
                 failures.append(f"{short}: body mentions {bad} -- the decider must "
                                 f"never be a premise's content")
+
+        for idx, (const, module, term) in enumerate(CONVERTIBILITY_PINS):
+            src = workdir / f"CV{idx}.v"
+            # Require, never Import: nothing from the checked library may
+            # enter the short-name space the pinned term is read in.
+            src.write_text(f"Require {module}.\nCheck (eq_refl : {const} = {term}).\n",
+                           encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            short = const.rsplit(".", 1)[1]
+            if proc.returncode != 0:
+                err = [ln for ln in (proc.stderr or "").splitlines()
+                       if ln.strip() and "overriding-logical-loadpath" not in ln]
+                tail = "\n      ".join(err[-12:])
+                failures.append(
+                    f"{short}: not convertible to the pinned fully qualified body "
+                    f"(a shadowed Runs/render/flatten_doc prints the same but is "
+                    f"another constant; OPEN-121 re-review MEDIUM-1).\n      {tail}")
+            else:
+                print(f"[print-assumptions] OK   {const}: convertible to the pinned "
+                      f"fully qualified body")
 
     if failures:
         print("\n[print-assumptions] FAIL — capstone(s) depend on unproved assumptions:\n")

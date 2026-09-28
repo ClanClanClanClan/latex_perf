@@ -79,7 +79,9 @@ def first_error(log: Path) -> str:
     return ""
 
 
-def grade(tex: Path, timeout: int = 60) -> dict:
+def grade(tex: Path, timeout: int = 300) -> dict:
+    # 300 s PER PASS, the strict tier's oracle_ok timeout (design §B.4;
+    # _strict_s0.GRADE_TIMEOUT_S), so both graders speak of one predicate.
     # The pinned-image oracle (ADR-012 decision 7) must see the work directory.
     with get_oracle().tempdir() as td:
         work = Path(td) / "w"

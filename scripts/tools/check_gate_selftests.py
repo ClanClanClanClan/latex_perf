@@ -733,9 +733,13 @@ def strict_scan_cell_dropped(text: str) -> str:
     of a long command (scan|close|k1|nosh|noou)."""
     d = json.loads(text)
     cell = "scan|close|k1|nosh|noou"
-    before = len(d["probes"])
-    d["probes"] = [r for r in d["probes"] if cell not in r.get("branches", [])]
-    assert len(d["probes"]) < before, "rule_probes drifted; update registry"
+    hit = 0
+    for r in d["probes"]:
+        if cell in r.get("branches", []):
+            # only this cell goes: whole probes would uncover other cells too
+            r["branches"] = [b for b in r["branches"] if b != cell]
+            hit += 1
+    assert hit, "rule_probes drifted; update registry"
     return json.dumps(d, indent=1) + "\n"
 
 

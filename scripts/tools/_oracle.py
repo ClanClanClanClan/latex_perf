@@ -183,8 +183,8 @@ def oracle_tex_vars(td) -> dict:
 
 def oracle_tex_env(td) -> dict:
     """The per-run environment a Python grader passes: the host environment
-    (for PATH on the native backend; the container backend forwards only the
-    `_ENV_FORWARD` variables) with `oracle_tex_vars(td)` on top."""
+    with `oracle_tex_vars(td)` on top. Only its `_ENV_FORWARD` variables reach
+    an engine, on either backend (engine_env); the rest is ignored."""
     return dict(os.environ, **oracle_tex_vars(td))
 
 
@@ -220,10 +220,11 @@ _GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR")
 
 
 def graded_env(env: dict | None) -> dict:
-    """The environment of a GRADED pdflatex run built from `env`: its non-TeX
-    variables (PATH on the native backend), its private TEXMFHOME/TEXMFVAR
-    (required), ORACLE_TEX_VARS imposed, every other TeX-shaping variable
-    dropped. See the block above."""
+    """The TeX variables of a GRADED pdflatex run built from `env`: its
+    private TEXMFHOME/TEXMFVAR (required), ORACLE_TEX_VARS imposed, every other
+    `_ENV_FORWARD` variable dropped. See the block above. Non-TeX keys of `env`
+    are kept here but never reach the engine: each backend passes only
+    `engine_env` (the image's environment plus `_ENV_FORWARD` variables)."""
     env = dict(env or {})
     missing = [k for k in _GRADING_TEXMF if not env.get(k)]
     if missing:
@@ -237,13 +238,85 @@ def graded_env(env: dict | None) -> dict:
     return out
 
 
+# THE ENGINE'S WHOLE ENVIRONMENT IS AN ALLOW-LIST, ON BOTH BACKENDS (C-91,
+# review round 4). graded_env removes the `_ENV_FORWARD` names and keeps every
+# other variable of the caller's dict, and until this block the NATIVE backend
+# (CI's tex-oracle job) handed that whole dict to pdflatex. A blocklist cannot
+# be complete here, because kpathsea reads ANY variable named after a
+# configuration key: `VAR_progname` and `VAR.progname` before `VAR`
+# (`openout_any_pdflatex`, `shell_escape`, `TEXMFCNF`, `TEXFORMATS`, ...).
+# MEASURED by the round-4 review in the pinned image through the native shim:
+# a host `openout_any_pdflatex=a` flipped a grade (rc 1 -> rc 0, the \openout
+# to /tmp written) while the engine's own `openout_any` still read `p`, and a
+# host `shell_escape=t` turned unrestricted \write18 on (\pdfshellescape 2 ->
+# 1); the container backend, which forwards `_ENV_FORWARD` names only, was
+# unaffected. So an engine now sees EXACTLY what `docker exec` gives it in the
+# container: the image's own environment (below) plus the forwarded
+# `_ENV_FORWARD` variables, and nothing of the host. The container backend
+# checks that its container really has this environment (a container started
+# with an extra `-e` under the oracle's name would otherwise leak one).
+# IMAGE_ENV is `docker inspect --format '{{json .Config.Env}}'` of the pinned
+# digest (MEASURED 2026-09-28, identical inside the running oracle container
+# apart from HOSTNAME) with HOME=/tmp, which the container is started with.
+IMAGE_ENV = {
+    "HOME": "/tmp",
+    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "TEXLIVE_INSTALL_NO_CONTEXT_CACHE": "1",
+    "NOPERLDOC": "1",
+    "DEBIAN_FRONTEND": "noninteractive",
+}
+# Variables of the container's environment that are not the image's and do
+# not reach TeX's configuration: docker sets HOSTNAME per container.
+_CONTAINER_ONLY_ENV = frozenset(("HOSTNAME",))
+
+
+def engine_env(tex_vars: dict | None, base: dict = IMAGE_ENV) -> dict:
+    """The COMPLETE environment of an engine run: `base` (the image's) plus the
+    `_ENV_FORWARD` variables of `tex_vars`. Every other key of `tex_vars` (a
+    caller's copy of the host environment) is dropped, whatever its name."""
+    out = dict(base)
+    out.update({k: v for k, v in (tex_vars or {}).items() if _ENV_FORWARD.match(k)})
+    return out
+
+
+def check_container_env(env: dict, where: str) -> None:
+    """The container's own environment must be IMAGE_ENV (plus HOSTNAME)."""
+    got = {k: v for k, v in env.items() if k not in _CONTAINER_ONLY_ENV}
+    if got != IMAGE_ENV:
+        extra = sorted(set(got) - set(IMAGE_ENV))
+        diff = sorted(k for k in IMAGE_ENV if got.get(k) != IMAGE_ENV[k])
+        raise OracleError(
+            f"{where}: the container's environment is not the pinned image's "
+            f"(extra {extra[:6]}, different {diff[:6]}); every exec would give "
+            f"pdflatex those variables. Remove the container (`_oracle.py stop`) "
+            f"so the oracle starts a clean one.")
+
+
+# The host variables the shim names in its note: every name kpathsea or TeX
+# could read (the configuration keys and their `_progname`/`.progname` forms,
+# the search paths). None of them reaches an engine on either backend; the
+# note only tells a user who exports one that it had no effect.
+_HOST_TEX_NOTE = re.compile(
+    r"^(TEXMF\w*|TEX\w*|KPSE\w*|\w*INPUTS(\W\w*)?|\w*FONTS(\W\w*)?|"
+    r"(openin_any|openout_any|shell_escape\w*|SOURCE_DATE_EPOCH|"
+    r"FORCE_SOURCE_DATE|max_print_line|error_line|half_error_line|"
+    r"max_strings|main_memory|extra_mem_\w+|save_size|buf_size|"
+    r"hash_extra|pool_size|string_vacancies|MKTEX\w*|MISSFONT_LOG|"
+    r"texmf_casefold_search|guess_input_kanji_encoding|command_line_encoding)"
+    r"([._]\w+)?)$")
+
+
 def host_tex_overrides(environ=None) -> list[str]:
     """The host TeX-shaping variables a graded run does NOT inherit (overridden
-    or dropped by graded_env), as `NAME=value` strings, for the shim's note."""
+    or dropped), as `NAME=value` strings, for the shim's note."""
     environ = os.environ if environ is None else environ
     return sorted(f"{k}={v}" for k, v in environ.items()
-                  if _ENV_FORWARD.match(k) and k != "L0_VALIDATORS"
-                  and not (k in ORACLE_TEX_VARS and v == ORACLE_TEX_VARS[k]))
+                  if (_ENV_FORWARD.match(k) or _HOST_TEX_NOTE.match(k))
+                  and k != "L0_VALIDATORS"
+                  and not (k in ORACLE_TEX_VARS and v == ORACLE_TEX_VARS[k])
+                  and not (k in IMAGE_ENV and v == IMAGE_ENV[k]))
 
 
 # The TeX engines the oracle runs. `pdflatex` is the grading engine; `pdftex`
@@ -252,17 +325,48 @@ def host_tex_overrides(environ=None) -> list[str]:
 ENGINE_PDFLATEX = "pdflatex"
 ENGINE_PDFTEX = "pdftex"
 ENGINES = (ENGINE_PDFLATEX, ENGINE_PDFTEX)
-# Every TeX engine binary of the image (the format-less engines and the
-# format-named links TeX Live installs), for image_command's refusal: a
-# non-TeX image command must never start one, as argv[0] or as an argument
-# another program runs (`xargs ... pdftex`), and no format selector (`&fmt`)
-# may appear in its argv.
-TEX_ENGINE_BINARIES = frozenset((
-    "tex", "etex", "initex", "virtex", "pdftex", "pdfetex", "pdflatex",
-    "latex", "latexmk", "xetex", "xelatex", "luatex", "lualatex", "luahbtex",
-    "luajittex", "dvilualatex", "dviluatex", "ptex", "eptex", "uptex", "euptex",
-    "platex", "uplatex", "aleph", "lamed", "hitex", "amstex", "pdfcsplain",
-    "csplain", "mptopdf"))
+# THE ONE VOCABULARY OF TeX ENGINE NAMES (C-91 review round 4): image_command
+# refuses every one of them and check_oracle_pin.py scans for every one of
+# them, so the two cannot disagree (the round-4 review MEASURED the gate's own
+# 11-name list missing `pdflatex-dev`, `mllatex`, `pdfjadetex`, `lualatex-dev`
+# while this table held 30). MEASURED 2026-09-28 in the pinned image by
+# listing bin/<arch>/: every engine binary, every link to one (a link's name
+# selects its format: `mllatex`, `pdfxmltex`, `latex-dev` and `jadetex` each
+# load a LaTeX format), and every shipped front end that runs an engine on a
+# document; plus the names of earlier releases and other distributions the
+# old table held (`virtex`, `lamed`, `tectonic`, `texi2dvi`, `rubber`, ...).
+_TEX_ENGINE_CORE = (
+    "tex", "initex", "virtex", "etex", "pdftex", "pdfetex", "luatex",
+    "luahbtex", "luajittex", "luajithbtex", "luametatex", "xetex", "ptex",
+    "eptex", "euptex", "uptex", "aleph", "lamed", "hitex", "tectonic")
+_TEX_ENGINE_LINKS = (   # format-named links (bin/<arch>/NAME -> an engine)
+    "amstex", "csplain", "pdfcsplain", "luacsplain", "eplain", "latex",
+    "latex-dev", "pdflatex", "pdflatex-dev", "lualatex", "lualatex-dev",
+    "dvilualatex", "dvilualatex-dev", "dviluatex", "xelatex", "xelatex-dev",
+    "platex", "platex-dev", "uplatex", "uplatex-dev", "hilatex", "jadetex",
+    "pdfjadetex", "xmltex", "pdfxmltex", "mllatex", "mltex", "mex", "pdfmex",
+    "utf8mex", "texsis", "lollipop", "optex", "texlua", "texluac", "texluajit",
+    "texluajitc", "context", "mtxrun")
+_TEX_ENGINE_DRIVERS = (  # front ends that start an engine on a document
+    "latexmk", "arara", "llmk", "cluttex", "cllualatex", "clxelatex",
+    "ptex2pdf", "texexec", "texfot", "pdftex-quiet", "simpdftex",
+    "xelatex-unsafe", "xetex-unsafe", "runtexfile", "runtexshebang", "lwarpmk",
+    "l3build", "make4ht", "htlatex", "htxelatex", "htxetex", "httex", "httexi",
+    "htmex", "xhlatex", "mk4ht", "tex4ebook", "latexdiff-vc", "pdfjam",
+    "pdfxup", "texliveonfly", "ps4pdf", "pst2pdf", "ltximg", "mkjobtexmf",
+    "mptopdf", "fmtutil", "fmtutil-sys", "fmtutil-user", "mktexfmt",
+    "bg5latex", "bg5pdflatex", "bg5+latex", "bg5+pdflatex", "gbklatex",
+    "gbkpdflatex", "cef5latex", "cef5pdflatex", "ceflatex", "cefpdflatex",
+    "cefslatex", "cefspdflatex", "sjislatex", "sjispdflatex", "texi2dvi",
+    "texi2pdf", "rubber", "latexrun")
+TEX_ENGINE_BINARIES = frozenset(_TEX_ENGINE_CORE + _TEX_ENGINE_LINKS
+                                + _TEX_ENGINE_DRIVERS)
+# A FORMAT SELECTOR picks a TeX engine's personality whatever the binary is
+# called: `&pdflatex` (TeX's own syntax), `-fmt=`/`--fmt`, and `-progname=`
+# (MEASURED 2026-09-28 by the round-4 review: `mllatex`, `latex`, `pdfxmltex`
+# and `jadetex` with `-progname=pdflatex` each load format=pdflatex and write
+# a PDF with rc 0).
+FMT_SELECTOR = re.compile(r"^(&[A-Za-z][\w.-]*|-{1,2}(fmt|progname)(=\S*)?)$")
 # argv[0] values image_command refuses because they run arbitrary commands
 # (`sh -c 'pdftex ...'`): a shell or interpreter would hide the engine from
 # the argument check above.
@@ -527,6 +631,8 @@ class _Base:
 
     def __init__(self):
         self._fp = None
+        # The non-TeX part of every engine run's environment (see IMAGE_ENV).
+        self.engine_base = dict(IMAGE_ENV)
 
     # -- provenance -------------------------------------------------------
     def fingerprint(self) -> dict:
@@ -623,7 +729,7 @@ class _Base:
                               f"({argv[:1]}): it could start a TeX engine this "
                               f"check cannot see; use run_engine")
         eng = [a for a in map(str, argv) if Path(a).name in TEX_ENGINE_BINARIES
-               or a.startswith("&")]
+               or a.startswith("&") or FMT_SELECTOR.match(a)]
         if eng:
             raise OracleError(f"image_command runs no TeX engine and takes no "
                               f"format selector: {eng[:3]}; use run_engine")
@@ -677,15 +783,26 @@ class NativeOracle(_Base):
 
     def fingerprint(self) -> dict:
         if self._fp is None:
-            fp = tree_fingerprint()
+            # In a child with the engine's environment, as the container
+            # backend does: kpsewhich in THIS process would read the host's
+            # TEXMFCNF/TEXMF* and could fingerprint a different tree.
+            p = subprocess.run([sys.executable, "-c", _FINGERPRINT_SNIPPET],
+                               env=engine_env({}, self.engine_base),
+                               capture_output=True, timeout=120)
+            if p.returncode != 0:
+                raise OracleError("native fingerprint failed: "
+                                  + p.stderr.decode(errors="replace")[:400])
+            fp = json.loads(p.stdout)
             _check_fingerprint(fp, "LP_ORACLE_IN_IMAGE is set, but")
             self._fp = fp
         return self._fp
 
     def _exec(self, cwd, engine, args, env, timeout, exact_env=False):
-        if exact_env:  # run_engine: the host's TeX variables never cross
-            env = {**{k: v for k, v in os.environ.items()
-                      if not _ENV_FORWARD.match(k)}, **(env or {})}
+        # An ALLOW-LIST, as the container backend's (see IMAGE_ENV): the
+        # image's environment plus the forwarded TeX variables of `env`, and
+        # nothing else of the caller's dict or the host's. graded_env and
+        # run_engine have already chosen those TeX variables.
+        env = engine_env(env, self.engine_base)
         _require_free_space(cwd, "before")
         try:
             p = subprocess.run([engine, *args], cwd=cwd, env=env,
@@ -702,7 +819,8 @@ class NativeOracle(_Base):
 
     def _image_command(self, argv, cwd, timeout):
         try:
-            p = subprocess.run(argv, cwd=cwd, capture_output=True, timeout=timeout)
+            p = subprocess.run(argv, cwd=cwd, capture_output=True, timeout=timeout,
+                               env=engine_env({}, self.engine_base))
         except (subprocess.TimeoutExpired, OSError) as e:
             raise OracleError(f"image command {argv[:1]} failed: {e}") from e
         return p.returncode, p.stdout, p.stderr
@@ -718,6 +836,9 @@ class HostDiagnostic(NativeOracle):
 
     def __init__(self):
         _Base.__init__(self)
+        # The host's TeX Live: its PATH and HOME, still no host TeX variable.
+        self.engine_base.update({k: os.environ[k] for k in ("PATH", "HOME")
+                                 if k in os.environ})
 
     def fingerprint(self) -> dict:
         if self._fp is None:
@@ -843,6 +964,10 @@ class ContainerOracle(_Base):
                          _FINGERPRINT_SNIPPET, timeout=120, check=True)
             fp = json.loads(p.stdout)
             _check_fingerprint(fp, f"container {self.name}")
+            e = self._dk("exec", self.name, "env", "-0", timeout=60, check=True)
+            check_container_env(dict(x.split("=", 1) for x in
+                                     e.stdout.decode(errors="replace").split("\0")
+                                     if "=" in x), f"container {self.name}")
             self._fp = fp
         return self._fp
 

@@ -442,7 +442,9 @@ directory must sit under `$HOME`, because colima mounts only that.
 (`diff_real_roots.py`, `gen_strict_battery.py`: `SOURCE_DATE_EPOCH=0`,
 `openin_any=p`, `openout_any=p`, private `TEXMFHOME`/`TEXMFVAR`; since C-91
 the oracle imposes exactly this on every graded run, shell graders included,
-through `_oracle.graded_env`), log-width
+through `_oracle.graded_env`, and on both backends the engine's WHOLE
+environment is an allow-list, the image's own plus these variables, through
+`_oracle.engine_env`), log-width
 settings that change no outcome, and `FORCE_SOURCE_DATE=1`, which the graders
 do NOT set. Three environments derive from it: *forced* (as is: `\year` is 1970,
 so name-set runs are byte-reproducible), *grading* (without

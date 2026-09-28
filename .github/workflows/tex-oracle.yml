@@ -197,9 +197,11 @@ jobs:
           want=$(python3 -c "import json;print(len(json.load(open('corpora/false_ready/manifest.json'))['fixtures']))")
           echo "fixtures: $got (manifest: $want)"
           # The oracle derives its own expected count FROM this file, so a short
-          # TSV would silently shrink the check rather than fail it. This is the
-          # only place that can compare against the manifest (the container has
-          # no python3, deliberately), so the cross-check belongs here.
+          # TSV would silently shrink the check rather than fail it. The count is
+          # cross-checked here, on the runner, against the manifest, before the
+          # graded run. (The pinned image DOES have python3, and since C-91 every
+          # native pdflatex run goes through the `_oracle.py pdflatex` shim, so
+          # the preflight step asserts python3 in the image.)
           [ "$got" -eq "$want" ] || {
             echo "::error::fixture TSV has $got rows but the manifest lists $want — refusing to grade a partial corpus."
             exit 1; }

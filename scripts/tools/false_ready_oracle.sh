@@ -37,8 +37,9 @@
 #   REQUIRE_PDFLATEX=1  every precondition is an error, never a skip (CI sets it)
 #   STRICT_GRADE=1      SOFT drift also fails
 #   ALLOW_ENGINE_SKEW=1 engine mismatch warns instead of exit 3
-#   FR_FIXTURE_TSV=path pre-computed fixture TSV; skips python3 entirely, which is
-#                       what lets the TeX container stay dependency-free
+#   FR_FIXTURE_TSV=path pre-computed fixture TSV; skips the python3 fixture
+#                       emitter (the pdflatex runs themselves still need python3:
+#                       since C-91 every one goes through the _oracle.py shim)
 #   TEX_TIMEOUT=30      per-pdflatex-run timeout in seconds
 #
 # Usage:

@@ -34,6 +34,12 @@ check_apply_fixes_roundtrip.pdflatex_ok) under a HOSTILE host environment and
 reads back what reached the engine: exactly ORACLE_TEX_VARS, a private
 TEXMFHOME/TEXMFVAR, no other TeX variable; `_oracle.sh` must route both
 backends through the shim; image_command must start no engine by any route.
+Review round 4: those checks named the variables that must NOT reach the
+engine, and a host `openout_any_pdflatex=a` (a kpathsea form nobody listed)
+flipped a grade on the native backend. They now assert what MAY reach it --
+the image's own environment (`_oracle.IMAGE_ENV`) plus the run's TeX
+variables -- and the container backend must refuse a container whose own
+environment is not the image's.
 
 This gate is PURE (no docker, no TeX): it drives the real grading code with
 FAKE docker/engine executables that reproduce each failure shape, including the
@@ -81,6 +87,10 @@ import os, sys
 a = sys.argv[1:]
 if os.environ.get("FAKE_ARGV"):
     open(os.environ["FAKE_ARGV"], "w").write("\0".join(a))
+if a[-2:] == ["env", "-0"]:            # the container's own environment
+    sys.stdout.write(open(os.environ["FAKE_CENV"]).read()); sys.exit(0)
+if a[:1] == ["exec"] and "python3" in a:  # the tree fingerprint snippet
+    sys.stdout.write(os.environ.get("FAKE_FP", "{}")); sys.exit(0)
 if a[:1] == ["exec"] and "-c" not in a:
     sys.exit(0)                       # `exec NAME rm -f -- ...`
 plan = os.environ["FAKE_PLAN"].split(",")
@@ -131,6 +141,32 @@ case "${plan[$i]}" in
   *)    exit 1 ;;
 esac
 '''
+
+
+# Host variables kpathsea reads although no oracle code names them: the
+# `VAR_progname` / `VAR.progname` forms of a configuration key, shell_escape,
+# the configuration and format search paths. MEASURED by the round-4 review:
+# on the native backend `openout_any_pdflatex=a` flipped a grade and
+# `shell_escape=t` turned \write18 on, while the old checks (which named only
+# the `_ENV_FORWARD` variables) passed. The checks below do not enumerate what
+# must NOT reach the engine; they assert what MAY (an allow-list), so a
+# variable nobody thought of fails them too.
+KPATHSEA_HOSTILE = {"openout_any_pdflatex": "a", "openin_any_pdflatex": "a",
+                    "openout_any.pdflatex": "a", "shell_escape": "t",
+                    "shell_escape_pdflatex": "t", "TEXMFCNF": "/nonexistent/cnf",
+                    "TEXFORMATS": "/nonexistent/fmt", "SOURCE_DATE_EPOCH.pdflatex": "5"}
+# What /bin/sh adds to the environment of the fake engine's own shell.
+_SH_OWN = {"PWD", "OLDPWD", "SHLVL", "_"}
+
+
+def not_allowed(got: dict, tex_keys) -> list[str]:
+    """Keys of an engine's environment that are neither the image's own
+    (IMAGE_ENV, with its values) nor one of the run's TeX variables."""
+    bad = [k for k in got if k not in _SH_OWN and k not in tex_keys
+           and k not in _oracle.IMAGE_ENV]
+    bad += [f"{k}={got[k]!r}" for k in _oracle.IMAGE_ENV
+            if k in got and k != "PATH" and got[k] != _oracle.IMAGE_ENV[k]]
+    return sorted(bad)
 
 
 class Checker:
@@ -361,20 +397,24 @@ class Checker:
         fake.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
                         f"env > '{envdump}'\nexit 0\n")
         fake.chmod(0o755)
-        saved = {k: os.environ.get(k) for k in ("PATH", "openin_any", "max_print_line")}
-        os.environ.update(PATH=f"{bindir}:{os.environ.get('PATH', '')}",
-                          openin_any="a", max_print_line="79")
+        hostile = dict(KPATHSEA_HOSTILE, openin_any="a", max_print_line="79")
+        saved = {k: os.environ.get(k) for k in hostile}
+        os.environ.update(hostile)
         try:
             n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
             _oracle._Base.__init__(n)
+            # The image's PATH, with the fake engine's directory in front
+            # (the host's PATH never reaches an engine).
+            n.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
             rc, _, _ = n.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["t.tex"], tv, 60)
             got = dict(x.split("=", 1) for x in envdump.read_text().splitlines()
                        if "=" in x)
+            leak = not_allowed(got, tv)
             self.expect("native run_engine: the caller's TeX variables and no host "
                         "TeX variable", rc == 0 and got.get("openin_any") == "p"
-                        and "max_print_line" not in got
+                        and not leak
                         and all(got.get(k) == v for k, v in tv.items()),
-                        str({k: got.get(k) for k in ("openin_any", "max_print_line")}))
+                        f"leaked {leak}")
         finally:
             for k, v in saved.items():
                 if v is None:
@@ -410,7 +450,8 @@ class Checker:
         argv (container) and from a fake engine's environment (native)."""
         hostile = {"SOURCE_DATE_EPOCH": "1700000000", "openin_any": "a",
                    "openout_any": "a", "FORCE_SOURCE_DATE": "1",
-                   "max_print_line": "1000", "TEXINPUTS": f"{self.workroot}/inp:"}
+                   "max_print_line": "1000", "TEXINPUTS": f"{self.workroot}/inp:",
+                   **KPATHSEA_HOSTILE}
         want_fixed = dict(_oracle.ORACLE_TEX_VARS)
         argv_file = self.td / "argv-env"
 
@@ -432,6 +473,9 @@ class Checker:
             for k in ("TEXMFHOME", "TEXMFVAR"):
                 if not got.get(k) or got.get(k) == texmf_host:
                     bad.append(f"{k}={got.get(k)!r} is not a private per-run one")
+            leak = not_allowed(got, set(want_fixed) | {"TEXMFHOME", "TEXMFVAR"})
+            if leak:
+                bad.append(f"not on the allow-list (image env + protocol): {leak}")
             return "; ".join(bad)
 
         saved = {k: os.environ.get(k) for k in list(hostile) + ["FAKE_ARGV",
@@ -480,16 +524,14 @@ class Checker:
             eng.chmod(0o755)
             n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
             _oracle._Base.__init__(n)
+            n.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
             _oracle._ORACLE = n
-            path = os.environ.get("PATH", "")
-            os.environ["PATH"] = f"{bindir}:{path}"
             os.chdir(self.workroot)
             try:
                 rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
                                               "-interaction=nonstopmode", "t.tex"])
             finally:
                 os.chdir(cwd)
-                os.environ["PATH"] = path
             got = (dict(x.split("=", 1) for x in dump.read_text().splitlines()
                         if "=" in x) if dump.exists() else {})
             why = exactly_protocol(got, host_th) if rc == 0 else f"rc {rc}"
@@ -513,6 +555,33 @@ class Checker:
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = v
+        # (6a) the container backend's own environment is the image's: a
+        # container started with an extra `-e` (under the oracle's name) would
+        # give every exec that variable, so fingerprint() refuses it.
+        import json as _json
+        arch = sorted(_oracle.TREE_FINGERPRINTS)[0]
+        fp = dict(_oracle.TREE_FINGERPRINTS[arch], arch=arch,
+                  banner="pdfTeX " + _oracle.EXPECT_VERSION)
+        for extra, want_ok in (({"HOSTNAME": "abc"}, True),
+                               ({"HOSTNAME": "abc", "shell_escape": "t"}, False),
+                               ({"TEXMFCNF": "/x"}, False)):
+            os.environ["FAKE_FP"] = _json.dumps(fp)
+            cenv = self.td / "container-env"
+            cenv.write_text("\0".join(
+                f"{k}={v}" for k, v in dict(_oracle.IMAGE_ENV, **extra).items()))
+            os.environ["FAKE_CENV"] = str(cenv)
+            o = self.oracle("ok")
+            try:
+                o.fingerprint()
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"ContainerOracle.fingerprint {'refused' if want_ok else 'accepted'} "
+                        f"a container whose environment is the image's plus "
+                        f"{sorted(extra)}", ok == want_ok)
+        for k in ("FAKE_FP", "FAKE_CENV"):
+            os.environ.pop(k, None)
+        _oracle._ORACLE = None
         # (6) the shell side: on BOTH backends oracle_setup must route every
         # run through the shim (a bare engine ran on the native one).
         osh = self.repo / "scripts/tools/_oracle.sh"
@@ -540,6 +609,7 @@ class Checker:
         eng = sorted(_oracle.TEX_ENGINE_BINARIES)
         for argv in (["xargs", "-a", "list", _oracle.ENGINE_PDFTEX],
                      ["kpsewhich", "&" + eng[0]], ["sh", "-c", "true"],
+                     ["sha256sum", _selector("progname") + _oracle.ENGINE_PDFLATEX],
                      ["/usr/bin/" + eng[-1], "x"]):
             try:
                 self.oracle("ok").image_command(argv)
@@ -638,6 +708,12 @@ class Checker:
                                capture_output=True, text=True)
             self.expect(f"drift_class {g} vs manifest {m} = '{p.stdout.strip()}', "
                         f"expected {want}", p.stdout.strip() == want)
+
+
+def _selector(kind: str) -> str:
+    """A format selector (`-progname=`), built from a parameter: this file is
+    scanned by check_oracle_pin, and a literal one is (rightly) a finding."""
+    return f"-{kind}="
 
 
 def _silenced(fn, *a):

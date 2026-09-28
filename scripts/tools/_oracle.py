@@ -48,13 +48,15 @@ WHAT THIS MODULE GUARANTEES.
 THE PROTOCOL (unchanged from the recorded one; STRICT_TIER_DESIGN.md §B.4).
 
 `pdflatex -interaction=nonstopmode -halt-on-error <toplevel>`, the stock
-restricted shell-escape (no `-shell-escape`, no `-no-shell-escape`, OPEN-053),
+restricted shell-escape (no `-shell-escape`, no `-no-shell-escape`, OPEN-053;
+since review round 5 the graded argv is an allow-list, `check_engine_argv`),
 up to 3 passes: run to the first rc 0, then ONE confirming pass whose rc is
 authoritative (the `fr_toc_second_pass` lesson). The result also records
 whether a PDF was produced; `compiles` requires rc 0 AND a PDF (§B.4 E0).
 
 Usage as a tool:
-  _oracle.py info                 print the oracle's provenance (starts it)
+  _oracle.py info                 print the oracle's provenance (starts it;
+                                  runs the container's full state scan)
   _oracle.py fingerprint          fingerprint the TeX tree this process sees
   _oracle.py assert-native        inside the image: verify, exit 0/2
   _oracle.py workroot             print the work root (for shell callers)
@@ -170,10 +172,20 @@ ORACLE_TEX_VARS = {"openin_any": "p", "openout_any": "p", "SOURCE_DATE_EPOCH": "
 
 
 def private_texmf_vars(td) -> dict:
-    """A private TEXMFHOME/TEXMFVAR below the work directory `td`, so no state
-    (fonts made by mktexpk, caches) crosses from one run to the next."""
+    """A private TEXMFHOME/TEXMFVAR/TEXMFCONFIG below the work directory `td`,
+    so no state (fonts made by mktexpk, caches, configuration) crosses from
+    one run to the next. These are EVERY writable tree of kpathsea's TEXMF in
+    the pinned image (MEASURED 2026-09-28, `kpsewhich -var-value=TEXMF` with
+    HOME=/tmp: {TEXMFCONFIG,TEXMFVAR,TEXMFHOME,!!TEXMFLOCAL,!!TEXMFSYSCONFIG,
+    !!TEXMFSYSVAR,!!TEXMFDIST}; the four `!!` trees belong to the image and
+    are checked by ContainerOracle.check_state). TEXMFCONFIG was missing
+    until review round 5: kpathsea searches it FIRST, it defaulted to the
+    long-lived container's /tmp/.texlive2026/texmf-config, and a .sty
+    written there by one run (through a shell escape the argv then allowed)
+    turned another document's grade from rc 1 to rc 0 (MEASURED, C-91)."""
     td = Path(td)
-    return {"TEXMFHOME": str(td / "th"), "TEXMFVAR": str(td / "tv")}
+    return {"TEXMFHOME": str(td / "th"), "TEXMFVAR": str(td / "tv"),
+            "TEXMFCONFIG": str(td / "tc")}
 
 
 def oracle_tex_vars(td) -> dict:
@@ -216,12 +228,12 @@ def oracle_tex_env(td) -> dict:
 # common in reproducible-build shells). The shim reports what it overrode on
 # stderr. run_engine (gen_contract.py, not a grader) is unaffected: its
 # environment is EXACTLY what the caller passes, with documented overrides.
-_GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR")
+_GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG")
 
 
 def graded_env(env: dict | None) -> dict:
     """The TeX variables of a GRADED pdflatex run built from `env`: its
-    private TEXMFHOME/TEXMFVAR (required), ORACLE_TEX_VARS imposed, every other
+    private TEXMFHOME/TEXMFVAR/TEXMFCONFIG (required), ORACLE_TEX_VARS imposed, every other
     `_ENV_FORWARD` variable dropped. See the block above. Non-TeX keys of `env`
     are kept here but never reach the engine: each backend passes only
     `engine_env` (the image's environment plus `_ENV_FORWARD` variables)."""
@@ -379,6 +391,106 @@ _DOCKER_CANDIDATES = ("docker", "/opt/homebrew/bin/docker", "/usr/local/bin/dock
 
 class OracleError(RuntimeError):
     """The oracle cannot give a trustworthy answer. Never caught to fall back."""
+
+
+# THE ENGINE'S ARGV IS AN ALLOW-LIST TOO (C-91, review round 5). graded_env and
+# engine_env fix the ENVIRONMENT, but pdfTeX also reads its configuration from
+# the COMMAND LINE, and until round 5 run_pdflatex, run_once, run_to_fixpoint
+# and the `_oracle.py pdflatex` shim passed argv through unchecked (only
+# image_command looked at it). MEASURED by the round-5 review through the shim,
+# on both backends: `-cnf-line=openout_any=a` gave rc 0 with an \openout to
+# /tmp written; `-cnf-line=shell_escape=t` and `-shell-escape` gave
+# \pdfshellescape=1; and with shell escape a \write18 put a .sty into the
+# container's persistent TEXMFCONFIG, after which a CLEAN graded run of another
+# document that \usepackage'd it went from rc 1 to rc 0. A blocklist of
+# options cannot be complete (web2c takes any `-cnf-line`, `-output-directory`,
+# `-translate-file`, `-mktex`, `-kpathsea-debug`, a format selector, `-ini`, a
+# first line that is TeX code), so a GRADED run accepts exactly the options a
+# grader uses, and exactly one file argument:
+#   -interaction=<batchmode|nonstopmode|scrollmode|errorstopmode>
+#   -halt-on-error  -file-line-error  -recorder  -draftmode
+#   (each also with `--`); `-jobname` is refused: no grader passes it (grep:
+#   run_once/the shell graders pass the interaction flags and the file only).
+# The file argument: one, not starting (after blanks) with `-`, `&` (a format
+# selector), `\` (TeX code as the first line) or `*` (INITEX's eTeX switch);
+# no whitespace or control character (web2c joins argv with spaces into TeX's
+# first line, so `a.tex \x` would run `\x`); no `..` component; and an
+# absolute path only inside the run directory. Anything else is OracleError
+# (the shim: INFRA_RC), never a grade. run_engine (gen_contract.py, not a
+# grader) has its own, wider allow-list: RUN_ENGINE_OPTIONS below.
+_INTERACTION_MODES = frozenset(("batchmode", "nonstopmode", "scrollmode",
+                                "errorstopmode"))
+GRADED_FLAGS = frozenset(("halt-on-error", "file-line-error", "recorder",
+                          "draftmode"))
+# run_engine's options: GRADED_FLAGS plus the INITEX jobs of gen_contract.py.
+# A `-jobname=`/`-progname=`/`-translate-file=` VALUE must match exactly.
+RUN_ENGINE_FLAGS = GRADED_FLAGS | {"ini", "etex"}
+RUN_ENGINE_VALUED = {
+    "jobname": re.compile(r"[A-Za-z0-9_-]{1,64}"),
+    "progname": re.compile(r"pdflatex"),
+    "translate-file": re.compile(r"cp227\.tcx"),
+}
+_UNSAFE_ARG_CHARS = re.compile(r"[\s\x00-\x1f\x7f]")
+
+
+def _option(a: str):
+    """(name, value) of `-name[=value]`/`--name[=value]`, else None."""
+    if not a.startswith("-"):
+        return None
+    body = a[2:] if a.startswith("--") else a[1:]
+    name, eq, value = body.partition("=")
+    return name, (value if eq else None)
+
+
+def check_engine_argv(args, cwd, *, graded: bool) -> None:
+    """Refuse (OracleError) any argv that is not on the allow-list above."""
+    if not isinstance(args, (list, tuple)) or not all(isinstance(a, str) for a in args):
+        raise OracleError(f"engine argv must be a list of str, got {args!r:.200}")
+    flags = GRADED_FLAGS if graded else RUN_ENGINE_FLAGS
+    valued = {} if graded else RUN_ENGINE_VALUED
+    what = "a graded pdflatex run" if graded else "run_engine"
+    positional = []
+    for a in args:
+        opt = _option(a)
+        if opt is None:
+            positional.append(a)
+            continue
+        name, value = opt
+        if value is None and name in flags:
+            continue
+        if name == "interaction" and value in _INTERACTION_MODES:
+            continue
+        if name in valued and value is not None and valued[name].fullmatch(value):
+            continue
+        raise OracleError(
+            f"{what} takes no option {a!r}: the argv is an allow-list "
+            f"(-interaction=MODE, {', '.join('-' + f for f in sorted(flags))}"
+            + (f", {', '.join('-' + k + '=' for k in sorted(valued))}" if valued else "")
+            + "); anything else could change the protocol (e.g. -cnf-line, "
+              "-shell-escape, -output-directory, a format selector)")
+    if len(positional) != 1:
+        raise OracleError(f"{what} takes exactly one file argument, got {positional!r:.200}")
+    p = positional[0]
+    head = p.lstrip(" \t")
+    if not head or head[0] in "-&*" or (graded and head[0] == "\\"):
+        raise OracleError(f"{what}: file argument {p!r:.100} starts with -, &, * "
+                          f"or \\ (an option, a format selector, INITEX's "
+                          f"switch or TeX code)")
+    if not graded:
+        return  # run_engine's argument is TeX code (INITEX's `\\dump`)
+    if _UNSAFE_ARG_CHARS.search(p):
+        raise OracleError(f"{what}: file argument {p!r:.100} holds whitespace or "
+                          f"a control character (web2c joins argv into TeX's "
+                          f"first line, so the rest would run as TeX code)")
+    if ".." in Path(p).parts:
+        raise OracleError(f"{what}: file argument {p!r:.100} climbs out of the "
+                          f"run directory with '..'")
+    if os.path.isabs(p):
+        try:
+            Path(p).resolve().relative_to(Path(cwd).resolve())
+        except ValueError:
+            raise OracleError(f"{what}: file argument {p!r:.100} is an absolute "
+                              f"path outside the run directory {cwd}")
 
 
 # POSITIVE PROOF THAT pdfTeX RAN (OPEN-118 review round 2). An exit code counts
@@ -682,8 +794,11 @@ class _Base:
                      timeout: int) -> tuple[int, bytes, bool]:
         """ONE graded pdflatex run, in the protocol's environment
         (`graded_env(env)`: ORACLE_TEX_VARS imposed, `env`'s private
-        TEXMFHOME/TEXMFVAR required, no other TeX variable). Returns (rc,
-        combined output, timed_out)."""
+        TEXMFHOME/TEXMFVAR/TEXMFCONFIG required, no other TeX variable) and
+        with an argv on the graded allow-list (`check_engine_argv`, C-91
+        round 5). Returns (rc, combined output, timed_out)."""
+        args = list(args)
+        check_engine_argv(args, cwd, graded=True)
         return self._exec(Path(cwd), ENGINE_PDFLATEX, args, graded_env(env), timeout)
 
     def _exec(self, cwd: Path, engine: str, args: list[str], env: dict | None,
@@ -709,6 +824,7 @@ class _Base:
         Returns (rc, combined output, timed_out)."""
         if engine not in ENGINES:
             raise OracleError(f"engine {engine!r} is not one of {ENGINES}")
+        check_engine_argv(list(args), cwd, graded=False)
         bad = sorted(k for k in tex_vars if not _ENV_FORWARD.match(k))
         if bad:
             raise OracleError(f"run_engine: {bad} are not TeX-shaping variables "
@@ -968,8 +1084,97 @@ class ContainerOracle(_Base):
             check_container_env(dict(x.split("=", 1) for x in
                                      e.stdout.decode(errors="replace").split("\0")
                                      if "=" in x), f"container {self.name}")
+            self.check_texmf_trees()
             self._fp = fp
         return self._fp
+
+    # THE LONG-LIVED CONTAINER MUST STILL BE THE IMAGE (C-91, review round 5).
+    # The base image is pinned by digest; a live container is not, and every
+    # grade of every grader runs in the same one for days. The round-5 review
+    # MEASURED a .sty planted in its /tmp/.texlive2026/texmf-config flipping a
+    # later CLEAN graded run (rc 1 -> rc 0) while `_oracle.py info` still
+    # passed: the fingerprint hashes the tlpdb and the format, not the trees
+    # kpathsea searches. Graded runs now search a private TEXMFHOME/TEXMFVAR/
+    # TEXMFCONFIG only (private_texmf_vars), and two checks refuse a container
+    # that has changed:
+    #   * check_texmf_trees, on EVERY construction (the shim's too): the
+    #     container's own default TEXMFHOME/TEXMFVAR/TEXMFCONFIG (as its
+    #     kpsewhich reports them) hold no file. Cheap (one exec).
+    #   * check_state, once per grading SESSION (get_oracle() for the Python
+    #     graders, `_oracle.py version`/`info` for the shell graders and a
+    #     user): no path of the container's root filesystem has a ctime
+    #     after the container was created, other than STATE_ALLOWED. ctime,
+    #     not mtime: a writer can set mtime back (touch -d), not ctime. About
+    #     6 s under load (a full `find / -xdev`), MEASURED; `docker diff` took
+    #     13-16 s, too slow even per session.
+    # RESIDUAL (OPEN-118 (h)): a change made AFTER the session's check, by
+    # something other than a graded run (a `docker exec` of one's own), is
+    # seen by the next session only.
+    STATE_ALLOWED = frozenset((
+        "/", "/etc", "/sys", "/proc", "/dev", "/tmp", "/var", "/var/cache",
+        "/var/cache/fontconfig", "/tmp/.texlive2026", "/.dockerenv",
+        "/etc/resolv.conf", "/etc/hostname", "/etc/hosts", "/etc/mtab"))
+    # fontconfig's caches (pdfTeX does not read them; written once, 682 files
+    # at 06:53:53 on 2026-09-27, 14 min after this container was created).
+    _STATE_ALLOWED_RX = re.compile(
+        r"^/var/cache/fontconfig/([0-9a-f]{32}-le64\.cache-\d+|CACHEDIR\.TAG)$")
+    _TEXMF_TREES_SH = (
+        'for v in TEXMFHOME TEXMFVAR TEXMFCONFIG; do '
+        'd=$(kpsewhich -var-value="$v") && [ -n "$d" ] || exit 3; '
+        'echo "D $d"; if [ -e "$d" ]; then find "$d" ! -type d -print; fi; '
+        'done')
+
+    def check_texmf_trees(self) -> None:
+        p = self._dk("exec", "-e", "HOME=/tmp", self.name, "sh", "-c",
+                     self._TEXMF_TREES_SH, timeout=60)
+        out = p.stdout.decode(errors="replace").splitlines()
+        trees = [x[2:] for x in out if x.startswith("D ")]
+        files = [x for x in out if x and not x.startswith("D ")]
+        if p.returncode != 0 or len(trees) != 3:
+            raise OracleError(f"container {self.name}: cannot list its default "
+                              f"TEXMFHOME/TEXMFVAR/TEXMFCONFIG (rc {p.returncode}: "
+                              f"{p.stderr.decode(errors='replace')[:200]})")
+        if files:
+            raise OracleError(
+                f"container {self.name}: its persistent TeX trees {trees} hold "
+                f"{len(files)} file(s), e.g. {files[:5]}. kpathsea would search "
+                f"them for any run without private trees, and something wrote "
+                f"them; refusing to grade. Inspect them, then `_oracle.py stop`.")
+
+    def check_state(self) -> None:
+        ins = self._dk("inspect", "--format", "{{.Created}}", self.name,
+                       timeout=60, check=True)
+        created = ins.stdout.decode().strip()
+        import datetime
+        try:
+            t = int(datetime.datetime.strptime(created[:19], "%Y-%m-%dT%H:%M:%S")
+                    .replace(tzinfo=datetime.timezone.utc).timestamp())
+        except ValueError:
+            raise OracleError(f"container {self.name}: unreadable Created {created!r}")
+        p = self._dk("exec", self.name, "find", "/", "-xdev", "-newerct", f"@{t}",
+                     "-printf", "%y %p\n", timeout=600)
+        if p.returncode != 0:
+            raise OracleError(f"container {self.name}: the state scan failed "
+                              f"(rc {p.returncode}): "
+                              f"{p.stderr.decode(errors='replace')[:300]}")
+        allowed = set(self.STATE_ALLOWED)
+        for a in [self.workroot, *self.workroot.parents]:
+            allowed.add(str(a))
+        bad = []
+        for line in p.stdout.decode(errors="replace").splitlines():
+            typ, _, path = line.partition(" ")
+            if path in allowed or self._STATE_ALLOWED_RX.match(path):
+                continue
+            if typ == "d" and path.startswith("/tmp/.texlive2026/"):
+                continue  # an empty tree's directories; files: check_texmf_trees
+            bad.append(path)
+        if bad:
+            raise OracleError(
+                f"container {self.name}: {len(bad)} path(s) changed since it was "
+                f"created ({created}), e.g. {bad[:6]}. The container is no longer "
+                f"the pinned image; refusing to grade. Inspect them (`docker "
+                f"exec {self.name} ls -la --time-style=full-iso PATH`), then "
+                f"`_oracle.py stop` so the oracle starts a clean one.")
 
     def tempdir(self, prefix: str = "lp-oracle-"):
         return tempfile.TemporaryDirectory(prefix=prefix, dir=self.workroot)
@@ -1097,16 +1302,20 @@ def _fingerprint_source() -> str:
 _FINGERPRINT_SNIPPET = _fingerprint_source()
 
 _ORACLE = None
+_STATE_CHECKED = False
 
 
 def in_image() -> bool:
     return bool(os.environ.get("LP_ORACLE_IN_IMAGE"))
 
 
-def get_oracle() -> _Base:
+def get_oracle(full_state: bool = True) -> _Base:
     """The oracle for this process. Raises OracleUnavailable/OracleError; never
-    returns a host-pdflatex backend."""
-    global _ORACLE
+    returns a host-pdflatex backend. `full_state` (the default: a grading
+    session) also runs the container's full state scan once per process
+    (ContainerOracle.check_state); the per-run shim passes False and relies on
+    the session's scan plus the per-construction check_texmf_trees."""
+    global _ORACLE, _STATE_CHECKED
     if _ORACLE is None:
         if in_image():
             if os.environ["LP_ORACLE_IN_IMAGE"] != IMAGE:
@@ -1115,6 +1324,9 @@ def get_oracle() -> _Base:
             _ORACLE = NativeOracle()
         else:
             _ORACLE = ContainerOracle()
+    if full_state and not _STATE_CHECKED and isinstance(_ORACLE, ContainerOracle):
+        _ORACLE.check_state()
+        _STATE_CHECKED = True
     return _ORACLE
 
 
@@ -1184,7 +1396,10 @@ def main(argv: list[str]) -> int:
         if cmd == "stop":
             ContainerOracle().stop()
             return 0
-        o = get_oracle()
+        # The per-run commands (the shim, rm) skip the full state scan; the
+        # session commands (`version`, which oracle_setup runs once per shell
+        # grader, and `info`) run it.
+        o = get_oracle(full_state=cmd not in (SHIM_COMMAND, "rm"))
         if cmd == "info":
             print(json.dumps(o.provenance(), indent=1))
             return 0
@@ -1199,12 +1414,14 @@ def main(argv: list[str]) -> int:
             if rest[:1] == ["--timeout"]:
                 timeout, rest = int(rest[1]), rest[2:]
             # The shell graders' runs get EXACTLY the Python graders'
-            # environment (C-91): a private TEXMFHOME/TEXMFVAR per run (else
-            # the container's default TEXMFVAR, /tmp/.texlive2026 with
-            # HOME=/tmp, would carry state such as mktexpk fonts from one run
-            # and one grader to the next) and ORACLE_TEX_VARS. Host values of
-            # any TeX-shaping variable are overridden or dropped, never
-            # forwarded (run_pdflatex applies graded_env); say which.
+            # environment (C-91): a private TEXMFHOME/TEXMFVAR/TEXMFCONFIG
+            # per run (else the container's defaults under /tmp/.texlive2026
+            # with HOME=/tmp would carry state such as mktexpk fonts, or a
+            # planted .sty, from one run and one grader to the next) and
+            # ORACLE_TEX_VARS. Host values of any TeX-shaping variable are
+            # overridden or dropped, never forwarded (run_pdflatex applies
+            # graded_env); say which. The ARGV is run_pdflatex's allow-list
+            # (check_engine_argv, round 5): an override refuses (INFRA_RC).
             dropped = host_tex_overrides()
             if dropped:
                 print(f"[oracle] note: the graded run does not inherit the "

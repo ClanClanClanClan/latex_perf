@@ -89,6 +89,15 @@ if os.environ.get("FAKE_ARGV"):
     open(os.environ["FAKE_ARGV"], "w").write("\0".join(a))
 if a[-2:] == ["env", "-0"]:            # the container's own environment
     sys.stdout.write(open(os.environ["FAKE_CENV"]).read()); sys.exit(0)
+if a[:1] == ["inspect"] and "{{.Created}}" in a:   # check_state's reference
+    print("2026-09-27T06:39:58.151938648Z"); sys.exit(0)
+if a[:1] == ["exec"] and "find" in a and "-newerct" in a:  # check_state's scan
+    sys.stdout.write(os.environ.get("FAKE_FIND", "d /tmp\n")); sys.exit(0)
+if a[:1] == ["exec"] and "python3" not in a and "-c" in a \
+        and "kpsewhich -var-value" in a[a.index("-c") + 1]:
+    sys.stdout.write(os.environ.get(      # check_texmf_trees
+        "FAKE_TREES", "D /tmp/texmf\nD /tmp/.texlive2026/texmf-var\n"
+        "D /tmp/.texlive2026/texmf-config\n")); sys.exit(0)
 if a[:1] == ["exec"] and "python3" in a:  # the tree fingerprint snippet
     sys.stdout.write(os.environ.get("FAKE_FP", "{}")); sys.exit(0)
 if a[:1] == ["exec"] and "-c" not in a:
@@ -197,6 +206,9 @@ class Checker:
         _oracle._Base.__init__(o)
         o.docker, o.workroot, o.name = str(self.fake), self.workroot, "lp-oracle-fake"
         _oracle._ORACLE = o
+        # The session's full state scan is tested on its own (argv_and_state);
+        # here the fake stands for a container already scanned.
+        _oracle._STATE_CHECKED = True
         return o
 
     def tv(self) -> dict:
@@ -470,10 +482,10 @@ class Checker:
             for k in ("FORCE_SOURCE_DATE", "max_print_line", "TEXINPUTS"):
                 if k in got:
                     bad.append(f"host {k}={got[k]!r} reached the engine")
-            for k in ("TEXMFHOME", "TEXMFVAR"):
+            for k in _oracle._GRADING_TEXMF:
                 if not got.get(k) or got.get(k) == texmf_host:
                     bad.append(f"{k}={got.get(k)!r} is not a private per-run one")
-            leak = not_allowed(got, set(want_fixed) | {"TEXMFHOME", "TEXMFVAR"})
+            leak = not_allowed(got, set(want_fixed) | set(_oracle._GRADING_TEXMF))
             if leak:
                 bad.append(f"not on the allow-list (image env + protocol): {leak}")
             return "; ".join(bad)
@@ -619,6 +631,160 @@ class Checker:
                 self.expect("-", True)
         _oracle._ORACLE = None
 
+    # ------------------------------------ argv allow-list and container state
+    def argv_and_state(self) -> None:
+        """C-91 review round 5. (a) A graded run's ARGV is an allow-list, on
+        every entry point: the round-5 review MEASURED `-cnf-line=openout_any=a`
+        (an \\openout to /tmp written, rc 0) and `-shell-escape` /
+        `-cnf-line=shell_escape=t` (\\pdfshellescape=1) passing through the
+        shim and run_pdflatex on both backends. (b) Every writable kpathsea
+        tree is private per run (TEXMFCONFIG was not: a .sty planted there
+        flipped a clean graded run from rc 1 to rc 0). (c) The long-lived
+        container is refused when its persistent TeX trees hold a file
+        (check_texmf_trees, every construction) or any path of its root
+        filesystem changed since creation (check_state, once per session)."""
+        hostile = [["-cnf-line=openout_any=a", "t.tex"],
+                   ["-cnf-line=shell_escape=t", "t.tex"],
+                   ["-shell-escape", "t.tex"], ["--shell-escape", "t.tex"],
+                   ["-enable-write18", "t.tex"], ["-shell-restricted", "t.tex"],
+                   ["-no-shell-escape", "t.tex"], ["-output-directory=/tmp", "t.tex"],
+                   ["-jobname=x", "t.tex"], ["-ini", "t.tex"],
+                   ["-translate-file=cp227.tcx", "t.tex"],
+                   ["-kpathsea-debug=4095", "t.tex"], ["-mktex=tfm", "t.tex"],
+                   [_selector("fmt") + "x", "t.tex"], [_selector("progname") + "x", "t.tex"],
+                   [_amp("x"), "t.tex"], ["t.tex", "u.tex"], [" " + _amp("x")],
+                   ["t.tex \\relax"], ["../t.tex"], ["/etc/t.tex"], ["\\input t"],
+                   ["-interaction=nonstopmode"], []]
+        for argv in hostile:
+            o = self.oracle("ok")
+            try:
+                o.run_pdflatex(self.workroot, argv, self.tv(), 60)
+                self.expect(f"run_pdflatex ran the argv {argv!r} (not on the "
+                            f"graded allow-list)", False)
+            except _oracle.OracleError:
+                self.expect("-", True)
+        cwd = os.getcwd()
+        os.chdir(self.workroot)
+        try:
+            for argv in hostile[:3]:
+                self.oracle("ok")
+                rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
+                                              "-interaction=nonstopmode", *argv])
+                self.expect(f"the _oracle.py pdflatex shim exited {rc} for the argv "
+                            f"{argv!r}, expected INFRA_RC", rc == _oracle.INFRA_RC)
+            # the native backend's shim: a fake engine that would grade rc 0
+            bindir = self.td / "nbin-argv"
+            bindir.mkdir(exist_ok=True)
+            eng = bindir / _oracle.ENGINE_PDFLATEX
+            eng.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\nexit 0\n")
+            eng.chmod(0o755)
+            n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
+            _oracle._Base.__init__(n)
+            n.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
+            _oracle._ORACLE = n
+            rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
+                                          "-cnf-line=openout_any=a",
+                                          "-interaction=nonstopmode", "t.tex"])
+            self.expect(f"the native shim exited {rc} for -cnf-line, expected "
+                        f"INFRA_RC", rc == _oracle.INFRA_RC)
+            rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
+                                          "-interaction=nonstopmode", "-halt-on-error",
+                                          "t.tex"])
+            self.expect(f"the native shim refused the graders' own argv (rc {rc})",
+                        rc == 0)
+        finally:
+            os.chdir(cwd)
+            _oracle._ORACLE = None
+        # the graders' own argv still runs (run_once, run_to_fixpoint)
+        o = self.oracle("ok")
+        try:
+            r = o.run_to_fixpoint(self.workroot, "t.tex", self.tv(), 60)
+            self.expect("run_to_fixpoint no longer runs the protocol's argv", r.rc == 0)
+        except _oracle.OracleError as e:
+            self.expect("run_to_fixpoint refused the protocol's own argv", False, str(e))
+        # run_engine: gen_contract.py's INITEX argv passes, an override does not
+        tv = _oracle.oracle_tex_vars(self.workroot / "tx")
+        for argv, want in ((["-ini", "-etex", "-interaction=nonstopmode",
+                             "-translate-file=cp227.tcx", "-jobname=lpvirgin",
+                             "\\dump"], True),
+                           (["-ini", "-cnf-line=shell_escape=t", "\\dump"], False),
+                           (["-shell-escape", "t.tex"], False),
+                           ([_selector("progname") + "x", "t.tex"], False)):
+            o = self.oracle("ok")
+            try:
+                o.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, argv, tv, 60)
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"run_engine {'refused' if want else 'ran'} {argv!r}",
+                        ok == want)
+        # (b) every writable kpathsea tree is private and required
+        self.expect("private_texmf_vars no longer makes TEXMFCONFIG private",
+                    set(_oracle.private_texmf_vars("/w")) >= {"TEXMFHOME", "TEXMFVAR",
+                                                              "TEXMFCONFIG"}
+                    and set(_oracle._GRADING_TEXMF) >= {"TEXMFHOME", "TEXMFVAR",
+                                                        "TEXMFCONFIG"})
+        try:
+            env = dict(self.tv())
+            env.pop("TEXMFCONFIG")
+            _oracle.graded_env(env)
+            self.expect("graded_env accepted a run without a private TEXMFCONFIG "
+                        "(the container's persistent one is searched first)", False)
+        except _oracle.OracleError:
+            self.expect("-", True)
+        # (c) the container's state
+        import json as _json
+        arch = sorted(_oracle.TREE_FINGERPRINTS)[0]
+        os.environ["FAKE_FP"] = _json.dumps(dict(
+            _oracle.TREE_FINGERPRINTS[arch], arch=arch,
+            banner="pdfTeX " + _oracle.EXPECT_VERSION))
+        cenv = self.td / "container-env-state"
+        cenv.write_text("\0".join(f"{k}={v}" for k, v in _oracle.IMAGE_ENV.items()))
+        os.environ["FAKE_CENV"] = str(cenv)
+        for trees, want_ok in (
+                (None, True),
+                ("D /tmp/texmf\nD /tmp/.texlive2026/texmf-var\nD /tmp/.texlive2026/"
+                 "texmf-config\n/tmp/.texlive2026/texmf-config/tex/latex/p.sty\n", False),
+                ("D /tmp/texmf\n", False)):
+            if trees is None:
+                os.environ.pop("FAKE_TREES", None)
+            else:
+                os.environ["FAKE_TREES"] = trees
+            try:
+                self.oracle("ok").fingerprint()  # every construction runs it
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"ContainerOracle.fingerprint (check_texmf_trees) "
+                        f"{'refused' if want_ok else 'accepted'} the trees "
+                        f"{trees!r}", ok == want_ok)
+        for k in ("FAKE_TREES", "FAKE_FP", "FAKE_CENV"):
+            os.environ.pop(k, None)
+        wr = str(self.workroot)
+        clean = ("d /\nd /tmp\nd /tmp/.texlive2026\nd /tmp/.texlive2026/texmf-var\n"
+                 "f /var/cache/fontconfig/0123456789abcdef0123456789abcdef-le64.cache-9\n"
+                 f"f /etc/hostname\nd {wr}\nd {self.workroot.parent}\n")
+        for find, want_ok in ((clean, True),
+                              (clean + "f /usr/local/texlive/texmf-local/tex/latex/p.sty\n", False),
+                              (clean + "f /tmp/.texlive2026/texmf-config/p.sty\n", False),
+                              (clean + "f /tmp/x.txt\n", False),
+                              (clean + "f /usr/local/texlive/2026/texmf.cnf\n", False)):
+            os.environ["FAKE_FIND"] = find
+            _oracle._STATE_CHECKED = False
+            o = self.oracle("ok")
+            _oracle._STATE_CHECKED = False
+            try:
+                _oracle.get_oracle()
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"get_oracle's session state scan "
+                        f"{'refused' if want_ok else 'accepted'} a container whose "
+                        f"changed paths are {find.split()[-1]!r}", ok == want_ok)
+        os.environ.pop("FAKE_FIND", None)
+        _oracle._ORACLE = None
+        _oracle._STATE_CHECKED = False
+
     # ----------------------------------------------------------------- shell
     def shell_grader(self) -> None:
         fro = (self.repo / "scripts/tools/false_ready_oracle.sh").read_text()
@@ -710,6 +876,12 @@ class Checker:
                         f"expected {want}", p.stdout.strip() == want)
 
 
+def _amp(fmt: str) -> str:
+    """`&fmt` (TeX's format selector), built from a parameter for the same
+    reason as _selector."""
+    return "&" + fmt
+
+
 def _selector(kind: str) -> str:
     """A format selector (`-progname=`), built from a parameter: this file is
     scanned by check_oracle_pin, and a literal one is (rightly) a finding."""
@@ -740,6 +912,7 @@ def main() -> int:
         c.python_graders()
         c.generator_client()
         c.grading_env()
+        c.argv_and_state()
         c.shell_grader()
     for k, v in saved.items():
         if v is None:

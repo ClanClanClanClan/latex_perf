@@ -34,9 +34,13 @@ and checks four things:
      `latexmk`, `arara`, `fmtutil`), the same table image_command refuses;
      the selector is `_oracle.FMT_SELECTOR` (`&fmt`, `-fmt=`/`--fmt`,
      `-progname=`). Scanned: every tracked .py, .sh/.bash/.zsh/.ksh/.command,
-     Makefile/.mk, .ml, other-language and workflow file, and any tracked
-     file without a known extension whose shebang names a shell or python.
-     The rules, each with a kill-test in check_gate_selftests.py:
+     Makefile/.mk, .ml, other-language and workflow file, any tracked file
+     without a known extension whose shebang names a shell or python, and the
+     command-running non-script files of `_command_file_kind` (composite
+     actions, pre-commit hooks, compose/k8s manifests, Dockerfiles, justfile,
+     tox.ini, Procfile, .envrc, package.json, latexmkrc, notebooks).
+     WHAT IS MODELLED -- exactly this, each shape with a kill-test in
+     check_gate_selftests.py; anything else is a residual (below):
        Python  every string literal that names an engine, found by the
                tokenizer (so a list split over lines is still one list), is a
                finding unless it is data: a dict key (`"pdflatex": ...`), the
@@ -47,50 +51,92 @@ and checks four things:
                literals, adjacent literals (`"pdf" "latex"`) and `+`/join
                chains of literals are joined first. THEN every non-literal
                EXPRESSION whose value is a function of literals only is
-               EVALUATED by a small interpreter (no eval): + * % on strings,
-               f-strings, str methods (join/format/replace/split/decode/...),
-               slicing, chr/bytes/str, base64/b16/b32/hex decoding, a
-               comprehension or generator over a literal iterable, either
-               branch of a conditional, and a name bound exactly once in the
-               file (`P = "pdf"; P + "latex"`). Data positions are exempt as
-               for literals.
+               EVALUATED by a small interpreter (no eval): + * % on strings
+               (`%` with a tuple or a dict of literals), f-strings, str
+               methods (join/format/replace/split/decode/...) called bound or
+               unbound (`str.__add__('pdfl', 'atex')`), slicing, chr,
+               bytes/str, `map(chr|str, ...)`, `functools.reduce(operator.add,
+               ...)`, base64/b16/b32/hex decoding, a comprehension or generator
+               over a literal iterable, either branch of a conditional, a
+               walrus, a starred operand (so the KEYS of an unpacked dict
+               literal, `[*{'-progname=pdflatex': 1}]`, are values), a name
+               bound exactly once in the file by `NAME = expr` or by tuple
+               unpacking of literals (`a, b = 'pdfl', 'atex'`), and a class
+               attribute bound once in its class body (`C.P`). Data positions
+               are exempt as for literals.
        shell   a bare engine token anywhere on a code line (comments
-               stripped), except inside an echo/printf message. The message
-               exemption covers ONE command (the line is split at `;`, `&&`,
-               `||`, `|` outside quotes) and none at all when a later stage of
-               the pipeline RUNS its input (`echo 'pdflatex t' | sh`, `| xargs`,
-               `| bash`); `printf -v` is an assignment, and its value is
-               computed. An engine the SHELL makes is resolved: assembled from
-               a variable (`${P}latex`), dequoted from one word (`"pdf"latex`,
-               `pdf\\latex`, an ANSI-C `$'pdf\\x6catex'`), a parameter
-               expansion's default (`${E:-pdftex}`), a brace expansion
-               (`pdf{latex,}`), a glob matching an engine name (`pdfla[t]ex`,
-               at least three literal letters). A `case` label is a pattern;
-               the value of `jq --arg NAME VALUE` is data. Makefiles are
-               scanned as shell after GNU make's text functions over literal
-               arguments are evaluated (`$(subst X,,pdfXlatex)`).
+               stripped), except inside an echo/printf MESSAGE. A message is
+               ONE command (the line is split at `;`, `&&`, `||`, `|` outside
+               quotes), and stops being one when (1) a later stage of the
+               pipeline RUNS its input -- the stage's argv[0], after wrapper
+               commands (`timeout 60`, `nice -n 5`, `env A=b`, `stdbuf -oL`,
+               `sudo`, ...) and their options are stripped, is a shell or
+               interpreter, `xargs`, `parallel`, awk, or a `while`/`until`
+               loop; (2) it holds a command substitution; (3) it is written
+               to a file (`> run.sh`; /dev/null, /dev/std*, a descriptor and
+               the CI's $GITHUB_* streams are not files); `printf -v` is an
+               assignment, and its value is computed. The commands inside
+               every `$(...)` and backquote pair (outside single quotes) are
+               scanned as commands of their own, wherever they stand. An
+               engine the SHELL makes is resolved: assembled from a variable
+               followed by an engine's tail (`${P}latex`); a word that expands
+               variables the file assigns LITERAL values (`NAME=w`,
+               `NAME+=w`, with export/local/readonly/declare; every value
+               kept), plain or with `,,`/`^^`/`,`/`^`, `/pat/rep`,
+               `//pat/rep`, `:off:len`, `#`/`##`/`%`/`%%` with a literal
+               pattern (`${P}${Q}`, `${E,,}`, `${E/X/}`, `${E:1}`); dequoted
+               from one word (`"pdf"latex`, `pdf\\latex`, an ANSI-C
+               `$'pdf\\x6catex'`); a parameter expansion's default, including
+               an indirect or positional one (`${E:-pdftex}`,
+               `${!n:-pdftex}`, `${1:-pdftex}`); a brace expansion
+               (`pdf{latex,}`); a glob matching an engine name (`pdfla[t]ex`,
+               at least three literal letters). A here-document fed to a
+               Python interpreter (`python3 - <<'EOF'`) is scanned as Python.
+               A `case` label is a pattern; the value of `jq --arg NAME VALUE`
+               is data. Makefiles are scanned as shell after make's variables
+               with literal values (`P = pdfl`, `+=`, `:=`, `?=`; recursive;
+               undefined = empty) are expanded and GNU make's text functions
+               over literal arguments are evaluated (`$(subst X,,pdfXlatex)`,
+               `$(addprefix ...)`, `$(if C,A,B)`, ...).
        other   in a tracked .c/.h/.rs/.js/.ts/.rb/.pl/.go/.lua file, a
-               quoted literal that is an engine or an engine command line.
-       OCaml   a file that spawns processes (Sys.command, Unix.create_process,
-               Unix.open_process*, Unix.exec*) must not name an engine as a
-               word of a string literal.
+               package.json or a latexmkrc, a quoted literal that is an engine
+               or an engine command line.
+       OCaml   a file that spawns processes (Sys.command, Unix.system,
+               Unix.create_process, Unix.open_process*, Unix.exec*, Unix.fork,
+               Lwt_process, Bos.OS/Bos.Cmd, Feather, Shexp_process) must not
+               name an engine as a word of a string literal.
        workflow  as shell, minus `name:` keys and YAML mapping KEYS (their
                values are scanned), with an exact allow-list of the in-image
-               canary lines of tex-oracle.yml.
+               canary lines of tex-oracle.yml. Composite actions, pre-commit
+               hooks, compose files and .github/ and infra/k8s/ YAML likewise.
      KNOWN RESIDUALS (OPEN-118 known limit (g)): a static scan cannot see a
      value that is not a function of the file's literals -- a name read from
-     the environment, a file, argv or the network; a variable bound more than
-     once or by a parameter/loop/import; a call the interpreter does not
+     the environment, a file, argv or the network. NOT MODELLED, therefore
+     residual: Python -- a variable bound more than once or by a parameter,
+     loop, import or augmented assignment; a call the interpreter does not
      model (any function of one's own, `codecs.decode(s, "rot13")`, `ord`
-     arithmetic through a loop); `eval`/`exec`/`sh -c`/`bash -c` of a string
-     built at run time; a `DATA_KEYS` value later used as argv; a function of
-     one's own named `run_engine`; shell variables assigned in one command
-     and expanded in another (`E=pdf; ${E}latex` IS caught by the `${P}latex`
-     rule, `read E; $E` is not), `eval`, `source` of a generated file, and
-     make's `$(shell ...)`/`$(call ...)`/`$(eval ...)`; other languages'
-     string operations (only literals are scanned there); an untracked file;
-     and `aleph`, the one vocabulary word not scanned (SCAN_DATA_WORDS: it is
-     also the LaTeX symbol \\aleph, listed as data in this repository).
+     arithmetic through a loop, `operator.concat` via a variable, a lambda);
+     a dict iterated by name (`d = {...}; [*d]`: only a dict LITERAL
+     unpacked in place is resolved); `eval`/`exec` of a string built at run
+     time; a `DATA_KEYS` value later used as argv; a function of one's own
+     named `run_engine`. Shell -- a variable whose value is not a literal
+     (`read E`, `E=$(...)`, `E=$X`), an array element, `eval`, `source`/`.`
+     of a generated file, a script written to a file by anything other than
+     echo/printf (`cat > f <<EOF`, `tee`, `sed`) and run later, `sh -c`/
+     `bash -c` of a variable, a pattern with glob characters in `${E/p/r}`.
+     make -- target-specific and command-line variables, `define` blocks,
+     `$(shell ...)`/`$(call ...)`/`$(eval ...)`/`$(foreach ...)`. Other
+     languages: string operations (only literals are scanned there). Files:
+     YAML/TOML/JSON/INI outside `_command_file_kind` are treated as DATA and
+     not scanned; an untracked file. And `aleph`, the one vocabulary word
+     not scanned (SCAN_DATA_WORDS: it is also the LaTeX symbol \\aleph,
+     listed as data in this repository).
+     MEASURED 2026-09-28 with the round-5 reviewer's harness (51 shapes,
+     the reviewer's session scratchpad, not in the repository): 49 caught; the other two (`$(firstword $(subst
+     ., ,pdfl.x)atex)` and `$(subst $(space),,$(E))` with `space` undefined)
+     do not start an engine under GNU make at all (`make -n` prints `pdfl
+     main.tex` and `pdfl atex main.tex`); with `space` defined the second is
+     caught.
 
 Run: python3 scripts/tools/check_oracle_pin.py --repo .
 """
@@ -174,11 +220,27 @@ BARE_TOKEN = re.compile(rf"(^|[^A-Za-z0-9_./-])({_ENG_ALT})([^A-Za-z0-9_.-]|$)")
 # _sh_printf_v). A message stops being one when the pipeline feeds it to a
 # shell (see SH_RUNS_STDIN).
 SH_MESSAGE = re.compile(r"^\s*(echo|printf(?!\s+-v\b)|die_infra|die|warn|log)\b")
-# A pipeline stage that RUNS its standard input as code or as arguments.
-SH_RUNS_STDIN = re.compile(r"^\s*(\S*/)?(sudo\s+)?(env\s+)?(\S*/)?"
-                           r"(sh|bash|dash|zsh|ksh|mksh|busybox|eval|source|xargs|"
-                           r"python3?|perl|ruby|tclsh)\b")
-ML_SPAWN = re.compile(r"Sys\.command|create_process|open_process|Unix\.exec")
+# A pipeline stage that RUNS its standard input as code or as arguments, BY
+# METHOD (C-91 review round 5): the stage's argv[0] after stripping wrapper
+# commands (`timeout 60`, `nice -n 5`, `env A=b`, `stdbuf -oL`, `sudo`, ...,
+# with their options and operands) is a RUNNER -- a shell or interpreter, a
+# command that runs its input lines (`xargs`, `parallel`), a loop that reads
+# them (`while read c; do $c; done`), or awk (`system($0)`). The round-5
+# review MEASURED `| timeout 60 sh`, `| nice -n 5 sh`, `| parallel`, `| while
+# read` and `| awk '{system($0)}'` scanning clean against the old prefix regex.
+SH_RUNNERS = frozenset(("sh", "bash", "dash", "zsh", "ksh", "mksh", "busybox",
+                        "eval", "source", ".", "xargs", "parallel", "python",
+                        "python3", "perl", "ruby", "tclsh", "node", "php", "lua",
+                        "texlua", "awk", "gawk", "mawk", "nawk", "busybox",
+                        "while", "until", "fish", "csh", "tcsh", "rc", "expect"))
+SH_WRAPPERS = frozenset(("sudo", "doas", "env", "timeout", "gtimeout", "nice",
+                         "ionice", "nohup", "stdbuf", "setsid", "time", "command",
+                         "exec", "builtin", "chrt", "taskset", "unbuffer",
+                         "xvfb-run", "flock", "chroot", "systemd-run", "caffeinate",
+                         "script", "watch", "then", "do", "else", "!", "{", "("))
+ML_SPAWN = re.compile(r"Sys\.command|create_process|open_process|Unix\.exec|"
+                      r"Unix\.system|Unix\.fork|Lwt_process|Bos\.(OS|Cmd)|"
+                      r"Feather\.|Shexp_process")
 # The engine as a WORD of the literal: not `.tex`/`main.tex` (a file name),
 # which `\b` matched once `tex` joined ENGINES; a path prefix still counts.
 ML_LITERAL = re.compile(rf'"[^"\n]*(?<![A-Za-z0-9_.-])({_ENG_ALT})(?![A-Za-z0-9_.-])[^"\n]*"')
@@ -354,6 +416,8 @@ _STR_METHODS = {"join", "format", "replace", "upper", "lower", "strip",
                 "removeprefix", "removesuffix", "title", "casefold",
                 "capitalize", "swapcase", "zfill", "center", "ljust", "rjust",
                 "translate", "expandtabs"}
+_STR_DUNDERS = {"__add__", "__radd__", "__mul__", "__rmul__", "__mod__",
+                "__getitem__", "__format__"}
 _DECODERS = {"b64decode", "b32decode", "b16decode", "a85decode", "b85decode",
              "urlsafe_b64decode", "standard_b64decode", "unhexlify", "fromhex"}
 _FOLD_MAX = 4096
@@ -382,6 +446,25 @@ def _fold(node, names, env, depth=0):
         raise _NoFold
     if isinstance(node, (ast.Tuple, ast.List, ast.Set)):
         return tuple(f(e) for e in node.elts)
+    # Round 5 (C-91): a dict of literals (for `%(a)s` formatting, and its KEYS
+    # when it is unpacked: `[*{'-progname=pdflatex': 1}]`), a walrus, a
+    # starred operand, and a class attribute bound once (`C.P`).
+    if isinstance(node, ast.Dict):
+        if any(k is None for k in node.keys):
+            raise _NoFold
+        return {f(k): f(v) for k, v in zip(node.keys, node.values)}
+    if isinstance(node, ast.NamedExpr):
+        return f(node.value)
+    if isinstance(node, ast.Starred):
+        v = f(node.value)
+        if not isinstance(v, (str, bytes, tuple, dict)):
+            raise _NoFold
+        return tuple(v)
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+        key = f"{node.value.id}.{node.attr}"
+        if key in names:
+            return f(names[key])
+        raise _NoFold
     if isinstance(node, ast.JoinedStr):
         out = ""
         for v in node.values:
@@ -452,6 +535,29 @@ def _fold(node, names, env, depth=0):
         return tuple(f(node.elt, dict(env, **{g.target.id: x})) for x in it)
     if isinstance(node, ast.Call) and not node.keywords:
         fn = node.func
+        fname = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", None)
+        # map(chr|str, LITERALS) and functools.reduce(operator.add, LITERALS)
+        if fname == "map" and len(node.args) == 2 and isinstance(node.args[0], ast.Name) \
+                and node.args[0].id in ("chr", "str"):
+            seq = f(node.args[1])
+            if not isinstance(seq, tuple) or len(seq) > _FOLD_MAX:
+                raise _NoFold
+            try:
+                return tuple((chr if node.args[0].id == "chr" else str)(x) for x in seq)
+            except (TypeError, ValueError, OverflowError):
+                raise _NoFold
+        if fname == "reduce" and len(node.args) in (2, 3) and (
+                getattr(node.args[0], "attr", None) in ("add", "concat", "iadd")
+                or getattr(node.args[0], "id", None) in ("add", "concat")):
+            seq = f(node.args[1])
+            if not isinstance(seq, tuple) or not seq:
+                raise _NoFold
+            acc = f(node.args[2]) if len(node.args) == 3 else seq[0]
+            for x in (seq if len(node.args) == 3 else seq[1:]):
+                if type(x) is not type(acc) or not isinstance(x, (str, bytes)):
+                    raise _NoFold
+                acc = acc + x
+            return acc
         args = [f(a) for a in node.args]
         if isinstance(fn, ast.Name):
             try:
@@ -476,7 +582,17 @@ def _fold(node, names, env, depth=0):
                     return getattr(base64, fn.attr)(args[0])
                 except (TypeError, ValueError, binascii.Error, AttributeError):
                     raise _NoFold
-            if fn.attr in _STR_METHODS:
+            if (isinstance(fn.value, ast.Name) and fn.value.id in ("str", "bytes")
+                    and (fn.attr in _STR_METHODS or fn.attr in _STR_DUNDERS) and args):
+                # the unbound form: str.__add__('pdfl', 'atex'), str.join(...)
+                try:
+                    r = getattr({"str": str, "bytes": bytes}[fn.value.id], fn.attr)(*args)
+                except (TypeError, ValueError, AttributeError, UnicodeError):
+                    raise _NoFold
+                if r is NotImplemented:
+                    raise _NoFold
+                return tuple(r) if isinstance(r, list) else r
+            if fn.attr in _STR_METHODS or fn.attr in _STR_DUNDERS:
                 recv = f(fn.value)
                 if not isinstance(recv, (str, bytes)):
                     raise _NoFold
@@ -514,10 +630,30 @@ def _once_bound_names(tree) -> dict:
         elif isinstance(n, (ast.Global, ast.Nonlocal)):
             for nm in n.names:
                 count[nm] = count.get(nm, 0) + 2
+        elif isinstance(n, ast.Attribute) and isinstance(n.ctx, (ast.Store, ast.Del)) \
+                and isinstance(n.value, ast.Name):
+            k = f"{n.value.id}.{n.attr}"
+            count[k] = count.get(k, 0) + 1
         if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name):
             value[n.targets[0].id] = n.value
         elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) and n.value is not None:
             value[n.target.id] = n.value
+        elif (isinstance(n, ast.Assign) and len(n.targets) == 1
+              and isinstance(n.targets[0], (ast.Tuple, ast.List))
+              and isinstance(n.value, (ast.Tuple, ast.List))
+              and len(n.targets[0].elts) == len(n.value.elts)):
+            # `a, b = 'pdfl', 'atex'` (MEASURED clean in round 5)
+            for t, v in zip(n.targets[0].elts, n.value.elts):
+                if isinstance(t, ast.Name):
+                    value[t.id] = v
+        if isinstance(n, ast.ClassDef):
+            # `class C: P = 'pdfl'` binds C.P (MEASURED clean in round 5)
+            for st in n.body:
+                if isinstance(st, ast.Assign) and len(st.targets) == 1 \
+                        and isinstance(st.targets[0], ast.Name):
+                    k = f"{n.name}.{st.targets[0].id}"
+                    value[k] = st.value
+                    count[k] = count.get(k, 0) + 1
     return {k: v for k, v in value.items() if count.get(k) == 1}
 
 
@@ -684,6 +820,89 @@ SH_CASE_LABEL = re.compile(r"^\s*[A-Za-z0-9_.*?|\[\]\"'-]+\)(\s|$)")
 YAML_KEY = re.compile(r"^\s*-?\s*[A-Za-z_][A-Za-z0-9_-]*:(?=\s|$)")
 
 
+_SH_HEREDOC = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+
+
+def _sh_heredoc_python(text: str) -> list[tuple[int, str]]:
+    """A here-document fed to a Python interpreter (`python3 - <<'EOF'`) is
+    Python: its body is scanned as Python (MEASURED clean in round 5). A
+    here-document fed to a shell is already scanned line by line as shell."""
+    hits, lines, i = [], text.split("\n"), 0
+    while i < len(lines):
+        m = _SH_HEREDOC.search(lines[i].split("#", 1)[0])
+        if m and re.fullmatch(r"python[0-9.]*", _sh_argv0(lines[i][:m.start()]) or ""):
+            end = next((j for j in range(i + 1, len(lines))
+                        if lines[j].strip() == m.group(2)), len(lines))
+            body = "\n".join(ln.lstrip("\t") for ln in lines[i + 1:end])
+            hits += [(i + 1 + n, v) for n, v in scan_python(body)]
+            i = end + 1
+            continue
+        i += 1
+    return hits
+
+
+def _sh_argv0(seg: str) -> str | None:
+    """The command a shell segment runs: its first word after variable
+    assignments and wrapper commands (SH_WRAPPERS) with their options and
+    operands (`-n 5`, `60`, `-oL`, `A=b`), path stripped."""
+    words = SH_WORD.findall(seg)
+    i, wrapped = 0, False
+    while i < len(words):
+        w = words[i].strip("\"'")
+        base = w.rsplit("/", 1)[-1]
+        if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*\+?=.*", w):
+            i += 1                         # an assignment prefix
+        elif base in SH_WRAPPERS:
+            i += 1
+            wrapped = True
+        elif wrapped and (w.startswith("-") or re.fullmatch(r"[0-9.]+[smhd]?", w)):
+            i += 1                         # a wrapper's option or operand
+        else:
+            return base
+    return None
+
+
+def _sh_runs_input(seg: str) -> bool:
+    return _sh_argv0(seg) in SH_RUNNERS
+
+
+def _sh_substitutions(code: str) -> list[str]:
+    """The commands inside `$(...)` and backquotes, outside single quotes (a
+    double-quoted message still runs them: `echo "log: $(pdflatex t)"`, MEASURED
+    scanning clean by the round-5 review). Nested ones are found by the
+    caller scanning each result again."""
+    out, i, n, sq = [], 0, len(code), False
+    while i < n:
+        c = code[i]
+        if c == "\\" and not sq:
+            i += 2
+            continue
+        if c == "'" and not sq and (i == 0 or code[i - 1] != "$"):
+            # a single-quoted span (only outside double quotes, approximated)
+            j = code.find("'", i + 1)
+            if j == -1:
+                break
+            i = j + 1
+            continue
+        if code.startswith("$(", i) and not code.startswith("$((", i):
+            depth, j = 1, i + 2
+            while j < n and depth:
+                depth += (code[j] == "(") - (code[j] == ")")
+                j += 1
+            out.append(code[i + 2:j - 1])
+            i = j
+            continue
+        if c == "`":
+            j = code.find("`", i + 1)
+            if j == -1:
+                break
+            out.append(code[i + 1:j])
+            i = j + 1
+            continue
+        i += 1
+    return out
+
+
 def scan_shell(text: str, allow: tuple = (), make: bool = False,
                yaml: bool = False) -> list[tuple[int, str]]:
     """A shell line starts an engine when the engine is a bare word OUTSIDE
@@ -692,7 +911,9 @@ def scan_shell(text: str, allow: tuple = (), make: bool = False,
     `sh -c 'pdflatex x.tex'`). An engine named inside a longer quoted string
     is a message or a pattern (`echo "... pdflatex failed"`, `grep 'pdftex\\|
     pdflatex'`), and `x['pdflatex']` is a subscript."""
-    hits = []
+    hits = _sh_heredoc_python(text)
+    sh_vars = _sh_var_values(text)
+    make_vars = _make_var_values(text) if make else {}
     for n, line in enumerate(text.split("\n"), 1):
         code = line.split("#", 1)[0] if not line.lstrip().startswith("#") else ""
         if not code.strip():
@@ -708,15 +929,30 @@ def scan_shell(text: str, allow: tuple = (), make: bool = False,
         hit = False
         segs = _sh_commands(code)
         # `echo 'pdflatex t.tex' | sh`: a message the pipeline RUNS is code.
-        runs_stdin = any(SH_RUNS_STDIN.match(sg) for sg in segs[1:])
+        runs_stdin = any(_sh_runs_input(sg) for sg in segs[1:])
         if make:
-            code = _make_eval(code)
+            code = _make_eval(code, make_vars)
             segs = _sh_commands(code)
+        # A command substitution runs, wherever it stands (C-91 round 5).
+        todo, subs = [code], []
+        while todo and len(subs) < 64:
+            for inner in _sh_substitutions(todo.pop()):
+                subs.append(inner)
+                todo.append(inner)
+        segs = segs + [c for inner in subs for c in _sh_commands(inner)]
         for seg in segs:
             seg = SH_CASE_LABEL.sub(" ", seg, count=1)
             seg = SH_JQ_ARG.sub(" ", seg) if re.search(r"(^|[\s(`])jq\s", seg) else seg
-            if SH_MESSAGE.match(seg) and not runs_stdin:
+            # A message stops being one when the pipeline runs it, when it
+            # holds a command substitution, or when it is written to a FILE
+            # (`echo 'pdflatex t' > run.sh; sh run.sh`, MEASURED clean in
+            # round 5): a message goes to a terminal, a log stream or /dev/null.
+            if (SH_MESSAGE.match(seg) and not runs_stdin
+                    and "$(" not in seg and "`" not in seg
+                    and not SH_REDIRECT_FILE.search(SH_QUOTED.sub('""', seg))):
                 continue                       # this ONE command is a message
+            if _sh_var_engine(seg, sh_vars):
+                hit = True
             if _sh_expanded_engine(seg):
                 hit = True
             unquoted = SH_QUOTED.sub('""', seg)
@@ -752,7 +988,126 @@ def scan_shell(text: str, allow: tuple = (), make: bool = False,
 SH_JQ_ARG = re.compile(r"--(arg|argjson)\s+\S+\s+\S+")
 # A parameter expansion with a default/alternative WORD: `${E:-pdftex}`,
 # `${E=pdftex}`, `${E:+pdftex}`. The word is what the shell substitutes.
-SH_PARAM_WORD = re.compile(r"\$\{[A-Za-z_][A-Za-z0-9_]*:?[-=+?]([^{}]*)\}")
+# `${!n:-pdftex}` (indirect) and `${1:-pdftex}` (a positional or special
+# parameter) too: MEASURED clean in round 5.
+SH_PARAM_WORD = re.compile(r"\$\{[!#]?(?:[A-Za-z_][A-Za-z0-9_]*|[0-9]+|[@*#?$!-])"
+                           r"(?:\[[^\]]*\])?:?[-=+?]([^{}]*)\}")
+# `>`/`>>`/`&>` to a FILE (not a descriptor, /dev/null, /dev/std*, or the
+# CI's own step-summary/output streams).
+SH_REDIRECT_FILE = re.compile(
+    r"(?<![0-9&<])(&?>>?|[0-9]>>?)\s*(?!&|/dev/(null|stderr|stdout|tty)\b|"
+    r"\S*GITHUB_(STEP_SUMMARY|OUTPUT|ENV)\b)[^\s;|&]")
+
+
+# SHELL VARIABLES WITH LITERAL VALUES (C-91 review round 5). The `${P}latex`
+# rule caught a variable followed by the tail of an engine name; the round-5
+# review MEASURED `${P}${Q}`, `${P}atex`, `${E,,}`, `${E/X/}`, `E+=...; $E`
+# and `${E:1}` scanning clean. So every variable assigned a LITERAL value in
+# the file (`NAME=word`, `NAME+=word`, with export/local/readonly/declare) is
+# tracked with all its values, and a word that expands those variables
+# (plain, case-modified, pattern-substituted, prefix/suffix-removed, sliced) is
+# expanded and matched like a literal. RESIDUAL: a value that is not a literal
+# (read from input, a command substitution, another variable's expansion at
+# assignment time), an array element, and `eval`.
+_SH_ASSIGN = re.compile(r"(?:^|[\s;&|(])(?:(?:export|local|readonly|declare"
+                        r"(?:\s+-[A-Za-z]+)*)\s+)?([A-Za-z_][A-Za-z0-9_]*)(\+?)="
+                        r"((?:\$'(?:[^'\\]|\\.)*'|\"(?:[^\"\\$`]|\\.)*\"|'[^']*'|"
+                        r"[^\s;&|()<>$`\"'])*)(?=$|[\s;&|)])")
+_SH_EXP = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)([^{}]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)")
+_SH_VAR_MAX = 64
+
+
+def _sh_dequote(w: str) -> str | None:
+    import shlex
+    dec = _ANSI_C.sub(lambda m: shlex.quote(_ansi_c_decode(m.group(1))), w)
+    try:
+        return "".join(shlex.split(dec, posix=True)) if dec else ""
+    except ValueError:
+        return None
+
+
+def _sh_var_values(text: str) -> dict:
+    vals: dict = {}
+    for line in text.split("\n"):
+        code = line.split("#", 1)[0] if not line.lstrip().startswith("#") else ""
+        for m in _SH_ASSIGN.finditer(code):
+            name, plus, raw = m.group(1), m.group(2), m.group(3)
+            v = _sh_dequote(raw)
+            if v is None:
+                continue
+            if plus:
+                cur = vals.get(name) or [""]
+                vals[name] = [c + v for c in cur][:_SH_VAR_MAX]
+            else:
+                vals.setdefault(name, [])
+                if v not in vals[name] and len(vals[name]) < _SH_VAR_MAX:
+                    vals[name].append(v)
+    return vals
+
+
+def _sh_apply_op(v: str, op: str) -> str | None:
+    """bash's value of `${NAME<op>}` for a literal op; None when unmodelled."""
+    import fnmatch
+    if op == "":
+        return v
+    if op in (",,", "^^", ",", "^"):
+        if op == ",,":
+            return v.lower()
+        if op == "^^":
+            return v.upper()
+        return (v[:1].lower() if op == "," else v[:1].upper()) + v[1:]
+    m = re.fullmatch(r"(//?)([^/]*)(?:/(.*))?", op)
+    if m:
+        pat, rep_ = m.group(2), m.group(3) or ""
+        if any(c in pat for c in "*?["):
+            return None
+        return v.replace(pat, rep_) if m.group(1) == "//" else v.replace(pat, rep_, 1)
+    m = re.fullmatch(r":\s*(-?\d+)(?::\s*(-?\d+))?", op)
+    if m:
+        off = int(m.group(1))
+        s = v[off:] if off >= 0 else v[len(v) + off:]
+        if m.group(2) is not None:
+            ln = int(m.group(2))
+            s = s[:ln] if ln >= 0 else s[:len(s) + ln]
+        return s
+    m = re.fullmatch(r"(##?|%%?)(.*)", op)
+    if m:
+        kind, pat = m.group(1), m.group(2)
+        if kind[0] == "#":
+            cands = [i for i in range(len(v) + 1) if fnmatch.fnmatchcase(v[:i], pat)]
+            return v[(max(cands) if kind == "##" else min(cands)):] if cands else v
+        cands = [i for i in range(len(v) + 1) if fnmatch.fnmatchcase(v[i:], pat)]
+        return v[:(min(cands) if kind == "%%" else max(cands))] if cands else v
+    return None
+
+
+def _sh_var_engine(seg: str, vals: dict) -> bool:
+    """A word of `seg` that, with the file's literal variable values
+    substituted, IS an engine name or a format selector."""
+    if not vals:
+        return False
+    for raw in SH_WORD.findall(seg):
+        if "$" not in raw or not any(
+                (m.group(1) or m.group(3)) in vals for m in _SH_EXP.finditer(raw)):
+            continue
+        outs = [raw]
+        for _ in range(4):
+            nxt = []
+            for w in outs:
+                m = _SH_EXP.search(w)
+                if m is None or (m.group(1) or m.group(3)) not in vals:
+                    nxt.append(w)
+                    continue
+                for v in vals[m.group(1) or m.group(3)]:
+                    r = _sh_apply_op(v, m.group(2) or "")
+                    if r is not None:
+                        nxt.append(w[:m.start()] + r + w[m.end():])
+            outs = nxt[:_SH_VAR_MAX]
+        for w in outs:
+            d = _sh_dequote(w)
+            if d is not None and (ENGINE_LITERAL.match(d) or FMT_SELECTOR.match(d)):
+                return True
+    return False
 _GLOB_CHARS = set("*?[")
 
 
@@ -841,10 +1196,58 @@ def _sh_expanded_engine(seg: str) -> bool:
 # is not literal and is left alone (a variable is a residual).
 _MAKE_FN = re.compile(r"\$[({](subst|patsubst|strip|addprefix|addsuffix|join|"
                       r"firstword|lastword|word|findstring|filter|sort|notdir|"
-                      r"basename|suffix)[ \t]+([^$(){}]*)[)}]")
+                      r"basename|suffix|if)[ \t]([^$(){}]*)[)}]")
 
 
-def _make_eval(code: str) -> str:
+# MAKE VARIABLES WITH LITERAL VALUES (C-91 review round 5): `P = pdfl` then
+# `$(P)$(Q)`, `$(P)atex`, `E += atex` were MEASURED scanning clean. Every
+# variable assigned at the top level of the makefile (`=`, `:=`, `::=`, `?=`,
+# `+=`, `override`/`export` prefixes) is expanded in recipe lines, recursively
+# (a value may reference another variable); an undefined variable expands to
+# nothing, as in make. `$(if COND,THEN,ELSE)` over literal arguments is
+# evaluated. RESIDUAL: target-specific and command-line variables, `define`
+# blocks, `$(shell ...)`/`$(call ...)`/`$(eval ...)`/`$(foreach ...)`.
+_MAKE_ASSIGN = re.compile(r"^(?:(?:override|export)\s+)*([A-Za-z_][A-Za-z0-9_.-]*)\s*"
+                          r"(\+=|::?=|\?=|=)\s*(.*)$")
+_MAKE_REF = re.compile(r"\$[({]([A-Za-z_][A-Za-z0-9_.-]*)[)}]|\$([A-Za-z_])")
+
+
+def _make_var_values(text: str) -> dict:
+    vals: dict = {}
+    for line in text.split("\n"):
+        if line.startswith("\t"):
+            continue                       # a recipe line
+        code = line.split("#", 1)[0].rstrip()
+        m = _MAKE_ASSIGN.match(code)
+        if not m:
+            continue
+        name, op, v = m.group(1), m.group(2), m.group(3).strip()
+        vals[name] = (vals[name] + " " + v).strip() if op == "+=" and name in vals else v
+    return vals
+
+
+def _make_expand(code: str, vals: dict) -> str:
+    for _ in range(8):
+        new = _MAKE_REF.sub(
+            lambda m: vals.get(m.group(1) or m.group(2), "")
+            if (m.group(1) or m.group(2)) not in _MAKE_FN_NAMES else m.group(0), code)
+        if new == code:
+            break
+        code = new
+    return code
+
+
+_MAKE_FN_NAMES = frozenset(("subst", "patsubst", "strip", "addprefix", "addsuffix",
+                            "join", "firstword", "lastword", "word", "findstring",
+                            "filter", "sort", "notdir", "basename", "suffix", "if",
+                            "shell", "call", "eval", "foreach", "wildcard", "info",
+                            "warning", "error", "value", "origin", "or", "and"))
+
+
+def _make_eval(code: str, vals: dict | None = None) -> str:
+    if vals is not None:
+        code = _make_expand(code, vals)
+
     def one(m):
         fn, a = m.group(1), m.group(2)
         parts = a.split(",")
@@ -876,6 +1279,8 @@ def _make_eval(code: str) -> str:
                 return parts[0] if parts[0] in parts[1] else ""
             if fn in ("notdir", "basename", "suffix"):
                 return a
+            if fn == "if" and len(parts) in (2, 3):
+                return parts[1] if parts[0].strip() else (parts[2] if len(parts) == 3 else "")
         except (ValueError, re.error):
             pass
         return m.group(0)
@@ -989,6 +1394,67 @@ def _shebang_scanner(p: Path):
     return None
 
 
+# TRACKED FILES THAT RUN COMMANDS BUT ARE NOT SCRIPTS (C-91 review round 5:
+# each MEASURED scanning clean). Scanned: a composite action's `runs` steps
+# (`action.yml` anywhere), `.pre-commit-config.yaml`/`.pre-commit-hooks.yaml`
+# `entry:`, compose files and Kubernetes manifests (`command:`/`args:`) -- as
+# YAML shell; a Dockerfile's RUN/CMD/ENTRYPOINT (`Dockerfile*`, `*.dockerfile`),
+# a justfile, tox.ini, a Procfile and an .envrc -- as shell; package.json
+# scripts and a latexmkrc (Perl) -- as quoted literals; a Jupyter notebook's
+# code cells -- as Python, its `!`/`%%bash` lines as shell. NOT scanned,
+# recorded: every other YAML/TOML/JSON/INI file is DATA in this repository
+# (rule specs, governance facts, CI dashboards: they name engines as values,
+# e.g. `compiler: pdflatex`), and the Rust/Cargo build is scanned as .rs.
+def _command_file_kind(rel: str):
+    name = rel.rsplit("/", 1)[-1]
+    if name in ("action.yml", "action.yaml", ".pre-commit-config.yaml",
+                ".pre-commit-hooks.yaml") or re.fullmatch(
+                    r"(docker-)?compose[\w.-]*\.ya?ml", name) or (
+                    rel.startswith(("infra/k8s/", ".github/")) and name.endswith((".yml", ".yaml"))):
+        return lambda t: scan_shell(t, yaml=True)
+    if (name.startswith("Dockerfile") or name.endswith(".dockerfile")
+            or name in ("justfile", "Justfile", ".justfile", "tox.ini", "Procfile",
+                        ".envrc")):
+        return scan_shell
+    if name in ("package.json",) or name.endswith("latexmkrc"):
+        return scan_other
+    if name.endswith(".ipynb"):
+        return scan_notebook
+    return None
+
+
+def scan_notebook(text: str) -> list[tuple[int, str]]:
+    """A notebook's code cells: `!cmd` lines and `%%bash`/`%%sh` cells as
+    shell, the rest as Python (other `%` magics blanked). Line numbers are the
+    cell's."""
+    try:
+        nb = json.loads(text)
+    except ValueError:
+        return scan_other(text)
+    hits = []
+    for cell in nb.get("cells", []) if isinstance(nb, dict) else []:
+        if not isinstance(cell, dict) or cell.get("cell_type") != "code":
+            continue
+        src = cell.get("source", "")
+        src = "".join(src) if isinstance(src, list) else str(src)
+        lines = src.split("\n")
+        if lines and re.match(r"^%%(bash|sh|script\s+(ba)?sh)\b", lines[0]):
+            hits += scan_shell("\n".join(lines[1:]))
+            continue
+        py = []
+        for ln in lines:
+            m = re.match(r"^(\s*)!(.*)$", ln)
+            if m:
+                hits += [(0, w) for _, w in scan_shell(m.group(2))]
+                py.append(m.group(1) + "pass")
+            elif ln.lstrip().startswith("%"):
+                py.append(ln[:len(ln) - len(ln.lstrip())] + "pass")
+            else:
+                py.append(ln)
+        hits += scan_python("\n".join(py))
+    return hits
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo", default=".")
@@ -1087,6 +1553,8 @@ def main() -> int:
         elif rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")):
             allow = WORKFLOW_ALLOW.get(rel, ())
             scan = (lambda t, a=allow: scan_shell(t, a, yaml=True))
+        elif _command_file_kind(rel) is not None:
+            scan = _command_file_kind(rel)
         else:
             # A script without a known extension is scanned by its SHEBANG
             # (round 4 MEASURED an extensionless `#!/bin/sh` file scanning

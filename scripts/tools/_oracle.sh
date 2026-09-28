@@ -7,7 +7,9 @@
 #   PDFLATEX        array: the command to run INSTEAD of `pdflatex`; on BOTH
 #                   backends the `_oracle.py pdflatex` shim, which imposes the
 #                   ONE grading environment (ORACLE_TEX_VARS, private TEXMF*,
-#                   no host TeX variable; C-91), so no caller can differ
+#                   no host TeX variable; C-91) and the graded ARGV allow-list
+#                   (-interaction/-halt-on-error/... and one file; round 5),
+#                   so no caller can differ
 #   ORACLE_BACKEND  native | container
 #   ORACLE_BANNER   the oracle's `pdflatex --version` first line
 #   ORACLE_RM       array: the command that deletes work files pdflatex will
@@ -63,7 +65,7 @@ oracle_setup() {
     ORACLE_BACKEND=native
     # Through the shim on the native backend too (C-91): the shim, not the
     # caller, gives every graded run the protocol's environment (_oracle.py
-    # graded_env: ORACLE_TEX_VARS, a private TEXMFHOME/TEXMFVAR, no host TeX
+    # graded_env: ORACLE_TEX_VARS, a private TEXMFHOME/TEXMFVAR/TEXMFCONFIG, no host TeX
     # variable), so CI grades exactly what a laptop grades. A bare `pdflatex`
     # here ran with the image's defaults: no openin_any/openout_any=p, no
     # SOURCE_DATE_EPOCH, the persistent TEXMFVAR. The shim enforces the

@@ -1,6 +1,6 @@
 # Design: the contract-bounded proven tier
 
-**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestone M0 (§F) is implemented; nothing is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestones M0 and M1 slice 1 (§F) are implemented. M2 phase 1, the Coq kernel of the fragment L_S0 (§I.4), is proved and attested, but no product verdict uses it: the CLI's strict tier is still a stub, so nothing a user sees is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
 
 **Paths.** Repository paths below are relative to the repository root. A `file:line` reference gives the line as of commit `978601ee` and may have moved since. Anything marked *(scratch-only)* was produced by the design spikes in a private scratch area and is **not in the repository**; it is cited as evidence for a measured figure, not as a file you can open.
 
@@ -34,7 +34,10 @@ Spike artefacts *(scratch-only)* were kept in a private scratch area, in three d
 
 The bridge corollary `strict_ready_iff_pdflatex : Faithful oracle C -> in_strict C d -> (decide C d = ProvenReady <-> oracle_ok d)` takes `Faithful` as an explicit **premise** (a `Definition`, not an `Axiom`, and not a `Section` `Hypothesis`, which would vanish into a ∀-binder on `End`). As a result:
 - the existing `Print Assumptions … Closed` gate still holds;
-- a new gate checks the corollary's *statement* textually, so that `Faithful` is its **only** non-structural premise.
+- a new gate checks the corollary's *statement* textually, so that `Faithful` is its **only** non-structural premise;
+- the *body* of `Faithful` is pinned too (OPEN-121 final review, MEDIUM-1). A pinned statement cannot see what a premise means: the review redefined `Faithful` as `oracle_ok (render d) <-> decide C d = ProvenReady`, which turns the corollary into decide = decide, and coqc printed the same pinned statement with `Print Assumptions` still Closed. `check_print_assumptions.py` now pins coqc's `Print Faithful` (the elaborated body) AND, because `Print` shows the shortest unambiguous name and a shadow `Module Semantics` placed on Bridge.v's Require line still printed `Semantics.Runs` (the re-review's MEDIUM-1, C-87), asks the KERNEL `eq_refl : Faithful = <body>` with every name fully qualified, in a file that Requires `Bridge` without Importing it; and check 10 of `check_strict_kernel.py` pins the source text, requires the body to mention `Runs` and none of `decide`/`run`/`step`, and forbids any other definer in any Coq SENTENCE of `Bridge.v` (only the pinned Require sentence, `Faithful` and the two bridge Corollaries). All arms are MEASURED to fail on the review's redefinition, and the convertibility and sentence arms on the re-review's shadow module; the textual arm has four registered kill-tests. The STATEMENTS are pinned the same way since the second re-review (HIGH-1, C-88): a shadow `in_strict_doc := False` defined in Bridge.v after `Faithful` made the corollary vacuous while `Check` still printed the pinned statement, and it evaded check 10 twice (a `Time` prefix; a Definition between `(* "(*" *)` and `(* "*)" *)`, which Coq reads as two comments). Now: both corollaries are Closed-checked and their types are checked by kernel conversion against fully qualified statements (Require without Import); `Print Module Bridge` must list exactly `Faithful` and the two corollaries; and check 10 lexes strings inside comments as Coq does, forbids any `"` in Bridge.v, strips control prefixes (`Time`, `Timeout n`, `Redirect`, attributes, ...) before its keyword scan, and PINS the whole comment-stripped code of Bridge.v sentence by sentence (an allow-list: any sentence not on it fails, whatever its keyword). MEASURED: every arm fails on the two mutants of that review, on the plain shadow, the `Time Notation` shadow and the comment-string `Module Decide` shadow; the clean tree passes; three more kill-tests.
+
+**What the theorem covers, and what it does not.** `Faithful` and the bridge corollary are about READY iff compiles, and nothing else. The reason and line of a PROVEN NOT-READY are exact with respect to `Runs` (`strict_decider_exact`, the `Fatal r l` direction), but no theorem connects `Fatal r l` to pdfTeX's first error message or its line: that is attested EMPIRICALLY, by the rule probes and the generated differential, which compare message class and line and report 0 disagreements. "A wrong reason or location counts as `strict_wrong`" (§E North Star, ADR-012 decision 6) is a claim the probes and the differential check, not a claim of the theorem.
 
 This repairs the graft from attestation-first. Its proposal, "Print Assumptions lists exactly `faithful`", only works if `faithful` is an `Axiom`, and that would break the Closed gate.
 
@@ -163,6 +166,8 @@ Shape distribution over 2,192 new names: 1,717 plain-undelimited, 238 register/c
 
 READY means rc 0 under `-interaction=nonstopmode -halt-on-error`, a ≤3-pass fixpoint, default restricted shell-escape, **and a PDF produced**. An explicit fatal code E0 covers "rc 0, no PDF" (the empty body; `\label` alone [M]).
 
+**The timeout is part of `oracle_ok`.** A run that does not finish within the timeout is not "compiles", so the predicate `Faithful` speaks about is "rc 0 and a PDF, within the timeout". The timeout is PER PASS: `_oracle.run_to_fixpoint` calls `run_once` with it for each of up to 3 passes and once more for the confirming pass, so the wall-clock bound on `oracle_ok` is (passes+1) × 300 s, at most 1,200 s. The harnesses (`strict_differential.py`, `gen_strict_signatures.py`) use 300 s, and `_strict_s0.grade` now defaults to the same 300 s (`GRADE_TIMEOUT_S`; it was 60 s) so an ad-hoc caller cannot get a flaky disagreement from a tighter one. The slowest documents measured INSIDE the capacity bounds (OPEN-121 final review, under the pinned oracle, READY on both sides): 6,666 forced pages (`x \par \break` × 6,666) at 47–52 s, and 19,995 `\mathstrut` in one display at 54.7 s, the latter under machine load. The margin to 300 s is about 5.5×; that no in-bounds document is slower is INFERRED from these adversarial searches, not proved.
+
 **Which pdflatex is the oracle (owner decision of 2026-09-26, ADR-012 decision 7).** The oracle is frozen as CI's digest-pinned TeX Live image, the `TEX_IMAGE` digest in `.github/workflows/tex-oracle.yml`, run locally through a container. The laptop TeX Live is not the oracle, so the earlier plan to repair its pdfmanagement orphan files is superseded. Every graded artefact is re-graded once under the image and the diffs are published as an oracle-baseline change; sample 3 is drawn and graded only after that. The [M] figures in this document were taken under the laptop pin and are pre-baseline.
 
 **Implemented 2026-09-27 (OPEN-118).** Attestation and metrics both call `scripts/tools/_oracle.py`, the only code allowed to start pdflatex (`check_oracle_pin.py` enforces this). It runs the image through a container locally and natively only inside the image in CI, and it fails rather than fall back to a host TeX Live. Each run records rc, the number of passes and whether a PDF was produced, so the E0 predicate above can be evaluated. Every artefact records the image digest, the architecture and two fingerprints of the TeX tree (the package database and a per-package revision digest of the macro layer), because the version banner does not pin the macro layer: the laptop printed the pinned banner while differing from the image in 190 packages. The re-grade under the image moved no cell of any re-graded artefact. The M1 contract generator must use the same entry point and store the macro-layer fingerprint in each contract's `pin` field (§B.2).
@@ -264,6 +269,7 @@ type verdict =
 - **Rendering.** The TIER line's verdict kind is `PROVEN-READY`/`PROVEN-NOT-READY` if and only if the verdict is `Proven_*`. The kind is a fixed token produced only by the renderer; user data (paths, macro names) is quoted verbatim in delimited fields and never rewritten, so a user path may contain the word PROVEN. Enforced by the renderer's structure plus a unit test.
   - Example: `PROVEN NOT-READY main.tex:42:7 \frac is math-only, used in text mode [E3, probe P-MODE/frac, contract 1a2b3c4d]`.
   - Heuristic lines always carry `heuristic — not a proof`.
+  - **What PROVEN NOT-READY's reason and location rest on.** The PROVEN in `PROVEN NOT-READY` is the theorem's: pdflatex does not compile (`strict_not_ready_pdflatex`, under `Faithful`). The `file:line:col` and the E-code are exact against `Runs`, but that they are pdfTeX's first error and its line is attested empirically by the rule probes and the differential (0 disagreements on message class and line), not proved (§0).
 - **`why_not_strict`** (graft from product-first) is shown on every non-proven verdict, with up to three reasons and fix-it nudges. Examples: `\def\R{\mathbb R}` → `\newcommand{\R}{\mathbb{R}}`, and "remove unused `\usepackage{foo}`". On sample 2, 17 papers are blocked only by `\def` and have no local style files [M].
 - **Exit codes stay as today** (0 = no known blocker, 1 = blocker), so there is no fixture churn. The new flag `--require-proof` exits 4 unless the verdict is `Proven_*`. JSON gains `tier`, `reason`, `loc`, `contract` and `why_not_strict`. product-first's 0–4 exit-code rewrite is rejected.
 - Certificate tokens follow A2/C1 (`docs/v27/REALIGNMENT_PLAN.md` §4).
@@ -293,7 +299,7 @@ type verdict =
 
 ## E. Measurement
 
-- **North Star.** Strict-tier coverage on a **virgin** sample, `#{PROVEN verdict = oracle} / N`. It is always shown beside `strict_wrong`, which counts false-READY, false-NOT-READY, **and wrong reason or location**. `strict_wrong` must be 0 and is published **with its 95% upper bound**: 0/k ≈ 3/k, which is about 30% at k = 10 (graft from product-first). The docs say that a small k is weak evidence.
+- **North Star.** Strict-tier coverage on a **virgin** sample, `#{PROVEN verdict = oracle} / N`. It is always shown beside `strict_wrong`, which counts false-READY, false-NOT-READY, **and wrong reason or location**. `strict_wrong` must be 0 and is published **with its 95% upper bound**: 0/k ≈ 3/k, which is about 30% at k = 10 (graft from product-first). The docs say that a small k is weak evidence. The false-READY and false-NOT-READY parts of `strict_wrong` are what the bridge corollary covers under `Faithful`; the wrong-reason-or-location part is covered by no theorem and is measured only (the probes and the differential compare message class and line; §0).
 - **Exactness evidence is carried by the generated differential**, not by the virgin count.
   - At least 10,000 random `L_S` documents per release are drawn over the attested contracts, weighted toward boundaries (mode switches, arity, clashes, nesting, dynamic contexts), graded by the pinned oracle and reported per E-code.
   - Any disagreement is an F-defect: it blocks the release, adds a CORRECTIONS row, and the affected rule is frozen out of the tier until fixed.
@@ -832,3 +838,209 @@ restated here.
 | closure boundary scan (measurement only, never used for ranking) | `corpora/real_roots/strict_boundary_sample3.json` (`scripts/tools/measure_strict_boundary.py`) |
 | publication, with samples 1 and 2 beside it and the 10 repo-named ids split out | `scripts/tools/gen_project_state.py` into `docs/v27/PROJECT_STATE.md` §1 |
 | staleness, claim and cell checks; oracle fingerprint check | `scripts/tools/check_project_state.py`, `scripts/tools/check_oracle_pin.py`, kill-tests in `scripts/tools/check_gate_selftests.py` |
+
+### I.4 M2 phase 1: the Coq kernel of L_S0 (2026-09-27)
+
+The kernel is proved and attested. Nothing in the product uses it: the CLI's
+strict tier is still the M0 stub, and `--require-proof` still exits 4 on every
+document. Ledger row: OPEN-121 in [PROJECT_STATE.md](PROJECT_STATE.md).
+
+| deliverable | where |
+|---|---|
+| node grammar, token stream (`flatten_doc`), the exact bytes given to pdflatex (`render`) | `proofs/Strict/Syntax.v` |
+| contract record, a parameter of every theorem (`c_defined`, `c_sig`); fatal reasons E0, E1, E3, E4, E5, E6 | `proofs/Strict/Contract.v` |
+| the declarative semantics `Runs`: 42 constructors, one per construct and failure mode, each commented with its probe family `S0/<constructor>` | `proofs/Strict/Semantics.v` |
+| the decider (`step` iterated by `run`; `decide`), membership `in_strict_doc`, and the theorems | `proofs/Strict/Decide.v` |
+| `Faithful` (a `Definition`) and the bridge `strict_ready_iff_pdflatex` | `proofs/Strict/Bridge.v` |
+| extraction and its regeneration | `proofs/Strict/Extract.v`, `scripts/tools/regen_strict_kernel_extract.sh`, committed as `latex-parse/strict/strict_kernel_extracted.ml` (checked by `scripts/tools/check_extract_identity.py`) |
+| harness driver (trusted, T5: builds the contract record from the committed files) and unit tests | `latex-parse/strict/strict_decide.ml`, `latex-parse/strict/test_strict_kernel.ml` |
+| probe-attested signatures | `scripts/tools/gen_strict_signatures.py`, `corpora/contracts/strict/article-s0-signatures.json` |
+| rule probes (with the branch matrix and the bound family) and the generated differential v2 | `scripts/tools/strict_differential.py`, `scripts/tools/_strict_s0.py`, `corpora/strict_s0/` |
+| pure gate over the kernel and its evidence, and the home of RULE R-INERT (spec-drift, 22 kill-tests) | `scripts/tools/check_strict_kernel.py` |
+
+**Theorems** (all `Qed`; `Print Assumptions` is Closed for each, registered in
+`scripts/tools/check_print_assumptions.py`, which also pins the bridge's
+statement textually so that `Faithful` stays its only premise about the
+world):
+
+- `strict_decider_exact`: for a strict document, `decide C d = ProvenReady`
+  iff `Runs C init (flatten_doc d) Compiles`, and `decide C d =
+  ProvenNotReady r l` iff `Runs … (Fatal r l)`. Proved from `run_sound` and
+  `run_complete`, a refinement in both directions.
+- `runs_deterministic`: proved by induction on `Runs` itself, not through the
+  decider.
+- `runs_total` and `decide_total`: a strict document always has an outcome,
+  so the decider never answers `NotStrict` inside the tier.
+- `in_strict_dec`.
+- `strict_ready_iff_pdflatex : Faithful oracle_ok C -> in_strict_doc C d ->
+  (decide C d = ProvenReady <-> oracle_ok (render d))`, and its NOT-READY
+  corollary `strict_not_ready_pdflatex`. Both are about READY iff compiles
+  ONLY: the reason and line of a NOT-READY are exact against `Runs`, and
+  agree with pdfTeX's first error by the probes and the differential
+  (0 disagreements), not by a theorem (§0). The body of `Faithful` is pinned
+  by coqc `Print`, by a kernel convertibility check against fully qualified
+  names (C-87), and by `check_strict_kernel.py` check 10; both corollaries' types
+  are pinned by kernel conversion against fully qualified statements and
+  Bridge's field list by `Print Module` (C-88).
+- Not a tautology, measured: changing one case of `step` (a paragraph break in
+  math reported as E3 instead of E6) makes `run_sound_n` fail to compile.
+
+**The fragment.** Characters (letters, digits, `. , ; : ! ? ( ) / + - =`),
+spaces, paragraph breaks (a blank line or `\par`), brace groups and stray
+`}`, the four math delimiters, `^`/`_` with a character or a group argument,
+and control words (ASCII letters) with no argument. A control word is decided E1 when it is
+outside the configuration's closed world, and is otherwise inside the tier
+only if it has a signature. The configuration is `article` with no packages.
+The fragment is BOUNDED (C-86): brace nesting at most 200 and at most 20,000
+tokens (`Decide.v` `max_brace_depth`, `max_tokens`, part of `in_strict_doc`).
+MEASURED under the pinned oracle: 253 nested groups compile and 254 give
+"TeX capacity exceeded [grouping levels=255]" in text, math and script
+groups; a formula of 1,000,000 characters, and 100,000 occurrences of
+`\Longleftarrow`, `\arcsin`, `\dots` or `\mathstrut` in one formula, give
+"[main memory size=5000000]". Before the bound the kernel answered PROVEN
+READY on such documents. The margins are attested per name (families R-NEST-*
+and R-BIG-* below) and for the structure (rule-probe family BOUND); that
+different names' memory costs ADD UP in one document is INFERRED, not
+measured.
+
+**Why the semantics runs on tokens, not on the tree.** TeX executes a token
+stream, and the tree nesting is not TeX's nesting. The byte-level lesson of
+the semantics-first spike is a rule of `Runs`, not a property of a lexer: `$`
+outside math looks at the next token, so an empty inline formula printed as
+`$$` opens display math (`R_dollar_display_open`). Likewise `{}}` is a group
+and a stray brace, `$x$$y$` is two inline formulas, and inside a math brace
+group TeX is in non-display math even within a display.
+
+**Rendering.** `render` puts a line feed after every token except a space and
+`$`, so pdfTeX's `l.N` locates the token that failed; the differential checks
+the line of every fatal. The header comment of `proofs/Strict/Syntax.v` says
+why each inserted line feed is harmless.
+
+**Signatures (generator version 3, C-85).** A defined control word gets
+`text` in {material, noop, fatal E3} and `math` in {noad, noop, fatal E3,
+fatal E6} only through five stages (`scripts/tools/gen_strict_signatures.py`,
+docstring):
+
+0. **RULE R-INERT** (stated and implemented in
+   `scripts/tools/check_strict_kernel.py`, applied by the generator and
+   re-applied by the gate to every admitted name): the name's `\meaning` at
+   body start, and the meanings of every name of letters and `@` its
+   expansion texts reach (transitively; 1,110 meanings for the 400
+   candidates), are read from the pinned image. A name is not inert, and
+   never admitted, when it is a conditional primitive (`\if*`, `\else`,
+   `\fi`, `\or`, `\unless`), an expansion-control primitive (`\expandafter`,
+   `\noexpand`, `\futurelet`, `\csname`, ...), a prefix (`\immediate`,
+   `\global`, ...), an interaction-mode changer (`\nonstopmode`, ...), an
+   I/O, diagnostic, tracing, code-table (`\catcode`, ...), deferred-execution
+   (`\aftergroup`, `\everypar`, ...) or definition primitive, a register, a
+   name `\let` to a structural character; or a macro whose expansion text is
+   empty (transparent to expansion), has unbalanced conditionals, or whose
+   expansion closure reaches a primitive of the state-changing classes
+   (`\tracingall` reaches `\tracingstats` through `\loggingall`,
+   `\tableofcontents` reaches `\input` and `\write`). The closure does not
+   follow names holding other characters (`\T1\IJ`, `\?-cmd`): it is a
+   screen, not a proof, and the probes below remain the behavioural check.
+1. **Base probes**: the 15 of version 2 (X in text and math next to each
+   construct the kernel models, and the two look-ahead probes of C-84).
+2. **Follower, display-follower and repetition families**, 43 documents per
+   name: X immediately followed by every token class of the fragment in text
+   and in math (every one of its 74 characters, space, blank line, `\par`,
+   braces, `$`, `$$`, `\(` `\)` `\[` `\]`, `^`, `_`, an undefined word,
+   `\end{document}`, end of file); X right after a `$` in display math
+   (D-FOLLOW-*: the position `Semantics.display_bad_follower` reads with
+   expansion, tex.web §1197); X 300 times in text, in math, alternating with
+   a character, in 300 paragraphs, groups, formulas and displays; X at the
+   nesting bound (alone and at every one of the 200 levels) and repeated to
+   the token bound in one paragraph and in one formula.
+3. **Admission**: exactly one of the 12 hypotheses makes the EXTRACTED
+   decider agree with the oracle on all 58 probes (verdict, message class,
+   line).
+4. **Interleaving**: seeded documents interleaving all admitted names (text
+   names in text, with and without characters between, across paragraphs and
+   in groups; math names in inline and display math and across formulas), at
+   least 300 occurrences each, graded against the kernel with the final
+   signature set; a disagreement is reduced by delta debugging to a minimal
+   set of names, all of which are rejected, until a round agrees.
+
+The candidates are a rule, not a list: the article closed world's control
+words minus `par`, `begin` and `end`, in sha256 order, the first 400.
+MEASURED (generator version 3): 130 admitted, 270 rejected (83 by R-INERT,
+184 by the base probes, 3 by stage 2, 0 by interleaving; 24 interleaving
+documents in one round, 0 disagreeing). 5,743 documents were graded for
+this run; the 6,000 base-probe grades of version 2 were reused for
+byte-identical documents under the same oracle provenance (the tool refuses
+reuse across any provenance difference). Admitted classes: fatal E3/noad 50,
+material/noad 53, noop/noop 20, noop/fatal E6 2, noop/noad 2, material/noop
+1, material/fatal E6 1, noop/fatal E3 1. Version 2 admitted 150; the 20 it
+admitted and version 3 does not are the whole finding of the adversarial
+review (C-85): `\empty`, `\CurrentOption`, `\UnusedTemplateKeys` (empty
+expansion), `\iftrue`, `\immediate`, `\nonstopmode`, `\tracingall`,
+`\loggingall`, `\tracingnone`, `\hideoutput`, `\tableofcontents`,
+`\titlepage`, `\flushright`, `\endflushright`, `\endlist`, `\endverse`,
+`\footnotemark` (R-INERT); `\theenumiii` and `\LinkTargetOff` (transparent
+after a display `$`: D-FOLLOW-DOLLAR compiles); `\cong` (exceeds main memory at the
+token bound: R-BIG-MATH gives "main memory size"). Version 3 admits no name
+version 2 rejected.
+
+**Evidence.**
+
+- Rule probes (`corpora/strict_s0/rule_probes.json`): 510 graded documents,
+  510 agree with the oracle; every one of the 42 constructors is used by at
+  least one agreeing probe. Of them, 393 form the BRANCH MATRIX (every
+  innermost frame x every token class, and for `$`, `^`, `_` x every follower
+  class including every admitted signature pair, undefined and end of file),
+  covering all 230 cells the grammar admits in the tier; the 352 cells
+  membership excludes (a script without its argument) are covered by 396
+  documents the extracted decider places outside the tier. 9 BOUND documents
+  at the bounds agree; 3 one past them are outside the tier.
+  `check_strict_kernel.py` derives the look-ahead tokens from the `Runs`
+  conclusions, the token and frame classes from `Syntax.v`/`Semantics.v` and
+  the signature classes from the signature file, so a new look-ahead rule or
+  token class without matrix coverage fails the gate (kill-tested).
+- Generated differential v2 (`corpora/strict_s0/differential_v2.json`):
+  4,000 seeded documents (seed 2), 4,000 of 4,000 agree with the oracle on verdict, message class and line: READY 1,572, E0 543, E1 429, E3 616, E4 127, E5 608, E6 105; 0 oracle timeouts or infrastructure failures; exact one-sided 95% upper bound on the disagreement rate 0.075% overall and 0.19% on READY verdicts, OVER THIS GENERATOR'S DISTRIBUTION. Of the 4,000, 100 put an admitted name right after a `$` in display math and 21 an undefined one, 298 have at least 100 tokens and 86 at least 300 (runs of repeated names; 31 of those are READY). A first run of the same size, made with a generator bug that let text-fatal and math-fatal names into clean documents (a helper shadowed by a second function of the same name), also agreed 4,000 of 4,000; it is not committed because the fixed code does not reproduce it; 40 of 42 constructors are used (`R_dollar_display_eof` and `R_mclose_inline_bad` only by the token-level rule probes). Sized at 4,000, not 10,000, because the shared oracle was loaded (about 2 documents per second).
+  The upper bound is a bound over the documents THIS generator draws, not
+  over L_S0 (C-85): version 1 drew no `$` in display math followed by a name
+  and no repeated name, and its 1,200 of 1,200 coexisted with both classes of
+  wrong verdict below. A class version 2 does not draw is equally unbounded.
+- Findings of the evidence, each an F-defect fixed at its source:
+  - C-83 (semantics): `R_dollar_display_eof` said a `$` ending a display at
+    the end of a file reads past the end; pdfTeX appends an end-of-line to
+    the last line, so the look-ahead meets a space.
+  - C-84 (contract): `\expandafter` passed 13 probes as noop/noop and read the
+    token after the next.
+  - C-85 (contract, found by adversarial review): 6 admitted names are
+    transparent after a display `$` (false NOT-READY with a wrong location:
+    `$$z $\empty $$$$$` compiles), and a name attested once per occurrence can
+    consume a global resource (`\tableofcontents` twenty times: model READY,
+    oracle "No room for a new \write", false READY). Fixed by stages 0, 2 and
+    4 above, the branch matrix and the generator's new shapes; both
+    reviewers' scripts re-run: 0 of 130 admitted names disagree in the
+    display-follower repro, and of the 50 adversarial documents 32 agree and
+    18 are outside the tier (they use names no longer admitted).
+  - C-86 (semantics): the kernel had no capacity bounds (false READY at 254
+    nested groups and on memory exhaustion); fixed by the bounded fragment.
+
+**Deviations from §C.3, and what is not done.**
+
+- No parser: documents are trees, printed by `render`. `parse`, `parse_exact`
+  and the bytes-level form of the bridge are phase 2; so is
+  `no_turing_construct`.
+- The fatal-reason set is phase 1's (E0, E1, E3, E4, E5, E6). E2, E7 and E11
+  need environments, arguments and Unicode, which the fragment does not have.
+  Unclosed math at `\end{document}` and a missing `\end{document}` are
+  labelled E5 (stack discipline).
+- `complete_scope` (§I.2): the contract attests the configuration's name set,
+  not a document's. In phase 1 every E1 verdict of the differential is itself
+  graded by the oracle; the per-document self-check before a PROVEN verdict is
+  still to do, with the wiring into the product.
+- A signature is attested in the probed contexts, under the rule R-INERT
+  screen, and in the interleavings; a context none of them builds is covered
+  only by the differential. Letters and digits after a name are probed one by
+  one (FT-CHARS, FM-CHARS) but in one document, so a look-ahead that silently
+  swallows one character without changing the outcome is not observable
+  (and does not matter to the verdict: READY iff compiles).
+- The kernel's own signature generator (`gen_strict_signatures.py`)
+  duplicates M1 slice 2's `contract_signatures.py` (branch
+  `feat/v27165-contract-signatures`); the two must converge onto one
+  signature source before M3 (OPEN-121).

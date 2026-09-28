@@ -21,7 +21,11 @@ jobs:
   # to branch-protection's required-checks list.
   spec-drift:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # 20, not 5: check_gate_selftests --level pure re-runs a gate per
+    # mutation and grew past 150 mutations (the oracle infra and pin
+    # gates alone take seconds each); it measured 498 s on the owner's
+    # machine and was cancelled at the old 5-minute limit on PR #622.
+    timeout-minutes: 20
     steps:
       # fetch-depth: 0 is LOAD-BEARING, not hygiene. actions/checkout defaults
       # to a one-commit clone, in which `git rev-list <sha>..HEAD` exits 128 for
@@ -186,6 +190,15 @@ jobs:
         # count finding nothing outside the dumped universe. Pure: no docker;
         # the TeX-running reproducibility gate stays local/nightly.
         run: python3 scripts/tools/check_gen_contract_parsers.py
+
+      - name: Strict kernel L_S0 and its evidence (ADR-012 M2 phase 1)
+        # Every Runs constructor of proofs/Strict/Semantics.v is probe-tagged
+        # and its family in corpora/strict_s0/rule_probes.json agrees with the
+        # oracle; the rule probes, the generated differential and the
+        # signature file ran the committed extraction and contract; no
+        # disagreement; no control-word name written into the Coq kernel.
+        # Pure: reads committed files only (the TeX runs are local/nightly).
+        run: python3 scripts/tools/check_strict_kernel.py --repo .
 
       # ADR-012 decision 7 / OPEN-118: the ONE pdflatex oracle is the pinned
       # TeX Live image. Pure: every graded artefact must name that image, the

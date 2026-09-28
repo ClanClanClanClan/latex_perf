@@ -51,6 +51,11 @@ the library without Importing it. The same arm checks the TYPES of both
 bridge corollaries against fully qualified statements (re-review 2, HIGH-1,
 C-88: a shadow `in_strict_doc := False` in Bridge.v printed the pinned
 statement), and `Print Module` must list exactly Bridge's three constants.
+BridgeBytes.v (M2 phase 2) is pinned the same way: FaithfulBytes' body, both
+bytes corollaries' printed statements and fully qualified types, and its
+field list (the bytes PR's review, LOW-2; MEASURED on a build with a
+`Time`-prefixed shadow `in_strict_bytes := False`: both printed statement
+pins passed, both type pins and the field list failed).
 
 USAGE
     python3 scripts/tools/check_print_assumptions.py [--repo .] [--build]
@@ -179,6 +184,65 @@ CAPSTONES = [
         "the NOT-READY side of the bridge under the same premise (OPEN-121 "
         "re-review 2: it was neither Closed-checked nor statement-pinned).",
     ),
+    # M2 phase 2: the decision on the BYTES of a file (proofs/Strict/Lexer.v,
+    # Front.v, DecideBytes.v, BridgeBytes.v).
+    (
+        "LaTeXPerfectionist.Strict.Lexer.lex_exact",
+        "LaTeXPerfectionist.Strict.Lexer",
+        "the executable lexer equals the declarative reading of a file (TeX Live's "
+        "lines, states N/M/S, comments, control sequences) in both directions.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Lexer.lexfile_deterministic",
+        "LaTeXPerfectionist.Strict.Lexer",
+        "a file is read one way only.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Front.parse_exact",
+        "LaTeXPerfectionist.Strict.Front",
+        "the executable parser (front matter, body, kernel tokens with lines) equals "
+        "the declarative Parse in both directions.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Front.parse_deterministic",
+        "LaTeXPerfectionist.Strict.Front",
+        "a file parses one way at most.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.in_strict_bytes_dec",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "membership of a file in the strict fragment is decidable.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.decide_bytes_exact",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "ADR-012 trust layer (2) on bytes: READY iff Runs Compiles, and NOT-READY r "
+        "on line ln iff Runs Fatal r l with ln the declarative reported line (the "
+        "line of the last token the outcome depends on).",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.decide_bytes_not_strict_iff",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "the bytes decider answers NotStrict exactly outside the fragment.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.determined_threshold_unique",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "the reported token of a NOT-READY is unique (the declarative location is "
+        "a function of the outcome).",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_ready_iff_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "ADR-012 bridge on bytes: under the named premise FaithfulBytes (a "
+        "Definition, never an Axiom), PROVEN READY on a file iff the oracle "
+        "compiles that file.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_not_ready_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "under FaithfulBytes, a file the bytes decider rejects does not compile.",
+    ),
 ]
 
 # The bridge corollary's STATEMENT, pinned (design §0: "a new gate checks the
@@ -194,6 +258,27 @@ STATEMENT_PINS = [
         "forall (oracle_ok : list Ascii.ascii -> Prop) (C : contract) (d : doc), "
         "Faithful oracle_ok C -> in_strict_doc C d -> "
         "decide C d = ProvenReady <-> oracle_ok (render d)",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_ready_iff_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.Syntax LaTeXPerfectionist.Strict.Contract "
+        "LaTeXPerfectionist.Strict.Decide LaTeXPerfectionist.Strict.DecideBytes "
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "forall (oracle_ok : list Ascii.ascii -> Prop) (C : bcontract) (b : list Ascii.ascii), "
+        "FaithfulBytes oracle_ok C -> in_strict_bytes C b -> "
+        "decide_bytes C b = ProvenReady <-> oracle_ok b",
+    ),
+    # The bytes PR's review, LOW-2: the NOT-READY side on bytes pinned too,
+    # as the kernel pins strict_not_ready_pdflatex (C-88).
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_not_ready_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.Syntax LaTeXPerfectionist.Strict.Contract "
+        "LaTeXPerfectionist.Strict.Decide LaTeXPerfectionist.Strict.DecideBytes "
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "forall (oracle_ok : list Ascii.ascii -> Prop) (C : bcontract) (b : list Ascii.ascii) "
+        "(r : reason) (ln : nat), "
+        "FaithfulBytes oracle_ok C -> in_strict_bytes C b -> "
+        "decide_bytes C b = ProvenNotReady r ln -> ~ oracle_ok b",
     ),
 ]
 
@@ -214,6 +299,22 @@ BODY_PINS = [
         # Decide.* constant (decide, run, step, ...) is the decider itself.
         ["Decide.decide", "Decide.run", "Decide.step", "Semantics.step",
          "Semantics.run"],
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.FaithfulBytes",
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "FaithfulBytes = fun (oracle_ok : list Ascii.ascii -> Prop) "
+        "(C : DecideBytes.bcontract) => forall (b : list Ascii.ascii) "
+        "(ks : list Front.ktok), DecideBytes.in_strict_bytes C b -> "
+        "Front.Parse (DecideBytes.bc_lex C) b ks -> oracle_ok b <-> "
+        "Semantics.Runs (DecideBytes.bc_kernel C) Semantics.init (Front.toks_of ks) "
+        "Semantics.Compiles : (list Ascii.ascii -> Prop) -> DecideBytes.bcontract -> Prop",
+        ["Semantics.Runs", "Front.Parse"],
+        # DecideBytes.in_strict_bytes is the structural membership premise; the
+        # decider, the executable reader and parser are never its content.
+        ["DecideBytes.decide_bytes", "DecideBytes.rd", "Decide.decide", "Decide.run",
+         "Decide.step", "Front.parse", "Front.front", "Front.body", "Front.prologue",
+         "Lexer.lex", "Lexer.lexl", "Lexer.lex_lines", "DecideBytes.in_strict_bytes_b"],
     ),
 ]
 
@@ -276,7 +377,43 @@ CONVERTIBILITY_PINS = [
         f"{_S}Decide.decide C d = {_S}Decide.ProvenNotReady r l -> "
         f"Coq.Init.Logic.not (oracle_ok ({_S}Syntax.render d))",
     ),
-
+    (
+        _S + "BridgeBytes.FaithfulBytes",
+        _S + "BridgeBytes",
+        "body",
+        f"fun (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}DecideBytes.bcontract) => "
+        f"forall b ks, {_S}DecideBytes.in_strict_bytes C b -> "
+        f"{_S}Front.Parse ({_S}DecideBytes.bc_lex C) b ks -> "
+        f"(oracle_ok b <-> {_S}Semantics.Runs "
+        f"({_S}DecideBytes.bc_kernel C) {_S}Semantics.init "
+        f"({_S}Front.toks_of ks) {_S}Semantics.Compiles)",
+    ),
+    # Both bytes corollaries' TYPES, fully qualified (the bytes PR's review,
+    # LOW-2: the rule C-88 applied to Bridge.v, applied to BridgeBytes.v).
+    (
+        _S + "BridgeBytes.strict_ready_iff_pdflatex_bytes",
+        _S + "BridgeBytes",
+        "type",
+        f"forall (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}DecideBytes.bcontract) (b : {_LIST_ASCII}), "
+        f"{_S}BridgeBytes.FaithfulBytes oracle_ok C -> "
+        f"{_S}DecideBytes.in_strict_bytes C b -> "
+        f"({_S}DecideBytes.decide_bytes C b = {_S}Decide.ProvenReady "
+        f"<-> oracle_ok b)",
+    ),
+    (
+        _S + "BridgeBytes.strict_not_ready_pdflatex_bytes",
+        _S + "BridgeBytes",
+        "type",
+        f"forall (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}DecideBytes.bcontract) (b : {_LIST_ASCII}) "
+        f"(r : {_S}Contract.reason) (ln : Coq.Init.Datatypes.nat), "
+        f"{_S}BridgeBytes.FaithfulBytes oracle_ok C -> "
+        f"{_S}DecideBytes.in_strict_bytes C b -> "
+        f"{_S}DecideBytes.decide_bytes C b = {_S}Decide.ProvenNotReady r ln -> "
+        f"Coq.Init.Logic.not (oracle_ok b)",
+    ),
 ]
 
 # The kernel's own list of what Bridge.v defines (`Print Module`, one field
@@ -284,12 +421,21 @@ CONVERTIBILITY_PINS = [
 # constant, module, inductive or axiom inside Bridge.v fails here whatever
 # the text of Bridge.v looks like (re-review 2, HIGH-1). A Notation is not a
 # module field; it cannot reach the Require-only kernel pins above.
-MODULE_FIELDS = (
-    _S + "Bridge",
-    [("Definition", "Faithful"),
-     ("Parameter", "strict_ready_iff_pdflatex"),
-     ("Parameter", "strict_not_ready_pdflatex")],
-)
+MODULE_FIELDS = [
+    (
+        _S + "Bridge",
+        [("Definition", "Faithful"),
+         ("Parameter", "strict_ready_iff_pdflatex"),
+         ("Parameter", "strict_not_ready_pdflatex")],
+    ),
+    # BridgeBytes.v likewise (the bytes PR's review, LOW-2).
+    (
+        _S + "BridgeBytes",
+        [("Definition", "FaithfulBytes"),
+         ("Parameter", "strict_ready_iff_pdflatex_bytes"),
+         ("Parameter", "strict_not_ready_pdflatex_bytes")],
+    ),
+]
 
 
 def module_fields(out: str) -> list[tuple[str, str]] | None:
@@ -461,23 +607,23 @@ def main() -> int:
                 print(f"[print-assumptions] OK   {const}: {what} convertible to the "
                       f"pinned fully qualified {what}")
 
-        mod, want_fields = MODULE_FIELDS
-        src = workdir / "PM.v"
-        src.write_text(f"Require {mod}.\nPrint Module {mod}.\n", encoding="utf-8")
-        proc = subprocess.run(
-            [coqc, "-R", str(vodir), "LaTeXPerfectionist",
-             "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
-            cwd=workdir, capture_output=True, text=True,
-        )
-        got_fields = module_fields(proc.stdout or "") if proc.returncode == 0 else None
-        if got_fields != want_fields:
-            failures.append(
-                f"{mod}: defines other than {want_fields} (OPEN-121 re-review 2, "
-                f"HIGH-1: a constant defined in Bridge.v can shadow what the bridge "
-                f"reads).\n      Coq: {got_fields if got_fields is not None else (proc.stdout or proc.stderr or '').strip()[:400]}")
-        else:
-            print(f"[print-assumptions] OK   {mod}: fields are exactly "
-                  f"{[n for _, n in want_fields]}")
+        for pm_idx, (mod, want_fields) in enumerate(MODULE_FIELDS):
+            src = workdir / f"PM{pm_idx}.v"
+            src.write_text(f"Require {mod}.\nPrint Module {mod}.\n", encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            got_fields = module_fields(proc.stdout or "") if proc.returncode == 0 else None
+            if got_fields != want_fields:
+                failures.append(
+                    f"{mod}: defines other than {want_fields} (OPEN-121 re-review 2, "
+                    f"HIGH-1: a constant defined in the bridge file can shadow what the bridge "
+                    f"reads).\n      Coq: {got_fields if got_fields is not None else (proc.stdout or proc.stderr or '').strip()[:400]}")
+            else:
+                print(f"[print-assumptions] OK   {mod}: fields are exactly "
+                      f"{[n for _, n in want_fields]}")
 
     if failures:
         print("\n[print-assumptions] FAIL — capstone(s) depend on unproved assumptions:\n")

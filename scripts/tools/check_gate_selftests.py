@@ -727,6 +727,131 @@ def strict_faithful_is_decide(text: str) -> str:
                 .replace(old_proof, "  symmetry. apply HF. exact Hs.\n"))
 
 
+# ---- check_strict_bytes (ADR-012 M2 phase 2) --------------------------------
+
+def bytes_family_one_disagrees(text: str) -> str:
+    """A reader constructor whose probe family has one document the oracle
+    disagrees with."""
+    d = json.loads(text)
+    f = d["by_family"]["LL_comment"]
+    assert f["agree"] == f["n"] >= 1, "bytes_probes drifted; update registry"
+    f["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_differential_one_disagreement(text: str) -> str:
+    d = json.loads(text)
+    assert d["summary"]["disagree"] == 0, "bytes_differential drifted; update registry"
+    d["summary"]["disagree"] = 1
+    d["summary"]["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_differential_below_floor(text: str) -> str:
+    d = json.loads(text)
+    assert d["summary"]["graded"] >= 3000, "bytes_differential drifted; update registry"
+    d["summary"]["graded"] = d["summary"]["agree"] = 2999
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_near_miss_decided(text: str) -> str:
+    """A near-miss outside the fragment that the decider gave a verdict."""
+    d = json.loads(text)
+    near = d["by_family"]["L0-NEAR"]
+    assert near["n"] == 0, "bytes_probes drifted; update registry"
+    near["n"] = near["agree"] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_reader_cell_dropped(text: str) -> str:
+    """No agreeing probe exercises the reader cell S|comment."""
+    d = json.loads(text)
+    n = 0
+    for r in d["documents"]:
+        if "S|comment" in r.get("lex_branches", []):
+            r["lex_branches"].remove("S|comment")
+            n += 1
+    assert n >= 1, "bytes_probes drifted; update registry"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_tree_consistency_differs(text: str) -> str:
+    d = json.loads(text)
+    tc = d["summary"]["tree_bytes_consistency"]
+    assert tc["agree"] == tc["checked"] >= 1, "bytes_probes drifted; update registry"
+    tc["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_explain_mismatch(text: str) -> str:
+    d = json.loads(text)
+    assert d["summary"]["explain_mismatches"] == 0, "bytes_differential drifted"
+    d["summary"]["explain_mismatches"] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def lexical_catcode_changed(text: str) -> str:
+    """The lexical contract no longer what the evidence ran (~ made other)."""
+    d = json.loads(text)
+    assert d["catcodes"][126] == 13, "lexical contract drifted; update registry"
+    d["catcodes"][126] = 12
+    return json.dumps(d, indent=1, sort_keys=True) + "\n"
+
+
+def lexical_structural_drift(text: str) -> str:
+    """A structural name that is not the one Syntax.v renders."""
+    d = json.loads(text)
+    assert d["structural"]["par"] == "par", "lexical contract drifted; update registry"
+    d["structural"]["par"] = "parr"
+    return json.dumps(d, indent=1, sort_keys=True) + "\n"
+
+
+def lexical_endline_not_eol(text: str) -> str:
+    """\\endlinechar's byte no longer of category 5: LL_end/LL_nullcs could
+    then be reached inside the fragment."""
+    d = json.loads(text)
+    assert d["catcodes"][13] == 5, "lexical contract drifted; update registry"
+    d["catcodes"][13] = 12
+    return json.dumps(d, indent=1, sort_keys=True) + "\n"
+
+
+def bytes_record_agree_flipped(text: str) -> str:
+    """The bytes PR's review, LOW-3: one graded record's `agree` flipped, the
+    summary untouched. A gate that trusts the summary passes this."""
+    d = json.loads(text)
+    r = next(r for r in d["documents"] if r.get("class") == "E1")
+    assert r["agree"] is True, "bytes_probes drifted; update registry"
+    r["agree"] = False
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_record_oracle_changed(text: str) -> str:
+    """A READY record whose stored oracle tuple no longer compiles (rc 1),
+    its `agree` and the summary untouched."""
+    d = json.loads(text)
+    r = next(r for r in d["documents"] if r.get("class") == "READY")
+    assert r["oracle"][0] == 0 and r["agree"] is True, "bytes_differential drifted"
+    r["oracle"][0] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_e0_record_has_line(text: str) -> str:
+    """LOW-1's regression: an E0 record carrying a line pdfTeX never reports."""
+    d = json.loads(text)
+    r = next(r for r in d["documents"] if r.get("class") == "E0")
+    assert r["model"][3] is None, "bytes_probes drifted; update registry"
+    r["model"][3] = 4
+    return json.dumps(d, indent=1) + "\n"
+
+
+def faithful_bytes_is_decide(text: str) -> str:
+    """The OPEN-121 MEDIUM-1 shape on bytes: FaithfulBytes' iff states the
+    decider instead of Runs (the corollary would be decide = decide)."""
+    old = "(oracle_ok b <-> Runs (bc_kernel C) init (toks_of ks) Compiles)."
+    assert text.count(old) == 1, "BridgeBytes.v drifted; update registry"
+    return text.replace(old, "(oracle_ok b <-> decide_bytes C b = ProvenReady).")
+
+
 REGISTRY = [
     GateTest(
         "check_strict_kernel",
@@ -874,6 +999,156 @@ REGISTRY = [
                      old="Definition init : state := mkState [] false 0.\n",
                      new="Definition init : state := mkState [] false 0.\n"
                          "Definition lp_kill := \"alpha\".\n"),
+        ]),
+    GateTest(
+        "check_strict_bytes",
+        [PY, f"{TOOLS}/check_strict_bytes.py", "--repo", "."],
+        "pure",
+        [
+            # The review rule of design §C.3, for the reader: every
+            # constructor cites its probe family.
+            Mutation("a reader constructor loses its probe tag",
+                     "proofs/Strict/Lexer.v",
+                     r"FAIL Lexer\.v: constructor LL_comment has no",
+                     old="(* probe L0/LL_comment: the rest",
+                     new="(* L0/LL_comment: the rest"),
+            Mutation("a reader probe family has a disagreeing probe",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: family LL_comment: 1 of",
+                     transform=bytes_family_one_disagrees),
+            Mutation("the byte-level differential reports a disagreement",
+                     "corpora/strict_s0/bytes_differential.json",
+                     r"FAIL bytes_differential: 1 disagreement",
+                     transform=bytes_differential_one_disagreement),
+            Mutation("the byte-level differential is below its floor",
+                     "corpora/strict_s0/bytes_differential.json",
+                     r"FAIL bytes_differential: graded 2999 files, the floor is 3000",
+                     transform=bytes_differential_below_floor),
+            Mutation("a near-miss outside the fragment got a verdict",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: near-misses: 1 decided",
+                     transform=bytes_near_miss_decided),
+            Mutation("a reader branch-matrix cell is not exercised",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL reader branch matrix: cell S\|comment is not exercised",
+                     transform=bytes_reader_cell_dropped),
+            Mutation("the tree and the bytes deciders differ on a rendering",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: the tree decider and the bytes decider differ",
+                     transform=bytes_tree_consistency_differs),
+            Mutation("explain disagrees with the verdict",
+                     "corpora/strict_s0/bytes_differential.json",
+                     r"FAIL bytes_differential: explain_mismatches = 1",
+                     transform=bytes_explain_mismatch),
+            # A reader change without re-running the evidence.
+            Mutation("the committed bytes extraction changes under the evidence",
+                     "latex-parse/strict/strict_bytes_extracted.ml",
+                     r"FAIL bytes_probes: ran another bytes_extract",
+                     old="[@@@warning \"-a\"]\n",
+                     new="[@@@warning \"-a\"]\n\nlet _lp_kill = ()\n"),
+            Mutation("the lexical contract changes under the evidence",
+                     "corpora/contracts/strict/article-s0-lexical.json",
+                     r"FAIL bytes_probes: ran another lexical",
+                     transform=lexical_catcode_changed),
+            Mutation("a structural name is not the renderer's",
+                     "corpora/contracts/strict/article-s0-lexical.json",
+                     r"FAIL lexical contract: structural names",
+                     transform=lexical_structural_drift),
+            Mutation("the end-of-line byte is no longer of category 5",
+                     "corpora/contracts/strict/article-s0-lexical.json",
+                     r"FAIL lexical contract: \\endlinechar is not a category-5 byte",
+                     transform=lexical_endline_not_eol),
+            # A name written into the reader instead of the lexical contract.
+            Mutation("a control-word name is written into the Coq reader",
+                     "proofs/Strict/Lexer.v",
+                     r"FAIL proofs/Strict/Lexer\.v: string literal 'par'",
+                     old="Definition sp : ascii := ascii_of_nat 32.\n",
+                     new="Definition sp : ascii := ascii_of_nat 32.\n"
+                         "Definition lp_kill := \"par\".\n"),
+            # Membership without its exclusions.
+            Mutation("in_strict_bytes no longer excludes a stream ending with $",
+                     "proofs/Strict/DecideBytes.v",
+                     r"FAIL DecideBytes\.v: in_strict_bytes no longer requires `ends_dollar",
+                     old="    bounded (toks_of ks) = true /\\\n    ends_dollar (toks_of ks) = false.\n",
+                     new="    bounded (toks_of ks) = true.\n"),
+            Mutation("the line bound's pin changes",
+                     "proofs/Strict/Lexer.v",
+                     r"FAIL Lexer\.v: missing the pin",
+                     old="Example max_line_bytes_is_10000 : max_line_bytes = Nat.mul 100 100.",
+                     new="Example max_line_bytes_is_10000 : max_line_bytes = Nat.mul 100 101."),
+            # OPEN-121 MEDIUM-1 / C-87, on bytes: FaithfulBytes redefined as
+            # the decider, conjoined with it, or shadowed from the Require line.
+            Mutation("FaithfulBytes is redefined as the decider",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: FaithfulBytes' body is not the pinned one.*"
+                     r"FAIL BridgeBytes\.v: FaithfulBytes' body does not mention Runs.*"
+                     r"FAIL BridgeBytes\.v: FaithfulBytes' body mentions \['decide_bytes'\]",
+                     transform=faithful_bytes_is_decide),
+            Mutation("FaithfulBytes' body conjoins the decider to Runs",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: FaithfulBytes' body mentions \['decide_bytes'\]",
+                     old="Runs (bc_kernel C) init (toks_of ks) Compiles).",
+                     new="Runs (bc_kernel C) init (toks_of ks) Compiles /\\ "
+                         "decide_bytes C b = ProvenReady)."),
+            Mutation("a shadow Module Semantics on BridgeBytes.v's Require line",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: defines more than FaithfulBytes and its "
+                     r"corollaries: \('Module', 'Semantics'\)",
+                     old="From LaTeXPerfectionist.Strict Require Import Syntax Contract "
+                         "Semantics Decide Lexer Front DecideBytes.\n",
+                     new="From LaTeXPerfectionist.Strict Require Import Syntax Contract "
+                         "Semantics Decide Lexer Front DecideBytes. Module Semantics. "
+                         "Definition Runs (C : contract) (s : Semantics.state) "
+                         "(ts : list tok) (o : outcome) : Prop := run C s ts = Some o. "
+                         "End Semantics. Import Semantics.\n"),
+            # The bytes PR's review, LOW-2: the kernel's C-88 shapes on
+            # BridgeBytes.v. Mutant A: a control prefix hides the shadow's
+            # keyword (measured: coqc's printed statement pins still pass on
+            # this build; the kernel type pins and Print Module fail).
+            Mutation("a Time-prefixed shadow in_strict_bytes in BridgeBytes.v",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: defines more than FaithfulBytes and its "
+                     r"corollaries: \('prefix', 'Time'\).*"
+                     r"FAIL BridgeBytes\.v: defines more than FaithfulBytes and its "
+                     r"corollaries: \('Definition', 'in_strict_bytes'\)",
+                     old="Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,",
+                     new="Time Definition in_strict_bytes (C : bcontract) "
+                         "(b : list Ascii.ascii) : Prop := False.\n\n"
+                         "Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,"),
+            # Mutant B: a shadow between two comments holding strings with a
+            # comment delimiter (Coq lexes strings inside comments).
+            Mutation("a shadow in_strict_bytes between two comment-strings",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: defines more than FaithfulBytes and its "
+                     r"corollaries: \('Definition', 'in_strict_bytes'\)",
+                     old="Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,",
+                     new="(* \"(*\" *)\nDefinition in_strict_bytes (C : bcontract) "
+                         "(b : list Ascii.ascii) : Prop := False.\n(* \"*)\" *)\n\n"
+                         "Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,"),
+            # The allow-list itself: a sentence no keyword scan would flag.
+            Mutation("an unpinned tactic sentence in BridgeBytes.v",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: its code is not the pinned sentence list "
+                     r"BRIDGE_SENTENCES .*not pinned: \['apply HF; auto'\]",
+                     old="apply HF; assumption.",
+                     new="apply HF; auto."),
+            # LOW-3: the summary is recomputed from the records.
+            Mutation("one record's agree flipped under an unchanged summary",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: record i=\d+: stored agree False, but its "
+                     r"oracle tuple .* give True",
+                     transform=bytes_record_agree_flipped),
+            Mutation("one record's oracle tuple changed under its agree",
+                     "corpora/strict_s0/bytes_differential.json",
+                     r"FAIL bytes_differential: record i=\d+: stored agree True, but its "
+                     r"oracle tuple \[1, ",
+                     transform=bytes_record_oracle_changed),
+            # LOW-1: an E0 has no l.N; a record that gives one disagrees.
+            Mutation("an E0 record carries a line",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: record i=\d+: stored agree True, .*"
+                     r"model E0 carries a line \(4\); pdfTeX reports none",
+                     transform=bytes_e0_record_has_line),
         ]),
     GateTest(
         "check_gen_contract_parsers",

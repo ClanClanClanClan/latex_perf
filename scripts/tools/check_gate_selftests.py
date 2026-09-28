@@ -88,6 +88,10 @@ from pathlib import Path
 
 MIN_MUTATIONS = 12
 
+# The harness imports gate helpers (e.g. _measurement_provenance) while
+# computing mutation payloads; it must not leave __pycache__ in the checkout
+# (review LOW-2).
+sys.dont_write_bytecode = True
 REPO = Path(__file__).resolve().parent.parent.parent
 PY = sys.executable
 TOOLS = "scripts/tools"
@@ -298,9 +302,13 @@ def prov_stale_build(text: str) -> str:
     tgt["cli_platform"] = _plat()
     # And claim THIS checkout built it: a hash built in another checkout
     # directory is a note, not a kill, because the build embeds absolute paths
-    # (C-72). Without this the mutation would only produce a note.
-    from _measurement_provenance import build_root_fingerprint as _root
-    tgt["cli_build_root"] = _root(REPO)
+    # (C-72). Without this the mutation would only produce a note. Recorded
+    # exactly as every producer records it, from the CLI's resolved path, so a
+    # symlinked _build is fingerprinted as the checkout that really built it
+    # (review LOW-1: _root(REPO) made this a false blind spot there).
+    from _measurement_provenance import cli_build_root as _root
+    tgt["cli_build_root"] = _root(
+        REPO / "_build/default/latex-parse/src/validators_cli.exe")
     return _json.dumps(d, indent=2)
 
 
@@ -2188,6 +2196,11 @@ def make_copy(base: Path, i: int, src: SourceState) -> Copy:
           "--quiet", str(root), src.head], REPO)
     c = Copy(root)
     for p in src.overlay:
+        # _build is linked below, never overlaid: a SYMLINKED _build is not
+        # matched by .gitignore's directory-only '_build/' and so shows up as
+        # untracked (review MEDIUM-1: FileExistsError in make_copy).
+        if Path(p).parts[:1] == ("_build",):
+            continue
         s, d = REPO / p, root / p
         if d.is_symlink() or d.is_file():
             d.unlink()
@@ -2208,7 +2221,10 @@ def make_copy(base: Path, i: int, src: SourceState) -> Copy:
     # of the CLI is the same one the in-place run computes.
     b = REPO / "_build"
     if b.exists():
-        os.symlink(b.resolve(), root / "_build")
+        link = root / "_build"
+        if link.is_symlink() or link.is_file():
+            link.unlink()
+        os.symlink(b.resolve(), link)
     got = _fingerprint(root, src.paths)
     if got != src.fingerprint:
         bad = sorted(p for p in set(got) | set(src.fingerprint)

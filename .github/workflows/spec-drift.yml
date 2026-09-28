@@ -21,7 +21,11 @@ jobs:
   # to branch-protection's required-checks list.
   spec-drift:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # 20, not 5: check_gate_selftests --level pure re-runs a gate per
+    # mutation and grew past 150 mutations (the oracle infra and pin
+    # gates alone take seconds each); it measured 498 s on the owner's
+    # machine and was cancelled at the old 5-minute limit on PR #622.
+    timeout-minutes: 20
     steps:
       # fetch-depth: 0 is LOAD-BEARING, not hygiene. actions/checkout defaults
       # to a one-commit clone, in which `git rev-list <sha>..HEAD` exits 128 for

@@ -665,6 +665,88 @@ def strict_signature_candidate_dropped(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+# ---- ADR-012 step 2, slice A: the one-argument commands ---------------------
+
+def _first_arg(d: dict, runs_text: bool = False) -> str:
+    for n, h in sorted(d["arg_signatures"].items()):
+        if not runs_text or h["text"][0] == "run":
+            return n
+    raise AssertionError("argument-signature file drifted; update registry")
+
+
+def strict_arg_not_inert(text: str) -> str:
+    """R-INERT on an admitted one-argument command's recorded meaning."""
+    d = json.loads(text)
+    d["meanings"][_first_arg(d)] = "\\iftrue"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_nest_overflows(text: str) -> str:
+    """C-86 for arguments: a command nested to the brace bound overflows
+    TeX's grouping levels (\\fbox, \\underline were rejected for this)."""
+    d = json.loads(text)
+    d["evidence"][_first_arg(d, runs_text=True)]["A-R-NEST-TEXT"] = [
+        1, False, "! TeX capacity exceeded, sorry [grouping levels=255].", 205]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_follower_missing(text: str) -> str:
+    d = json.loads(text)
+    d["evidence"][_first_arg(d)].pop("A-D-FOLLOW")
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_both_kinds(text: str) -> str:
+    """contract_wf: a name with a phase-1 signature also given an argument
+    signature."""
+    d = json.loads(text)
+    p1 = json.loads((REPO / "corpora/contracts/strict/article-s0-signatures.json").read_text())
+    n = sorted(p1["signatures"])[0]
+    d["arg_signatures"][n] = d["arg_signatures"][_first_arg(d)]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_candidate_dropped(text: str) -> str:
+    d = json.loads(text)
+    assert d["selection"]["names"], "argument-signature file drifted; update registry"
+    d["selection"]["names"].pop(0)
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_context_disagrees(text: str) -> str:
+    """Phase-1 names inside an argument's mode (an hbox): one disagreement."""
+    d = json.loads(text)
+    assert d["context"].get("disagree") == 0, "argument-signature file drifted"
+    d["context"]["disagree"] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_rules_other_arg_file(text: str) -> str:
+    d = json.loads(text)
+    assert d.get("arg_signatures_sha256"), "rule_probes drifted; update registry"
+    d["arg_signatures_sha256"] = "0" * 64
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_scan_cell_dropped(text: str) -> str:
+    """The argument scanner's matrix: no probe closes the outermost argument
+    of a long command (scan|close|k1|nosh|noou)."""
+    d = json.loads(text)
+    cell = "scan|close|k1|nosh|noou"
+    before = len(d["probes"])
+    d["probes"] = [r for r in d["probes"] if cell not in r.get("branches", [])]
+    assert len(d["probes"]) < before, "rule_probes drifted; update registry"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_family_dropped(text: str) -> str:
+    """A live slice-A constructor (R_close_arg) without its probe family."""
+    d = json.loads(text)
+    assert "R_close_arg" in d["by_family"], "rule_probes drifted; update registry"
+    d["by_family"].pop("R_close_arg")
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_faithful_is_decide(text: str) -> str:
     """The final review's MEDIUM-1 redefinition, verbatim: Faithful's body
     becomes `oracle_ok (render d) <-> decide C d = ProvenReady` and the
@@ -689,6 +771,14 @@ def bytes_family_one_disagrees(text: str) -> str:
     f = d["by_family"]["LL_comment"]
     assert f["agree"] == f["n"] >= 1, "bytes_probes drifted; update registry"
     f["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_other_arg_file(text: str) -> str:
+    """Slice A: the byte-level evidence ran another argument-signature file."""
+    d = json.loads(text)
+    assert d.get("arg_signatures_sha256"), "bytes_probes drifted; update registry"
+    d["arg_signatures_sha256"] = "0" * 64
     return json.dumps(d, indent=1) + "\n"
 
 
@@ -823,13 +913,13 @@ REGISTRY = [
                      r"FAIL rule_probes: family R_script_double: 1 of",
                      transform=strict_family_one_disagrees),
             Mutation("the differential reports a disagreement",
-                     "corpora/strict_s0/differential_v2.json",
+                     "corpora/strict_s0/differential_v3.json",
                      r"FAIL differential: 1 disagreement",
                      transform=strict_differential_one_disagreement),
             # C-85: the published bound must be one over the generator's
             # distribution, not over L_S0.
             Mutation("the differential's bound drops its scope",
-                     "corpora/strict_s0/differential_v2.json",
+                     "corpora/strict_s0/differential_v3.json",
                      r"FAIL differential: the upper bound does not state",
                      transform=strict_bound_scope_dropped),
             # C-85 / R-INERT: a non-inert name admitted.
@@ -952,6 +1042,57 @@ REGISTRY = [
                      old="Definition init : state := mkState [] false 0.\n",
                      new="Definition init : state := mkState [] false 0.\n"
                          "Definition lp_kill := \"alpha\".\n"),
+            # ---- ADR-012 step 2, slice A --------------------------------
+            # The review rule for the two new relations (Scans, Stops).
+            Mutation("a Scans constructor loses its probe tag",
+                     "proofs/Strict/Semantics.v",
+                     r"FAIL Semantics\.v: constructor SC_close_last has no",
+                     old="(* probe S0/SC_close_last: the closing brace",
+                     new="(* S0/SC_close_last: the closing brace"),
+            Mutation("a live argument constructor loses its probe family",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL rule_probes: no probe family for constructor R_close_arg",
+                     transform=strict_arg_family_dropped),
+            Mutation("membership no longer requires well-formed arguments",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: in_strict_toks no longer requires `wfa`",
+                     old="  Forall (fun t => tok_ok C t = true) ts /\\ scripts_ok ts = true "
+                         "/\\ wfa C 0 ts = true.",
+                     new="  Forall (fun t => tok_ok C t = true) ts /\\ scripts_ok ts = true."),
+            Mutation("an admitted one-argument command is not inert",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: admitted '.*' is not inert: conditional",
+                     transform=strict_arg_not_inert),
+            Mutation("an admitted one-argument command overflows grouping levels",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: admitted '.*' does not compile under "
+                     r"A-R-NEST-TEXT",
+                     transform=strict_arg_nest_overflows),
+            Mutation("an admitted one-argument command lacks its display-follower probe",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: admitted '.*' lacks probe families "
+                     r"\['A-D-FOLLOW'\]",
+                     transform=strict_arg_follower_missing),
+            Mutation("a name has both kinds of signature (contract_wf)",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: '.*' has both kinds of signature",
+                     transform=strict_arg_both_kinds),
+            Mutation("the argument candidates are not the selection rule's",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: the candidate list is not the selection rule's",
+                     transform=strict_arg_candidate_dropped),
+            Mutation("a phase-1 name disagrees inside an argument's mode",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: the context stage has 1 disagreement",
+                     transform=strict_arg_context_disagrees),
+            Mutation("the rule probes ran another argument-signature file",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL rule_probes: ran another argument-signature file",
+                     transform=strict_rules_other_arg_file),
+            Mutation("an argument-scanner cell is not exercised",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL branch matrix: cell scan\|close\|k1\|nosh\|noou is not",
+                     transform=strict_scan_cell_dropped),
         ]),
     GateTest(
         "check_strict_bytes",
@@ -999,6 +1140,10 @@ REGISTRY = [
                      r"FAIL bytes_probes: ran another bytes_extract",
                      old="[@@@warning \"-a\"]\n",
                      new="[@@@warning \"-a\"]\n\nlet _lp_kill = ()\n"),
+            Mutation("the byte-level probes ran another argument-signature file",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: ran another arg_signatures",
+                     transform=bytes_other_arg_file),
             Mutation("the lexical contract changes under the evidence",
                      "corpora/contracts/strict/article-s0-lexical.json",
                      r"FAIL bytes_probes: ran another lexical",

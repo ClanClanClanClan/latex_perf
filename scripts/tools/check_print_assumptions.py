@@ -167,6 +167,25 @@ CAPSTONES = [
         "every strict document has an outcome, so the decider never answers "
         "NotStrict inside the tier.",
     ),
+    # ADR-012 step 2, slice A: the two relations Runs now concludes through.
+    (
+        "LaTeXPerfectionist.Strict.Decide.scans_deterministic",
+        "LaTeXPerfectionist.Strict.Decide",
+        "the argument scanner Scans (where an error inside an argument is "
+        "reported) gives at most one outcome, proved on the relation itself.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.stops_deterministic",
+        "LaTeXPerfectionist.Strict.Decide",
+        "Stops (stop now, or defer to the argument's end) gives at most one "
+        "outcome.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.decide_total",
+        "LaTeXPerfectionist.Strict.Decide",
+        "the tree decider never answers NotStrict inside the tier (with the "
+        "argument well-formedness condition wfa in the membership).",
+    ),
     (
         "LaTeXPerfectionist.Strict.Decide.in_strict_dec",
         "LaTeXPerfectionist.Strict.Decide",

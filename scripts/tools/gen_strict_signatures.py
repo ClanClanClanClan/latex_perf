@@ -105,7 +105,10 @@ import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
 import check_strict_kernel as CK  # noqa: E402
 
-GENERATOR_VERSION = "3"
+# Version 4 (C-92): stage 0's meaning closure follows robust commands
+# (`\protect \X  ` to the inner name "X "); nothing else changed, and every
+# probe grade of version 3 is reused (--reuse).
+GENERATOR_VERSION = "4"
 STRUCTURAL = CK.STRUCTURAL
 # Two control words outside the closed world (checked in main()).
 UNDEF_A, UNDEF_B = "lpqundefa", "lpqundefb"
@@ -265,7 +268,9 @@ def dump_meanings(oracle, names: list[str]) -> dict[str, str]:
              r"\immediate\openout\lpqmw=lpqmeanings.txt\relax",
              r"\begin{document}"]
     for i, n in enumerate(names):
-        if not re.fullmatch(r"[A-Za-z@]+", n):
+        # letters and @; a robust command's inner name ends with one space
+        # (check_strict_kernel.body_tokens, C-92)
+        if not re.fullmatch(r"[A-Za-z@]+ ?", n):
             raise ValueError(f"meaning dump: unexpected name {n!r}")
         lines.append(r"\immediate\write\lpqmw{LPQ:%d:\ifcsname %s\endcsname"
                      r"\expandafter\meaning\csname %s\endcsname\else undefined\fi}"
@@ -476,7 +481,9 @@ def main() -> int:
     args = ap.parse_args()
 
     oracle = _oracle.get_oracle()
-    kern = S.Kernel(signatures=None)
+    # phase-1 names only: the one-argument commands (slice A) are attested by
+    # gen_strict_arg_signatures.py, against this file's final set
+    kern = S.Kernel(signatures=None, arg_signatures=None)
     names = candidates(args.n)
     if {UNDEF_A, UNDEF_B} & S.members():
         raise SystemExit("the look-ahead probes' undefined names are defined")
@@ -546,7 +553,7 @@ def main() -> int:
     def ktmp(sigs):
         body = {"source": S.source_block(), "signatures": sigs}
         sig_tmp.write_text(json.dumps(body))
-        return S.Kernel(signatures=sig_tmp)
+        return S.Kernel(signatures=sig_tmp, arg_signatures=None)
 
     def usable(sigs):
         nt = sorted(n for n, h in sigs.items() if not isinstance(h["text"], list))

@@ -1,6 +1,6 @@
 # Design: the contract-bounded proven tier
 
-**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestones M0 and M1 slice 1 (§F) are implemented. M2 phase 1, the Coq kernel of the fragment L_S0 (§I.4), and M2 phase 2, the decision on the BYTES of a file with its verified reader (§I.5, a stacked branch), are proved and attested, but no product verdict uses them: the CLI's strict tier is still a stub, so nothing a user sees is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestones M0 and M1 slice 1 (§F) are implemented. M2 phase 1, the Coq kernel of the fragment L_S0 (§I.4), and M2 phase 2, the decision on the BYTES of a file with its verified reader (§I.5, a stacked branch), and step 2 slice A, commands with one argument that run it (§I.6, stacked on phase 2), are proved and attested, but no product verdict uses them: the CLI's strict tier is still a stub, so nothing a user sees is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
 
 **Paths.** Repository paths below are relative to the repository root. A `file:line` reference gives the line as of commit `978601ee` and may have moved since. Anything marked *(scratch-only)* was produced by the design spikes in a private scratch area and is **not in the repository**; it is cited as evidence for a measured figure, not as a file you can open.
 
@@ -997,7 +997,7 @@ version 2 rejected.
   conclusions, the token and frame classes from `Syntax.v`/`Semantics.v` and
   the signature classes from the signature file, so a new look-ahead rule or
   token class without matrix coverage fails the gate (kill-tested).
-- Generated differential v2 (`corpora/strict_s0/differential_v2.json`):
+- Generated differential v2 (`differential_v2.json`, superseded by `corpora/strict_s0/differential_v3.json` in step 2, §I.6; in git history):
   4,000 seeded documents (seed 2), 4,000 of 4,000 agree with the oracle on verdict, message class and line (line agreement covers only the classes that have an l.N: E0 has none, so its 543 documents are compared on verdict and message class only): READY 1,572, E0 543, E1 429, E3 616, E4 127, E5 608, E6 105; 0 oracle timeouts or infrastructure failures; exact one-sided 95% upper bound on the disagreement rate 0.075% overall and 0.19% on READY verdicts, OVER THIS GENERATOR'S DISTRIBUTION. Of the 4,000, 100 put an admitted name right after a `$` in display math and 21 an undefined one, 298 have at least 100 tokens and 86 at least 300 (runs of repeated names; 31 of those are READY). A first run of the same size, made with a generator bug that let text-fatal and math-fatal names into clean documents (a helper shadowed by a second function of the same name), also agreed 4,000 of 4,000; it is not committed because the fixed code does not reproduce it; 40 of 42 constructors are used (`R_dollar_display_eof` and `R_mclose_inline_bad` only by the token-level rule probes). Sized at 4,000, not 10,000, because the shared oracle was loaded (about 2 documents per second).
   The upper bound is a bound over the documents THIS generator draws, not
   over L_S0 (C-85): version 1 drew no `$` in display math followed by a name
@@ -1190,3 +1190,211 @@ evidence was committed:
   configuration (M3) the class comes from its contract.
 - Not wired into `validators_cli` (M3), no per-document closed-world check yet
   (as phase 1), and no `no_turing_construct` corollary yet.
+
+### I.6 Step 2, slice A: commands with one argument (2026-09-28)
+
+The fragment widens from argument-free control words to control words that read
+ONE brace argument and run it (text or math), for configuration `article`. It
+is proved and attested and, like phases 1 and 2, wired into nothing but
+`strict_decide.exe` (the CLI's strict tier is still the M0 stub). Branch
+`feat/v27165-strict-args`, stacked on `feat/v27165-strict-bytes` (PR #623).
+Ledger row: OPEN-122.
+
+**What pdfTeX does, and so what the semantics says.** pdfTeX reads the whole
+argument from the file before it runs any of it. MEASURED under the pinned
+oracle: `\textbf{x`/`\zzundef`/`y`/`}` on four lines gives "Undefined control
+sequence" on the line of the closing brace, not of `\zzundef`; with a blank
+line inside instead, "Paragraph ended before \text@command was complete", also
+on the closing brace's line (the text font commands re-read their argument with
+a macro that is not long); `$\mathrm{x`/blank line/`y}$` gives "Paragraph ended
+before \math@egroup was complete" on the blank line itself (the macro that
+reads the argument from the file is not long). So an error inside an argument
+is reported where the file reader stands. `Semantics.v` says this with two new
+relations, used by every rule that stops pdfTeX:
+
+- `Stops fs p r l ts out`: outside every argument the run stops with `Fatal r
+  l` (`Stop_now`); inside one the error is DEFERRED and the tokens are scanned
+  from the offending one on (`Stop_defer`).
+- `Scans sc p ts out`: TeX's argument scanner. It counts braces until the
+  outermost argument closes (`SC_close_last`: the deferred reason, at that
+  brace), and a paragraph break inside an argument that is not long wins
+  (`SC_par_outer`: at the break, when the outermost argument was read from the
+  file by a non-long macro; `SC_par_short`: E6 at the brace, when an argument
+  that was open at the deferral re-reads it with a non-long macro).
+
+A one-argument command's signature (`Contract.v` `asig`) has a longness (`long`,
+`short_inner`, `short_outer`) and a behaviour per mode: stop before reading the
+argument (`now`), read it and stop (`after`), or read it and run it in a group
+of a mode (`run`: text, text in restricted horizontal mode — an hbox, where
+`$$` is an empty formula and LaTeX's `\[` opens nothing — or math). New `Runs`
+rules: `R_arg_{text,math}_{now,after,run}`, `R_close_arg`, `R_par_short`,
+`R_dollar_restricted_open`, `R_mopen_display_restricted`; every phase-1 rule
+that stops pdfTeX now concludes through `Stops` (names unchanged). The frame
+`FArg` records an argument while it runs. Membership adds `wfa`: every
+one-argument command is followed immediately by its `{`, and every argument
+closes before `\end{document}` and before the end of the stream (MEASURED:
+otherwise pdfTeX reads on past what the fragment models — "File ended while
+scanning use of"); `Explain.v` reports it as `WArgForm`.
+
+**Theorems** (all `Qed`, `Print Assumptions` Closed; 25 capstones registered in
+`check_print_assumptions.py`, three new: `scans_deterministic`,
+`stops_deterministic`, `decide_total`): `strict_decider_exact` (both
+directions), `runs_deterministic` (on `Runs` itself; `scans_deterministic` and
+`stops_deterministic` likewise on the relations), `runs_total` and
+`decide_total` (the totality proof carries an invariant: the braces `wfa`
+counts are the brace frames down to the outermost argument, `arg_depth`),
+`in_strict_dec`, and on bytes `lex_exact`, `parse_exact` (reader unchanged),
+`in_strict_bytes_dec`, `decide_bytes_exact` (the location machinery `rd` counts
+the scanner's tokens: `rd_scan`; `rd_stable`/`rd_unstable`/`rd_never` re-proved
+for the deferral), `decide_bytes_not_strict_iff`,
+`determined_threshold_unique`; both bridges. The bridge pins (statements,
+bodies, fully qualified convertibility, module fields, sentence allow-lists)
+are UNCHANGED and pass: `Bridge.v`, `BridgeBytes.v` and every name their
+pinned statements and bodies mention are unchanged; what changed is the
+content of `Runs`, `in_strict_doc` and `in_strict_bytes`, which the pins
+reference by name (deliberately: a pin of a premise's name is what lets the
+semantics widen without re-pinning, and C-87/C-88's shadowing shapes stay
+excluded by the fully qualified convertibility checks).
+
+**Signatures (generator `gen_strict_arg_signatures.py`, version 1).** The
+candidates are a rule (`check_strict_kernel.arg_candidates`, re-applied by the
+gate to the recorded meanings of every closed-world control word): the
+control words whose meaning at body start, through one robust wrapper, is a
+macro with parameter text exactly `#1`, minus the phase-1 names. Stages:
+R-INERT, base probes (36 per name, every token on its own line so the LINE
+separates "at the name", "at the break" and "at the closing brace"), follower
+/ display-follower / repetition / bound probes (the command nested 200 deep,
+repeated to the token bound, and with an argument of the token bound's size),
+admission (exactly one of 306 hypotheses agrees on every probe),
+interleaving (all admitted commands nested in each other with the phase-1
+names inside), and CONTEXT (every phase-1 name inside a carrier of each mode an
+argument opens that phase 1 never probed: restricted horizontal mode, text
+inside math). MEASURED (generator version 1, the pinned image, a private
+container): 166 candidates; 83 rejected by R-INERT, 72 by the base probes
+(their argument is a counter, a dimension, a font name, a condition, or it is
+stored and not typeset: `\author`, `\date`, `\markright`), 4 by stage 2
+(`\fbox`, `\frame`, `\underline` nested 200 deep exceed "[grouping
+levels=255]": each level opens more than one TeX group; `\numberline` after a
+display `$` moves the error line to its argument's brace: TeX's look-ahead
+EXPANDS a non-robust macro, which reads its argument), 0 by interleaving (9
+documents), 0 by context (484 documents: all 121 phase-1 names in an hbox
+argument, in text and in math, agree); 7 admitted, all of one class — long,
+run with material in an hbox in text, run in an hbox in math: `\mbox`,
+`\centerline`, `\leftline`, `\rightline`, `\llap`, `\rlap`, `\clap`. 3,932
+documents graded. The near-misses name mechanisms the model does not have
+yet: an argument that runs INLINE in the current math list (`\pmod`; its `$`
+closes the formula instead of meeting a group), code after the argument that
+runs in whatever mode the argument left (`\underbar`: "Missing $ inserted" at
+an unclosed `$`, not "Extra }"), and the display-`$` expansion of a
+non-robust argument macro (`\numberline`).
+
+**C-92 (R-INERT).** The meaning closure of RULE R-INERT did not follow LaTeX's
+robust wrappers (`\X` = `\protect \X  `, the code being the meaning of the name
+"X "), so a robust name's own code was never screened. Following it (phase-1
+generator version 4) rejects 9 names phase 1 had admitted: `\bf`, `\it`,
+`\sf`, `\tt`, `\eminnershape`, `\labelitemfont` (reach `\afterassignment`
+through `\@defaultunits`) and `\centering`, `\raggedleft`, `\labelenumiv`
+(reach `\immediate` through `\GenericError`); 121 remain. The same rule
+excludes the text font commands (`\textbf`, `\emph`, `\textit`, ...) from
+slice A.
+
+**Evidence** (the pinned image, run in a private container of it: the shared
+container accumulated other agents' `/tmp/gs_*` files, which #622's state
+check refuses; `LP_ORACLE_WORKROOT`; `check_strict_kernel.py`,
+`check_strict_bytes.py`):
+
+- Rule probes (`rule_probes.json`, generator version 3): 1,426 documents, 680
+  graded, 680 agree; 746 outside the tier by design. Every non-dormant
+  constructor of `Runs`, `Scans` and `Stops` has an agreeing family that
+  exercises it; 7 are DORMANT under this contract (no admitted command is
+  `short_*`, `now` or `after`: `R_arg_{text,math}_{now,after}`,
+  `R_par_short`, `SC_par_outer`, `SC_par_short`), which the gate derives
+  from the signature files. The branch matrix now has the argument heads
+  (`arg.textr`, the only payload mode admitted), the argument commands as
+  tokens (only `{` as a follower is in the tier) and as followers of every
+  look-ahead, and the scanner's cells `scan|<token>|k1/k2|<longness>`: 301
+  in-tier cells and 537 excluded ones covered. The slice-A families come
+  after the phase-1 ones so the phase-1 probes, and their byte-level
+  re-layouts, are byte for byte what they were: 475 grades reused.
+- Generated differential v3 (`differential_v3.json`, seed 3): 3,000 of 3,000
+  agree on verdict, message class (checked against the fatal EVENT: for an
+  error inside an argument, the offending token) and line (the LOCATION: the
+  outermost argument's closing brace): READY 1,030, E0 410, E1 339, E3 631,
+  E4 80, E5 445, E6 65; 502 documents defer an error inside an argument
+  (`Stop_defer`), 727 close an argument that ran (`R_close_arg`), 415 open
+  math in an hbox; exact one-sided 95% bound 0.10% (0.29% on READY), over
+  THIS generator's distribution (C-85).
+- Byte-level probes (`bytes_probes.json`): 5,975 files, 2,847 graded, 2,847
+  agree (verdict, message, and line for every class with an l.N); 3,128
+  outside by design, all decided outside; 0 `explain` mismatches; the tree
+  decider and the bytes decider give the same verdict, reason and line on
+  all 1,414 renderings; 1,238 grades reused.
+- Byte-level differential (`bytes_differential.json`, seed 6): 3,500 of
+  3,500 agree (READY 1,353, E0 347, E1 367, E3 669, E4 110, E5 533, E6 121);
+  399 files defer an error inside an argument, whose argument spreads over
+  lines (the direct generator writes commands with `_strict_bytes.Direct.argcmd`);
+  82 directly written files fell outside and were replaced; the 139
+  near-misses are all outside; bound 0.086% (0.22% on READY), over this
+  generator.
+- Findings: no semantic disagreement on any graded document. The harness
+  had three defects, each found by a dry run with a provisional contract
+  BEFORE any document was graded: the matrix completer gave up after a
+  deferral (the argument stayed open, so the probe fell outside the tier),
+  a generated hazard could land between a command and its brace, and a deep
+  nest plus an argument crossed the brace bound. C-92 (above) is the one
+  correction of a published claim.
+
+**The payoff on real papers, measured.** The frame of `diff_real_roots.py`
+(2,719 papers arXiv declares pdflatex with one toplevel, ordered by sha256 of
+the id), offsets 0-399 (samples 1 and 2) and 2000-2718; never 720-919 (sealed
+sample 3). MEASURED with the extracted decider on the ROOT file's bytes: 0 of
+1,119 roots are in the fragment before this step (phase-1 signatures of
+version 3, no argument signatures) and 0 after. 1,117 stop at the front
+matter (the class is not a bare `article`, it has options, or the preamble
+loads packages or defines anything: 22 roots load no package, the median
+loads 16; the classes are `article` with options 293, `amsart` with options
+219, bare `article` 181, `IEEEtran` 79, ...), 1 is over the size bound, 1
+starts with `%&`. With the front matter replaced by the fragment's, 0 of the
+bodies are in either. INFERRED from a regex census of the bodies: 1,118 use a
+defined control word that has no signature (`\maketitle` 1,011, `\section`
+975, `\label` 961, `\cite` 900, `\ref` 852, `\subsection` 816, `\in` 809,
+`\frac` 797, `\bibliography` 778, `\caption` 720, `\left`/`\right` 719,
+`\item` 716, `\cdot` 699, `\textbf` 696, `\mathcal` 677, `\alpha` 602), 1,043
+an environment, 1,040 a character outside the set (`[`, `]`, `*`, quotes),
+983 another control symbol, 953 `\\`, 916 `#` or `&`, 802 `~`, 710 a byte
+over 127; 51 bodies have exactly one of these classes. Slice A's commands
+occur in 126 bodies (`\mbox`), 40 (`\centerline`), 4 (`\rlap`), 1 (`\llap`).
+So packages block first, then R-INERT, then the character set; and math
+symbols such as `\alpha`, `\in`, `\cdot`, `\leq` are outside only because
+phase 1 attested a 400-name sample of the ~2,000 control words (its selection
+rule), which is the cheapest widening there is.
+
+**Not done, and why: RULE R-INERT, not the semantics, blocks slices B-D.**
+MEASURED (R-INERT with C-92's closure, meanings at body start from the pinned
+image): not inert are `\section`, `\subsection`, `\subsubsection`,
+`\paragraph`, `\footnote`, `\caption`, `\maketitle` and every text font
+command (reach `\afterassignment` through `\@defaultunits`, the size code of
+`\selectfont`); `\item`, `\begin`, the environments `itemize`, `enumerate`,
+`center`, `quote`, `equation` and the math alphabets `\mathrm`, `\mathcal`
+(reach `\immediate` through `\GenericError`, i.e. through their error path);
+`\label` (`\catcode` through `\@makeother`), `\cite` (`\immediate`),
+`\clearpage` (`\write`), `\mathbf` (`\input`), and the environment ends
+`\enditemize`, `\endcenter`, `\endquote` (`\aftergroup`). Inert are `\par`,
+`\newpage`, `\ref`, `\pageref`, `\end`, `displaymath`, `\frac`, `\sqrt`,
+`\hat`, `\bar`, `\vec`, `\overline`, `\mbox`, `\fbox`, `\underline`,
+`\centerline`.
+
+- Slices B (sectioning, moving arguments), C (the list, quote, center and
+  equation environments) and D (`\label`) are therefore outside the tier BY
+  RULE until R-INERT distinguishes a terminal-only `\immediate\write` on an
+  error path, and an `\afterassignment` consumed inside the same expansion,
+  from the effects the rule exists for (C-85: `\tableofcontents`' twenty
+  `\write`s). That refinement is step 3's first item; the semantics of this
+  step (arguments, deferral, restricted mode) is what they then need.
+- Environments also need the reader's `Body` to accept `\end{X}` for X other
+  than `document`, and kernel tokens for `\begin{X}`/`\end{X}`: not started.
+- The inert `\frac`, `\sqrt`, `\hat`, `\bar`, `\vec`, `\overline` read their
+  arguments otherwise: `\frac` two macro arguments; the math accents, `\sqrt`
+  and `\overline` through TeX's math scanner, INCREMENTALLY (an error inside
+  is reported at its own line, like a script group). Each is a mechanism of
+  its own, not a signature of this one; `\sqrt` also looks ahead for `[`.

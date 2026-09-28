@@ -69,7 +69,10 @@ Inductive node :=
 | NStrayClose                     (* }     *)
 | NMath (k : math_kind) (b : list node)
 | NScript (up : bool) (arg : node)  (* ^arg ([up]) or _arg *)
-| NCmd (cs : name).               (* \cs — phase 1: no arguments *)
+| NCmd (cs : name).               (* \cs; a one-argument command (step 2,
+                                     slice A: Contract.v [asig]) is followed
+                                     by the [NGroup] of its argument: the
+                                     argument is a token-level structure *)
 
 (** A document of configuration [article]:
     [\documentclass{article}] [\begin{document}] body, then

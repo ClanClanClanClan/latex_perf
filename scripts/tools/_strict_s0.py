@@ -43,6 +43,18 @@ EXTRACT = REPO / "latex-parse/strict/strict_kernel_extracted.ml"
 # lexical contract it reads (gen_strict_lexical.py).
 BYTES_EXTRACT = REPO / "latex-parse/strict/strict_bytes_extracted.ml"
 LEXICAL = REPO / "corpora/contracts/strict/article-s0-lexical.json"
+# ADR-012 step 2, slice A: the one-argument commands' signatures
+# (gen_strict_arg_signatures.py; Contract.v [asig]).
+ARG_SIGNATURES = REPO / "corpora/contracts/strict/article-s1-arg-signatures.json"
+
+
+def _check_source(path: Path) -> None:
+    d = json.loads(Path(path).read_text())
+    src = source_block()
+    for k in ("kernel_sha256", "contract_sha256"):
+        if d["source"][k] != src[k]:
+            raise SystemExit(f"{path} was generated from another "
+                             f"{k.split('_')[0]} file ({k} differs)")
 
 
 def sha256_file(p: Path) -> str:
@@ -98,20 +110,23 @@ def build_exe() -> Path:
 
 class Kernel:
     """The extracted decider. `signatures=None` runs with no attested name
-    (every defined control word is then outside the tier)."""
+    (every defined control word is then outside the tier); `arg_signatures`
+    (slice A) defaults to the committed file when it exists."""
 
-    def __init__(self, signatures: Path | None = SIGNATURES):
+    def __init__(self, signatures: Path | None = SIGNATURES,
+                 arg_signatures: Path | None | str = "default"):
         self.exe = build_exe()
         self.args = [str(self.exe), "--kernel", str(kernel_path()),
                      "--contract", str(CONTRACT)]
         if signatures is not None:
-            sig = json.loads(Path(signatures).read_text())
-            src = source_block()
-            for k in ("kernel_sha256", "contract_sha256"):
-                if sig["source"][k] != src[k]:
-                    raise SystemExit(f"{signatures} was generated from another "
-                                     f"{k.split('_')[0]} file ({k} differs)")
+            _check_source(signatures)
             self.args += ["--signatures", str(signatures)]
+        if arg_signatures == "default":
+            arg_signatures = ARG_SIGNATURES if ARG_SIGNATURES.is_file() else None
+        if arg_signatures is not None:
+            _check_source(arg_signatures)
+            self.args += ["--arg-signatures", str(arg_signatures)]
+        self.arg_signatures = arg_signatures
 
     def run(self, requests: list[dict]) -> list[dict]:
         """Each request: {"doc": {...}, optional "signatures": {...}}."""
@@ -140,18 +155,20 @@ class BytesKernel:
     (verdict, reason, line, the token and mode of the fatal, the reader's and
     the kernel's coverage labels, `explain`)."""
 
-    def __init__(self, signatures: Path = SIGNATURES, lexical: Path = LEXICAL):
+    def __init__(self, signatures: Path = SIGNATURES, lexical: Path = LEXICAL,
+                 arg_signatures: Path | None | str = "default"):
         self.exe = build_exe()
-        src = source_block()
         for path in (signatures, lexical):
-            d = json.loads(Path(path).read_text())
-            for k in ("kernel_sha256", "contract_sha256"):
-                if d["source"][k] != src[k]:
-                    raise SystemExit(f"{path} was generated from another "
-                                     f"{k.split('_')[0]} file ({k} differs)")
+            _check_source(path)
         self.args = [str(self.exe), "--bytes", "--kernel", str(kernel_path()),
                      "--contract", str(CONTRACT), "--signatures", str(signatures),
                      "--lexical", str(lexical)]
+        if arg_signatures == "default":
+            arg_signatures = ARG_SIGNATURES if ARG_SIGNATURES.is_file() else None
+        if arg_signatures is not None:
+            _check_source(arg_signatures)
+            self.args += ["--arg-signatures", str(arg_signatures)]
+        self.arg_signatures = arg_signatures
 
     def run(self, files: list[bytes]) -> list[dict]:
         payload = "".join(json.dumps({"id": i, "hex": b.hex()}) + "\n"
@@ -231,6 +248,75 @@ def grade_bytes(oracle, b: bytes, timeout: int = GRADE_TIMEOUT_S) -> dict:
                 "timed_out": r.timed_out, "error": msg, "line": ln}
 
 
+class GradeCache:
+    """Grades of files already graded by the SAME oracle, keyed by the sha256
+    of the exact bytes pdflatex ran on (a grade is a function of the bytes and
+    the oracle, nothing else: the protocol is fixed). Seeded from committed
+    evidence files, each accepted only when its recorded oracle provenance
+    equals this oracle's in every field (else refused, never mixed), and from
+    a local JSON-lines store the harness appends to (same rule, per line).
+    Tree evidence records a 16-hex prefix of the sha256, byte evidence the
+    whole; both are honoured. Every tool that uses it records how many grades
+    it reused and from which files."""
+
+    def __init__(self, oracle, sources: list[Path] = (), store: Path | None = None):
+        import threading
+        self._lock = threading.Lock()
+        self.prov = oracle.provenance()
+        self.full: dict[str, dict] = {}
+        self.short: dict[str, dict] = {}
+        self.sources = []
+        self.hits = 0
+        self.store = Path(store) if store else None
+        for p in sources:
+            self._load_evidence(Path(p))
+        if self.store and self.store.is_file():
+            for line in self.store.read_text().splitlines():
+                r = json.loads(line)
+                if r.get("oracle") == self.prov:
+                    self.full[r["sha256"]] = r["grade"]
+            self.sources.append({"file": str(self.store), "kind": "local store"})
+
+    def _load_evidence(self, p: Path) -> None:
+        d = json.loads(p.read_text())
+        if d.get("oracle") != self.prov:
+            diff = sorted(k for k in set(d.get("oracle", {})) | set(self.prov)
+                          if d.get("oracle", {}).get(k) != self.prov.get(k))
+            raise SystemExit(f"grade reuse: {p} was graded by another oracle ({diff})")
+        n = 0
+        for key in ("probes", "documents"):
+            for rec in d.get(key, []):
+                if "oracle" not in rec:
+                    continue
+                rc, pdf, err, line = rec["oracle"]
+                g = {"rc": rc, "pdf": pdf, "error": err, "line": line,
+                     "timed_out": False, "passes": None}
+                if "sha256" in rec:
+                    self.full[rec["sha256"]] = g
+                elif "tex_sha256" in rec:
+                    self.short[rec["tex_sha256"]] = g
+                n += 1
+        self.sources.append({"file": str(p.relative_to(REPO)) if p.is_relative_to(REPO)
+                             else str(p), "sha256": sha256_file(p), "records": n})
+
+    def get(self, b: bytes) -> dict | None:
+        h = hashlib.sha256(b).hexdigest()
+        g = self.full.get(h) or self.short.get(h[:16])
+        if g is not None:
+            self.hits += 1
+        return g
+
+    def put(self, b: bytes, g: dict) -> None:
+        h = hashlib.sha256(b).hexdigest()
+        self.full[h] = g
+        if self.store and not g.get("timed_out"):
+            with self._lock, self.store.open("a") as f:
+                f.write(json.dumps({"sha256": h, "oracle": self.prov, "grade": g}) + "\n")
+
+    def record(self) -> dict:
+        return {"grades_reused": self.hits, "sources": self.sources}
+
+
 # ------------------------------------------------------------ comparison ---
 
 # (reason, token at the fatal, mode) -> the first `!` messages pdfTeX gives.
@@ -244,6 +330,7 @@ _EXTRA_CLOSE = r"^! Extra \}, or forgotten \$\.$"
 _MISSING_CLOSE = r"^! Missing \} inserted\.$"
 _BAD_DELIM = r"^! LaTeX Error: Bad math environment delimiter\.$"
 _DISPLAY_END = r"^! Display math should end with \$\$\.$"
+_RUNAWAY = r"^! Paragraph ended before \\\S+ +was complete\.$"
 # E5 by the token that raised it and the mode it met (Semantics.v comments).
 _E5 = {
     ("close", "text"): (_TOO_MANY,),
@@ -277,6 +364,11 @@ def expected_messages(reason: str, tok: str, mode: str) -> tuple[str, ...]:
     if reason == "E5":
         return _E5.get((tok, mode), ())
     if reason == "E6":
+        # slice A: a paragraph break in an argument that is not long, read
+        # from the file (at the break) or by the command's own expansion (where
+        # the reader stands); strict_decide.ml fatal_event labels it "arg"
+        if tok in ("blank_line", "par") and mode == "arg":
+            return (_RUNAWAY,)
         if tok in ("blank_line", "par") or (tok == "cs" and mode == "math"):
             return (_MISSING_DOLLAR,)
     return ()

@@ -440,8 +440,8 @@ let math_cls = function
   | K.MxNoop -> "noop"
   | K.MxFatal r -> "fatal." ^ string_of_reason r
 
-(* The class of a one-argument command's behaviour in text / in math (the
-   branch matrix's token class; slice A). *)
+(* The class of a one-argument command's behaviour in text / in math (the branch
+   matrix's token class; slice A). *)
 let arg_text_cls = function
   | K.TFatalNow r -> "now." ^ string_of_reason r
   | K.TFatalAfter r -> "after." ^ string_of_reason r
@@ -474,9 +474,7 @@ let follower_label c = function
       else
         match c.K.c_sig n with
         | None -> (
-            match c.K.c_arg n with
-            | None -> "cs:nosig"
-            | Some _ -> "cs:arg")
+            match c.K.c_arg n with None -> "cs:nosig" | Some _ -> "cs:arg")
         | Some sg ->
             "cs:" ^ text_cls sg.K.sig_text ^ "/" ^ math_cls sg.K.sig_math)
   | Some t -> tok_name t
@@ -486,7 +484,11 @@ let branch_of c s t nx =
   let math = K.in_math fs in
   let tok = match t with K.TCs n -> cs_label c math n | _ -> tok_name t in
   let reads_next =
-    match t with K.TDollar | K.TScript _ -> true | _ -> false
+    match t with
+    | K.TDollar | K.TScript _ -> true
+    (* slice A: a one-argument command reads the brace of its argument *)
+    | K.TCs n -> K.is_argcmd c n
+    | _ -> false
   in
   let tail =
     match t with
@@ -502,9 +504,9 @@ let branch_of c s t nx =
     ]
 
 (* One step of the argument scanner (Semantics.Scans; [K.scan_run]): the rule it
-   used, the branch cell "scan|<token>|<k=1 or k>1>|<sh>|<ou>", and the next scan
-   state, or None when it stops (or leaves the tier: TEnd, k = 0). REPORTING
-   ONLY, like [rule_of]. *)
+   used, the branch cell "scan|<token>|<k=1 or k>1>|<sh>|<ou>", and the next
+   scan state, or None when it stops (or leaves the tier: TEnd, k = 0).
+   REPORTING ONLY, like [rule_of]. *)
 let scan_step (sc : K.scan) t =
   let cell =
     String.concat "|"
@@ -602,8 +604,9 @@ let fatal_event c toks =
           ev :=
             Some
               ( tok_name t,
-                if (match t with K.TPar _ -> true | _ -> false)
-                   && K.short_depth s.K.s_frames <> 0
+                if
+                  (match t with K.TPar _ -> true | _ -> false)
+                  && K.short_depth s.K.s_frames <> 0
                 then "arg"
                 else mode )
       | K.Defer2 _ ->
@@ -640,9 +643,20 @@ let close_toks c toks =
     | K.FShift (false, _, _) -> K.TMCloseInline
     | K.FShift (true, _, _) -> K.TMCloseDisplay
   in
+  (* the braces Decide.wfa still needs at the end of the prefix: an argument
+     that is open when the run stops (or defers an error to its end) is closed,
+     so the probe stays in the tier (slice A) *)
+  let rec need k = function
+    | [] -> k
+    | K.TOpen :: r -> need (if k = 0 then 0 else k + 1) r
+    | K.TClose :: r -> need (max 0 (k - 1)) r
+    | K.TCs n :: K.TOpen :: r when K.is_argcmd c n -> need (k + 1) r
+    | K.TEnd :: _ -> k
+    | _ :: r -> need k r
+  in
   match walk K.init toks with
   | Some s -> toks @ List.map closer s.K.s_frames @ [ K.TEnd ]
-  | None -> toks @ [ K.TEnd ]
+  | None -> toks @ List.init (need 0 toks) (fun _ -> K.TClose) @ [ K.TEnd ]
 
 (* The mode in force when the fatal at token [l] is raised: the state the
    extracted [step] reaches when it stops (trusted harness use of extracted
@@ -661,10 +675,10 @@ let mode_at c toks =
   in
   if K.in_math (walk K.init toks).K.s_frames then "math" else "text"
 
-(* The fields of a NOT-READY record that the agreement rule reads: the token
-   and mode of the fatal EVENT ([loc_tok], [loc_mode]; for an error deferred
-   inside an argument, the offending token, and [loc_stop] the token the
-   reader stands on) -- see [fatal_event]. *)
+(* The fields of a NOT-READY record that the agreement rule reads: the token and
+   mode of the fatal EVENT ([loc_tok], [loc_mode]; for an error deferred inside
+   an argument, the offending token, and [loc_stop] the token the reader stands
+   on) -- see [fatal_event]. *)
 let event_fields c toks l =
   let at =
     match List.nth_opt toks l with
@@ -773,7 +787,9 @@ let tree_mode ~kernel ~contract ~sigs ~asigs =
                      [in_strict_b] is made of. *)
                   let strict =
                     List.for_all (fun t -> K.tok_ok c t) toks
-                    && K.scripts_ok toks && K.wfa c 0 toks && K.bounded toks
+                    && K.scripts_ok toks
+                    && K.wfa c 0 toks
+                    && K.bounded toks
                   in
                   ( toks,
                     string_of_chars (K.header @ K.render_toks toks),
@@ -1440,7 +1456,9 @@ let () =
         match !asigs with
         | Some s -> Some s
         | None ->
-            let d = p "corpora/contracts/strict/article-s1-arg-signatures.json" in
+            let d =
+              p "corpora/contracts/strict/article-s1-arg-signatures.json"
+            in
             if Sys.file_exists d then Some d else None
       in
       let lexical =
@@ -1455,7 +1473,7 @@ let () =
         die "strict_decide: need --kernel and --contract";
       if !bytes then (
         if !lexical = "" then die "strict_decide: --bytes needs --lexical";
-        bytes_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs
-          ~asigs:!asigs ~lexical:!lexical)
+        bytes_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs ~asigs:!asigs
+          ~lexical:!lexical)
       else
         tree_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs ~asigs:!asigs

@@ -32,7 +32,13 @@ Two modes:
                      capacity bounds of Decide.v; C-86), written to
                      corpora/strict_s0/rule_probes.json
   --random N         N generated documents (seeded, reproducible), written to
-                     corpora/strict_s0/differential_v2.json
+                     corpora/strict_s0/differential_v3.json (version 3, slice A:
+                     the one-argument commands; version 2 is in git history)
+
+GRADE REUSE: --reuse FILE... takes the grades of byte-identical documents from
+evidence files graded by the same oracle (every provenance field equal), and
+--grade-store PATH keeps a local JSON-lines store of new grades; the output
+records how many grades were reused and from which files (_strict_s0.GradeCache).
 
 WHAT THE RANDOM MODE'S NUMBER MEANS. Its upper bound on the disagreement rate
 is a bound over the documents THIS GENERATOR draws (its version, weights and
@@ -67,9 +73,14 @@ import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
 from _strict_s0 import cmd, doc, group, par, script, space, stray, text  # noqa: E402
 
-GENERATOR_VERSION = "2"
+# Version 3 (ADR-012 step 2, slice A): the one-argument commands in the rule
+# probes (families R_arg_*, R_close_arg, R_par_short, the restricted-mode
+# rules, Stops and Scans; the branch matrix's argument heads and argument
+# tokens; the scanner's matrix SCAN) and in the generated documents (Gen.arg,
+# weighted toward the hazards of step 2).
+GENERATOR_VERSION = "3"
 OUT_DIR = S.REPO / "corpora/strict_s0"
-DIFFERENTIAL = OUT_DIR / "differential_v2.json"
+DIFFERENTIAL = OUT_DIR / "differential_v3.json"
 MAX_BRACE_DEPTH, MAX_TOKENS = S.MAX_BRACE_DEPTH, S.MAX_TOKENS
 # Families whose documents are OUTSIDE the tier by design (recorded, never
 # graded): the bound's other side, and the matrix cells membership excludes.
@@ -86,6 +97,13 @@ RULES = [
     "R_script_text", "R_script_double", "R_script_char", "R_script_group",
     "R_cs_undefined", "R_cs_text_material", "R_cs_text_noop", "R_cs_text_fatal",
     "R_cs_math_noad", "R_cs_math_noop", "R_cs_math_fatal",
+    # ADR-012 step 2, slice A: arguments (Semantics.v)
+    "R_par_short", "R_close_arg", "R_dollar_restricted_open",
+    "R_mopen_display_restricted",
+    "R_arg_text_now", "R_arg_text_after", "R_arg_text_run",
+    "R_arg_math_now", "R_arg_math_after", "R_arg_math_run",
+    "SC_close_last", "SC_close", "SC_open", "SC_par_outer", "SC_par_short",
+    "SC_par_long", "SC_skip", "Stop_now", "Stop_defer",
 ]
 
 
@@ -106,11 +124,26 @@ class Names:
     (random letter strings and mutations of attested names, each checked to
     be OUTSIDE the closed world)."""
 
-    def __init__(self, sig_path: Path, rng: random.Random):
+    def __init__(self, sig_path: Path, rng: random.Random, arg_path: Path | None = None):
         self.members = S.members()
         sig = json.loads(Path(sig_path).read_text())["signatures"]
         self.sigs = sig
         self.all = sorted(sig)
+        # slice A: the one-argument commands, by the mode their argument runs
+        # in when used in text / math (None: fatal there)
+        self.args = (json.loads(Path(arg_path).read_text())["arg_signatures"]
+                     if arg_path and Path(arg_path).is_file() else {})
+        self.arg_all = sorted(self.args)
+        self.arg_run = {"text": defaultdict(list), "math": defaultdict(list)}
+        self.arg_fatal = {"text": [], "math": []}
+        for n in self.arg_all:
+            h = self.args[n]
+            for where in ("text", "math"):
+                b = h[where]
+                if b[0] == "run":
+                    self.arg_run[where][b[-1]].append(n)
+                else:
+                    self.arg_fatal[where].append(n)
         self.text_ok = [n for n in self.all if _cls(sig[n]["text"]) != "fatal"]
         self.math_ok = [n for n in self.all if _cls(sig[n]["math"]) != "fatal"]
         self.by = defaultdict(list)
@@ -256,8 +289,149 @@ def rule_docs(nm: Names) -> list[tuple[str, dict]]:
         for n in nm.by[key][:3]:
             fam.append((rule, mk(n)))
     fam += bound_docs()
-    fam += matrix_docs(nm)
+    fam += matrix_docs(nm, phase1_only=True)
+    # slice A's families come LAST, so the phase-1 probes (and the byte-level
+    # re-layouts drawn after them from one seeded generator) stay byte for byte
+    fam += arg_rule_docs(nm)
+    fam += matrix_docs(nm, phase1_only=False)
+    fam += scan_matrix_docs(nm)
     return [(f, r if "toks" in r else {"doc": r}) for f, r in fam]
+
+
+# ------------------------------------------------ slice A: argument rules ---
+
+def _A(x: str, *payload) -> list:
+    return [cmd(x), group(*payload)]
+
+
+def _arg_where(nm: "Names", x: str) -> str | None:
+    """Where the command's argument RUNS (text preferred), or None."""
+    h = nm.args[x]
+    for where in ("text", "math"):
+        if h[where][0] == "run":
+            return where
+    return None
+
+
+def _in(where: str, *nodes):
+    """Nodes placed in text (as they are) or in an inline formula."""
+    return list(nodes) if where == "text" else [dollar(*nodes)]
+
+
+def arg_rule_docs(nm: "Names") -> list[tuple[str, dict]]:
+    """The directed probe families of the slice-A constructors of
+    Semantics.v (R_arg_*, R_close_arg, R_par_short, the restricted-mode rules,
+    Stops and Scans). A family whose premise no admitted name satisfies is not
+    generated: that constructor is DORMANT under the committed contract, which
+    check_strict_kernel.py derives from the signature files."""
+    if not nm.args:
+        return []
+    u, x, y = nm.undefined[0], text("x"), text("y")
+    fam: list[tuple[str, dict]] = []
+    A = nm.args
+
+    def pick(pred, k=2):
+        return [n for n in nm.arg_all if pred(A[n])][:k]
+
+    for where in ("text", "math"):
+        for kind in ("now", "after", "run"):
+            names = pick(lambda h: h[where][0] == kind, 3)
+            rule = f"R_arg_{where}_{kind}"
+            for n in names:
+                fam.append((rule, doc(*_in(where, text("a"), *_A(n, y), text("b")))))
+                fam.append((rule, doc(*_in(where, *_A(n)))))
+        # every payload mode the admitted names have, run
+        for pm in ("text", "text_restricted", "math"):
+            for n in nm.arg_run[where][pm][:1]:
+                fam.append((f"R_arg_{where}_run", doc(*_in(where, *_A(n, y)))))
+    runs = [n for n in nm.arg_all if _arg_where(nm, n)]
+    for n in runs[:3]:
+        w = _arg_where(nm, n)
+        fam.append(("R_close_arg", doc(*_in(w, *_A(n, y), text("z")))))
+        fam.append(("R_close_arg", doc(*_in(w, *_A(n, y), *_A(n, y)))))
+    # a paragraph break in an argument that is not long
+    for lg in ("short_inner", "short_outer"):
+        for n in [q for q in runs if A[q]["long"] == lg][:2]:
+            w = _arg_where(nm, n)
+            fam.append(("R_par_short", doc(*_in(w, *_A(n, text("a"), par(True), text("b"))))))
+            fam.append(("R_par_short", doc(*_in(w, *_A(n, text("a"), par(False), text("b"))))))
+            fam.append(("SC_par_outer" if lg == "short_outer" else "SC_par_short",
+                        doc(*_in(w, *_A(n, cmd(u), text("a"), par(True), text("b"))))))
+    for n in [q for q in runs if A[q]["long"] == "long"][:2]:
+        w = _arg_where(nm, n)
+        fam.append(("SC_par_long", doc(*_in(w, *_A(n, cmd(u), par(True), text("b"))))))
+        if w == "text":
+            fam.append(("R_par_text", doc(*_A(n, text("a"), par(True), text("b")))))
+    # restricted horizontal mode
+    for where in ("text", "math"):
+        for n in nm.arg_run[where]["text_restricted"][:2]:
+            fam.append(("R_dollar_restricted_open", doc(*_in(where, *_A(n, dollar(y))))))
+            fam.append(("R_dollar_restricted_open", doc(*_in(where, *_A(n, display(y))))))
+            fam.append(("R_mopen_display_restricted",
+                        doc(*_in(where, *_A(n, {"raw": "open_bracket"}, y)))))
+            fam.append(("R_mopen_display_restricted", doc(*_in(where, *_A(n, bracket(y))))))
+    # Stops / Scans: a fatal outside and inside an argument, the scanner's
+    # braces and skips
+    fam += [("Stop_now", doc(cmd(u))), ("Stop_now", doc(dollar(x, par())))]
+    for n in runs[:3]:
+        w = _arg_where(nm, n)
+        fam.append(("Stop_defer", doc(*_in(w, *_A(n, text("a"), cmd(u), text("b"))))))
+        fam.append(("SC_close_last", doc(*_in(w, *_A(n, cmd(u))))))
+        fam.append(("SC_close", doc(*_in(w, *_A(n, cmd(u), group(text("c")), text("d"))))))
+        fam.append(("SC_open", doc(*_in(w, *_A(n, cmd(u), group(), text("d"))))))
+        fam.append(("SC_skip", doc(*_in(w, *_A(n, cmd(u), text("abc"), space(), dollar(y))))))
+    return [(f, _fix_raw(d)) for f, d in fam]
+
+
+def _fix_raw(d: dict) -> dict:
+    """A tree with a raw token (an unbalanced delimiter inside an argument)
+    becomes a token stream."""
+    if '"raw"' not in json.dumps(d):
+        return d
+    import gen_strict_arg_signatures as GA
+    return {"toks": GA._toks_of_doc(json.loads(json.dumps(d).replace(
+        '{"raw": "open_bracket"}', '{"raw": ["open_bracket"]}')))}
+
+
+# The scanner's BRANCH cells: "scan|<token>|k1 or k2|sh or nosh|ou or noou"
+# (strict_decide.ml scan_step). Each document defers an error at the start of
+# an argument of the given longness, then puts the token directly in the
+# argument (k1) or in a group inside it (k2).
+SCAN_TOKENS = [("char", "x"), "space", ("par", False), ("par", True), "open", "close",
+               "dollar", "open_paren", "close_paren", "open_bracket", "close_bracket",
+               "sup", "sub", "cs"]
+
+
+def scan_matrix_docs(nm: "Names") -> list[tuple[str, dict]]:
+    if not nm.args:
+        return []
+    u = nm.undefined[0]
+    out = []
+    for lg in ("long", "short_inner", "short_outer"):
+        cands = [n for n in nm.arg_all if nm.args[n]["long"] == lg and _arg_where(nm, n)]
+        if not cands:
+            continue
+        n = cands[0]
+        w = _arg_where(nm, n)
+        pre = [["dollar"]] if w == "math" else []
+        post = [["dollar"]] if w == "math" else []
+        for t in SCAN_TOKENS:
+            tok = [["cs", u]] if t == "cs" else [list(t) if isinstance(t, tuple) else [t]]
+            for k in ("k1", "k2"):
+                body = [["cs", n], ["open"], ["cs", u]]
+                if k == "k2":
+                    body += [["open"]]
+                body += tok
+                if t == "open":
+                    body += [["close"]]
+                if t in ("sup", "sub"):
+                    body += [["char", "a"]]
+                if k == "k2" and t != "close":
+                    body += [["close"]]
+                if not (k == "k1" and t == "close"):
+                    body += [["close"]]
+                out.append(("SCAN", {"toks": pre + body + post + [["end"]]}))
+    return out
 
 
 def _nest(depth: int, inner: list) -> list:
@@ -322,25 +496,78 @@ def _mcls(beh) -> str:
     return beh if isinstance(beh, str) else "fatal." + beh[1]
 
 
-def matrix_docs(nm: "Names") -> list[tuple[str, dict]]:
+def _acls(h: dict, where: str) -> str:
+    """strict_decide.ml arg_text_cls / arg_math_cls."""
+    b = h[where]
+    if b[0] in ("now", "after"):
+        return f"{b[0]}.{b[1]}"
+    if where == "text":
+        return f"run.{'material' if b[1] else 'noop'}.{b[2]}"
+    return f"run.{b[1]}"
+
+
+def arg_heads(nm: "Names") -> dict[str, tuple[list, bool]]:
+    """Slice A: one head per mode an admitted argument runs in (the prefix
+    opens the argument of a representative command), and for a math argument
+    also with the tail's scripts set. -> {name: (prefix, math?)}"""
+    heads = {}
+    for where in ("text", "math"):
+        for pm in ("text", "text_restricted", "math"):
+            reps = nm.arg_run[where][pm]
+            if not reps:
+                continue
+            n = reps[0]
+            pre = (["dollar"] if where == "math" else []) + [("cs", n), "open", ("char", "q")]
+            heads[f"arg-{where}-{pm}-"] = (pre, pm == "math")
+            if pm == "math":
+                heads[f"arg-{where}-{pm}+"] = (
+                    pre + ["sup", ("char", "a"), "sub", ("char", "b")], True)
+    return heads
+
+
+def matrix_docs(nm: "Names", phase1_only: bool = True) -> list[tuple[str, dict]]:
+    """phase1_only: the phase-1 matrix, document for document as version 2
+    drew it; else the cells slice A adds (the argument heads, the argument
+    commands as tokens, and a command as the follower of a look-ahead)."""
     sig, u = nm.sigs, nm.undefined[0]
     text_rep, math_rep, pair_rep = {}, {}, {}
     for n in sorted(sig):
         text_rep.setdefault(_mcls(sig[n]["text"]), n)
         math_rep.setdefault(_mcls(sig[n]["math"]), n)
         pair_rep.setdefault((_mcls(sig[n]["text"]), _mcls(sig[n]["math"])), n)
-    followers = MATRIX_TOKENS + [("cs", u)] + [("cs", n) for n in pair_rep.values()] + [None]
+    # slice A: one-argument commands, a representative per class and mode
+    atext_rep, amath_rep = {}, {}
+    for n in nm.arg_all:
+        atext_rep.setdefault(_acls(nm.args[n], "text"), n)
+        amath_rep.setdefault(_acls(nm.args[n], "math"), n)
+    arg_follow = [("cs", n) for n in sorted(set(atext_rep.values()) | set(amath_rep.values()))[:1]]
+    p1_followers = MATRIX_TOKENS + [("cs", u)] + [("cs", n) for n in pair_rep.values()] + [None]
+    followers = p1_followers[:-1] + arg_follow + [None]
     out = []
 
     def tok(t):
         return list(t) if isinstance(t, tuple) else [t]
 
-    for hname, prefix in MATRIX_HEADS.items():
-        math = hname[0] in "idm"
+    heads = {h: (p, h[0] in "idm") for h, p in MATRIX_HEADS.items()}
+    new_heads = arg_heads(nm)
+    if not phase1_only:
+        heads.update(new_heads)
+    argcmd = set(nm.arg_all)
+    for hname, (prefix, math) in heads.items():
         cs_toks = [("cs", u)] + [("cs", n) for n in (math_rep if math else text_rep).values()]
-        for t in MATRIX_TOKENS + cs_toks:
+        a_toks = [] if phase1_only else \
+            [("cs", n) for n in (amath_rep if math else atext_rep).values()]
+        for t in MATRIX_TOKENS + cs_toks + a_toks:
             tl = t if isinstance(t, str) else t[0]
-            fl = followers if tl in READS_NEXT else ["-"]
+            is_arg = isinstance(t, tuple) and t[0] == "cs" and t[1] in argcmd
+            if phase1_only:
+                fl = p1_followers if tl in READS_NEXT else ["-"]
+            elif hname in new_heads or is_arg:
+                fl = followers if (tl in READS_NEXT or is_arg) else ["-"]
+            elif tl in READS_NEXT:
+                fl = arg_follow  # an old head's look-ahead: only the new follower
+            else:
+                continue  # an old cell: phase1_only drew it
             for f in fl:
                 toks = [tok(q) for q in prefix] + [tok(t)]
                 if f == "-":
@@ -353,12 +580,20 @@ def matrix_docs(nm: "Names") -> list[tuple[str, dict]]:
                     if f in ("sup", "sub"):
                         # a script needs its argument (Decide.v scripts_ok)
                         toks.append(["char", "a"])
+                    if isinstance(f, tuple) and f[0] == "cs" and f[1] in argcmd:
+                        toks.append(["open"])  # an argument command's brace
                 req = {"toks": toks}
                 if close:
                     req["close"] = True
                 ft = f if isinstance(f, (str, type(None))) else f[0]
                 outside = tl in ("sup", "sub") and ft not in ("char",) and \
                     not (ft == "open")
+                # Decide.wfa: an argument command is followed by its brace
+                outside = outside or (is_arg and ft != "open")
+                # an argument still open at the end of the stream or at
+                # \end{document} (Decide.wfa)
+                if hname.startswith("arg-") and not close:
+                    outside = True
                 out.append(("MATRIX-OUT" if outside else "MATRIX", req))
     return out
 
@@ -397,9 +632,76 @@ class Gen:
         for _ in range(self.r.randint(lo, hi)):
             if self.r.random() < 0.06:
                 out += self.run(mode, clean)
+            elif self.nm.args and depth < 6 and self.r.random() < self.ARG_P:
+                out += self.arg(depth, mode, clean)
             else:
-                out.append(self.node(depth, mode, clean))
+                out.append(self.node(depth, "text" if mode == "rtext" else mode, clean)
+                           if mode != "rtext" else self.rnode(depth, clean))
         return out
+
+    # ---- version 3 (ADR-012 step 2, slice A): one-argument commands --------
+    # A command and its argument, the argument's content generated in the
+    # mode it runs in; failing documents put the hazards of design step 2
+    # inside it: an undefined name (reported at the closing brace), a
+    # paragraph break or a blank line (arguments that are not long), a $ or a
+    # script in the wrong mode, $$ and \[ \] in an hbox, a nested command, a
+    # stray brace, and the command itself in a mode where it stops.
+    ARG_P = 0.12
+
+    def rnode(self, depth: int, clean: bool):
+        """A node in restricted horizontal mode (an hbox argument)."""
+        if self.r.random() < 0.25:
+            kind = self.pick([(4, "dollar"), (3, "display"), (2, "paren"),
+                              (0 if clean else 3, "bracket")])
+            return S.math(kind, *self.seq(depth + 1, "math", clean, 0, 3))
+        return self.node(depth, "text", clean)
+
+    def arg(self, depth: int, mode: str, clean: bool) -> list:
+        where = "text" if mode in ("text", "rtext") else "math"
+        runs = [n for pm in self.nm.arg_run[where].values() for n in pm]
+        if clean or self.r.random() < 0.7:
+            pool = runs
+        else:
+            pool = self.nm.arg_all
+        if not pool:
+            return []
+        x = self.r.choice(sorted(pool))
+        b = self.nm.args[x][where]
+        pm = b[-1] if b[0] == "run" else "text"
+        sub = {"text": "text", "text_restricted": "rtext", "math": "math"}[pm]
+        if self.r.random() < 0.08:
+            # repeated: a global resource shows only under repetition (C-85)
+            k = self.pick([(4, 5), (3, 30), (2, 100), (1, 300)])
+            return [m for _ in range(k) for m in (cmd(x), group(text(self.word(1, 1))))]
+        payload = self.seq(depth + 1, sub, clean, 0, 4)
+        if not clean and self.r.random() < 0.5:
+            hz = self.pick([(5, "undef"), (4, "par"), (3, "blank"), (3, "dollar"),
+                            (2, "script"), (2, "display"), (2, "bracket"),
+                            (1, "stray"), (2, "badname")])
+            if hz == "undef":
+                h = cmd(self.r.choice(self.nm.undefined))
+            elif hz == "par":
+                h = par(True)
+            elif hz == "blank":
+                h = par(False)
+            elif hz == "dollar":
+                h = S.math("dollar", text("u")) if sub != "math" else stray()
+            elif hz == "script":
+                h = script(True, text("2"))
+            elif hz == "display":
+                h = S.math("display", text("v"))
+            elif hz == "bracket":
+                h = S.math("bracket", text("v"))
+            elif hz == "stray":
+                h = stray()
+            else:
+                h = cmd(self.name("math" if sub == "text" else "text", False))
+            # never between a nested command and its argument's brace
+            ok = [i for i in range(len(payload) + 1)
+                  if i == 0 or not (payload[i - 1][0] == "cmd"
+                                    and payload[i - 1][1] in self.nm.args)]
+            payload.insert(self.r.choice(ok), h)
+        return [cmd(x), group(*payload)]
 
     # Version 2 shapes (C-85): runs of one to three names repeated up to 300
     # times (a global resource shows only under repetition), with or without
@@ -445,7 +747,10 @@ class Gen:
     def nest(self, clean: bool):
         """Deep brace nesting, up to the bound of Decide.v (C-86)."""
         k = self.pick([(6, 10), (4, 50), (3, 120), (2, MAX_BRACE_DEPTH - 1)])
+        # an argument inside would add braces past the bound (slice A)
+        saved, self.ARG_P = self.ARG_P, (0 if k > MAX_BRACE_DEPTH - 20 else self.ARG_P)
         inner = self.seq(3, "text", clean, 1, 3)
+        self.ARG_P = saved
         node = inner
         for _ in range(k):
             node = [group(*node)]
@@ -501,6 +806,9 @@ class Gen:
 
 # ------------------------------------------------------------- running ---
 
+CACHE: "S.GradeCache | None" = None  # set by main (--reuse, --grade-store)
+
+
 def run_all(requests: list[dict], sig_path: Path, workers: int, label: str):
     kern = S.Kernel(signatures=sig_path)
     models = kern.run(requests)
@@ -510,8 +818,14 @@ def run_all(requests: list[dict], sig_path: Path, workers: int, label: str):
     def g(m):
         if m["verdict"] == "not_strict":
             return {"not_strict": True}  # outside the tier: nothing to grade
+        b = m["tex"].encode("ascii")
+        hit = CACHE.get(b) if CACHE else None
+        if hit is not None:
+            return dict(hit)
         try:
             r = S.grade(oracle, m["tex"], timeout=300)
+            if CACHE:
+                CACHE.put(b, r)
         except _oracle.OracleError as e:
             r = {"infra": str(e)[:300]}
         done[0] += 1
@@ -595,7 +909,10 @@ def tally(docs, models, grades, families=None):
 
 import _strict_bytes as SB  # noqa: E402
 
-BYTES_GENERATOR_VERSION = "1"
+# Version 2 (ADR-012 step 2, slice A): the phase-1 rule probes re-laid out
+# include the slice-A families, the trees are generator version 3's, and the
+# direct generator writes one-argument commands (_strict_bytes.Direct.argcmd).
+BYTES_GENERATOR_VERSION = "2"
 BYTES_PROBES = OUT_DIR / "bytes_probes.json"
 BYTES_DIFFERENTIAL = OUT_DIR / "bytes_differential.json"
 LEX_RULES = [
@@ -620,8 +937,15 @@ def byte_names(nm: "Names") -> dict:
               and sig[n]["math"] == "noad")
     mo = next(n for n in sorted(sig) if isinstance(sig[n]["text"], list)
               and sig[n]["math"] == "noad")
+    # slice A: (name, the mode its argument runs in) per mode of use
+    arg_run = {w: [(n, pm) for pm, ns in sorted(nm.arg_run[w].items()) for n in ns]
+               for w in ("text", "math")}
+    arg_all = [(n, nm.args[n]["text"][-1] if nm.args[n]["text"][0] == "run" else "text")
+               for n in nm.arg_all]
     return {"undefined": nm.undefined, "text_material": tm, "math_only": mo,
-            "text_ok": nm.text_ok, "math_ok": nm.math_ok, "all": nm.all}
+            "text_ok": nm.text_ok, "math_ok": nm.math_ok, "all": nm.all,
+            "arg_run_text": arg_run["text"], "arg_run_math": arg_run["math"],
+            "arg_all": arg_all}
 
 
 def bytes_rule_docs(nm: "Names", sig_path: Path, rng: random.Random):
@@ -683,8 +1007,13 @@ def run_bytes(docs, sig_path: Path, workers: int, label: str):
         (fam, b, _), m = pair
         if m["verdict"] == "not_strict":
             return {"not_strict": True}
+        hit = CACHE.get(b) if CACHE else None
+        if hit is not None:
+            return dict(hit)
         try:
             r = S.grade_bytes(oracle, b, timeout=300)
+            if CACHE:
+                CACHE.put(b, r)
         except _oracle.OracleError as e:
             r = {"infra": str(e)[:300]}
         done[0] += 1
@@ -885,6 +1214,9 @@ def main_bytes(args, nm: "Names", sig_path: Path) -> int:
         "seed": args.seed,
         "source": S.source_block(),
         "signatures_sha256": S.sha256_file(sig_path),
+        "arg_signatures_sha256": (S.sha256_file(S.ARG_SIGNATURES)
+                                  if S.ARG_SIGNATURES.is_file() else None),
+        "reuse": CACHE.record() if CACHE else None,
         "lexical_sha256": S.sha256_file(S.LEXICAL),
         "bytes_extract_sha256": S.sha256_file(S.BYTES_EXTRACT),
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
@@ -934,9 +1266,17 @@ def main() -> int:
                     help="M2 phase 2: the reader's probe families (bytes)")
     ap.add_argument("--bytes", type=int, default=0,
                     help="M2 phase 2: N generated files (bytes)")
+    ap.add_argument("--reuse", nargs="*", default=[],
+                    help="evidence files of the same oracle whose grades of "
+                         "byte-identical files are reused (recorded in the output)")
+    ap.add_argument("--grade-store", help="a local JSON-lines grade store (read and appended)")
     args = ap.parse_args()
     sig_path = Path(args.signatures)
-    nm = Names(sig_path, random.Random(args.seed))
+    global CACHE
+    if args.reuse or args.grade_store:
+        CACHE = S.GradeCache(_oracle.get_oracle(), [Path(p) for p in args.reuse],
+                             Path(args.grade_store) if args.grade_store else None)
+    nm = Names(sig_path, random.Random(args.seed), S.ARG_SIGNATURES)
     if args.bytes_rules or args.bytes:
         return main_bytes(args, nm, sig_path)
 
@@ -987,19 +1327,25 @@ def main() -> int:
         "seed": args.seed,
         "source": S.source_block(),
         "signatures_sha256": S.sha256_file(sig_path),
+        "arg_signatures_sha256": (S.sha256_file(S.ARG_SIGNATURES)
+                                  if S.ARG_SIGNATURES.is_file() else None),
+        "reuse": CACHE.record() if CACHE else None,
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
         "oracle": oracle.provenance(),
         "agreement_rule": "_strict_s0.agrees: READY iff rc 0 and a PDF; E0 iff rc 0 "
                           "and no PDF; any other reason iff rc != 0, the first ! "
                           "message is in _strict_s0.expected_messages(reason, token, "
-                          "mode), and the fatal token's line equals the oracle's l.N",
+                          "mode) for the fatal EVENT (for an error deferred inside an "
+                          "argument, the offending token; slice A), and the line of "
+                          "the fatal's location (where the reader stands) equals the "
+                          "oracle's l.N",
         "summary": summary,
         "by_rule": by_rule,
         "disagreements": dis,
         "infrastructure_failures": infra,
     }
     if families is not None:
-        out["by_family"] = {f: by_family[f] for f in RULES + ["BOUND", "MATRIX"]
+        out["by_family"] = {f: by_family[f] for f in RULES + ["BOUND", "MATRIX", "SCAN"]
                             if f in by_family}
         out["probes"] = records
         out["outside_tier"] = outside

@@ -102,6 +102,7 @@ LEXICAL = "corpora/contracts/strict/article-s0-lexical.json"
 BYTES_EXTRACT = "latex-parse/strict/strict_bytes_extracted.ml"
 KERNEL_EXTRACT = "latex-parse/strict/strict_kernel_extracted.ml"
 SIGNATURES = "corpora/contracts/strict/article-s0-signatures.json"
+ARG_SIGNATURES = "corpora/contracts/strict/article-s1-arg-signatures.json"  # slice A
 PHASE2_FILES = ["Lexer.v", "Front.v", "DecideBytes.v", "BridgeBytes.v", "Explain.v"]
 READER_INDUCTIVES = [("Lexer.v", "Inductive FirstLine :"), ("Lexer.v", "Inductive Lines :"),
                      ("Lexer.v", "Inductive LineLex "), ("Lexer.v", "Inductive LinesLex "),
@@ -399,6 +400,8 @@ def main() -> int:
            "kernel_extract_sha256": sha(repo / KERNEL_EXTRACT),
            "signatures_sha256": sha(repo / SIGNATURES),
            "lexical_sha256": sha(repo / LEXICAL)}
+    if (repo / ARG_SIGNATURES).is_file():
+        cur["arg_signatures_sha256"] = sha(repo / ARG_SIGNATURES)
     files = {}
     for label, rel in (("bytes_probes", PROBES), ("bytes_differential", DIFFERENTIAL)):
         d = json.loads((repo / rel).read_text())
@@ -499,7 +502,9 @@ def main() -> int:
     sem = (strict / "Semantics.v").read_text()
     syn = (strict / "Syntax.v").read_text()
     sigs = json.loads((repo / SIGNATURES).read_text()).get("signatures", {})
-    need_ok, _, finds = required_cells(syn, sem, sigs)
+    asigs = (json.loads((repo / ARG_SIGNATURES).read_text()).get("arg_signatures", {})
+             if (repo / ARG_SIGNATURES).is_file() else {})
+    need_ok, _, finds = required_cells(syn, sem, sigs, asigs)
     fails += [f"kernel matrix: {m}" for m in finds]
     kcov = {b for r in rp.get("documents", []) if r.get("agree") for b in r.get("branches", [])}
     # A `$` at the END of the kernel stream is outside the fragment at the byte

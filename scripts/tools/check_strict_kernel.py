@@ -93,7 +93,28 @@ import sys
 from pathlib import Path
 
 MIN_DIFFERENTIAL = 3000
-DIFFERENTIAL = "corpora/strict_s0/differential_v2.json"
+DIFFERENTIAL = "corpora/strict_s0/differential_v3.json"
+# ADR-012 step 2, slice A: the one-argument commands' signatures
+ARG_SIGNATURES = "corpora/contracts/strict/article-s1-arg-signatures.json"
+REQUIRED_ARG_FAMILIES = [
+    "A-T-ALONE", "A-T-EMPTY", "A-T-SPACE", "A-T-MID", "A-T-PAR", "A-T-GROUP", "A-T-UNDEF",
+    "A-T-PARARG", "A-T-BLANKARG", "A-T-PARLATE", "A-T-DD", "A-T-BRK", "A-T-BRKOPEN",
+    "A-T-DOLLAR", "A-T-SUP", "A-T-SHIFT", "A-T-NEST", "A-T-NESTPAR", "A-T-STRAY",
+    "A-T-NOEND",
+    "A-M-ALONE", "A-M-EMPTY", "A-M-SCRIPTS", "A-M-TAIL", "A-M-DOLLAR", "A-M-SUP",
+    "A-M-UNDEF", "A-M-PARARG", "A-M-DD", "A-M-BRK", "A-M-DISPLAY", "A-M-GROUP",
+    "A-M-SCRIPTARG", "A-M-NEST", "A-M-PAREN", "A-M-BRACKETS",
+    "A-D-FOLLOW",
+    "A-R-TEXT", "A-R-TEXT-ALT", "A-R-PARS", "A-R-GROUPS", "A-R-MATH", "A-R-FORMULAS",
+    "A-R-DISPLAYS", "A-R-NEST-TEXT", "A-R-NEST-MATH", "A-R-BIG-TEXT", "A-R-BIG-MATH",
+    "A-R-BIG-ARG",
+] + [f"A-F{w}-{k}" for w in "TM" for k in (
+    "CHARS", "OPEN", "CLOSE", "PAR", "BLANK", "DOLLAR", "DISPLAY", "MOPEN", "BOPEN",
+    "SUP", "UNDEF", "SPACE", "SELF")] + ["A-FT-END", "A-FT-EOF", "A-FM-MCLOSE", "A-FM-BCLOSE"]
+ARG_REPETITION = {"text": ["A-R-TEXT", "A-R-TEXT-ALT", "A-R-PARS", "A-R-GROUPS",
+                           "A-R-NEST-TEXT", "A-R-BIG-TEXT", "A-R-BIG-ARG"],
+                  "math": ["A-R-MATH", "A-R-FORMULAS", "A-R-DISPLAYS", "A-R-NEST-MATH",
+                           "A-R-BIG-MATH"]}
 REQUIRED_SIGNATURE_FAMILIES = [
     # base (generator version 2)
     "T-ALONE", "T-MID", "T-GROUP", "T-PAR", "T-DOLLAR", "T-SUP", "T-SPACE",
@@ -158,10 +179,11 @@ MAX_TOKENS = 200 * 100
 #         (code tables, interaction, input/output, diagnostics and tracing,
 #         deferred execution, \immediate, \scantokens). The closure follows
 #         every token of letters and @ in an expansion text to its recorded
-#         meaning, transitively. It does not follow a name holding other
-#         characters (\T1\IJ, \?-cmd): a screen, not a proof, recorded in
-#         §I.4; the probes (follower, repetition, interleaving) remain the
-#         behavioural check.
+#         meaning, transitively, and (since C-92) every robust-command
+#         reference `\protect \Y  ` to the meaning of the inner name "Y ".
+#         It does not follow a name holding other characters (\T1\IJ,
+#         \?-cmd): a screen, not a proof, recorded in §I.4; the probes
+#         (follower, repetition, interleaving) remain the behavioural check.
 # ---------------------------------------------------------------------------
 NON_INERT_PRIMITIVE_CLASSES = {
     "expansion control": {
@@ -213,6 +235,13 @@ STRUCTURAL_CHARACTER_MEANINGS = (
 _MACRO = re.compile(r"^((?:\\(?:long|protected|outer) )*)macro:(.*?)->(.*)$", re.S)
 _REGISTER = re.compile(r"^\\(count|dimen|skip|muskip|toks)\d+$")
 _TOKEN = re.compile(r"\\([A-Za-z@]+)")
+# LaTeX's robust commands (\DeclareRobustCommand): \X is `\protect \X  ` and
+# the command's code is the meaning of the name "X " (a trailing space in the
+# name; \meaning prints it, then its separating space). Correction C-92: the
+# closure of generator version 3 did not follow this edge, so a robust name's
+# own code was never screened (\bf, \it, \sf, \tt reach \afterassignment,
+# \centering and \raggedleft \immediate, through their robust inner names).
+_ROBUST = re.compile(r"\\protect \\([A-Za-z@]+)  ")
 
 
 def _conditional(p: str) -> bool:
@@ -221,9 +250,13 @@ def _conditional(p: str) -> bool:
 
 def body_tokens(meaning: str) -> list[str] | None:
     """The letter/@ control-word names of a macro's expansion text (None if
-    the meaning is not a macro)."""
+    the meaning is not a macro), and for every robust-command reference
+    `\\protect \\Y  ` also the inner name "Y " (with its trailing space,
+    C-92)."""
     m = _MACRO.match(meaning)
-    return _TOKEN.findall(m.group(3)) if m else None
+    if not m:
+        return None
+    return _TOKEN.findall(m.group(3)) + [y + " " for y in _ROBUST.findall(m.group(3))]
 
 
 def primitive_of(meaning: str | None, primitives: set[str]) -> str | None:
@@ -290,6 +323,27 @@ def inertness_violation(name: str, meanings: dict[str, str],
                 via = "" if x == name else f" via \\{x}"
                 return f"expansion reaches \\{q}{via} (state-changing)"
     return None
+
+
+_MACRO_PARAMS = re.compile(r"^((?:\\(?:long|protected|outer) )*)macro:(.*?)->", re.S)
+
+
+def arg_candidates(meanings: dict[str, str], admitted1: set[str]) -> list[str]:
+    """The slice-A selection rule (gen_strict_arg_signatures.candidates): the
+    control words of the closed world minus par/begin/end and the phase-1
+    admitted names, whose meaning at body start -- through one robust wrapper
+    to the inner name "X " -- is a macro with parameter text exactly #1."""
+    out = []
+    for n in sorted(meanings):
+        if not re.fullmatch(r"[A-Za-z]+", n) or n in STRUCTURAL or n in admitted1:
+            continue
+        m = meanings[n]
+        if m == f"macro:->\\protect \\{n}  ":
+            m = meanings.get(n + " ", "")
+        mm = _MACRO_PARAMS.match(m)
+        if mm and mm.group(2) == "#1":
+            out.append(n)
+    return out
 
 
 def sha(p: Path) -> str:
@@ -361,7 +415,10 @@ def _balanced(text: str, i: int) -> int:
 def lookahead_tokens(sem: str) -> dict[str, set[str]]:
     """Runs constructor -> the head token constructors whose rule READS
     beyond its own token: its conclusion names a second explicit token, ends
-    the stream right after it ([t]), or a premise inspects the rest."""
+    the stream right after it ([t]), or a premise inspects the rest. A
+    premise that only hands the rest on (the recursive Runs, and since slice
+    A the Stops and Scans continuations, which read the rest by their own
+    rules and have their own cells) is not an inspection."""
     body = sem[sem.index("Inductive Runs"):]
     parts = re.split(r"^\|\s*(R_\w+)\s*:", body, flags=re.M)
     out: dict[str, set[str]] = {}
@@ -380,8 +437,8 @@ def lookahead_tokens(sem: str) -> dict[str, set[str]]:
         else:
             elems = [e.strip() for e in lst[1:-1].split("::")]
             explicit = [e for e in elems if e not in ("rest", "[]")]
-            # a premise other than the recursive Runs one that mentions rest
             inspects = any(re.search(r"\brest\b", seg) and "Runs C" not in seg
+                           and "Stops" not in seg and "Scans" not in seg
                            for seg in premises.split("->"))
             reads = len(explicit) >= 2 or inspects
         if reads and elems:
@@ -402,19 +459,45 @@ TOK_LABELS = {
     "TMOpenDisplay": ["open_bracket"], "TMCloseDisplay": ["close_bracket"],
     "TScript": ["sup", "sub"], "TCs": [], "TEnd": ["end"],
 }
-# frame constructor (Semantics.v) -> head labels; "top" is the empty stack
+# frame constructor (Semantics.v) -> head labels; "top" is the empty stack.
+# FArg (slice A): one head per mode an argument runs in; a head no admitted
+# argument signature runs in is unreachable under the contract (dormant).
 FRAME_LABELS = {"FSimple": ["simple"], "FShift": ["inline", "display"],
-                "FMGroup": ["mgroup"]}
-MATH_HEADS = {"inline", "display", "mgroup"}
+                "FMGroup": ["mgroup"], "FArg": ["arg.text", "arg.textr", "arg.math"]}
+MATH_HEADS = {"inline", "display", "mgroup", "arg.math"}
+ARG_HEAD_OF_PAY = {"text": "arg.text", "text_restricted": "arg.textr", "math": "arg.math"}
+# the scanner's token classes (strict_decide.ml tok_name; \end{document} is
+# never inside an argument: Decide.wfa)
+SCAN_TOKEN_LABELS = ["char", "space", "blank_line", "par", "open", "close", "dollar",
+                     "open_paren", "close_paren", "open_bracket", "close_bracket",
+                     "sup", "sub", "cs"]
+SCAN_FLAGS_OF_LONG = {"long": "nosh|noou", "short_inner": "sh|noou", "short_outer": "sh|ou"}
 
 
 def _cls(b) -> str:
     return b if isinstance(b, str) else "fatal." + b[1]
 
 
-def required_cells(syntax: str, sem: str, sigs: dict) -> tuple[set[str], set[str], list[str]]:
+def _acls(h: dict, where: str) -> str:
+    """strict_decide.ml arg_text_cls / arg_math_cls."""
+    b = h[where]
+    if b[0] in ("now", "after"):
+        return f"{b[0]}.{b[1]}"
+    if where == "text":
+        return f"run.{'material' if b[1] else 'noop'}.{b[2]}"
+    return f"run.{b[1]}"
+
+
+def arg_runs(asigs: dict) -> set[str]:
+    """The payload modes the admitted argument signatures run in."""
+    return {h[w][-1] for h in asigs.values() for w in ("text", "math") if h[w][0] == "run"}
+
+
+def required_cells(syntax: str, sem: str, sigs: dict, asigs: dict | None = None
+                   ) -> tuple[set[str], set[str], list[str]]:
     """(cells that must be covered by an agreeing probe, cells that must be
     covered by an outside-the-tier probe, structural findings)."""
+    asigs = asigs or {}
     finds = []
     toks = inductive_ctors(syntax, "Inductive tok :=")
     if set(toks) != set(TOK_LABELS):
@@ -430,18 +513,34 @@ def required_cells(syntax: str, sem: str, sigs: dict) -> tuple[set[str], set[str
         if t not in TOK_LABELS:
             finds.append(f"look-ahead head token {t} (constructors {sorted(la[t])}) unknown")
         reads |= set(TOK_LABELS.get(t, []))
-    heads = ["top"] + [h for f in frames for h in FRAME_LABELS.get(f, [])]
+    # a control word reads ahead only through the argument rules (R_arg_*):
+    # the look-ahead is a property of the argument classes, not of every name
+    arg_reads = "TCs" in la and all(c.startswith("R_arg_") for c in la["TCs"])
+    if "TCs" in la and not arg_reads:
+        finds.append(f"a control word reads ahead through {sorted(la['TCs'])}: "
+                     f"the matrix knows the argument rules only")
+    live_args = {ARG_HEAD_OF_PAY[p] for p in arg_runs(asigs)}
+    heads = ["top"] + [h for f in frames for h in FRAME_LABELS.get(f, [])
+                       if not h.startswith("arg.") or h in live_args]
     plain = [lab for t in toks for lab in TOK_LABELS.get(t, [])]
     tcls = sorted({_cls(v["text"]) for v in sigs.values()})
     mcls = sorted({_cls(v["math"]) for v in sigs.values()})
     pairs = sorted({f"{_cls(v['text'])}/{_cls(v['math'])}" for v in sigs.values()})
-    followers = plain + ["cs:undef"] + [f"cs:{q}" for q in pairs] + ["eof"]
+    atcls = sorted({_acls(v, "text") for v in asigs.values()})
+    amcls = sorted({_acls(v, "math") for v in asigs.values()})
+    followers = (plain + ["cs:undef"] + [f"cs:{q}" for q in pairs]
+                 + (["cs:arg"] if asigs else []) + ["eof"])
     need_ok, need_out = set(), set()
     for h in heads:
         math = h in MATH_HEADS
+        in_arg = h.startswith("arg.")
         cs = ["cs:undef"] + [f"cs:{'m' if math else 't'}.{c}" for c in (mcls if math else tcls)]
-        for t in plain + cs:
-            if t not in reads:
+        acs = [f"cs:{'am' if math else 'at'}.{c}" for c in (amcls if math else atcls)]
+        for t in plain + cs + acs:
+            if t == "end" and in_arg:
+                need_out.add(f"{h}|end|-|-")  # Decide.wfa: \end{document} in an argument
+                continue
+            if not (t in reads or (t in acs and arg_reads)):
                 need_ok.add(f"{h}|{t}|-|-")
                 continue
             tails = (["tail-", "tail+"] if math else ["tail-"]) if t in ("sup", "sub") else ["-"]
@@ -450,8 +549,21 @@ def required_cells(syntax: str, sem: str, sigs: dict) -> tuple[set[str], set[str
                     cell = f"{h}|{t}|{f}|{tl}"
                     if t in ("sup", "sub") and f not in ("char", "open"):
                         need_out.add(cell)  # Decide.v scripts_ok
+                    elif t in acs and f != "open":
+                        need_out.add(cell)  # Decide.wfa: the argument's brace
+                    elif in_arg and f in ("end", "eof"):
+                        need_out.add(cell)  # Decide.wfa: an argument left open
                     else:
                         need_ok.add(cell)
+    # the argument scanner (Semantics.Scans): every token class, directly in
+    # the outermost argument (k1) and inside a group in it (k2), for each
+    # longness an admitted command that runs its argument has
+    longs = {v["long"] for v in asigs.values()
+             if v["text"][0] == "run" or v["math"][0] == "run"}
+    for lg in sorted(longs):
+        for t in SCAN_TOKEN_LABELS:
+            for k in ("k1", "k2"):
+                need_ok.add(f"scan|{t}|{k}|{SCAN_FLAGS_OF_LONG[lg]}")
     return need_ok, need_out, finds
 
 
@@ -597,17 +709,24 @@ def main() -> int:
     sem = (repo / "proofs/Strict/Semantics.v").read_text()
     syntax = (repo / "proofs/Strict/Syntax.v").read_text()
     decide_v = (repo / "proofs/Strict/Decide.v").read_text()
-    body = sem[sem.index("Inductive Runs"):]
-    ctors = re.findall(r"^\|\s*(R_\w+)\s*:", body, re.M)
-    if len(ctors) < 40:
-        fails.append(f"Semantics.v: found {len(ctors)} Runs constructors; the parser "
+    # the constructors of the three semantic relations: Runs, and since slice A
+    # Scans (the argument scanner) and Stops (where an error is reported)
+    ctors = []
+    for header, prefix in (("Inductive Scans", "SC_"), ("Inductive Stops", "Stop_"),
+                           ("Inductive Runs", "R_")):
+        body = sem[sem.index(header):]
+        body = body[:body.index(".\n\n") if header != "Inductive Runs" else len(body)]
+        found = re.findall(rf"^\|\s*({prefix}\w+)\s*:", body, re.M)
+        for c in found:
+            pre = body[:body.index(f"| {c} :")]
+            last_comment = pre[pre.rfind("(*"):]
+            if f"probe S0/{c}" not in last_comment:
+                fails.append(f"Semantics.v: constructor {c} has no `probe S0/{c}` comment "
+                             f"directly above it")
+        ctors += found
+    if len([c for c in ctors if c.startswith("R_")]) < 40:
+        fails.append(f"Semantics.v: found {len(ctors)} constructors; the parser "
                      f"of this gate is broken or the relation shrank")
-    for c in ctors:
-        pre = body[:body.index(f"| {c} :")]
-        last_comment = pre[pre.rfind("(*"):]
-        if f"probe S0/{c}" not in last_comment:
-            fails.append(f"Semantics.v: constructor {c} has no `probe S0/{c}` comment "
-                         f"directly above it")
 
     extract = repo / "latex-parse/strict/strict_kernel_extracted.ml"
     sig_path = repo / "corpora/contracts/strict/article-s0-signatures.json"
@@ -630,13 +749,51 @@ def main() -> int:
 
     sig = json.loads(sig_path.read_text())
     fresh("signatures", sig, False)
+    asig_path = repo / ARG_SIGNATURES
+    asig = json.loads(asig_path.read_text()) if asig_path.is_file() else {}
+    asigs = asig.get("arg_signatures", {})
+    if asig:
+        fresh("arg signatures", asig, False)
+        if asig.get("signatures_sha256") != sha(sig_path):
+            fails.append("arg signatures: attested against another phase-1 signature "
+                         "file (the context and interleaving stages read it); re-run it")
     rp = json.loads((repo / "corpora/strict_s0/rule_probes.json").read_text())
     fresh("rule_probes", rp, True)
     df = json.loads((repo / DIFFERENTIAL).read_text())
     fresh("differential", df, True)
+    for label, d in (("rule_probes", rp), ("differential", df)):
+        if d.get("arg_signatures_sha256") != (sha(asig_path) if asig else None):
+            fails.append(f"{label}: ran another argument-signature file; re-run it")
+
+    # DORMANT constructors (slice A): a rule whose premise no admitted
+    # signature satisfies cannot fire on any document under the committed
+    # contract; it needs no family (it is listed). Derived from the files.
+    runs_in = lambda pred: any(pred(h) for h in asigs.values())  # noqa: E731
+    run_any = lambda h: h["text"][0] == "run" or h["math"][0] == "run"  # noqa: E731
+    live = {
+        "R_arg_text_now": runs_in(lambda h: h["text"][0] == "now"),
+        "R_arg_text_after": runs_in(lambda h: h["text"][0] == "after"),
+        "R_arg_text_run": runs_in(lambda h: h["text"][0] == "run"),
+        "R_arg_math_now": runs_in(lambda h: h["math"][0] == "now"),
+        "R_arg_math_after": runs_in(lambda h: h["math"][0] == "after"),
+        "R_arg_math_run": runs_in(lambda h: h["math"][0] == "run"),
+        "R_close_arg": runs_in(run_any),
+        "R_par_short": runs_in(lambda h: run_any(h) and h["long"] != "long"),
+        "R_dollar_restricted_open": "text_restricted" in arg_runs(asigs),
+        "R_mopen_display_restricted": "text_restricted" in arg_runs(asigs),
+        "SC_par_outer": runs_in(lambda h: run_any(h) and h["long"] == "short_outer"),
+        "SC_par_short": runs_in(lambda h: run_any(h) and h["long"] == "short_inner"),
+        "SC_par_long": runs_in(lambda h: run_any(h) and h["long"] == "long"),
+    }
+    deferring = runs_in(lambda h: run_any(h) or "after" in (h["text"][0], h["math"][0]))
+    for c in ("SC_close_last", "SC_close", "SC_open", "SC_skip", "Stop_defer"):
+        live[c] = deferring
+    dormant = sorted(c for c in ctors if live.get(c, True) is False)
 
     fam = rp.get("by_family", {})
     for c in ctors:
+        if c in dormant:
+            continue
         f = fam.get(c)
         if not f or f.get("n", 0) < 1:
             fails.append(f"rule_probes: no probe family for constructor {c}")
@@ -681,6 +838,30 @@ def main() -> int:
                      f"({len(got - want)} extra, {len(want - got)} missing)")
     if set(sigs) & set(sig.get("rejected", {})):
         fails.append("signatures: a name is both admitted and rejected")
+    # 4b. argument signatures (slice A): contract_wf and the selection rule
+    if asig:
+        for n in asigs:
+            if n not in members:
+                fails.append(f"arg signatures: {n!r} is not defined in the closed world")
+            if n in sigs:
+                fails.append(f"arg signatures: {n!r} has both kinds of signature (contract_wf)")
+        sel = asig.get("selection", {})
+        sm = asig.get("selection_meanings", {})
+        if sel.get("only"):
+            fails.append("arg signatures: generated with --only (not the selection rule)")
+        want_a = arg_candidates(sm, set(sigs))
+        words_all = {m for m in members if re.fullmatch(r"[A-Za-z]+", m)}
+        if not words_all <= set(sm):
+            fails.append(f"arg signatures: selection meanings lack "
+                         f"{len(words_all - set(sm))} closed-world control words")
+        if set(sel.get("names", [])) != set(want_a):
+            fails.append("arg signatures: the candidate list is not the selection rule's")
+        got_a = set(asigs) | set(asig.get("rejected", {}))
+        if got_a != set(want_a):
+            fails.append(f"arg signatures: admitted+rejected differ from the candidates "
+                         f"({len(got_a - set(want_a))} extra, {len(set(want_a) - got_a)} missing)")
+        if set(asigs) & set(asig.get("rejected", {})):
+            fails.append("arg signatures: a name is both admitted and rejected")
 
     # 5. no name in Coq
     for f in ("Semantics.v", "Contract.v", "Bridge.v", "Decide.v"):
@@ -707,9 +888,18 @@ def main() -> int:
             continue
         if v:
             fails.append(f"signatures: admitted {n!r} is not inert: {v} (R-INERT)")
+    ameanings = asig.get("meanings", {})
+    for n in sorted(asigs):
+        try:
+            v = inertness_violation(n, ameanings, prims)
+        except KeyError as e:
+            fails.append(f"arg signatures: {e.args[0]} (R-INERT)")
+            continue
+        if v:
+            fails.append(f"arg signatures: admitted {n!r} is not inert: {v} (R-INERT)")
 
     # 7. branch matrix
-    need_ok, need_out, finds = required_cells(syntax, sem, sigs)
+    need_ok, need_out, finds = required_cells(syntax, sem, sigs, asigs)
     fails += [f"branch matrix: {m}" for m in finds]
     covered_ok = {b for r in rp.get("probes", []) if r.get("agree")
                   for b in r.get("branches", [])}
@@ -754,6 +944,40 @@ def main() -> int:
         fails.append("signatures: no interleaving round with 0 disagreements (stage 4)")
     elif not {"I-TEXT", "I-MATH"} <= set(il[-1].get("families", [])):
         fails.append("signatures: the last interleaving round lacks text or math documents")
+    # 8b. argument-signature evidence is complete (slice A)
+    aev = asig.get("evidence", {})
+    for n, h in sorted(asigs.items()):
+        e = aev.get(n, {})
+        miss = [f for f in REQUIRED_ARG_FAMILIES if f not in e]
+        if miss:
+            fails.append(f"arg signatures: admitted {n!r} lacks probe families {miss[:6]}")
+            continue
+        rc, pdf, err, _ = e["A-D-FOLLOW"]
+        if rc == 0 or err != "! Display math should end with $$.":
+            fails.append(f"arg signatures: admitted {n!r} is not a bad display-$ follower "
+                         f"(A-D-FOLLOW: rc {rc}, {err!r}; C-85)")
+        for where, fams in ARG_REPETITION.items():
+            if h[where][0] != "run":
+                continue  # the first occurrence stops pdflatex, or nothing runs
+            for f in fams:
+                rc, pdf, err, _ = e[f]
+                if rc != 0 or not pdf:
+                    fails.append(f"arg signatures: admitted {n!r} does not compile under "
+                                 f"{f} (rc {rc}, pdf {pdf}, {err!r}; C-85/C-86)")
+    if asigs:
+        ail = asig.get("interleaving", {}).get("rounds", [])
+        if not ail or ail[-1].get("disagree") != 0 or ail[-1].get("documents", 0) < 1:
+            fails.append("arg signatures: no interleaving round with 0 disagreements")
+        ctx = asig.get("context", {})
+        if ctx.get("disagree") != 0:
+            fails.append(f"arg signatures: the context stage has {ctx.get('disagree')} "
+                         f"disagreement(s) (phase-1 names in an argument's mode)")
+        need_ctx = {f"{w}/{h[w][-1]}" for h in asigs.values() for w in ("text", "math")
+                    if h[w][0] == "run" and h[w][-1] != "math"
+                    and not (w == "text" and h[w][-1] == "text")}
+        if need_ctx - set(ctx.get("carriers", {})):
+            fails.append(f"arg signatures: no context evidence for the modes "
+                         f"{sorted(need_ctx - set(ctx.get('carriers', {})))}")
 
     # 9. capacity bounds
     for pin in ("Example max_brace_depth_is_200 : max_brace_depth = 200.",
@@ -765,6 +989,12 @@ def main() -> int:
     if not re.search(r"Definition in_strict_doc .*\n.*bounded \(flatten_doc d\) = true",
                      decide_v):
         fails.append("Decide.v: in_strict_doc no longer requires `bounded` (C-86)")
+    # slice A: an argument that does not close before \end{document} or the
+    # end of the stream is outside the tier (pdfTeX reads on past what the
+    # fragment models), and so is a one-argument command without its brace
+    if not re.search(r"Definition in_strict_toks .*\n.*wfa C 0 ts = true\.", decide_v):
+        fails.append("Decide.v: in_strict_toks no longer requires `wfa` (slice A: "
+                     "arguments well formed)")
     b = fam.get("BOUND", {})
     if b.get("n", 0) < 6 or b.get("agree") != b.get("n"):
         fails.append(f"rule_probes: BOUND family {b.get('agree')}/{b.get('n')} agree "
@@ -780,12 +1010,13 @@ def main() -> int:
             print(f"FAIL {m}")
         print(f"[strict-kernel] FAIL — {len(fails)} finding(s)")
         return 1
-    print(f"[strict-kernel] OK — {len(ctors)} Runs constructors, each probe-tagged and "
-          f"attested; {rp['summary']['graded']} rule probes and "
+    print(f"[strict-kernel] OK — {len(ctors)} constructors of Runs/Scans/Stops, each "
+          f"probe-tagged and attested ({len(dormant)} dormant under the contract: "
+          f"{dormant}); {rp['summary']['graded']} rule probes and "
           f"{df['summary']['graded']} differential documents agree with the oracle; "
           f"branch matrix {len(need_ok)} + {len(need_out)} cells covered; "
-          f"{len(sigs)} signatures by the selection rule, every one inert, "
-          f"with complete follower/repetition evidence")
+          f"{len(sigs)} signatures and {len(asigs)} argument signatures by their "
+          f"selection rules, every one inert, with complete evidence")
     return 0
 
 

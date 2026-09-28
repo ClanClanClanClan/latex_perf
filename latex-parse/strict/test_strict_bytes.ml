@@ -192,7 +192,9 @@ let () =
   (* step 2, slice A (each file measured under the pinned oracle, 2026-09-28):
      an error inside an argument is reported where the file reader stands, on
      the closing brace of the outermost argument *)
-  check "error in an argument" (h ^ "\\textbf{x\n\\zzundef\ny\n}\n" ^ e) "E1 l.6";
+  check "error in an argument"
+    (h ^ "\\textbf{x\n\\zzundef\ny\n}\n" ^ e)
+    "E1 l.6";
   check "short-outer argument: at the break"
     (h ^ "$\\mathrm{x\n\n y}$\n" ^ e)
     "E6 l.4";

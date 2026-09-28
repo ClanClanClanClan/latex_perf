@@ -216,6 +216,30 @@ class Direct:
     def filler(self) -> bytes:
         return self.r.choice([self.sp(), self.eol(), self.comment(), b""])
 
+    # ADR-012 step 2, slice A: a one-argument command and its argument, the
+    # argument spread over lines (the line of an error inside it is the line
+    # of its closing brace), with the hazards of step 2 in failing files.
+    def argcmd(self, where: str, depth: int, clean: bool) -> bytes:
+        runs = self.n.get(f"arg_run_{where}", [])
+        pool = runs if (clean or self.r.random() < 0.7) else self.n.get("arg_all", [])
+        if not pool:
+            return b""
+        name, pm = self.r.choice(pool)
+        gap = self.r.choice([b"", b"", b" ", b"\n", b"%" + comment_junk(self.r) + b"\n",
+                             b" \n "])
+        if pm == "math":
+            body = self.math(depth + 1, clean)
+        else:
+            body = self.text(depth + 1, clean, self.r.randint(0, 4))
+        if not clean and self.r.random() < 0.5:
+            hz = self.r.choice([b"\\" + self.r.choice(self.n["undefined"]).encode() + b" ",
+                                self.blank(), b"\\par ", b"$x$", b"^2", b"$$y$$",
+                                b"\\[y\\]", b"\\[y", b"$y"])
+            body = body + hz if self.r.random() < 0.5 else hz + body
+        if ends_word(body):
+            body += self.r.choice([b" ", b"\n", b"%\n"])
+        return b"\\" + name.encode() + gap + b"{" + body + self.r.choice([b"", b"\n"]) + b"}"
+
     def blank(self) -> bytes:
         e = self.eol()
         return e + self.r.choice([b"", b"  ", b"\t"]) + e
@@ -242,7 +266,9 @@ class Direct:
             elif ch < 0.8:
                 out += self.cw("math", clean)
             elif ch < 0.9 and depth < 3:
-                out += b"{" + self.math(depth + 1, clean) + b"}"
+                out += (self.argcmd("math", depth, clean)
+                        if self.n.get("arg_run_math") and self.r.random() < 0.35
+                        else b"{" + self.math(depth + 1, clean) + b"}")
             elif not clean:
                 out += self.r.choice([b"}", self.blank(), b"$", b"\\par ", b"^", b"\\)"])
             if ends_word(bytes(out)) and self.r.random() < 0.5:
@@ -268,7 +294,9 @@ class Direct:
                     close = self.r.choice([b"$", b"$$", b"\\)", b"\\]", b""])
                 out += kind.encode() + self.math(depth + 1, clean) + close
             elif ch < 0.8 and depth < 4:
-                out += b"{" + self.text(depth + 1, clean, self.r.randint(0, 4)) + b"}"
+                out += (self.argcmd("text", depth, clean)
+                        if self.n.get("arg_run_text") and self.r.random() < 0.4
+                        else b"{" + self.text(depth + 1, clean, self.r.randint(0, 4)) + b"}")
             elif ch < 0.84:
                 out += b"\\par" + self.r.choice([b" ", b"\n", b"%\n", b""])
             elif not clean:

@@ -133,7 +133,7 @@ def cli_build_root(cli_path):
 
 def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
                      src_tree_sha, path=WATCHED_PATH, recorded_platform=None,
-                     recorded_build_root=None):
+                     recorded_build_root=None, built_cli_path=None):
     """Is the artefact's recorded binary hash a problem? Returns (findings, notes).
 
     ⚠ THIS ARM USED TO HARD-FAIL ON ANY MISMATCH, AND THAT WAS WRONG IN A WAY
@@ -179,6 +179,15 @@ def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
     The four states, in order: other platform -> note; no or other build root
     -> note; same build root and moved source -> note; same build root, same
     source, different hash -> FAILURE.
+
+    "This build root" is the checkout that built THE BINARY BEING HASHED
+    (`cli_build_root(built_cli_path)`, which resolves symlinks), not merely
+    the directory the gate runs in. The two are the same fingerprint for any
+    ordinary `_build`; they differ only when `_build` is a symlink into another
+    checkout — e.g. check_gate_selftests' isolated worktree copies, which link
+    the source checkout's `_build` — and there the binary's own build root is
+    the one C-72's premise is about. Callers that omit the path keep the old
+    repo-directory comparison.
     """
     if not recorded_cli:
         return [], []
@@ -204,11 +213,13 @@ def check_cli_sha256(repo, label, howto, recorded_cli, built_cli,
                     f"no cli_build_root (a legacy artefact), and the binary "
                     f"hash depends on the checkout directory it was built in "
                     f"(C-72)"]
-    if recorded_build_root != build_root_fingerprint(repo):
+    here = (cli_build_root(built_cli_path) if built_cli_path is not None
+            else build_root_fingerprint(repo))
+    if recorded_build_root != here:
         return [], [f"{label}: cli_sha256 NOT comparable — built in another "
                     f"checkout directory (cli_build_root "
                     f"{recorded_build_root[:12]}…, this checkout "
-                    f"{build_root_fingerprint(repo)[:12]}…); the binary embeds "
+                    f"{here[:12]}…); the binary embeds "
                     f"absolute paths (C-72)"]
 
     head_tree = engine_tree_id(repo, "HEAD", path)

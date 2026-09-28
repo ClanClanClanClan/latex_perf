@@ -225,7 +225,8 @@ def _check_one(repo, artefact_rel, window, baseline, findings, summary_lines):
                                     prov.get("cli_sha256"), built,
                                     prov.get("src_tree_sha"),
                                     recorded_platform=prov.get("cli_platform"),
-                                    recorded_build_root=prov.get("cli_build_root"))
+                                    recorded_build_root=prov.get("cli_build_root"),
+                                    built_cli_path=cli if built else None)
     findings.extend(f_cli)
     for _n in n_cli:
         print(f"[apply-fixes-real] NOTE: {_n}", file=sys.stderr)

@@ -100,7 +100,7 @@ def end_variant(rng: random.Random, kind: str | None = None) -> bytes:
 def trailing(rng: random.Random) -> bytes:
     """Bytes after \\end{document}: never read by TeX (measured), so
     anything, on its line and after (the line stays within the bound)."""
-    kind = rng.choice(["none", "newline", "junk_line", "junk_lines", "tex"])
+    kind = rng.choice(["none", "newline", "junk_line", "junk_lines", "tex_code"])
     if kind == "none":
         return b""
     if kind == "newline":

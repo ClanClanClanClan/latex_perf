@@ -1122,7 +1122,7 @@ class Tex:
         d.mkdir(parents=True)
         return d
 
-    def run(self, jobdir: Path, engine: str, args: list, timeout: int,
+    def run_engine(self, jobdir: Path, engine: str, args: list, timeout: int,
             env: str = "forced") -> tuple:
         """One `engine` run with `args` in jobdir through the oracle, under
         the TeX variables of `env` (tex_vars). Returns (rc, seconds); rc
@@ -1152,7 +1152,7 @@ class Tex:
         if jobname != JOBNAME:
             args.append("-jobname=" + jobname)
         args.append("job.tex")
-        rc, secs = self.run(jobdir, _oracle.ENGINE_PDFLATEX, args, timeout, env)
+        rc, secs = self.run_engine(jobdir, _oracle.ENGINE_PDFLATEX, args, timeout, env)
         logp, flsp = jobdir / (jobname + ".log"), jobdir / (jobname + ".fls")
         if not logp.exists() and rc != TIMEOUT_RC:
             # pdflatex always writes a log; no log means docker or the
@@ -1324,7 +1324,7 @@ def engine_primitives(tex: Tex) -> dict:
     jd = tex.job("virgin")
     initex = _oracle.ENGINE_PDFTEX
     ini = ["-ini", "-etex", "-interaction=nonstopmode", "-translate-file=cp227.tcx"]
-    rc, _ = tex.run(jd, initex, ini + ["-jobname=lpvirgin", "\\dump"], LONG_TIMEOUT)
+    rc, _ = tex.run_engine(jd, initex, ini + ["-jobname=lpvirgin", "\\dump"], LONG_TIMEOUT)
     log = (jd / "lpvirgin.log").read_bytes() if (jd / "lpvirgin.log").exists() else b""
     if rc != 0 or not (jd / "lpvirgin.fmt").exists():
         raise SystemExit("gen_contract: virgin INITEX dump failed: rc=%d" % rc)
@@ -1336,7 +1336,7 @@ def engine_primitives(tex: Tex) -> dict:
     # Virgin INITEX has no brace characters; the catcode line needs them.
     (jd / "prim.tex").write_bytes(b"\\catcode123=1 \\catcode125=2 \\relax\n" + block +
                                   b"\\end\n")
-    rc2, _ = tex.run(jd, initex, ini + ["-jobname=lpprim", "prim.tex"], LONG_TIMEOUT)
+    rc2, _ = tex.run_engine(jd, initex, ini + ["-jobname=lpprim", "prim.tex"], LONG_TIMEOUT)
     d = parse_dump((jd / "lpprim.log").read_bytes())
     shutil.rmtree(jd, ignore_errors=True)
     if rc2 != 0 or d["error"] is not None or unw:
@@ -1515,7 +1515,7 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
     report["engine_primitives"] = prim["multiletter"] + len(prim["single"])
 
     jd = tex.job("kernel_initex")
-    rc, secs = tex.run(jd, _oracle.ENGINE_PDFTEX,
+    rc, secs = tex.run_engine(jd, _oracle.ENGINE_PDFTEX,
                        ["-ini", "-etex", "-interaction=nonstopmode",
                         "-jobname=lpkernel", "-progname=pdflatex",
                         "-translate-file=cp227.tcx",

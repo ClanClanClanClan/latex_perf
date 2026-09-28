@@ -143,11 +143,18 @@ def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 6
     # MEASURED 2026-09-27 before this catch existed in its current form: with
     # `docker exec` pointed at a dead socket the docker CLI exited 1, the oracle
     # passed that through, and this function returned False ("fails").
+    # The ONE grading environment (C-91): this used to pass `dict(os.environ)`,
+    # i.e. no ORACLE_TEX_VARS and the container's persistent TEXMFVAR. The
+    # oracle now imposes ORACLE_TEX_VARS on every graded run and requires a
+    # private TEXMFHOME/TEXMFVAR, which tex_env(td) supplies, as for every
+    # other Python grader.
     try:
+        o = get_oracle()
         # through the oracle: see ContainerOracle.remove
-        get_oracle().remove([pdf] + [Path(workdir) / f"{Path(base).stem}.{j}"
-                                     for j in also_remove])
-        rc, timed_out = get_oracle().run_once(workdir, base, dict(os.environ), secs)
+        o.remove([pdf] + [Path(workdir) / f"{Path(base).stem}.{j}"
+                          for j in also_remove])
+        with o.tempdir(prefix="lp-rt-texmf-") as td:
+            rc, timed_out = o.run_once(workdir, base, o.tex_env(td), secs)
     except OracleError as e:
         print(f"[fixer-roundtrip] NOT GRADED ({base}): {e}", file=sys.stderr)
         return None

@@ -4,7 +4,12 @@
 # scripts/tools/_oracle.py is its only entry point, and this file is the shell
 # side of it. After `oracle_setup TAG REQUIRE`:
 #
-#   PDFLATEX        array: the command to run INSTEAD of `pdflatex`
+#   PDFLATEX        array: the command to run INSTEAD of `pdflatex`; on BOTH
+#                   backends the `_oracle.py pdflatex` shim, which imposes the
+#                   ONE grading environment (ORACLE_TEX_VARS, private TEXMF*,
+#                   no host TeX variable; C-91) and the graded ARGV allow-list
+#                   (-interaction/-halt-on-error/... and one file; round 5),
+#                   so no caller can differ
 #   ORACLE_BACKEND  native | container
 #   ORACLE_BANNER   the oracle's `pdflatex --version` first line
 #   ORACLE_RM       array: the command that deletes work files pdflatex will
@@ -12,7 +17,7 @@
 #                   host-side delete leaves the container's view of the
 #                   directory stale for about a second, and pdflatex then
 #                   cannot create its log; see ContainerOracle.remove)
-#   ORACLE_TIMEOUT_INSIDE  1 when the command enforces TEX_TIMEOUT itself
+#   ORACLE_TIMEOUT_INSIDE  1: the shim enforces TEX_TIMEOUT itself
 #                   (container: the timeout runs INSIDE the container, because
 #                   killing the docker client on the host would leave pdflatex
 #                   running in the container), so no outer `timeout` wrapper
@@ -58,10 +63,17 @@ oracle_setup() {
       echo "[$tag] FATAL: $out" >&2; exit 2
     fi
     ORACLE_BACKEND=native
-    PDFLATEX=(pdflatex)
+    # Through the shim on the native backend too (C-91): the shim, not the
+    # caller, gives every graded run the protocol's environment (_oracle.py
+    # graded_env: ORACLE_TEX_VARS, a private TEXMFHOME/TEXMFVAR/TEXMFCONFIG, no host TeX
+    # variable), so CI grades exactly what a laptop grades. A bare `pdflatex`
+    # here ran with the image's defaults: no openin_any/openout_any=p, no
+    # SOURCE_DATE_EPOCH, the persistent TEXMFVAR. The shim enforces the
+    # timeout (124) and maps an oracle failure to INFRA_RC (125).
+    PDFLATEX=(python3 "$py" pdflatex --timeout "$TEX_TIMEOUT")
     ORACLE_RM=(rm -f --)
-    ORACLE_TIMEOUT_INSIDE=0
-    ORACLE_BANNER="$(pdflatex --version 2>/dev/null | head -1)"
+    ORACLE_TIMEOUT_INSIDE=1
+    ORACLE_BANNER="$(python3 "$py" version 2>/dev/null | tail -1)"
     return 0
   fi
   if command -v python3 >/dev/null 2>&1 && out="$(python3 "$py" version 2>&1)"; then

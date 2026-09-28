@@ -1061,14 +1061,19 @@ row: OPEN-121.
 | the diagnostic `explain` (first offending byte and construct; not proved, checked against the verdict on every evidence file) | `proofs/Strict/Explain.v` |
 | extraction, separate from phase 1's (which stays byte for byte, so the phase-1 evidence stays fresh) | `proofs/Strict/ExtractBytes.v`, `scripts/tools/regen_strict_bytes_extract.sh`, `latex-parse/strict/strict_bytes_extracted.ml` (checked by `check_extract_identity.py`) |
 | the lexical contract, dumped from the pinned image at body start of `article`; its structural names READ from phase 1's renderer (`Syntax.v`), not written | `scripts/tools/gen_strict_lexical.py`, `corpora/contracts/strict/article-s0-lexical.json` |
-| driver: `--bytes` (JSON lines) and file mode `strict_decide.exe FILE.tex` (PROVEN-READY / PROVEN-NOT-READY reason l.N / NOT-IN-FRAGMENT byte offset and construct; exit 0, 0, 3) | `latex-parse/strict/strict_decide.ml`; unit tests `latex-parse/strict/test_strict_bytes.ml` |
+| driver: `--bytes` (JSON lines) and file mode `strict_decide.exe FILE.tex` (PROVEN-READY / PROVEN-NOT-READY reason l.N, and E0 with no line since pdfTeX reports none / NOT-IN-FRAGMENT byte offset and construct; exit 0, 0, 3) | `latex-parse/strict/strict_decide.ml`; unit tests `latex-parse/strict/test_strict_bytes.ml` |
 | byte-level generators, probe families and differential | `scripts/tools/_strict_bytes.py`, `scripts/tools/strict_differential.py --bytes-rules / --bytes N`, `corpora/strict_s0/bytes_probes.json`, `corpora/strict_s0/bytes_differential.json` |
-| pure gate over the reader, its evidence and the pin of `FaithfulBytes` (spec-drift, 18 kill-tests) | `scripts/tools/check_strict_bytes.py` |
+| pure gate over the reader, its evidence (every summary count recomputed from the per-file records) and the pin of `BridgeBytes.v`'s whole code (spec-drift, 24 kill-tests) | `scripts/tools/check_strict_bytes.py` |
 
 **Theorems** (all `Qed`, `Print Assumptions` Closed, registered in
-`check_print_assumptions.py`, which also pins the bytes bridge's statement,
-`FaithfulBytes`' printed body and its kernel convertibility against fully
-qualified names, as C-87 does for `Faithful`):
+`check_print_assumptions.py`, which also pins both bytes corollaries'
+statements, printed and by kernel conversion of their types against fully
+qualified statements, `FaithfulBytes`' printed body and its kernel
+convertibility, and `Print Module BridgeBytes` = exactly `FaithfulBytes` and
+the two corollaries, as C-87 and C-88 do for `Bridge.v`; MEASURED on a build
+with a `Time`-prefixed shadow `in_strict_bytes := False` in BridgeBytes.v:
+both printed statement pins still pass, both type pins and the field list
+fail):
 
 - `lex_exact : lex L b = ts <-> LexFile L b ts` (both directions; reading is
   total, a byte outside the fragment is a `RBad` token, never a failure), and
@@ -1086,6 +1091,13 @@ qualified names, as C-87 does for `Faithful`):
   and its NOT-READY corollary. As for phase 1, the bridge covers READY iff
   compiles only; the reason and the line are exact against `Runs` and
   `ReportedLine` and agree with pdfTeX by the probes and the differential.
+  LINE agreement is over the classes that have an `l.N` (E1, E3, E4, E5,
+  E6): E0 (rc 0, "No pages of output.") has none, so the driver prints an
+  E0 without a line (file mode and `--bytes` JSON), an E0 record carries
+  none, and an E0 agrees only when the oracle reports none either
+  (`strict_differential.agrees_bytes`; the bytes PR's review, LOW-1: the
+  first driver printed the proved `ReportedLine` of an E0, a line pdfTeX
+  never gives, and the agreement rule never read it).
 
 **The line of a NOT-READY, declaratively.** `Runs` gives a reason and the
 INDEX of a token; pdfTeX prints `l.N`, the line its reader stands on, which
@@ -1136,11 +1148,21 @@ covers.
 
 **Evidence** (the pinned oracle; `check_strict_bytes.py`):
 
-- `bytes_probes.json` (seed 2): 3,907 files, 2,167 graded and 2,167 agree with the oracle on verdict, message class and LINE (READY 826, E0 42, E1 94, E3 150, E4 67, E5 821, E6 167; 0 timeouts or infrastructure failures); 1,740 outside by design, every one decided NOT-IN-FRAGMENT (the reader's outside rules, 139 near-misses (every outside construct in each reader state among them), and the phase-1 MATRIX-OUT documents re-laid out). Every constructor of the reader and the front matter is used by an agreeing graded probe except the outside rules (used by files decided outside) and `LL_nullcs` (unreachable under the article contract); the reader's branch matrix (N/M/S x every catcode class present) and the kernel's 230-cell matrix are covered at the byte level. The 501 graded phase-1 rule probes appear four times each: as rendered, with lines joined, joined through comments holding any byte, and with mixed CR/CR LF/LF line ends, padding, front-matter and `\end{document}` variants and bytes after it. `R_dollar_display_eof` is exercised by no byte-level file: its only byte-level path, a stream ending with `$`, is outside the fragment (above)
-- `bytes_differential.json` (seed 5): 5,000 files in the fragment, 2,500 phase-1 generated trees re-laid out (joined, comment-joined, mixed) and 2,500 generated directly as byte strings (105 direct candidates that fell outside the fragment were replaced and are counted), 5,000 of 5,000 agree with the oracle on verdict, message class and line (READY 2,007, E0 465, E1 544, E3 705, E4 208, E5 831, E6 240; 0 timeouts or infrastructure failures); the 103 near-misses are all NOT-IN-FRAGMENT; exact one-sided 95% upper bound on the disagreement rate 0.06% overall and 0.15% on READY, OVER THIS GENERATOR'S DISTRIBUTION, not over L_S0 (C-85). A class of files the generators do not draw is not bounded.
+- `bytes_probes.json` (seed 2): 3,907 files, 2,167 graded and 2,167 agree with the oracle on verdict and message class, and on the LINE for every class that has an `l.N` (READY 826, E0 42, E1 94, E3 150, E4 67, E5 821, E6 167; 0 timeouts or infrastructure failures); 1,740 outside by design, every one decided NOT-IN-FRAGMENT (the reader's outside rules, 139 near-misses (every outside construct in each reader state among them), and the phase-1 MATRIX-OUT documents re-laid out). Every constructor of the reader and the front matter is used by an agreeing graded probe except the outside rules (used by files decided outside) and `LL_nullcs` (unreachable under the article contract); the reader's branch matrix (N/M/S x every catcode class present) and the kernel's 230-cell matrix are covered at the byte level. The 501 graded phase-1 rule probes appear four times each: as rendered, with lines joined, joined through comments holding any byte, and with mixed CR/CR LF/LF line ends, padding, front-matter and `\end{document}` variants and bytes after it. `R_dollar_display_eof` is exercised by no byte-level file: its only byte-level path, a stream ending with `$`, is outside the fragment (above)
+- `bytes_differential.json` (seed 5): 5,000 files in the fragment, 2,500 phase-1 generated trees re-laid out (joined, comment-joined, mixed) and 2,500 generated directly as byte strings (105 direct candidates that fell outside the fragment were replaced and are counted), 5,000 of 5,000 agree with the oracle on verdict and message class, and on the line for every class that has an `l.N` (READY 2,007, E0 465, E1 544, E3 705, E4 208, E5 831, E6 240; 0 timeouts or infrastructure failures); the 139 near-misses are all NOT-IN-FRAGMENT; exact one-sided 95% upper bound on the disagreement rate 0.06% overall and 0.15% on READY, OVER THIS GENERATOR'S DISTRIBUTION, not over L_S0 (C-85). A class of files the generators do not draw is not bounded.
 - The tree decider (phase 1, with its harness line computation) and the bytes
-  decider (proved location) give the same verdict, reason and line on all
-  897 phase-1 renderings.
+  decider (proved location) give the same verdict, reason and line (E0's
+  not compared: it has none) on all 897 phase-1 renderings.
+- Both files were RE-RUN under the pinned oracle after the review's LOW-1
+  (the E0 records' lines removed at the driver); every graded record's
+  verdict, oracle grade and agreement and every graded count is unchanged
+  (the only record differences are the 42 + 465 E0 lines, now none); the
+  differential's near-miss set is now the generator's current 139 (the
+  first run drew 103, before the last near-miss families were added), all
+  NOT-IN-FRAGMENT. `check_strict_bytes.py` recomputes each record's agreement from
+  its stored oracle tuple and model verdict and every count of the summary,
+  `by_class`, `by_family` and the stated bound from the records (LOW-3); a
+  flipped `agree` under an unchanged summary fails it (kill-tested).
 
 **Findings of phase 2**, each an F-defect fixed at its source before any
 evidence was committed:

@@ -26,7 +26,8 @@ together:
      file, of the lexical contract, and the kernel/contract files; each must
      be the committed file's.
   4. NO DISAGREEMENT. Both files: 0 disagreements (verdict, message class,
-     LINE), 0 infrastructure failures, 0 files generated inside that were
+     and LINE for every class that has an l.N; E0 has none, and an E0
+     record must carry none), 0 infrastructure failures, 0 files generated inside that were
      built to be outside or the reverse, 0 mismatches between `explain` and
      the verdict; the rule probes' phase-1 renderings are decided the same
      by the tree decider and the bytes decider (verdict, reason, line); the
@@ -54,9 +55,21 @@ together:
      none of the decider's executable functions (case-sensitive: `Parse` is
      the declarative relation, `parse` the executable parser); and every Coq
      SENTENCE of BridgeBytes.v is the pinned Require, FaithfulBytes or one of
-     the two bridge corollaries. check_print_assumptions.py pins the
-     elaborated body (coqc Print) and its convertibility against fully
-     qualified names.
+     the two bridge corollaries. Since the bytes PR's review (LOW-2) this is
+     check_strict_kernel's check 10 for Bridge.v applied to BridgeBytes.v:
+     control prefixes (Time, Timeout n, attributes, ...) are stripped and
+     are themselves a finding, comments are stripped as Coq lexes them
+     (strings inside comments), the file may hold no double quote, and its
+     WHOLE comment-stripped code is pinned sentence by sentence
+     (BRIDGE_SENTENCES, an allow-list). check_print_assumptions.py pins the
+     elaborated body (coqc Print), its convertibility and both corollaries'
+     types against fully qualified names, and BridgeBytes' field list.
+ 11. THE SUMMARY IS THE RECORDS' (bytes review LOW-3). Every graded
+     record's `agree` is recomputed by strict_differential.agrees_bytes from
+     its stored oracle tuple and model verdict, and every count of the
+     summary, by_class and by_family, and the stated upper bound, is
+     recomputed from the records; any difference fails. A flipped `agree`
+     under an unchanged summary, or an E0 record carrying a line, fails.
  10. THE LEXICAL CONTRACT IS THE GENERATOR'S. corpora/contracts/strict/
      article-s0-lexical.json has 256 catcodes and an \\endlinechar, its
      structural names are the ones the phase-1 renderer prints
@@ -76,7 +89,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_strict_kernel import required_cells, strip_coq_comments  # noqa: E402
+from check_strict_kernel import (  # noqa: E402
+    _CONTROL_PREFIX, coq_sentences, required_cells, strip_coq_comments)
 
 MIN_BYTES_DIFFERENTIAL = 3000
 MIN_NEAR = 50
@@ -119,10 +133,43 @@ FAITHFUL_BYTES_FORBIDDEN = ("decide", "decide_bytes", "run", "step", "rd", "lex"
                             "in_strict_bytes_b", "strict_ks_b")
 BRIDGE_REQUIRE = ("From LaTeXPerfectionist.Strict Require Import Syntax Contract Semantics "
                   "Decide Lexer Front DecideBytes")
-BRIDGE_SENTENCES = [
+# The only definer sentences BridgeBytes.v may contain besides the Require:
+# FaithfulBytes and the two bridge corollaries, by their first two words.
+BRIDGE_DEFINERS = [
     ("Definition", "FaithfulBytes"),
     ("Corollary", "strict_ready_iff_pdflatex_bytes"),
     ("Corollary", "strict_not_ready_pdflatex_bytes"),
+]
+# The WHOLE comment-stripped code of BridgeBytes.v, sentence by sentence
+# (check_strict_kernel.coq_sentences, whitespace normalised): an allow-list,
+# as check_strict_kernel.BRIDGE_SENTENCES is for Bridge.v (OPEN-121 re-review
+# 2, HIGH-1, C-88; the bytes PR's review, LOW-2). A sentence no keyword scan
+# names (a tactic, a control-prefixed command, a sentence a comment-string
+# hid) is not on this list. Changing BridgeBytes.v's code means changing this
+# list, in review, together with check_print_assumptions.py's kernel pins.
+BRIDGE_SENTENCES = [
+    BRIDGE_REQUIRE,
+    "Definition FaithfulBytes (oracle_ok : list Ascii.ascii -> Prop) (C : bcontract) : "
+    "Prop := forall b ks, in_strict_bytes C b -> Parse (bc_lex C) b ks -> "
+    "(oracle_ok b <-> Runs (bc_kernel C) init (toks_of ks) Compiles)",
+    "Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b, "
+    "FaithfulBytes oracle_ok C -> in_strict_bytes C b -> "
+    "(decide_bytes C b = ProvenReady <-> oracle_ok b)",
+    "Proof",
+    "intros oracle_ok C b HF Hs",
+    "destruct Hs as [Hlen [ks [Hp Hk]]]",
+    "assert (Hin : in_strict_bytes C b) by (split; [exact Hlen|exists ks; split; assumption])",
+    "destruct (decide_bytes_exact C b ks Hin Hp) as [Hready _]",
+    "rewrite Hready", "symmetry", "apply HF; assumption",
+    "Qed",
+    "Corollary strict_not_ready_pdflatex_bytes : forall oracle_ok C b r ln, "
+    "FaithfulBytes oracle_ok C -> in_strict_bytes C b -> "
+    "decide_bytes C b = ProvenNotReady r ln -> ~ oracle_ok b",
+    "Proof",
+    "intros oracle_ok C b r ln HF Hs Hd Hok",
+    "apply (proj2 (strict_ready_iff_pdflatex_bytes oracle_ok C b HF Hs)) in Hok",
+    "rewrite Hd in Hok", "discriminate",
+    "Qed",
 ]
 _DEFINERS = r"Definition|Fixpoint|CoFixpoint|Let|Notation|Infix|Instance|" \
     r"Inductive|CoInductive|Record|Structure|Class|Axiom|Axioms|Parameter|" \
@@ -149,23 +196,22 @@ def constructors(text: str, header: str) -> list[tuple[str, str]]:
     return out
 
 
-def sentences(code: str) -> list[str]:
-    """The Coq sentences of comment-free source (split at '.' + whitespace)."""
-    parts = re.split(r"\.(?=\s|$)", code)
-    return [" ".join(p.split()) for p in parts if p.strip()]
-
-
 def bridge_findings(bridge: str) -> list[str]:
     out: list[str] = []
     code = strip_coq_comments(bridge)
-    proofs = re.compile(r"^(Proof|Qed|intros|destruct|assert|rewrite|symmetry|apply|"
-                        r"exact|split|exists|discriminate|contradiction|reflexivity)\b|"
-                        r"^[-+*]")
-    for s in sentences(code):
+    if '"' in bridge:
+        out.append("BridgeBytes.v: contains a `\"` (a string, even inside a comment, "
+                   "changes where Coq's comments end; OPEN-121 re-review 2, HIGH-1)")
+    sents = coq_sentences(code)
+    for s in sents:
+        pm = _CONTROL_PREFIX.match(s)
+        if pm:
+            out.append(f"BridgeBytes.v: defines more than FaithfulBytes and its corollaries: "
+                       f"{('prefix', pm.group(0).strip())} (a control prefix hides a "
+                       f"command's keyword; OPEN-121 re-review 2, HIGH-1)")
+            s = s[pm.end():]
         m = re.match(rf"^({_DEFINERS})\b\s*(\S*)", s)
         if not m:
-            if not proofs.match(s):
-                out.append(f"BridgeBytes.v: unexpected sentence {s[:80]!r}")
             continue
         kind, name = m.group(1), m.group(2)
         if kind == "From":
@@ -174,10 +220,18 @@ def bridge_findings(bridge: str) -> list[str]:
                            f"{s[:160]!r} (a shadow module on this line was OPEN-121 "
                            f"re-review MEDIUM-1)")
             continue
-        if (kind, name) not in BRIDGE_SENTENCES:
+        if (kind, name) not in BRIDGE_DEFINERS:
             out.append(f"BridgeBytes.v: defines more than FaithfulBytes and its corollaries: "
                        f"{(kind, name)} (a name defined here could shadow what "
                        f"FaithfulBytes reads)")
+    pinned = [" ".join(x.split()) for x in BRIDGE_SENTENCES]
+    if sents != pinned:
+        extra = [x for x in sents if x not in pinned]
+        missing = [x for x in pinned if x not in sents]
+        out.append(f"BridgeBytes.v: its code is not the pinned sentence list BRIDGE_SENTENCES "
+                   f"(bytes review LOW-2); not pinned: {[x[:80] for x in extra]}; "
+                   f"missing: {[x[:80] for x in missing]}"
+                   + ("" if extra or missing else "; same sentences, other order"))
     head = " ".join(FAITHFUL_BYTES_HEAD.split())
     norm = " ".join(code.split())
     i = norm.find(head)
@@ -196,6 +250,81 @@ def bridge_findings(bridge: str) -> list[str]:
     if bad:
         out.append(f"BridgeBytes.v: FaithfulBytes' body mentions {bad} -- the decider, "
                    f"the executable reader or parser must never be a premise's content")
+    return out
+
+
+def recount_findings(label: str, d: dict) -> list[str]:
+    """Check 11 (bytes review LOW-3): the summary is RECOMPUTED from the
+    per-document records, never trusted. Each graded record's `agree` must be
+    what strict_differential.agrees_bytes gives on its stored oracle tuple and
+    its stored model verdict (its class, and for a NOT-READY its reason,
+    token, mode and line); every count of the summary, of by_class and of
+    by_family must equal the count over the records."""
+    import strict_differential as D
+    out: list[str] = []
+    recs = d.get("documents", [])
+    outside = d.get("outside", [])
+    infra = d.get("infrastructure_failures", [])
+    s_ = d.get("summary", {})
+    by_class: dict = {}
+    by_family: dict = {}
+    agree = 0
+    for r in recs:
+        try:
+            m, o = D.model_of_record(r), D.oracle_of_record(r)
+        except (KeyError, TypeError, ValueError) as e:
+            out.append(f"{label}: record i={r.get('i')} is malformed ({e!r})")
+            continue
+        if D.S.verdict_class(m) != r.get("class"):
+            out.append(f"{label}: record i={r.get('i')}: class {r.get('class')!r} is not "
+                       f"its model verdict's {D.S.verdict_class(m)!r}")
+        ok, why = D.agrees_bytes(m, o)
+        if bool(r.get("agree")) != ok or not isinstance(r.get("agree"), bool):
+            out.append(f"{label}: record i={r.get('i')}: stored agree {r.get('agree')!r}, "
+                       f"but its oracle tuple {r.get('oracle')} and model "
+                       f"{r.get('model', 'READY')} give {ok} ({why})")
+        agree += ok
+        c = by_class.setdefault(r.get("class"), {"n": 0, "agree": 0})
+        c["n"] += 1
+        c["agree"] += ok
+        f = by_family.setdefault(r.get("family"), {"n": 0, "agree": 0, "outside": 0})
+        f["n"] += 1
+        f["agree"] += ok
+    for r in outside:
+        by_family.setdefault(r.get("family"), {"n": 0, "agree": 0, "outside": 0})
+        by_family[r.get("family")]["outside"] += 1
+    graded = len(recs)
+    want = {"graded": graded, "agree": agree, "disagree": graded - agree,
+            "outside_by_design": len(outside),
+            "oracle_infrastructure_failures": len(infra),
+            "documents": graded + len(outside) + len(infra),
+            "oracle_timeouts": 0}
+    for k, v in want.items():
+        if s_.get(k) != v:
+            out.append(f"{label}: summary {k} = {s_.get(k)}, but the records give {v}")
+    if len(d.get("disagreements", [])) != graded - agree:
+        out.append(f"{label}: {len(d.get('disagreements', []))} disagreement entries, but "
+                   f"the records give {graded - agree}")
+    if s_.get("by_class") != {k: by_class[k] for k in sorted(by_class)}:
+        out.append(f"{label}: summary by_class {s_.get('by_class')} is not the records' "
+                   f"{by_class}")
+    stored_f = d.get("by_family", {})
+    for fam in sorted(set(stored_f) | set(by_family)):
+        got = {k: stored_f.get(fam, {}).get(k, 0) for k in ("n", "agree", "outside")}
+        rec = by_family.get(fam, {"n": 0, "agree": 0, "outside": 0})
+        if got != rec:
+            out.append(f"{label}: by_family {fam} {got} is not the records' {rec}")
+    ready_n = by_class.get("READY", {}).get("n", 0)
+    ub = s_.get("upper_bound_95")
+    if agree == graded and graded:
+        want_ub = (round(1 - 0.05 ** (1 / graded), 6),
+                   round(1 - 0.05 ** (1 / ready_n), 6) if ready_n else None)
+        if not ub or (ub.get("all"), ub.get("ready")) != want_ub:
+            out.append(f"{label}: upper_bound_95 {ub and (ub.get('all'), ub.get('ready'))} "
+                       f"is not the one {graded} graded / {ready_n} READY records give "
+                       f"{want_ub}")
+    elif ub:
+        out.append(f"{label}: an upper bound is stated over records that disagree")
     return out
 
 
@@ -292,6 +421,8 @@ def main() -> int:
                 fails.append(f"{label}: {k} = {s_.get(k)}")
         if s_.get("agree") != s_.get("graded"):
             fails.append(f"{label}: agree {s_.get('agree')} != graded {s_.get('graded')}")
+        # 11. the summary recomputed from the records (LOW-3)
+        fails.extend(recount_findings(label, d))
         # 5. near-misses
         near = d.get("by_family", {}).get("L0-NEAR", {})
         if near.get("n", 0) != 0 or near.get("outside", 0) < MIN_NEAR:
@@ -421,7 +552,8 @@ def main() -> int:
     ps, ds = rp["summary"], dfs["summary"]
     print(f"[strict-bytes] OK — {len(ctors)} reader constructors, each probe-tagged and "
           f"attested; {ps['graded']} byte-level probes and {ds['graded']} differential "
-          f"files agree with the oracle (verdict, message, line); "
+          f"files agree with the oracle (verdict, message, and line for every class "
+          f"with an l.N), every count recomputed from the records; "
           f"{ps['outside_by_design'] + ds['outside_by_design']} files outside by design; "
           f"reader matrix {len(classes_in) * 3} + {len(classes_out) * 3} cells and the "
           f"kernel matrix's {len(need_ok)} covered at the byte level")

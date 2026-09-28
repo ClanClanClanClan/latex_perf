@@ -6,8 +6,8 @@
     what the pinned pdflatex does with a file CANNOT be proved in Coq.  It is
     the named [Definition] [FaithfulBytes], an explicit PREMISE of the bridge
     corollary, never an [Axiom] and never a [Section] [Hypothesis]; so
-    [Print Assumptions strict_ready_iff_pdflatex_bytes] stays "Closed under
-    the global context" (scripts/tools/check_print_assumptions.py).
+    [Print Assumptions strict_ready_iff_pdflatex_bytes] stays Closed under
+    the global context (scripts/tools/check_print_assumptions.py).
 
     [FaithfulBytes] is stated against the DECLARATIVE side only: for every
     file in the fragment and its declarative parse [ks], the oracle compiles
@@ -16,8 +16,14 @@
     is pinned three ways, as [Bridge.Faithful]'s is (OPEN-121 final review
     MEDIUM-1 and re-review, C-87): coqc's [Print], a kernel [eq_refl]
     convertibility check against fully qualified names
-    (check_print_assumptions.py), and a textual scan of every Coq sentence of
-    this file (scripts/tools/check_strict_bytes.py, kill-tested).
+    (check_print_assumptions.py), and a pin of this file's WHOLE code,
+    sentence by sentence (check_strict_bytes.BRIDGE_SENTENCES, an allow-list,
+    after control prefixes are stripped; this file holds no double quote,
+    since a string inside a comment moves where Coq's comments end: C-88).
+    The STATEMENTS of both corollaries below are pinned as the kernel's are
+    (C-88): printed by [Check], and their TYPES by kernel conversion against
+    fully qualified statements; [Print Module BridgeBytes] must list exactly
+    FaithfulBytes and the two corollaries.
 
     [oracle_ok bytes] is Bridge.v's: the pinned pdflatex, under the oracle
     protocol of design §B.4, exits 0 AND writes a PDF on these bytes, each
@@ -25,8 +31,11 @@
     bridge covers READY iff compiles ONLY: the reason and the line of a
     NOT-READY are exact against [Runs] and the declarative [ReportedLine]
     ([DecideBytes.decide_bytes_exact]), and agree with pdfTeX's first error
-    and its [l.N] by the probes and the byte-level differential, not by this
-    file.  [FaithfulBytes] is attested, not proved, by the probe families of
+    by the probes and the byte-level differential, not by this file; LINE
+    agreement is over the classes that have an [l.N] (E1, E3, E4, E5, E6).
+    E0 (rc 0, no pages of output) has none: pdfTeX reports no line for it,
+    so the driver prints none and an E0 record carries none, although
+    [ReportedLine] still names a token.  [FaithfulBytes] is attested, not proved, by the probe families of
     every constructor of Lexer.v, Front.v and Semantics.v and by the
     differential (scripts/tools/strict_differential.py --bytes), which run
     the EXTRACTED [decide_bytes] (ExtractBytes.v) on the very bytes the

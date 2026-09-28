@@ -1026,7 +1026,10 @@ let decide_bytes_json kc (bc : B.bcontract) (b : char list) =
             ("reason", `String (string_of_reason (k_reason r)));
             ("loc", `Int l);
             ("loc_tok", tok);
-            ("loc_line", if line = 0 then `Null else `Int line);
+            (* E0 (no pages of output) is not an error pdfTeX reports: it prints
+               no l.N, so neither does this record (OPEN-121 review, LOW-1); the
+               proved ReportedLine is still [line]. *)
+            ("loc_line", if line = 0 || r = B.E0 then `Null else `Int line);
             ("loc_mode", `String (mode_at kc ktoks));
           ])
   | B.NotStrict -> `Assoc (base @ [ ("verdict", `String "not_strict") ])
@@ -1064,6 +1067,12 @@ let file_mode ~kernel ~contract ~sigs ~lexical path =
   match B.decide_bytes bc b with
   | B.ProvenReady ->
       Printf.printf "PROVEN-READY %S\n" path;
+      exit 0
+  | B.ProvenNotReady (B.E0, _) ->
+      (* pdfTeX reports no l.N for E0 (rc 0, "No pages of output."): printing
+         the proved ReportedLine here would state a line pdfTeX never gives
+         (OPEN-121 review, LOW-1). *)
+      Printf.printf "PROVEN-NOT-READY %S E0 (no pages of output; no l.N)\n" path;
       exit 0
   | B.ProvenNotReady (r, line) ->
       let r = string_of_reason (k_reason r) in

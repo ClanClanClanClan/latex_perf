@@ -768,6 +768,35 @@ def lexical_endline_not_eol(text: str) -> str:
     return json.dumps(d, indent=1, sort_keys=True) + "\n"
 
 
+def bytes_record_agree_flipped(text: str) -> str:
+    """The bytes PR's review, LOW-3: one graded record's `agree` flipped, the
+    summary untouched. A gate that trusts the summary passes this."""
+    d = json.loads(text)
+    r = next(r for r in d["documents"] if r.get("class") == "E1")
+    assert r["agree"] is True, "bytes_probes drifted; update registry"
+    r["agree"] = False
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_record_oracle_changed(text: str) -> str:
+    """A READY record whose stored oracle tuple no longer compiles (rc 1),
+    its `agree` and the summary untouched."""
+    d = json.loads(text)
+    r = next(r for r in d["documents"] if r.get("class") == "READY")
+    assert r["oracle"][0] == 0 and r["agree"] is True, "bytes_differential drifted"
+    r["oracle"][0] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def bytes_e0_record_has_line(text: str) -> str:
+    """LOW-1's regression: an E0 record carrying a line pdfTeX never reports."""
+    d = json.loads(text)
+    r = next(r for r in d["documents"] if r.get("class") == "E0")
+    assert r["model"][3] is None, "bytes_probes drifted; update registry"
+    r["model"][3] = 4
+    return json.dumps(d, indent=1) + "\n"
+
+
 def faithful_bytes_is_decide(text: str) -> str:
     """The OPEN-121 MEDIUM-1 shape on bytes: FaithfulBytes' iff states the
     decider instead of Runs (the corollary would be decide = decide)."""
@@ -1025,6 +1054,54 @@ REGISTRY = [
                          "Definition Runs (C : contract) (s : Semantics.state) "
                          "(ts : list tok) (o : outcome) : Prop := run C s ts = Some o. "
                          "End Semantics. Import Semantics.\n"),
+            # The bytes PR's review, LOW-2: the kernel's C-88 shapes on
+            # BridgeBytes.v. Mutant A: a control prefix hides the shadow's
+            # keyword (measured: coqc's printed statement pins still pass on
+            # this build; the kernel type pins and Print Module fail).
+            Mutation("a Time-prefixed shadow in_strict_bytes in BridgeBytes.v",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: defines more than FaithfulBytes and its "
+                     r"corollaries: \('prefix', 'Time'\).*"
+                     r"FAIL BridgeBytes\.v: defines more than FaithfulBytes and its "
+                     r"corollaries: \('Definition', 'in_strict_bytes'\)",
+                     old="Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,",
+                     new="Time Definition in_strict_bytes (C : bcontract) "
+                         "(b : list Ascii.ascii) : Prop := False.\n\n"
+                         "Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,"),
+            # Mutant B: a shadow between two comments holding strings with a
+            # comment delimiter (Coq lexes strings inside comments).
+            Mutation("a shadow in_strict_bytes between two comment-strings",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: defines more than FaithfulBytes and its "
+                     r"corollaries: \('Definition', 'in_strict_bytes'\)",
+                     old="Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,",
+                     new="(* \"(*\" *)\nDefinition in_strict_bytes (C : bcontract) "
+                         "(b : list Ascii.ascii) : Prop := False.\n(* \"*)\" *)\n\n"
+                         "Corollary strict_ready_iff_pdflatex_bytes : forall oracle_ok C b,"),
+            # The allow-list itself: a sentence no keyword scan would flag.
+            Mutation("an unpinned tactic sentence in BridgeBytes.v",
+                     "proofs/Strict/BridgeBytes.v",
+                     r"FAIL BridgeBytes\.v: its code is not the pinned sentence list "
+                     r"BRIDGE_SENTENCES .*not pinned: \['apply HF; auto'\]",
+                     old="apply HF; assumption.",
+                     new="apply HF; auto."),
+            # LOW-3: the summary is recomputed from the records.
+            Mutation("one record's agree flipped under an unchanged summary",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: record i=\d+: stored agree False, but its "
+                     r"oracle tuple .* give True",
+                     transform=bytes_record_agree_flipped),
+            Mutation("one record's oracle tuple changed under its agree",
+                     "corpora/strict_s0/bytes_differential.json",
+                     r"FAIL bytes_differential: record i=\d+: stored agree True, but its "
+                     r"oracle tuple \[1, ",
+                     transform=bytes_record_oracle_changed),
+            # LOW-1: an E0 has no l.N; a record that gives one disagrees.
+            Mutation("an E0 record carries a line",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"FAIL bytes_probes: record i=\d+: stored agree True, .*"
+                     r"model E0 carries a line \(4\); pdfTeX reports none",
+                     transform=bytes_e0_record_has_line),
         ]),
     GateTest(
         "check_gen_contract_parsers",

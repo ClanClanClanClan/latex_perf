@@ -697,6 +697,40 @@ def run_bytes(docs, sig_path: Path, workers: int, label: str):
     return oracle, models, grades
 
 
+def agrees_bytes(model: dict, oracle: dict) -> tuple[bool, str]:
+    """Phase 1's agreement rule (_strict_s0.agrees) on a byte-level verdict,
+    with E0 made exact about LINES: pdfTeX reports no l.N for E0 (rc 0, no
+    PDF), so an E0 agrees only when the oracle gave no line AND the model's
+    record carries none (OPEN-121 review, LOW-1: the driver printed the proved
+    ReportedLine of an E0, a line pdfTeX never reports, and the agreement rule
+    never read it). LINE agreement is therefore over the classes that have an
+    l.N (E1, E3, E4, E5, E6); E0 has none. check_strict_bytes.py recomputes
+    every record's agreement with this function."""
+    ok, why = S.agrees(model, oracle)
+    if ok and model.get("verdict") == "not_ready" and model.get("reason") == "E0":
+        if model.get("loc_line") is not None:
+            return False, f"model E0 carries a line ({model['loc_line']}); pdfTeX reports none"
+        if oracle.get("line") is not None:
+            return False, f"model E0, oracle reports l.{oracle['line']}"
+    return ok, why
+
+
+def model_of_record(rec: dict) -> dict:
+    """The model side of a graded evidence record, in the shape agrees takes."""
+    if rec.get("class") == "READY":
+        return {"verdict": "ready"}
+    if "model" not in rec:
+        return {"verdict": "not_strict"}
+    reason, tok, mode, line = rec["model"]
+    return {"verdict": "not_ready", "reason": reason, "loc_tok": tok,
+            "loc_mode": mode, "loc_line": line}
+
+
+def oracle_of_record(rec: dict) -> dict:
+    rc, pdf, err, line = rec["oracle"]
+    return {"rc": rc, "pdf": pdf, "error": err, "line": line, "timed_out": False}
+
+
 def tally_bytes(docs, models, grades, keep_docs: bool):
     by_class = defaultdict(lambda: {"n": 0, "agree": 0})
     by_rule = {r: {"docs": 0, "agree": 0} for r in RULES}
@@ -732,7 +766,7 @@ def tally_bytes(docs, models, grades, keep_docs: bool):
         elif exp_out:
             # built to be outside, decided: a defect of the reader or the family
             unexpected.append(dict(rec, verdict=m["verdict"]))
-        ok, why = S.agrees(m, g)
+        ok, why = agrees_bytes(m, g)
         cls = S.verdict_class(m)
         by_class[cls]["n"] += 1
         by_class[cls]["agree"] += ok
@@ -801,7 +835,9 @@ def main_bytes(args, nm: "Names", sig_path: Path) -> int:
     ready_n = by_class.get("READY", {}).get("n", 0)
     # the phase-1 rendered bytes: the tree decider and the bytes decider are
     # two proved-exact deciders of the same file; they must agree on verdict,
-    # reason and line (the tree side's line is phase 1's harness computation).
+    # reason and line (the tree side's line is phase 1's harness computation;
+    # an E0 has no l.N, and the bytes record carries none, so an E0's line is
+    # not compared -- LOW-1).
     consistency = {"checked": 0, "agree": 0, "differ": []}
     if args.bytes_rules:
         p1 = [(f, r) for f, r in rule_docs(nm) if f not in ("BOUND", "BOUND-OUT")]
@@ -811,7 +847,8 @@ def main_bytes(args, nm: "Names", sig_path: Path) -> int:
         for (i, bm), tm in zip(renders, tmodels):
             consistency["checked"] += 1
             same = (bm["verdict"] == tm["verdict"] and bm.get("reason") == tm.get("reason")
-                    and bm.get("loc_line") == tm.get("loc_line"))
+                    and (bm.get("reason") == "E0"
+                         or bm.get("loc_line") == tm.get("loc_line")))
             consistency["agree"] += same
             if not same:
                 consistency["differ"].append({"i": i, "bytes": [bm["verdict"], bm.get("reason"), bm.get("loc_line")],
@@ -852,12 +889,15 @@ def main_bytes(args, nm: "Names", sig_path: Path) -> int:
         "bytes_extract_sha256": S.sha256_file(S.BYTES_EXTRACT),
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
         "oracle": oracle.provenance(),
-        "agreement_rule": "_strict_s0.agrees on the extracted decide_bytes' verdict: "
-                          "READY iff rc 0 and a PDF; E0 iff rc 0 and no PDF; any other "
+        "agreement_rule": "strict_differential.agrees_bytes (_strict_s0.agrees) on the "
+                          "extracted decide_bytes' verdict: READY iff rc 0 and a PDF; "
+                          "E0 iff rc 0 and no PDF, and neither the oracle nor the record "
+                          "gives a line (pdfTeX reports no l.N for E0); any other "
                           "reason iff rc != 0, the first ! message is in "
                           "_strict_s0.expected_messages(reason, token, mode), and the "
                           "reported line (DecideBytes.ReportedLine) equals the oracle's "
-                          "l.N (both absent when the file ends)",
+                          "l.N (both absent when the file ends). Line agreement is over "
+                          "the classes that have an l.N; E0 has none",
         "summary": summary,
         "by_rule": by_rule,
         "by_family": {f: by_family[f] for f in sorted(by_family)},

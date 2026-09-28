@@ -29,16 +29,21 @@ the committed extraction, signature file, kernel and contract, and that
 neither reports a disagreement.
 
 The byte-level files use the same rule on the extracted `decide_bytes`'
-verdict; the LINE compared is the declarative reported line of
-`DecideBytes.ReportedLine` (the line of the last token the outcome depends on;
-none when the file ends without `\end{document}`).
+verdict (`strict_differential.agrees_bytes`); the LINE compared is the
+declarative reported line of `DecideBytes.ReportedLine` (the line of the last
+token the outcome depends on; none when the file ends without
+`\end{document}`). Line agreement is over the classes that have an `l.N`:
+E0 (rc 0, no PDF) has none, so an E0 record carries no line and agrees only
+when the oracle reports none.
 
 `scripts/tools/check_strict_bytes.py` (pure) checks the byte-level files: every
 constructor of the reader and front matter probe-tagged and attested (or, for
 the rules that put a file outside, used by a file decided outside), every cell
 of the reader's branch matrix and the kernel's matrix exercised at the byte
 level, the committed extraction and lexical contract, 0 disagreements, every
-near-miss outside, and the pin of `FaithfulBytes`.
+near-miss outside, the pin of `BridgeBytes.v`'s whole code, and that each
+record's `agree` and every count of the summary are what the per-file records
+(stored oracle tuple, model verdict) give.
 
 Regenerate (needs docker and the pinned image; local or nightly only):
 
@@ -46,4 +51,4 @@ Regenerate (needs docker and the pinned image; local or nightly only):
     python3 scripts/tools/strict_differential.py --random 3000 --seed 2
     python3 scripts/tools/gen_strict_lexical.py
     python3 scripts/tools/strict_differential.py --bytes-rules --seed 2
-    python3 scripts/tools/strict_differential.py --bytes 3000 --seed 5
+    python3 scripts/tools/strict_differential.py --bytes 5000 --seed 5

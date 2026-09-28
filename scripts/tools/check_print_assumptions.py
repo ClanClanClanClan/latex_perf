@@ -51,6 +51,11 @@ the library without Importing it. The same arm checks the TYPES of both
 bridge corollaries against fully qualified statements (re-review 2, HIGH-1,
 C-88: a shadow `in_strict_doc := False` in Bridge.v printed the pinned
 statement), and `Print Module` must list exactly Bridge's three constants.
+BridgeBytes.v (M2 phase 2) is pinned the same way: FaithfulBytes' body, both
+bytes corollaries' printed statements and fully qualified types, and its
+field list (the bytes PR's review, LOW-2; MEASURED on a build with a
+`Time`-prefixed shadow `in_strict_bytes := False`: both printed statement
+pins passed, both type pins and the field list failed).
 
 USAGE
     python3 scripts/tools/check_print_assumptions.py [--repo .] [--build]
@@ -263,6 +268,18 @@ STATEMENT_PINS = [
         "FaithfulBytes oracle_ok C -> in_strict_bytes C b -> "
         "decide_bytes C b = ProvenReady <-> oracle_ok b",
     ),
+    # The bytes PR's review, LOW-2: the NOT-READY side on bytes pinned too,
+    # as the kernel pins strict_not_ready_pdflatex (C-88).
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_not_ready_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.Syntax LaTeXPerfectionist.Strict.Contract "
+        "LaTeXPerfectionist.Strict.Decide LaTeXPerfectionist.Strict.DecideBytes "
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "forall (oracle_ok : list Ascii.ascii -> Prop) (C : bcontract) (b : list Ascii.ascii) "
+        "(r : reason) (ln : nat), "
+        "FaithfulBytes oracle_ok C -> in_strict_bytes C b -> "
+        "decide_bytes C b = ProvenNotReady r ln -> ~ oracle_ok b",
+    ),
 ]
 
 
@@ -372,6 +389,31 @@ CONVERTIBILITY_PINS = [
         f"({_S}DecideBytes.bc_kernel C) {_S}Semantics.init "
         f"({_S}Front.toks_of ks) {_S}Semantics.Compiles)",
     ),
+    # Both bytes corollaries' TYPES, fully qualified (the bytes PR's review,
+    # LOW-2: the rule C-88 applied to Bridge.v, applied to BridgeBytes.v).
+    (
+        _S + "BridgeBytes.strict_ready_iff_pdflatex_bytes",
+        _S + "BridgeBytes",
+        "type",
+        f"forall (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}DecideBytes.bcontract) (b : {_LIST_ASCII}), "
+        f"{_S}BridgeBytes.FaithfulBytes oracle_ok C -> "
+        f"{_S}DecideBytes.in_strict_bytes C b -> "
+        f"({_S}DecideBytes.decide_bytes C b = {_S}Decide.ProvenReady "
+        f"<-> oracle_ok b)",
+    ),
+    (
+        _S + "BridgeBytes.strict_not_ready_pdflatex_bytes",
+        _S + "BridgeBytes",
+        "type",
+        f"forall (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}DecideBytes.bcontract) (b : {_LIST_ASCII}) "
+        f"(r : {_S}Contract.reason) (ln : Coq.Init.Datatypes.nat), "
+        f"{_S}BridgeBytes.FaithfulBytes oracle_ok C -> "
+        f"{_S}DecideBytes.in_strict_bytes C b -> "
+        f"{_S}DecideBytes.decide_bytes C b = {_S}Decide.ProvenNotReady r ln -> "
+        f"Coq.Init.Logic.not (oracle_ok b)",
+    ),
 ]
 
 # The kernel's own list of what Bridge.v defines (`Print Module`, one field
@@ -379,12 +421,21 @@ CONVERTIBILITY_PINS = [
 # constant, module, inductive or axiom inside Bridge.v fails here whatever
 # the text of Bridge.v looks like (re-review 2, HIGH-1). A Notation is not a
 # module field; it cannot reach the Require-only kernel pins above.
-MODULE_FIELDS = (
-    _S + "Bridge",
-    [("Definition", "Faithful"),
-     ("Parameter", "strict_ready_iff_pdflatex"),
-     ("Parameter", "strict_not_ready_pdflatex")],
-)
+MODULE_FIELDS = [
+    (
+        _S + "Bridge",
+        [("Definition", "Faithful"),
+         ("Parameter", "strict_ready_iff_pdflatex"),
+         ("Parameter", "strict_not_ready_pdflatex")],
+    ),
+    # BridgeBytes.v likewise (the bytes PR's review, LOW-2).
+    (
+        _S + "BridgeBytes",
+        [("Definition", "FaithfulBytes"),
+         ("Parameter", "strict_ready_iff_pdflatex_bytes"),
+         ("Parameter", "strict_not_ready_pdflatex_bytes")],
+    ),
+]
 
 
 def module_fields(out: str) -> list[tuple[str, str]] | None:
@@ -556,23 +607,23 @@ def main() -> int:
                 print(f"[print-assumptions] OK   {const}: {what} convertible to the "
                       f"pinned fully qualified {what}")
 
-        mod, want_fields = MODULE_FIELDS
-        src = workdir / "PM.v"
-        src.write_text(f"Require {mod}.\nPrint Module {mod}.\n", encoding="utf-8")
-        proc = subprocess.run(
-            [coqc, "-R", str(vodir), "LaTeXPerfectionist",
-             "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
-            cwd=workdir, capture_output=True, text=True,
-        )
-        got_fields = module_fields(proc.stdout or "") if proc.returncode == 0 else None
-        if got_fields != want_fields:
-            failures.append(
-                f"{mod}: defines other than {want_fields} (OPEN-121 re-review 2, "
-                f"HIGH-1: a constant defined in Bridge.v can shadow what the bridge "
-                f"reads).\n      Coq: {got_fields if got_fields is not None else (proc.stdout or proc.stderr or '').strip()[:400]}")
-        else:
-            print(f"[print-assumptions] OK   {mod}: fields are exactly "
-                  f"{[n for _, n in want_fields]}")
+        for pm_idx, (mod, want_fields) in enumerate(MODULE_FIELDS):
+            src = workdir / f"PM{pm_idx}.v"
+            src.write_text(f"Require {mod}.\nPrint Module {mod}.\n", encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            got_fields = module_fields(proc.stdout or "") if proc.returncode == 0 else None
+            if got_fields != want_fields:
+                failures.append(
+                    f"{mod}: defines other than {want_fields} (OPEN-121 re-review 2, "
+                    f"HIGH-1: a constant defined in the bridge file can shadow what the bridge "
+                    f"reads).\n      Coq: {got_fields if got_fields is not None else (proc.stdout or proc.stderr or '').strip()[:400]}")
+            else:
+                print(f"[print-assumptions] OK   {mod}: fields are exactly "
+                      f"{[n for _, n in want_fields]}")
 
     if failures:
         print("\n[print-assumptions] FAIL — capstone(s) depend on unproved assumptions:\n")

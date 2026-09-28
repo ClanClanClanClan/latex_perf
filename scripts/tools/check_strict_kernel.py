@@ -72,7 +72,13 @@ longer belong together:
      define nothing but Faithful (no shadowing Definition/Notation/...).
      That definer scan reads every Coq SENTENCE (a `Module` on the Require
      line is a sentence too, re-review MEDIUM-1) and admits only the pinned
-     Require sentence, Faithful and the two bridge Corollaries.
+     Require sentence, Faithful and the two bridge Corollaries. Since the
+     second re-review (HIGH-1, C-88) the scan strips control prefixes
+     (Time, Timeout n, Redirect, attributes, ...) first, the comment
+     stripper lexes strings inside comments as Coq does, Bridge.v may hold
+     no double quote at all, and the WHOLE comment-stripped code of
+     Bridge.v is pinned sentence by sentence (BRIDGE_SENTENCES, an
+     allow-list: a sentence no keyword names still fails).
      check_print_assumptions.py pins the ELABORATED body too (coqc `Print`).
 
 Run: python3 scripts/tools/check_strict_kernel.py [--repo .]
@@ -291,9 +297,29 @@ def sha(p: Path) -> str:
 
 
 def strip_coq_comments(text: str) -> str:
-    out, depth, i = [], 0, 0
+    """The code of a Coq file with its comments removed, lexed as Coq lexes
+    it: a `"` opens a string both in code and INSIDE a comment, and a comment
+    delimiter inside such a string does not count (`""` inside a string is
+    an escaped quote, which toggling handles). The OPEN-121 re-review 2
+    (HIGH-1) hid a Definition between `(* "(*" *)` and `(* "*)" *)`: Coq
+    reads two comments and a Definition, a lexer that ignores strings reads
+    one comment. A string left open at the end of the file (Coq rejects the
+    file) keeps everything after it as code, so nothing is hidden."""
+    out, depth, i, in_str = [], 0, 0, False
     while i < len(text):
-        if text.startswith("(*", i):
+        c = text[i]
+        if in_str:
+            if c == '"':
+                in_str = False
+            if depth == 0:
+                out.append(c)
+            i += 1
+        elif c == '"':
+            in_str = True
+            if depth == 0:
+                out.append(c)
+            i += 1
+        elif text.startswith("(*", i):
             depth += 1
             i += 2
         elif text.startswith("*)", i) and depth:
@@ -301,8 +327,12 @@ def strip_coq_comments(text: str) -> str:
             i += 2
         else:
             if depth == 0:
-                out.append(text[i])
+                out.append(c)
             i += 1
+    if depth:
+        # An unterminated comment: Coq rejects the file; report its text as
+        # code rather than hide it.
+        return text
     return "".join(out)
 
 
@@ -447,6 +477,43 @@ _DEFINERS = r"Definition|Fixpoint|CoFixpoint|Let|Notation|Infix|Instance|" \
     r"Primitive|Register|Include|Import|Export|Open|Require|From|Load|" \
     r"Declare|Set|Unset|Arguments|Hint|Existing|Opaque|Transparent|Strategy|" \
     r"Reserved|Delimit|Bind|Tactic|Abbreviation"
+# Control prefixes Coq accepts in front of a vernacular command: they hide
+# the command's keyword from a sentence-start match (re-review 2, HIGH-1:
+# `Time Definition in_strict_doc ... := False.`). They are stripped before
+# matching, and any sentence that carries one is itself a finding.
+_CONTROL_PREFIX = re.compile(
+    r"^(?:(?:Time|Instructions|Profile|Succeed|Fail|Timeout\s+\d+|"
+    r"Redirect\s+\S+|Local|Global|Polymorphic|Monomorphic|Program|"
+    r"Cumulative|NonCumulative|Private)\s+|#\[[^\]]*\]\s*)+")
+# The whole code of Bridge.v (comments removed, sentence by sentence,
+# whitespace normalised) is PINNED: an allow-list, not a deny-list. Every
+# evasion of a keyword scan found so far (a Module on the Require line, a
+# control prefix, a comment-string) adds a sentence that is not on this
+# list. Changing Bridge.v's code therefore means changing this list, in
+# review, together with check_print_assumptions.py's kernel pins.
+BRIDGE_SENTENCES = [
+    "From LaTeXPerfectionist.Strict Require Import Syntax Contract Semantics Decide",
+    "Definition Faithful (oracle_ok : list Ascii.ascii -> Prop) (C : contract) : Prop "
+    ":= forall d, in_strict_doc C d -> "
+    "(oracle_ok (render d) <-> Runs C init (flatten_doc d) Compiles)",
+    "Corollary strict_ready_iff_pdflatex : forall oracle_ok C d, "
+    "Faithful oracle_ok C -> in_strict_doc C d -> "
+    "(decide C d = ProvenReady <-> oracle_ok (render d))",
+    "Proof",
+    "intros oracle_ok C d HF Hs",
+    "destruct (strict_decider_exact C d Hs) as [Hready _]",
+    "rewrite Hready", "symmetry", "apply HF", "exact Hs",
+    "Qed",
+    "Corollary strict_not_ready_pdflatex : forall oracle_ok C d r l, "
+    "Faithful oracle_ok C -> in_strict_doc C d -> "
+    "decide C d = ProvenNotReady r l -> ~ oracle_ok (render d)",
+    "Proof",
+    "intros oracle_ok C d r l HF Hs Hd Hok",
+    "apply (proj2 (strict_ready_iff_pdflatex oracle_ok C d HF Hs)) in Hok",
+    "rewrite Hd in Hok", "discriminate",
+    "Qed",
+]
+
 # The only definer sentences Bridge.v may contain: the Require sentence
 # exactly (whitespace normalised), and Faithful and the two bridge
 # Corollaries by their first two words.
@@ -474,10 +541,15 @@ def faithful_findings(bridge: str) -> list[str]:
     code = strip_coq_comments(bridge)
     out: list[str] = []
     defs = []
-    for sent in coq_sentences(code):
-        if sent.startswith("#["):
-            defs.append(("#[", sent[:60]))
-            continue
+    if '"' in bridge:
+        out.append("Bridge.v: contains a `\"` (a string, even inside a comment, "
+                   "changes where Coq's comments end; OPEN-121 re-review 2, HIGH-1)")
+    sents = coq_sentences(code)
+    for sent in sents:
+        pm = _CONTROL_PREFIX.match(sent)
+        if pm:
+            defs.append(("prefix", pm.group(0).strip()))
+            sent = sent[pm.end():]
         m = re.match(rf"({_DEFINERS})\b\s*(\S*)", sent)
         if not m:
             continue
@@ -487,6 +559,14 @@ def faithful_findings(bridge: str) -> list[str]:
     if defs:
         out.append(f"Bridge.v: defines more than Faithful: {defs} (a name defined here "
                    f"could shadow what Faithful's body reads; OPEN-121 review M-1)")
+    pinned = [" ".join(x.split()) for x in BRIDGE_SENTENCES]
+    if sents != pinned:
+        extra = [x for x in sents if x not in pinned]
+        missing = [x for x in pinned if x not in sents]
+        out.append(f"Bridge.v: its code is not the pinned sentence list BRIDGE_SENTENCES "
+                   f"(re-review 2, HIGH-1); not pinned: {[x[:80] for x in extra]}; "
+                   f"missing: {[x[:80] for x in missing]}"
+                   + ("" if extra or missing else "; same sentences, other order"))
     head = " ".join(FAITHFUL_HEAD.split())
     norm = " ".join(code.split())
     i = norm.find(head)

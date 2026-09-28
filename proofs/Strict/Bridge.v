@@ -6,15 +6,15 @@
     [Definition], [Faithful], taken as an explicit PREMISE of the bridge
     corollary — never an [Axiom] and never a [Section] [Hypothesis] (which
     would disappear into a binder at [End]).  So [Print Assumptions
-    strict_ready_iff_pdflatex] stays "Closed under the global context"
+    strict_ready_iff_pdflatex] stays Closed under the global context
     (scripts/tools/check_print_assumptions.py enforces it), and the
     corollary's statement shows [Faithful] as its only premise about the
     world; the others are structural ([in_strict_doc]).
 
-    [oracle_ok bytes] is "the pinned pdflatex, under the oracle protocol of
+    [oracle_ok bytes] is: the pinned pdflatex, under the oracle protocol of
     design §B.4 (nonstopmode, halt-on-error, run to the first rc 0 then one
     confirming pass), exits 0 AND writes a PDF on these bytes, within the
-    oracle timeout" (scripts/tools/_oracle.py, [OracleRun.compiles]; the
+    oracle timeout (scripts/tools/_oracle.py, [OracleRun.compiles]; the
     timeout is 300 s PER PASS, design §B.4: [run_to_fixpoint] runs up to
     MAX_PASSES = 3 passes plus one confirming pass, each bounded by 300 s,
     so the wall-clock bound on [oracle_ok] is (3+1) x 300 s = 1200 s, and a
@@ -28,6 +28,13 @@
     — not proved — by the probes of every [Runs] constructor and by the
     generated differential (scripts/tools/strict_differential.py), which runs
     the EXTRACTED [render] and [decide] (Extract.v) against that oracle.
+
+    This file holds no double-quote character, not even in a comment: in
+    Coq a string opens inside a comment too, so a comment delimiter inside
+    one moves where the comment ends (OPEN-121 re-review 2, HIGH-1); the
+    whole code of this file is pinned by check_strict_kernel.py check 10,
+    and its three constants by check_print_assumptions.py against fully
+    qualified names (kernel conversion) and by [Print Module].
 
     Phase-1 deviation from the design's statement: there is no [parse] yet,
     so the corollary starts from the tree [d], not from bytes; [parse_exact]

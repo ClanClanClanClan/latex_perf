@@ -792,6 +792,34 @@ REGISTRY = [
                          "Runs (C : contract) (s : Semantics.state) (ts : list tok) "
                          "(o : outcome) : Prop := run C s ts = Some o. End "
                          "Semantics. Import Semantics.\n"),
+            # OPEN-121 re-review 2 (HIGH-1), mutant A: a control prefix hid
+            # the shadow's keyword from a sentence-start scan.
+            Mutation("a Time-prefixed shadow in_strict_doc in Bridge.v",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful: "
+                     r"\[\('prefix', 'Time'\), \('Definition', 'in_strict_doc'\)\]",
+                     old="Corollary strict_ready_iff_pdflatex :",
+                     new="Time Definition in_strict_doc (C : contract) (d : doc) : "
+                         "Prop := False.\n\nCorollary strict_ready_iff_pdflatex :"),
+            # Mutant B: a comment holding a string with a comment delimiter.
+            # Coq sees two comments and a Definition; the kill regex needs the
+            # LEXER to see the Definition (the no-quote rule alone would not
+            # print it).
+            Mutation("a shadow in_strict_doc between two comment-strings",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful: "
+                     r"\[\('Definition', 'in_strict_doc'\)\]",
+                     old="Corollary strict_ready_iff_pdflatex :",
+                     new="(* \"(*\" *)\nDefinition in_strict_doc (C : contract) "
+                         "(d : doc) : Prop := False.\n(* \"*)\" *)\n\n"
+                         "Corollary strict_ready_iff_pdflatex :"),
+            # The allow-list itself: a sentence no keyword scan would flag.
+            Mutation("an unpinned tactic sentence in Bridge.v",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: its code is not the pinned sentence list "
+                     r"BRIDGE_SENTENCES .*not pinned: \['assumption'\]",
+                     old="apply HF. exact Hs.",
+                     new="apply HF. assumption."),
             # A name written into the kernel instead of the contract.
             Mutation("a control-word name is written into the Coq kernel",
                      "proofs/Strict/Semantics.v",

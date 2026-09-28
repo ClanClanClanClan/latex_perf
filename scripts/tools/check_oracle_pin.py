@@ -26,8 +26,10 @@ and checks four things:
      it is in PRE_BASELINE with the ledger row that removes it.
   3. PRE_BASELINE is pinned to its exact contents: widening it silently fails,
      and an entry whose artefact has since been re-graded fails too.
-  4. No tracked code starts a TeX engine (pdflatex, latexmk, xelatex,
-     lualatex) outside `_oracle.py` and `_oracle.sh`. Scanned: every tracked
+  4. No tracked code starts a TeX engine (ENGINES: pdflatex, latexmk,
+     xelatex, lualatex, and since C-91 pdftex, tex, etex, initex, pdfetex,
+     luatex, xetex) or passes a FORMAT SELECTOR (`&pdflatex`, `-fmt=...`,
+     `--fmt`) outside `_oracle.py` and `_oracle.sh`. Scanned: every tracked
      .py, .sh/.bash, Makefile/.mk, .ml and workflow file, not only scripts/.
      The rules, each with a kill-test in check_gate_selftests.py:
        Python  every string literal that names an engine, found by the
@@ -40,7 +42,10 @@ and checks four things:
                (`x["pdflatex"]`), an argument of .get/.setdefault/.pop, or an
                operand of ==, !=, in. Bytes literals are scanned like str
                ones, and adjacent literals are joined first (`"pdf" "latex"`
-               is one literal to Python). That catches
+               is one literal to Python), and so are statically resolvable
+               concatenations: a `+` chain of literals (`"pdf" + "latex"`) and
+               `"SEP".join([...])` / `"SEP".join((...))` over literals only
+               (C-91). That catches
                `["timeout", "60", "pdflatex", t]`, `("pdflatex", t)`,
                `ENGINE = "pdflatex"`, `shutil.which("pdflatex")`, and a shell
                string such as `f"pdflatex {t}"` or `"pdflatex main.tex"`.
@@ -51,9 +56,20 @@ and checks four things:
                and `printf t | xargs pdflatex` are findings. An engine name
                assembled from a variable (`${P}latex`, `pdf$X`) is a finding,
                and so is one the shell assembles by dequoting one word
-               (`"pdf"latex`, `pdf\\latex`). .zsh/.ksh files are scanned as
-               shell. KNOWN RESIDUALS (OPEN-118): Python `"pdf" + "latex"`
-               and a DATA_KEYS value later used as argv are not findings.
+               (`"pdf"latex`, `pdf\\latex`), including an ANSI-C `$'...'`
+               word, whose escapes are decoded (`$'pdf\\x6catex'`, C-91). A
+               `case` label (`tex)`) is a pattern and is not scanned. A format
+               selector is a finding as a quoted or bare word. .zsh/.ksh
+               files are scanned as shell.
+     KNOWN RESIDUALS (OPEN-118 known limit (g)), each unclosable by a static
+     scan of literals: a name built from a VARIABLE (`P = "pdf"; P + "latex"`,
+     `"".join(parts)`), by `%`/`.format`/an f-string field
+     (`f"{'pdf'}latex"`), by a call (`chr`, `bytes.decode`, `codecs`,
+     `base64`), or read from a file or the environment; a DATA_KEYS value
+     later used as argv; `latex` (pdfTeX in DVI mode), which is not in
+     ENGINES because it is a data word in this repo (`jq --arg k latex`);
+     `eval`/`sh -c` on a string assembled at run time; and any other
+     language's string operations (only literals are scanned there).
        other   in a tracked .c/.h/.rs/.js/.ts/.rb/.pl/.go/.lua file, a
                quoted literal that is an engine or an engine command line.
        OCaml   a file that spawns processes (Sys.command, Unix.create_process,
@@ -124,15 +140,31 @@ PRE_BASELINE_SIZE = 4
 ORACLE_FILES = {"scripts/tools/_oracle.py", "scripts/tools/_oracle.sh"}
 SCANNER_FILES = {"scripts/tools/check_oracle_pin.py",
                  "scripts/tools/check_gate_selftests.py"}
-ENGINES = ("pdflatex", "latexmk", "xelatex", "lualatex")
-_ENG_ALT = "|".join(ENGINES)
+# The engines a document can be compiled with. pdftex/tex/etex/initex/
+# pdfetex/luatex/xetex were added on 2026-09-28 (OPEN-118 known limit (g),
+# C-91): the list held only the four LaTeX front-ends, so `pdftex '&pdflatex'
+# t.tex` -- pdflatex under another name -- scanned clean (MEASURED RC 0 by the
+# round-3 re-review). NOT scanned: `latex` (pdfTeX in DVI mode). It is a data
+# word here (MEASURED 2026-09-28: 4 tracked smoke scripts pass `jq --arg k
+# latex`, the JSON key of the service payload), so a bare-word rule would
+# cry wolf; recorded as a residual in OPEN-118 (g).
+ENGINES = ("pdflatex", "latexmk", "xelatex", "lualatex", "pdftex", "tex", "etex",
+           "initex", "pdfetex", "luatex", "xetex")
+_ENG_ALT = "|".join(sorted(ENGINES, key=len, reverse=True))
 ENGINE_LITERAL = re.compile(rf"^(\S*/)?({_ENG_ALT})$")
+# A FORMAT SELECTOR picks the engine's personality whatever the binary is
+# called: `&pdflatex` (TeX's own syntax), `-fmt=pdflatex`, `--fmt pdflatex`.
+# A literal that is one is a finding like an engine name: it has no use but
+# as an argument to a TeX engine.
+FMT_SELECTOR = re.compile(r"^(&[A-Za-z][\w.-]*|-{1,2}fmt(=\S*)?)$")
 # A string that is a shell command line starting with an engine.
-ENGINE_CMDLINE = re.compile(rf"^\s*(\S*/)?({_ENG_ALT})\s+(-|\S+\.tex\b|\{{|\$|\"|')")
+ENGINE_CMDLINE = re.compile(rf"^\s*(\S*/)?({_ENG_ALT})\s+(-|&|\S+\.tex\b|\{{|\$|\"|')")
 BARE_TOKEN = re.compile(rf"(^|[^A-Za-z0-9_./-])({_ENG_ALT})([^A-Za-z0-9_.-]|$)")
 SH_MESSAGE = re.compile(r"^\s*(echo|printf|die_infra|die|warn|log)\b")
 ML_SPAWN = re.compile(r"Sys\.command|create_process|open_process|Unix\.exec")
-ML_LITERAL = re.compile(rf'"[^"\n]*\b({_ENG_ALT})\b[^"\n]*"')
+# The engine as a WORD of the literal: not `.tex`/`main.tex` (a file name),
+# which `\b` matched once `tex` joined ENGINES; a path prefix still counts.
+ML_LITERAL = re.compile(rf'"[^"\n]*(?<![A-Za-z0-9_.-])({_ENG_ALT})(?![A-Za-z0-9_.-])[^"\n]*"')
 DATA_CALLS = {"get", "setdefault", "pop"}
 # Dict keys whose engine-valued VALUE is recorded metadata, not a command.
 DATA_KEYS = {"engine", "declared_compiler", "compiler", "protocol"}
@@ -156,6 +188,11 @@ WORKFLOW_ALLOW = {
 }
 FINGERPRINT_KEYS = ("tlpdb_sha256", "macro_layer_sha256", "fmt_sha256")
 BACKENDS = {"container", "native"}
+
+
+def _is_engine_literal(val: str) -> bool:
+    return bool(ENGINE_LITERAL.match(val) or ENGINE_CMDLINE.match(val)
+                or FMT_SELECTOR.match(val))
 
 
 def _py_string_value(tok: str) -> str | None:
@@ -225,13 +262,13 @@ def scan_python(text: str) -> list[tuple[int, str]]:
                 joined[-1] = _U(tokenize.STRING, '"' + a + b + '"', joined[-1].start)
                 continue
         joined.append(t)
-    sig = joined
+    sig = _fold_python_concat(joined, _U)
     hits = []
     for i, t in enumerate(sig):
         if t.type != tokenize.STRING:
             continue
         val = _py_string_value(t.string)
-        if val is None or not (ENGINE_LITERAL.match(val) or ENGINE_CMDLINE.match(val)):
+        if val is None or not _is_engine_literal(val):
             continue
         prev = sig[i - 1].string if i else ""
         nxt = sig[i + 1].string if i + 1 < len(sig) else ""
@@ -252,7 +289,98 @@ def scan_python(text: str) -> list[tuple[int, str]]:
     return hits
 
 
-SH_QUOTED = re.compile(r"""\"(?:[^\"\\]|\\.)*\"|'[^']*'""")
+def _fold_python_concat(sig: list, unit) -> list:
+    """Statically resolvable string CONCATENATION, folded into one unit
+    (OPEN-118 known limit (g), C-91): `"pdf" + "latex"` (a chain of string
+    literals joined by `+`) and `"SEP".join([...])` / `"SEP".join((...))` over
+    string literals only. Before this the scan saw two harmless literals
+    (MEASURED RC 0 by the round-3 re-review). The folded unit keeps the
+    tokens around the WHOLE expression as its neighbours, so the data-position
+    exemptions still apply to it. A concatenation with any non-literal operand
+    (a variable, a call, `%`, an f-string field) is not resolvable here."""
+    import tokenize
+    S = tokenize.STRING
+
+    def val(t):
+        return _py_string_value(t.string) if t.type == S else None
+    out, i = [], 0
+    while i < len(sig):
+        t = sig[i]
+        # "SEP".join(["a", "b"])  or  "SEP".join(("a", "b"))
+        if (val(t) is not None and i + 3 < len(sig) and sig[i + 1].string == "."
+                and sig[i + 2].string == "join" and sig[i + 3].string == "("):
+            j = i + 4
+            close = None
+            if j < len(sig) and sig[j].string in ("[", "("):
+                close = "]" if sig[j].string == "[" else ")"
+                j += 1
+            parts, ok = [], True
+            while j < len(sig) and sig[j].string != (close or ")"):
+                v = val(sig[j])
+                if v is None:
+                    ok = False
+                    break
+                parts.append(v)
+                j += 1
+                if j < len(sig) and sig[j].string == ",":
+                    j += 1
+            if ok and parts and j < len(sig):
+                if close:
+                    j += 1  # past the inner ] or )
+                if j < len(sig) and sig[j].string == ")":
+                    out.append(unit(S, '"' + val(t).join(parts) + '"', t.start))
+                    i = j + 1
+                    continue
+        # "a" + "b" + "c"
+        if (val(t) is not None and i + 2 < len(sig) and sig[i + 1].string == "+"
+                and val(sig[i + 2]) is not None):
+            acc, j = val(t), i
+            while (j + 2 < len(sig) and sig[j + 1].string == "+"
+                   and val(sig[j + 2]) is not None):
+                acc += val(sig[j + 2])
+                j += 2
+            out.append(unit(S, '"' + acc + '"', t.start))
+            i = j + 1
+            continue
+        out.append(t)
+        i += 1
+    return out
+
+
+# A shell quoted span: an ANSI-C `$'...'` (backslash escapes ARE processed,
+# so `$'pdf\x6catex'` is `pdflatex`), a double-quoted or a single-quoted one.
+SH_QUOTED = re.compile(r"""\$'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\"|'[^']*'""")
+_ANSI_C = re.compile(r"\$'((?:[^'\\]|\\.)*)'")
+_ANSI_ESC = re.compile(r"\\(x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{1,4}|U[0-9A-Fa-f]{1,8}|"
+                       r"[0-7]{1,3}|c.|.)", re.S)
+_ANSI_SIMPLE = {"a": "\a", "b": "\b", "e": "\x1b", "E": "\x1b", "f": "\f",
+                "n": "\n", "r": "\r", "t": "\t", "v": "\v"}
+
+
+def _ansi_c_decode(body: str) -> str:
+    """The text bash makes of the body of `$'...'`."""
+    def one(m):
+        e = m.group(1)
+        if e[0] in "xuU":
+            return chr(int(e[1:], 16))
+        if e[0] in "01234567":
+            return chr(int(e, 8) & 0xFF)
+        if e[0] == "c" and len(e) == 2:
+            return chr(ord(e[1]) & 0x1F)
+        return _ANSI_SIMPLE.get(e, e)
+    return _ANSI_ESC.sub(one, body)
+
+
+def _sh_quoted_inner(tok: str) -> str:
+    """The text a quoted span stands for (ANSI-C escapes decoded)."""
+    if tok.startswith("$'"):
+        return _ansi_c_decode(tok[2:-1])
+    return tok[1:-1]
+
+
+# A `case` label at the start of a command (`tex)  cp "$f" "$d" ;;`): a
+# PATTERN, not a command, so it is removed before the command is scanned.
+SH_CASE_LABEL = re.compile(r"^\s*[A-Za-z0-9_.*?|\[\]\"'-]+\)(\s|$)")
 
 
 def scan_shell(text: str, allow: tuple = ()) -> list[tuple[int, str]]:
@@ -273,6 +401,7 @@ def scan_shell(text: str, allow: tuple = ()) -> list[tuple[int, str]]:
             continue
         hit = False
         for seg in _sh_commands(code):
+            seg = SH_CASE_LABEL.sub(" ", seg, count=1)
             if SH_MESSAGE.match(seg):
                 continue                       # this ONE command is a message
             unquoted = SH_QUOTED.sub('""', seg)
@@ -283,11 +412,15 @@ def scan_shell(text: str, allow: tuple = ()) -> list[tuple[int, str]]:
             if _sh_assembled_engine(seg):
                 hit = True
             for m in SH_QUOTED.finditer(seg):
-                inner = m.group(0)[1:-1]
+                inner = _sh_quoted_inner(m.group(0))
                 subscript = (seg[:m.start()].endswith("[")
                              and seg[m.end():].startswith("]"))
-                if not subscript and (ENGINE_LITERAL.match(inner)
-                                      or ENGINE_CMDLINE.match(inner)):
+                if not subscript and _is_engine_literal(inner):
+                    hit = True
+            # A format selector as a bare word (`-fmt=pdflatex`, `--fmt`,
+            # `\&pdflatex`): an argument only a TeX engine takes.
+            for w in SH_WORD.findall(SH_QUOTED.sub('""', seg)):
+                if FMT_SELECTOR.match(w.lstrip("\\")):
                     hit = True
         if hit:
             hits.append((n, line.strip()))
@@ -307,18 +440,20 @@ def _sh_assembled_engine(seg: str) -> bool:
     for raw in SH_WORD.findall(seg):
         if not any(c in raw for c in "\"'\\"):
             continue
+        # `$'...'` first: shlex knows no ANSI-C quoting (C-91).
+        dec = _ANSI_C.sub(lambda m: shlex.quote(_ansi_c_decode(m.group(1))), raw)
         try:
-            w = "".join(shlex.split(raw, posix=True))
+            w = "".join(shlex.split(dec, posix=True))
         except ValueError:
             continue
         m = BARE_TOKEN.search(w)
-        if m and m.group(2) not in raw:
+        if (m and m.group(2) not in raw) or FMT_SELECTOR.match(w):
             return True
     return False
 
 
 # One shell word, quotes and escapes kept: the unit the shell dequotes.
-SH_WORD = re.compile(r"""(?:"(?:[^"\\]|\\.)*"|'[^']*'|\\.|[^\s"'\\])+""")
+SH_WORD = re.compile(r"""(?:\$'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|'[^']*'|\\.|[^\s"'\\])+""")
 
 
 def _sh_commands(code: str) -> list[str]:
@@ -341,7 +476,7 @@ def scan_other(text: str) -> list[tuple[int, str]]:
     for n, line in enumerate(text.split("\n"), 1):
         for m in OTHER_LITERAL.finditer(line):
             inner = m.group(1) if m.group(1) is not None else m.group(2)
-            if ENGINE_LITERAL.match(inner) or ENGINE_CMDLINE.match(inner):
+            if _is_engine_literal(inner):
                 hits.append((n, line.strip()))
                 break
     return hits

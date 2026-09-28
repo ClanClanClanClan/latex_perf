@@ -62,7 +62,9 @@ Usage as a tool:
                                   run ONE pdflatex in the current directory
                                   through the oracle; exit with its rc (124 on
                                   timeout, INFRA_RC=125 when the oracle itself
-                                  failed). The shim the shell graders use.
+                                  failed). The shim the shell graders use, on
+                                  both backends; its run gets the protocol's
+                                  environment (graded_env), never the host's.
   _oracle.py vet --dir D [--output F -- ARGS...]
                                   shell graders: refuse (INFRA_RC) a run when
                                   D is short of space or F shows pdfTeX failing
@@ -186,12 +188,87 @@ def oracle_tex_env(td) -> dict:
     return dict(os.environ, **oracle_tex_vars(td))
 
 
+# ONE GRADING PROTOCOL, IMPOSED BY THE ORACLE, NOT CHOSEN BY THE CALLER
+# (OPEN-118 known limit (b), C-91). Until 2026-09-28 ORACLE_TEX_VARS reached a
+# graded run only when the CALLER put it there: the Python graders did (through
+# tex_env), but the `_oracle.py pdflatex` shim passed the host environment, so
+# false_ready_oracle.sh and diff_compile_check.sh graded with pdfTeX's defaults
+# (openin_any/openout_any unset, no SOURCE_DATE_EPOCH) or with whatever the
+# host exported; on the native backend (CI) they ran `pdflatex` bare; and
+# check_apply_fixes_roundtrip passed `dict(os.environ)`, with neither the
+# variables nor a private TEXMFVAR. So `graded_env` is applied INSIDE
+# run_pdflatex, the one path every graded run takes (run_once,
+# run_to_fixpoint, the shim), and a graded run's TeX-shaping variables are
+# exactly:
+#   * ORACLE_TEX_VARS, imposed over any value the caller's dict held (a host
+#     `SOURCE_DATE_EPOCH=1700000000` or `openout_any=a` is overridden, not
+#     forwarded);
+#   * the private TEXMFHOME/TEXMFVAR the caller names, which are REQUIRED (a
+#     run without them would share the container's persistent TEXMFVAR);
+#   * nothing else: every other `_ENV_FORWARD` variable (FORCE_SOURCE_DATE,
+#     max_print_line, error_line, half_error_line, TEXINPUTS, BIBINPUTS,
+#     BSTINPUTS) is DROPPED. No grader sets one, so one in the dict came from
+#     the host, and it would change a grade (FORCE_SOURCE_DATE=1 makes \today
+#     follow SOURCE_DATE_EPOCH) or the log's line breaks.
+# Override, not refuse: the shell graders discard the shim's stderr, so a
+# refusal would reach the user as an unexplained "not graded" for an
+# environment variable they may not know they export (SOURCE_DATE_EPOCH is
+# common in reproducible-build shells). The shim reports what it overrode on
+# stderr. run_engine (gen_contract.py, not a grader) is unaffected: its
+# environment is EXACTLY what the caller passes, with documented overrides.
+_GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR")
+
+
+def graded_env(env: dict | None) -> dict:
+    """The environment of a GRADED pdflatex run built from `env`: its non-TeX
+    variables (PATH on the native backend), its private TEXMFHOME/TEXMFVAR
+    (required), ORACLE_TEX_VARS imposed, every other TeX-shaping variable
+    dropped. See the block above."""
+    env = dict(env or {})
+    missing = [k for k in _GRADING_TEXMF if not env.get(k)]
+    if missing:
+        raise OracleError(
+            f"a graded run needs a private {'/'.join(missing)} (oracle_tex_vars "
+            f"or tex_env): without one the container's persistent TEXMFVAR "
+            f"carries state from run to run")
+    out = {k: v for k, v in env.items() if not _ENV_FORWARD.match(k)}
+    out.update({k: env[k] for k in _GRADING_TEXMF if k in env})
+    out.update(ORACLE_TEX_VARS)
+    return out
+
+
+def host_tex_overrides(environ=None) -> list[str]:
+    """The host TeX-shaping variables a graded run does NOT inherit (overridden
+    or dropped by graded_env), as `NAME=value` strings, for the shim's note."""
+    environ = os.environ if environ is None else environ
+    return sorted(f"{k}={v}" for k, v in environ.items()
+                  if _ENV_FORWARD.match(k) and k != "L0_VALIDATORS"
+                  and not (k in ORACLE_TEX_VARS and v == ORACLE_TEX_VARS[k]))
+
+
 # The TeX engines the oracle runs. `pdflatex` is the grading engine; `pdftex`
 # is the same binary without a format, which gen_contract.py runs as INITEX
 # (`pdftex -ini`) to enumerate the engine's primitives and trace the kernel.
 ENGINE_PDFLATEX = "pdflatex"
 ENGINE_PDFTEX = "pdftex"
 ENGINES = (ENGINE_PDFLATEX, ENGINE_PDFTEX)
+# Every TeX engine binary of the image (the format-less engines and the
+# format-named links TeX Live installs), for image_command's refusal: a
+# non-TeX image command must never start one, as argv[0] or as an argument
+# another program runs (`xargs ... pdftex`), and no format selector (`&fmt`)
+# may appear in its argv.
+TEX_ENGINE_BINARIES = frozenset((
+    "tex", "etex", "initex", "virtex", "pdftex", "pdfetex", "pdflatex",
+    "latex", "latexmk", "xetex", "xelatex", "luatex", "lualatex", "luahbtex",
+    "luajittex", "dvilualatex", "dviluatex", "ptex", "eptex", "uptex", "euptex",
+    "platex", "uplatex", "aleph", "lamed", "hitex", "amstex", "pdfcsplain",
+    "csplain", "mptopdf"))
+# argv[0] values image_command refuses because they run arbitrary commands
+# (`sh -c 'pdftex ...'`): a shell or interpreter would hide the engine from
+# the argument check above.
+_IMAGE_SHELLS = frozenset(("sh", "bash", "dash", "zsh", "ksh", "busybox", "env",
+                           "python", "python3", "perl", "lua", "texlua",
+                           "timeout", "nice", "nohup", "stdbuf", "setsid"))
 
 _DOCKER_CANDIDATES = ("docker", "/opt/homebrew/bin/docker", "/usr/local/bin/docker")
 
@@ -497,8 +574,11 @@ class _Base:
     # -- running ----------------------------------------------------------
     def run_pdflatex(self, cwd: Path, args: list[str], env: dict | None,
                      timeout: int) -> tuple[int, bytes, bool]:
-        """ONE pdflatex run. Returns (rc, combined output, timed_out)."""
-        return self._exec(Path(cwd), ENGINE_PDFLATEX, args, env, timeout)
+        """ONE graded pdflatex run, in the protocol's environment
+        (`graded_env(env)`: ORACLE_TEX_VARS imposed, `env`'s private
+        TEXMFHOME/TEXMFVAR required, no other TeX variable). Returns (rc,
+        combined output, timed_out)."""
+        return self._exec(Path(cwd), ENGINE_PDFLATEX, args, graded_env(env), timeout)
 
     def _exec(self, cwd: Path, engine: str, args: list[str], env: dict | None,
               timeout: int) -> tuple[int, bytes, bool]:
@@ -538,10 +618,15 @@ class _Base:
         grade and never a TeX job (an engine is refused: use run_engine).
         Returns (rc, stdout, stderr); a caller must treat a non-zero rc as a
         failure of the oracle, never as data."""
-        if not argv or Path(argv[0]).name in ENGINES + ("latexmk", "xelatex",
-                                                        "lualatex", "tex", "etex"):
-            raise OracleError(f"image_command runs no TeX engine: {argv[:1]}; "
-                              f"use run_engine")
+        if not argv or Path(str(argv[0])).name in _IMAGE_SHELLS:
+            raise OracleError(f"image_command runs no shell or interpreter "
+                              f"({argv[:1]}): it could start a TeX engine this "
+                              f"check cannot see; use run_engine")
+        eng = [a for a in map(str, argv) if Path(a).name in TEX_ENGINE_BINARIES
+               or a.startswith("&")]
+        if eng:
+            raise OracleError(f"image_command runs no TeX engine and takes no "
+                              f"format selector: {eng[:3]}; use run_engine")
         return self._image_command(list(argv), cwd, timeout)
 
     def _image_command(self, argv, cwd, timeout):
@@ -988,17 +1073,20 @@ def main(argv: list[str]) -> int:
             timeout = 120
             if rest[:1] == ["--timeout"]:
                 timeout, rest = int(rest[1]), rest[2:]
-            # The shell graders pass the HOST environment. Give each run the
-            # same private TEXMFHOME/TEXMFVAR the Python graders get from
-            # tex_env(), unless the caller set its own (validated inside the
-            # work root): otherwise the container's default TEXMFVAR
-            # (/tmp/.texlive2026 with HOME=/tmp) would carry state, e.g. fonts
-            # generated by mktexpk, from one run and one grader to the next.
-            env = dict(os.environ)
+            # The shell graders' runs get EXACTLY the Python graders'
+            # environment (C-91): a private TEXMFHOME/TEXMFVAR per run (else
+            # the container's default TEXMFVAR, /tmp/.texlive2026 with
+            # HOME=/tmp, would carry state such as mktexpk fonts from one run
+            # and one grader to the next) and ORACLE_TEX_VARS. Host values of
+            # any TeX-shaping variable are overridden or dropped, never
+            # forwarded (run_pdflatex applies graded_env); say which.
+            dropped = host_tex_overrides()
+            if dropped:
+                print(f"[oracle] note: the graded run does not inherit the "
+                      f"host's {', '.join(dropped)} (protocol: "
+                      f"{ORACLE_TEX_VARS})", file=sys.stderr)
             with o.tempdir(prefix="lp-oracle-shim-") as td:
-                env.setdefault("TEXMFHOME", str(Path(td) / "th"))
-                env.setdefault("TEXMFVAR", str(Path(td) / "tv"))
-                rc, out, to = o.run_pdflatex(Path.cwd(), rest, env, timeout)
+                rc, out, to = o.run_pdflatex(Path.cwd(), rest, o.tex_env(td), timeout)
             sys.stdout.buffer.write(out)
             return 124 if to else rc
     except BaseException as e:  # noqa: BLE001 -- every exception, see below

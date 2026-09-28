@@ -20,7 +20,7 @@
     "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
     "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
     "backend": "container",
-    "baseline_note": "Oracle-baseline change (ADR-012 decision 7, OPEN-118): re-graded 2026-09-27 under the pinned image through scripts/tools/_oracle.py (container backend, aarch64) with check_apply_fixes_roundtrip.py REQUIRE_PDFLATEX=1: 78 documents x 8 cells, the 3 known_broken rows reproduced exactly, PASS. Re-run 2026-09-27 after the adversarial review (compiles = rc 0 AND a PDF, work-file deletes through the container): 78 documents x 8 cells, fixer rewrote 90, the same 3 known_broken rows, PASS."
+    "baseline_note": "Oracle-baseline change (ADR-012 decision 7, OPEN-118): re-graded 2026-09-27 under the pinned image through scripts/tools/_oracle.py (container backend, aarch64) with check_apply_fixes_roundtrip.py REQUIRE_PDFLATEX=1: 78 documents x 8 cells, the 3 known_broken rows reproduced exactly, PASS. Re-run 2026-09-27 after the adversarial review (compiles = rc 0 AND a PDF, work-file deletes through the container): 78 documents x 8 cells, fixer rewrote 90, the same 3 known_broken rows, PASS. Re-run 2026-09-28 under the ONE grading environment (C-91: the round-trip gate used to pass the host environment, i.e. no ORACLE_TEX_VARS and the container's persistent TEXMFVAR; it now passes tex_env and the oracle imposes the protocol), at origin/main 0a038436 before any commit, side by side with the pre-fix gate: 78 documents x 8 cells, fixer rewrote 90, the same 3 known_broken rows, PASS in both."
   },
   "known_broken": [
     {

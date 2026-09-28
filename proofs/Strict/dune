@@ -1,0 +1,8 @@
+; The strict-tier kernel (ADR-012, milestone M2 phase 1; docs/v27/STRICT_TIER_DESIGN.md
+; §A.2 and §C). Its own theory, like proofs/generated, so the kernel depends on the
+; Coq standard library only and on none of the heuristic tier's proofs (design §C.4:
+; a strict verdict never cites them).
+
+(coq.theory
+ (name LaTeXPerfectionist.Strict)
+ (theories Coq))

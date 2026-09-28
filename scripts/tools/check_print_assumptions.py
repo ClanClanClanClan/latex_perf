@@ -31,6 +31,27 @@ For each capstone, `Print Assumptions` must print exactly "Closed under the glob
 context". Anything else — an axiom list, a Section variable, a missing constant — is
 a failure, and the offending assumptions are echoed so the break is actionable.
 
+It also pins, by coqc's own output: the STATEMENT of the strict bridge corollary
+(`Check`) and the BODY of the premise it names (`Print Faithful`, BODY_PINS).
+The body pin exists because a pinned statement cannot see what a premise
+MEANS: the OPEN-121 final review redefined Faithful as `oracle_ok (render d)
+<-> decide C d = ProvenReady` (the corollary then proves decide = decide),
+and `Check` printed the same statement while Print Assumptions stayed Closed.
+`Print` shows the ELABORATED body with SHORTEST unambiguous names, so a
+top-level local shadowing of `Runs` or `flatten_doc` changes the output but a
+shadow MODULE named `Semantics` does not (C-87); the body must further
+mention Semantics.Runs and no Decide.* constant. The textual twin of this pin
+(pure, kill-tested) is check 10 of check_strict_kernel.py.
+
+`Print` resolves names but prints them SHORT, so a shadow module named
+`Semantics` inside Bridge.v prints `Semantics.Runs` too (re-review MEDIUM-1).
+The last arm (CONVERTIBILITY_PINS) therefore asks the KERNEL: `eq_refl :
+Faithful = <term>` with every name fully qualified, in a file that Requires
+the library without Importing it. The same arm checks the TYPES of both
+bridge corollaries against fully qualified statements (re-review 2, HIGH-1,
+C-88: a shadow `in_strict_doc := False` in Bridge.v printed the pinned
+statement), and `Print Module` must list exactly Bridge's three constants.
+
 USAGE
     python3 scripts/tools/check_print_assumptions.py [--repo .] [--build]
 
@@ -43,6 +64,7 @@ Exit 0 if every capstone is closed; exit 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -120,7 +142,169 @@ CAPSTONES = [
         "LaTeXPerfectionist.LanguageContract",
         "the LP-Core tier decision is sound (feature-list -> tier step).",
     ),
+    # The strict-tier kernel L_S0 (ADR-012, milestone M2 phase 1; proofs/Strict).
+    (
+        "LaTeXPerfectionist.Strict.Decide.strict_decider_exact",
+        "LaTeXPerfectionist.Strict.Decide",
+        "ADR-012 trust layer (2): the extracted decider equals the declarative "
+        "semantics Runs in BOTH directions (READY iff Runs Compiles; NOT-READY r l "
+        "iff Runs Fatal r l). Every PROVEN verdict of the strict tier rests on it.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.runs_deterministic",
+        "LaTeXPerfectionist.Strict.Decide",
+        "the semantics Runs gives a document at most one outcome (proved on the "
+        "relation itself, not through the decider).",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.runs_total",
+        "LaTeXPerfectionist.Strict.Decide",
+        "every strict document has an outcome, so the decider never answers "
+        "NotStrict inside the tier.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.in_strict_dec",
+        "LaTeXPerfectionist.Strict.Decide",
+        "membership in the strict fragment is decidable.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Bridge.strict_ready_iff_pdflatex",
+        "LaTeXPerfectionist.Strict.Bridge",
+        "ADR-012 bridge: under the named premise Faithful (a Definition, never an "
+        "Axiom), PROVEN READY iff the oracle compiles. An Axiom here would make "
+        "faithfulness an unstated assumption of every strict verdict.",
+    ),    (
+        "LaTeXPerfectionist.Strict.Bridge.strict_not_ready_pdflatex",
+        "LaTeXPerfectionist.Strict.Bridge",
+        "the NOT-READY side of the bridge under the same premise (OPEN-121 "
+        "re-review 2: it was neither Closed-checked nor statement-pinned).",
+    ),
 ]
+
+# The bridge corollary's STATEMENT, pinned (design §0: "a new gate checks the
+# corollary's statement textually, so that Faithful is its only non-structural
+# premise"). Print Assumptions cannot see a premise: a premise is part of the
+# statement, and a Closed theorem may still assume anything in its hypotheses.
+# `Check` prints the statement; whitespace is normalised before comparing.
+STATEMENT_PINS = [
+    (
+        "LaTeXPerfectionist.Strict.Bridge.strict_ready_iff_pdflatex",
+        "LaTeXPerfectionist.Strict.Syntax LaTeXPerfectionist.Strict.Contract "
+        "LaTeXPerfectionist.Strict.Decide LaTeXPerfectionist.Strict.Bridge",
+        "forall (oracle_ok : list Ascii.ascii -> Prop) (C : contract) (d : doc), "
+        "Faithful oracle_ok C -> in_strict_doc C d -> "
+        "decide C d = ProvenReady <-> oracle_ok (render d)",
+    ),
+]
+
+
+# (constant, modules to Require, the pinned `Print` output up to `Arguments`,
+#  identifiers the body MUST mention, identifier prefixes it must NOT mention)
+BODY_PINS = [
+    (
+        "LaTeXPerfectionist.Strict.Bridge.Faithful",
+        "LaTeXPerfectionist.Strict.Bridge",
+        "Faithful = fun (oracle_ok : list Ascii.ascii -> Prop) (C : Contract.contract) "
+        "=> forall d : Syntax.doc, Decide.in_strict_doc C d -> "
+        "oracle_ok (Syntax.render d) <-> "
+        "Semantics.Runs C Semantics.init (Syntax.flatten_doc d) Semantics.Compiles "
+        ": (list Ascii.ascii -> Prop) -> Contract.contract -> Prop",
+        ["Semantics.Runs"],
+        # Decide.in_strict_doc is the structural membership premise; any other
+        # Decide.* constant (decide, run, step, ...) is the decider itself.
+        ["Decide.decide", "Decide.run", "Decide.step", "Semantics.step",
+         "Semantics.run"],
+    ),
+]
+
+# (constant, module to Require WITHOUT Import, the term it must be convertible
+#  to, every name FULLY QUALIFIED). The printed body pin above is not enough:
+# the OPEN-121 re-review (MEDIUM-1) put `Module Semantics. Definition Runs ...
+# := run C s ts = Some o. End Semantics. Import Semantics.` on Bridge.v's
+# Require line, and coqc's `Print` still showed `Semantics.Runs` -- resolved to
+# the shadow LaTeXPerfectionist.Strict.Bridge.Semantics.Runs. A kernel
+# `eq_refl` against fully qualified names cannot be satisfied by a shadow: the
+# shadow's constant is a different constant, and it unfolds to the decider.
+_S = "LaTeXPerfectionist.Strict."
+_LIST_ASCII = "Coq.Init.Datatypes.list Coq.Strings.Ascii.ascii"
+# (constant, module to Require WITHOUT Import, kind, term). kind "body": the
+# constant must be convertible to the term (`eq_refl : c = term`); kind
+# "type": the constant must have the term as its type (`c : term`, kernel
+# conversion). Every name is FULLY QUALIFIED.
+#
+# The "type" rows exist because the printed STATEMENT_PINS above compare a
+# RENDERING of the statement, the class C-87 records for the body: the
+# OPEN-121 re-review 2 (HIGH-1) defined a shadow `in_strict_doc := False`
+# inside Bridge.v, after Faithful and before the corollary (hidden from the
+# textual check by a `Time` prefix, and separately by a comment that holds a
+# string with a comment delimiter), and `Check` still printed
+# `in_strict_doc C d` -- the corollary was vacuous (premise False) and every
+# printed pin passed. Against a fully qualified type in a Require-only file,
+# a shadow constant is another constant and does not convert.
+CONVERTIBILITY_PINS = [
+    (
+        _S + "Bridge.Faithful",
+        _S + "Bridge",
+        "body",
+        f"fun (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}Contract.contract) => "
+        f"forall d, {_S}Decide.in_strict_doc C d -> "
+        f"(oracle_ok ({_S}Syntax.render d) <-> "
+        f"{_S}Semantics.Runs C {_S}Semantics.init "
+        f"({_S}Syntax.flatten_doc d) {_S}Semantics.Compiles)",
+    ),
+    (
+        _S + "Bridge.strict_ready_iff_pdflatex",
+        _S + "Bridge",
+        "type",
+        f"forall (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}Contract.contract) (d : {_S}Syntax.doc), "
+        f"{_S}Bridge.Faithful oracle_ok C -> "
+        f"{_S}Decide.in_strict_doc C d -> "
+        f"({_S}Decide.decide C d = {_S}Decide.ProvenReady "
+        f"<-> oracle_ok ({_S}Syntax.render d))",
+    ),
+    (
+        _S + "Bridge.strict_not_ready_pdflatex",
+        _S + "Bridge",
+        "type",
+        f"forall (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}Contract.contract) (d : {_S}Syntax.doc) "
+        f"(r : {_S}Contract.reason) (l : Coq.Init.Datatypes.nat), "
+        f"{_S}Bridge.Faithful oracle_ok C -> "
+        f"{_S}Decide.in_strict_doc C d -> "
+        f"{_S}Decide.decide C d = {_S}Decide.ProvenNotReady r l -> "
+        f"Coq.Init.Logic.not (oracle_ok ({_S}Syntax.render d))",
+    ),
+
+]
+
+# The kernel's own list of what Bridge.v defines (`Print Module`, one field
+# per line at the first indentation of `Struct`): exactly these, so a shadow
+# constant, module, inductive or axiom inside Bridge.v fails here whatever
+# the text of Bridge.v looks like (re-review 2, HIGH-1). A Notation is not a
+# module field; it cannot reach the Require-only kernel pins above.
+MODULE_FIELDS = (
+    _S + "Bridge",
+    [("Definition", "Faithful"),
+     ("Parameter", "strict_ready_iff_pdflatex"),
+     ("Parameter", "strict_not_ready_pdflatex")],
+)
+
+
+def module_fields(out: str) -> list[tuple[str, str]] | None:
+    """(kind, name) of every field of a `Print Module` of a plain Struct, or
+    None if the output is not a plain `Module M := Struct ... End`."""
+    lines = [ln for ln in out.splitlines() if ln.strip()]
+    text = " ".join(" ".join(lines).split())
+    if not re.match(r"^Module \S+ := Struct ", text) or not text.endswith(" End"):
+        return None
+    fields = []
+    for ln in lines:
+        m = re.match(r"^ {5}(\S+) (\S+)", ln)
+        if m:
+            fields.append((m.group(1), m.group(2)))
+    return fields
 
 
 def main() -> int:
@@ -129,6 +313,10 @@ def main() -> int:
     ap.add_argument(
         "--build", action="store_true", help="run `dune build proofs` before checking"
     )
+    ap.add_argument(
+        "--vodir", default=None,
+        help="built proofs directory (default <repo>/_build/default/proofs); "
+             "lets a kill-test point the gate at a mutated build")
     args = ap.parse_args()
     repo = Path(args.repo).resolve()
 
@@ -143,7 +331,8 @@ def main() -> int:
             print("[print-assumptions] FAIL: `dune build proofs` failed", file=sys.stderr)
             return 1
 
-    vodir = repo / "_build" / "default" / "proofs"
+    vodir = (Path(args.vodir).resolve() if args.vodir
+             else repo / "_build" / "default" / "proofs")
     gendir = vodir / "generated"
     if not vodir.is_dir():
         print(
@@ -196,6 +385,99 @@ def main() -> int:
                     f"      why this theorem matters: {why}\n"
                     f"      Coq reported:\n      {reported}"
                 )
+
+        for idx, (thm, module, want) in enumerate(STATEMENT_PINS):
+            src = workdir / f"ST{idx}.v"
+            src.write_text(f"Require Import {module}.\nCheck {thm}.\n", encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            out = proc.stdout or ""  # Coq's warnings go to stderr
+            # `Check` prints "<name>\n     : <statement>"; keep the statement.
+            got = " ".join(out.split(":", 1)[1].split()) if ":" in out else ""
+            if proc.returncode != 0 or got != " ".join(want.split()):
+                failures.append(
+                    f"{thm}: statement is not the pinned one (the bridge's premises "
+                    f"changed; Faithful must stay its only non-structural premise).\n"
+                    f"      pinned: {' '.join(want.split())}\n      Coq:    {got or out.strip()[:400]}"
+                )
+            else:
+                print(f"[print-assumptions] OK   {thm}: statement pinned")
+
+        for idx, (const, module, want, must, mustnot) in enumerate(BODY_PINS):
+            src = workdir / f"BP{idx}.v"
+            src.write_text(f"Require Import {module}.\nPrint {const}.\n", encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            out = proc.stdout or ""  # Coq's warnings go to stderr
+            got = " ".join(out.split("Arguments", 1)[0].split())
+            short = const.rsplit(".", 1)[1]
+            if proc.returncode != 0 or got != " ".join(want.split()):
+                failures.append(
+                    f"{short}: body is not the pinned one (a premise's statement "
+                    f"can stay pinned while its meaning changes; OPEN-121 review M-1).\n"
+                    f"      pinned: {' '.join(want.split())}\n"
+                    f"      Coq:    {got or out.strip()[:400]}"
+                )
+            else:
+                print(f"[print-assumptions] OK   {const}: body pinned")
+            idents = set(re.findall(r"[A-Za-z_][A-Za-z_0-9'.]*", got))
+            for m in must:
+                if m not in idents:
+                    failures.append(f"{short}: body does not mention {m}")
+            bad = sorted(i for i in idents for b in mustnot if i == b)
+            if bad:
+                failures.append(f"{short}: body mentions {bad} -- the decider must "
+                                f"never be a premise's content")
+
+        for idx, (const, module, kind, term) in enumerate(CONVERTIBILITY_PINS):
+            src = workdir / f"CV{idx}.v"
+            # Require, never Import: nothing from the checked library may
+            # enter the short-name space the pinned term is read in.
+            probe = (f"(eq_refl : {const} = {term})" if kind == "body"
+                     else f"({const} : {term})")
+            src.write_text(f"Require {module}.\nCheck {probe}.\n", encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            short = const.rsplit(".", 1)[1]
+            what = "body" if kind == "body" else "statement"
+            if proc.returncode != 0:
+                err = [ln for ln in (proc.stderr or "").splitlines()
+                       if ln.strip() and "overriding-logical-loadpath" not in ln]
+                tail = "\n      ".join(err[-12:])
+                failures.append(
+                    f"{short}: {what} not convertible to the pinned fully qualified "
+                    f"{what} (a shadowed name prints the same but is another "
+                    f"constant; OPEN-121 re-reviews MEDIUM-1 and HIGH-1).\n      {tail}")
+            else:
+                print(f"[print-assumptions] OK   {const}: {what} convertible to the "
+                      f"pinned fully qualified {what}")
+
+        mod, want_fields = MODULE_FIELDS
+        src = workdir / "PM.v"
+        src.write_text(f"Require {mod}.\nPrint Module {mod}.\n", encoding="utf-8")
+        proc = subprocess.run(
+            [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+             "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+            cwd=workdir, capture_output=True, text=True,
+        )
+        got_fields = module_fields(proc.stdout or "") if proc.returncode == 0 else None
+        if got_fields != want_fields:
+            failures.append(
+                f"{mod}: defines other than {want_fields} (OPEN-121 re-review 2, "
+                f"HIGH-1: a constant defined in Bridge.v can shadow what the bridge "
+                f"reads).\n      Coq: {got_fields if got_fields is not None else (proc.stdout or proc.stderr or '').strip()[:400]}")
+        else:
+            print(f"[print-assumptions] OK   {mod}: fields are exactly "
+                  f"{[n for _, n in want_fields]}")
 
     if failures:
         print("\n[print-assumptions] FAIL — capstone(s) depend on unproved assumptions:\n")

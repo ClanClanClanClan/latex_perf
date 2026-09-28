@@ -573,7 +573,261 @@ def contract_drop_grading_pass3(text: str) -> str:
 
 KERNEL_FILE = "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json"
 
+
+def strict_family_one_disagrees(text: str) -> str:
+    """ADR-012 M2: a Runs constructor whose probe family has one probe the
+    oracle disagrees with."""
+    d = json.loads(text)
+    f = d["by_family"]["R_script_double"]
+    assert f["agree"] == f["n"] >= 1, "rule_probes drifted; update registry"
+    f["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_differential_one_disagreement(text: str) -> str:
+    d = json.loads(text)
+    assert d["summary"]["disagree"] == 0, "differential drifted; update registry"
+    d["summary"]["disagree"] = 1
+    d["summary"]["agree"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def _first_admitted(d: dict, text_ok: bool = False) -> str:
+    for n, h in sorted(d["signatures"].items()):
+        if not text_ok or not isinstance(h["text"], list):
+            return n
+    raise AssertionError("signature file drifted; update registry")
+
+
+def strict_admitted_not_inert(text: str) -> str:
+    """C-85 / R-INERT: an admitted name whose recorded meaning is a
+    conditional primitive."""
+    d = json.loads(text)
+    d["meanings"][_first_admitted(d)] = "\\iftrue"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_transparent(text: str) -> str:
+    """C-85: an admitted name that is transparent after a $ in display math
+    (its display-follower grade compiles)."""
+    d = json.loads(text)
+    d["evidence"][_first_admitted(d)]["D-FOLLOW-DOLLAR"] = [0, True, "", None]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_global_resource(text: str) -> str:
+    """C-85: an admitted name that fails under repetition (\\tableofcontents)."""
+    d = json.loads(text)
+    d["evidence"][_first_admitted(d, text_ok=True)]["R-TEXT"] = [
+        1, False, "! No room for a new \\write .", 16]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_family_missing(text: str) -> str:
+    d = json.loads(text)
+    d["evidence"][_first_admitted(d)].pop("D-FOLLOW-CHAR")
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_interleave_disagrees(text: str) -> str:
+    d = json.loads(text)
+    r = d["interleaving"]["rounds"]
+    assert r and r[-1]["disagree"] == 0, "signature file drifted; update registry"
+    r[-1]["disagree"] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_matrix_cell_dropped(text: str) -> str:
+    """C-85 / check 7: no probe exercises `$` in display math followed by a
+    character."""
+    d = json.loads(text)
+    cell = "display|dollar|char|-"
+    before = len(d["probes"])
+    d["probes"] = [r for r in d["probes"] if cell not in r.get("branches", [])]
+    assert len(d["probes"]) < before, "rule_probes drifted; update registry"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_bound_scope_dropped(text: str) -> str:
+    d = json.loads(text)
+    assert "not over L_S0" in d["summary"]["upper_bound_95"]["scope"], \
+        "differential drifted; update registry"
+    d["summary"]["upper_bound_95"]["scope"] = "the disagreement rate"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_signature_candidate_dropped(text: str) -> str:
+    """A rejected candidate silently removed: the candidate set no longer is
+    the selection rule's."""
+    d = json.loads(text)
+    assert d["rejected"], "signature file drifted; update registry"
+    d["rejected"].pop(sorted(d["rejected"])[0])
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_faithful_is_decide(text: str) -> str:
+    """The final review's MEDIUM-1 redefinition, verbatim: Faithful's body
+    becomes `oracle_ok (render d) <-> decide C d = ProvenReady` and the
+    corollary's proof `symmetry; apply HF; exact Hs` -- the decide=decide
+    tautology. coqc printed the same pinned statement and Print Assumptions
+    stayed Closed; only the body pin can see it."""
+    old_body = "(oracle_ok (render d) <-> Runs C init (flatten_doc d) Compiles)."
+    old_proof = ("  destruct (strict_decider_exact C d Hs) as [Hready _].\n"
+                 "  rewrite Hready. symmetry. apply HF. exact Hs.\n")
+    assert text.count(old_body) == 1 and text.count(old_proof) == 1, \
+        "Bridge.v drifted; update registry"
+    return (text.replace(old_body, "(oracle_ok (render d) <-> decide C d = ProvenReady).")
+                .replace(old_proof, "  symmetry. apply HF. exact Hs.\n"))
+
+
 REGISTRY = [
+    GateTest(
+        "check_strict_kernel",
+        [PY, f"{TOOLS}/check_strict_kernel.py", "--repo", "."],
+        "pure",
+        [
+            # The review rule of design §C.3: every Runs constructor cites
+            # its probe family.
+            Mutation("a Runs constructor loses its probe tag",
+                     "proofs/Strict/Semantics.v",
+                     r"FAIL Semantics\.v: constructor R_close_top has no",
+                     old="(* probe S0/R_close_top: }",
+                     new="(* S0/R_close_top: }"),
+            Mutation("a probe family has a disagreeing probe",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL rule_probes: family R_script_double: 1 of",
+                     transform=strict_family_one_disagrees),
+            Mutation("the differential reports a disagreement",
+                     "corpora/strict_s0/differential_v2.json",
+                     r"FAIL differential: 1 disagreement",
+                     transform=strict_differential_one_disagreement),
+            # C-85: the published bound must be one over the generator's
+            # distribution, not over L_S0.
+            Mutation("the differential's bound drops its scope",
+                     "corpora/strict_s0/differential_v2.json",
+                     r"FAIL differential: the upper bound does not state",
+                     transform=strict_bound_scope_dropped),
+            # C-85 / R-INERT: a non-inert name admitted.
+            Mutation("an admitted name is a conditional (not inert)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' is not inert: conditional",
+                     transform=strict_admitted_not_inert),
+            # C-85: a name transparent to the display-$ look-ahead admitted.
+            Mutation("an admitted name is transparent after a display $",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' is not a bad display-\$ follower",
+                     transform=strict_admitted_transparent),
+            # C-85: a name consuming a global resource admitted.
+            Mutation("an admitted name fails under repetition",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' does not compile under R-TEXT",
+                     transform=strict_admitted_global_resource),
+            Mutation("an admitted name lacks a display-follower probe",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' lacks probe families",
+                     transform=strict_admitted_family_missing),
+            Mutation("the last interleaving round disagrees",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: no interleaving round with 0 disagreements",
+                     transform=strict_interleave_disagrees),
+            # C-85 / check 7: a follower class of a look-ahead unprobed.
+            Mutation("a branch-matrix cell is not exercised",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL branch matrix: cell display\|dollar\|char\|- is not",
+                     transform=strict_matrix_cell_dropped),
+            # check 7 derives the look-ahead tokens from Runs: a rule that
+            # starts reading the next token must bring its follower cells.
+            Mutation("a Runs rule starts reading the next token",
+                     "proofs/Strict/Semantics.v",
+                     r"FAIL branch matrix: cell \w+\|end\|char\|- is not",
+                     old="    Runs C (mkState fs true p) (TEnd :: rest) Compiles",
+                     new="    Runs C (mkState fs true p) (TEnd :: TChar c :: rest) Compiles"),
+            # C-86: the capacity bounds dropped from membership.
+            Mutation("membership no longer requires the capacity bounds",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: in_strict_doc no longer requires `bounded`",
+                     old="  in_strict_toks C (flatten_doc d) /\\ bounded (flatten_doc d) = true.",
+                     new="  in_strict_toks C (flatten_doc d)."),
+            Mutation("the signature candidates are not the selection rule's",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: candidate set differs",
+                     transform=strict_signature_candidate_dropped),
+            # A semantics change without re-running the evidence.
+            Mutation("the committed extraction changes under the evidence",
+                     "latex-parse/strict/strict_kernel_extracted.ml",
+                     r"FAIL rule_probes: ran another extraction",
+                     old="[@@@warning \"-a\"]\n",
+                     new="[@@@warning \"-a\"]\n\nlet _lp_kill = ()\n"),
+            # OPEN-121 final review MEDIUM-1: Faithful redefined as the
+            # decider (a tautology) under an unchanged pinned statement.
+            Mutation("Faithful is redefined as the decider (review repro)",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: Faithful's body is not the pinned one.*"
+                     r"FAIL Bridge\.v: Faithful's body does not mention Runs.*"
+                     r"FAIL Bridge\.v: Faithful's body mentions \['decide'\]",
+                     transform=strict_faithful_is_decide),
+            Mutation("Faithful's body conjoins the decider to Runs",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: Faithful's body mentions \['decide'\]",
+                     old="Runs C init (flatten_doc d) Compiles).",
+                     new="Runs C init (flatten_doc d) Compiles /\\ "
+                         "decide C d = ProvenReady)."),
+            Mutation("Bridge.v shadows a name Faithful reads",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful",
+                     old="Definition Faithful (oracle_ok",
+                     new="Local Notation flatten_doc := flatten_doc.\n"
+                         "Definition Faithful (oracle_ok"),
+            # OPEN-121 re-review MEDIUM-1, the repro verbatim: a shadow module
+            # on the Require line. coqc's Print still showed Semantics.Runs
+            # and a line-start definer scan never looked there.
+            Mutation("a shadow Module Semantics on Bridge.v's Require line",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful: "
+                     r"\[\('Module', 'Semantics'\), \('Definition', 'Runs'\)",
+                     old="From LaTeXPerfectionist.Strict Require Import Syntax "
+                         "Contract Semantics Decide.\n",
+                     new="From LaTeXPerfectionist.Strict Require Import Syntax "
+                         "Contract Semantics Decide. Module Semantics. Definition "
+                         "Runs (C : contract) (s : Semantics.state) (ts : list tok) "
+                         "(o : outcome) : Prop := run C s ts = Some o. End "
+                         "Semantics. Import Semantics.\n"),
+            # OPEN-121 re-review 2 (HIGH-1), mutant A: a control prefix hid
+            # the shadow's keyword from a sentence-start scan.
+            Mutation("a Time-prefixed shadow in_strict_doc in Bridge.v",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful: "
+                     r"\[\('prefix', 'Time'\), \('Definition', 'in_strict_doc'\)\]",
+                     old="Corollary strict_ready_iff_pdflatex :",
+                     new="Time Definition in_strict_doc (C : contract) (d : doc) : "
+                         "Prop := False.\n\nCorollary strict_ready_iff_pdflatex :"),
+            # Mutant B: a comment holding a string with a comment delimiter.
+            # Coq sees two comments and a Definition; the kill regex needs the
+            # LEXER to see the Definition (the no-quote rule alone would not
+            # print it).
+            Mutation("a shadow in_strict_doc between two comment-strings",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful: "
+                     r"\[\('Definition', 'in_strict_doc'\)\]",
+                     old="Corollary strict_ready_iff_pdflatex :",
+                     new="(* \"(*\" *)\nDefinition in_strict_doc (C : contract) "
+                         "(d : doc) : Prop := False.\n(* \"*)\" *)\n\n"
+                         "Corollary strict_ready_iff_pdflatex :"),
+            # The allow-list itself: a sentence no keyword scan would flag.
+            Mutation("an unpinned tactic sentence in Bridge.v",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: its code is not the pinned sentence list "
+                     r"BRIDGE_SENTENCES .*not pinned: \['assumption'\]",
+                     old="apply HF. exact Hs.",
+                     new="apply HF. assumption."),
+            # A name written into the kernel instead of the contract.
+            Mutation("a control-word name is written into the Coq kernel",
+                     "proofs/Strict/Semantics.v",
+                     r"FAIL proofs/Strict/Semantics\.v: string literal 'alpha'",
+                     old="Definition init : state := mkState [] false 0.\n",
+                     new="Definition init : state := mkState [] false 0.\n"
+                         "Definition lp_kill := \"alpha\".\n"),
+        ]),
     GateTest(
         "check_gen_contract_parsers",
         [PY, f"{TOOLS}/check_gen_contract_parsers.py"],

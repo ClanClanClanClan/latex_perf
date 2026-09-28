@@ -37,6 +37,19 @@ it.) Composed per-package
 contracts and heuristic detectors are **not** in it: neither can produce or
 override a PROVEN verdict.
 
+**What the proof covers, and what is measured.** `Faithful` and the bridge
+theorem `strict_ready_iff_pdflatex` cover **READY if and only if pdflatex
+compiles**, and nothing more. The reason and the line a PROVEN NOT-READY names
+are exact with respect to the Coq semantics, but that they are pdfTeX's first
+error and its line is attested **empirically**, by the rule probes and the
+generated differential (0 disagreements on message class and line), not by the
+theorem; counting a wrong reason or location as `strict_wrong` is a check those
+probes make. "Compiles" includes the oracle's timeout: 300 s PER PASS, and the
+protocol runs up to 3 passes plus one confirming pass, so the wall-clock bound
+is (passes+1) x 300 s, at most 1,200 s (the slowest in-bounds documents
+measured take 47–55 s for the whole protocol). `Faithful`'s body is pinned by two
+gates so that it cannot be silently weakened to a statement about the decider.
+
 **Why the heuristic tier is not called proven any more.** Its `PREMISE-CERTIFIED`
 token certifies the premises of a Coq theorem over an *abstract* model, not the
 document. Measured, that reading is wrong on a few percent of certified real papers,

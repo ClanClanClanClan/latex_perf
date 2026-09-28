@@ -1,13 +1,17 @@
 # Configuration contracts (ADR-012, milestone M1)
 
-Generated data. Nothing here is written by hand and nothing reads it yet: the
-first consumer is milestone M2 (`docs/v27/STRICT_TIER_DESIGN.md` §F).
+Generated data. Nothing here is written by hand. The first consumer is the
+strict kernel of milestone M2 phase 1 (`docs/v27/STRICT_TIER_DESIGN.md` §I.4):
+its harness (`latex-parse/strict/strict_decide.ml`) builds the kernel's
+contract record from `article.json`, the kernel file and
+`strict/article-s0-signatures.json`. No product verdict reads any of it yet.
 
 | file | what |
 |---|---|
 | `<name>.json` | one configuration contract (schema `lp-configuration-contract/1`), written by `scripts/tools/gen_contract.py generate` |
 | `kernel/<arch>-<fmt sha256 prefix>.json` | the kernel closed world for that `pdflatex.fmt`: every name defined in format state, with its meaning kind, and the evidence that the set is complete (`coverage`: TeX's own hash-table count finds 0 names outside the candidates; `primitives`: the engine's primitives, counted against TeX's own count) |
 | `probes/<name>.json` | a probe-harness demonstration report (schema `lp-probe-report/1`), written by `gen_contract.py probes` |
+| `strict/article-s0-signatures.json` | the probe-attested signatures (text and math behaviour) of a rule-selected sample of the article configuration's control words, the only way a defined name enters the strict kernel L_S0 (ADR-012 M2 phase 1); written by `scripts/tools/gen_strict_signatures.py`, see its docstring for the admission rule |
 | `parser_fixtures/` | excerpts of real generator logs, the fixtures of `scripts/tools/check_gen_contract_parsers.py` (required `spec-drift`), which also checks the committed kernel file and contracts for completeness |
 
 Every TeX job ran inside the pinned image named by `TEX_IMAGE` in

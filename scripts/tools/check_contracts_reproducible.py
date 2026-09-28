@@ -50,6 +50,7 @@ import argparse
 import difflib
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -321,6 +322,14 @@ SIG_DEFINERS = (
     "\\makeatletter\\newcommand{\\lpsf}{\\@ifnextchar\\bgroup{\\textbf}{}}\\makeatother",
     # Text-only: fails in math before taking its argument.
     "\\newcommand{\\lpsg}[1]{\\ifmmode\\lpundefinedsg\\fi#1}",
+    # Version 2 (review C-82). Stores its argument for later: not TyLabel.
+    "\\newcommand{\\lpsh}[1]{\\gdef\\lpshx{#1}}",
+    # Its argument is typeset only by \\tableofcontents: not TyLabel.
+    "\\newcommand{\\lpsi}[1]{\\addtocontents{toc}{#1}}",
+    # Swallows the token after it without a parameter scan: unresolved.
+    "\\newcommand{\\lpsj}{\\string}",
+    # A key (message only): TyLabel.
+    "\\newcommand{\\lpsk}[1]{\\typeout{#1}}",
 )
 
 
@@ -334,7 +343,8 @@ def signature_kills(tex, pin, kernel, work) -> list:
     tmpd = Path(tempfile.mkdtemp(prefix="sigkill-", dir=str(tex.base)))
     cp = tmpd / "sigkill.json"
     cp.write_text(gc.canonical_json(c), encoding="utf-8")
-    res = sg.probe_names(cp, ["lpsa", "lpsc", "lpsd", "lpse", "lpsf", "lpsg", "lpnotaname"],
+    res = sg.probe_names(cp, ["lpsa", "lpsc", "lpsd", "lpse", "lpsf", "lpsg", "lpsh", "lpsi",
+                              "lpsj", "lpsk", "lpnotaname"],
                          cache=tmpd / "cache", work=work)
 
     def shape(n, i=0):
@@ -342,6 +352,17 @@ def signature_kills(tex, pin, kernel, work) -> list:
         if r.get("status") != "attested" or len(r["variants"]) <= i:
             return None
         return [a["kind"] for a in r["variants"][i]["args"]]
+    def argty(n, i=0, j=0):
+        r = res[n]
+        if r.get("status") != "attested":
+            return "unresolved"
+        return r["variants"][i]["args"][j].get("argty")
+
+    def refuted(n, i=0, j=0):
+        r = res[n]
+        if r.get("status") != "attested":
+            return None
+        return (r["variants"][i]["args"][j].get("refuted") or {}).get("argty")
     out = [
         ("sig: the probe contract is complete", c["complete"]),
         ("sig: \\lpsa (hint arity 0) is attested as one mandatory argument",
@@ -357,8 +378,42 @@ def signature_kills(tex, pin, kernel, work) -> list:
          shape("lpsg") == ["req"] and
          res["lpsg"]["variants"][0]["cells"]["text"]["allowed"] == "ok" and
          res["lpsg"]["variants"][0]["cells"]["math"]["allowed"] == "fatal"),
+        ("sig: a slot storing its payload for later is not TyLabel (review HIGH-2)",
+         argty("lpsh") is None and refuted("lpsh") == "TyLabel"),
+        ("sig: a slot typeset only by \\tableofcontents is not TyLabel (review HIGH-2)",
+         argty("lpsi") is None and refuted("lpsi") == "TyLabel"),
+        ("sig: a macro whose expansion swallows the next token is unresolved (review HIGH-1)",
+         res["lpsj"].get("status") == "unresolved"),
+        ("sig: a message-only slot is TyLabel", argty("lpsk") == "TyLabel"),
         ("sig: a name outside the closed world is E1, with no probe",
          res["lpnotaname"] == {"status": "undefined"}),
+    ]
+    # The 2026-09-27 review's own cases, on the committed article contract.
+    art = gc.REPO / "corpora" / "contracts" / "article.json"
+    rv = sg.probe_names(art, ["string", "noexpand", "index", "obeylines", "aftergroup",
+                              "ifdefined", "pmod", "section", "title", "label", "matrix",
+                              "addtocontents"], cache=tmpd / "cache-art", work=work)
+
+    def rv_arg(n, j):
+        r = rv[n]
+        if r.get("status") != "attested":
+            return "unresolved"
+        args = [a for a in r["variants"][0]["args"] if a["kind"] != "star"]
+        return args[j].get("argty")
+    out += [
+        ("sig: \\string, \\noexpand, \\index, \\obeylines, \\aftergroup, \\ifdefined are "
+         "unresolved (review HIGH-1)",
+         all(rv[n].get("status") == "unresolved" for n in ("string", "noexpand", "index",
+                                                           "obeylines", "aftergroup",
+                                                           "ifdefined"))),
+        ("sig: \\pmod's and \\matrix's arguments are TyMath (review HIGH-2)",
+         rv_arg("pmod", 0) == "TyMath" and rv_arg("matrix", 0) == "TyMath"),
+        ("sig: \\section's optional argument and \\title's argument are untyped, "
+         "\\label's is TyLabel (review HIGH-2)",
+         rv_arg("section", 0) is None and rv_arg("title", 0) is None and
+         rv_arg("label", 0) == "TyLabel"),
+        ("sig: \\addtocontents's text is untyped (typeset when the file is toc)",
+         rv_arg("addtocontents", 1) is None),
     ]
     # The cache answers the second call without TeX.
     rep: dict = {}
@@ -370,15 +425,46 @@ def signature_kills(tex, pin, kernel, work) -> list:
     return out
 
 
-def check_sidecars(repo: Path, paths: list, work, tmp: Path, sample: int = 0) -> int:
+def sample_seed(repo: Path, config_key: str, rotation: str | None) -> str:
+    """The sample's seed: the configuration and a ROTATION, by default the
+    commit checked out (review MEDIUM-2: seeded by the configuration alone,
+    the sample was the same 60 names on every run)."""
+    if not rotation:
+        r = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                           capture_output=True, text=True)
+        rotation = r.stdout.strip() or "no-commit"
+    return "%s:%s" % (config_key, rotation)
+
+
+def compare_sampled(old: dict, new: dict, names: list, envs: list) -> list:
+    """Records of the sample that differ from the committed sidecar: every
+    sampled name, every sampled environment, the calibration, and the whole
+    definer table (re-run in full: a row has no log to replay)."""
+    bad = [n for n in names if json.dumps(new["signatures"].get(n), sort_keys=True) !=
+           json.dumps(old["signatures"].get(n), sort_keys=True)]
+    bad += ["env:" + e for e in envs if json.dumps(new["environments"].get(e), sort_keys=True)
+            != json.dumps(old["environments"].get(e), sort_keys=True)]
+    if new.get("calibration") != old.get("calibration"):
+        bad.append("calibration")
+    for i, (a, b) in enumerate(zip(new["definer_rules"], old["definer_rules"])):
+        if a != b:
+            bad.append("definer:%s/%s" % (b.get("id"), b.get("context")))
+    if len(new["definer_rules"]) != len(old["definer_rules"]):
+        bad.append("definer: %d rows re-run, %d committed"
+                   % (len(new["definer_rules"]), len(old["definer_rules"])))
+    return bad
+
+
+def check_sidecars(repo: Path, paths: list, work, tmp: Path, sample: int = 0,
+                   rotation: str | None = None) -> int:
     """Regenerate each selected contract's signature sidecar (if committed) and
     diff it byte for byte. Long: the whole scope is probed again. With
-    `sample` > 0, only a seeded sample of names is regenerated and each
-    regenerated name's record (its canonical JSON line) is compared with the
-    committed one: a partial check, valid because every name's probes are
-    independent of every other name's."""
+    `sample` > 0, a sample of names (rotated by `rotation`, default the
+    commit, plus the fixed adversarial names) and of environments is
+    regenerated, with the whole definer table and the calibration, and each
+    record is compared with the committed one: a partial check, valid
+    because every name's probes are independent of every other name's."""
     import contract_signatures as sg
-    import random
     failures = 0
     for path in paths:
         side = sg.sidecar_path(repo, path)
@@ -386,20 +472,37 @@ def check_sidecars(repo: Path, paths: list, work, tmp: Path, sample: int = 0) ->
             continue
         if sample:
             old = json.loads(side.read_text(encoding="utf-8"))
-            names = sorted(random.Random(old["config_key"]).sample(
-                sorted(old["signatures"]), min(sample, len(old["signatures"]))))
+            seed = sample_seed(repo, old["config_key"], rotation)
+            names = sg.signature_sample(old["signatures"], seed, sample)
+            envs = sg.signature_sample(old["environments"], seed, max(3, sample // 20),
+                                       fixed=sg.ADVERSARIAL_ENVS)
+            print("     %s: sample seed %r: %d names (%d adversarial), %d environments"
+                  % (side.relative_to(repo), seed, len(names),
+                     len(set(names) & set(sg.ADVERSARIAL_NAMES)), len(envs)))
             with gc.Tex(gc.read_image(repo), work) as tex:
                 new = sg.generate_signatures(tex, repo, path, workers=8, batch=False,
-                                             names=names)
-            bad = [n for n in names if json.dumps(new["signatures"][n], sort_keys=True) !=
-                   json.dumps(old["signatures"][n], sort_keys=True)]
+                                             names=names, environments=envs, definer=True)
+            bad = compare_sampled(old, new, names, envs)
             if bad:
                 failures += 1
-                print("DIFF %s: %d of %d sampled names do not reproduce: %s"
-                      % (side.relative_to(repo), len(bad), len(names), bad[:10]))
+                print("DIFF %s: %d sampled records do not reproduce: %s"
+                      % (side.relative_to(repo), len(bad), bad[:10]))
             else:
-                print("OK   %s: %d sampled names reproduced record for record"
-                      % (side.relative_to(repo), len(names)))
+                print("OK   %s: %d sampled names, %d environments, %d definer rows and the "
+                      "calibration reproduced record for record"
+                      % (side.relative_to(repo), len(names), len(envs),
+                         len(new["definer_rules"])))
+            # Kill-test of the comparison itself: a committed definer row
+            # flipped (the one kind of record no pure check can re-derive)
+            # must be seen.
+            import copy
+            mut = copy.deepcopy(old)
+            r0 = mut["definer_rules"][0]
+            r0["outcome"] = "fatal" if r0["outcome"] == "ok" else "ok"
+            seen = any(x.startswith("definer:") for x in compare_sampled(mut, new, names, envs))
+            print("%s sig kill: a flipped definer row is seen by the sampled comparison"
+                  % ("OK  " if seen else "FAIL"))
+            failures += 0 if seen else 1
             continue
         with gc.Tex(gc.read_image(repo), work) as tex:
             new = sg.generate_signatures(tex, repo, path, workers=8, batch=True)
@@ -423,7 +526,12 @@ def main(argv=None) -> int:
                     help="also regenerate each selected contract's signature sidecar "
                          "(corpora/contracts/signatures/) and diff it (long)")
     ap.add_argument("--signatures-sample", type=int, default=0,
-                    help="with --signatures: regenerate only this many seeded names")
+                    help="with --signatures: regenerate only this many seeded names (plus "
+                         "the fixed adversarial names, some environments and the whole "
+                         "definer table)")
+    ap.add_argument("--signatures-seed", default=None,
+                    help="with --signatures-sample: the rotation of the sample's seed "
+                         "(default: the commit checked out)")
     ap.add_argument("--cached-kernel", action="store_true",
                     help="reuse the cached kernel instead of re-running INITEX")
     ap.add_argument("--work", default=None,
@@ -501,7 +609,8 @@ def main(argv=None) -> int:
                     if kfile.exists():
                         _show_diff(kfile, kout)
         if a.signatures:
-            failures += check_sidecars(repo, paths, work, tmp, a.signatures_sample)
+            failures += check_sidecars(repo, paths, work, tmp, a.signatures_sample,
+                                       a.signatures_seed)
         failures += adversarial(image, work, cache)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

@@ -57,6 +57,7 @@ A project `P` is STRICT with respect to contract `C` iff all six conditions hold
    - A name that is defined but whose signature is not attested in that (mode, context) is **outside** the tier. It is never guessed.
    - Loading tikz without using it can stay strict. This is sound here and was not in product-first, because the *configuration trace* (not a per-package overlay) has already recorded tikz's hooks, catcode changes and `load_outcome`.
 4. **Standard catcode regime.** No production exists for `\catcode`, `\makeatletter`, `\def`, `\let`, `\csname`, `\expandafter`, primitive `\if*`, `\write`/`\openout`/`\write18`, `\newif`, `\loop`, `\ifthenelse`, `\whiledo`, `\foreach`, `\ExplSyntaxOn`, `\NewDocumentCommand`, or `@`-names.
+   - Nor for any other name whose use changes a catcode or the group level, or takes the next token other than as a macro argument (review of 2026-09-27, C-82): `\obeylines`, `\obeyspaces`, `\dospecials`-style catcode changers, the `\@sanitize` users (`\index`, `\glossary`), `\string`, `\noexpand`, `\meaning`, `\aftergroup`, `\enddocument`, `\stop`, `\bgroup`/`\begingroup`. This list is not hand-maintained: since signature version 2 the **follow probe** (§I.4) attests, for every name and cell, that the token after the use is the next one executed with all 256 catcodes and the group level unchanged, and a name that fails it has no attested shape, so its uses are outside the tier. (`\dospecials` itself passes at body start in `article`: `\do` is `\noexpand` there, so it changes nothing.)
    - Active characters introduced by the configuration (babel french makes `! : ; ?` active, ngerman `"`, spanish `" < >` [M]) come from the contract's `catcodes` field. Each one either has a signature or is out of the tier.
    - Verbatim constructs (`\verb`, `verbatim`, `\url`) are productions with their own lexical rule, admitted at top level only.
 5. **Layout-independence side conditions** (graft from attestation-first). These make page-builder fatals structurally impossible rather than modelled.
@@ -128,10 +129,10 @@ The two-kind split is forced by measurement:
 | `files_read`, `lazy_files` | files read at load, and files read on first use (e.g. `\mathbb` → `umsa.fd`) | `pdflatex -recorder` `.fls` of the load, and of each positive probe, minus the empty-document baseline | re-run with the file hidden; the expected fatal must appear |
 | `defined_names` (closed world) | every name whose final meaning at body start differs from the kernel | pass 1: `\tracingassigns=1` over `\documentclass…\begin{document}`, with `\typeout` load boundaries and `max_print_line=1000000`. Pass 2: `\ifcsname`-guarded `\meaning` dump **after `AtBeginDocument`** (65 names assigned during load revert by body start [M]) | **closure self-check**: `\ifdefined` on a random 1% of the kernel∪contract universe plus every name the document uses must agree with membership. Any mismatch blocks the contract. As built (§I.2) the universe is also checked against TeX's own hash-table count, and the per-document part is M2's |
 | `meaning` | `Undefined \| Relax \| Primitive \| Char \| MathChar \| Register \| Macro{long, protected, robust, ltcmd-spec}` | pass 2 dump, a lazy closed-world memo (negatives are answers too; this settles ROADMAP G1's polarity split) | from the dump |
-| `signature(name, mode, context)` | `allowed : Ok \| Fatal msg`, plus `args : [kind ∈ {req, opt, star}, argty, long]` | Candidates come from the ltcmd spec in the meaning, the `\@protected@testopt`/`\@ifstar` idioms, and the outer-sentinel arity probe (`\outer\def\STOP{}`, then `\cs{x}^n\STOP`). **A shape read is a hint, never attestation**: static `#n` arity disagreed with behavioural arity on **121/405 = 30%** of macros [M]. Payload lattice: `{a}`, `{1pt}`, `{equation}`, `{example-image}`, `{http://x}`, `[width=1cm]`, a counter name | **solo** `-halt-on-error` probes, **one variable each**, classified by *error class*, not rc. Positive probes: a well-typed use compiles, in T, in M, and in each context. Negative probes: wrong mode, `\par` in the argument (long-ness), a missing argument. **Batched probes are triage only**: batch-vs-solo polarity agreement was 142/143 [M]. A 15 s timeout guards against the MetaPost-support hangs [M] |
+| `signature(name, mode, context)` | `allowed : Ok \| Fatal msg`, plus `args : [kind ∈ {req, opt, star}, argty, long]` | Candidates come from the ltcmd spec in the meaning, the `\@protected@testopt`/`\@ifstar` idioms, and the outer-sentinel arity probe (`\outer\def\STOP{}`, then `\cs{x}^n\STOP`). **A shape read is a hint, never attestation**: static `#n` arity disagreed with behavioural arity on **121/405 = 30%** of macros [M]. Payload lattice: `{a}`, `{1pt}`, `{equation}`, `{example-image}`, `{http://x}`, `[width=1cm]`, a counter name | **solo** `-halt-on-error` probes, **one variable each**, classified by *error class*, not rc. Positive probes: a well-typed use compiles, in T, in M, and in each context. Negative probes: wrong mode, `\par` in the argument (long-ness), a missing argument. **Batched probes are triage only**: batch-vs-solo polarity agreement was 142/143 [M]. A 15 s timeout guards against the MetaPost-support hangs [M]. **As built since signature version 2 (§I.4, C-82):** the sentinel attests only macro-parameter consumption, so every shape also needs a passing *follow probe* in every cell it is used in, argument types are read from three error-class witnesses, and every type is confirmed through the configuration's consumers (and, for TyLabel, processed at the use) |
 | `environments` | begin-args, body mode, the context it pushes (list, float, alignment n, theorem, display) | `\X` and `\endX` both in `defined_names`, plus the same probe families | solo |
-| `definer_rules` | pin-level semantics of each admitted definer | a probe table (13 probes [M]). Plausible hand rules are false at the pin: `\newcounter{lemma}` followed by `\newtheorem{lemma}` **compiles**, and `\newcommand` on a `\relax`-meaning name compiles [M] | the table is the attestation |
-| `decl_templates` | per declaration command and **owner combination** (kernel / amsthm / amsthm+thmtools / ntheorem): the names it defines, `errors_if_defined`, and `requires` | fresh-name probe (`\newtheorem{zzq}[section]{Zzq}`), then a meaning diff of the zzq family, then collision probes. The amsthm+thmtools template differs, and it reproduces `Command \c@lemma already defined` [M] (graft from product-first) | collision matrix |
+| `definer_rules` | pin-level semantics of each admitted definer | a probe table (13 probes [M]). Plausible hand rules are false at the pin: `\newcounter{lemma}` followed by `\newtheorem{lemma}` **compiles** (in the kernel only: under amsthm it is fatal, C-81), and `\newcommand` on a `\relax`-meaning name compiles [M] | the table is the attestation |
+| `decl_templates` | per declaration command and **owner combination** (kernel / amsthm / amsthm+thmtools / ntheorem): the names it defines, `errors_if_defined`, and `requires` | fresh-name probe (`\newtheorem{zzq}[section]{Zzq}`), then a meaning diff of the zzq family, then collision probes. The amsthm+thmtools template differs, and it reproduces `Command \c@lemma already defined` [M] (graft from product-first). **Corrected by C-81 (measured at the pinned image, 2026-09-27):** it is not only amsthm+thmtools — amsthm ALONE already fails `\newcounter{lemma}\newtheorem{lemma}{Lemma}` (`Command \c@lemma already defined`; the kernel alone compiles it), and under amsthm+thmtools EVERY shared-counter `\newtheorem`, including `\newtheorem{thm}{T}\newtheorem{lemma}[thm]{L}`, is fatal on pass 1, and so is thmtools' own `\declaretheorem[sibling=thm]{lemma}` (amsthm alone compiles the shared form) | collision matrix |
 | `load_delta[k]`, definer kind | names assigned while load k ran, with kind `new \| renew \| provide \| def` | pass 1 per-load slices. The kind is found by a **sensitivity probe** (insert `\newcommand{\n}{}` before load k), run only for names that a user defines before a later load | solo |
 | `counters` | `c@X`, with `\theX` and the `cl@X` reset lists | from `defined_names` and the meanings | `\stepcounter{X}` probe |
 | `key_families` | `\KV@<fam>@<key>`, kvoptions, `\ds@<opt>` | from the trace: Gin 31, Hyp 161, Field 85 keys [M] | one misspelled-key probe per family (`keyval Error: widht undefined` [M]) |
@@ -816,6 +817,11 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 
 ### I.3 M1 slice 2: signature probes (2026-09-27)
 
+*Version 1 as first built. Its exactness test, its argument typing and its
+gate were corrected by the adversarial review recorded in §I.4 (signature
+version 2, C-82); where the two disagree, §I.4 is current, and the measured
+figures below are version 1's.*
+
 Data only: nothing reads a signature yet (M2 is the first consumer). Ledger row
 OPEN-120.
 
@@ -986,3 +992,148 @@ stops with `Forbidden control sequence found while scanning use of`
 - Only `article` carries a full sidecar; `amsart` was not generated (the
   full scope takes hours on this machine under load).
 - The sidecar is 4.5 MB (the probe log of every name is kept as evidence).
+
+### I.4 Signature version 2: the adversarial review of 2026-09-27 (C-81, C-82)
+
+An adversarial reviewer measured, under the pinned image, that version 1's
+signatures were unsound in two ways (C-82) and its gate re-derived too little.
+Ledger row OPEN-120 carries the numbers; this section the method.
+
+**HIGH-1: exactness saw one way of taking a token.** The `\outer` sentinel
+stops only a macro-parameter scan. A name that takes the next token another
+way, or changes how the rest is read, passed `use` + `use\lpstop` as r = 0:
+the reviewer's `use\lpundefzz` probe did not stop on `\lpundefzz` for 12 of
+918 r = 0 variants. False READY: `\item x \string\end{itemize}` is fatal;
+false NOT-READY: `x \index{a^b} y` compiles. **Fix: the follow probe**,
+`\lpfsave <use>\lpfollow\lpnocs`, required in the base cell (a fourth
+exactness fact) and in every other accepting cell (`shape_checked`).
+`\lpfsave` records the catcodes of all 256 bytes and `\currentgrouplevel`;
+`\lpfollow` is `\outer` (no macro can take it as an argument) and stops with
+`! LPFOLLOW.` if both are unchanged, `! LPSTATE.` if not; `\lpnocs` is
+undefined, so a use that defers or reorders the token after it stops there
+instead. A name that fails it has no attested shape in that cell (outside the
+tier), which covers the §A.1.4 catcode changers by measurement rather than by
+a list.
+
+**HIGH-2: TyLabel from one use in isolation, and a witness that toggled the
+mode it tested.** Version 1 typed a slot TyLabel when both `a^b` and `$a$`
+compiled. That held for payloads another command typesets LATER
+(`\section[..]` through the .toc, `\title` through `\maketitle`, `\caption[..]`
+through the .lof, `\markboth` through the running heads), and `$a$` inside a
+math slot closed and reopened math, so `\pmod`, `\matrix` and `\cases` read as
+not typesetting their argument and `\begin{math}`'s body as `either`.
+**Fix:** three one-variable witnesses read by ERROR CLASS, so that only
+typesetting counts as evidence: `a^b` (`missing_dollar` = typeset in text),
+`\"a` (`math_accent` = typeset in math, without toggling it) and `a&b`
+(compiles only where nothing is typeset, or inside an alignment, where `\"a`
+shows math). Every type is then CONFIRMED: the payloads it admits must also
+compile in a *consumer document* (`\title{t}` given; `\pagestyle{headings}`,
+`\tableofcontents`, `\listoffigures`, `\listoftables` before the use;
+`\maketitle`, a new page and `\leftmark\rightmark` after it; the oracle's
+pass protocol); the plain payload `a` must compile there too, else the
+type is refuted. A TyLabel payload must also be processed AT the use (`\lpnocs`
+there is `undefined_cs`, not stored for later or discarded), each other
+text-like slot is also set to `toc`/`lof`/`lot`, and a slot beside two or more
+other text-like slots is not TyLabel at all (their joint values are not
+attested). A refuted type is None with a `refuted` record naming the probe.
+
+**Calibration.** The design's premises (each witness's class in each mode,
+the follow probe on `\relax`/`\string`/`\noexpand`/`\expandafter`/
+`\obeylines`/`\bgroup`, the consumer suite catching `\section[a&b]`,
+`\title{a^b}` and `\markboth{a&b}`) are re-measured for every configuration
+probed (22 probes, recorded in the sidecar); a configuration where one fails
+is refused.
+
+**MEDIUM-1: the gate re-derives the whole record.** The probe log now holds
+every probe in order, with each fatal probe's message. `check_sidecar`
+REPLAYS each name's and environment's derivation on its own log (a
+`ReplaySession`: no TeX) and requires exactly the logged probes in the
+logged order and a record identical in every field: status, shape, star and
+the starred variant, per-cell outcomes, `shape_checked`, `follow`, content
+kinds, argty and its refutation, long, negatives, optional positions, body
+mode, pushes, attempts, bare-use outcomes. A definer row has no log: its
+class must be its message's class, and the sampled TeX check re-runs the
+whole table. In-gate kill-tests mutate each field of a committed record, and
+seven new `check_gate_selftests.py` mutations undo each fix.
+
+**MEDIUM-2: the reproducibility sample rotates.** Its seed is the
+configuration plus a rotation (the commit by default, or
+`--signatures-seed`); the 27 adversarial names of this review, four
+environments, the calibration and the whole definer table are always
+regenerated.
+
+**LOW.** The declaration templates' `defines` now holds only the names that
+carry the declared name; scratch and side effects (`@let@token`,
+`thmt@tmp`, `cl@enumi`) are `incidental_defines`.
+
+**Measured (2026-09-28, under the image, arm64; the `article` contract; a
+full regeneration, 3.9 h on 8 workers while another track shared the
+container).**
+
+- 2,148 names: **1,312 attested, 836 unresolved**. Exactly 31 names moved
+  from attested to unresolved, all by the follow probe, none the other way:
+  the next token consumed or reordered (`undefined_cs`): `\string`,
+  `\noexpand`, `\meaning`, `\do`, `\aftergroup`, `\afterassignment`,
+  `\expandafter`, `\if`, `\ifcat`, `\ifdefined`, `\index`, `\glossary`,
+  `\partokenname`, `\pdfprimitive`; never reached (`ok`): `\enddocument`,
+  `\stop`; catcodes or group level changed (`lp_state_changed`):
+  `\obeylines`, `\obeyspaces`, `\obeycr`, `\makeatletter`, `\ExplSyntaxOn`,
+  the three `\ProvidesExpl*`, `\UseRawInputEncoding`, `\bgroup`,
+  `\begingroup`, `\equation`, `\long`, `\outer`, `\protected`. Every other
+  accepting cell passes its follow probe (0 accepting cells unchecked).
+- Types: **TyLabel 442 → 115**. 313 candidate slots were refuted: 13 by the
+  consumer document (`\section`/`\subsection`/`\subsubsection`/`\part`'s
+  optional argument, `\title`, `\author`, `\date`, `\thanks`, `\markboth`,
+  `\markright`, `\sectionmark`, `\addtocontents`'s text), 87 as stored or
+  discarded (definer bodies, hook code, a branch not taken), 213 beside two
+  or more other text-like slots. 9 former TyLabel slots are now TyMath
+  (`\pmod`, `\matrix`, `\pmatrix`, `\cases`, `\bordermatrix`,
+  `\displaylines`, `\lefteqn`, `\mathhexbox`×2). TyText 93, TyInherit 80,
+  TyMath 29, untyped 368 (was 66).
+- Environments 30 of 41 attested, as before; body mode `math` for `math`,
+  `displaymath`, `equation`, `eqnarray(*)` (version 1: `either` for `math`),
+  none for the list environments and `verbatim`.
+- 57,027 solo probes (22 calibration, 56,881 name/environment, 124 definer),
+  151,233 engine runs. Batch triage: 41,711 agree / 1,162 disagree / 7,394
+  inconclusive / 6,614 skipped (follow and consumer probes). The sidecar is
+  6.3 MB; the pure gate replays its 55,670 name probes in about a second.
+- **The reviewer's own scripts, re-run against this sidecar** (w1-w8): the
+  r = 0 look-ahead census (w6) finds **0 of 890** r = 0 variants not followed
+  by the undefined-cs error (version 1: 12 of 918); the 205-probe re-check of
+  a random sample (w2) finds 0 mismatches; the 35-name regeneration (w5)
+  reproduces 35 of 35; every name of w1/w8 (`\string`, `\noexpand`,
+  `\meaning`, `\do`, `\partokenname`, `\aftergroup`, `\obeylines`,
+  `\obeyspaces`, `\index`) is now unresolved, so neither the false READY
+  nor the false NOT-READY can be derived from the sidecar (the documents
+  are outside the tier); w3's `\section[..]` and `\title` slots are untyped
+  (`\caption` was and is unresolved); w7's `\pmod` argument is TyMath and
+  `math`'s body is math.
+
+- **Reproducibility.** The committed sidecar is the byte output of that
+  full regeneration (not assembled incrementally). A second, independent
+  run of `check_contracts_reproducible.py --signatures --signatures-sample 60
+  --signatures-seed review-2026-09-28` regenerated 85 names (60 drawn, plus
+  the 27 adversarial ones, two overlapping), 7 environments, all 124 definer
+  rows and the calibration: every record identical. The same run
+  reproduced the `article` contract and the kernel file byte for byte and
+  passed every TeX kill-test, including the eight new ones (a macro that
+  stores its argument, one typeset only by `\tableofcontents`, one that
+  expands to `\string`, a message-only slot; and on the committed contract,
+  the reviewer's `\string`/`\noexpand`/`\index`/`\obeylines`/`\aftergroup`/
+  `\ifdefined` unresolved, `\pmod`/`\matrix` TyMath, `\section[..]` and
+  `\title` untyped, `\label` TyLabel, `\addtocontents`'s text untyped).
+  `newtheorem.json` regenerated twice, byte-identical.
+
+**Known limits (recorded, not fixed).**
+
+- The consumer suite is the configuration's own, at its default counters: a
+  document that raises `tocdepth` makes `\paragraph[..]`'s optional argument
+  a table-of-contents entry, and `\paragraph#0` is still TyLabel.
+- Joint dependence is attested only for one other text-like slot at a time
+  (over `toc`/`lof`/`lot`); lattice-typed slots are held at their payloads.
+- `\setlength`'s slots are now TyInherit (`\setlength{a}{a}` typesets, and
+  both witnesses behave as in the text they typeset); this is the §G.1
+  parametricity risk, which only M2's differential tests.
+- `\dospecials` stays attested: at body start in `article` `\do` is
+  `\noexpand`, so it changes no catcode.
+

@@ -2,11 +2,11 @@
  "declaration": "newtheorem",
  "generator": {
   "module": "scripts/tools/contract_signatures.py",
-  "signature_version": "1",
+  "signature_version": "2",
   "tool": "scripts/tools/gen_contract.py decl-templates",
   "version": "4"
  },
- "method": "per owner combination (the base configuration article plus the owner packages): a complete contract of the base, and one per form with the declaration as a preamble definer; `defines` etc. are the difference of the two closed worlds. `collisions`: solo probes (grading environment, the oracle's pass protocol) of the declaration after a prior definition of its name, and of unknown counter arguments",
+ "method": "per owner combination (the base configuration article plus the owner packages): a complete contract of the base, and one per form with the declaration as a preamble definer; `defines` etc. are the difference of the two closed worlds, `defines` the names that carry the declared name (zzq) and `incidental_defines` every other name first defined (scratch, or a side effect such as a counter's reset list). `collisions`: solo probes (grading environment, the oracle's pass protocol) of the declaration after a prior definition of its name, and of unknown counter arguments",
  "owners": {
   "amsthm": {
    "base_complete": true,
@@ -66,7 +66,7 @@
     {
      "body": "\\begin{zzq}a\\end{zzq} x",
      "context": "preamble",
-     "error_class": "latex_error",
+     "error_class": "no_counter",
      "id": "shared-unknown-counter",
      "message": "LaTeX Error: No counter 'xzzq' defined.",
      "outcome": "fatal",
@@ -75,7 +75,7 @@
     {
      "body": "\\begin{zzq}a\\end{zzq} x",
      "context": "preamble",
-     "error_class": "latex_error",
+     "error_class": "no_counter",
      "id": "within-unknown-counter",
      "message": "LaTeX Error: No counter 'xzzq' defined.",
      "outcome": "fatal",
@@ -112,7 +112,6 @@
      "config_key": "657a7bbb70a46154648af9fb8fdbc4a034c07ce9131e674437614fdeb5f11950",
      "declaration": "\\newtheorem{zzq}{Zzq}",
      "defines": {
-      "@let@token": "Primitive",
       "c@zzq": "Register:count",
       "cl@zzq": "Macro",
       "endzzq": "Macro",
@@ -120,6 +119,9 @@
       "theHzzq": "Macro",
       "thezzq": "Macro",
       "zzq": "Macro"
+     },
+     "incidental_defines": {
+      "@let@token": "Primitive"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -132,7 +134,6 @@
      "config_key": "f0f44461c08951f0accea485405f575306bbf87296ee50f2c19d51b2224b8513",
      "declaration": "\\newtheorem{zzq}[enumi]{Zzq}",
      "defines": {
-      "@let@token": "Char",
       "alias@ctr@zzq": "Macro",
       "c@zzq": "Register:count",
       "cl@zzq": "Macro",
@@ -141,6 +142,9 @@
       "theHzzq": "Macro",
       "thezzq": "Macro",
       "zzq": "Macro"
+     },
+     "incidental_defines": {
+      "@let@token": "Char"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -153,10 +157,12 @@
      "config_key": "3d896cea41c11f859b652a56147b9747be46c77daa952e4d2675d7f24148ef71",
      "declaration": "\\newtheorem*{zzq}{Zzq}",
      "defines": {
-      "@let@token": "Char",
       "endzzq": "Macro",
-      "reserved@d": "Char",
       "zzq": "Macro"
+     },
+     "incidental_defines": {
+      "@let@token": "Char",
+      "reserved@d": "Char"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -171,15 +177,17 @@
      "config_key": "c1226cf793784c2d0fa55d1e3a2bdfee691917c98590bd3c0277ba76cee8f578",
      "declaration": "\\newtheorem{zzq}{Zzq}[enumi]",
      "defines": {
-      "@let@token": "Char",
       "c@zzq": "Register:count",
-      "cl@enumi": "Macro",
       "cl@zzq": "Macro",
       "endzzq": "Macro",
       "p@zzq": "Macro",
       "theHzzq": "Macro",
       "thezzq": "Macro",
       "zzq": "Macro"
+     },
+     "incidental_defines": {
+      "@let@token": "Char",
+      "cl@enumi": "Macro"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -245,7 +253,7 @@
     {
      "body": "\\begin{zzq}a\\end{zzq} x",
      "context": "preamble",
-     "error_class": "latex_error",
+     "error_class": "no_counter",
      "id": "shared-unknown-counter",
      "message": "LaTeX Error: No counter 'xzzq' defined.",
      "outcome": "fatal",
@@ -254,7 +262,7 @@
     {
      "body": "\\begin{zzq}a\\end{zzq} x",
      "context": "preamble",
-     "error_class": "latex_error",
+     "error_class": "no_counter",
      "id": "within-unknown-counter",
      "message": "LaTeX Error: No counter 'xzzq' defined.",
      "outcome": "fatal",
@@ -297,31 +305,33 @@
      "config_key": "d65d66a315a64f26139394c111672e72ef26535d6dea1dd5dbcc27e6c6841e2d",
      "declaration": "\\newtheorem{zzq}{Zzq}",
      "defines": {
-      "@@reallyparse": "Macro",
-      "@parsecmd": "Macro",
       "c@zzq": "Register:count",
       "cl@zzq": "Macro",
       "endzzq": "Macro",
       "l@zzq": "Macro",
       "ll@zzq": "Macro",
-      "p@tmp": "Macro",
       "p@zzq": "Macro",
       "theHzzq": "Macro",
       "thezzq": "Macro",
-      "thmt@args": "Macro",
-      "thmt@autoreffix": "Relax",
       "thmt@contentsline@zzq": "Macro",
-      "thmt@envname": "Macro",
       "thmt@original@endzzq": "Macro",
       "thmt@original@zzq": "Macro",
-      "thmt@thmname": "Macro",
-      "thmt@tmp": "Macro",
       "thmt@zzq@postfoothook": "Macro",
       "thmt@zzq@postheadhook": "Macro",
       "thmt@zzq@prefoothook": "Macro",
       "thmt@zzq@preheadhook": "Macro",
       "zzq": "Macro",
       "zzqautorefname": "Macro"
+     },
+     "incidental_defines": {
+      "@@reallyparse": "Macro",
+      "@parsecmd": "Macro",
+      "p@tmp": "Macro",
+      "thmt@args": "Macro",
+      "thmt@autoreffix": "Relax",
+      "thmt@envname": "Macro",
+      "thmt@thmname": "Macro",
+      "thmt@tmp": "Macro"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -350,27 +360,29 @@
      "config_key": "70aed9b3b7e4f83de46ffce10733c5c90c530c9c576ade0ee4999f418e2d126c",
      "declaration": "\\newtheorem*{zzq}{Zzq}",
      "defines": {
-      "@@reallyparse": "Macro",
-      "@parsecmd": "Macro",
       "endzzq": "Macro",
       "l@zzq": "Macro",
       "ll@zzq": "Macro",
-      "p@tmp": "Macro",
       "thezzq": "Macro",
-      "thmt@args": "Macro",
-      "thmt@autoreffix": "Relax",
       "thmt@contentsline@zzq": "Macro",
-      "thmt@envname": "Macro",
       "thmt@original@endzzq": "Macro",
       "thmt@original@zzq": "Macro",
-      "thmt@thmname": "Macro",
-      "thmt@tmp": "Macro",
       "thmt@zzq@postfoothook": "Macro",
       "thmt@zzq@postheadhook": "Macro",
       "thmt@zzq@prefoothook": "Macro",
       "thmt@zzq@preheadhook": "Macro",
       "zzq": "Macro",
       "zzqautorefname": "Macro"
+     },
+     "incidental_defines": {
+      "@@reallyparse": "Macro",
+      "@parsecmd": "Macro",
+      "p@tmp": "Macro",
+      "thmt@args": "Macro",
+      "thmt@autoreffix": "Relax",
+      "thmt@envname": "Macro",
+      "thmt@thmname": "Macro",
+      "thmt@tmp": "Macro"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -388,33 +400,35 @@
      "config_key": "c2203a20e727afc74da7e6bc429f0b6138797d2213c128abb7cf7b3a7502b891",
      "declaration": "\\newtheorem{zzq}{Zzq}[enumi]",
      "defines": {
-      "@@reallyparse": "Macro",
-      "@parsecmd": "Macro",
       "c@zzq": "Register:count",
-      "cl@enumi": "Macro",
       "cl@zzq": "Macro",
       "endzzq": "Macro",
       "l@zzq": "Macro",
       "ll@zzq": "Macro",
-      "p@tmp": "Macro",
       "p@zzq": "Macro",
       "theHzzq": "Macro",
       "thezzq": "Macro",
-      "thmt@args": "Macro",
-      "thmt@autoreffix": "Relax",
       "thmt@contentsline@zzq": "Macro",
-      "thmt@envname": "Macro",
       "thmt@original@endzzq": "Macro",
       "thmt@original@zzq": "Macro",
-      "thmt@parent": "Macro",
-      "thmt@thmname": "Macro",
-      "thmt@tmp": "Macro",
       "thmt@zzq@postfoothook": "Macro",
       "thmt@zzq@postheadhook": "Macro",
       "thmt@zzq@prefoothook": "Macro",
       "thmt@zzq@preheadhook": "Macro",
       "zzq": "Macro",
       "zzqautorefname": "Macro"
+     },
+     "incidental_defines": {
+      "@@reallyparse": "Macro",
+      "@parsecmd": "Macro",
+      "cl@enumi": "Macro",
+      "p@tmp": "Macro",
+      "thmt@args": "Macro",
+      "thmt@autoreffix": "Relax",
+      "thmt@envname": "Macro",
+      "thmt@parent": "Macro",
+      "thmt@thmname": "Macro",
+      "thmt@tmp": "Macro"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -476,7 +490,7 @@
     {
      "body": "\\begin{zzq}a\\end{zzq} x",
      "context": "preamble",
-     "error_class": "latex_error",
+     "error_class": "no_counter",
      "id": "shared-unknown-counter",
      "message": "LaTeX Error: No counter 'xzzq' defined.",
      "outcome": "fatal",
@@ -485,7 +499,7 @@
     {
      "body": "\\begin{zzq}a\\end{zzq} x",
      "context": "preamble",
-     "error_class": "latex_error",
+     "error_class": "no_counter",
      "id": "within-unknown-counter",
      "message": "LaTeX Error: No counter 'xzzq' defined.",
      "outcome": "fatal",
@@ -518,7 +532,6 @@
      "config_key": "de4caadc8459460803d70cc31ba35e4f816bfcfdfc0a78f7e4326b863ff80b9b",
      "declaration": "\\newtheorem{zzq}{Zzq}",
      "defines": {
-      "@let@token": "Macro+protected",
       "c@zzq": "Register:count",
       "cl@zzq": "Macro",
       "endzzq": "Macro",
@@ -526,6 +539,9 @@
       "theHzzq": "Macro",
       "thezzq": "Macro",
       "zzq": "Macro"
+     },
+     "incidental_defines": {
+      "@let@token": "Macro+protected"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -536,7 +552,6 @@
      "config_key": "9e63197f6af42696ed7c84eb0b89014f1312fe439a2b965b09671f7188225c80",
      "declaration": "\\newtheorem{zzq}[enumi]{Zzq}",
      "defines": {
-      "@let@token": "Char",
       "alias@ctr@zzq": "Macro",
       "c@zzq": "Register:count",
       "cl@zzq": "Macro",
@@ -545,6 +560,9 @@
       "theHzzq": "Macro",
       "thezzq": "Macro",
       "zzq": "Macro"
+     },
+     "incidental_defines": {
+      "@let@token": "Char"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []
@@ -571,15 +589,17 @@
      "config_key": "16aed1ac07cef9a00855307e23d58d6a0dd12d94a289bc4e0cf2c72c72c05507",
      "declaration": "\\newtheorem{zzq}{Zzq}[enumi]",
      "defines": {
-      "@let@token": "Char",
       "c@zzq": "Register:count",
-      "cl@enumi": "Macro",
       "cl@zzq": "Macro",
       "endzzq": "Macro",
       "p@zzq": "Macro",
       "theHzzq": "Macro",
       "thezzq": "Macro",
       "zzq": "Macro"
+     },
+     "incidental_defines": {
+      "@let@token": "Char",
+      "cl@enumi": "Macro"
      },
      "reverts_to_kernel": [],
      "undefines_kernel_names": []

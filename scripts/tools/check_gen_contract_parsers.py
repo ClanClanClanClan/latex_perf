@@ -579,6 +579,9 @@ if not ARGS.kernel:
               c["load_outcome"].get("passes", 0) >= 2)
 
 # --- M1 slice 2: signature probes (contract_signatures.py) ---------------------------
+import copy  # noqa: E402
+import re  # noqa: E402
+import time  # noqa: E402
 import contract_signatures as sg  # noqa: E402
 # The sentinel's error, as TeX prints it (recorded in the probe runs of
 # 2026-09-27; the message text is TeX's, the classes are ours).
@@ -590,6 +593,17 @@ check("sig: any other scan meeting it is not a grab",
       gc.classify_error("Forbidden control sequence found while scanning definition of \\x.")
       == "forbidden_cs" and sg.outcome_of({"outcome": "fatal", "error_class":
       "forbidden_cs", "message": "x"})["o"] == "fatal")
+# The follow probe's two errors (TeX prints `! <text>.` for \errmessage{<text>}).
+check("sig: the follow probe's own error reads as follow, a state change as fatal",
+      sg.outcome_of({"outcome": "fatal", "error_class": "other", "message": "LPFOLLOW."})
+      == {"o": "follow"} and
+      sg.outcome_of({"outcome": "fatal", "error_class": "other", "message": "LPSTATE."})["e"]
+      == "lp_state_changed" and
+      sg.outcome_of({"outcome": "fatal", "error_class": "undefined_cs",
+                     "message": "Undefined control sequence."})["o"] == "fatal")
+check("sig: a missing counter is its own class (the payload search keys on classes only)",
+      sg.refine_class("latex_error", "LaTeX Error: No counter 'a' defined.") == "no_counter"
+      and sg.refine_class("latex_error", "LaTeX Error: x") == "latex_error")
 check("sig: a letter after the sentinel is separated (\\lpstopa is another name)",
       sg.build_use("\\begin{x}", [], stop=True, tail="a\\end{x}") ==
       "\\begin{x}\\lpstop a\\end{x}" and
@@ -607,19 +621,48 @@ check("sig: the sentinel is defined iff the use names it",
       b"\\outer" not in d3 and d4.index(b"\\outer") < d4.index(b"\\begin{document}"))
 check("sig: cells place the use", b"x \\c{a}\\lpstop y" in d1 and b"x $\\c{a}$" in d2 and
       d4.endswith(b"\\begin{document}\nx\n\\end{document}\n"))
+d5 = sg.cell_doc(pre, "list", sg.follow_use("\\c"))
+check("sig: the follow probe: state saved before the use, \\lpfollow and \\lpnocs after it, "
+      "its macros defined iff it is used",
+      sg.follow_use("\\c{a}") == "\\lpfsave \\c{a}\\lpfollow\\lpnocs" and
+      d5.count(sg.FOLLOW_DEF.encode()) == 1 and b"\\item x \\lpfsave \\c\\lpfollow\\lpnocs y" in d5
+      and sg.FOLLOW_DEF.encode() not in d1 and b"\\outer\\def\\lpfollow" in d5)
+d6 = sg.cell_doc(pre, sg.CONS + "vertical", "\\c{a}")
+d7 = sg.cell_doc(pre, sg.CONS + "preamble", "\\c{a}")
+check("sig: the consumer cell: a \\title first, toc/lof/lot and headings before the use, "
+      "\\maketitle, a new page and both marks after it",
+      d6.startswith(pre + b"\\title{t}\n\\begin{document}\n\\pagestyle{headings}"
+                    b"\\tableofcontents\\listoffigures\\listoftables\n\\c{a}\\par x\n"
+                    b"\\maketitle\\newpage x\\leftmark\\rightmark\n\\end{document}")
+      and d7.startswith(pre + b"\\title{t}\n\\c{a}\n\\begin{document}\n\\pagestyle{headings}"))
 LET = set(range(65, 91)) | set(range(97, 123))
 check("sig: names a body can type (letters run, or one non-letter byte)",
       sg.user_facing("textbf", LET) and sg.user_facing("\\", LET) and sg.user_facing("i", LET)
       and not sg.user_facing("@gobble", LET) and not sg.user_facing("c@page", LET)
       and not sg.user_facing("cs_new:Npn", LET) and not sg.user_facing("", LET))
-check("sig: content kinds", [sg.content_kind("text", m, t) for m, t in
-      ((True, True), (False, False), (True, False), (False, True))] ==
-      ["opaque", "restricted", "math", "text"])
-check("sig: argty table", [sg.argty_of(k) for k in (
-      {"text": "text", "math": "text"}, {"text": "text", "math": "math"},
-      {"math": "math"}, {"text": "opaque", "math": "opaque"}, {"text": "math", "math": "math"},
-      {"text": "text", "list": "math"}, {"text": "restricted"}, {})] ==
-      ["TyText", "TyInherit", "TyMath", "TyLabel", "TyMath", None, None, None])
+# Witnesses (review C-82): the text witness must not toggle math.
+check("sig: the text witness does not toggle math, the none witness is fatal typeset",
+      "$" not in sg.TEXT_CONTENT and "&" in sg.NONE_CONTENT and "^" in sg.MATH_CONTENT)
+W_OK, W_TX, W_MA, W_CS, W_TAB = "ok", "missing_dollar", "math_accent", "missing_endcsname", \
+    "misplaced_tab"
+check("sig: content kinds by the error class of each witness (typesetting evidence only)",
+      [sg.content_kind("text", m, t, n) for m, t, n in (
+          (W_TX, W_OK, W_TAB), (W_OK, W_MA, W_TAB), (W_OK, W_MA, W_OK), (W_OK, W_CS, W_OK),
+          (W_OK, W_OK, W_OK), (W_OK, W_OK, W_TAB), (W_TX, W_MA, W_TAB), (W_CS, W_CS, W_CS))] ==
+      ["text", "math", "math", "none", "none", "opaque", "restricted", "restricted"])
+check("sig: \\\"a typeset in math is its own class",
+      sg.refine_class("other", "Please use \\mathaccent for accents in math mode.") ==
+      "math_accent")
+check("sig: argty table (TyLabel only when no cell typesets the payload)",
+      [sg.argty_of(k) for k in (
+          {"text": "text", "math": "text"}, {"text": "text", "math": "math"},
+          {"math": "math"}, {"text": "none", "math": "none"}, {"text": "math", "math": "math"},
+          {"text": "text", "list": "math"}, {"text": "restricted"}, {},
+          {"text": "none", "math": "math"}, {"text": "opaque", "math": "opaque"})] ==
+      ["TyText", "TyInherit", "TyMath", "TyLabel", "TyMath", None, None, None, None, None])
+check("sig: an environment body has a mode only when a witness shows typesetting",
+      [sg.body_mode_of(m, t) for m, t in ((W_OK, W_OK), (W_OK, W_MA), (W_TX, W_OK),
+                                          (W_TX, W_MA))] == [None, "math", "text", None])
 # SYNTHETIC meanings in TeX's printed form: hints only, never attestation.
 mh = {"x": b"macro:->\\protect \\x  ", "x ": b"\\long macro:#1->\\textbf {#1}",
       "y": b"macro:->\\@ifstar \\ys \\yn ", "z": b"macro:->\\@protected@testopt \\z \\\\z {}"}
@@ -628,40 +671,270 @@ check("sig: meaning hints (robust inner, star, optional)",
       and sg.meaning_hint("y", mh)["star"] and sg.meaning_hint("z", mh)["opt"]
       and sg.meaning_hint("q", {})["source"] == "undefined")
 
-# The committed sidecars: bound to their contract's bytes, every attested
-# shape backed by its own probe log, the summary recomputed.
+
+# SYNTHETIC: the discovery logic on a fake TeX (no engine). A model macro \lpx
+# takes its first `r` tokens (a brace group is one token) as arguments; the
+# sentinel among them is a grab; a payload other than `a` is judged by
+# `pay(cell, payload, consumers)`; the follow probe passes unless `follow`
+# says otherwise for the cell. Each case is a shape one of the 2026-09-27
+# review's findings is about.
+class FakeSession(sg.Session):
+    def __init__(self, model):
+        super().__init__(None)
+        self.model = model
+
+    def p(self, cell, use):
+        key = (cell, use)
+        if key not in self.memo:
+            self.memo[key] = self.model(cell, use)
+            self.log.append(key)
+        return self.memo[key]
+
+
+def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None):
+    def model(cell, use):
+        cons = cell.startswith(sg.CONS)
+        base = cell[len(sg.CONS):] if cons else cell
+        pre = "\\lpfsave "
+        if use.startswith(pre):
+            o = model(cell, use[len(pre):-len("\\lpfollow\\lpnocs")])
+            if o["o"] != "ok":
+                return o
+            ok = follow(base) if follow else True
+            return {"o": "follow"} if ok else {"o": "fatal", "e": "undefined_cs",
+                                                "m": "Undefined control sequence."}
+        rest = use[len("\\lpx"):]
+        toks, i = [], 0
+        while i < len(rest):
+            if rest.startswith("\\lpstop", i):
+                toks.append("STOP")
+                i += len("\\lpstop")
+            elif rest[i] == "{":
+                j = rest.index("}", i)
+                toks.append(("G", rest[i + 1:j]))
+                i = j + 1
+            else:
+                toks.append(("C", rest[i]))
+                i += 1
+        taken = toks[:r]
+        if "STOP" in taken or ("G", "\\lpstop") in taken:
+            return {"o": "grab", "e": "forbidden_cs_use", "m": "Forbidden control sequence."}
+        if len(taken) < r:
+            return {"o": "fatal", "e": "missing_open", "m": "Missing { inserted."}
+        if base not in cells_ok:
+            return {"o": "fatal", "e": "wrong_mode", "m": "You can't use that here."}
+        for t in taken:
+            if t[0] == "G" and t[1] != "a":
+                res = pay(base, t[1], cons) if pay else "ok"
+                if res != "ok":
+                    return {"o": "fatal", "e": res, "m": "M " + res}
+        return {"o": "ok"}
+    return model
+
+
+def fake_sig(model):
+    S = FakeSession(model)
+    rec = sg._record(sg.signature_for(S, "\\lpx", "", []), S, None)
+    return rec
+
+
+def label_pay(cons_none="ok", stored="undefined_cs"):
+    def pay(cell, p, cons):
+        if p == sg.TEXT_CONTENT:
+            return "missing_endcsname"
+        if p == sg.NONE_CONTENT and cons:
+            return cons_none
+        if p == sg.STORED_CONTENT:
+            return stored
+        return "ok"
+    return pay
+
+
+r_string = fake_sig(fake_macro(0, follow=lambda c: False))
+check("sig: an r=0 use whose next token is consumed (\\string, \\index) is unresolved "
+      "(review HIGH-1)", r_string["status"] == "unresolved" and
+      {a["reason"] for a in r_string["attempts"].values()} == {sg.EXACT_REASONS["follow"]},
+      r_string.get("attempts"))
+r_relax = fake_sig(fake_macro(0))
+check("sig: an r=0 use whose next token follows is attested",
+      r_relax["status"] == "attested" and r_relax["variants"][0]["r"] == 0)
+r_part = fake_sig(fake_macro(0, follow=lambda c: c != "list"))
+v_part = r_part["variants"][0]
+check("sig: an accepting cell whose follow probe fails is not shape-checked, and gives no "
+      "content", r_part["status"] == "attested" and
+      v_part["cells"]["list"]["shape_checked"] is False and
+      v_part["cells"]["list"]["follow"] == "undefined_cs" and
+      v_part["cells"]["text"]["shape_checked"] is True)
+r_label = fake_sig(fake_macro(1, pay=label_pay()))
+check("sig: a key slot (not typeset, processed at the use, no consumer typesets it) is TyLabel",
+      r_label["status"] == "attested" and r_label["variants"][0]["args"][0]["argty"] == "TyLabel",
+      r_label["variants"][0]["args"][0] if r_label["status"] == "attested" else r_label)
+r_title = fake_sig(fake_macro(1, pay=label_pay(cons_none="misplaced_tab")))
+a_title = r_title["variants"][0]["args"][0]
+check("sig: a slot a consumer typesets later (\\title, \\section[..]) is not TyLabel "
+      "(review HIGH-2)", a_title["argty"] is None and a_title["refuted"]["argty"] == "TyLabel"
+      and a_title["refuted"]["by"][0].startswith(sg.CONS), a_title)
+r_blank = fake_sig(fake_macro(1, pay=label_pay(stored="ok")))
+a_blank = r_blank["variants"][0]["args"][0]
+check("sig: a slot whose payload is stored or discarded (a branch not taken) is not TyLabel",
+      a_blank["argty"] is None and a_blank["refuted"]["by"][1] == "\\lpx{\\lpnocs}", a_blank)
+
+
+def math_pay(cell, p, cons):
+    return {sg.TEXT_CONTENT: "math_accent", sg.NONE_CONTENT: "misplaced_tab"}.get(p, "ok")
+
+
+r_pmod = fake_sig(fake_macro(1, cells_ok=("math",), pay=math_pay))
+r_matrix = fake_sig(fake_macro(1, cells_ok=("math",), pay=lambda c, p, k: {
+    sg.TEXT_CONTENT: "math_accent"}.get(p, "ok")))
+check("sig: an alignment's body (a&b compiles there) is TyMath, not TyLabel (\\matrix, \\cases)",
+      r_matrix["variants"][0]["args"][0]["argty"] == "TyMath", r_matrix.get("variants"))
+check("sig: a math-only command's argument is TyMath (\\pmod{\\\"a} is fatal; version 1's "
+      "$a$ toggled out of math and read it as not typeset)",
+      r_pmod["status"] == "attested" and r_pmod["variants"][0]["base_cell"] == "math" and
+      r_pmod["variants"][0]["args"][0]["argty"] == "TyMath", r_pmod.get("variants"))
+# The replay verifier on the synthetic records: exact, and it sees a changed field.
+check("sig: replay re-derives the synthetic records exactly",
+      all(sg.replay(r, "\\lpx", []) == [] for r in (r_string, r_relax, r_part, r_label, r_title,
+                                                     r_blank, r_pmod)))
+m_label = copy.deepcopy(r_label)
+m_label["variants"][0]["args"][0]["argty"] = "TyText"
+m_title = copy.deepcopy(r_title)
+del m_title["variants"][0]["args"][0]["refuted"]
+m_title["variants"][0]["args"][0]["argty"] = "TyLabel"
+check("sig: replay sees a changed argty and an erased refutation",
+      sg.replay(m_label, "\\lpx", []) != [] and sg.replay(m_title, "\\lpx", []) != [])
+# The reproducibility sample rotates with its seed and always holds the
+# adversarial names (review MEDIUM-2).
+_pool = ["n%04d" % i for i in range(2000)] + list(sg.ADVERSARIAL_NAMES)
+s_a, s_b = sg.signature_sample(_pool, "k:a", 60), sg.signature_sample(_pool, "k:b", 60)
+check("sig: the reproducibility sample rotates with its seed and holds the adversarial names",
+      s_a != s_b and set(sg.ADVERSARIAL_NAMES) <= set(s_a) and set(sg.ADVERSARIAL_NAMES) <= set(s_b)
+      and s_a == sg.signature_sample(_pool, "k:a", 60))
+
+
+# The committed sidecars: bound to their contract's bytes, every record
+# re-derived in full from its own probe log (replay), the calibration and the
+# definer table checked, the summary recomputed.
+def _first(side, pred):
+    for n in sorted(side["signatures"]):
+        r = side["signatures"][n]
+        if r["status"] == "attested":
+            for vi, v in enumerate(r["variants"]):
+                for ai, a in enumerate(v["args"]):
+                    if pred(r, v, a):
+                        return n, vi, ai
+    return None
+
+
 SDIR = REPO / sg.SIG_DIR
 sidecars = sorted(SDIR.glob("*.json")) if SDIR.is_dir() else []
 for sf in sidecars:
     side = json.loads(sf.read_text(encoding="utf-8"))
     cp = REPO / side.get("contract", "")
-    probs = sg.check_sidecar(side, cp.read_bytes() if cp.is_file() else None)
-    check("sidecar %s: consistent with its contract and its own probe log" % sf.name,
-          not probs, probs[:5])
-    check("sidecar %s: solo count = name/environment probes + definer rows" % sf.name,
-          side["solo"]["probes"] == side["summary"]["solo_probes"] + len(side["definer_rules"]),
+    cbytes = cp.read_bytes() if cp.is_file() else None
+    t0 = time.monotonic()
+    probs = sg.check_sidecar(side, cbytes)
+    check("sidecar %s: consistent with its contract, its calibration and its own probe log "
+          "(every record re-derived by replay)" % sf.name, not probs, probs[:5])
+    check("sidecar %s: solo count = calibration + name/environment probes + definer rows"
+          % sf.name, side["solo"]["probes"] == len(side.get("calibration", [])) +
+          side["summary"]["solo_probes"] + len(side["definer_rules"]),
           (side["solo"], side["summary"]["solo_probes"], len(side["definer_rules"])))
     check("sidecar %s: covers its whole scope" % sf.name,
           side["scope"].get("names") != "subset" and side["summary"]["names"] > 0)
-    # In-gate kill-tests of check_sidecar itself: each claim, broken, is seen.
-    att = sorted(n for n, r in side["signatures"].items() if r["status"] == "attested"
-                 and any(a["kind"] == "req" for a in r["variants"][0]["args"]))
-    if att:
-        import copy  # noqa: E402
-        n0 = att[0]
-        bad = copy.deepcopy(side)
-        bad["signatures"][n0]["probes"] = [p for p in bad["signatures"][n0]["probes"]
-                                           if p[2] != "grab"]
-        check("sidecar kill: dropping %s's grab probes is seen" % n0,
-              any("grab" in x for x in sg.check_sidecar(bad, cp.read_bytes())))
-        bad = copy.deepcopy(side)
-        v0 = bad["signatures"][n0]["variants"][0]
-        c0 = sorted(v0["cells"])[0]
-        v0["cells"][c0]["allowed"] = "fatal" if v0["cells"][c0]["allowed"] == "ok" else "ok"
-        check("sidecar kill: a flipped cell verdict is seen",
-              any("cell %s" % c0 in x for x in sg.check_sidecar(bad, cp.read_bytes())))
-        check("sidecar kill: a stale contract is seen",
-              any("stale" in x for x in sg.check_sidecar(side, cp.read_bytes() + b" ")))
+    lat = [(x["argty"], x["payload"]) for x in side.get("lattice", [])]
+
+    # In-gate kill-tests of the check itself: each attested field, changed in
+    # one record, must be seen (review MEDIUM-1: version 1 re-derived only the
+    # use, r, the drop-last grab and the per-cell polarity).
+    def killed(label, name, mutate, env=False):
+        rec = copy.deepcopy((side["environments"] if env else side["signatures"])[name])
+        mutate(rec)
+        if env:
+            p = sg.replay(rec, "", lat, env=name)
+        else:
+            p = sg.replay(rec, sg.cs(name), lat)
+            for v in rec.get("variants", []):
+                p += sg.check_variant(v, rec["probes"], sg.cs(name), "")
+        check("sidecar kill: %s (%s) is seen" % (label, name), bool(p))
+
+    def arg_at(loc):
+        n, vi, ai = loc
+        return lambda rec: rec["variants"][vi]["args"][ai]
+
+    kills = [
+        ("a changed argty", lambda r, v, a: a.get("argty") == "TyText",
+         lambda loc: lambda rec: arg_at(loc)(rec).update(argty="TyMath")),
+        ("a changed lattice argty", lambda r, v, a: a.get("argty") == "TyDimen",
+         lambda loc: lambda rec: arg_at(loc)(rec).update(argty="TyNumber")),
+        ("a changed negative", lambda r, v, a: bool(a.get("negative")),
+         lambda loc: lambda rec: arg_at(loc)(rec).update(negative="ok")),
+        ("a flipped long", lambda r, v, a: a.get("long") is True,
+         lambda loc: lambda rec: arg_at(loc)(rec).update(long=False)),
+        ("a changed content kind", lambda r, v, a: bool(a.get("content")),
+         lambda loc: lambda rec: arg_at(loc)(rec)["content"].update(
+             {sorted(arg_at(loc)(rec)["content"])[0]: "opaque"})),
+        ("an erased refutation", lambda r, v, a: bool(a.get("refuted")),
+         lambda loc: lambda rec: arg_at(loc)(rec).pop("refuted")),
+        ("a flipped star flag", lambda r, v, a: r["star"] is True,
+         lambda loc: lambda rec: rec.update(star=False)),
+        ("a dropped starred variant", lambda r, v, a: len(r["variants"]) > 1,
+         lambda loc: lambda rec: rec["variants"].pop()),
+        ("a flipped shape_checked", lambda r, v, a: any(
+            c.get("allowed") == "ok" and c.get("shape_checked") for k, c in v["cells"].items()
+            if k != v["base_cell"]),
+         lambda loc: lambda rec: [c.update(shape_checked=False) for k, c in
+                                  rec["variants"][loc[1]]["cells"].items()
+                                  if c.get("shape_checked") and
+                                  k != rec["variants"][loc[1]]["base_cell"]][:1]),
+        ("a changed follow outcome", lambda r, v, a: any(
+            c.get("follow") == "follow" for c in v["cells"].values()),
+         lambda loc: lambda rec: [c.update(follow="undefined_cs") for c in
+                                  rec["variants"][loc[1]]["cells"].values()
+                                  if c.get("follow") == "follow"][:1]),
+        ("a changed optional position", lambda r, v, a: v["r"] >= 1,
+         lambda loc: lambda rec: rec["variants"][loc[1]]["optional_positions"]["0"].update(
+             count=rec["variants"][loc[1]]["optional_positions"]["0"]["count"] + 1)),
+    ]
+    for label, pred, mk in kills:
+        loc = _first(side, pred)
+        check("sidecar %s: the sidecar has a record for the kill-test '%s'" % (sf.name, label),
+              loc is not None)
+        if loc is not None:
+            killed(label, loc[0], mk(loc))
+    unres = sorted(n for n, r in side["signatures"].items() if r["status"] == "unresolved"
+                   and r.get("attempts"))
+    if unres:
+        killed("a changed unresolved reason", unres[0], lambda rec: [
+            a.update(reason="x") for a in rec["attempts"].values()][:1])
+    envs = sorted(e for e, r in side["environments"].items() if r["status"] == "attested")
+    if envs:
+        killed("a changed body mode", envs[0], lambda rec: rec.update(
+            body_mode="text" if rec["body_mode"] != "text" else "math"), env=True)
+        killed("a changed push", envs[0], lambda rec: rec.update(
+            pushes=sorted(set(rec["pushes"]) ^ {"caption"})), env=True)
+    n0 = _first(side, lambda r, v, a: a["kind"] == "req")[0]
+    bad = copy.deepcopy(side["signatures"][n0])
+    bad["probes"] = [p for p in bad["probes"] if p[2] != "grab"]
+    check("sidecar kill: dropping %s's grab probes is seen" % n0,
+          any("grab" in x for v in bad["variants"]
+              for x in sg.check_variant(v, bad["probes"], sg.cs(n0), "")))
+    # Global claims: the whole check on a mutated copy.
+    mut = copy.deepcopy(side)
+    mut["calibration"][0][2] = "fatal" if mut["calibration"][0][2] == "ok" else "ok"
+    mut["definer_rules"][0] = dict(mut["definer_rules"][0], outcome="fatal")
+    mut["definer_rules"][0].pop("error_class", None)
+    mut["definer_rules"][0].pop("message", None)
+    fl = sg.check_sidecar(mut, cbytes)
+    check("sidecar kill: a failed calibration premise is seen",
+          any(x.startswith("calibration") for x in fl), fl[:3])
+    check("sidecar kill: a definer row flipped to fatal with no class is seen",
+          any(x.startswith("definer") for x in fl), fl[:3])
+    check("sidecar kill: a stale contract is seen",
+          cbytes is not None and any("stale" in x for x in sg.check_sidecar(side, cbytes + b" ")))
+    print("check_gen_contract_parsers: sidecar %s checked in %.1f s"
+          % (sf.name, time.monotonic() - t0))
 DFILE = REPO / sg.DECL_DIR / "newtheorem.json"
 if DFILE.is_file():
     dt = json.loads(DFILE.read_text(encoding="utf-8"))
@@ -673,6 +946,13 @@ if DFILE.is_file():
               ent["base_complete"] and all(f["complete"] or "load_outcome" in f
                                            for f in ent["forms"].values()),
               {k: f.get("incomplete_reasons") for k, f in ent["forms"].items()})
+        check("decl templates %s: `defines` holds only names carrying the declared name, "
+              "the rest are incidental (review LOW)" % owner,
+              all(sg.DECL_FRESH in n for f in ent["forms"].values()
+                  for n in f.get("defines", {})) and
+              all(sg.DECL_FRESH not in n for f in ent["forms"].values()
+                  for n in f.get("incidental_defines", {})) and
+              all("incidental_defines" in f for f in ent["forms"].values() if "defines" in f))
 
 print("check_gen_contract_parsers: %d checks, %d failed" % (count, fails))
 sys.exit(1 if fails else 0)

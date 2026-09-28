@@ -39,8 +39,9 @@ classified by error class, never by rc; a shape read from \\meaning is a hint).
                         a non-text payload only if `a` there fails: that
                         failure is recorded as the slot's negative);
                      3. exactness, attested: the canonical use compiles, the
-                        canonical use followed by \\lpstop does not grab, and
-                        with its last mandatory argument dropped it grabs (the
+                        canonical use followed by \\lpstop does not grab, the
+                        FOLLOW PROBE passes (version 2, below), and with its
+                        last mandatory argument dropped it grabs (the
                         missing-argument negative). A multi-stage macro that
                         grabs more once its payloads are well typed goes back
                         to step 1;
@@ -62,20 +63,41 @@ classified by error class, never by rc; a shape read from \\meaning is a hint).
                         \\input does): `\\cs A{\\lpstop}` grabs iff it is
                         consumed (kind `gopt`); without this test the group
                         would be modelled as typeset text.
+  follow probe     (version 2, review C-82) `\\lpfsave <use>\\lpfollow\\lpnocs`:
+                   the \\outer sentinel only trips a macro PARAMETER scan, so a
+                   use that takes the next token another way (\\string,
+                   \\noexpand, \\meaning, \\aftergroup, \\expandafter, \\index,
+                   \\enddocument, \\ifdefined) or changes the catcodes or the
+                   group level (\\obeylines, \\obeyspaces, \\makeatletter,
+                   \\bgroup) passed version 1 as r = 0. The probe passes only
+                   if \\lpfollow is executed next and finds the catcodes of all
+                   256 bytes and \\currentgrouplevel as \\lpfsave saved them
+                   (`! LPFOLLOW.`); \\lpnocs (undefined) catches a use that
+                   reorders or defers it.
   per cell         the canonical use of each variant, solo: `ok` or the fatal
-                   error class and message. In a cell other than the base that
-                   accepts the use, `shape_checked` records that nothing more
-                   is consumed there (canonical + \\lpstop does not grab).
+                   error class and message. In an accepting cell,
+                   `shape_checked` records that the shape holds there: the
+                   follow probe passes, and (outside the base cell) nothing
+                   more is grabbed; only checked cells give content kinds.
   argument types   a text-like slot (payload `a` accepted) is typed by what its
-                   payload is typeset as, in each cell that accepts the use:
-                   `a^b` (math-only material) and `$a$` (text-only material),
-                   one variable each, in the text and math cells and the base
-                   cell; `a\\par b` in the base cell gives `long`.
+                   payload is typeset as, in each checked cell that accepts the
+                   use (text, math and the base cell), from three one-variable
+                   witnesses classified by ERROR CLASS: `a^b` (missing_dollar =
+                   typeset in text), `\\"a` (math_accent = typeset in math,
+                   without toggling it as version 1's `$a$` did) and `a&b`
+                   (compiles only where nothing is typeset, or in an
+                   alignment); `a\\par b` in the base cell gives `long`.
                    TyText / TyMath / TyInherit (text in text cells, math in the
-                   math cell) / TyLabel (both accepted: the payload is not
-                   typeset by the use itself, e.g. a label, a key, or a
-                   heading's table-of-contents text); None when the cells
-                   disagree otherwise (the slot's type is not attested).
+                   math cell) / TyLabel (no cell typesets the payload); None
+                   when the cells disagree otherwise. Every type is then
+                   CONFIRMED (version 2): the payloads it admits must compile
+                   in the consumer document (\\title given; headings, the
+                   toc/lof/lot before the use; \\maketitle, a new page and the
+                   marks after it), and a TyLabel payload must be processed at
+                   the use (`\\lpnocs` there is undefined_cs, not stored or
+                   discarded), with each other text-like slot also set to
+                   toc/lof/lot, and no TyLabel beside two or more other
+                   text-like slots. A refuted type is None, with `refuted`.
                    Non-text slots are typed by the lattice payload that made
                    the use compile: TyNumber `1`, TyDimen `1pt`, TyCounter (a
                    counter of the configuration), TyFile `lpprobe` (lpprobe.tex
@@ -111,8 +133,16 @@ classified by error class, never by rc; a shape read from \\meaning is a hint).
 
   Batched probes are TRIAGE only (design B.2): after the solo probes, every
   name's probes run once more in one nonstop document, each in a group after a
-  marker, and the batch polarity is compared with the solo one. Nothing in a
-  signature comes from a batch.
+  marker, and the batch polarity is compared with the solo one (follow and
+  consumer probes are skipped). Nothing in a signature comes from a batch.
+
+  calibration      (version 2) the design's premises re-measured for the
+                   configuration (CALIBRATION): the witnesses' classes, the
+                   follow probe on \\relax / \\string / \\obeylines, the
+                   consumer suite. A configuration where one fails is refused.
+  the log          every probe of a record, in order, with the message of a
+                   fatal one: check_sidecar RE-DERIVES the whole record from
+                   it (replay(): the derivation re-run on the log, no TeX).
 
 The sidecar `corpora/contracts/signatures/<contract>.json` names its contract
 by sha256 (a regenerated contract with other bytes makes it stale) and is
@@ -124,6 +154,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 import re
 import shutil
 import sys
@@ -140,7 +171,7 @@ SIG_SCHEMA = "lp-contract-signatures/1"
 DECL_SCHEMA = "lp-decl-templates/1"
 # Bumped by hand when the probe DESIGN changes the output on purpose (as
 # gen_contract.GENERATOR_VERSION; never a source hash, the C-68 lesson).
-SIGNATURE_VERSION = "1"
+SIGNATURE_VERSION = "2"
 SIG_DIR = gc.CONTRACT_DIR / "signatures"
 DECL_DIR = gc.CONTRACT_DIR / "decl_templates"
 CACHE = "~/.cache/lp-oracle/contracts/signatures"
@@ -152,7 +183,29 @@ SENT = "lpstop"          # the \outer sentinel
 CSPAY = "lpprobecs"      # the TyCsName payload
 FRESH = "lpq"            # the definer table's fresh name (and endlpq, c@lpq)
 DECL_FRESH = "zzq"       # the decl-template fresh theorem name (design B.2)
-RESERVED = (SENT, CSPAY, FRESH, "end" + FRESH, "c@" + FRESH, DECL_FRESH, "c@" + DECL_FRESH)
+# The follow probe (version 2, review C-82): `\lpfsave <use>\lpfollow\lpnocs`.
+# \lpfsave records the catcodes of all 256 bytes and the group level;
+# \lpfollow (\outer, so a macro cannot take it as an argument) compares them
+# and stops with `! LPFOLLOW.` if nothing changed, `! LPSTATE.` if something
+# did; \lpnocs is undefined, so a use that consumes, defers or reorders the
+# token after it (\string, \noexpand, \aftergroup, \expandafter, \index, ...)
+# stops on \lpnocs (or not at all) instead. \lpnocs is also the payload of the
+# stored-payload probe (a TyLabel slot's payload must be processed at the
+# use, not stored or discarded).
+FOLLOW = "lpfollow"
+FSAVE = "lpfsave"
+NOCS = "lpnocs"
+FOLLOW_AUX = ("lpfone", "lpfgob", "lpfcc", "lpfstate", "lpfnow")
+RESERVED = (SENT, CSPAY, FRESH, "end" + FRESH, "c@" + FRESH, DECL_FRESH, "c@" + DECL_FRESH,
+            FOLLOW, FSAVE, NOCS) + FOLLOW_AUX
+FOLLOW_DEF = (r"\long\def\lpfone#1{#1}\long\def\lpfgob#1{}"
+              r"\def\lpfcc#1{\ifnum#1<256 \the\catcode#1,\expandafter\lpfone\else"
+              r"\expandafter\lpfgob\fi{\expandafter\lpfcc\expandafter{\the\numexpr#1+1}}}"
+              r"\def\lpfsave{\edef\lpfstate{\lpfcc{0}/\the\currentgrouplevel}}"
+              r"\outer\def\lpfollow{\edef\lpfnow{\lpfcc{0}/\the\currentgrouplevel}"
+              r"\ifx\lpfstate\lpfnow\errmessage{LPFOLLOW}\else\errmessage{LPSTATE}\fi}")
+FOLLOW_OK = "LPFOLLOW."
+FOLLOW_STATE = "LPSTATE."
 # Files in every probe directory, so that a file argument can be well typed.
 FILE_STEM = "lpprobe"
 COMPANIONS = {FILE_STEM + ".tex": b"lpprobefile\n",
@@ -164,14 +217,40 @@ CELLS = ("text", "math", "vertical", "list", "preamble")
 CELL_DOC = {"text": "x %s y", "math": "x $%s$", "vertical": "%s\\par x",
             "list": "\\begin{itemize}\\item x %s y\\end{itemize}"}
 TEXTLIKE_CELLS = ("text", "vertical", "list")
+# The consumer document (version 2, review C-82): a slot's payload may be
+# typeset LATER by another command (\section[..] and \caption[..] through
+# the .toc/.lof, \title/\author/\thanks through \maketitle, \markboth and
+# \sectionmark through the running heads), across the pass protocol. A
+# consumer cell `consumers:<cell>` is <cell> with a \title given before the
+# use (\maketitle without one is an error at the pin) and these around it.
+CONS = "consumers:"
+CONS_TITLE = "\\title{t}\n"
+CONS_PRE = "\\pagestyle{headings}\\tableofcontents\\listoffigures\\listoftables\n"
+CONS_POST = "\n\\maketitle\\newpage x\\leftmark\\rightmark"
+# The files the consumer suite reads back. A slot's consumption can depend on
+# another slot's value (\addtocontents{toc}{..} is typeset, {a}{..} is written
+# nowhere): a TyLabel candidate is also confirmed with each other text-like
+# slot set to each of these, and is not typed at all when the use has two or
+# more other text-like slots (their joint values are not attested).
+CONS_KEYS = ("toc", "lof", "lot")
 MAX_REQ = 9
 MAX_OPT_RUN = 3
 MAX_TYPE_PASSES = 2
 
 TEXT = "a"
+# Content witnesses, one variable each (version 2). Measured at the pin
+# (2026-09-27): `a^b` is fatal typeset in text mode and fine in math and as a
+# key; `\"a` is fatal typeset in math mode WITHOUT toggling it (`$a$`, the
+# version-1 witness, closed the math and reopened it, so \pmod{$a$} compiled
+# and \pmod read as not typesetting its argument; \pmod{\LaTeX} is fatal);
+# `a&b` is fatal typeset in either mode outside an alignment and fine as a
+# \label/\cite key or in \typeout. calibrate() re-measures all of this for
+# the configuration probed and refuses it if any fails.
 MATH_CONTENT = "a^b"
-TEXT_CONTENT = "$a$"
+TEXT_CONTENT = "\\\"a"
+NONE_CONTENT = "a&b"
 PAR_CONTENT = "a\\par b"
+STORED_CONTENT = "\\" + NOCS
 GRAB_CLASS = "forbidden_cs_use"
 # Error classes that say the USE is in the wrong place (mode or context), so
 # that no payload can fix it in this cell: typing is skipped and the next cell
@@ -192,19 +271,43 @@ ENV_CELLS = ("vertical", "text", "math")
 # Pure helpers (unit-tested by check_gen_contract_parsers.py)
 # ---------------------------------------------------------------------------
 
+def refine_class(e: str, m: str | None) -> str:
+    """The error class a probe outcome is recorded with: gen_contract's class,
+    refined where this module needs more than it says (the follow probe's
+    own `! LPSTATE.`, and a missing counter, which steers the payload search
+    and so must not depend on the message text)."""
+    if m == FOLLOW_STATE:
+        return "lp_state_changed"
+    if e == "latex_error" and m and m.startswith("LaTeX Error: No counter"):
+        return "no_counter"
+    if e == "other" and m and m.startswith("Please use \\mathaccent for accents in math mode"):
+        return "math_accent"
+    return e
+
+
 def outcome_of(res_or_cls: dict) -> dict:
-    """A probe outcome, compact: o in {ok, grab, fatal, timeout}, e the error
-    class, m the first error message. `grab` is the sentinel's own error."""
+    """A probe outcome, compact: o in {ok, grab, follow, fatal, timeout}, e
+    the error class, m the first error message. `grab` is the sentinel's own
+    error; `follow` is the follow probe's `! LPFOLLOW.` (the token after the
+    use was the next one executed, and the catcodes and group level are
+    unchanged)."""
     c = res_or_cls
     if c["outcome"] == "ok":
         return {"o": "ok"}
     if c["outcome"] == "timeout":
         return {"o": "timeout", "e": "timeout"}
+    if c.get("message") == FOLLOW_OK:
+        return {"o": "follow"}
     o = {"o": "grab" if c.get("error_class") == GRAB_CLASS else "fatal",
-         "e": c["error_class"]}
+         "e": refine_class(c["error_class"], c.get("message"))}
     if c.get("message"):
         o["m"] = c["message"]
     return o
+
+
+# Outcomes recorded in the probe log by name; every other one is a fatal
+# error class, followed by its message.
+NAMED_OUTCOMES = ("ok", "grab", "follow", "timeout")
 
 
 def cs(name: str) -> str:
@@ -229,14 +332,34 @@ def build_use(head: str, slots: list, *, star: bool = False, stop: bool = False,
     return s + tail
 
 
+def follow_use(use: str) -> str:
+    """The follow probe of a (complete) use: the state saved before it, then
+    \\lpfollow and the undefined \\lpnocs after it."""
+    return cs(FSAVE) + " " + use + cs(FOLLOW) + cs(NOCS)
+
+
+def _mentions(name: str, use: str) -> bool:
+    return re.search(r"\\%s(?![A-Za-z])" % name, use) is not None
+
+
 def cell_doc(pre: bytes, cell: str, use: str) -> bytes:
     """The whole probe document: the configuration, then the use in `cell`.
-    The sentinel is defined iff the use mentions it, just before it."""
-    sdef = ("\\outer\\def%s{}" % cs(SENT)) if re.search(r"\\%s(?![A-Za-z])" % SENT, use) else ""
+    The sentinel (and the follow probe's macros) are defined iff the use
+    mentions them, just before it. A `consumers:<cell>` cell is <cell> with
+    the consumer suite around the use (CONS_*)."""
+    cons = cell.startswith(CONS)
+    if cons:
+        cell = cell[len(CONS):]
+    sdef = ("\\outer\\def%s{}" % cs(SENT)) if _mentions(SENT, use) else ""
+    if _mentions(FOLLOW, use):
+        sdef += FOLLOW_DEF
+    top = CONS_TITLE.encode("utf-8") if cons else b""
+    bpre, bpost = (CONS_PRE, CONS_POST) if cons else ("", "")
     if cell == "preamble":
-        return (pre + (sdef + use + "\n").encode("utf-8") +
-                b"\\begin{document}\nx\n\\end{document}\n")
-    return (pre + b"\\begin{document}\n" + (sdef + CELL_DOC[cell] % use + "\n").encode("utf-8")
+        return (pre + top + (sdef + use + "\n").encode("utf-8") +
+                ("\\begin{document}\n%sx%s\n\\end{document}\n" % (bpre, bpost)).encode("utf-8"))
+    return (pre + top + b"\\begin{document}\n" +
+            (bpre + sdef + CELL_DOC[cell] % use + bpost + "\n").encode("utf-8")
             + b"\\end{document}\n")
 
 
@@ -300,30 +423,63 @@ def meaning_hint(name: str, meanings: dict) -> dict:
     return out
 
 
-def content_kind(cell: str, math_ok: bool, text_ok: bool) -> str:
-    """What a text-like slot's payload is typeset as, in one cell, from the
-    `a^b` (math-only) and `$a$` (text-only) probes."""
-    if math_ok and text_ok:
-        return "opaque"
-    if not math_ok and not text_ok:
+# The error classes that are evidence of TYPESETTING in a mode (not of a key
+# or string context rejecting the witness, e.g. `\"a` in \label's
+# \csname is missing_endcsname): `a^b` typeset in text, `\"a` typeset in
+# math. Measured at the pin, 2026-09-27.
+TEXT_TYPESET = "missing_dollar"
+MATH_TYPESET = "math_accent"
+
+
+def content_kind(cell: str, m: str, t: str, n: str) -> str:
+    """What a text-like slot's payload is, in one cell, from the outcome words
+    of the three witnesses: m for `a^b`, t for `\"a`, n for `a&b`.
+    `text`/`math`: typeset in that mode (the other mode's witness fails with
+    that mode's typesetting error, the own one compiles); `none`: no mode
+    shows typesetting, and `a^b` and `a&b` both compile (a key, a message; an
+    alignment cell, where `a&b` compiles, typesets `\"a` in math and so is
+    `math`); `opaque` and `restricted` describe no type."""
+    text_ts, math_ts = m == TEXT_TYPESET, t == MATH_TYPESET
+    if text_ts and math_ts:
         return "restricted"
-    return "math" if math_ok else "text"
+    if text_ts:
+        return "text" if t == "ok" else "restricted"
+    if math_ts:
+        return "math" if m == "ok" else "restricted"
+    if m == "ok" and n == "ok":
+        return "none"
+    if m == "ok" and t == "ok":
+        return "opaque"
+    return "restricted"
+
+
+def body_mode_of(m: str, t: str) -> str | None:
+    """An environment body's mode from the two mode witnesses' outcome words;
+    None unless one mode is shown (version 1 read `either` from `$a$`, which
+    toggled math, so `\begin{math}` read as either)."""
+    k = content_kind("", m, t, "fatal")
+    return k if k in ("math", "text") else None
 
 
 def argty_of(kinds: dict) -> str | None:
     """The lattice type of a text-like slot from its per-cell content kinds
-    ({cell: kind}); None when the cells disagree in a way no type describes."""
+    ({cell: kind}); None when the cells disagree in a way no type describes.
+    TyLabel here is only a CANDIDATE: the consumer and stored-payload probes
+    (_confirm_type) must confirm it."""
     if not kinds:
+        return None
+    vals = set(kinds.values())
+    if vals & {"restricted", "opaque"}:
+        return None
+    if vals == {"none"}:
+        return "TyLabel"
+    if "none" in vals:
         return None
     tk = {kinds[c] for c in kinds if c in TEXTLIKE_CELLS}
     mk = kinds.get("math")
-    if "restricted" in tk or mk == "restricted" or len(tk) > 1:
+    if len(tk) > 1:
         return None
     t = next(iter(tk)) if tk else None
-    if t == "opaque" and mk in (None, "opaque"):
-        return "TyLabel"
-    if mk == "opaque" and t is None:
-        return "TyLabel"
     if t == "text" and mk == "math":
         return "TyInherit"
     if t in (None, "text") and mk in (None, "text"):
@@ -356,11 +512,11 @@ def lattice(contract: dict, members: dict) -> list:
 def lattice_order(lat: list, err: dict) -> list:
     """The lattice, the types the error suggests first (a hint for the search
     only; the outcome decides)."""
-    e, m = err.get("e", ""), err.get("m", "")
+    e = err.get("e", "")
     first = []
     if e in ("missing_number", "bad_unit"):
         first = ["TyNumber", "TyDimen"] if e == "missing_number" else ["TyDimen"]
-    elif "No counter" in m:
+    elif e == "no_counter":
         first = ["TyCounter"]
     elif e == "missing_file":
         first = ["TyFile"]
@@ -454,13 +610,55 @@ class Session:
         return self.memo[key]
 
     def evidence(self) -> list:
-        """[cell, use, outcome] per probe; the outcome is `ok`, `grab`,
-        `timeout` or the error class."""
-        out = []
-        for cell, use in self.log:
-            o = self.memo[(cell, use)]
-            out.append([cell, use, o["o"] if o["o"] in ("ok", "grab", "timeout") else o["e"]])
-        return out
+        """[cell, use, outcome] per probe, in the order run; the outcome is
+        `ok`, `grab`, `follow`, `timeout` or the error class, and a fatal
+        outcome carries its message as a fourth element. The log is complete:
+        replay() re-derives the whole record from it."""
+        return [evidence_entry(cell, use, self.memo[(cell, use)]) for cell, use in self.log]
+
+
+def evidence_entry(cell: str, use: str, o: dict) -> list:
+    if o["o"] in NAMED_OUTCOMES:
+        return [cell, use, o["o"]]
+    return [cell, use, o["e"]] + ([o["m"]] if o.get("m") else [])
+
+
+def outcome_from_entry(entry: list) -> dict:
+    """The inverse of evidence_entry."""
+    o = entry[2]
+    if o in ("ok", "grab", "follow"):
+        return {"o": o}
+    if o == "timeout":
+        return {"o": "timeout", "e": "timeout"}
+    out = {"o": "fatal", "e": o}
+    if len(entry) > 3:
+        out["m"] = entry[3]
+    return out
+
+
+class ReplayMiss(Exception):
+    """A replayed derivation asked for a probe its log does not hold."""
+
+
+class ReplaySession(Session):
+    """A Session answered from a record's own probe log, never from TeX: the
+    derivation re-run on it must ask for exactly the logged probes, in the
+    logged order, and produce exactly the recorded fields (check_sidecar)."""
+
+    def __init__(self, probes: list):
+        super().__init__(None)
+        self.logged = {}
+        for entry in probes:
+            self.logged[(entry[0], entry[1])] = outcome_from_entry(entry)
+
+    def p(self, cell: str, use: str) -> dict:
+        key = (cell, use)
+        if key not in self.memo:
+            if key not in self.logged:
+                raise ReplayMiss("probe not in the log: %s %r" % key)
+            self.memo[key] = self.logged[key]
+            self.log.append(key)
+        return self.memo[key]
 
 
 # ---------------------------------------------------------------------------
@@ -511,6 +709,20 @@ def _type_search(S: Session, head: str, tail: str, cell: str, star: bool, slots:
     return cur
 
 
+EXACT_REASONS = {
+    "use": "minimised payloads do not compile",
+    "stop": "the canonical use followed by the sentinel fails",
+    "follow": "the token after the canonical use is not the next one executed with the "
+              "catcodes and group level unchanged (follow probe)",
+    "drop": "dropping the last mandatory argument does not leave the name wanting one",
+}
+
+
+def outcome_word(o: dict) -> str:
+    """One word for an outcome in a record: the named outcome, or the class."""
+    return o["o"] if o["o"] in NAMED_OUTCOMES else o.get("e", o["o"])
+
+
 def discover(S: Session, head: str, tail: str, cell: str, lat: list, *,
              star: bool = False) -> dict:
     """The shape of `head` (after `*` if star) in `cell`. Returns a variant
@@ -519,17 +731,29 @@ def discover(S: Session, head: str, tail: str, cell: str, lat: list, *,
     def use(slots, stop=False):
         return build_use(head, _pairs(slots), star=star, stop=stop, tail=tail)
 
-    def exact(slots) -> bool:
-        """The three attested facts of a shape: the use compiles, nothing
-        more is grabbed after it, and without its last mandatory argument
-        the name wants one."""
-        if S.p(cell, use(slots))["o"] != "ok" or S.p(cell, use(slots, stop=True))["o"] != "ok":
-            return False
+    def exact(slots):
+        """The four attested facts of a shape: the use compiles, nothing
+        more is grabbed after it, the token after it is the next one executed
+        with the catcodes and group level unchanged (the follow probe: the
+        sentinel only trips a macro PARAMETER scan, so \\string, \\noexpand,
+        \\aftergroup, \\index or \\obeylines pass it), and without its last
+        mandatory argument the name wants one. Returns None, or the first
+        fact that fails and its outcome."""
+        if S.p(cell, use(slots))["o"] != "ok":
+            return "use", S.p(cell, use(slots))
+        o = S.p(cell, use(slots, stop=True))
+        if o["o"] != "ok":
+            return "stop", o
+        o = S.p(cell, follow_use(use(slots)))
+        if o["o"] != "follow":
+            return "follow", o
         ri = [i for i, s in enumerate(slots) if s["kind"] == "req"]
         if ri:
             short = [s for i, s in enumerate(slots) if i != ri[-1]]
-            return S.p(cell, use(short, stop=True))["o"] == "grab"
-        return True
+            o = S.p(cell, use(short, stop=True))
+            if o["o"] != "grab":
+                return "drop", o
+        return None
 
     slots: list = []
     rounds = 0
@@ -583,10 +807,9 @@ def discover(S: Session, head: str, tail: str, cell: str, lat: list, *,
                     S.p(cell, use(slots, stop=True))["o"] != "ok"):
         return {"status": "unresolved", "reason": "minimised payloads do not compile"}
     r = len(slots)
-    if not exact(slots):
-        o = S.p(cell, use(slots[:-1], stop=True)) if r else {"o": "?"}
-        return {"status": "unresolved", "reason": "dropping the last mandatory argument "
-                "does not leave the name wanting one", "outcome": o}
+    fail = exact(slots)
+    if fail is not None:
+        return {"status": "unresolved", "reason": EXACT_REASONS[fail[0]], "outcome": fail[1]}
     # 4. optional arguments at each position.
     req = slots
     opt_at: dict = {}
@@ -639,7 +862,7 @@ def discover(S: Session, head: str, tail: str, cell: str, lat: list, *,
                         s["payload"], s["argty"] = TEXT, None
                     else:
                         s["negative"] = ot.get("e", ot["o"])
-            if exact(full):
+            if exact(full) is None:
                 canonical, opt_status = full, "attested"
             else:
                 opt_status = "inexact"
@@ -665,13 +888,15 @@ def star_test(S: Session, head: str, tail: str, cell: str, v: dict):
 
 
 def _cells_for(S: Session, head: str, tail: str, v: dict, cells) -> dict:
-    """Per cell: the canonical use's outcome; outside the base cell, the shape
-    re-checked there; in text-like and math cells, the content probes of every
-    text-like slot."""
+    """Per cell: the canonical use's outcome; the shape checked there (in the
+    base cell by discover; elsewhere nothing more is grabbed after the use
+    and the follow probe passes); in a checked text-like or math cell, the
+    three content witnesses of every text-like slot."""
     slots, star = v["slots"], v["star"]
+    canon = build_use(head, _pairs(slots), star=star, tail=tail)
     out = {}
     for cell in cells:
-        u = S.p(cell, build_use(head, _pairs(slots), star=star, tail=tail))
+        u = S.p(cell, canon)
         rec = {"allowed": "ok" if u["o"] == "ok" else "fatal"}
         if u["o"] != "ok":
             rec["error_class"] = u.get("e", u["o"])
@@ -679,28 +904,84 @@ def _cells_for(S: Session, head: str, tail: str, v: dict, cells) -> dict:
                 rec["message"] = u["m"]
             out[cell] = rec
             continue
+        fo = S.p(cell, follow_use(canon))
+        rec["follow"] = outcome_word(fo)
         if cell == v["cell"]:
-            rec["shape_checked"] = True
+            rec["shape_checked"] = fo["o"] == "follow"
         else:
-            # Outside the base cell: nothing more is consumed after the use.
+            # Outside the base cell: nothing more is consumed after the use,
+            # and the token after it is the next one executed.
             o1 = S.p(cell, build_use(head, _pairs(slots), star=star, stop=True, tail=tail))
-            rec["shape_checked"] = o1["o"] == "ok"
-        if cell in ("text", "math") or (cell == v["cell"] and cell != "preamble"):
+            rec["shape_checked"] = o1["o"] == "ok" and fo["o"] == "follow"
+        if rec["shape_checked"] and (cell in ("text", "math") or
+                                     (cell == v["cell"] and cell != "preamble")):
             content = {}
             for i, s in enumerate(slots):
                 if s["payload"] != TEXT:
                     continue
                 res = []
-                for p in (MATH_CONTENT, TEXT_CONTENT):
+                for p in (MATH_CONTENT, TEXT_CONTENT, NONE_CONTENT):
                     trial = [dict(x) for x in slots]
                     trial[i]["payload"] = p
-                    res.append(S.p(cell, build_use(head, _pairs(trial), star=star,
-                                                   tail=tail))["o"] == "ok")
-                content[str(i)] = content_kind(cell, res[0], res[1])
+                    res.append(outcome_word(S.p(cell, build_use(head, _pairs(trial), star=star,
+                                                                tail=tail))))
+                content[str(i)] = content_kind(cell, res[0], res[1], res[2])
             if content:
                 rec["content"] = content
         out[cell] = rec
     return out
+
+
+def _witnesses(argty: str, base: str) -> tuple:
+    """The content witnesses a slot's type admits, re-run in the consumer
+    document of the base cell."""
+    if argty == "TyLabel":
+        return (NONE_CONTENT,)
+    if argty == "TyMath" or (argty == "TyInherit" and base == "math"):
+        return (MATH_CONTENT,)
+    return (TEXT_CONTENT,)
+
+
+def _confirm_type(S: Session, head: str, tail: str, v: dict, i: int, argty: str):
+    """A text-like slot's type stands only if the payloads it admits are
+    also accepted when every consumer of the configuration runs (CONS_*:
+    the payload may be typeset later, through the .toc/.lof/.lot, \\maketitle
+    or the running heads), and, for TyLabel, if the payload is processed AT
+    the use (an undefined control sequence there is fatal) rather than
+    stored for later (\\title, a definer's body) or discarded (a branch not
+    taken). Returns None, or the refuting probe as [cell, use, outcome]."""
+    base = v["cell"]
+    ccell = CONS + base
+
+    def use_with(p):
+        trial = [dict(x) for x in v["slots"]]
+        trial[i]["payload"] = p
+        return build_use(head, _pairs(trial), star=v["star"], tail=tail)
+    for p in (TEXT,) + _witnesses(argty, base):
+        o = S.p(ccell, use_with(p))
+        if o["o"] != "ok":
+            return [ccell, use_with(p), outcome_word(o)]
+    if argty == "TyLabel":
+        others = [j for j, s in enumerate(v["slots"]) if j != i and s["payload"] == TEXT]
+        if len(others) >= 2:
+            return ["-", "%d other text-like slots: their joint values are not attested"
+                    % len(others), "joint"]
+        for j in others:
+            for key in CONS_KEYS:
+                def keyed(p):
+                    trial = [dict(x) for x in v["slots"]]
+                    trial[i]["payload"], trial[j]["payload"] = p, key
+                    return build_use(head, _pairs(trial), star=v["star"], tail=tail)
+                # Only a legal use can refute: the control must compile.
+                if S.p(ccell, keyed(TEXT))["o"] != "ok":
+                    continue
+                o = S.p(ccell, keyed(NONE_CONTENT))
+                if o["o"] != "ok":
+                    return [ccell, keyed(NONE_CONTENT), outcome_word(o)]
+        o = S.p(base, use_with(STORED_CONTENT))
+        if not (o["o"] == "fatal" and o.get("e") == "undefined_cs"):
+            return [base, use_with(STORED_CONTENT), outcome_word(o)]
+    return None
 
 
 def _finish_slots(S: Session, head: str, tail: str, v: dict, cells: dict) -> list:
@@ -712,7 +993,13 @@ def _finish_slots(S: Session, head: str, tail: str, v: dict, cells: dict) -> lis
         if s["payload"] == TEXT:
             kinds = {c: rec["content"][str(i)] for c, rec in cells.items()
                      if rec.get("content") and str(i) in rec["content"]}
-            a["argty"] = argty_of(kinds)
+            ty = argty_of(kinds)
+            if ty is not None:
+                refuted = _confirm_type(S, head, tail, v, i, ty)
+                if refuted is not None:
+                    a["refuted"] = {"argty": ty, "by": refuted}
+                    ty = None
+            a["argty"] = ty
             a["content"] = kinds
             if base != "preamble":
                 trial = [dict(x) for x in v["slots"]]
@@ -721,7 +1008,7 @@ def _finish_slots(S: Session, head: str, tail: str, v: dict, cells: dict) -> lis
                 a["long"] = (True if o["o"] == "ok" else
                              (False if o.get("e") == "par_in_argument" else None))
                 if a["long"] is None:
-                    a["par_outcome"] = o.get("e", o["o"])
+                    a["par_outcome"] = outcome_word(o)
             else:
                 a["long"] = None
         else:
@@ -748,7 +1035,7 @@ def signature_for(S: Session, head: str, tail: str, lat: list, *, base_order=CEL
             break
         attempts[cell] = {k: d[k] for k in ("status", "reason") if k in d}
         if d.get("outcome"):
-            attempts[cell]["outcome"] = d["outcome"].get("e", d["outcome"]["o"])
+            attempts[cell]["outcome"] = outcome_word(d["outcome"])
         if d["status"] == "unresolved" and (d.get("reason") == "timeout" or
                                             d.get("reason", "").startswith("more than")):
             # Another cell would repeat the same probes to the same end.
@@ -760,7 +1047,7 @@ def signature_for(S: Session, head: str, tail: str, lat: list, *, base_order=CEL
             o = S.p(cell, head + tail)
             bare[cell] = {"allowed": "ok" if o["o"] == "ok" else "fatal"}
             if o["o"] != "ok":
-                bare[cell]["error_class"] = o.get("e", o["o"])
+                bare[cell]["error_class"] = outcome_word(o)
                 if o.get("m"):
                     bare[cell]["message"] = o["m"]
         return {"status": "unresolved", "attempts": attempts, "bare_use": bare}
@@ -812,10 +1099,8 @@ def environment_for(S: Session, env: str, lat: list) -> dict:
     body_probes = {}
     for key, body in ENV_BODIES:
         o = S.p(base, "%s%s%s\\end{%s}" % (head, args, body, env))
-        body_probes[key] = "ok" if o["o"] == "ok" else o.get("e", o["o"])
-    mo, to = body_probes["math_content"] == "ok", body_probes["text_content"] == "ok"
-    rec["body_mode"] = {"opaque": "either", "restricted": None,
-                        "math": "math", "text": "text"}[content_kind(base, mo, to)]
+        body_probes[key] = outcome_word(o)
+    rec["body_mode"] = body_mode_of(body_probes["math_content"], body_probes["text_content"])
     rec["pushes"] = sorted(k for k in ("item", "caption", "alignment") if body_probes[k] == "ok")
     rec["body_probes"] = body_probes
     return rec
@@ -1013,6 +1298,58 @@ def _record(sig: dict, S: Session, hint: dict | None) -> dict:
     return out
 
 
+# The probe design's own premises, re-measured for every configuration probed
+# (version 2): (cell, use, expected). `fatal` = any error but the follow
+# probe's own; `not_follow` = anything but `follow`.
+CALIBRATION = (
+    ("text", TEXT_CONTENT, "ok"), ("math", TEXT_CONTENT, MATH_TYPESET),
+    ("math", MATH_CONTENT, "ok"), ("text", MATH_CONTENT, TEXT_TYPESET),
+    ("text", NONE_CONTENT, "fatal"), ("math", NONE_CONTENT, "fatal"),
+    ("text", "\\label{%s}" % NONE_CONTENT, "ok"),
+    ("text", STORED_CONTENT, "undefined_cs"),
+    ("text", follow_use("\\relax"), "follow"),
+    ("math", follow_use("\\relax"), "follow"),
+    ("preamble", follow_use("\\relax"), "follow"),
+    ("text", follow_use("\\string"), "not_follow"),
+    ("text", follow_use("\\noexpand"), "not_follow"),
+    ("text", follow_use("\\expandafter"), "not_follow"),
+    ("text", follow_use("\\obeylines"), "lp_state_changed"),
+    ("text", follow_use("\\bgroup"), "lp_state_changed"),
+    (CONS + "text", TEXT, "ok"), (CONS + "vertical", TEXT, "ok"),
+    (CONS + "preamble", "\\relax", "ok"),
+    (CONS + "vertical", "\\section[%s]{x}" % NONE_CONTENT, "fatal"),
+    (CONS + "preamble", "\\title{%s}" % MATH_CONTENT, "fatal"),
+    (CONS + "text", "\\markboth{%s}{c}" % NONE_CONTENT, "fatal"),
+)
+
+
+def calibration_meets(outcome: str, expect: str) -> bool:
+    """Does a logged outcome word meet a CALIBRATION expectation?"""
+    if expect in ("ok", "follow"):
+        return outcome == expect
+    if expect == "not_follow":
+        return outcome != "follow"
+    if expect == "fatal":
+        return outcome not in ("ok", "follow", "timeout", "grab")
+    return outcome == expect
+
+
+def calibrate(prober) -> list:
+    """Run CALIBRATION; returns [cell, use, outcome(, message), expected] per
+    row and refuses the configuration if any premise fails."""
+    S = Session(prober)
+    rows = []
+    for cell, use, expect in CALIBRATION:
+        S.p(cell, use)
+    for (cell, use, expect), ent in zip(CALIBRATION, S.evidence()):
+        rows.append(ent + [expect] if len(ent) > 3 else ent + [None, expect])
+    bad = [r for r in rows if not calibration_meets(r[2], r[-1])]
+    if bad:
+        raise SystemExit("contract_signatures: the probe design's premises fail for this "
+                         "configuration: %s" % bad)
+    return rows
+
+
 def hint_agreement(rec: dict) -> str | None:
     """Did the \\meaning hint predict the attested mandatory count?"""
     h = rec.get("hint") or {}
@@ -1029,24 +1366,30 @@ def probe_one_name(prober: Prober, name: str, lat: list, hint: dict | None,
 
 
 def run_batches(prober: Prober, records: dict, workers: int) -> dict:
-    """Triage: each record's solo probes once more in one batch; returns
-    agreement counts and the disagreeing probes."""
+    """Triage: each record's solo probes (batchable ones) once more in one
+    batch; returns agreement counts and the disagreeing probes."""
     def one(item):
         key, rec = item
-        items = [(i, cell, use) for i, (cell, use, _) in enumerate(rec["probes"])]
+        items = [(i, p[0], p[1]) for i, p in enumerate(rec["probes"]) if batchable(p[0], p[1])]
         pol = prober.batch(items) if items else {}
         res = []
-        for i, (cell, use, solo) in enumerate(rec["probes"]):
+        for i, p in enumerate(rec["probes"]):
+            cell, use, solo = p[0], p[1], p[2]
+            if not batchable(cell, use):
+                res.append((key, cell, use, "skipped", None))
+                continue
             b = pol.get(i, "unreached")
             s = "ok" if solo == "ok" else ("timeout" if solo == "timeout" else "fatal")
             res.append((key, cell, use, s, b))
         return res
-    agree = disagree = inconclusive = 0
+    agree = disagree = inconclusive = skipped = 0
     dis = []
     with ThreadPoolExecutor(max_workers=workers) as ex:
         for part in ex.map(one, sorted(records.items())):
             for key, cell, use, s, b in part:
-                if s == "timeout" or b in ("timeout", "unreached"):
+                if s == "skipped":
+                    skipped += 1
+                elif s == "timeout" or b in ("timeout", "unreached"):
                     inconclusive += 1
                 elif s == b:
                     agree += 1
@@ -1054,7 +1397,13 @@ def run_batches(prober: Prober, records: dict, workers: int) -> dict:
                     disagree += 1
                     dis.append([key, cell, use, s, b])
     return {"agree": agree, "disagree": disagree, "inconclusive": inconclusive,
-            "disagreements": dis}
+            "skipped": skipped, "disagreements": dis}
+
+
+def batchable(cell: str, use: str) -> bool:
+    """Batch triage covers the plain cells only: a consumer cell's document
+    and the follow probe's error are not a segment of a shared run."""
+    return not cell.startswith(CONS) and not _mentions(FOLLOW, use)
 
 
 def summarize(sigs: dict, envs: dict) -> dict:
@@ -1064,11 +1413,17 @@ def summarize(sigs: dict, envs: dict) -> dict:
     cells: dict = {}
     star = {"true": 0, "false": 0, "unknown": 0}
     hint = {"agree": 0, "disagree": 0}
+    refuted: dict = {}
+    unchecked = 0
+    reasons: dict = {}
     probes = 0
     for rec in sigs.values():
         probes += len(rec["probes"])
         st[rec["status"]] += 1
         if rec["status"] != "attested":
+            for att in rec.get("attempts", {}).values():
+                r = att.get("reason", att["status"])
+                reasons[r] = reasons.get(r, 0) + 1
             continue
         star["true" if rec["star"] else ("false" if rec["star"] is False else "unknown")] += 1
         h = hint_agreement(rec)
@@ -1081,11 +1436,16 @@ def summarize(sigs: dict, envs: dict) -> dict:
                     continue
                 t = a.get("argty") or "untyped"
                 argty[t] = argty.get(t, 0) + 1
+                if a.get("refuted"):
+                    t = a["refuted"]["argty"]
+                    refuted[t] = refuted.get(t, 0) + 1
             if v["star"]:
                 continue
             for c, r in v["cells"].items():
                 k = "%s:%s" % (c, r["allowed"])
                 cells[k] = cells.get(k, 0) + 1
+                if r["allowed"] == "ok" and not r.get("shape_checked"):
+                    unchecked += 1
     env_st = {"attested": 0, "unresolved": 0}
     for rec in envs.values():
         probes += len(rec["probes"])
@@ -1093,12 +1453,36 @@ def summarize(sigs: dict, envs: dict) -> dict:
     return {"names": len(sigs), "status": st, "base_cell": dict(sorted(base.items())),
             "argty": dict(sorted(argty.items())), "cells": dict(sorted(cells.items())),
             "star": star, "hint_arity_vs_attested": hint, "environments": len(envs),
-            "environment_status": env_st, "solo_probes": probes}
+            "environment_status": env_st, "solo_probes": probes,
+            "types_refuted_by_consumers_or_storage": dict(sorted(refuted.items())),
+            "accepting_cells_shape_unchecked": unchecked,
+            "unresolved_attempt_reasons": dict(sorted(reasons.items()))}
+
+
+# Names every sampled reproducibility check regenerates (MEDIUM-2 of the
+# 2026-09-27 review: a sample seeded by the configuration alone drew the same
+# 60 names forever). The reviewers' adversarial names: each once passed a
+# version-1 check it should not have, or is the case a fix is about.
+ADVERSARIAL_NAMES = ("string", "noexpand", "meaning", "aftergroup", "expandafter", "do",
+                     "index", "glossary", "enddocument", "stop", "ifdefined", "partokenname",
+                     "obeylines", "obeyspaces", "verb", "section", "input", "pmod", "title",
+                     "thanks", "markboth", "caption", "label", "cite", "IfBlankTF",
+                     "addcontentsline", "ensuremath")
+ADVERSARIAL_ENVS = ("math", "itemize", "equation", "center")
+
+
+def signature_sample(names, seed: str, n: int, fixed=ADVERSARIAL_NAMES) -> list:
+    """A reproducibility sample: n names drawn with `seed` (the caller
+    rotates it, e.g. with the commit), plus every `fixed` name present."""
+    pool = sorted(names)
+    pick = random.Random(seed).sample(pool, min(n, len(pool)))
+    return sorted(set(pick) | (set(fixed) & set(pool)))
 
 
 def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, workers: int,
                         names: list | None = None, batch: bool = True,
-                        report: dict | None = None) -> dict:
+                        report: dict | None = None, environments: list | None = None,
+                        definer: bool = False) -> dict:
     report = report if report is not None else {}
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     if not contract.get("complete"):
@@ -1136,6 +1520,7 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
     report["dump_secs"] = round(time.monotonic() - t0, 1)
     lat = lattice(contract, members)
     prober = Prober(tex, cfg)
+    calibration = calibrate(prober)
 
     t1 = time.monotonic()
     sigs: dict = {}
@@ -1147,7 +1532,8 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
     report["names_secs"] = round(time.monotonic() - t1, 1)
     t2 = time.monotonic()
     envs: dict = {}
-    env_todo = [] if subset else environment_names(members)
+    env_todo = (environment_names(members) if not subset else
+                sorted(e for e in (environments or []) if e in environment_names(members)))
     def env_one(e):
         S = Session(prober)
         return _record(environment_for(S, e, lat), S, None)
@@ -1157,7 +1543,8 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
     report["environments_secs"] = round(time.monotonic() - t2, 1)
     t3 = time.monotonic()
     targets = definer_targets(members, contract)
-    rows = [] if subset else run_definer_rows(prober, definer_rows(targets), workers)
+    rows = run_definer_rows(prober, definer_rows(targets), workers) if (definer or not subset) \
+        else []
     report["definer_secs"] = round(time.monotonic() - t3, 1)
     solo = {"probes": prober.solo, "runs": prober.runs}
     report["solo_engine_secs_total"] = round(prober.secs, 1)
@@ -1180,7 +1567,8 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
         "config_key": contract["config_key"],
         "configuration": cfg,
         "pin": contract["pin"],
-        "scope": ({"names": "subset", "requested": todo} if subset else
+        "scope": ({"names": "subset", "requested": todo, "environments": env_todo,
+                   "definer_rules": bool(rows)} if subset else
                   {"names": "every member of the closed world a body can type (%d)" % len(scope),
                    "environments": "every X with \\X and \\endX members, X letters with an "
                                    "optional trailing *",
@@ -1188,6 +1576,13 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
         "letters": [b for b in sorted(letters)],
         "cells": {c: (CELL_DOC.get(c) or "in the preamble; body `x`") for c in CELLS},
         "sentinel": "\\outer\\def%s{}" % cs(SENT),
+        "follow_probe": {"use": follow_use("<use>"), "definitions": FOLLOW_DEF,
+                         "passes_on": "! %s" % FOLLOW_OK},
+        "witnesses": {"math": MATH_CONTENT, "text": TEXT_CONTENT, "none": NONE_CONTENT,
+                      "stored": STORED_CONTENT, "long": PAR_CONTENT},
+        "consumers": {"preamble_before_use": CONS_TITLE.strip(), "body_before": CONS_PRE.strip(),
+                      "body_after": CONS_POST.strip(), "other_slot_keys": list(CONS_KEYS)},
+        "calibration": calibration,
         "lattice": [{"argty": ty, "payload": p} for ty, p in lat],
         "companion_files": sorted(COMPANIONS),
         "protocol": ("solo: %s -interaction=nonstopmode -halt-on-error, a fresh directory "
@@ -1195,8 +1590,9 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
                      "pass protocol (to the first rc 0 in at most %d runs, then one "
                      "confirming run), coreutils timeout %ds per run; outcome ok = rc 0 and "
                      "a PDF on the last run, grab = the sentinel's `Forbidden control "
-                     "sequence found while scanning use of`, else the error class of the "
-                     "first `!` line with TeX's location context"
+                     "sequence found while scanning use of`, follow = the follow probe's "
+                     "`! LPFOLLOW.`, else the error class of the first `!` line with TeX's "
+                     "location context"
                      % (gc._oracle.ENGINE_PDFLATEX, gc.MAX_PASSES, gc.PROBE_TIMEOUT)),
         "signatures": sigs,
         "environments": envs,
@@ -1219,9 +1615,10 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
 # ---------------------------------------------------------------------------
 
 def check_variant(v: dict, probes: list, head: str, tail: str) -> list:
-    """The implications the probe log must support for one attested variant.
-    Returns the failed ones."""
-    out = {(c, u): o for c, u, o in probes}
+    """The implications the probe log must support for one attested variant
+    (a readable restatement of what replay() re-derives in full). Returns
+    the failed ones."""
+    out = {(p[0], p[1]): p[2] for p in probes}
     bad = []
     base = v["base_cell"]
     slots = [(a["kind"], a["payload"]) for a in v["args"] if a["kind"] != "star"]
@@ -1233,6 +1630,9 @@ def check_variant(v: dict, probes: list, head: str, tail: str) -> list:
         bad.append("canonical use does not compile in the base cell: %r" % out.get((base, canon)))
     if out.get((base, build_use(head, slots, star=star, stop=True, tail=tail))) != "ok":
         bad.append("canonical use + sentinel is not recorded ok in the base cell")
+    if out.get((base, follow_use(canon))) != "follow":
+        bad.append("the follow probe of the canonical use is not recorded as passing in the "
+                   "base cell")
     req_idx = [i for i, s in enumerate(slots) if s[0] == "req"]
     if req_idx:
         short = [s for i, s in enumerate(slots) if i != req_idx[-1]]
@@ -1244,15 +1644,84 @@ def check_variant(v: dict, probes: list, head: str, tail: str) -> list:
         o = out.get((c, canon))
         if o is None or (o == "ok") != (rec["allowed"] == "ok"):
             bad.append("cell %s: allowed=%s but the probe log says %r" % (c, rec["allowed"], o))
+        if rec.get("shape_checked") and out.get((c, follow_use(canon))) != "follow":
+            bad.append("cell %s: shape_checked without a passing follow probe" % c)
     for a in v["args"]:
         if a.get("argty") and a["payload"] != TEXT and not a.get("negative"):
             bad.append("typed slot %r without its negative" % a)
     return bad
 
 
+def replay(rec: dict, head: str, lat: list, *, env: str | None = None) -> list:
+    """Re-derive a whole record from its own probe log, with no TeX: the
+    derivation (signature_for, or environment_for) is run again on a
+    ReplaySession. It must ask for exactly the logged probes in the logged
+    order, and every field it produces (status, shape, star and the starred
+    variant, per-cell outcomes, shape_checked, follow, content kinds, argty
+    and its refutation, long, negatives, optional positions, body mode,
+    pushes, attempts, bare-use outcomes) must equal the recorded one.
+    Returns problems."""
+    S = ReplaySession(rec["probes"])
+    try:
+        if env is not None:
+            new = environment_for(S, env, lat)
+        else:
+            new = signature_for(S, head, "", lat, cells=CELLS)
+    except ReplayMiss as e:
+        return ["replay: %s" % e]
+    bad = []
+    logged = [(p[0], p[1]) for p in rec["probes"]]
+    if S.log != logged:
+        extra = len(logged) - len(S.log)
+        bad.append("replay: the derivation asks for %d probes, the log holds %d%s"
+                   % (len(S.log), len(logged), " (unused entries)" if extra > 0 else
+                      " (a different order)"))
+    got = {k: v for k, v in rec.items() if k not in ("probes", "hint")}
+    new = json.loads(json.dumps(new))
+    if new != got:
+        keys = sorted(set(new) | set(got))
+        diff = [k for k in keys if new.get(k) != got.get(k)]
+        detail = ""
+        for k in diff:
+            if k == "variants" and isinstance(new.get(k), list) and isinstance(got.get(k), list):
+                for i, (a, b) in enumerate(zip(new[k], got[k])):
+                    for f in sorted(set(a) | set(b)):
+                        if a.get(f) != b.get(f):
+                            detail = " (variant %d field %s)" % (i, f)
+                            break
+                    if detail:
+                        break
+                if not detail and len(new[k]) != len(got[k]):
+                    detail = " (%d variants re-derived, %d recorded)" % (len(new[k]), len(got[k]))
+        bad.append("replay: recorded %s differ from the re-derivation%s" % (diff, detail))
+    return bad
+
+
+def check_definer_row(row: dict) -> list:
+    """A definer row's outcome is its own solo probe (no log to replay); what
+    the row can say about itself is checked: the outcome vocabulary, and a
+    fatal row's class is the class of its message."""
+    bad = []
+    o = row.get("outcome")
+    if o not in ("ok", "fatal", "timeout"):
+        return ["outcome %r" % o]
+    if o == "ok" and ("error_class" in row or "message" in row):
+        bad.append("ok with an error class or message")
+    if o == "fatal":
+        m = row.get("message")
+        if not row.get("error_class"):
+            bad.append("fatal without an error class")
+        elif m is not None and row["error_class"] != refine_class(gc.classify_error(m), m):
+            bad.append("error class %r is not the class of its message %r"
+                       % (row["error_class"], m))
+        elif m is None and row["error_class"] not in ("no_pdf", "no_error_line"):
+            bad.append("fatal without a message")
+    return bad
+
+
 def check_sidecar(side: dict, contract_bytes: bytes | None) -> list:
-    """Every structural claim of a sidecar that its own probe log can
-    confirm, and its binding to the contract. Returns problems."""
+    """Every claim of a sidecar that its own probe log can confirm, and its
+    binding to the contract. Returns problems."""
     bad = []
     if side.get("schema") != SIG_SCHEMA:
         return ["schema %r" % side.get("schema")]
@@ -1263,6 +1732,18 @@ def check_sidecar(side: dict, contract_bytes: bytes | None) -> list:
         bad.append("its contract %s is missing" % side.get("contract"))
     elif gc.sha256_bytes(contract_bytes) != side["contract_sha256"]:
         bad.append("stale: its contract's sha256 differs from contract_sha256")
+    # The probe design's premises, as calibrated for this configuration.
+    cal = side.get("calibration") or []
+    if [(r[0], r[1], r[-1]) for r in cal] != [tuple(c) for c in CALIBRATION]:
+        bad.append("calibration: the recorded rows are not this version's CALIBRATION")
+    for r in cal:
+        if not calibration_meets(r[2], r[-1]):
+            bad.append("calibration: %s %r gave %r, expected %s" % (r[0], r[1], r[2], r[-1]))
+    wit = side.get("witnesses", {})
+    if (wit.get("math"), wit.get("text"), wit.get("none")) != (MATH_CONTENT, TEXT_CONTENT,
+                                                               NONE_CONTENT):
+        bad.append("witnesses: recorded %r are not this version's" % wit)
+    lat = [(x["argty"], x["payload"]) for x in side.get("lattice", [])]
     for n, rec in side["signatures"].items():
         if rec["status"] == "attested":
             for v in rec["variants"]:
@@ -1270,15 +1751,27 @@ def check_sidecar(side: dict, contract_bytes: bytes | None) -> list:
                     bad.append("%s: %s" % (n, p))
         elif rec["status"] != "unresolved":
             bad.append("%s: status %r" % (n, rec["status"]))
-        seen = [(c, u) for c, u, _ in rec["probes"]]
+        seen = [(p[0], p[1]) for p in rec["probes"]]
         if len(seen) != len(set(seen)):
             bad.append("%s: a probe is logged twice" % n)
+        for p in replay(rec, cs(n), lat):
+            bad.append("%s: %s" % (n, p))
     for e, rec in side.get("environments", {}).items():
         if rec["status"] == "attested":
             tail = "%s\\end{%s}" % (rec["body"], e)
             for v in rec["variants"]:
                 for p in check_variant(v, rec["probes"], "\\begin{%s}" % e, tail):
                     bad.append("env %s: %s" % (e, p))
+        for p in replay(rec, "", lat, env=e):
+            bad.append("env %s: %s" % (e, p))
+    rows = side.get("definer_rules", [])
+    if rows != [dict(r, **{k: x[k] for k in x if k not in r})
+                for r, x in zip(definer_rows(side["definer_targets"]), rows)] or \
+            len(rows) != len(definer_rows(side["definer_targets"])):
+        bad.append("definer_rules: the rows are not the probe table of its targets")
+    for r in rows:
+        for p in check_definer_row(r):
+            bad.append("definer %s/%s: %s" % (r.get("id"), r.get("context"), p))
     s = summarize(side["signatures"], side.get("environments", {}))
     if s != side["summary"]:
         bad.append("summary does not match the entries")
@@ -1339,6 +1832,7 @@ def probe_names(contract_path: Path, names: list, *, cells=CELLS, cache: Path | 
             raise SystemExit("contract_signatures: the image's format is not the contract's")
         meanings, _ = body_start_dump(tex, contract["configuration"], [n for n, _ in todo])
         prober = Prober(tex, contract["configuration"])
+        calibrate(prober)
 
         def one(item):
             n, old = item
@@ -1348,19 +1842,14 @@ def probe_names(contract_path: Path, names: list, *, cells=CELLS, cache: Path | 
             if old is not None:
                 # Replay the cached probe log into the memo: the search is
                 # deterministic, so already-run probes are not run again.
-                for c, u, o in old["probes"]:
-                    S.memo[(c, u)] = {"o": o} if o in ("ok", "grab", "timeout") else \
-                        {"o": "fatal", "e": o, **({"m": old["messages"][c + "\x00" + u]}
-                                                  if c + "\x00" + u in old.get("messages", {})
-                                                  else {})}
-                    S.log.append((c, u))
+                for entry in old["probes"]:
+                    S.memo[(entry[0], entry[1])] = outcome_from_entry(entry)
+                    S.log.append((entry[0], entry[1]))
             sig = signature_for(S, cs(n), "", lat, cells=tuple(want))
             rec = _record(sig, S, meaning_hint(n, meanings))
             rec["name"] = n
             rec["contract_sha256"] = csha
             rec["cells_done"] = want
-            rec["messages"] = {c + "\x00" + u: S.memo[(c, u)]["m"] for c, u in S.log
-                               if S.memo[(c, u)].get("m")}
             p = _cache_path(cache, csha, n)
             p.parent.mkdir(parents=True, exist_ok=True)
             tmp = p.with_suffix(".tmp")
@@ -1376,7 +1865,7 @@ def probe_names(contract_path: Path, names: list, *, cells=CELLS, cache: Path | 
 
 
 def _select_cells(rec: dict, cells) -> dict:
-    r = {k: v for k, v in rec.items() if k not in ("messages", "cells_done")}
+    r = {k: v for k, v in rec.items() if k != "cells_done"}
     if r.get("status") == "attested":
         r["variants"] = [dict(v, cells={c: v["cells"][c] for c in cells if c in v["cells"]})
                          for v in r["variants"]]
@@ -1427,8 +1916,14 @@ def _names_diff(base: dict, with_decl: dict) -> dict:
     removed = sorted(n for n in b if n not in w)
     changed = sorted(n for n in w if n in b and w[n]["meaning_sha256"] != b[n]["meaning_sha256"])
     undefined = sorted(n for n in w if n not in b and w[n]["kind"] == "Undefined")
-    return {"defines": {n: gc.short_kind(w[n]) for n in added}, "changes": changed,
-            "reverts_to_kernel": removed, "undefines_kernel_names": undefined}
+    # `defines` is the declaration's template: the names that carry the
+    # declared name. Every other name it first defines is `incidental`:
+    # scratch (\@let@token, \thmt@tmp, \reserved@d) or a side effect on
+    # something that exists already (\cl@enumi, the reset list of the
+    # `within` counter). Version 1 listed both as `defines` (review, LOW).
+    return {"defines": {n: gc.short_kind(w[n]) for n in added if DECL_FRESH in n},
+            "incidental_defines": {n: gc.short_kind(w[n]) for n in added if DECL_FRESH not in n},
+            "changes": changed, "reverts_to_kernel": removed, "undefines_kernel_names": undefined}
 
 
 def generate_decl_templates(tex: "gc.Tex", kernel: dict, pin: dict, *, workers: int,
@@ -1482,7 +1977,10 @@ def generate_decl_templates(tex: "gc.Tex", kernel: dict, pin: dict, *, workers: 
             "method": ("per owner combination (the base configuration article plus the "
                        "owner packages): a complete contract of the base, and one per "
                        "form with the declaration as a preamble definer; `defines` etc. "
-                       "are the difference of the two closed worlds. `collisions`: solo "
+                       "are the difference of the two closed worlds, `defines` the names "
+                       "that carry the declared name (zzq) and `incidental_defines` every "
+                       "other name first defined (scratch, or a side effect such as a "
+                       "counter's reset list). `collisions`: solo "
                        "probes (grading environment, the oracle's pass protocol) of the "
                        "declaration after a prior definition of its name, and of unknown "
                        "counter arguments"),

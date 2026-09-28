@@ -30,6 +30,12 @@ again):
 
     python3 scripts/tools/check_contracts_reproducible.py --signatures
 
+or a rotating sample of it (the seed is the configuration plus the commit, or
+`--signatures-seed`; the reviewers' adversarial names, some environments, the
+whole definer table and the calibration are always included):
+
+    python3 scripts/tools/check_contracts_reproducible.py --signatures --signatures-sample 60
+
 Signatures of a few names on demand (M3's use-based attestation; cached by
 contract sha256, name and cell under `~/.cache/lp-oracle/contracts/signatures`):
 

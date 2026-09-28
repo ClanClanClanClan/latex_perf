@@ -42,7 +42,8 @@ theorem `strict_ready_iff_pdflatex` cover **READY if and only if pdflatex
 compiles**, and nothing more. The reason and the line a PROVEN NOT-READY names
 are exact with respect to the Coq semantics, but that they are pdfTeX's first
 error and its line is attested **empirically**, by the rule probes and the
-generated differential (0 disagreements on message class and line), not by the
+generated differential (0 disagreements on message class and line; line only
+where pdfTeX reports an l.N, never for E0), not by the
 theorem; counting a wrong reason or location as `strict_wrong` is a check those
 probes make. "Compiles" includes the oracle's timeout: 300 s PER PASS, and the
 protocol runs up to 3 passes plus one confirming pass, so the wall-clock bound

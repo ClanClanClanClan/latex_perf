@@ -11,8 +11,10 @@ Three generated files are compiled into the shipped binary:
     latex-parse/src/language_contract_extracted.ml     (LanguageContractExtract.v)
 
 A fourth, latex-parse/strict/strict_kernel_extracted.ml (proofs/Strict/Extract.v),
-is not in the shipped binary: it is the strict-tier kernel the generated
-differential runs (ADR-012 M2 phase 1), checked here for the same reason.
+and a fifth, latex-parse/strict/strict_bytes_extracted.ml
+(proofs/Strict/ExtractBytes.v), are not in the shipped binary: they are the
+strict-tier kernel and its decision on bytes that the generated differentials
+run (ADR-012 M2 phases 1 and 2), checked here for the same reason.
 
 They are the ONLY link between the Coq proofs and the running code: the capstone
 `compile_safe_of_source` is about `body_of_source`, and the thing that actually
@@ -104,6 +106,15 @@ EXTRACTS = [
         "scripts/tools/regen_strict_kernel_extract.sh",
         "latex-parse/strict/strict_kernel_extracted.ml",
         "proofs/Strict/Extract.v",
+    ),
+    (
+        # The strict tier's decision on BYTES (ADR-012 M2 phase 2): the lexer,
+        # parser and decide_bytes that strict_decide.exe runs in file mode and
+        # the byte-level evidence grades. Not linked into the shipped binary.
+        "strict_bytes",
+        "scripts/tools/regen_strict_bytes_extract.sh",
+        "latex-parse/strict/strict_bytes_extracted.ml",
+        "proofs/Strict/ExtractBytes.v",
     ),
 ]
 

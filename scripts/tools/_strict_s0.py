@@ -39,6 +39,10 @@ CONTRACT = REPO / "corpora/contracts/article.json"
 SIGNATURES = REPO / "corpora/contracts/strict/article-s0-signatures.json"
 EXE_REL = "latex-parse/strict/strict_decide.exe"
 EXTRACT = REPO / "latex-parse/strict/strict_kernel_extracted.ml"
+# M2 phase 2: the decision on bytes (proofs/Strict/ExtractBytes.v) and the
+# lexical contract it reads (gen_strict_lexical.py).
+BYTES_EXTRACT = REPO / "latex-parse/strict/strict_bytes_extracted.ml"
+LEXICAL = REPO / "corpora/contracts/strict/article-s0-lexical.json"
 
 
 def sha256_file(p: Path) -> str:
@@ -129,6 +133,42 @@ class Kernel:
         return sorted(out, key=lambda o: o["id"])
 
 
+class BytesKernel:
+    """The extracted decider on BYTES (DecideBytes.decide_bytes), with the
+    committed signature file and lexical contract. Each request is a file's
+    bytes; each answer is strict_decide.ml's `decide_bytes_json` record
+    (verdict, reason, line, the token and mode of the fatal, the reader's and
+    the kernel's coverage labels, `explain`)."""
+
+    def __init__(self, signatures: Path = SIGNATURES, lexical: Path = LEXICAL):
+        self.exe = build_exe()
+        src = source_block()
+        for path in (signatures, lexical):
+            d = json.loads(Path(path).read_text())
+            for k in ("kernel_sha256", "contract_sha256"):
+                if d["source"][k] != src[k]:
+                    raise SystemExit(f"{path} was generated from another "
+                                     f"{k.split('_')[0]} file ({k} differs)")
+        self.args = [str(self.exe), "--bytes", "--kernel", str(kernel_path()),
+                     "--contract", str(CONTRACT), "--signatures", str(signatures),
+                     "--lexical", str(lexical)]
+
+    def run(self, files: list[bytes]) -> list[dict]:
+        payload = "".join(json.dumps({"id": i, "hex": b.hex()}) + "\n"
+                          for i, b in enumerate(files))
+        p = subprocess.run(self.args, input=payload, capture_output=True, text=True)
+        if p.returncode != 0:
+            raise SystemExit(f"strict_decide --bytes failed rc={p.returncode}: "
+                             f"{p.stderr[-2000:]}")
+        out = [json.loads(line) for line in p.stdout.splitlines() if line.strip()]
+        if len(out) != len(files):
+            raise SystemExit(f"strict_decide answered {len(out)} of {len(files)}")
+        for o in out:
+            if "error" in o:
+                raise SystemExit(f"strict_decide rejected request {o['id']}: {o['error']}")
+        return sorted(out, key=lambda o: o["id"])
+
+
 # ---------------------------------------------------------------- oracle ---
 
 def _first_error(log_text: str) -> tuple[str, int | None]:
@@ -170,6 +210,19 @@ def grade(oracle, tex: str, timeout: int = GRADE_TIMEOUT_S) -> dict:
     with oracle.tempdir("lp-strict-s0-") as td:
         td = Path(td)
         (td / "main.tex").write_text(tex, encoding="ascii")
+        r = oracle.run_to_fixpoint(td, "main.tex", oracle.tex_env(td), timeout)
+        log = td / "main.log"
+        text = log.read_text(errors="replace") if log.is_file() else ""
+        msg, ln = _first_error(text)
+        return {"rc": r.rc, "pdf": r.pdf, "passes": r.passes,
+                "timed_out": r.timed_out, "error": msg, "line": ln}
+
+
+def grade_bytes(oracle, b: bytes, timeout: int = GRADE_TIMEOUT_S) -> dict:
+    """`grade` for a file given as BYTES (written byte for byte)."""
+    with oracle.tempdir("lp-strict-bytes-") as td:
+        td = Path(td)
+        (td / "main.tex").write_bytes(b)
         r = oracle.run_to_fixpoint(td, "main.tex", oracle.tex_env(td), timeout)
         log = td / "main.log"
         text = log.read_text(errors="replace") if log.is_file() else ""

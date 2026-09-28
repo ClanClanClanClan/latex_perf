@@ -69,12 +69,44 @@ let kernel =
       ("relax", { B.sig_text = B.TxNoop; B.sig_math = B.MxNoop });
     ]
   in
+  (* step 2, slice A: the test contract's one-argument commands (as in
+     test_strict_kernel.ml, with the behaviours measured there) *)
+  let asigs =
+    [
+      ( "textbf",
+        {
+          B.as_long = B.LShortInner;
+          B.as_text = B.TRun (true, B.PText false);
+          B.as_math = B.MRun (B.PText true);
+        } );
+      ( "textit",
+        {
+          B.as_long = B.LShortInner;
+          B.as_text = B.TRun (true, B.PText false);
+          B.as_math = B.MRun (B.PText true);
+        } );
+      ( "mathrm",
+        {
+          B.as_long = B.LShortOuter;
+          B.as_text = B.TFatalNow B.E3;
+          B.as_math = B.MRun B.PMath;
+        } );
+      ( "mbox",
+        {
+          B.as_long = B.LLong;
+          B.as_text = B.TRun (true, B.PText true);
+          B.as_math = B.MRun (B.PText true);
+        } );
+    ]
+  in
   {
     B.c_defined =
       (fun n ->
         List.mem_assoc (str n) sigs
+        || List.mem_assoc (str n) asigs
         || List.mem (str n) [ "end"; "par"; "begin"; "documentclass" ]);
     B.c_sig = (fun n -> List.assoc_opt (str n) sigs);
+    B.c_arg = (fun n -> List.assoc_opt (str n) asigs);
   }
 
 let contract = { B.bc_kernel = kernel; B.bc_lex = lexcon }
@@ -157,6 +189,28 @@ let () =
   check "first line %&latex" ("%&latex\n" ^ h ^ "x\n" ^ e) "not_strict";
   check "first line  %&latex" (" %&latex\n" ^ h ^ "x\n" ^ e) "ready";
   check "line at the bound" (h ^ String.make 10000 'x' ^ "\n" ^ e) "ready";
+  (* step 2, slice A (each file measured under the pinned oracle, 2026-09-28):
+     an error inside an argument is reported where the file reader stands, on
+     the closing brace of the outermost argument *)
+  check "error in an argument" (h ^ "\\textbf{x\n\\zzundef\ny\n}\n" ^ e) "E1 l.6";
+  check "short-outer argument: at the break"
+    (h ^ "$\\mathrm{x\n\n y}$\n" ^ e)
+    "E6 l.4";
+  check "math-only command in text" (h ^ "x\n\\mathrm{x\n}\n" ^ e) "E3 l.4";
+  check "\\] in an hbox" (h ^ "\\mbox{\\[x\n\\]\n}\n" ^ e) "E5 l.5";
+  check "inner short argument, outer long"
+    (h ^ "\\mbox{\\textbf{x\n\n}\n\\zzundef}\n" ^ e)
+    "E6 l.6";
+  check "a break after the short argument closed"
+    (h ^ "\\mbox{\\textit{\\zzundef}\n{\n\n}\n}\n" ^ e)
+    "E1 l.7";
+  check "argument open at \\end{document}" (h ^ "\\textbf{x\n" ^ e) "not_strict";
+  check "argument without its brace" (h ^ "\\textbf x\n" ^ e) "not_strict";
+  (match B.explain contract (chars (h ^ "\\textbf x\n" ^ e)) with
+  | Some (off, B.WArgForm) when off = String.length h -> ()
+  | _ ->
+      incr failures;
+      print_endline "FAIL explain: an argument command without its brace");
   (* explain: the first offending byte of an outside file *)
   (match B.explain contract (chars (h ^ "x ~ y\n" ^ e)) with
   | Some (off, B.WLexBad B.BadCat) when off = String.length h + 2 -> ()

@@ -26,7 +26,12 @@ Inductive why_out :=
                           defined in the configuration without a signature *)
 | WScriptArg           (* ^ or _ not followed by a character or { *)
 | WBound               (* the kernel's capacity bounds *)
-| WEndsDollar.         (* the kernel stream ends with $ *)
+| WEndsDollar          (* the kernel stream ends with $ *)
+| WArgForm.            (* step 2, slice A: a one-argument command not
+                          followed by the brace of its argument, or an
+                          argument that does not close before
+                          \end{document} or the end of the file
+                          (Decide.wfa) *)
 
 Definition rtok_eqb (a b : rtok) : bool :=
   match a, b with
@@ -116,6 +121,34 @@ Fixpoint first_bad_script (ks : list ktok) : option ktok :=
       end
   end.
 
+(** Where [Decide.wfa] fails, counted as it counts: [Some (Some k)] at the
+    token [k] (a one-argument command without its brace, or an
+    [\end{document}] inside an argument), [Some None] at the end of the
+    file (an argument still open), [None] when the arguments are well
+    formed. *)
+Fixpoint first_bad_arg (K : contract) (need : nat) (ks : list ktok) : option (option ktok) :=
+  match ks with
+  | [] => if Nat.eqb need 0 then None else Some None
+  | k :: r =>
+      match k_tok k with
+      | TEnd => if Nat.eqb need 0 then None else Some (Some k)
+      | TOpen => first_bad_arg K (if Nat.eqb need 0 then 0 else S need) r
+      | TClose => first_bad_arg K (pred need) r
+      | TCs n =>
+          if is_argcmd K n then
+            match r with
+            | k2 :: r' =>
+                match k_tok k2 with
+                | TOpen => first_bad_arg K (S need) r'
+                | _ => Some (Some k)
+                end
+            | [] => Some (Some k)
+            end
+          else first_bad_arg K need r
+      | _ => first_bad_arg K need r
+      end
+  end.
+
 (** The first [{] beyond the nesting bound, counted as [Decide.depth_ok_from]
     counts. *)
 Fixpoint first_too_deep (d : nat) (ks : list ktok) : option ktok :=
@@ -152,6 +185,10 @@ Definition explain (C : bcontract) (b : list ascii) : option (nat * why_out) :=
                     match first_bad_script ks with
                     | Some k => Some (k_off k, WScriptArg)
                     | None =>
+                      match first_bad_arg K 0 ks with
+                      | Some (Some k) => Some (k_off k, WArgForm)
+                      | Some None => Some (length b, WArgForm)
+                      | None =>
                         if negb (Nat.leb (length ks) max_tokens)
                         then Some (off_or (nth_error ks max_tokens) (length b), WBound)
                         else
@@ -162,6 +199,7 @@ Definition explain (C : bcontract) (b : list ascii) : option (nat * why_out) :=
                               then Some (off_or (last (map Some ks) None) (length b), WEndsDollar)
                               else None
                           end
+                      end
                     end
                 end
             end

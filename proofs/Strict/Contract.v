@@ -34,7 +34,8 @@ Inductive reason :=
 | E4   (* double superscript / double subscript *)
 | E5   (* stack discipline: stray }, a math delimiter that does not match
           the open math, unclosed math at \end{document}, no \end{document} *)
-| E6.  (* \par (or a blank line) in math *)
+| E6.  (* \par (or a blank line) in math, or in the argument of a command
+          whose argument is not long (slice A) *)
 
 (** How a defined control word behaves when it is executed in TEXT (vertical
     or horizontal) mode, as attested by probes. *)
@@ -52,13 +53,64 @@ Inductive math_beh :=
 
 Record signature := mkSig { sig_text : text_beh; sig_math : math_beh }.
 
+(** ** Commands with one mandatory argument (ADR-012 step 2, slice A)
+
+    A control word whose meaning reads ONE undelimited macro argument, given
+    as a brace group right after the name.  pdfTeX first READS the whole
+    argument from the file (so the file reader then stands on its closing
+    brace), and only then runs the command's expansion.  MEASURED under the
+    pinned oracle (the rule probes of family S0/Stop_defer): an error raised
+    while the argument's tokens run is reported on the line of that closing
+    brace, not on the line of the token that raised it.  How a signature
+    describes such a command, attested per name by solo probes
+    (scripts/tools/gen_strict_signatures.py, stage A):
+
+    - [as_long], what a paragraph break inside the argument does.  [LLong]:
+      nothing special.  [LShortInner]: the command's expansion re-reads its
+      argument with a macro that is not long (the text font commands'
+      [text@command]); pdfTeX stops with "Paragraph ended before ... was
+      complete" before any of the argument runs, where the file reader
+      stands.  [LShortOuter]: already the macro that reads the argument FROM
+      THE FILE is not long; pdfTeX stops at the paragraph break itself.
+    - [as_text] / [as_math], what the command does in text / in math: stop
+      before reading the argument ([TFatalNow]/[MFatalNow]: the file reader
+      stands on the name); read it and stop ([TFatalAfter]/[MFatalAfter]);
+      or read it and run it in a group whose mode is a [pay]
+      ([TRun]/[MRun]; in text, [material] says whether the command typesets
+      something even for an empty argument).  In math a run argument always
+      leaves a fresh tail: the result is a noad, or a node that is not one (a
+      box, a choice), and then TeX gives a following script a new empty
+      noad. *)
+
+Inductive longness := LLong | LShortInner | LShortOuter.
+
+(** The mode an argument runs in: text, in restricted horizontal mode (an
+    hbox: there a double dollar is an empty formula and the display opener of
+    LaTeX opens nothing) or not; or math, as a math group. *)
+Inductive pay := PText (restricted : bool) | PMath.
+
+Inductive arg_text :=
+| TFatalNow (r : reason)
+| TFatalAfter (r : reason)
+| TRun (material : bool) (p : pay).
+
+Inductive arg_math :=
+| MFatalNow (r : reason)
+| MFatalAfter (r : reason)
+| MRun (p : pay).
+
+Record asig := mkASig { as_long : longness; as_text : arg_text; as_math : arg_math }.
+
 Record contract := mkContract {
   c_defined : name -> bool;
-  c_sig : name -> option signature
+  c_sig : name -> option signature;
+  c_arg : name -> option asig   (* slice A: the one-argument commands *)
 }.
 
-(** Well-formedness the loader checks (a signature only for a defined name).
-    No theorem of the kernel needs it: an undefined name is decided E1
-    whatever its (then meaningless) signature says. *)
+(** Well-formedness the loader checks (a signature only for a defined name,
+    and never both kinds for one name).  No theorem of the kernel needs it:
+    an undefined name is decided E1 whatever its (then meaningless)
+    signatures say, and the argument rules require [c_sig C n = None]. *)
 Definition contract_wf (C : contract) : Prop :=
-  forall n s, c_sig C n = Some s -> c_defined C n = true.
+  (forall n s, c_sig C n = Some s -> c_defined C n = true) /\
+  (forall n a, c_arg C n = Some a -> c_defined C n = true /\ c_sig C n = None).

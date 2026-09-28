@@ -39,4 +39,4 @@ Unset Extraction Optimize.
 
 Extraction "strict_bytes_extracted.ml"
   decide_bytes explain parse lex in_strict_bytes_b rd run step init toks_of
-  tok_ok scripts_ok bounded in_math.
+  tok_ok scripts_ok bounded in_math wfa scan_run rd_scan.

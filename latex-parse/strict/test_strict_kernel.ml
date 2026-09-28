@@ -32,10 +32,44 @@ let contract =
       ("relax", { K.sig_text = K.TxNoop; K.sig_math = K.MxNoop });
     ]
   in
+  (* Step 2, slice A: three one-argument commands, with the behaviours the
+     cases below measured under the pinned oracle (2026-09-28): an error in
+     [\textbf]'s argument is reported on the line of its closing brace, a
+     paragraph break in it gives "Paragraph ended before \text@command was
+     complete" there too; [\mathrm] in text gives "allowed only in math mode"
+     on its own line, and a paragraph break in its argument "Paragraph ended
+     before \math@egroup was complete" on the break's line; [\mbox] runs its
+     argument in an hbox, where [$$] is an empty formula. *)
+  let asigs =
+    [
+      ( "textbf",
+        {
+          K.as_long = K.LShortInner;
+          K.as_text = K.TRun (true, K.PText false);
+          K.as_math = K.MRun (K.PText true);
+        } );
+      ( "mathrm",
+        {
+          K.as_long = K.LShortOuter;
+          K.as_text = K.TFatalNow K.E3;
+          K.as_math = K.MRun K.PMath;
+        } );
+      ( "mbox",
+        {
+          K.as_long = K.LLong;
+          K.as_text = K.TRun (true, K.PText true);
+          K.as_math = K.MRun (K.PText true);
+        } );
+    ]
+  in
   {
     K.c_defined =
-      (fun n -> List.mem_assoc (str n) sigs || str n = "end" || str n = "par");
+      (fun n ->
+        List.mem_assoc (str n) sigs
+        || List.mem_assoc (str n) asigs
+        || str n = "end" || str n = "par");
     K.c_sig = (fun n -> List.assoc_opt (str n) sigs);
+    K.c_arg = (fun n -> List.assoc_opt (str n) asigs);
   }
 
 let t w = K.NText (chars w)
@@ -130,6 +164,41 @@ let () =
   (* outside the tier: a script whose argument is a control word *)
   check "cs script arg"
     (doc [ dollar [ t "x"; sup (cmd "alpha") ] ])
+    "not_strict";
+  (* step 2, slice A: one-argument commands (families S0/Stop_defer, S0/SC_*,
+     S0/R_arg_*; each case measured under the pinned oracle, 2026-09-28) *)
+  let g b = K.NGroup b in
+  check "error in an argument: at its closing brace"
+    (doc [ cmd "textbf"; g [ t "x"; cmd "zzundef"; t "y" ] ])
+    "E1@5";
+  check "paragraph in a short-inner argument: at its closing brace"
+    (doc [ cmd "textbf"; g [ t "x"; K.NPar false; cmd "zzundef"; t "y" ] ])
+    "E6@6";
+  check "math-only command in text: at the name"
+    (doc [ cmd "mathrm"; g [ t "x" ] ])
+    "E3@0";
+  check "paragraph in a short-outer argument: at the break"
+    (doc [ dollar [ cmd "mathrm"; g [ t "x"; K.NPar true; t "y" ] ] ])
+    "E6@4";
+  check "$$ in an hbox is an empty formula"
+    (doc [ cmd "mbox"; g [ display [ t "x" ] ] ])
+    "ready";
+  check "\\] in an hbox"
+    (doc [ cmd "mbox"; g [ K.NMath (K.MkBracket, [ t "x" ]) ] ])
+    "E5@5";
+  check "display in a text argument" (doc [ cmd "textbf"; g [ display [ t "x" ] ] ]) "ready";
+  check "display in a restricted argument in math"
+    (doc [ dollar [ cmd "textbf"; g [ display [ t "x" ] ] ] ])
+    "ready";
+  check "a math argument is a noad"
+    (doc [ dollar [ cmd "mathrm"; g [ t "x" ]; sup (t "a"); sup (t "b") ] ])
+    "E4@7";
+  check "a box in math is a fresh tail"
+    (doc [ dollar [ t "x"; sup (t "a"); cmd "mbox"; g []; sup (t "b") ] ])
+    "ready";
+  check "argument command without its brace" (doc [ cmd "textbf"; t "x" ]) "not_strict";
+  check "argument command before a stray brace"
+    (doc [ cmd "textbf"; K.NStrayClose ])
     "not_strict";
   (* the capacity bounds (Decide.v [bounded], C-86): 200 nested groups are
      inside the tier, 201 are not (MEASURED: 254 overflow TeX's grouping

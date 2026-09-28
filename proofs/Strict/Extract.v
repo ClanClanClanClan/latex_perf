@@ -35,4 +35,4 @@ Extraction Language OCaml.
 Unset Extraction Optimize.
 
 Extraction "strict_kernel_extracted.ml"
-  decide render flatten_doc in_strict_b run step init.
+  decide render flatten_doc in_strict_b run step init wfa scan_run in_arg short_depth.

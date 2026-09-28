@@ -144,6 +144,82 @@ let load_signatures path members ~kernel_key ~contract_key =
       | _ -> die "strict_decide: %s has no signatures" p));
   tbl
 
+(* ---- argument signatures (ADR-012 step 2, slice A) ---------------------- *)
+
+(* The one-argument commands' signatures (Contract.v [asig]), written by
+   scripts/tools/gen_strict_arg_signatures.py from solo probes. JSON per name:
+   {"long": "long"|"short_inner"|"short_outer", "text": ["now", R] | ["after",
+   R] | ["run", material, P], "math": ["now", R] | ["after", R] | ["run", P]}
+   with P one of "text", "text_restricted", "math". *)
+let longness_of = function
+  | `String "long" -> K.LLong
+  | `String "short_inner" -> K.LShortInner
+  | `String "short_outer" -> K.LShortOuter
+  | _ -> failwith "bad argument longness"
+
+let pay_of = function
+  | `String "text" -> K.PText false
+  | `String "text_restricted" -> K.PText true
+  | `String "math" -> K.PMath
+  | _ -> failwith "bad argument payload mode"
+
+let string_of_pay = function
+  | K.PText false -> "text"
+  | K.PText true -> "text_restricted"
+  | K.PMath -> "math"
+
+let arg_text_of = function
+  | `List [ `String "now"; `String r ] -> K.TFatalNow (reason_of_string r)
+  | `List [ `String "after"; `String r ] -> K.TFatalAfter (reason_of_string r)
+  | `List [ `String "run"; `Bool m; p ] -> K.TRun (m, pay_of p)
+  | _ -> failwith "bad argument text behaviour"
+
+let arg_math_of = function
+  | `List [ `String "now"; `String r ] -> K.MFatalNow (reason_of_string r)
+  | `List [ `String "after"; `String r ] -> K.MFatalAfter (reason_of_string r)
+  | `List [ `String "run"; p ] -> K.MRun (pay_of p)
+  | _ -> failwith "bad argument math behaviour"
+
+let asig_of v =
+  {
+    K.as_long = longness_of (member "long" v);
+    K.as_text = arg_text_of (member "text" v);
+    K.as_math = arg_math_of (member "math" v);
+  }
+
+(* contract_wf (Contract.v): an argument signature only for a defined name that
+   has no phase-1 signature. *)
+let load_arg_signatures path members sigs ~kernel_key ~contract_key =
+  let tbl = Hashtbl.create 256 in
+  (match path with
+  | None -> ()
+  | Some p -> (
+      let j = load_json p in
+      let src = member "source" j in
+      (match
+         (member "kernel_meanings_sha256" src, member "contract_config_key" src)
+       with
+      | `String k, `String c when k = kernel_key && c = contract_key -> ()
+      | _ ->
+          die
+            "strict_decide: %s was generated from other kernel/contract files \
+             than the ones given"
+            p);
+      match member "arg_signatures" j with
+      | `Assoc l ->
+          List.iter
+            (fun (n, v) ->
+              if not (Hashtbl.mem members n) then
+                die "strict_decide: argument signature for undefined name %S" n;
+              if Hashtbl.mem sigs n then
+                die "strict_decide: %S has both kinds of signature" n;
+              Hashtbl.replace tbl n
+                (try asig_of v
+                 with Failure m -> die "strict_decide: %s: %s: %s" p n m))
+            l
+      | _ -> die "strict_decide: %s has no arg_signatures" p));
+  tbl
+
 (* ---- documents ----------------------------------------------------------- *)
 
 let rec node_of = function
@@ -247,15 +323,20 @@ let rule_of c s t nx res =
   match (t, res) with
   | K.TEnd, K.Stop K.Compiles -> "R_end_ok"
   | K.TEnd, K.Stop (K.Fatal (K.E0, _)) -> "R_end_empty"
-  | K.TEnd, _ -> "R_end_math"
+  | K.TEnd, K.Stop _ -> "R_end_math"
+  | K.TEnd, _ -> "stuck"
   | K.TChar _, _ -> if math then "R_char_math" else "R_char_text"
   | K.TSpace, _ -> "R_space"
-  | K.TPar _, _ -> if math then "R_par_math" else "R_par_text"
+  | K.TPar _, _ ->
+      if K.short_depth fs <> 0 then "R_par_short"
+      else if math then "R_par_math"
+      else "R_par_text"
   | K.TOpen, _ -> if math then "R_open_math" else "R_open_text"
   | K.TClose, _ -> (
       match head with
       | Some K.FSimple -> "R_close_simple"
       | Some (K.FMGroup _) -> "R_close_group"
+      | Some (K.FArg _) -> "R_close_arg"
       | Some (K.FShift _) -> "R_close_shift"
       | None -> "R_close_top")
   | K.TDollar, _ -> (
@@ -267,7 +348,8 @@ let rule_of c s t nx res =
           "R_dollar_display_undef"
       | Some (K.FShift (true, _, _)), None -> "R_dollar_display_eof"
       | Some (K.FShift (true, _, _)), _ -> "R_dollar_display_bad"
-      | Some (K.FMGroup _), _ -> "R_dollar_group"
+      | _ when K.mgroup_head fs -> "R_dollar_group"
+      | _ when K.restricted fs -> "R_dollar_restricted_open"
       | _, Some K.TDollar -> "R_dollar_display_open"
       | _, _ -> "R_dollar_inline_open")
   | K.TMOpenInline, _ -> if math then "R_mopen_inline_bad" else "R_mopen_inline"
@@ -276,7 +358,9 @@ let rule_of c s t nx res =
       | Some (K.FShift (false, _, _)) -> "R_mclose_inline"
       | _ -> "R_mclose_inline_bad")
   | K.TMOpenDisplay, _ ->
-      if math then "R_mopen_display_bad" else "R_mopen_display"
+      if math then "R_mopen_display_bad"
+      else if K.restricted fs then "R_mopen_display_restricted"
+      else "R_mopen_display"
   | K.TMCloseDisplay, _ -> (
       match head with
       | Some (K.FShift (true, _, _)) -> "R_mclose_display"
@@ -293,7 +377,26 @@ let rule_of c s t nx res =
       if not (c.K.c_defined n) then "R_cs_undefined"
       else
         match c.K.c_sig n with
-        | None -> "stuck"
+        | None -> (
+            match c.K.c_arg n with
+            | None -> "stuck"
+            | Some a -> (
+                let side = if math then "math" else "text" in
+                let beh =
+                  if math then
+                    match a.K.as_math with
+                    | K.MFatalNow _ -> "now"
+                    | K.MFatalAfter _ -> "after"
+                    | K.MRun _ -> "run"
+                  else
+                    match a.K.as_text with
+                    | K.TFatalNow _ -> "now"
+                    | K.TFatalAfter _ -> "after"
+                    | K.TRun _ -> "run"
+                in
+                match (beh, nx) with
+                | "now", _ | _, Some K.TOpen -> "R_arg_" ^ side ^ "_" ^ beh
+                | _ -> "stuck"))
         | Some sg -> (
             if math then
               match sg.K.sig_math with
@@ -323,6 +426,9 @@ let head_label = function
   | K.FShift (false, _, _) :: _ -> "inline"
   | K.FShift (true, _, _) :: _ -> "display"
   | K.FMGroup _ :: _ -> "mgroup"
+  | K.FArg (_, K.PText false, _, _) :: _ -> "arg.text"
+  | K.FArg (_, K.PText true, _, _) :: _ -> "arg.textr"
+  | K.FArg (_, K.PMath, _, _) :: _ -> "arg.math"
 
 let text_cls = function
   | K.TxMaterial -> "material"
@@ -334,11 +440,29 @@ let math_cls = function
   | K.MxNoop -> "noop"
   | K.MxFatal r -> "fatal." ^ string_of_reason r
 
+(* The class of a one-argument command's behaviour in text / in math (the
+   branch matrix's token class; slice A). *)
+let arg_text_cls = function
+  | K.TFatalNow r -> "now." ^ string_of_reason r
+  | K.TFatalAfter r -> "after." ^ string_of_reason r
+  | K.TRun (m, p) ->
+      "run." ^ (if m then "material." else "noop.") ^ string_of_pay p
+
+let arg_math_cls = function
+  | K.MFatalNow r -> "now." ^ string_of_reason r
+  | K.MFatalAfter r -> "after." ^ string_of_reason r
+  | K.MRun p -> "run." ^ string_of_pay p
+
 let cs_label c math n =
   if not (c.K.c_defined n) then "cs:undef"
   else
     match c.K.c_sig n with
-    | None -> "cs:nosig"
+    | None -> (
+        match c.K.c_arg n with
+        | None -> "cs:nosig"
+        | Some a ->
+            if math then "cs:am." ^ arg_math_cls a.K.as_math
+            else "cs:at." ^ arg_text_cls a.K.as_text)
     | Some sg ->
         if math then "cs:m." ^ math_cls sg.K.sig_math
         else "cs:t." ^ text_cls sg.K.sig_text
@@ -349,7 +473,10 @@ let follower_label c = function
       if not (c.K.c_defined n) then "cs:undef"
       else
         match c.K.c_sig n with
-        | None -> "cs:nosig"
+        | None -> (
+            match c.K.c_arg n with
+            | None -> "cs:nosig"
+            | Some _ -> "cs:arg")
         | Some sg ->
             "cs:" ^ text_cls sg.K.sig_text ^ "/" ^ math_cls sg.K.sig_math)
   | Some t -> tok_name t
@@ -374,24 +501,122 @@ let branch_of c s t nx =
       tail;
     ]
 
+(* One step of the argument scanner (Semantics.Scans; [K.scan_run]): the rule it
+   used, the branch cell "scan|<token>|<k=1 or k>1>|<sh>|<ou>", and the next scan
+   state, or None when it stops (or leaves the tier: TEnd, k = 0). REPORTING
+   ONLY, like [rule_of]. *)
+let scan_step (sc : K.scan) t =
+  let cell =
+    String.concat "|"
+      [
+        "scan";
+        tok_name t;
+        (if sc.K.sc_k <= 1 then "k1" else "k2");
+        (if sc.K.sc_sh = 0 then "nosh" else "sh");
+        (if sc.K.sc_ou then "ou" else "noou");
+      ]
+  in
+  match t with
+  | K.TClose ->
+      if sc.K.sc_k = 1 then ("SC_close_last", cell, None)
+      else if sc.K.sc_k >= 2 then
+        let k = sc.K.sc_k - 1 in
+        ( "SC_close",
+          cell,
+          Some { sc with K.sc_k = k; K.sc_sh = K.close_sh k sc.K.sc_sh } )
+      else ("stuck", cell, None)
+  | K.TOpen -> ("SC_open", cell, Some { sc with K.sc_k = sc.K.sc_k + 1 })
+  | K.TPar _ ->
+      if sc.K.sc_ou then ("SC_par_outer", cell, None)
+      else if sc.K.sc_sh = 0 then ("SC_par_long", cell, Some sc)
+      else ("SC_par_short", cell, Some { sc with K.sc_r = K.E6 })
+  | K.TEnd -> ("stuck", cell, None)
+  | _ -> ("SC_skip", cell, Some sc)
+
+(* The steps of the extracted run (and of its argument scanner), for coverage
+   reporting and for the FATAL EVENT of a deferred error: [walk_run c toks f g]
+   calls [f s t nx res] at every step of [run] and [g sc t] at every step of
+   [scan_run]. *)
+let walk_run c toks ~step ~scan ~eof =
+  let rec sc_walk sc = function
+    | [] -> ()
+    | t :: rest -> (
+        scan sc t;
+        match scan_step sc t with
+        | _, _, Some sc' -> sc_walk sc' rest
+        | _, _, None -> ())
+  in
+  let rec walk s = function
+    | [] -> eof s
+    | t :: rest -> (
+        let nx = match rest with x :: _ -> Some x | [] -> None in
+        let res = K.step c s t nx in
+        step s t nx res;
+        match res with
+        | K.Go1 s' -> walk s' rest
+        | K.Go2 s' -> ( match rest with _ :: r -> walk s' r | [] -> ())
+        | K.Stop _ | K.Stuck -> ()
+        | K.Defer sc -> sc_walk sc (t :: rest)
+        | K.Defer2 sc -> ( match rest with _ :: r -> sc_walk sc r | [] -> ()))
+  in
+  walk K.init toks
+
 let rules_used c toks =
   let acc = ref [] and br = ref [] in
   let add r = if not (List.mem r !acc) then acc := r :: !acc in
   let addb b = if not (List.mem b !br) then br := b :: !br in
-  let rec walk s = function
-    | [] -> add "R_eof"
-    | t :: rest -> (
-        let nx = match rest with x :: _ -> Some x | [] -> None in
-        let res = K.step c s t nx in
-        add (rule_of c s t nx res);
-        addb (branch_of c s t nx);
-        match res with
-        | K.Go1 s' -> walk s' rest
-        | K.Go2 s' -> ( match rest with _ :: r -> walk s' r | [] -> ())
-        | K.Stop _ | K.Stuck -> ())
-  in
-  walk K.init toks;
+  walk_run c toks
+    ~step:(fun s t nx res ->
+      add (rule_of c s t nx res);
+      addb (branch_of c s t nx);
+      match (res, t, s.K.s_frames) with
+      (* the rules whose conclusion goes through Semantics.Stops *)
+      | K.Stop (K.Fatal _), (K.TEnd | K.TClose), [] -> ()
+      | K.Stop (K.Fatal _), K.TEnd, _ -> ()
+      | K.Stop (K.Fatal _), _, _ -> add "Stop_now"
+      | K.Defer _, _, _ -> add "Stop_defer"
+      | _ -> ())
+    ~scan:(fun sc t ->
+      let r, cell, _ = scan_step sc t in
+      add r;
+      addb cell)
+    ~eof:(fun _ -> add "R_eof");
   (List.rev !acc, List.rev !br)
+
+(* The FATAL EVENT of a verdict: the token class and mode of the step that
+   raised the error, where pdfTeX's message comes from (not where its reader
+   stands, which is the fatal's location). For an error deferred inside an
+   argument this is the offending token; a paragraph break that the scanner
+   turns into "Paragraph ended before ... was complete" is ("par" or
+   "blank_line", "arg"). None when the run stops without a deferral (the
+   location's token and mode are then the event). *)
+let fatal_event c toks =
+  let ev = ref None in
+  let deferred = ref false in
+  walk_run c toks
+    ~step:(fun s t _ res ->
+      let mode = if K.in_math s.K.s_frames then "math" else "text" in
+      match res with
+      | K.Defer _ ->
+          deferred := true;
+          ev :=
+            Some
+              ( tok_name t,
+                if (match t with K.TPar _ -> true | _ -> false)
+                   && K.short_depth s.K.s_frames <> 0
+                then "arg"
+                else mode )
+      | K.Defer2 _ ->
+          deferred := true;
+          ev := Some (tok_name t, mode)
+      | _ -> ())
+    ~scan:(fun sc t ->
+      match (t, scan_step sc t) with
+      | K.TPar _, ("SC_par_outer", _, _) | K.TPar _, ("SC_par_short", _, _) ->
+          ev := Some (tok_name t, "arg")
+      | _ -> ())
+    ~eof:(fun _ -> ());
+  if !deferred then !ev else None
 
 (* A token prefix completed by the frames the EXTRACTED run has open at its end,
    innermost first, then [\end{document}] (request field "close": true; the rule
@@ -408,10 +633,10 @@ let close_toks c toks =
         with
         | K.Go1 s' -> walk s' rest
         | K.Go2 s' -> ( match rest with _ :: r -> walk s' r | [] -> None)
-        | K.Stop _ | K.Stuck -> None)
+        | K.Stop _ | K.Stuck | K.Defer _ | K.Defer2 _ -> None)
   in
   let closer = function
-    | K.FSimple | K.FMGroup _ -> K.TClose
+    | K.FSimple | K.FMGroup _ | K.FArg _ -> K.TClose
     | K.FShift (false, _, _) -> K.TMCloseInline
     | K.FShift (true, _, _) -> K.TMCloseDisplay
   in
@@ -432,24 +657,50 @@ let mode_at c toks =
         with
         | K.Go1 s' -> walk s' rest
         | K.Go2 s' -> ( match rest with _ :: r -> walk s' r | [] -> s)
-        | K.Stop _ | K.Stuck -> s)
+        | K.Stop _ | K.Stuck | K.Defer _ | K.Defer2 _ -> s)
   in
   if K.in_math (walk K.init toks).K.s_frames then "math" else "text"
 
-(* The tree mode of phase 1: JSON lines of trees or token streams. *)
-let tree_mode ~kernel ~contract ~sigs =
-  let members = load_members kernel contract in
-  let sg =
-    load_signatures sigs members
-      ~kernel_key:(content_key kernel "meanings_sha256")
-      ~contract_key:(content_key contract "config_key")
+(* The fields of a NOT-READY record that the agreement rule reads: the token
+   and mode of the fatal EVENT ([loc_tok], [loc_mode]; for an error deferred
+   inside an argument, the offending token, and [loc_stop] the token the
+   reader stands on) -- see [fatal_event]. *)
+let event_fields c toks l =
+  let at =
+    match List.nth_opt toks l with
+    | Some t -> `String (tok_name t)
+    | None -> `String "eof"
   in
-  (* A request may carry "signatures": {name: {text, math}}, a HYPOTHESIS for
-     this request only (gen_strict_signatures.py asks what the kernel predicts
-     under each candidate signature). They override the file's for that request,
-     and contract_wf is checked for them too. *)
-  let contract_for extra =
-    let local = Hashtbl.create 8 in
+  match fatal_event c toks with
+  | Some (tok, mode) ->
+      [
+        ("loc_tok", `String tok);
+        ("loc_mode", `String mode);
+        ("deferred", `Bool true);
+        ("loc_stop", at);
+      ]
+  | None ->
+      [
+        ("loc_tok", at);
+        ("loc_mode", `String (mode_at c toks));
+        ("deferred", `Bool false);
+      ]
+
+(* The tree mode of phase 1: JSON lines of trees or token streams. *)
+let tree_mode ~kernel ~contract ~sigs ~asigs =
+  let members = load_members kernel contract in
+  let kernel_key = content_key kernel "meanings_sha256" in
+  let contract_key = content_key contract "config_key" in
+  let sg = load_signatures sigs members ~kernel_key ~contract_key in
+  let ag = load_arg_signatures asigs members sg ~kernel_key ~contract_key in
+  (* A request may carry "signatures": {name: {text, math}} and
+     "arg_signatures": {name: {long, text, math}}, HYPOTHESES for this request
+     only (the signature generators ask what the kernel predicts under each
+     candidate signature). They override the files' for that request, and
+     contract_wf is checked for them too: a name given one kind of signature by
+     the request has none of the other kind. *)
+  let contract_for extra extra_arg =
+    let local = Hashtbl.create 8 and local_arg = Hashtbl.create 8 in
     (match extra with
     | `Assoc l ->
         List.iter
@@ -463,6 +714,17 @@ let tree_mode ~kernel ~contract ~sigs =
               })
           l
     | _ -> ());
+    (match extra_arg with
+    | `Assoc l ->
+        List.iter
+          (fun (n, v) ->
+            if not (Hashtbl.mem members n) then
+              failwith ("argument signature for undefined name " ^ n);
+            if Hashtbl.mem local n then
+              failwith ("both kinds of signature for " ^ n);
+            Hashtbl.replace local_arg n (asig_of v))
+          l
+    | _ -> ());
     {
       K.c_defined = (fun n -> Hashtbl.mem members (string_of_chars n));
       K.c_sig =
@@ -470,7 +732,14 @@ let tree_mode ~kernel ~contract ~sigs =
           let n = string_of_chars n in
           match Hashtbl.find_opt local n with
           | Some x -> Some x
-          | None -> Hashtbl.find_opt sg n);
+          | None ->
+              if Hashtbl.mem local_arg n then None else Hashtbl.find_opt sg n);
+      K.c_arg =
+        (fun n ->
+          let n = string_of_chars n in
+          match Hashtbl.find_opt local_arg n with
+          | Some x -> Some x
+          | None -> if Hashtbl.mem local n then None else Hashtbl.find_opt ag n);
     }
   in
   try
@@ -481,7 +750,9 @@ let tree_mode ~kernel ~contract ~sigs =
         let id = member "id" j in
         let out =
           try
-            let c = contract_for (member "signatures" j) in
+            let c =
+              contract_for (member "signatures" j) (member "arg_signatures" j)
+            in
             (* A document goes through [decide] (membership, then the run); a
                raw token stream through [run] from [init] directly: by
                run_sound/run_complete that IS the relation [Runs]. *)
@@ -496,13 +767,13 @@ let tree_mode ~kernel ~contract ~sigs =
                   in
                   (* Token-level requests pass the same membership as documents:
                      [in_strict_toks] (every token admitted, every script with
-                     its argument) and the capacity bounds ([bounded],
-                     Decide.v). The extracted [tok_ok], [scripts_ok] and
-                     [bounded] are the functions [in_strict_b] is made of. *)
+                     its argument, every argument well formed) and the capacity
+                     bounds ([bounded], Decide.v). The extracted [tok_ok],
+                     [scripts_ok], [wfa] and [bounded] are the functions
+                     [in_strict_b] is made of. *)
                   let strict =
                     List.for_all (fun t -> K.tok_ok c t) toks
-                    && K.scripts_ok toks
-                    && K.bounded toks
+                    && K.scripts_ok toks && K.wfa c 0 toks && K.bounded toks
                   in
                   ( toks,
                     string_of_chars (K.header @ K.render_toks toks),
@@ -531,11 +802,6 @@ let tree_mode ~kernel ~contract ~sigs =
             match verdict with
             | K.ProvenReady -> `Assoc (base @ [ ("verdict", `String "ready") ])
             | K.ProvenNotReady (r, l) ->
-                let tok =
-                  match List.nth_opt toks l with
-                  | Some t -> `String (tok_name t)
-                  | None -> `String "eof"
-                in
                 let line =
                   if l >= ntoks then `Null else `Int (line_of_token toks l)
                 in
@@ -545,10 +811,9 @@ let tree_mode ~kernel ~contract ~sigs =
                       ("verdict", `String "not_ready");
                       ("reason", `String (string_of_reason r));
                       ("loc", `Int l);
-                      ("loc_tok", tok);
                       ("loc_line", line);
-                      ("loc_mode", `String (mode_at c toks));
-                    ])
+                    ]
+                  @ event_fields c toks l)
             | K.NotStrict ->
                 `Assoc (base @ [ ("verdict", `String "not_strict") ])
           with Failure m -> `Assoc [ ("id", id); ("error", `String m) ]
@@ -599,6 +864,27 @@ let b_sig (s : K.signature) : B.signature =
       | K.MxNoad -> B.MxNoad
       | K.MxNoop -> B.MxNoop
       | K.MxFatal r -> B.MxFatal (b_reason r));
+  }
+
+let b_pay = function K.PText b -> B.PText b | K.PMath -> B.PMath
+
+let b_asig (a : K.asig) : B.asig =
+  {
+    B.as_long =
+      (match a.K.as_long with
+      | K.LLong -> B.LLong
+      | K.LShortInner -> B.LShortInner
+      | K.LShortOuter -> B.LShortOuter);
+    B.as_text =
+      (match a.K.as_text with
+      | K.TFatalNow r -> B.TFatalNow (b_reason r)
+      | K.TFatalAfter r -> B.TFatalAfter (b_reason r)
+      | K.TRun (m, p) -> B.TRun (m, b_pay p));
+    B.as_math =
+      (match a.K.as_math with
+      | K.MFatalNow r -> B.MFatalNow (b_reason r)
+      | K.MFatalAfter r -> B.MFatalAfter (b_reason r)
+      | K.MRun p -> B.MRun (b_pay p));
   }
 
 let k_tok = function
@@ -725,6 +1011,9 @@ let why_name = function
   | B.WScriptArg -> "script without a character or { argument"
   | B.WBound -> "capacity bound"
   | B.WEndsDollar -> "file ends with $"
+  | B.WArgForm ->
+      "a command's argument is not a brace group that closes before \
+       \\end{document}"
 
 let why_code = function
   | B.WTooBig -> "too_big"
@@ -739,6 +1028,7 @@ let why_code = function
   | B.WScriptArg -> "script_arg"
   | B.WBound -> "bound"
   | B.WEndsDollar -> "ends_dollar"
+  | B.WArgForm -> "arg_form"
 
 (* ---- coverage labels of the reader (REPORTING ONLY) ---------------------- *)
 
@@ -945,16 +1235,18 @@ let read_file path =
   s
 
 (* The contracts of the bytes decision, from the committed files. *)
-let bytes_contract ~kernel ~contract ~sigs ~lexical =
+let bytes_contract ~kernel ~contract ~sigs ~asigs ~lexical =
   let members = load_members kernel contract in
   let kernel_key = content_key kernel "meanings_sha256" in
   let contract_key = content_key contract "config_key" in
   let sg = load_signatures sigs members ~kernel_key ~contract_key in
+  let ag = load_arg_signatures asigs members sg ~kernel_key ~contract_key in
   let lx = load_lexcon lexical ~kernel_key ~contract_key in
   let kc =
     {
       K.c_defined = (fun n -> Hashtbl.mem members (string_of_chars n));
       K.c_sig = (fun n -> Hashtbl.find_opt sg (string_of_chars n));
+      K.c_arg = (fun n -> Hashtbl.find_opt ag (string_of_chars n));
     }
   in
   let bc =
@@ -965,6 +1257,9 @@ let bytes_contract ~kernel ~contract ~sigs ~lexical =
           B.c_sig =
             (fun n ->
               Option.map b_sig (Hashtbl.find_opt sg (string_of_chars n)));
+          B.c_arg =
+            (fun n ->
+              Option.map b_asig (Hashtbl.find_opt ag (string_of_chars n)));
         };
       B.bc_lex = lx;
     }
@@ -1014,28 +1309,22 @@ let decide_bytes_json kc (bc : B.bcontract) (b : char list) =
         | Some (B.Fatal (_, l)) -> l
         | _ -> -1
       in
-      let tok =
-        match List.nth_opt ktoks l with
-        | Some t -> `String (tok_name t)
-        | None -> `String "eof"
-      in
       `Assoc
         (base
         @ [
             ("verdict", `String "not_ready");
             ("reason", `String (string_of_reason (k_reason r)));
             ("loc", `Int l);
-            ("loc_tok", tok);
             (* E0 (no pages of output) is not an error pdfTeX reports: it prints
                no l.N, so neither does this record (OPEN-121 review, LOW-1); the
                proved ReportedLine is still [line]. *)
             ("loc_line", if line = 0 || r = B.E0 then `Null else `Int line);
-            ("loc_mode", `String (mode_at kc ktoks));
-          ])
+          ]
+        @ event_fields kc ktoks l)
   | B.NotStrict -> `Assoc (base @ [ ("verdict", `String "not_strict") ])
 
-let bytes_mode ~kernel ~contract ~sigs ~lexical =
-  let kc, bc = bytes_contract ~kernel ~contract ~sigs ~lexical in
+let bytes_mode ~kernel ~contract ~sigs ~asigs ~lexical =
+  let kc, bc = bytes_contract ~kernel ~contract ~sigs ~asigs ~lexical in
   try
     while true do
       let line = input_line stdin in
@@ -1060,8 +1349,8 @@ let bytes_mode ~kernel ~contract ~sigs ~lexical =
    file's bytes, on one line. Exit 0 on a verdict (either way), 3 outside the
    fragment, 2 on a usage or contract error. The verdict word is a fixed token
    of this printer; the file name follows it, quoted. *)
-let file_mode ~kernel ~contract ~sigs ~lexical path =
-  let _, bc = bytes_contract ~kernel ~contract ~sigs ~lexical in
+let file_mode ~kernel ~contract ~sigs ~asigs ~lexical path =
+  let _, bc = bytes_contract ~kernel ~contract ~sigs ~asigs ~lexical in
   let s = try read_file path with Sys_error m -> die "strict_decide: %s" m in
   let b = List.init (String.length s) (String.get s) in
   match B.decide_bytes bc b with
@@ -1102,19 +1391,24 @@ let find_repo () =
 
 let () =
   let kernel = ref "" and contract = ref "" and sigs = ref None in
+  let asigs = ref None in
   let lexical = ref "" and bytes = ref false and file = ref None in
   Arg.parse
     [
       ("--kernel", Arg.Set_string kernel, "kernel names file");
       ("--contract", Arg.Set_string contract, "configuration contract");
       ("--signatures", Arg.String (fun s -> sigs := Some s), "signatures file");
+      ( "--arg-signatures",
+        Arg.String (fun s -> asigs := Some s),
+        "one-argument commands' signatures file (slice A)" );
       ("--lexical", Arg.Set_string lexical, "lexical contract (bytes)");
       ("--bytes", Arg.Set bytes, "JSON lines of files as hex (bytes mode)");
     ]
     (fun f -> file := Some f)
-    "strict_decide.exe --kernel K --contract C [--signatures S]   (trees)\n\
+    "strict_decide.exe --kernel K --contract C [--signatures S] \
+     [--arg-signatures A]   (trees)\n\
      strict_decide.exe --bytes --kernel K --contract C --signatures S \
-     --lexical X\n\
+     [--arg-signatures A] --lexical X\n\
      strict_decide.exe FILE.tex   (contracts from the repository)";
   match !file with
   | Some path ->
@@ -1142,17 +1436,26 @@ let () =
         | Some s -> Some s
         | None -> Some (p "corpora/contracts/strict/article-s0-signatures.json")
       in
+      let asigs =
+        match !asigs with
+        | Some s -> Some s
+        | None ->
+            let d = p "corpora/contracts/strict/article-s1-arg-signatures.json" in
+            if Sys.file_exists d then Some d else None
+      in
       let lexical =
         if !lexical = "" then
           p "corpora/contracts/strict/article-s0-lexical.json"
         else !lexical
       in
-      file_mode ~kernel:kernel_path ~contract:contract_path ~sigs ~lexical path
+      file_mode ~kernel:kernel_path ~contract:contract_path ~sigs ~asigs
+        ~lexical path
   | None ->
       if !kernel = "" || !contract = "" then
         die "strict_decide: need --kernel and --contract";
       if !bytes then (
         if !lexical = "" then die "strict_decide: --bytes needs --lexical";
         bytes_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs
-          ~lexical:!lexical)
-      else tree_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs
+          ~asigs:!asigs ~lexical:!lexical)
+      else
+        tree_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs ~asigs:!asigs

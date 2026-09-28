@@ -2,8 +2,10 @@
 
     ADR-012 / STRICT_TIER_DESIGN.md §C.3, trust layer (2).  [decide] is an
     ordinary function (extracted to OCaml, Extract.v): a one-token transition
-    function [step] iterated by [run].  [Runs] (Semantics.v) is the separate
-    declarative relation it is proved equal to, in both directions:
+    function [step] iterated by [run] (with [scan_run], TeX's argument
+    scanner, once an error inside an argument is deferred).  [Runs]
+    (Semantics.v) is the separate declarative relation it is proved equal
+    to, in both directions:
 
       strict_decider_exact : in_strict_doc C d ->
         (decide C d = ProvenReady <-> Runs C init (flatten_doc d) Compiles) /\
@@ -24,7 +26,7 @@
     both directions, and it fails if a single [step] case differs from its
     constructor (the kill-test of the harness demonstrates one). *)
 
-From Coq Require Import List Bool Ascii Lia.
+From Coq Require Import List Bool Ascii Arith Lia.
 Import ListNotations.
 From LaTeXPerfectionist.Strict Require Import Syntax Contract Semantics.
 
@@ -59,12 +61,13 @@ Definition is_some {A} (o : option A) : bool := match o with Some _ => true | No
 
 (** A token is admitted: a safe character, or a control word that is either
     undefined in the contract's closed world (decided E1) or has an attested
-    signature.  A defined name WITHOUT a signature is outside the tier
-    (design §A.1.3: never guessed). *)
+    signature (of a name without arguments, or of a one-argument command).
+    A defined name WITHOUT a signature is outside the tier (design §A.1.3:
+    never guessed). *)
 Definition tok_ok (C : contract) (t : tok) : bool :=
   match t with
   | TChar c => safe_char c
-  | TCs n => name_ok n && (negb (c_defined C n) || is_some (c_sig C n))
+  | TCs n => name_ok n && (negb (c_defined C n) || is_some (c_sig C n) || is_some (c_arg C n))
   | _ => true
   end.
 
@@ -81,8 +84,40 @@ Fixpoint scripts_ok (ts : list tok) : bool :=
   | _ :: rest => scripts_ok rest
   end.
 
+(** A one-argument command, as [step] reads the contract. *)
+Definition is_argcmd (C : contract) (n : name) : bool :=
+  c_defined C n && negb (is_some (c_sig C n)) && is_some (c_arg C n).
+
+(** ARGUMENTS ARE WELL FORMED (step 2, slice A): every one-argument command
+    is immediately followed by the [{] of its argument, and every argument
+    closes before [\end{document}] and before the end of the stream.
+    [need] counts the braces still to close before the outermost argument
+    open at this point closes (0: none is open).  Measured: an argument
+    that does not close before the end of the file gives "File ended while
+    scanning use of", and one that holds [\end{document}] makes pdfTeX read
+    on past it, which the fragment (Front.v) never models; both are outside
+    the tier, never a verdict. *)
+Fixpoint wfa (C : contract) (need : nat) (ts : list tok) : bool :=
+  match ts with
+  | [] => Nat.eqb need 0
+  | t :: r =>
+      match t with
+      | TEnd => Nat.eqb need 0
+      | TOpen => wfa C (if Nat.eqb need 0 then 0 else S need) r
+      | TClose => wfa C (pred need) r
+      | TCs n =>
+          if is_argcmd C n then
+            match r with
+            | TOpen :: r' => wfa C (S need) r'
+            | _ => false
+            end
+          else wfa C need r
+      | _ => wfa C need r
+      end
+  end.
+
 Definition in_strict_toks (C : contract) (ts : list tok) : Prop :=
-  Forall (fun t => tok_ok C t = true) ts /\ scripts_ok ts = true.
+  Forall (fun t => tok_ok C t = true) ts /\ scripts_ok ts = true /\ wfa C 0 ts = true.
 
 (** ** TeX's global capacities (correction C-86)
 
@@ -133,7 +168,7 @@ Definition in_strict_doc (C : contract) (d : doc) : Prop :=
 
 Definition in_strict_b (C : contract) (d : doc) : bool :=
   forallb (tok_ok C) (flatten_doc d) && scripts_ok (flatten_doc d)
-  && bounded (flatten_doc d).
+  && wfa C 0 (flatten_doc d) && bounded (flatten_doc d).
 
 Lemma in_strict_b_spec : forall C d, in_strict_b C d = true <-> in_strict_doc C d.
 Proof.
@@ -154,7 +189,37 @@ Inductive step_res :=
 | Go1 (s : state)      (* consumed one token *)
 | Go2 (s : state)      (* consumed this token and the next *)
 | Stop (o : outcome)
-| Stuck.               (* no rule: outside the tier *)
+| Stuck                (* no rule: outside the tier *)
+| Defer (sc : scan)    (* an error inside an argument: scan from this token *)
+| Defer2 (sc : scan).  (* read an argument, then stop: scan after this
+                          token and the next (the argument's brace) *)
+
+(** A token raises [r] at [l] ([Semantics.Stops]). *)
+Definition halt (fs : list frame) (r : reason) (l : nat) : step_res :=
+  if in_arg fs then Defer (start_scan fs r) else Stop (Fatal r l).
+
+(** TeX's argument scanner ([Semantics.Scans]). *)
+Fixpoint scan_run (sc : scan) (p : nat) (ts : list tok) : option outcome :=
+  match ts with
+  | [] => None
+  | t :: rest =>
+      match t with
+      | TClose =>
+          match sc_k sc with
+          | O => None
+          | S O => Some (Fatal (sc_r sc) p)
+          | S (S k) =>
+              scan_run (mkScan (sc_r sc) (S k) (close_sh (S k) (sc_sh sc)) (sc_ou sc)) (S p) rest
+          end
+      | TOpen => scan_run (mkScan (sc_r sc) (S (sc_k sc)) (sc_sh sc) (sc_ou sc)) (S p) rest
+      | TPar _ =>
+          if sc_ou sc then Some (Fatal E6 p)
+          else if Nat.eqb (sc_sh sc) 0 then scan_run sc (S p) rest
+          else scan_run (mkScan E6 (sc_k sc) (sc_sh sc) false) (S p) rest
+      | TEnd => None
+      | _ => scan_run sc (S p) rest
+      end
+  end.
 
 Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_res :=
   let fs := s_frames s in
@@ -162,13 +227,17 @@ Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_re
   let p := s_pos s in
   match t with
   | TEnd =>
-      if in_math fs then Stop (Fatal E5 p)
+      if in_arg fs then Stuck
+      else if in_math fs then Stop (Fatal E5 p)
       else if o then Stop Compiles else Stop (Fatal E0 p)
   | TChar _ =>
       if in_math fs then Go1 (mkState (fresh_tail fs) o (S p))
       else Go1 (mkState fs true (S p))
   | TSpace => Go1 (mkState fs o (S p))
-  | TPar _ => if in_math fs then Stop (Fatal E6 p) else Go1 (mkState fs o (S p))
+  | TPar _ =>
+      if negb (Nat.eqb (short_depth fs) 0) then halt fs E6 p
+      else if in_math fs then halt fs E6 p
+      else Go1 (mkState fs o (S p))
   | TOpen =>
       if in_math fs then Go1 (mkState (FMGroup false false false :: fresh_tail fs) o (S p))
       else Go1 (mkState (FSimple :: fs) o (S p))
@@ -176,7 +245,8 @@ Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_re
       match fs with
       | FSimple :: r => Go1 (mkState r o (S p))
       | FMGroup _ _ _ :: r => Go1 (mkState r o (S p))
-      | FShift _ _ _ :: _ => Stop (Fatal E5 p)
+      | FArg _ _ _ _ :: r => Go1 (mkState r o (S p))
+      | FShift _ _ _ :: _ => halt fs E5 p
       | [] => Stop (Fatal E5 p)
       end
   | TDollar =>
@@ -187,37 +257,40 @@ Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_re
           | Some TDollar => Go2 (mkState r o (S (S p)))
           | Some (TCs n) =>
               if c_defined C n
-              then (if is_some (c_sig C n) then Stop (Fatal E5 p) else Stuck)
-              else Stop (Fatal E1 (S p))
-          | Some _ => Stop (Fatal E5 p)
-          | None => Stop (Fatal E5 p)
+              then (if is_some (c_sig C n) || is_some (c_arg C n) then halt fs E5 p else Stuck)
+              else halt fs E1 (S p)
+          | Some _ => halt fs E5 p
+          | None => halt fs E5 p
           end
-      | FMGroup _ _ _ :: _ => Stop (Fatal E5 p)
       | _ =>
-          match nx with
-          | Some TDollar => Go2 (mkState (FShift true false false :: fs) true (S (S p)))
-          | _ => Go1 (mkState (FShift false false false :: fs) true (S p))
-          end
+          if mgroup_head fs then halt fs E5 p
+          else if restricted fs then Go1 (mkState (FShift false false false :: fs) true (S p))
+          else
+            match nx with
+            | Some TDollar => Go2 (mkState (FShift true false false :: fs) true (S (S p)))
+            | _ => Go1 (mkState (FShift false false false :: fs) true (S p))
+            end
       end
   | TMOpenInline =>
-      if in_math fs then Stop (Fatal E5 p)
+      if in_math fs then halt fs E5 p
       else Go1 (mkState (FShift false false false :: fs) true (S p))
   | TMCloseInline =>
       match fs with
       | FShift false _ _ :: r => Go1 (mkState r o (S p))
-      | _ => Stop (Fatal E5 p)
+      | _ => halt fs E5 p
       end
   | TMOpenDisplay =>
-      if in_math fs then Stop (Fatal E5 p)
+      if in_math fs then halt fs E5 p
+      else if restricted fs then Go1 (mkState fs o (S p))
       else Go1 (mkState (FShift true false false :: fs) true (S p))
   | TMCloseDisplay =>
       match fs with
       | FShift true _ _ :: r => Go1 (mkState r o (S p))
-      | _ => Stop (Fatal E5 p)
+      | _ => halt fs E5 p
       end
   | TScript up =>
-      if negb (in_math fs) then Stop (Fatal E3 p)
-      else if tail_has up fs then Stop (Fatal E4 p)
+      if negb (in_math fs) then halt fs E3 p
+      else if tail_has up fs then halt fs E4 p
       else
         match nx with
         | Some (TChar _) => Go2 (mkState (mark_script up fs) o (S (S p)))
@@ -225,23 +298,59 @@ Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_re
         | _ => Stuck
         end
   | TCs n =>
-      if negb (c_defined C n) then Stop (Fatal E1 p)
+      if negb (c_defined C n) then halt fs E1 p
       else
         match c_sig C n with
-        | None => Stuck
         | Some sg =>
             if in_math fs then
               match sig_math sg with
               | MxNoad => Go1 (mkState (fresh_tail fs) o (S p))
               | MxNoop => Go1 (mkState fs o (S p))
-              | MxFatal r => Stop (Fatal r p)
+              | MxFatal r => halt fs r p
               end
             else
               match sig_text sg with
               | TxMaterial => Go1 (mkState fs true (S p))
               | TxNoop => Go1 (mkState fs o (S p))
-              | TxFatal r => Stop (Fatal r p)
+              | TxFatal r => halt fs r p
               end
+        | None =>
+            match c_arg C n with
+            | None => Stuck
+            | Some a =>
+                if in_math fs then
+                  match as_math a with
+                  | MFatalNow r => halt fs r p
+                  | MFatalAfter r =>
+                      match nx with
+                      | Some TOpen =>
+                          Defer2 (start_scan (FArg (as_long a) (PText false) false false :: fs) r)
+                      | _ => Stuck
+                      end
+                  | MRun pl =>
+                      match nx with
+                      | Some TOpen =>
+                          Go2 (mkState (FArg (as_long a) pl false false :: fresh_tail fs) o (S (S p)))
+                      | _ => Stuck
+                      end
+                  end
+                else
+                  match as_text a with
+                  | TFatalNow r => halt fs r p
+                  | TFatalAfter r =>
+                      match nx with
+                      | Some TOpen =>
+                          Defer2 (start_scan (FArg (as_long a) (PText false) false false :: fs) r)
+                      | _ => Stuck
+                      end
+                  | TRun m pl =>
+                      match nx with
+                      | Some TOpen =>
+                          Go2 (mkState (FArg (as_long a) pl false false :: fs) (o || m) (S (S p)))
+                      | _ => Stuck
+                      end
+                  end
+            end
         end
   end.
 
@@ -254,6 +363,9 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       | Go2 s' => match rest with [] => None | _ :: rest' => run C s' rest' end
       | Stop o => Some o
       | Stuck => None
+      | Defer sc => scan_run sc (s_pos s) (t :: rest)
+      | Defer2 sc =>
+          match rest with [] => None | _ :: rest' => scan_run sc (S (S (s_pos s))) rest' end
       end
   end.
 
@@ -272,7 +384,103 @@ Definition verdict_of (r : option outcome) : verdict :=
 Definition decide (C : contract) (d : doc) : verdict :=
   if in_strict_b C d then verdict_of (run C init (flatten_doc d)) else NotStrict.
 
+(** ** The scanner: [scan_run] is [Scans], both ways *)
+
+Lemma scan_run_sound : forall ts sc p o, scan_run sc p ts = Some o -> Scans sc p ts o.
+Proof.
+  induction ts as [|t rest IH]; intros [r k sh ou] p o H; [discriminate|].
+  destruct t; cbn [scan_run sc_r sc_k sc_sh sc_ou] in H;
+    try (apply SC_skip; [exact I|apply IH; exact H]).
+  - (* TPar *)
+    destruct ou.
+    + injection H as <-. apply SC_par_outer.
+    + destruct (Nat.eqb sh 0) eqn:E.
+      * apply Nat.eqb_eq in E. subst sh. apply SC_par_long. apply IH. exact H.
+      * apply Nat.eqb_neq in E. apply SC_par_short; [exact E|]. apply IH. exact H.
+  - (* TOpen *) apply SC_open. apply IH. exact H.
+  - (* TClose *)
+    destruct k as [|[|k]]; [discriminate| |].
+    + injection H as <-. apply SC_close_last.
+    + apply SC_close. apply IH. exact H.
+  - (* TEnd *) discriminate.
+Qed.
+
+Lemma scan_run_complete : forall sc p ts o, Scans sc p ts o -> scan_run sc p ts = Some o.
+Proof.
+  intros sc p ts o H. induction H; cbn [scan_run sc_r sc_k sc_sh sc_ou].
+  - reflexivity.
+  - exact IHScans.
+  - exact IHScans.
+  - reflexivity.
+  - apply Nat.eqb_neq in H. rewrite H. exact IHScans.
+  - exact IHScans.
+  - destruct t; simpl in H; try contradiction; exact IHScans.
+Qed.
+
+(** Proved on [Scans] itself, like [runs_deterministic]. *)
+Theorem scans_deterministic : forall sc p ts o1 o2,
+  Scans sc p ts o1 -> Scans sc p ts o2 -> o1 = o2.
+Proof.
+  intros sc p ts o1 o2 H1. revert o2.
+  induction H1; intros o2 H2; inversion H2; subst; simpl in *;
+    first [ reflexivity | contradiction | congruence | (apply IHScans; assumption) ].
+Qed.
+
+Definition halt_out (fs : list frame) (p : nat) (r : reason) (l : nat) (ts : list tok)
+  : option outcome :=
+  if in_arg fs then scan_run (start_scan fs r) p ts else Some (Fatal r l).
+
+Lemma halt_out_sound : forall fs p r l ts o, halt_out fs p r l ts = Some o -> Stops fs p r l ts o.
+Proof.
+  intros fs p r l ts o H. unfold halt_out in H. destruct (in_arg fs) eqn:A.
+  - apply Stop_defer; [exact A|]. apply scan_run_sound. exact H.
+  - injection H as <-. apply Stop_now. exact A.
+Qed.
+
+Lemma halt_out_complete : forall fs p r l ts o, Stops fs p r l ts o -> halt_out fs p r l ts = Some o.
+Proof.
+  intros fs p r l ts o H. unfold halt_out. destruct H as [fs p r l ts A|fs p r l ts o A S].
+  - rewrite A. reflexivity.
+  - rewrite A. apply scan_run_complete. exact S.
+Qed.
+
+Theorem stops_deterministic : forall fs p r l ts o1 o2,
+  Stops fs p r l ts o1 -> Stops fs p r l ts o2 -> o1 = o2.
+Proof.
+  intros fs p r l ts o1 o2 H1 H2.
+  destruct H1 as [fs p r l ts A|fs p r l ts o A S];
+    inversion H2 as [fs' p' r' l' ts' A'|fs' p' r' l' ts' o' A' S']; subst; try congruence.
+  eapply scans_deterministic; eassumption.
+Qed.
+
+Lemma run_step : forall C s t rest,
+  run C s (t :: rest) =
+  match step C s t (hd_error rest) with
+  | Go1 s' => run C s' rest
+  | Go2 s' => match rest with [] => None | _ :: rest' => run C s' rest' end
+  | Stop o => Some o
+  | Stuck => None
+  | Defer sc => scan_run sc (s_pos s) (t :: rest)
+  | Defer2 sc =>
+      match rest with [] => None | _ :: rest' => scan_run sc (S (S (s_pos s))) rest' end
+  end.
+Proof. reflexivity. Qed.
+
+Lemma run_halt : forall C s t rest fs r l,
+  step C s t (hd_error rest) = halt fs r l ->
+  run C s (t :: rest) = halt_out fs (s_pos s) r l (t :: rest).
+Proof.
+  intros C s t rest fs r l H. rewrite run_step, H. unfold halt, halt_out.
+  destruct (in_arg fs); reflexivity.
+Qed.
+
 (** ** Soundness: what [run] answers, [Runs] derives *)
+
+(* Solve a goal [Runs ... (t :: rest) o] whose step is a [halt]. *)
+Local Ltac by_halt Hrun :=
+  first
+    [ rewrite (run_halt _ _ _ _ _ _ _ eq_refl) in Hrun; apply halt_out_sound in Hrun
+    | idtac ].
 
 Lemma run_sound_n : forall C k ts s o,
   length ts <= k -> run C s ts = Some o -> Runs C s ts o.
@@ -284,113 +492,258 @@ Proof.
     + destruct s as [fs so p]. simpl in Hrun. injection Hrun as <-. constructor.
     + simpl in Hlen.
       assert (Hl1 : length rest <= k) by lia.
-      destruct s as [fs so p]. simpl in Hrun.
-      destruct t; simpl in Hrun.
+      destruct s as [fs so p].
+      destruct t.
       * (* TChar *)
+        rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
         destruct (in_math fs) eqn:Hm.
         -- apply R_char_math; [exact Hm|]. apply IH; assumption.
         -- apply R_char_text; [exact Hm|]. apply IH; assumption.
-      * (* TSpace *) apply R_space. apply IH; assumption.
+      * (* TSpace *)
+        rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+        apply R_space. apply IH; assumption.
       * (* TPar *)
-        destruct (in_math fs) eqn:Hm.
-        -- injection Hrun as <-. apply R_par_math; exact Hm.
-        -- apply R_par_text; [exact Hm|]. apply IH; assumption.
+        destruct (Nat.eqb (short_depth fs) 0) eqn:Hsd.
+        -- apply Nat.eqb_eq in Hsd.
+           destruct (in_math fs) eqn:Hm.
+           ++ apply R_par_math; [exact Hm|exact Hsd|].
+              rewrite (run_halt C (mkState fs so p) _ _ fs E6 p) in Hrun
+                by (cbn [step s_frames s_out s_pos]; rewrite Hsd, Hm; reflexivity).
+              apply halt_out_sound. exact Hrun.
+           ++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+              rewrite Hsd, Hm in Hrun. cbn in Hrun.
+              apply R_par_text; [exact Hm|exact Hsd|]. apply IH; assumption.
+        -- apply Nat.eqb_neq in Hsd. apply R_par_short; [exact Hsd|].
+           rewrite (run_halt C (mkState fs so p) _ _ fs E6 p) in Hrun
+             by (cbn [step s_frames s_out s_pos]; apply Nat.eqb_neq in Hsd; rewrite Hsd; reflexivity).
+           apply halt_out_sound. exact Hrun.
       * (* TOpen *)
+        rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
         destruct (in_math fs) eqn:Hm.
         -- apply R_open_math; [exact Hm|]. apply IH; assumption.
         -- apply R_open_text; [exact Hm|]. apply IH; assumption.
       * (* TClose *)
         destruct fs as [|f fs'].
-        -- injection Hrun as <-. apply R_close_top.
-        -- destruct f.
-           ++ apply R_close_simple. apply IH; assumption.
-           ++ injection Hrun as <-. apply R_close_shift.
-           ++ apply R_close_group. apply IH; assumption.
+        -- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+           injection Hrun as <-. apply R_close_top.
+        -- destruct f as [|d sp sb|g sp sb|l pl sp sb].
+           ++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+              apply R_close_simple. apply IH; assumption.
+           ++ apply R_close_shift.
+              rewrite (run_halt C _ _ _ (FShift d sp sb :: fs') E5 p) in Hrun by reflexivity.
+              apply halt_out_sound. exact Hrun.
+           ++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+              apply R_close_group. apply IH; assumption.
+           ++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+              apply R_close_arg. apply IH; assumption.
       * (* TDollar *)
-        destruct fs as [|f fs'].
-        -- (* text, no frame *)
+        destruct fs as [|f fs'] eqn:Efs.
+        -- (* top: text, unrestricted *)
+           rewrite run_step in Hrun. cbn [step s_frames s_out s_pos mgroup_head restricted] in Hrun.
            destruct rest as [|t2 rest2].
-           ++ simpl in Hrun. apply R_dollar_inline_open; [reflexivity|exact I|].
+           ++ apply R_dollar_inline_open; [reflexivity|reflexivity|exact I|].
               apply IH; [simpl; lia|exact Hrun].
-           ++ simpl in Hrun. destruct t2;
-              try (apply R_dollar_inline_open; [reflexivity|exact I|apply IH; assumption]).
-              apply R_dollar_display_open; [reflexivity|]. apply IH; [simpl in Hl1; lia|exact Hrun].
-        -- destruct f as [|d sp sb|g sp sb].
+           ++ destruct t2; cbn [hd_error] in Hrun;
+              try (apply R_dollar_inline_open; [reflexivity|reflexivity|exact I|apply IH; assumption]).
+              apply R_dollar_display_open; [reflexivity|reflexivity|].
+              apply IH; [simpl in Hl1; lia|exact Hrun].
+        -- destruct f as [|d sp sb|g sp sb|l pl sp sb].
            ++ (* FSimple: text *)
-              destruct rest as [|t2 rest2].
-              ** simpl in Hrun. apply R_dollar_inline_open; [reflexivity|exact I|].
-                 apply IH; [simpl; lia|exact Hrun].
-              ** simpl in Hrun. destruct t2;
-                 try (apply R_dollar_inline_open; [reflexivity|exact I|apply IH; assumption]).
-                 apply R_dollar_display_open; [reflexivity|]. apply IH; [simpl in Hl1; lia|exact Hrun].
+              destruct (restricted (FSimple :: fs')) eqn:Hr.
+              ** rewrite run_step in Hrun. cbn [step s_frames s_out s_pos mgroup_head] in Hrun.
+                 rewrite Hr in Hrun.
+                 apply R_dollar_restricted_open; [reflexivity|exact Hr|]. apply IH; assumption.
+              ** rewrite run_step in Hrun. cbn [step s_frames s_out s_pos mgroup_head] in Hrun.
+                 rewrite Hr in Hrun.
+                 destruct rest as [|t2 rest2].
+                 --- apply R_dollar_inline_open; [reflexivity|exact Hr|exact I|].
+                     apply IH; [simpl; lia|exact Hrun].
+                 --- destruct t2; cbn [hd_error] in Hrun;
+                     try (apply R_dollar_inline_open; [reflexivity|exact Hr|exact I|apply IH; assumption]).
+                     apply R_dollar_display_open; [reflexivity|exact Hr|].
+                     apply IH; [simpl in Hl1; lia|exact Hrun].
            ++ destruct d.
               ** (* display *)
                  destruct rest as [|t2 rest2].
-                 --- simpl in Hrun. injection Hrun as <-. apply R_dollar_display_eof.
-                 --- simpl in Hrun. destruct t2;
-                     try (injection Hrun as <-; apply R_dollar_display_bad; exact I).
-                     +++ apply R_dollar_display_close. apply IH; [simpl in Hl1; lia|exact Hrun].
-                     +++ destruct (c_defined C n) eqn:Hd.
-                         *** destruct (c_sig C n) eqn:Hs; simpl in Hrun; [|discriminate].
-                             injection Hrun as <-. apply R_dollar_display_bad. simpl.
-                             split; [exact Hd|]. rewrite Hs. discriminate.
-                         *** injection Hrun as <-. apply R_dollar_display_undef. exact Hd.
-              ** (* inline *) apply R_dollar_inline_close. apply IH; assumption.
-           ++ injection Hrun as <-. apply R_dollar_group.
+                 --- apply R_dollar_display_eof.
+                     rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E5 p) in Hrun by reflexivity.
+                     apply halt_out_sound. exact Hrun.
+                 --- destruct t2 eqn:Et2.
+                     all: try (apply R_dollar_display_bad; [exact I|];
+                               rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E5 p) in Hrun by reflexivity;
+                               apply halt_out_sound; exact Hrun).
+                     +++ (* $$ *)
+                         rewrite run_step in Hrun. cbn [step s_frames s_out s_pos hd_error] in Hrun.
+                         apply R_dollar_display_close. apply IH; [simpl in Hl1; lia|exact Hrun].
+                     +++ (* control word *)
+                         destruct (c_defined C n) eqn:Hd.
+                         *** destruct (is_some (c_sig C n) || is_some (c_arg C n)) eqn:Hs.
+                             ---- apply R_dollar_display_bad.
+                                  { simpl. split; [exact Hd|].
+                                    apply orb_true_iff in Hs as [Hs|Hs];
+                                      [left|right]; destruct (c_sig C n), (c_arg C n);
+                                      simpl in Hs; try discriminate; discriminate. }
+                                  rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E5 p) in Hrun
+                                    by (cbn [step s_frames s_out s_pos hd_error]; rewrite Hd, Hs; reflexivity).
+                                  apply halt_out_sound. exact Hrun.
+                             ---- rewrite run_step in Hrun.
+                                  cbn [step s_frames s_out s_pos hd_error] in Hrun.
+                                  rewrite Hd, Hs in Hrun. discriminate.
+                         *** apply R_dollar_display_undef; [exact Hd|].
+                             rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E1 (S p)) in Hrun
+                               by (cbn [step s_frames s_out s_pos hd_error]; rewrite Hd; reflexivity).
+                             apply halt_out_sound. exact Hrun.
+              ** (* inline *)
+                 rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+                 apply R_dollar_inline_close. apply IH; assumption.
+           ++ (* math brace group *)
+              apply R_dollar_group; [reflexivity|].
+              rewrite (run_halt C _ _ _ (FMGroup g sp sb :: fs') E5 p) in Hrun by reflexivity.
+              apply halt_out_sound. exact Hrun.
+           ++ destruct pl as [b|].
+              ** (* text argument *)
+                 destruct b.
+                 --- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos mgroup_head restricted] in Hrun.
+                     apply R_dollar_restricted_open; [reflexivity|reflexivity|]. apply IH; assumption.
+                 --- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos mgroup_head restricted] in Hrun.
+                     destruct rest as [|t2 rest2].
+                     +++ apply R_dollar_inline_open; [reflexivity|reflexivity|exact I|].
+                         apply IH; [simpl; lia|exact Hrun].
+                     +++ destruct t2; cbn [hd_error] in Hrun;
+                         try (apply R_dollar_inline_open; [reflexivity|reflexivity|exact I|apply IH; assumption]).
+                         apply R_dollar_display_open; [reflexivity|reflexivity|].
+                         apply IH; [simpl in Hl1; lia|exact Hrun].
+              ** (* math argument *)
+                 apply R_dollar_group; [reflexivity|].
+                 rewrite (run_halt C _ _ _ (FArg l PMath sp sb :: fs') E5 p) in Hrun by reflexivity.
+                 apply halt_out_sound. exact Hrun.
       * (* TMOpenInline *)
         destruct (in_math fs) eqn:Hm.
-        -- injection Hrun as <-. apply R_mopen_inline_bad; exact Hm.
-        -- apply R_mopen_inline; [exact Hm|]. apply IH; assumption.
+        -- apply R_mopen_inline_bad; [exact Hm|].
+           rewrite (run_halt C _ _ _ fs E5 p) in Hrun
+             by (cbn [step s_frames s_out s_pos]; rewrite Hm; reflexivity).
+           apply halt_out_sound. exact Hrun.
+        -- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun. rewrite Hm in Hrun.
+           apply R_mopen_inline; [exact Hm|]. apply IH; assumption.
       * (* TMCloseInline *)
-        destruct fs as [|f fs'];
-          [injection Hrun as <-; apply R_mclose_inline_bad; exact I|].
-        destruct f as [|d sp sb|g sp sb];
-          try (injection Hrun as <-; apply R_mclose_inline_bad; exact I).
-        destruct d.
-        -- injection Hrun as <-. apply R_mclose_inline_bad; exact I.
-        -- apply R_mclose_inline. apply IH; assumption.
+        destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+          try (apply R_mclose_inline_bad; [exact I|];
+               rewrite (run_halt C _ _ _ _ E5 p) in Hrun by reflexivity;
+               apply halt_out_sound; exact Hrun).
+        rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+        apply R_mclose_inline. apply IH; assumption.
       * (* TMOpenDisplay *)
         destruct (in_math fs) eqn:Hm.
-        -- injection Hrun as <-. apply R_mopen_display_bad; exact Hm.
-        -- apply R_mopen_display; [exact Hm|]. apply IH; assumption.
+        -- apply R_mopen_display_bad; [exact Hm|].
+           rewrite (run_halt C _ _ _ fs E5 p) in Hrun
+             by (cbn [step s_frames s_out s_pos]; rewrite Hm; reflexivity).
+           apply halt_out_sound. exact Hrun.
+        -- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun. rewrite Hm in Hrun.
+           destruct (restricted fs) eqn:Hr.
+           ++ apply R_mopen_display_restricted; [exact Hm|exact Hr|]. apply IH; assumption.
+           ++ apply R_mopen_display; [exact Hm|exact Hr|]. apply IH; assumption.
       * (* TMCloseDisplay *)
-        destruct fs as [|f fs'];
-          [injection Hrun as <-; apply R_mclose_display_bad; exact I|].
-        destruct f as [|d sp sb|g sp sb];
-          try (injection Hrun as <-; apply R_mclose_display_bad; exact I).
-        destruct d.
-        -- apply R_mclose_display. apply IH; assumption.
-        -- injection Hrun as <-. apply R_mclose_display_bad; exact I.
+        destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+          try (apply R_mclose_display_bad; [exact I|];
+               rewrite (run_halt C _ _ _ _ E5 p) in Hrun by reflexivity;
+               apply halt_out_sound; exact Hrun).
+        rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+        apply R_mclose_display. apply IH; assumption.
       * (* TScript *)
-        destruct (in_math fs) eqn:Hm; simpl in Hrun.
+        destruct (in_math fs) eqn:Hm.
         -- destruct (tail_has up fs) eqn:Ht.
-           ++ injection Hrun as <-. apply R_script_double; assumption.
-           ++ destruct rest as [|t2 rest2]; [discriminate|].
-              simpl in Hrun. destruct t2; try discriminate.
+           ++ apply R_script_double; [exact Hm|exact Ht|].
+              rewrite (run_halt C _ _ _ fs E4 p) in Hrun
+                by (cbn [step s_frames s_out s_pos]; rewrite Hm, Ht; reflexivity).
+              apply halt_out_sound. exact Hrun.
+           ++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+              rewrite Hm, Ht in Hrun. cbn [negb] in Hrun.
+              destruct rest as [|t2 rest2]; [discriminate|].
+              cbn [hd_error] in Hrun. destruct t2; try discriminate.
               ** apply R_script_char; [exact Hm|exact Ht|].
                  apply IH; [simpl in Hl1; lia|exact Hrun].
               ** apply R_script_group; [exact Hm|exact Ht|].
                  apply IH; [simpl in Hl1; lia|exact Hrun].
-        -- injection Hrun as <-. apply R_script_text; exact Hm.
+        -- apply R_script_text; [exact Hm|].
+           rewrite (run_halt C _ _ _ fs E3 p) in Hrun
+             by (cbn [step s_frames s_out s_pos]; rewrite Hm; reflexivity).
+           apply halt_out_sound. exact Hrun.
       * (* TCs *)
-        destruct (c_defined C n) eqn:Hd; simpl in Hrun.
-        -- destruct (c_sig C n) as [sg|] eqn:Hs; [|discriminate].
-           destruct (in_math fs) eqn:Hm.
-           ++ destruct (sig_math sg) eqn:Hsm.
-              ** eapply R_cs_math_noad; try eassumption. apply IH; assumption.
-              ** eapply R_cs_math_noop; try eassumption. apply IH; assumption.
-              ** injection Hrun as <-. eapply R_cs_math_fatal; eassumption.
-           ++ destruct (sig_text sg) eqn:Hst.
-              ** eapply R_cs_text_material; try eassumption. apply IH; assumption.
-              ** eapply R_cs_text_noop; try eassumption. apply IH; assumption.
-              ** injection Hrun as <-. eapply R_cs_text_fatal; eassumption.
-        -- injection Hrun as <-. apply R_cs_undefined; exact Hd.
+        destruct (c_defined C n) eqn:Hd.
+        -- destruct (c_sig C n) as [sg|] eqn:Hs.
+           ++ destruct (in_math fs) eqn:Hm.
+              ** destruct (sig_math sg) eqn:Hsm.
+                 --- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                     rewrite Hd, Hs, Hm, Hsm in Hrun. cbn [negb] in Hrun.
+                     eapply R_cs_math_noad; try eassumption. apply IH; assumption.
+                 --- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                     rewrite Hd, Hs, Hm, Hsm in Hrun. cbn [negb] in Hrun.
+                     eapply R_cs_math_noop; try eassumption. apply IH; assumption.
+                 --- eapply R_cs_math_fatal; try eassumption.
+                     rewrite (run_halt C _ _ _ fs r p) in Hrun
+                       by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Hm, Hsm; reflexivity).
+                     apply halt_out_sound. exact Hrun.
+              ** destruct (sig_text sg) eqn:Hst.
+                 --- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                     rewrite Hd, Hs, Hm, Hst in Hrun. cbn [negb] in Hrun.
+                     eapply R_cs_text_material; try eassumption. apply IH; assumption.
+                 --- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                     rewrite Hd, Hs, Hm, Hst in Hrun. cbn [negb] in Hrun.
+                     eapply R_cs_text_noop; try eassumption. apply IH; assumption.
+                 --- eapply R_cs_text_fatal; try eassumption.
+                     rewrite (run_halt C _ _ _ fs r p) in Hrun
+                       by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Hm, Hst; reflexivity).
+                     apply halt_out_sound. exact Hrun.
+           ++ destruct (c_arg C n) as [a|] eqn:Ha.
+              ** destruct (in_math fs) eqn:Hm.
+                 --- destruct (as_math a) as [r|r|pl] eqn:Ham.
+                     +++ eapply R_arg_math_now; try eassumption.
+                         rewrite (run_halt C _ _ _ fs r p) in Hrun
+                           by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Ham; reflexivity).
+                         apply halt_out_sound. exact Hrun.
+                     +++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                         rewrite Hd, Hs, Ha, Hm, Ham in Hrun. cbn [negb] in Hrun.
+                         destruct rest as [|t2 rest2]; [discriminate|].
+                         cbn [hd_error] in Hrun. destruct t2; try discriminate.
+                         eapply R_arg_math_after; try eassumption.
+                         apply scan_run_sound. exact Hrun.
+                     +++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                         rewrite Hd, Hs, Ha, Hm, Ham in Hrun. cbn [negb] in Hrun.
+                         destruct rest as [|t2 rest2]; [discriminate|].
+                         cbn [hd_error] in Hrun. destruct t2; try discriminate.
+                         eapply R_arg_math_run; try eassumption.
+                         apply IH; [simpl in Hl1; lia|exact Hrun].
+                 --- destruct (as_text a) as [r|r|m pl] eqn:Hat.
+                     +++ eapply R_arg_text_now; try eassumption.
+                         rewrite (run_halt C _ _ _ fs r p) in Hrun
+                           by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Hat; reflexivity).
+                         apply halt_out_sound. exact Hrun.
+                     +++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                         rewrite Hd, Hs, Ha, Hm, Hat in Hrun. cbn [negb] in Hrun.
+                         destruct rest as [|t2 rest2]; [discriminate|].
+                         cbn [hd_error] in Hrun. destruct t2; try discriminate.
+                         eapply R_arg_text_after; try eassumption.
+                         apply scan_run_sound. exact Hrun.
+                     +++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                         rewrite Hd, Hs, Ha, Hm, Hat in Hrun. cbn [negb] in Hrun.
+                         destruct rest as [|t2 rest2]; [discriminate|].
+                         cbn [hd_error] in Hrun. destruct t2; try discriminate.
+                         eapply R_arg_text_run; try eassumption.
+                         apply IH; [simpl in Hl1; lia|exact Hrun].
+              ** rewrite run_step in Hrun. cbn [step s_frames s_out s_pos negb] in Hrun.
+                 rewrite Hd, Hs, Ha in Hrun. discriminate.
+        -- apply R_cs_undefined; [exact Hd|].
+           rewrite (run_halt C _ _ _ fs E1 p) in Hrun
+             by (cbn [step s_frames s_out s_pos]; rewrite Hd; reflexivity).
+           apply halt_out_sound. exact Hrun.
       * (* TEnd *)
+        rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
+        destruct (in_arg fs) eqn:Ha; [discriminate|].
         destruct (in_math fs) eqn:Hm.
-        -- injection Hrun as <-. apply R_end_math; exact Hm.
+        -- injection Hrun as <-. apply R_end_math; assumption.
         -- destruct so; injection Hrun as <-.
-           ++ apply R_end_ok; exact Hm.
-           ++ apply R_end_empty; exact Hm.
+           ++ apply R_end_ok; assumption.
+           ++ apply R_end_empty; assumption.
 Qed.
 
 Lemma run_sound : forall C ts s o, run C s ts = Some o -> Runs C s ts o.
@@ -398,75 +751,160 @@ Proof. intros C ts s o H. eapply run_sound_n; [apply le_n|exact H]. Qed.
 
 (** ** Completeness: what [Runs] derives, [run] answers *)
 
+(* A rule whose conclusion goes through [Stops]: the step is a [halt]. *)
+Local Ltac by_stops H :=
+  erewrite run_halt; [apply halt_out_complete; exact H|].
+
 Lemma run_complete : forall C s ts o, Runs C s ts o -> run C s ts = Some o.
 Proof.
-  intros C s ts o H. induction H; simpl.
+  intros C s ts o H. induction H.
   - (* R_eof *) reflexivity.
-  - (* R_end_ok *) rewrite H. reflexivity.
-  - (* R_end_empty *) rewrite H. reflexivity.
-  - (* R_end_math *) rewrite H. reflexivity.
-  - (* R_char_text *) rewrite H. exact IHRuns.
-  - (* R_char_math *) rewrite H. exact IHRuns.
+  - (* R_end_ok *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0. reflexivity.
+  - (* R_end_empty *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0. reflexivity.
+  - (* R_end_math *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0. reflexivity.
+  - (* R_char_text *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H. exact IHRuns.
+  - (* R_char_math *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H. exact IHRuns.
   - (* R_space *) exact IHRuns.
-  - (* R_par_text *) rewrite H. exact IHRuns.
-  - (* R_par_math *) rewrite H. reflexivity.
-  - (* R_open_text *) rewrite H. exact IHRuns.
-  - (* R_open_math *) rewrite H. exact IHRuns.
+  - (* R_par_text *)
+    rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H0, H. exact IHRuns.
+  - (* R_par_math *)
+    by_stops H1. cbn [step s_frames s_out s_pos]. rewrite H0, H. reflexivity.
+  - (* R_par_short *)
+    by_stops H0. cbn [step s_frames s_out s_pos].
+    apply Nat.eqb_neq in H. rewrite H. reflexivity.
+  - (* R_open_text *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H. exact IHRuns.
+  - (* R_open_math *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H. exact IHRuns.
   - (* R_close_simple *) exact IHRuns.
   - (* R_close_group *) exact IHRuns.
-  - (* R_close_shift *) reflexivity.
+  - (* R_close_arg *) exact IHRuns.
+  - (* R_close_shift *) by_stops H. reflexivity.
   - (* R_close_top *) reflexivity.
   - (* R_dollar_display_open *)
-    destruct fs as [|[|d sp sb|g sp sb] fs']; simpl in H; try discriminate; exact IHRuns.
+    rewrite run_step.
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
+      cbn [step s_frames s_out s_pos mgroup_head restricted hd_error]; try rewrite H0; exact IHRuns.
   - (* R_dollar_inline_open *)
-    destruct fs as [|[|d sp sb|g sp sb] fs']; simpl in H; try discriminate;
-      (destruct rest as [|[] rest']; simpl in H0; try contradiction; exact IHRuns).
+    rewrite run_step.
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
+      cbn [step s_frames s_out s_pos mgroup_head restricted]; try rewrite H0;
+      (destruct rest as [|[] rest']; simpl in H1; try contradiction; exact IHRuns).
+  - (* R_dollar_restricted_open *)
+    rewrite run_step.
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
+      cbn [step s_frames s_out s_pos mgroup_head restricted]; try rewrite H0; exact IHRuns.
   - (* R_dollar_inline_close *) exact IHRuns.
   - (* R_dollar_display_close *) exact IHRuns.
-  - (* R_dollar_display_undef *) rewrite H. reflexivity.
+  - (* R_dollar_display_undef *)
+    by_stops H0. cbn [step s_frames s_out s_pos hd_error]. rewrite H. reflexivity.
   - (* R_dollar_display_bad *)
+    by_stops H0. cbn [step s_frames s_out s_pos hd_error].
     destruct t; simpl in H; try contradiction; try reflexivity.
     destruct H as [Hd Hs]. rewrite Hd.
-    destruct (c_sig C n); [reflexivity|]. exfalso. apply Hs. reflexivity.
-  - (* R_dollar_display_eof *) reflexivity.
-  - (* R_dollar_group *) reflexivity.
-  - (* R_mopen_inline *) rewrite H. exact IHRuns.
-  - (* R_mopen_inline_bad *) rewrite H. reflexivity.
+    destruct (c_sig C n), (c_arg C n); try reflexivity.
+    exfalso. destruct Hs as [Hs|Hs]; apply Hs; reflexivity.
+  - (* R_dollar_display_eof *) by_stops H. reflexivity.
+  - (* R_dollar_group *)
+    by_stops H0.
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H; try discriminate; reflexivity.
+  - (* R_mopen_inline *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H. exact IHRuns.
+  - (* R_mopen_inline_bad *) by_stops H0. cbn [step s_frames s_out s_pos]. rewrite H. reflexivity.
   - (* R_mclose_inline *) exact IHRuns.
   - (* R_mclose_inline_bad *)
-    destruct fs as [|[|[] sp sb|g sp sb] fs']; simpl in H; try contradiction; reflexivity.
-  - (* R_mopen_display *) rewrite H. exact IHRuns.
-  - (* R_mopen_display_bad *) rewrite H. reflexivity.
+    by_stops H0.
+    destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs']; simpl in H; try contradiction; reflexivity.
+  - (* R_mopen_display *)
+    rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0. exact IHRuns.
+  - (* R_mopen_display_restricted *)
+    rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0. exact IHRuns.
+  - (* R_mopen_display_bad *) by_stops H0. cbn [step s_frames s_out s_pos]. rewrite H. reflexivity.
   - (* R_mclose_display *) exact IHRuns.
   - (* R_mclose_display_bad *)
-    destruct fs as [|[|[] sp sb|g sp sb] fs']; simpl in H; try contradiction; reflexivity.
-  - (* R_script_text *) rewrite H. reflexivity.
-  - (* R_script_double *) rewrite H, H0. reflexivity.
-  - (* R_script_char *) rewrite H, H0. exact IHRuns.
-  - (* R_script_group *) rewrite H, H0. exact IHRuns.
-  - (* R_cs_undefined *) rewrite H. reflexivity.
-  - (* R_cs_text_material *) rewrite H, H0, H2, H1. exact IHRuns.
-  - (* R_cs_text_noop *) rewrite H, H0, H2, H1. exact IHRuns.
-  - (* R_cs_text_fatal *) rewrite H, H0, H2, H1. reflexivity.
-  - (* R_cs_math_noad *) rewrite H, H0, H2, H1. exact IHRuns.
-  - (* R_cs_math_noop *) rewrite H, H0, H2, H1. exact IHRuns.
-  - (* R_cs_math_fatal *) rewrite H, H0, H2, H1. reflexivity.
+    by_stops H0.
+    destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs']; simpl in H; try contradiction; reflexivity.
+  - (* R_script_text *) by_stops H0. cbn [step s_frames s_out s_pos]. rewrite H. reflexivity.
+  - (* R_script_double *)
+    by_stops H1. cbn [step s_frames s_out s_pos]. rewrite H, H0. reflexivity.
+  - (* R_script_char *)
+    rewrite run_step. cbn [step s_frames s_out s_pos hd_error]. rewrite H, H0. exact IHRuns.
+  - (* R_script_group *)
+    rewrite run_step. cbn [step s_frames s_out s_pos hd_error]. rewrite H, H0. exact IHRuns.
+  - (* R_cs_undefined *) by_stops H0. cbn [step s_frames s_out s_pos]. rewrite H. reflexivity.
+  - (* R_cs_text_material *)
+    rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0, H2, H1. exact IHRuns.
+  - (* R_cs_text_noop *)
+    rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0, H2, H1. exact IHRuns.
+  - (* R_cs_text_fatal *)
+    by_stops H3. cbn [step s_frames s_out s_pos]. rewrite H, H0, H2, H1. reflexivity.
+  - (* R_cs_math_noad *)
+    rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0, H2, H1. exact IHRuns.
+  - (* R_cs_math_noop *)
+    rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0, H2, H1. exact IHRuns.
+  - (* R_cs_math_fatal *)
+    by_stops H3. cbn [step s_frames s_out s_pos]. rewrite H, H0, H2, H1. reflexivity.
+  - (* R_arg_text_now *)
+    by_stops H4. cbn [step s_frames s_out s_pos]. rewrite H, H0, H1, H3, H2. reflexivity.
+  - (* R_arg_text_after *)
+    rewrite run_step. cbn [step s_frames s_out s_pos hd_error]. rewrite H, H0, H1, H3, H2.
+    apply scan_run_complete. exact H4.
+  - (* R_arg_text_run *)
+    rewrite run_step. cbn [step s_frames s_out s_pos hd_error]. rewrite H, H0, H1, H3, H2.
+    exact IHRuns.
+  - (* R_arg_math_now *)
+    by_stops H4. cbn [step s_frames s_out s_pos]. rewrite H, H0, H1, H3, H2. reflexivity.
+  - (* R_arg_math_after *)
+    rewrite run_step. cbn [step s_frames s_out s_pos hd_error]. rewrite H, H0, H1, H3, H2.
+    apply scan_run_complete. exact H4.
+  - (* R_arg_math_run *)
+    rewrite run_step. cbn [step s_frames s_out s_pos hd_error]. rewrite H, H0, H1, H3, H2.
+    exact IHRuns.
 Qed.
 
 (** ** Determinism of the semantics, proved on [Runs] itself *)
+
+Lemma mgroup_in_math : forall fs, mgroup_head fs = true -> in_math fs = true.
+Proof. intros [|[|d sp sb|g sp sb|l [b|] sp sb] r] H; simpl in H; try discriminate; reflexivity. Qed.
+
+(* Two premises reading the same contract entry name the same entry. *)
+Local Ltac unify_entries :=
+  repeat match goal with
+  | [ H1 : ?x = Some ?a, H2 : ?x = Some ?b |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : as_text ?a = TRun ?m ?p, H2 : as_text ?a = TRun ?m' ?p' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <- <-
+  | [ H1 : as_text ?a = TFatalAfter ?r, H2 : as_text ?a = TFatalAfter ?r' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : as_math ?a = MRun ?p, H2 : as_math ?a = MRun ?p' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : as_math ?a = MFatalAfter ?r, H2 : as_math ?a = MFatalAfter ?r' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : as_text ?a = TFatalNow ?r, H2 : as_text ?a = TFatalNow ?r' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : as_math ?a = MFatalNow ?r, H2 : as_math ?a = MFatalNow ?r' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : sig_text ?a = TxFatal ?r, H2 : sig_text ?a = TxFatal ?r' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : sig_math ?a = MxFatal ?r, H2 : sig_math ?a = MxFatal ?r' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <-
+  end.
 
 Theorem runs_deterministic : forall C s ts o1 o2,
   Runs C s ts o1 -> Runs C s ts o2 -> o1 = o2.
 Proof.
   intros C s ts o1 o2 Ha. revert o2.
-  induction Ha; intros o2 Hb; inversion Hb; subst; simpl in *;
+  induction Ha; intros o2 Hb; inversion Hb; subst; simpl in *; unify_entries;
     first
       [ reflexivity
       | apply IHHa; assumption
       | contradiction
       | congruence
+      | eapply stops_deterministic; eassumption
+      | eapply scans_deterministic; eassumption
       | match goal with
         | [ Hc : _ /\ _ |- _ ] => destruct Hc; congruence
+        end
+      | match goal with
+        | [ Hm : mgroup_head ?fs = true, Hi : in_math ?fs = false |- _ ] =>
+            rewrite (mgroup_in_math _ Hm) in Hi; discriminate
         end ].
 Qed.
 
@@ -493,16 +931,120 @@ Qed.
 
 (** ** Totality inside the tier *)
 
-Local Ltac fin1 :=
-  first [ discriminate
-        | match goal with
-          | [ H : forall s', run _ s' _ <> None |- _ ] => apply H
-          end ].
+(** The braces [wfa] counts are the brace frames [arg_depth] counts. *)
+Lemma arg_depth_out : forall fs, in_arg fs = false -> arg_depth fs = 0.
+Proof.
+  induction fs as [|f r IH]; intros H; [reflexivity|].
+  unfold in_arg in H. cbn [existsb] in H. apply orb_false_iff in H as [H1 H2].
+  cbn [arg_depth]. unfold in_arg. rewrite H2, H1. reflexivity.
+Qed.
+
+Lemma arg_depth_in : forall fs, in_arg fs = true -> 1 <= arg_depth fs.
+Proof.
+  induction fs as [|f r IH]; intros H; [discriminate|].
+  cbn [arg_depth]. unfold in_arg in *. cbn [existsb] in H.
+  destruct (existsb is_arg_frame r) eqn:E.
+  - destruct (is_brace f); [lia|]. apply IH. reflexivity.
+  - rewrite orb_false_r in H. rewrite H. lia.
+Qed.
+
+Lemma arg_depth_zero : forall fs, Nat.eqb (arg_depth fs) 0 = negb (in_arg fs).
+Proof.
+  intros fs. destruct (in_arg fs) eqn:E.
+  - apply Nat.eqb_neq. pose proof (arg_depth_in fs E). lia.
+  - rewrite (arg_depth_out fs E). reflexivity.
+Qed.
+
+Lemma in_arg_fresh : forall fs, in_arg (fresh_tail fs) = in_arg fs.
+Proof. intros [|[] r]; reflexivity. Qed.
+
+Lemma arg_depth_fresh : forall fs, arg_depth (fresh_tail fs) = arg_depth fs.
+Proof. intros [|[] r]; reflexivity. Qed.
+
+Lemma in_arg_mark : forall up fs, in_arg (mark_script up fs) = in_arg fs.
+Proof. intros up [|[] r]; reflexivity. Qed.
+
+Lemma arg_depth_mark : forall up fs, arg_depth (mark_script up fs) = arg_depth fs.
+Proof. intros up [|[] r]; reflexivity. Qed.
+
+(** Pushing a brace frame that is not an argument. *)
+Lemma arg_depth_push : forall f fs,
+  is_brace f = true -> is_arg_frame f = false ->
+  arg_depth (f :: fs) = if Nat.eqb (arg_depth fs) 0 then 0 else S (arg_depth fs).
+Proof.
+  intros f fs Hb Ha. cbn [arg_depth]. rewrite Hb, Ha, arg_depth_zero.
+  destruct (in_arg fs); reflexivity.
+Qed.
+
+Lemma arg_depth_push_arg : forall l pl sp sb fs,
+  arg_depth (FArg l pl sp sb :: fs) = S (arg_depth fs).
+Proof.
+  intros. cbn [arg_depth is_brace is_arg_frame].
+  destruct (in_arg fs) eqn:E; [reflexivity|]. rewrite (arg_depth_out fs E). reflexivity.
+Qed.
+
+Lemma arg_depth_shift : forall d sp sb fs, arg_depth (FShift d sp sb :: fs) = arg_depth fs.
+Proof.
+  intros. cbn [arg_depth is_brace is_arg_frame].
+  destruct (in_arg fs) eqn:E; [reflexivity|]. rewrite (arg_depth_out fs E). reflexivity.
+Qed.
+
+Lemma arg_depth_pop : forall f fs,
+  is_brace f = true -> arg_depth fs = pred (arg_depth (f :: fs)).
+Proof.
+  intros f fs Hb. cbn [arg_depth]. rewrite Hb.
+  destruct (in_arg fs) eqn:E; [reflexivity|].
+  rewrite (arg_depth_out fs E). destruct (is_arg_frame f); reflexivity.
+Qed.
+
+Lemma scan_total_n : forall C k ts sc p,
+  length ts <= k -> 1 <= sc_k sc -> wfa C (sc_k sc) ts = true -> scan_run sc p ts <> None.
+Proof.
+  intros C k. induction k as [|k IH]; intros ts [r kk sh ou] p Hlen Hk Hw;
+    cbn [sc_k] in Hk, Hw.
+  - destruct ts; [|simpl in Hlen; lia].
+    cbn [wfa] in Hw. apply Nat.eqb_eq in Hw. lia.
+  - destruct ts as [|t rest].
+    + cbn [wfa] in Hw. apply Nat.eqb_eq in Hw. lia.
+    + simpl in Hlen. assert (Hl : length rest <= k) by lia.
+      destruct t; cbn [scan_run sc_r sc_k sc_sh sc_ou]; cbn [wfa] in Hw;
+        try (apply IH; [exact Hl|exact Hk|exact Hw]).
+      * (* TPar *)
+        destruct ou; [discriminate|].
+        destruct (Nat.eqb sh 0); apply IH; cbn [sc_k]; assumption.
+      * (* TOpen *)
+        apply IH; cbn [sc_k]; [exact Hl|lia|].
+        replace (Nat.eqb kk 0) with false in Hw by (symmetry; apply Nat.eqb_neq; lia).
+        exact Hw.
+      * (* TClose *)
+        destruct kk as [|[|kk]]; [lia|discriminate|].
+        apply IH; cbn [sc_k]; [exact Hl|lia|exact Hw].
+      * (* TCs *)
+        destruct (is_argcmd C n) eqn:Ha.
+        -- destruct rest as [|[] r']; try discriminate.
+           apply IH; cbn [sc_k]; [exact Hl|exact Hk|].
+           cbn [wfa]. replace (Nat.eqb kk 0) with false by (symmetry; apply Nat.eqb_neq; lia).
+           exact Hw.
+        -- apply IH; cbn [sc_k]; assumption.
+      * (* TEnd *) apply Nat.eqb_eq in Hw. lia.
+Qed.
+
+Lemma halt_total : forall C fs p r l ts,
+  wfa C (arg_depth fs) ts = true -> halt_out fs p r l ts <> None.
+Proof.
+  intros C fs p r l ts Hw. unfold halt_out. destruct (in_arg fs) eqn:E; [|discriminate].
+  apply (scan_total_n C (length ts)); [apply le_n|cbn [start_scan sc_k]; apply arg_depth_in; exact E|].
+  exact Hw.
+Qed.
+
+Local Ltac halt_tot C Hw :=
+  rewrite (run_halt C _ _ _ _ _ _ eq_refl); apply (halt_total C); exact Hw.
 
 Lemma run_total_n : forall C k ts s,
-  length ts <= k -> in_strict_toks C ts -> run C s ts <> None.
+  length ts <= k -> Forall (fun t => tok_ok C t = true) ts -> scripts_ok ts = true ->
+  wfa C (arg_depth (s_frames s)) ts = true -> run C s ts <> None.
 Proof.
-  intros C k. induction k as [|k IH]; intros ts s Hlen [Hok Hsc].
+  intros C k. induction k as [|k IH]; intros ts s Hlen Hok Hsc Hw.
   - destruct ts; [|simpl in Hlen; lia]. destruct s; simpl; discriminate.
   - destruct ts as [|t rest]; [destruct s; simpl; discriminate|].
     simpl in Hlen. inversion Hok as [|t' rest' Ht Hrest]; subst.
@@ -510,65 +1052,245 @@ Proof.
     assert (Hsc1 : scripts_ok rest = true).
     { destruct t; simpl in Hsc; try exact Hsc.
       destruct rest as [|[] r]; try discriminate; exact Hsc. }
-    assert (IH1 : forall s', run C s' rest <> None)
-      by (intro s'; apply IH; [exact Hl1|split; assumption]).
-    assert (IH2 : forall t2 rest2 s', rest = t2 :: rest2 -> run C s' rest2 <> None).
-    { intros t2 rest2 s' ->. inversion Hrest; subst. apply IH.
-      - simpl in Hl1. lia.
-      - split; [assumption|]. destruct t2; simpl in Hsc1; try exact Hsc1.
-        destruct rest2 as [|[] r]; try discriminate; exact Hsc1. }
-    destruct s as [fs so p]. simpl.
-    destruct t; simpl.
-    + destruct (in_math fs); fin1.
-    + fin1.
-    + destruct (in_math fs); [discriminate|fin1].
-    + destruct (in_math fs); fin1.
-    + destruct fs as [|[] fs']; try discriminate; fin1.
-    + destruct fs as [|[|d sp sb|g sp sb] fs'].
-      * destruct rest as [|t2 rest2]; simpl; [fin1|].
-        destruct t2; try fin1. apply (IH2 TDollar rest2); reflexivity.
-      * destruct rest as [|t2 rest2]; simpl; [fin1|].
-        destruct t2; try fin1. apply (IH2 TDollar rest2); reflexivity.
-      * destruct d; [|fin1].
-        destruct rest as [|t2 rest2]; simpl; [discriminate|].
-        destruct t2; try discriminate.
-        -- apply (IH2 TDollar rest2); reflexivity.
-        -- inversion Hrest as [|? ? Ht2 _]; subst. simpl in Ht2.
-           apply andb_true_iff in Ht2 as [_ Ht2].
-           destruct (c_defined C n); [|discriminate].
-           destruct (c_sig C n); simpl in *; discriminate.
-      * discriminate.
-    + destruct (in_math fs); [discriminate|fin1].
-    + destruct fs as [|[|[] sp sb|g sp sb] fs']; try discriminate; fin1.
-    + destruct (in_math fs); [discriminate|fin1].
-    + destruct fs as [|[|[] sp sb|g sp sb] fs']; try discriminate; fin1.
-    + destruct (in_math fs); simpl; [|discriminate].
-      destruct (tail_has up fs); [discriminate|].
-      destruct rest as [|t2 rest2]; [simpl in Hsc; discriminate|].
-      simpl in Hsc. destruct t2; try discriminate; simpl;
-        eapply IH2; reflexivity.
-    + simpl in Ht. apply andb_true_iff in Ht as [_ Ht].
-      destruct (c_defined C n); simpl; [|discriminate].
-      destruct (c_sig C n) as [sg|]; [|discriminate].
+    destruct s as [fs so p]. cbn [s_frames] in Hw.
+    set (d := arg_depth fs) in *.
+    (* one token consumed, frames [fs'] with [arg_depth fs' = d'] *)
+    assert (G1 : forall fs' so' p', arg_depth fs' = arg_depth fs ->
+               wfa C (arg_depth fs) rest = true ->
+               run C (mkState fs' so' p') rest <> None).
+    { intros fs' so' p' E W. apply IH; try assumption; cbn [s_frames]; rewrite E. exact W. }
+    destruct t.
+    + (* TChar *)
+      rewrite run_step. cbn [step s_frames s_out s_pos].
+      cbn [wfa] in Hw.
+      destruct (in_math fs); apply G1; try rewrite arg_depth_fresh; auto.
+    + (* TSpace *)
+      rewrite run_step. cbn [step s_frames s_out s_pos]. cbn [wfa] in Hw. apply G1; auto.
+    + (* TPar *)
+      destruct (negb (Nat.eqb (short_depth fs) 0)) eqn:Hs.
+      * rewrite (run_halt C _ _ _ fs E6 p) by (cbn [step s_frames s_out s_pos]; rewrite Hs; reflexivity).
+        apply (halt_total C). exact Hw.
+      * destruct (in_math fs) eqn:Hm.
+        -- rewrite (run_halt C _ _ _ fs E6 p)
+             by (cbn [step s_frames s_out s_pos]; rewrite Hs, Hm; reflexivity).
+           apply (halt_total C). exact Hw.
+        -- rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite Hs, Hm.
+           cbn [wfa] in Hw. apply G1; auto.
+    + (* TOpen *)
+      rewrite run_step. cbn [step s_frames s_out s_pos]. cbn [wfa] in Hw.
       destruct (in_math fs).
-      * destruct (sig_math sg); try discriminate; fin1.
-      * destruct (sig_text sg); try discriminate; fin1.
-    + destruct (in_math fs); [discriminate|]. destruct so; discriminate.
+      * apply IH; try assumption. cbn [s_frames].
+        rewrite arg_depth_push by reflexivity. rewrite arg_depth_fresh. exact Hw.
+      * apply IH; try assumption. cbn [s_frames].
+        rewrite arg_depth_push by reflexivity. exact Hw.
+    + (* TClose *)
+      cbn [wfa] in Hw.
+      destruct fs as [|f fs'].
+      * rewrite run_step. cbn [step s_frames s_out s_pos]. discriminate.
+      * destruct f as [|dd sp sb|g sp sb|l pl sp sb].
+        -- rewrite run_step. cbn [step s_frames s_out s_pos].
+           apply IH; try assumption. cbn [s_frames].
+           rewrite (arg_depth_pop FSimple fs' eq_refl). exact Hw.
+        -- rewrite (run_halt C _ _ _ (FShift dd sp sb :: fs') E5 p) by reflexivity.
+           apply (halt_total C). cbn [wfa]. exact Hw.
+        -- rewrite run_step. cbn [step s_frames s_out s_pos].
+           apply IH; try assumption. cbn [s_frames].
+           rewrite (arg_depth_pop (FMGroup g sp sb) fs' eq_refl). exact Hw.
+        -- rewrite run_step. cbn [step s_frames s_out s_pos].
+           apply IH; try assumption. cbn [s_frames].
+           rewrite (arg_depth_pop (FArg l pl sp sb) fs' eq_refl). exact Hw.
+    + (* TDollar *)
+      assert (Hw' : wfa C d rest = true) by (cbn [wfa] in Hw; exact Hw).
+      destruct fs as [|f fs'] eqn:Efs.
+      * rewrite run_step. cbn [step s_frames s_out s_pos mgroup_head restricted].
+        destruct rest as [|t2 rest2]; [simpl; discriminate|].
+        destruct t2; cbn [hd_error];
+          try (apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; exact Hw').
+        apply IH; [simpl in Hl1; lia|inversion Hrest; assumption| |].
+        { simpl in Hsc1. exact Hsc1. }
+        cbn [s_frames]. rewrite arg_depth_shift. cbn [wfa] in Hw'. exact Hw'.
+      * subst d.
+        destruct f as [|dd sp sb|g sp sb|l pl sp sb].
+        -- (* FSimple *)
+           rewrite run_step. cbn [step s_frames s_out s_pos mgroup_head].
+           destruct (restricted (FSimple :: fs')).
+           ++ apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; exact Hw'.
+           ++ destruct rest as [|t2 rest2]; [simpl; discriminate|].
+              destruct t2; cbn [hd_error];
+                try (apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; exact Hw').
+              apply IH; [simpl in Hl1; lia|inversion Hrest; assumption| |].
+              { simpl in Hsc1. exact Hsc1. }
+              cbn [s_frames]. rewrite arg_depth_shift. cbn [wfa] in Hw'. exact Hw'.
+        -- destruct dd.
+           ++ (* display *)
+              destruct rest as [|t2 rest2].
+              ** rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E5 p) by reflexivity.
+                 apply (halt_total C). exact Hw.
+              ** destruct t2 eqn:Et2.
+                 all: try (rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E5 p) by reflexivity;
+                           apply (halt_total C); exact Hw).
+                 --- (* $$ *)
+                     rewrite run_step. cbn [step s_frames s_out s_pos hd_error].
+                     apply IH; [simpl in Hl1; lia|inversion Hrest; assumption|simpl in Hsc1; exact Hsc1|].
+                     cbn [s_frames]. rewrite <- (arg_depth_shift true sp sb fs').
+                     cbn [wfa] in Hw'. exact Hw'.
+                 --- (* control word *)
+                     inversion Hrest as [|? ? Ht2 _]; subst. simpl in Ht2.
+                     apply andb_true_iff in Ht2 as [_ Ht2].
+                     destruct (c_defined C n) eqn:Hd.
+                     +++ destruct (is_some (c_sig C n) || is_some (c_arg C n)) eqn:Hs.
+                         *** rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E5 p)
+                               by (cbn [step s_frames s_out s_pos hd_error]; rewrite Hd, Hs; reflexivity).
+                             apply (halt_total C). exact Hw.
+                         *** simpl in Ht2. rewrite Hs in Ht2. discriminate.
+                     +++ rewrite (run_halt C _ _ _ (FShift true sp sb :: fs') E1 (S p))
+                           by (cbn [step s_frames s_out s_pos hd_error]; rewrite Hd; reflexivity).
+                         apply (halt_total C). exact Hw.
+           ++ (* inline *)
+              rewrite run_step. cbn [step s_frames s_out s_pos].
+              apply IH; try assumption. cbn [s_frames].
+              rewrite <- (arg_depth_shift false sp sb fs'). exact Hw'.
+        -- rewrite (run_halt C _ _ _ (FMGroup g sp sb :: fs') E5 p) by reflexivity.
+           apply (halt_total C). exact Hw.
+        -- destruct pl as [b|].
+           ++ rewrite run_step. cbn [step s_frames s_out s_pos mgroup_head restricted].
+              destruct b.
+              ** apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; exact Hw'.
+              ** destruct rest as [|t2 rest2]; [simpl; discriminate|].
+                 destruct t2; cbn [hd_error];
+                   try (apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; exact Hw').
+                 apply IH; [simpl in Hl1; lia|inversion Hrest; assumption| |].
+                 { simpl in Hsc1. exact Hsc1. }
+                 cbn [s_frames]. rewrite arg_depth_shift. cbn [wfa] in Hw'. exact Hw'.
+           ++ rewrite (run_halt C _ _ _ (FArg l PMath sp sb :: fs') E5 p) by reflexivity.
+              apply (halt_total C). exact Hw.
+    + (* TMOpenInline *)
+      destruct (in_math fs) eqn:Hm.
+      * rewrite (run_halt C _ _ _ fs E5 p) by (cbn [step s_frames s_out s_pos]; rewrite Hm; reflexivity).
+        apply (halt_total C). exact Hw.
+      * rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite Hm.
+        apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; cbn [wfa] in Hw. exact Hw.
+    + (* TMCloseInline *)
+      destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+        try (rewrite (run_halt C _ _ _ _ E5 p) by reflexivity; apply (halt_total C); exact Hw).
+      rewrite run_step. cbn [step s_frames s_out s_pos].
+      apply IH; try assumption. cbn [s_frames].
+      rewrite <- (arg_depth_shift false sp sb fs'). cbn [wfa] in Hw. exact Hw.
+    + (* TMOpenDisplay *)
+      destruct (in_math fs) eqn:Hm.
+      * rewrite (run_halt C _ _ _ fs E5 p) by (cbn [step s_frames s_out s_pos]; rewrite Hm; reflexivity).
+        apply (halt_total C). exact Hw.
+      * rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite Hm. cbn [wfa] in Hw.
+        destruct (restricted fs).
+        -- apply IH; try assumption.
+        -- apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; exact Hw.
+    + (* TMCloseDisplay *)
+      destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+        try (rewrite (run_halt C _ _ _ _ E5 p) by reflexivity; apply (halt_total C); exact Hw).
+      rewrite run_step. cbn [step s_frames s_out s_pos].
+      apply IH; try assumption. cbn [s_frames].
+      rewrite <- (arg_depth_shift true sp sb fs'). cbn [wfa] in Hw. exact Hw.
+    + (* TScript *)
+      destruct (in_math fs) eqn:Hm.
+      * destruct (tail_has up fs) eqn:Htl.
+        -- rewrite (run_halt C _ _ _ fs E4 p)
+             by (cbn [step s_frames s_out s_pos]; rewrite Hm, Htl; reflexivity).
+           apply (halt_total C). exact Hw.
+        -- rewrite run_step. cbn [step s_frames s_out s_pos negb]. rewrite Hm, Htl. cbn [negb].
+           destruct rest as [|t2 rest2]; [simpl in Hsc; discriminate|].
+           simpl in Hsc. inversion Hrest; subst.
+           cbn [wfa] in Hw.
+           destruct t2; try discriminate; cbn [hd_error].
+           ++ apply IH; [simpl in Hl1; lia|assumption|exact Hsc|].
+              cbn [s_frames]. rewrite arg_depth_mark. cbn [wfa] in Hw. exact Hw.
+           ++ apply IH; [simpl in Hl1; lia|assumption|exact Hsc|].
+              cbn [s_frames]. rewrite arg_depth_push by reflexivity. rewrite arg_depth_mark.
+              cbn [wfa] in Hw. exact Hw.
+      * rewrite (run_halt C _ _ _ fs E3 p) by (cbn [step s_frames s_out s_pos]; rewrite Hm; reflexivity).
+        apply (halt_total C). exact Hw.
+    + (* TCs *)
+      simpl in Ht. apply andb_true_iff in Ht as [_ Ht].
+      destruct (c_defined C n) eqn:Hd.
+      * destruct (c_sig C n) as [sg|] eqn:Hs.
+        -- assert (Hw' : wfa C d rest = true).
+           { cbn [wfa] in Hw. unfold is_argcmd in Hw. rewrite Hd, Hs in Hw. exact Hw. }
+           destruct (in_math fs) eqn:Hm.
+           ++ destruct (sig_math sg) as [| |r] eqn:Hsm.
+              ** rewrite run_step. cbn [step s_frames s_out s_pos negb]. rewrite Hd, Hs, Hm, Hsm.
+                 cbn [negb]. apply G1; [apply arg_depth_fresh|exact Hw'].
+              ** rewrite run_step. cbn [step s_frames s_out s_pos negb]. rewrite Hd, Hs, Hm, Hsm.
+                 cbn [negb]. apply G1; auto.
+              ** rewrite (run_halt C _ _ _ fs r p)
+                   by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Hm, Hsm; reflexivity).
+                 apply (halt_total C). exact Hw.
+           ++ destruct (sig_text sg) as [| |r] eqn:Hst.
+              ** rewrite run_step. cbn [step s_frames s_out s_pos negb]. rewrite Hd, Hs, Hm, Hst.
+                 cbn [negb]. apply G1; auto.
+              ** rewrite run_step. cbn [step s_frames s_out s_pos negb]. rewrite Hd, Hs, Hm, Hst.
+                 cbn [negb]. apply G1; auto.
+              ** rewrite (run_halt C _ _ _ fs r p)
+                   by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Hm, Hst; reflexivity).
+                 apply (halt_total C). exact Hw.
+        -- destruct (c_arg C n) as [a|] eqn:Ha.
+           ++ assert (Harg : is_argcmd C n = true) by (unfold is_argcmd; rewrite Hd, Hs, Ha; reflexivity).
+              assert (Hw2 := Hw). cbn [wfa] in Hw2. rewrite Harg in Hw2.
+              destruct (in_math fs) eqn:Hm.
+              ** destruct (as_math a) as [r|r|pl] eqn:Ham.
+                 --- rewrite (run_halt C _ _ _ fs r p)
+                       by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Ham; reflexivity).
+                     apply (halt_total C). exact Hw.
+                 --- rewrite run_step. cbn [step s_frames s_out s_pos negb].
+                     rewrite Hd, Hs, Ha, Hm, Ham. cbn [negb].
+                     destruct rest as [|[] r']; try discriminate. cbn [hd_error].
+                     apply (scan_total_n C (length r')); [apply le_n| |].
+                     { cbn [start_scan sc_k]. rewrite arg_depth_push_arg. lia. }
+                     cbn [start_scan sc_k]. rewrite arg_depth_push_arg. exact Hw2.
+                 --- rewrite run_step. cbn [step s_frames s_out s_pos negb].
+                     rewrite Hd, Hs, Ha, Hm, Ham. cbn [negb].
+                     destruct rest as [|[] r']; try discriminate. cbn [hd_error].
+                     inversion Hrest as [|? ? _ Hr']; subst.
+                     apply IH; [simpl in Hl1; lia|exact Hr'|simpl in Hsc1; exact Hsc1|].
+                     cbn [s_frames]. rewrite arg_depth_push_arg, arg_depth_fresh. exact Hw2.
+              ** destruct (as_text a) as [r|r|m pl] eqn:Hat.
+                 --- rewrite (run_halt C _ _ _ fs r p)
+                       by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Hat; reflexivity).
+                     apply (halt_total C). exact Hw.
+                 --- rewrite run_step. cbn [step s_frames s_out s_pos negb].
+                     rewrite Hd, Hs, Ha, Hm, Hat. cbn [negb].
+                     destruct rest as [|[] r']; try discriminate. cbn [hd_error].
+                     apply (scan_total_n C (length r')); [apply le_n| |].
+                     { cbn [start_scan sc_k]. rewrite arg_depth_push_arg. lia. }
+                     cbn [start_scan sc_k]. rewrite arg_depth_push_arg. exact Hw2.
+                 --- rewrite run_step. cbn [step s_frames s_out s_pos negb].
+                     rewrite Hd, Hs, Ha, Hm, Hat. cbn [negb].
+                     destruct rest as [|[] r']; try discriminate. cbn [hd_error].
+                     inversion Hrest as [|? ? _ Hr']; subst.
+                     apply IH; [simpl in Hl1; lia|exact Hr'|simpl in Hsc1; exact Hsc1|].
+                     cbn [s_frames]. rewrite arg_depth_push_arg. exact Hw2.
+           ++ simpl in Ht; try rewrite Hs in Ht; try rewrite Ha in Ht; simpl in Ht; discriminate.
+      * rewrite (run_halt C _ _ _ fs E1 p) by (cbn [step s_frames s_out s_pos]; rewrite Hd; reflexivity).
+        apply (halt_total C). exact Hw.
+    + (* TEnd *)
+      rewrite run_step. cbn [step s_frames s_out s_pos].
+      cbn [wfa] in Hw. unfold d in Hw. rewrite arg_depth_zero in Hw.
+      destruct (in_arg fs); [discriminate|].
+      destruct (in_math fs); [discriminate|]. destruct so; discriminate.
 Qed.
 
 Theorem runs_total : forall C d,
   in_strict_doc C d -> exists o, Runs C init (flatten_doc d) o.
 Proof.
-  intros C d [Hs _].
+  intros C d [[Hok [Hsc Hw]] _].
   destruct (run C init (flatten_doc d)) as [o|] eqn:E.
   - exists o. apply run_sound. exact E.
-  - exfalso. eapply run_total_n; [apply le_n|exact Hs|exact E].
+  - exfalso. eapply (run_total_n C _ _ init); [apply le_n|exact Hok|exact Hsc|exact Hw|exact E].
 Qed.
 
 Theorem decide_total : forall C d, in_strict_doc C d -> decide C d <> NotStrict.
 Proof.
   intros C d Hs. pose proof Hs as Hs'. apply in_strict_b_spec in Hs'.
+  destruct Hs as [[Hok [Hsc Hw]] _].
   unfold decide. rewrite Hs'.
   destruct (run C init (flatten_doc d)) as [[|r l]|] eqn:E; simpl; try discriminate.
-  intros _. eapply run_total_n; [apply le_n|exact (proj1 Hs)|exact E].
+  intros _. eapply (run_total_n C _ _ init); [apply le_n|exact Hok|exact Hsc|exact Hw|exact E].
 Qed.

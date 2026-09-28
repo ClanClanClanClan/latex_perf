@@ -41,19 +41,6 @@ type comparison = Eq | Lt | Gt
 
 let pred n = Stdlib.max 0 (n - 1)
 let rec add = ( + )
-let rec mul = ( * )
-
-let rec leb n0 m =
-  (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
-    (fun _ -> true)
-    (fun n' ->
-      (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
-        (fun _ -> false)
-        (fun m' -> leb n' m')
-        m)
-    n0
-
-let ltb n0 m = leb (Stdlib.Int.succ n0) m
 
 module Nat = struct
   let pred n0 =
@@ -240,12 +227,28 @@ type reason = E0 | E1 | E3 | E4 | E5 | E6
 type text_beh = TxMaterial | TxNoop | TxFatal of reason
 type math_beh = MxNoad | MxNoop | MxFatal of reason
 type signature = { sig_text : text_beh; sig_math : math_beh }
-type contract = { c_defined : name -> bool; c_sig : name -> signature option }
+type longness = LLong | LShortInner | LShortOuter
+type pay = PText of bool | PMath
+
+type arg_text =
+  | TFatalNow of reason
+  | TFatalAfter of reason
+  | TRun of bool * pay
+
+type arg_math = MFatalNow of reason | MFatalAfter of reason | MRun of pay
+type asig = { as_long : longness; as_text : arg_text; as_math : arg_math }
+
+type contract = {
+  c_defined : name -> bool;
+  c_sig : name -> signature option;
+  c_arg : name -> asig option;
+}
 
 type frame =
   | FSimple
   | FShift of bool * bool * bool
   | FMGroup of bool * bool * bool
+  | FArg of longness * pay * bool * bool
 
 type state = { s_frames : frame list; s_out : bool; s_pos : int }
 
@@ -259,7 +262,8 @@ let in_math = function
       match f with
       | FSimple -> false
       | FShift (_, _, _) -> true
-      | FMGroup (_, _, _) -> true)
+      | FMGroup (_, _, _) -> true
+      | FArg (_, p, _, _) -> ( match p with PText _ -> false | PMath -> true))
 
 let tail_has up = function
   | [] -> false
@@ -267,7 +271,9 @@ let tail_has up = function
       match f with
       | FSimple -> false
       | FShift (_, sp0, sb) -> if up then sp0 else sb
-      | FMGroup (_, sp0, sb) -> if up then sp0 else sb)
+      | FMGroup (_, sp0, sb) -> if up then sp0 else sb
+      | FArg (_, p, sp0, sb) -> (
+          match p with PText _ -> false | PMath -> if up then sp0 else sb))
 
 let fresh_tail fs =
   match fs with
@@ -276,7 +282,8 @@ let fresh_tail fs =
       match f with
       | FSimple -> fs
       | FShift (d, _, _) -> FShift (d, false, false) :: r
-      | FMGroup (g, _, _) -> FMGroup (g, false, false) :: r)
+      | FMGroup (g, _, _) -> FMGroup (g, false, false) :: r
+      | FArg (l, p, _, _) -> FArg (l, p, false, false) :: r)
 
 let mark_script up fs =
   match fs with
@@ -287,7 +294,91 @@ let mark_script up fs =
       | FShift (d, sp0, sb) ->
           FShift (d, (if up then true else sp0), if up then sb else true) :: r
       | FMGroup (g, sp0, sb) ->
-          FMGroup (g, (if up then true else sp0), if up then sb else true) :: r)
+          FMGroup (g, (if up then true else sp0), if up then sb else true) :: r
+      | FArg (l, p, sp0, sb) ->
+          FArg (l, p, (if up then true else sp0), if up then sb else true) :: r)
+
+let mgroup_head = function
+  | [] -> false
+  | f :: _ -> (
+      match f with
+      | FSimple -> false
+      | FShift (_, _, _) -> false
+      | FMGroup (_, _, _) -> true
+      | FArg (_, p, _, _) -> ( match p with PText _ -> false | PMath -> true))
+
+let rec restricted = function
+  | [] -> false
+  | f :: r -> (
+      match f with
+      | FSimple -> restricted r
+      | FShift (_, _, _) -> false
+      | FMGroup (_, _, _) -> false
+      | FArg (_, p, _, _) -> ( match p with PText b -> b | PMath -> false))
+
+let is_arg_frame = function
+  | FSimple -> false
+  | FShift (_, _, _) -> false
+  | FMGroup (_, _, _) -> false
+  | FArg (_, _, _, _) -> true
+
+let is_brace = function
+  | FSimple -> true
+  | FShift (_, _, _) -> false
+  | FMGroup (_, _, _) -> true
+  | FArg (_, _, _, _) -> true
+
+let short_frame = function
+  | FSimple -> false
+  | FShift (_, _, _) -> false
+  | FMGroup (_, _, _) -> false
+  | FArg (l, _, _, _) -> (
+      match l with LLong -> false | LShortInner -> true | LShortOuter -> true)
+
+let in_arg fs = existsb is_arg_frame fs
+
+let rec arg_depth = function
+  | [] -> 0
+  | f :: r ->
+      if in_arg r then
+        if is_brace f then Stdlib.Int.succ (arg_depth r) else arg_depth r
+      else if is_arg_frame f then Stdlib.Int.succ 0
+      else 0
+
+let rec short_depth = function
+  | [] -> 0
+  | f :: r ->
+      (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+        (fun _ -> if short_frame f then arg_depth (f :: r) else 0)
+        (fun n0 -> Stdlib.Int.succ n0)
+        (short_depth r)
+
+let rec outer_short = function
+  | [] -> false
+  | f :: r -> (
+      if in_arg r then outer_short r
+      else
+        match f with
+        | FSimple -> false
+        | FShift (_, _, _) -> false
+        | FMGroup (_, _, _) -> false
+        | FArg (l, _, _, _) -> (
+            match l with
+            | LLong -> false
+            | LShortInner -> false
+            | LShortOuter -> true))
+
+type scan = { sc_r : reason; sc_k : int; sc_sh : int; sc_ou : bool }
+
+let start_scan fs r =
+  {
+    sc_r = r;
+    sc_k = arg_depth fs;
+    sc_sh = short_depth fs;
+    sc_ou = outer_short fs;
+  }
+
+let close_sh k sh = if Nat.ltb k sh then 0 else sh
 
 let in_range lo hi c =
   match compare0 lo c with
@@ -317,7 +408,10 @@ let tok_ok c = function
   | TMOpenDisplay -> true
   | TMCloseDisplay -> true
   | TScript _ -> true
-  | TCs n0 -> name_ok n0 && (negb (c.c_defined n0) || is_some (c.c_sig n0))
+  | TCs n0 ->
+      name_ok n0
+      && ((negb (c.c_defined n0) || is_some (c.c_sig n0))
+         || is_some (c.c_arg n0))
   | TEnd -> true
 
 let rec scripts_ok = function
@@ -355,6 +449,46 @@ let rec scripts_ok = function
       | TCs _ -> scripts_ok rest
       | TEnd -> scripts_ok rest)
 
+let is_argcmd c n0 =
+  (c.c_defined n0 && negb (is_some (c.c_sig n0))) && is_some (c.c_arg n0)
+
+let rec wfa c need = function
+  | [] -> need = 0
+  | t :: r -> (
+      match t with
+      | TChar _ -> wfa c need r
+      | TSpace -> wfa c need r
+      | TPar _ -> wfa c need r
+      | TOpen -> wfa c (if need = 0 then 0 else Stdlib.Int.succ need) r
+      | TClose -> wfa c (pred need) r
+      | TDollar -> wfa c need r
+      | TMOpenInline -> wfa c need r
+      | TMCloseInline -> wfa c need r
+      | TMOpenDisplay -> wfa c need r
+      | TMCloseDisplay -> wfa c need r
+      | TScript _ -> wfa c need r
+      | TCs n0 ->
+          if is_argcmd c n0 then
+            match r with
+            | [] -> false
+            | t0 :: r' -> (
+                match t0 with
+                | TChar _ -> false
+                | TSpace -> false
+                | TPar _ -> false
+                | TOpen -> wfa c (Stdlib.Int.succ need) r'
+                | TClose -> false
+                | TDollar -> false
+                | TMOpenInline -> false
+                | TMCloseInline -> false
+                | TMOpenDisplay -> false
+                | TMCloseDisplay -> false
+                | TScript _ -> false
+                | TCs _ -> false
+                | TEnd -> false)
+          else wfa c need r
+      | TEnd -> need = 0)
+
 let ten =
   Stdlib.Int.succ
     (Stdlib.Int.succ
@@ -365,8 +499,10 @@ let ten =
                    (Stdlib.Int.succ
                       (Stdlib.Int.succ (Stdlib.Int.succ (Stdlib.Int.succ 0)))))))))
 
-let max_brace_depth = mul (Stdlib.Int.succ (Stdlib.Int.succ 0)) (mul ten ten)
-let max_tokens = mul max_brace_depth (mul ten ten)
+let max_brace_depth =
+  Nat.mul (Stdlib.Int.succ (Stdlib.Int.succ 0)) (Nat.mul ten ten)
+
+let max_tokens = Nat.mul max_brace_depth (Nat.mul ten ten)
 
 let rec depth_ok_from k = function
   | [] -> true
@@ -375,8 +511,9 @@ let rec depth_ok_from k = function
       | TChar _ -> depth_ok_from k r
       | TSpace -> depth_ok_from k r
       | TPar _ -> depth_ok_from k r
-      | TOpen -> ltb k max_brace_depth && depth_ok_from (Stdlib.Int.succ k) r
-      | TClose -> depth_ok_from (pred k) r
+      | TOpen ->
+          Nat.ltb k max_brace_depth && depth_ok_from (Stdlib.Int.succ k) r
+      | TClose -> depth_ok_from (Nat.pred k) r
       | TDollar -> depth_ok_from k r
       | TMOpenInline -> depth_ok_from k r
       | TMCloseInline -> depth_ok_from k r
@@ -386,9 +523,66 @@ let rec depth_ok_from k = function
       | TCs _ -> depth_ok_from k r
       | TEnd -> depth_ok_from k r)
 
-let bounded ts = leb (length ts) max_tokens && depth_ok_from 0 ts
+let bounded ts = length ts <= max_tokens && depth_ok_from 0 ts
 
-type step_res = Go1 of state | Go2 of state | Stop of outcome | Stuck
+type step_res =
+  | Go1 of state
+  | Go2 of state
+  | Stop of outcome
+  | Stuck
+  | Defer of scan
+  | Defer2 of scan
+
+let halt fs r l =
+  if in_arg fs then Defer (start_scan fs r) else Stop (Fatal (r, l))
+
+let rec scan_run sc p = function
+  | [] -> None
+  | t :: rest -> (
+      match t with
+      | TChar _ -> scan_run sc (Stdlib.Int.succ p) rest
+      | TSpace -> scan_run sc (Stdlib.Int.succ p) rest
+      | TPar _ ->
+          if sc.sc_ou then Some (Fatal (E6, p))
+          else if sc.sc_sh = 0 then scan_run sc (Stdlib.Int.succ p) rest
+          else
+            scan_run
+              { sc_r = E6; sc_k = sc.sc_k; sc_sh = sc.sc_sh; sc_ou = false }
+              (Stdlib.Int.succ p) rest
+      | TOpen ->
+          scan_run
+            {
+              sc_r = sc.sc_r;
+              sc_k = Stdlib.Int.succ sc.sc_k;
+              sc_sh = sc.sc_sh;
+              sc_ou = sc.sc_ou;
+            }
+            (Stdlib.Int.succ p) rest
+      | TClose ->
+          (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+            (fun _ -> None)
+            (fun n0 ->
+              (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+                (fun _ -> Some (Fatal (sc.sc_r, p)))
+                (fun k ->
+                  scan_run
+                    {
+                      sc_r = sc.sc_r;
+                      sc_k = Stdlib.Int.succ k;
+                      sc_sh = close_sh (Stdlib.Int.succ k) sc.sc_sh;
+                      sc_ou = sc.sc_ou;
+                    }
+                    (Stdlib.Int.succ p) rest)
+                n0)
+            sc.sc_k
+      | TDollar -> scan_run sc (Stdlib.Int.succ p) rest
+      | TMOpenInline -> scan_run sc (Stdlib.Int.succ p) rest
+      | TMCloseInline -> scan_run sc (Stdlib.Int.succ p) rest
+      | TMOpenDisplay -> scan_run sc (Stdlib.Int.succ p) rest
+      | TMCloseDisplay -> scan_run sc (Stdlib.Int.succ p) rest
+      | TScript _ -> scan_run sc (Stdlib.Int.succ p) rest
+      | TCs _ -> scan_run sc (Stdlib.Int.succ p) rest
+      | TEnd -> None)
 
 let step c s t nx =
   let fs = s.s_frames in
@@ -401,7 +595,8 @@ let step c s t nx =
       else Go1 { s_frames = fs; s_out = true; s_pos = Stdlib.Int.succ p }
   | TSpace -> Go1 { s_frames = fs; s_out = o; s_pos = Stdlib.Int.succ p }
   | TPar _ ->
-      if in_math fs then Stop (Fatal (E6, p))
+      if negb (short_depth fs = 0) then halt fs E6 p
+      else if in_math fs then halt fs E6 p
       else Go1 { s_frames = fs; s_out = o; s_pos = Stdlib.Int.succ p }
   | TOpen ->
       if in_math fs then
@@ -420,227 +615,247 @@ let step c s t nx =
           match f with
           | FSimple ->
               Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
-          | FShift (_, _, _) -> Stop (Fatal (E5, p))
+          | FShift (_, _, _) -> halt fs E5 p
           | FMGroup (_, _, _) ->
+              Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
+          | FArg (_, _, _, _) ->
               Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }))
   | TDollar -> (
       match fs with
       | [] -> (
-          match nx with
-          | Some t0 -> (
-              match t0 with
-              | TChar _ ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TSpace ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TPar _ ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TOpen ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TClose ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TDollar ->
-                  Go2
-                    {
-                      s_frames = FShift (true, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
-                    }
-              | TMOpenInline ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TMCloseInline ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TMOpenDisplay ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TMCloseDisplay ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TScript _ ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TCs _ ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    }
-              | TEnd ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    })
-          | None ->
-              Go1
-                {
-                  s_frames = FShift (false, false, false) :: fs;
-                  s_out = true;
-                  s_pos = Stdlib.Int.succ p;
-                })
+          if mgroup_head fs then halt fs E5 p
+          else if restricted fs then
+            Go1
+              {
+                s_frames = FShift (false, false, false) :: fs;
+                s_out = true;
+                s_pos = Stdlib.Int.succ p;
+              }
+          else
+            match nx with
+            | Some t0 -> (
+                match t0 with
+                | TChar _ ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TSpace ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TPar _ ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TOpen ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TClose ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TDollar ->
+                    Go2
+                      {
+                        s_frames = FShift (true, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
+                      }
+                | TMOpenInline ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TMCloseInline ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TMOpenDisplay ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TMCloseDisplay ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TScript _ ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TCs _ ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      }
+                | TEnd ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      })
+            | None ->
+                Go1
+                  {
+                    s_frames = FShift (false, false, false) :: fs;
+                    s_out = true;
+                    s_pos = Stdlib.Int.succ p;
+                  })
       | f :: r -> (
           match f with
           | FSimple -> (
-              match nx with
-              | Some t0 -> (
-                  match t0 with
-                  | TChar _ ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TSpace ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TPar _ ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TOpen ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TClose ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TDollar ->
-                      Go2
-                        {
-                          s_frames = FShift (true, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
-                        }
-                  | TMOpenInline ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TMCloseInline ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TMOpenDisplay ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TMCloseDisplay ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TScript _ ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TCs _ ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        }
-                  | TEnd ->
-                      Go1
-                        {
-                          s_frames = FShift (false, false, false) :: fs;
-                          s_out = true;
-                          s_pos = Stdlib.Int.succ p;
-                        })
-              | None ->
-                  Go1
-                    {
-                      s_frames = FShift (false, false, false) :: fs;
-                      s_out = true;
-                      s_pos = Stdlib.Int.succ p;
-                    })
+              if mgroup_head fs then halt fs E5 p
+              else if restricted fs then
+                Go1
+                  {
+                    s_frames = FShift (false, false, false) :: fs;
+                    s_out = true;
+                    s_pos = Stdlib.Int.succ p;
+                  }
+              else
+                match nx with
+                | Some t0 -> (
+                    match t0 with
+                    | TChar _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TSpace ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TPar _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TOpen ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TClose ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TDollar ->
+                        Go2
+                          {
+                            s_frames = FShift (true, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
+                          }
+                    | TMOpenInline ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMCloseInline ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMOpenDisplay ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMCloseDisplay ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TScript _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TCs _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TEnd ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          })
+                | None ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      })
           | FShift (display, _, _) ->
               if display then
                 match nx with
                 | Some t0 -> (
                     match t0 with
-                    | TChar _ -> Stop (Fatal (E5, p))
-                    | TSpace -> Stop (Fatal (E5, p))
-                    | TPar _ -> Stop (Fatal (E5, p))
-                    | TOpen -> Stop (Fatal (E5, p))
-                    | TClose -> Stop (Fatal (E5, p))
+                    | TChar _ -> halt fs E5 p
+                    | TSpace -> halt fs E5 p
+                    | TPar _ -> halt fs E5 p
+                    | TOpen -> halt fs E5 p
+                    | TClose -> halt fs E5 p
                     | TDollar ->
                         Go2
                           {
@@ -648,22 +863,244 @@ let step c s t nx =
                             s_out = o;
                             s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
                           }
-                    | TMOpenInline -> Stop (Fatal (E5, p))
-                    | TMCloseInline -> Stop (Fatal (E5, p))
-                    | TMOpenDisplay -> Stop (Fatal (E5, p))
-                    | TMCloseDisplay -> Stop (Fatal (E5, p))
-                    | TScript _ -> Stop (Fatal (E5, p))
+                    | TMOpenInline -> halt fs E5 p
+                    | TMCloseInline -> halt fs E5 p
+                    | TMOpenDisplay -> halt fs E5 p
+                    | TMCloseDisplay -> halt fs E5 p
+                    | TScript _ -> halt fs E5 p
                     | TCs n0 ->
                         if c.c_defined n0 then
-                          if is_some (c.c_sig n0) then Stop (Fatal (E5, p))
+                          if is_some (c.c_sig n0) || is_some (c.c_arg n0) then
+                            halt fs E5 p
                           else Stuck
-                        else Stop (Fatal (E1, Stdlib.Int.succ p))
-                    | TEnd -> Stop (Fatal (E5, p)))
-                | None -> Stop (Fatal (E5, p))
+                        else halt fs E1 (Stdlib.Int.succ p)
+                    | TEnd -> halt fs E5 p)
+                | None -> halt fs E5 p
               else Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
-          | FMGroup (_, _, _) -> Stop (Fatal (E5, p))))
+          | FMGroup (_, _, _) -> (
+              if mgroup_head fs then halt fs E5 p
+              else if restricted fs then
+                Go1
+                  {
+                    s_frames = FShift (false, false, false) :: fs;
+                    s_out = true;
+                    s_pos = Stdlib.Int.succ p;
+                  }
+              else
+                match nx with
+                | Some t0 -> (
+                    match t0 with
+                    | TChar _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TSpace ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TPar _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TOpen ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TClose ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TDollar ->
+                        Go2
+                          {
+                            s_frames = FShift (true, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
+                          }
+                    | TMOpenInline ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMCloseInline ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMOpenDisplay ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMCloseDisplay ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TScript _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TCs _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TEnd ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          })
+                | None ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      })
+          | FArg (_, _, _, _) -> (
+              if mgroup_head fs then halt fs E5 p
+              else if restricted fs then
+                Go1
+                  {
+                    s_frames = FShift (false, false, false) :: fs;
+                    s_out = true;
+                    s_pos = Stdlib.Int.succ p;
+                  }
+              else
+                match nx with
+                | Some t0 -> (
+                    match t0 with
+                    | TChar _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TSpace ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TPar _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TOpen ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TClose ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TDollar ->
+                        Go2
+                          {
+                            s_frames = FShift (true, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
+                          }
+                    | TMOpenInline ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMCloseInline ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMOpenDisplay ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TMCloseDisplay ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TScript _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TCs _ ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          }
+                    | TEnd ->
+                        Go1
+                          {
+                            s_frames = FShift (false, false, false) :: fs;
+                            s_out = true;
+                            s_pos = Stdlib.Int.succ p;
+                          })
+                | None ->
+                    Go1
+                      {
+                        s_frames = FShift (false, false, false) :: fs;
+                        s_out = true;
+                        s_pos = Stdlib.Int.succ p;
+                      })))
   | TMOpenInline ->
-      if in_math fs then Stop (Fatal (E5, p))
+      if in_math fs then halt fs E5 p
       else
         Go1
           {
@@ -673,16 +1110,19 @@ let step c s t nx =
           }
   | TMCloseInline -> (
       match fs with
-      | [] -> Stop (Fatal (E5, p))
+      | [] -> halt fs E5 p
       | f :: r -> (
           match f with
-          | FSimple -> Stop (Fatal (E5, p))
+          | FSimple -> halt fs E5 p
           | FShift (display, _, _) ->
-              if display then Stop (Fatal (E5, p))
+              if display then halt fs E5 p
               else Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
-          | FMGroup (_, _, _) -> Stop (Fatal (E5, p))))
+          | FMGroup (_, _, _) -> halt fs E5 p
+          | FArg (_, _, _, _) -> halt fs E5 p))
   | TMOpenDisplay ->
-      if in_math fs then Stop (Fatal (E5, p))
+      if in_math fs then halt fs E5 p
+      else if restricted fs then
+        Go1 { s_frames = fs; s_out = o; s_pos = Stdlib.Int.succ p }
       else
         Go1
           {
@@ -692,18 +1132,19 @@ let step c s t nx =
           }
   | TMCloseDisplay -> (
       match fs with
-      | [] -> Stop (Fatal (E5, p))
+      | [] -> halt fs E5 p
       | f :: r -> (
           match f with
-          | FSimple -> Stop (Fatal (E5, p))
+          | FSimple -> halt fs E5 p
           | FShift (display, _, _) ->
               if display then
                 Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
-              else Stop (Fatal (E5, p))
-          | FMGroup (_, _, _) -> Stop (Fatal (E5, p))))
+              else halt fs E5 p
+          | FMGroup (_, _, _) -> halt fs E5 p
+          | FArg (_, _, _, _) -> halt fs E5 p))
   | TScript up -> (
-      if negb (in_math fs) then Stop (Fatal (E3, p))
-      else if tail_has up fs then Stop (Fatal (E4, p))
+      if negb (in_math fs) then halt fs E3 p
+      else if tail_has up fs then halt fs E4 p
       else
         match nx with
         | Some t0 -> (
@@ -735,7 +1176,7 @@ let step c s t nx =
             | TEnd -> Stuck)
         | None -> Stuck)
   | TCs n0 -> (
-      if negb (c.c_defined n0) then Stop (Fatal (E1, p))
+      if negb (c.c_defined n0) then halt fs E1 p
       else
         match c.c_sig n0 with
         | Some sg -> (
@@ -750,17 +1191,124 @@ let step c s t nx =
                     }
               | MxNoop ->
                   Go1 { s_frames = fs; s_out = o; s_pos = Stdlib.Int.succ p }
-              | MxFatal r -> Stop (Fatal (r, p))
+              | MxFatal r -> halt fs r p
             else
               match sg.sig_text with
               | TxMaterial ->
                   Go1 { s_frames = fs; s_out = true; s_pos = Stdlib.Int.succ p }
               | TxNoop ->
                   Go1 { s_frames = fs; s_out = o; s_pos = Stdlib.Int.succ p }
-              | TxFatal r -> Stop (Fatal (r, p)))
-        | None -> Stuck)
+              | TxFatal r -> halt fs r p)
+        | None -> (
+            match c.c_arg n0 with
+            | Some a -> (
+                if in_math fs then
+                  match a.as_math with
+                  | MFatalNow r -> halt fs r p
+                  | MFatalAfter r -> (
+                      match nx with
+                      | Some t0 -> (
+                          match t0 with
+                          | TChar _ -> Stuck
+                          | TSpace -> Stuck
+                          | TPar _ -> Stuck
+                          | TOpen ->
+                              Defer2
+                                (start_scan
+                                   (FArg (a.as_long, PText false, false, false)
+                                   :: fs)
+                                   r)
+                          | TClose -> Stuck
+                          | TDollar -> Stuck
+                          | TMOpenInline -> Stuck
+                          | TMCloseInline -> Stuck
+                          | TMOpenDisplay -> Stuck
+                          | TMCloseDisplay -> Stuck
+                          | TScript _ -> Stuck
+                          | TCs _ -> Stuck
+                          | TEnd -> Stuck)
+                      | None -> Stuck)
+                  | MRun pl -> (
+                      match nx with
+                      | Some t0 -> (
+                          match t0 with
+                          | TChar _ -> Stuck
+                          | TSpace -> Stuck
+                          | TPar _ -> Stuck
+                          | TOpen ->
+                              Go2
+                                {
+                                  s_frames =
+                                    FArg (a.as_long, pl, false, false)
+                                    :: fresh_tail fs;
+                                  s_out = o;
+                                  s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
+                                }
+                          | TClose -> Stuck
+                          | TDollar -> Stuck
+                          | TMOpenInline -> Stuck
+                          | TMCloseInline -> Stuck
+                          | TMOpenDisplay -> Stuck
+                          | TMCloseDisplay -> Stuck
+                          | TScript _ -> Stuck
+                          | TCs _ -> Stuck
+                          | TEnd -> Stuck)
+                      | None -> Stuck)
+                else
+                  match a.as_text with
+                  | TFatalNow r -> halt fs r p
+                  | TFatalAfter r -> (
+                      match nx with
+                      | Some t0 -> (
+                          match t0 with
+                          | TChar _ -> Stuck
+                          | TSpace -> Stuck
+                          | TPar _ -> Stuck
+                          | TOpen ->
+                              Defer2
+                                (start_scan
+                                   (FArg (a.as_long, PText false, false, false)
+                                   :: fs)
+                                   r)
+                          | TClose -> Stuck
+                          | TDollar -> Stuck
+                          | TMOpenInline -> Stuck
+                          | TMCloseInline -> Stuck
+                          | TMOpenDisplay -> Stuck
+                          | TMCloseDisplay -> Stuck
+                          | TScript _ -> Stuck
+                          | TCs _ -> Stuck
+                          | TEnd -> Stuck)
+                      | None -> Stuck)
+                  | TRun (m, pl) -> (
+                      match nx with
+                      | Some t0 -> (
+                          match t0 with
+                          | TChar _ -> Stuck
+                          | TSpace -> Stuck
+                          | TPar _ -> Stuck
+                          | TOpen ->
+                              Go2
+                                {
+                                  s_frames =
+                                    FArg (a.as_long, pl, false, false) :: fs;
+                                  s_out = o || m;
+                                  s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
+                                }
+                          | TClose -> Stuck
+                          | TDollar -> Stuck
+                          | TMOpenInline -> Stuck
+                          | TMCloseInline -> Stuck
+                          | TMOpenDisplay -> Stuck
+                          | TMCloseDisplay -> Stuck
+                          | TScript _ -> Stuck
+                          | TCs _ -> Stuck
+                          | TEnd -> Stuck)
+                      | None -> Stuck))
+            | None -> Stuck))
   | TEnd ->
-      if in_math fs then Stop (Fatal (E5, p))
+      if in_arg fs then Stuck
+      else if in_math fs then Stop (Fatal (E5, p))
       else if o then Stop Compiles
       else Stop (Fatal (E0, p))
 
@@ -771,7 +1319,13 @@ let rec run c s = function
       | Go1 s' -> run c s' rest
       | Go2 s' -> ( match rest with [] -> None | _ :: rest' -> run c s' rest')
       | Stop o -> Some o
-      | Stuck -> None)
+      | Stuck -> None
+      | Defer sc -> scan_run sc s.s_pos (t :: rest)
+      | Defer2 sc -> (
+          match rest with
+          | [] -> None
+          | _ :: rest' ->
+              scan_run sc (Stdlib.Int.succ (Stdlib.Int.succ s.s_pos)) rest'))
 
 type verdict = ProvenReady | ProvenNotReady of reason * int | NotStrict
 
@@ -1765,7 +2319,7 @@ let ends_dollar ts =
   | TEnd -> false
 
 let strict_ks_b k ts =
-  ((forallb (tok_ok k) ts && scripts_ok ts) && bounded ts)
+  (((forallb (tok_ok k) ts && scripts_ok ts) && wfa k 0 ts) && bounded ts)
   && negb (ends_dollar ts)
 
 let in_strict_bytes_b c b =
@@ -1788,7 +2342,8 @@ let reads_next s = function
           match f with
           | FSimple -> false
           | FShift (display, _, _) -> if display then true else false
-          | FMGroup (_, _, _) -> false))
+          | FMGroup (_, _, _) -> false
+          | FArg (_, _, _, _) -> false))
   | TMOpenInline -> false
   | TMCloseInline -> false
   | TMOpenDisplay -> false
@@ -1796,6 +2351,65 @@ let reads_next s = function
   | TScript _ -> false
   | TCs _ -> false
   | TEnd -> false
+
+let rec rd_scan sc = function
+  | [] -> None
+  | t :: rest -> (
+      match t with
+      | TChar _ -> option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TSpace -> option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TPar _ ->
+          if sc.sc_ou then Some (Stdlib.Int.succ 0)
+          else if sc.sc_sh = 0 then
+            option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+          else
+            option_map
+              (fun x -> Stdlib.Int.succ x)
+              (rd_scan
+                 { sc_r = E6; sc_k = sc.sc_k; sc_sh = sc.sc_sh; sc_ou = false }
+                 rest)
+      | TOpen ->
+          option_map
+            (fun x -> Stdlib.Int.succ x)
+            (rd_scan
+               {
+                 sc_r = sc.sc_r;
+                 sc_k = Stdlib.Int.succ sc.sc_k;
+                 sc_sh = sc.sc_sh;
+                 sc_ou = sc.sc_ou;
+               }
+               rest)
+      | TClose ->
+          (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+            (fun _ -> None)
+            (fun n0 ->
+              (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+                (fun _ -> Some (Stdlib.Int.succ 0))
+                (fun k ->
+                  option_map
+                    (fun x -> Stdlib.Int.succ x)
+                    (rd_scan
+                       {
+                         sc_r = sc.sc_r;
+                         sc_k = Stdlib.Int.succ k;
+                         sc_sh = close_sh (Stdlib.Int.succ k) sc.sc_sh;
+                         sc_ou = sc.sc_ou;
+                       }
+                       rest))
+                n0)
+            sc.sc_k
+      | TDollar -> option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TMOpenInline ->
+          option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TMCloseInline ->
+          option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TMOpenDisplay ->
+          option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TMCloseDisplay ->
+          option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TScript _ -> option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TCs _ -> option_map (fun x -> Stdlib.Int.succ x) (rd_scan sc rest)
+      | TEnd -> None)
 
 let rec rd k s = function
   | [] -> None
@@ -1815,7 +2429,15 @@ let rec rd k s = function
             | [] -> None
             | _ :: _ -> Some (Stdlib.Int.succ (Stdlib.Int.succ 0))
           else Some (Stdlib.Int.succ 0)
-      | Stuck -> None)
+      | Stuck -> None
+      | Defer sc -> rd_scan sc (t :: rest)
+      | Defer2 sc -> (
+          match rest with
+          | [] -> None
+          | _ :: r' ->
+              option_map
+                (fun n0 -> Stdlib.Int.succ (Stdlib.Int.succ n0))
+                (rd_scan sc r')))
 
 let line_at ks k = match nth_error ks k with Some t -> t.k_line | None -> 0
 let report_line ks = function Some n0 -> line_at ks (pred n0) | None -> 0
@@ -1846,6 +2468,7 @@ type why_out =
   | WScriptArg
   | WBound
   | WEndsDollar
+  | WArgForm
 
 let rtok_eqb a b =
   match a with
@@ -2085,6 +2708,44 @@ let rec first_bad_script = function
       | TCs _ -> first_bad_script r
       | TEnd -> first_bad_script r)
 
+let rec first_bad_arg k need = function
+  | [] -> if need = 0 then None else Some None
+  | k0 :: r -> (
+      match k0.k_tok with
+      | TChar _ -> first_bad_arg k need r
+      | TSpace -> first_bad_arg k need r
+      | TPar _ -> first_bad_arg k need r
+      | TOpen ->
+          first_bad_arg k (if need = 0 then 0 else Stdlib.Int.succ need) r
+      | TClose -> first_bad_arg k (pred need) r
+      | TDollar -> first_bad_arg k need r
+      | TMOpenInline -> first_bad_arg k need r
+      | TMCloseInline -> first_bad_arg k need r
+      | TMOpenDisplay -> first_bad_arg k need r
+      | TMCloseDisplay -> first_bad_arg k need r
+      | TScript _ -> first_bad_arg k need r
+      | TCs n0 ->
+          if is_argcmd k n0 then
+            match r with
+            | [] -> Some (Some k0)
+            | k2 :: r' -> (
+                match k2.k_tok with
+                | TChar _ -> Some (Some k0)
+                | TSpace -> Some (Some k0)
+                | TPar _ -> Some (Some k0)
+                | TOpen -> first_bad_arg k (Stdlib.Int.succ need) r'
+                | TClose -> Some (Some k0)
+                | TDollar -> Some (Some k0)
+                | TMOpenInline -> Some (Some k0)
+                | TMCloseInline -> Some (Some k0)
+                | TMOpenDisplay -> Some (Some k0)
+                | TMCloseDisplay -> Some (Some k0)
+                | TScript _ -> Some (Some k0)
+                | TCs _ -> Some (Some k0)
+                | TEnd -> Some (Some k0))
+          else first_bad_arg k need r
+      | TEnd -> if need = 0 then None else Some (Some k0))
+
 let rec first_too_deep d = function
   | [] -> None
   | k :: r -> (
@@ -2126,18 +2787,25 @@ let explain c b =
                     match first_bad_script ks with
                     | Some k0 -> Some (k0.k_off, WScriptArg)
                     | None -> (
-                        if negb (length ks <= max_tokens) then
-                          Some
-                            (off_or (nth_error ks max_tokens) (length b), WBound)
-                        else
-                          match first_too_deep 0 ks with
-                          | Some k0 -> Some (k0.k_off, WBound)
-                          | None ->
-                              if ends_dollar (toks_of ks) then
-                                Some
-                                  ( off_or
-                                      (last (map (fun x -> Some x) ks) None)
-                                      (length b),
-                                    WEndsDollar )
-                              else None)))
+                        match first_bad_arg k 0 ks with
+                        | Some o -> (
+                            match o with
+                            | Some k0 -> Some (k0.k_off, WArgForm)
+                            | None -> Some (length b, WArgForm))
+                        | None -> (
+                            if negb (length ks <= max_tokens) then
+                              Some
+                                ( off_or (nth_error ks max_tokens) (length b),
+                                  WBound )
+                            else
+                              match first_too_deep 0 ks with
+                              | Some k0 -> Some (k0.k_off, WBound)
+                              | None ->
+                                  if ends_dollar (toks_of ks) then
+                                    Some
+                                      ( off_or
+                                          (last (map (fun x -> Some x) ks) None)
+                                          (length b),
+                                        WEndsDollar )
+                                  else None))))
             | None -> Some (length b, WToken)))

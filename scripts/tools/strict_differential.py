@@ -576,6 +576,352 @@ def tally(docs, models, grades, families=None):
     return by_class, by_rule, by_family, disagreements, records, infra, outside
 
 
+# =================================================================== BYTES ==
+# M2 phase 2: the decision on the BYTES of a file (proofs/Strict/DecideBytes.v,
+# extracted as latex-parse/strict/strict_bytes_extracted.ml and run through
+# strict_decide.exe --bytes). Two modes:
+#   --bytes-rules   the probe families of every constructor of the reader and
+#                   the front matter (Lexer.v, Front.v), the bounds family, the
+#                   phase-1 rule probes' rendered bytes re-laid out four ways
+#                   (as rendered, lines joined, joined through comments, mixed
+#                   line ends and padding), and the near-misses outside the
+#                   fragment -> corpora/strict_s0/bytes_probes.json
+#   --bytes N       N generated files, half re-laid-out phase-1 trees and half
+#                   generated directly as byte strings, plus the near-misses
+#                   -> corpora/strict_s0/bytes_differential.json
+# Every verdict is the extracted decide_bytes'; every grade is the one
+# oracle's; the agreement rule is phase 1's (_strict_s0.agrees: verdict, the
+# pdfTeX message class for the reason, and the LINE).
+
+import _strict_bytes as SB  # noqa: E402
+
+BYTES_GENERATOR_VERSION = "1"
+BYTES_PROBES = OUT_DIR / "bytes_probes.json"
+BYTES_DIFFERENTIAL = OUT_DIR / "bytes_differential.json"
+LEX_RULES = [
+    "FL_directive", "FL_none",
+    "Lines_nil", "Lines_lf", "Lines_crlf", "Lines_cr", "Lines_last",
+    "LL_end", "LL_eol_new", "LL_eol_mid", "LL_eol_skip", "LL_space_skip",
+    "LL_space_emit", "LL_comment", "LL_char", "LL_bgroup", "LL_egroup",
+    "LL_math", "LL_sub", "LL_sup", "LL_hathat", "LL_word", "LL_word_hathat",
+    "LL_sym", "LL_sym_hathat", "LL_nullcs", "LL_bad",
+    "LX_nil", "LX_line", "LX_long",
+    "P_prologue",
+    "B_eof", "B_end", "B_space", "B_space_script", "B_par_line", "B_par_word",
+    "B_word", "B_sym", "B_char", "B_open", "B_close", "B_math", "B_script",
+]
+P1_MODES = ["render", "tight", "comment", "mixed"]
+HEX_MAX = 4096  # files up to this size are recorded byte for byte
+
+
+def byte_names(nm: "Names") -> dict:
+    sig = nm.sigs
+    tm = next(n for n in sorted(sig) if sig[n]["text"] == "material"
+              and sig[n]["math"] == "noad")
+    mo = next(n for n in sorted(sig) if isinstance(sig[n]["text"], list)
+              and sig[n]["math"] == "noad")
+    return {"undefined": nm.undefined, "text_material": tm, "math_only": mo,
+            "text_ok": nm.text_ok, "math_ok": nm.math_ok, "all": nm.all}
+
+
+def bytes_rule_docs(nm: "Names", sig_path: Path, rng: random.Random):
+    """(family, bytes, expected outside?) for --bytes-rules."""
+    out = [(f, b, f in SB.OUTSIDE_FAMILIES)
+           for f, b in SB.lexer_families(byte_names(nm), rng)]
+    # the phase-1 rule probes, as the extracted renderer printed them, then
+    # re-laid out: a phase-1 document outside the tier stays outside.
+    # The phase-1 BOUND documents are not re-laid out: one token per line
+    # doubles their kernel stream at the byte level (every line end is a
+    # space token), so they are outside the byte-level bound; the bounds are
+    # probed at the byte level by the family L0-bounds.
+    p1 = [(f, r) for f, r in rule_docs(nm) if f not in ("BOUND", "BOUND-OUT")]
+    models = S.Kernel(signatures=sig_path).run([r for _, r in p1])
+    for m in models:
+        tex = m["tex"].encode("ascii")
+        outside = m["verdict"] == "not_strict"
+        for mode in P1_MODES:
+            out.append((f"P1-{mode.upper()}", SB.relayout(tex, rng, mode), outside))
+    out += [("L0-NEAR", b, True) for _, b in SB.near_miss_docs(rng)]
+    return out
+
+
+def bytes_random_docs(nm: "Names", n: int, rng: random.Random, sig_path: Path):
+    """(family, bytes, expected outside?) for --bytes N: n files in the
+    fragment, half re-laid-out phase-1 trees and half generated directly, plus
+    the near-misses. A generated file the extracted decider places outside is
+    not graded and is replaced (the direct generator may draw a script without
+    its argument or a ^^ on purpose); their number is reported."""
+    gen, direct = Gen(rng, nm), SB.Direct(rng, byte_names(nm))
+    tree_kern = S.Kernel(signatures=None)  # the renderer only
+    bk = S.BytesKernel(signatures=sig_path)
+    out, discarded = [], {"TREE": 0, "DIRECT": 0}
+    while len(out) < n:
+        need = n - len(out)
+        batch = []
+        trees = [gen.document() for _ in range((need + 1) // 2)]
+        for m in tree_kern.run([{"doc": d} for d in trees]):
+            mode = rng.choice(["tight", "comment", "mixed", "mixed"])
+            batch.append((f"TREE-{mode.upper()}",
+                          SB.relayout(m["tex"].encode("ascii"), rng, mode), False))
+        batch += [("DIRECT", direct.document(), False) for _ in range(need // 2)]
+        for (fam, b, e), m in zip(batch, bk.run([b for _, b, _ in batch])):
+            if m["verdict"] == "not_strict":
+                discarded[fam.split("-")[0]] += 1
+            elif len(out) < n:
+                out.append((fam, b, e))
+    out += [("L0-NEAR", b, True) for _, b in SB.near_miss_docs(rng)]
+    return out, discarded
+
+
+def run_bytes(docs, sig_path: Path, workers: int, label: str):
+    kern = S.BytesKernel(signatures=sig_path)
+    models = kern.run([b for _, b, _ in docs])
+    oracle = _oracle.get_oracle()
+    t0, done = time.time(), [0]
+
+    def g(pair):
+        (fam, b, _), m = pair
+        if m["verdict"] == "not_strict":
+            return {"not_strict": True}
+        try:
+            r = S.grade_bytes(oracle, b, timeout=300)
+        except _oracle.OracleError as e:
+            r = {"infra": str(e)[:300]}
+        done[0] += 1
+        if done[0] % 50 == 0:
+            print(f"[{label}] graded {done[0]} ({time.time() - t0:.0f}s)", flush=True)
+        return r
+
+    with ThreadPoolExecutor(workers) as ex:
+        grades = list(ex.map(g, zip(docs, models)))
+    return oracle, models, grades
+
+
+def agrees_bytes(model: dict, oracle: dict) -> tuple[bool, str]:
+    """Phase 1's agreement rule (_strict_s0.agrees) on a byte-level verdict,
+    with E0 made exact about LINES: pdfTeX reports no l.N for E0 (rc 0, no
+    PDF), so an E0 agrees only when the oracle gave no line AND the model's
+    record carries none (OPEN-121 review, LOW-1: the driver printed the proved
+    ReportedLine of an E0, a line pdfTeX never reports, and the agreement rule
+    never read it). LINE agreement is therefore over the classes that have an
+    l.N (E1, E3, E4, E5, E6); E0 has none. check_strict_bytes.py recomputes
+    every record's agreement with this function."""
+    ok, why = S.agrees(model, oracle)
+    if ok and model.get("verdict") == "not_ready" and model.get("reason") == "E0":
+        if model.get("loc_line") is not None:
+            return False, f"model E0 carries a line ({model['loc_line']}); pdfTeX reports none"
+        if oracle.get("line") is not None:
+            return False, f"model E0, oracle reports l.{oracle['line']}"
+    return ok, why
+
+
+def model_of_record(rec: dict) -> dict:
+    """The model side of a graded evidence record, in the shape agrees takes."""
+    if rec.get("class") == "READY":
+        return {"verdict": "ready"}
+    if "model" not in rec:
+        return {"verdict": "not_strict"}
+    reason, tok, mode, line = rec["model"]
+    return {"verdict": "not_ready", "reason": reason, "loc_tok": tok,
+            "loc_mode": mode, "loc_line": line}
+
+
+def oracle_of_record(rec: dict) -> dict:
+    rc, pdf, err, line = rec["oracle"]
+    return {"rc": rc, "pdf": pdf, "error": err, "line": line, "timed_out": False}
+
+
+def tally_bytes(docs, models, grades, keep_docs: bool):
+    by_class = defaultdict(lambda: {"n": 0, "agree": 0})
+    by_rule = {r: {"docs": 0, "agree": 0} for r in RULES}
+    by_family = defaultdict(lambda: {"n": 0, "agree": 0, "exercised": 0, "outside": 0})
+    lex_rule_docs = {r: {"graded_agree": 0, "outside": 0} for r in LEX_RULES}
+    records, outside, dis, infra, unexpected = [], [], [], [], []
+    explain_mismatch = []
+    for i, ((fam, b, exp_out), m, g) in enumerate(zip(docs, models, grades)):
+        sha = hashlib.sha256(b).hexdigest()
+        rec = {"i": i, "family": fam, "sha256": sha, "nbytes": len(b)}
+        if keep_docs and len(b) <= HEX_MAX:
+            rec["hex"] = b.hex()
+        # explain is None exactly on the decided files (Explain.v)
+        if (m["verdict"] == "not_strict") != (m.get("explain") is not None):
+            explain_mismatch.append({"i": i, "family": fam, "verdict": m["verdict"],
+                                     "explain": m.get("explain")})
+        if "infra" in g:
+            infra.append({"i": i, "error": g["infra"]})
+            continue
+        lr = m.get("lex_rules", [])
+        if "not_strict" in g:
+            if exp_out:
+                outside.append(dict(rec, explain=m.get("explain"), lex_rules=lr,
+                                    lex_branches=m.get("lex_branches", [])))
+                by_family[fam]["outside"] += 1
+                by_family[fam]["exercised"] += fam in lr
+                for r in lr:
+                    if r in lex_rule_docs:
+                        lex_rule_docs[r]["outside"] += 1
+                continue
+            unexpected.append(dict(rec, explain=m.get("explain")))
+            g = {"rc": None, "pdf": None, "timed_out": False, "error": "", "line": None}
+        elif exp_out:
+            # built to be outside, decided: a defect of the reader or the family
+            unexpected.append(dict(rec, verdict=m["verdict"]))
+        ok, why = agrees_bytes(m, g)
+        cls = S.verdict_class(m)
+        by_class[cls]["n"] += 1
+        by_class[cls]["agree"] += ok
+        for r in m.get("rules", []):
+            by_rule.setdefault(r, {"docs": 0, "agree": 0})
+            by_rule[r]["docs"] += 1
+            by_rule[r]["agree"] += ok
+        if ok:
+            for r in lr:
+                if r in lex_rule_docs:
+                    lex_rule_docs[r]["graded_agree"] += 1
+        by_family[fam]["n"] += 1
+        by_family[fam]["agree"] += ok
+        by_family[fam]["exercised"] += fam in lr
+        rec.update({"class": cls, "agree": ok,
+                    "oracle": [g["rc"], g["pdf"], g["error"], g["line"]]})
+        if m["verdict"] == "not_ready":
+            rec["model"] = [m["reason"], m["loc_tok"], m["loc_mode"], m["loc_line"]]
+        if keep_docs:
+            rec.update({"lex_rules": lr, "lex_branches": m.get("lex_branches", []),
+                        "rules": m.get("rules", []), "branches": m.get("branches", [])})
+        records.append(rec)
+        if not ok:
+            dis.append({"i": i, "family": fam, "why": why,
+                        "hex": b.hex() if len(b) <= HEX_MAX else None, "sha256": sha,
+                        "model": {k: m.get(k) for k in ("verdict", "reason", "loc",
+                                                        "loc_tok", "loc_mode", "loc_line",
+                                                        "rules")},
+                        "oracle": g})
+    return (by_class, by_rule, by_family, lex_rule_docs, records, outside, dis, infra,
+            unexpected, explain_mismatch)
+
+
+def dump_records(out: dict) -> str:
+    """The evidence file: one top-level key per line, and every element of a
+    list of records on its own compact line (a byte-level file has thousands
+    of records; indented JSON would multiply its size)."""
+    keys = list(out)
+    lines = ["{"]
+    for i, k in enumerate(keys):
+        v = out[k]
+        end = "," if i < len(keys) - 1 else ""
+        if isinstance(v, list) and v and isinstance(v[0], dict):
+            lines.append(f" {json.dumps(k)}: [")
+            lines += ["  " + json.dumps(r, separators=(",", ":")) + ("," if j < len(v) - 1 else "")
+                      for j, r in enumerate(v)]
+            lines.append(" ]" + end)
+        else:
+            lines.append(f" {json.dumps(k)}: {json.dumps(v)}{end}")
+    return "\n".join(lines) + "\n}\n"
+
+
+def main_bytes(args, nm: "Names", sig_path: Path) -> int:
+    rng = random.Random(args.seed)
+    discarded = None
+    if args.bytes_rules:
+        docs = bytes_rule_docs(nm, sig_path, rng)
+        label, default_out, keep = "bytes-rules", BYTES_PROBES, True
+    else:
+        docs, discarded = bytes_random_docs(nm, args.bytes, rng, sig_path)
+        label, default_out, keep = "bytes", BYTES_DIFFERENTIAL, False
+    oracle, models, grades = run_bytes(docs, sig_path, args.workers, label)
+    (by_class, by_rule, by_family, lex_rule_docs, records, outside, dis, infra,
+     unexpected, explain_mismatch) = tally_bytes(docs, models, grades, keep)
+    graded = sum(v["n"] for v in by_class.values())
+    ready_n = by_class.get("READY", {}).get("n", 0)
+    # the phase-1 rendered bytes: the tree decider and the bytes decider are
+    # two proved-exact deciders of the same file; they must agree on verdict,
+    # reason and line (the tree side's line is phase 1's harness computation;
+    # an E0 has no l.N, and the bytes record carries none, so an E0's line is
+    # not compared -- LOW-1).
+    consistency = {"checked": 0, "agree": 0, "differ": []}
+    if args.bytes_rules:
+        p1 = [(f, r) for f, r in rule_docs(nm) if f not in ("BOUND", "BOUND-OUT")]
+        tmodels = S.Kernel(signatures=sig_path).run([r for _, r in p1])
+        renders = [(i, m) for i, (f, b, _) in enumerate(docs) if f == "P1-RENDER"
+                   for m in [models[i]]]
+        for (i, bm), tm in zip(renders, tmodels):
+            consistency["checked"] += 1
+            same = (bm["verdict"] == tm["verdict"] and bm.get("reason") == tm.get("reason")
+                    and (bm.get("reason") == "E0"
+                         or bm.get("loc_line") == tm.get("loc_line")))
+            consistency["agree"] += same
+            if not same:
+                consistency["differ"].append({"i": i, "bytes": [bm["verdict"], bm.get("reason"), bm.get("loc_line")],
+                                              "tree": [tm["verdict"], tm.get("reason"), tm.get("loc_line")]})
+    summary = {
+        "documents": len(docs),
+        "graded": graded,
+        "agree": sum(v["agree"] for v in by_class.values()),
+        "disagree": len(dis),
+        "not_strict_generated": len(unexpected),
+        "outside_by_design": len(outside),
+        "explain_mismatches": len(explain_mismatch),
+        "oracle_infrastructure_failures": len(infra),
+        "oracle_timeouts": sum(1 for g in grades if g.get("timed_out")),
+        "by_class": {k: by_class[k] for k in sorted(by_class)},
+        "rules_never_exercised": [r for r in RULES if by_rule.get(r, {}).get("docs", 0) == 0],
+        "tree_bytes_consistency": {k: v for k, v in consistency.items() if k != "differ"},
+    }
+    if discarded is not None:
+        summary["generated_outside_replaced"] = discarded
+    if not dis and graded:
+        summary["upper_bound_95"] = {
+            "all": round(1 - 0.05 ** (1 / graded), 6),
+            "ready": round(1 - 0.05 ** (1 / ready_n), 6) if ready_n else None,
+            "scope": "the disagreement rate over files drawn by THIS generator "
+                     "(version, weights, seed), not over L_S0: a class of files "
+                     "the generator does not draw is not bounded (C-85)",
+        }
+    out = {
+        "schema": "lp-strict-bytes/1",
+        "generator": "scripts/tools/strict_differential.py",
+        "generator_version": BYTES_GENERATOR_VERSION,
+        "mode": label,
+        "seed": args.seed,
+        "source": S.source_block(),
+        "signatures_sha256": S.sha256_file(sig_path),
+        "lexical_sha256": S.sha256_file(S.LEXICAL),
+        "bytes_extract_sha256": S.sha256_file(S.BYTES_EXTRACT),
+        "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
+        "oracle": oracle.provenance(),
+        "agreement_rule": "strict_differential.agrees_bytes (_strict_s0.agrees) on the "
+                          "extracted decide_bytes' verdict: READY iff rc 0 and a PDF; "
+                          "E0 iff rc 0 and no PDF, and neither the oracle nor the record "
+                          "gives a line (pdfTeX reports no l.N for E0); any other "
+                          "reason iff rc != 0, the first ! message is in "
+                          "_strict_s0.expected_messages(reason, token, mode), and the "
+                          "reported line (DecideBytes.ReportedLine) equals the oracle's "
+                          "l.N (both absent when the file ends). Line agreement is over "
+                          "the classes that have an l.N; E0 has none",
+        "summary": summary,
+        "by_rule": by_rule,
+        "by_family": {f: by_family[f] for f in sorted(by_family)},
+        "lex_rules": lex_rule_docs,
+        "disagreements": dis,
+        "unexpected_outside_or_inside": unexpected,
+        "explain_mismatches": explain_mismatch,
+        "tree_bytes_differences": consistency["differ"],
+        "infrastructure_failures": infra,
+        "outside": outside,
+        "documents": records,
+    }
+    path = Path(args.out) if args.out else default_out
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(dump_records(out))
+    print(json.dumps(summary, indent=1))
+    for d in dis[:20]:
+        print("DISAGREE", d["i"], d["family"], d["why"])
+    for u in unexpected[:10]:
+        print("UNEXPECTED", u)
+    bad = dis or infra or unexpected or explain_mismatch or consistency["differ"]
+    return 1 if bad else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--rules", action="store_true")
@@ -584,9 +930,15 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--signatures", default=str(S.SIGNATURES))
     ap.add_argument("--out")
+    ap.add_argument("--bytes-rules", action="store_true",
+                    help="M2 phase 2: the reader's probe families (bytes)")
+    ap.add_argument("--bytes", type=int, default=0,
+                    help="M2 phase 2: N generated files (bytes)")
     args = ap.parse_args()
     sig_path = Path(args.signatures)
     nm = Names(sig_path, random.Random(args.seed))
+    if args.bytes_rules or args.bytes:
+        return main_bytes(args, nm, sig_path)
 
     if args.rules:
         fam = rule_docs(nm)
@@ -599,7 +951,7 @@ def main() -> int:
         families = None
         label, default_out = "random", DIFFERENTIAL
     else:
-        ap.error("give --rules or --random N")
+        ap.error("give --rules, --random N, --bytes-rules or --bytes N")
     kern, oracle, models, grades = run_all(docs, sig_path, args.workers, label)
     not_strict = [i for i, m in enumerate(models) if m["verdict"] == "not_strict"]
     by_class, by_rule, by_family, dis, records, infra, outside = tally(

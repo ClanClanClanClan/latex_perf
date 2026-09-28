@@ -200,6 +200,17 @@ jobs:
         # Pure: reads committed files only (the TeX runs are local/nightly).
         run: python3 scripts/tools/check_strict_kernel.py --repo .
 
+      - name: Strict decision on bytes and its evidence (ADR-012 M2 phase 2)
+        # Every constructor of the reader and front matter (proofs/Strict/
+        # Lexer.v, Front.v) is probe-tagged and attested by an agreeing
+        # byte-level probe (or, for the rules that put a file outside the
+        # fragment, by a file decided outside); every cell of the reader's
+        # branch matrix is exercised; the byte-level probes and differential ran
+        # the committed extraction and lexical contract with 0 disagreements on
+        # verdict, message and line; FaithfulBytes' body is pinned; no string
+        # literal in the phase-2 Coq files. Pure: committed files only.
+        run: python3 scripts/tools/check_strict_bytes.py --repo .
+
       # ADR-012 decision 7 / OPEN-118: the ONE pdflatex oracle is the pinned
       # TeX Live image. Pure: every graded artefact must name that image, the
       # tree fingerprints must be measured for the pinned digest, and no script

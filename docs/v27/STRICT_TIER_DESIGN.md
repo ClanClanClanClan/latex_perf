@@ -34,7 +34,10 @@ Spike artefacts *(scratch-only)* were kept in a private scratch area, in three d
 
 The bridge corollary `strict_ready_iff_pdflatex : Faithful oracle C -> in_strict C d -> (decide C d = ProvenReady <-> oracle_ok d)` takes `Faithful` as an explicit **premise** (a `Definition`, not an `Axiom`, and not a `Section` `Hypothesis`, which would vanish into a ∀-binder on `End`). As a result:
 - the existing `Print Assumptions … Closed` gate still holds;
-- a new gate checks the corollary's *statement* textually, so that `Faithful` is its **only** non-structural premise.
+- a new gate checks the corollary's *statement* textually, so that `Faithful` is its **only** non-structural premise;
+- the *body* of `Faithful` is pinned too (OPEN-121 final review, MEDIUM-1). A pinned statement cannot see what a premise means: the review redefined `Faithful` as `oracle_ok (render d) <-> decide C d = ProvenReady`, which turns the corollary into decide = decide, and coqc printed the same pinned statement with `Print Assumptions` still Closed. `check_print_assumptions.py` now pins coqc's `Print Faithful` (the elaborated body, fully qualified, so a local shadowing of `Runs` or `flatten_doc` also shows), and check 10 of `check_strict_kernel.py` pins the source text, requires the body to mention `Runs` and none of `decide`/`run`/`step`, and forbids any other definition in `Bridge.v`. Both arms are MEASURED to fail on the review's redefinition; the textual arm has three registered kill-tests.
+
+**What the theorem covers, and what it does not.** `Faithful` and the bridge corollary are about READY iff compiles, and nothing else. The reason and line of a PROVEN NOT-READY are exact with respect to `Runs` (`strict_decider_exact`, the `Fatal r l` direction), but no theorem connects `Fatal r l` to pdfTeX's first error message or its line: that is attested EMPIRICALLY, by the rule probes and the generated differential, which compare message class and line and report 0 disagreements. "A wrong reason or location counts as `strict_wrong`" (§E North Star, ADR-012 decision 6) is a claim the probes and the differential check, not a claim of the theorem.
 
 This repairs the graft from attestation-first. Its proposal, "Print Assumptions lists exactly `faithful`", only works if `faithful` is an `Axiom`, and that would break the Closed gate.
 
@@ -163,6 +166,8 @@ Shape distribution over 2,192 new names: 1,717 plain-undelimited, 238 register/c
 
 READY means rc 0 under `-interaction=nonstopmode -halt-on-error`, a ≤3-pass fixpoint, default restricted shell-escape, **and a PDF produced**. An explicit fatal code E0 covers "rc 0, no PDF" (the empty body; `\label` alone [M]).
 
+**The timeout is part of `oracle_ok`.** A run that does not finish within the timeout is not "compiles", so the predicate `Faithful` speaks about is "rc 0 and a PDF, within the timeout". The harnesses (`strict_differential.py`, `gen_strict_signatures.py`) use 300 s, and `_strict_s0.grade` now defaults to the same 300 s (`GRADE_TIMEOUT_S`; it was 60 s) so an ad-hoc caller cannot get a flaky disagreement from a tighter one. The slowest documents measured INSIDE the capacity bounds (OPEN-121 final review, under the pinned oracle, READY on both sides): 6,666 forced pages (`x \par \break` × 6,666) at 47–52 s, and 19,995 `\mathstrut` in one display at 54.7 s, the latter under machine load. The margin to 300 s is about 5.5×; that no in-bounds document is slower is INFERRED from these adversarial searches, not proved.
+
 **Which pdflatex is the oracle (owner decision of 2026-09-26, ADR-012 decision 7).** The oracle is frozen as CI's digest-pinned TeX Live image, the `TEX_IMAGE` digest in `.github/workflows/tex-oracle.yml`, run locally through a container. The laptop TeX Live is not the oracle, so the earlier plan to repair its pdfmanagement orphan files is superseded. Every graded artefact is re-graded once under the image and the diffs are published as an oracle-baseline change; sample 3 is drawn and graded only after that. The [M] figures in this document were taken under the laptop pin and are pre-baseline.
 
 **Implemented 2026-09-27 (OPEN-118).** Attestation and metrics both call `scripts/tools/_oracle.py`, the only code allowed to start pdflatex (`check_oracle_pin.py` enforces this). It runs the image through a container locally and natively only inside the image in CI, and it fails rather than fall back to a host TeX Live. Each run records rc, the number of passes and whether a PDF was produced, so the E0 predicate above can be evaluated. Every artefact records the image digest, the architecture and two fingerprints of the TeX tree (the package database and a per-package revision digest of the macro layer), because the version banner does not pin the macro layer: the laptop printed the pinned banner while differing from the image in 190 packages. The re-grade under the image moved no cell of any re-graded artefact. The M1 contract generator must use the same entry point and store the macro-layer fingerprint in each contract's `pin` field (§B.2).
@@ -264,6 +269,7 @@ type verdict =
 - **Rendering.** The TIER line's verdict kind is `PROVEN-READY`/`PROVEN-NOT-READY` if and only if the verdict is `Proven_*`. The kind is a fixed token produced only by the renderer; user data (paths, macro names) is quoted verbatim in delimited fields and never rewritten, so a user path may contain the word PROVEN. Enforced by the renderer's structure plus a unit test.
   - Example: `PROVEN NOT-READY main.tex:42:7 \frac is math-only, used in text mode [E3, probe P-MODE/frac, contract 1a2b3c4d]`.
   - Heuristic lines always carry `heuristic — not a proof`.
+  - **What PROVEN NOT-READY's reason and location rest on.** The PROVEN in `PROVEN NOT-READY` is the theorem's: pdflatex does not compile (`strict_not_ready_pdflatex`, under `Faithful`). The `file:line:col` and the E-code are exact against `Runs`, but that they are pdfTeX's first error and its line is attested empirically by the rule probes and the differential (0 disagreements on message class and line), not proved (§0).
 - **`why_not_strict`** (graft from product-first) is shown on every non-proven verdict, with up to three reasons and fix-it nudges. Examples: `\def\R{\mathbb R}` → `\newcommand{\R}{\mathbb{R}}`, and "remove unused `\usepackage{foo}`". On sample 2, 17 papers are blocked only by `\def` and have no local style files [M].
 - **Exit codes stay as today** (0 = no known blocker, 1 = blocker), so there is no fixture churn. The new flag `--require-proof` exits 4 unless the verdict is `Proven_*`. JSON gains `tier`, `reason`, `loc`, `contract` and `why_not_strict`. product-first's 0–4 exit-code rewrite is rejected.
 - Certificate tokens follow A2/C1 (`docs/v27/REALIGNMENT_PLAN.md` §4).
@@ -293,7 +299,7 @@ type verdict =
 
 ## E. Measurement
 
-- **North Star.** Strict-tier coverage on a **virgin** sample, `#{PROVEN verdict = oracle} / N`. It is always shown beside `strict_wrong`, which counts false-READY, false-NOT-READY, **and wrong reason or location**. `strict_wrong` must be 0 and is published **with its 95% upper bound**: 0/k ≈ 3/k, which is about 30% at k = 10 (graft from product-first). The docs say that a small k is weak evidence.
+- **North Star.** Strict-tier coverage on a **virgin** sample, `#{PROVEN verdict = oracle} / N`. It is always shown beside `strict_wrong`, which counts false-READY, false-NOT-READY, **and wrong reason or location**. `strict_wrong` must be 0 and is published **with its 95% upper bound**: 0/k ≈ 3/k, which is about 30% at k = 10 (graft from product-first). The docs say that a small k is weak evidence. The false-READY and false-NOT-READY parts of `strict_wrong` are what the bridge corollary covers under `Faithful`; the wrong-reason-or-location part is covered by no theorem and is measured only (the probes and the differential compare message class and line; §0).
 - **Exactness evidence is carried by the generated differential**, not by the virgin count.
   - At least 10,000 random `L_S` documents per release are drawn over the attested contracts, weighted toward boundaries (mode switches, arity, clashes, nesting, dynamic contexts), graded by the pinned oracle and reported per E-code.
   - Any disagreement is an F-defect: it blocks the release, adds a CORRECTIONS row, and the affected rule is frozen out of the tier until fixed.
@@ -849,7 +855,11 @@ world):
 - `in_strict_dec`.
 - `strict_ready_iff_pdflatex : Faithful oracle_ok C -> in_strict_doc C d ->
   (decide C d = ProvenReady <-> oracle_ok (render d))`, and its NOT-READY
-  corollary `strict_not_ready_pdflatex`.
+  corollary `strict_not_ready_pdflatex`. Both are about READY iff compiles
+  ONLY: the reason and line of a NOT-READY are exact against `Runs`, and
+  agree with pdfTeX's first error by the probes and the differential
+  (0 disagreements), not by a theorem (§0). The body of `Faithful` is pinned
+  by coqc `Print` and by `check_strict_kernel.py` check 10.
 - Not a tautology, measured: changing one case of `step` (a paragraph break in
   math reported as E3 instead of E6) makes `run_sound_n` fail to compile.
 

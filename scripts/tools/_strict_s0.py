@@ -155,7 +155,16 @@ def _first_error(log_text: str) -> tuple[str, int | None]:
     return "", None
 
 
-def grade(oracle, tex: str, timeout: int = 60) -> dict:
+# The oracle timeout is PART of oracle_ok (Bridge.v, design §B.4): a run that
+# times out is not "compiles". Inside the capacity bounds the slowest documents
+# measured are 6,666 forced pages (47-52 s) and 19,995 \mathstrut in one display
+# (54.7 s, under load) -- the final OPEN-121 review, r1f/adv3.log. The default
+# is the harnesses' 300 s (strict_differential, gen_strict_signatures), so an
+# ad-hoc caller cannot get a flaky disagreement from a tighter one.
+GRADE_TIMEOUT_S = 300
+
+
+def grade(oracle, tex: str, timeout: int = GRADE_TIMEOUT_S) -> dict:
     """One document through the oracle's protocol. An OracleError propagates:
     an infrastructure failure is never a grade."""
     with oracle.tempdir("lp-strict-s0-") as td:

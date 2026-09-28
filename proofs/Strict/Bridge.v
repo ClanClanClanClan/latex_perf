@@ -13,8 +13,15 @@
 
     [oracle_ok bytes] is "the pinned pdflatex, under the oracle protocol of
     design §B.4 (nonstopmode, halt-on-error, run to the first rc 0 then one
-    confirming pass), exits 0 AND writes a PDF on these bytes"
-    (scripts/tools/_oracle.py, [OracleRun.compiles]).  [Faithful] is attested
+    confirming pass), exits 0 AND writes a PDF on these bytes, within the
+    oracle timeout" (scripts/tools/_oracle.py, [OracleRun.compiles]; the
+    timeout is 300 s, design §B.4, so a run that times out is not ok).
+    The bridge covers READY iff compiles ONLY: the reason and line of a
+    NOT-READY are exact against [Runs], and agree with pdfTeX by the probes
+    and the differential, not by this file.  The BODY of [Faithful] is
+    pinned by check_print_assumptions.py (coqc [Print]) and by
+    check_strict_kernel.py check 10; it must mention [Runs] and never the
+    decider (OPEN-121 final review, MEDIUM-1).  [Faithful] is attested
     — not proved — by the probes of every [Runs] constructor and by the
     generated differential (scripts/tools/strict_differential.py), which runs
     the EXTRACTED [render] and [decide] (Extract.v) against that oracle.

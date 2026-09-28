@@ -60,6 +60,17 @@ longer belong together:
      and pins them (Examples) at the values this gate and the generators use,
      the rule probes' BOUND family (the structure at the bounds) agrees with
      the oracle, and its BOUND-OUT documents are outside the tier.
+ 10. FAITHFUL'S BODY IS PINNED (OPEN-121 final review, MEDIUM-1).
+     Bridge.v's `Definition Faithful` must be, token for token (comments stripped, whitespace normalised),
+     FAITHFUL_BODY: oracle_ok (render d) <-> Runs ... Compiles. The pinned
+     STATEMENT of strict_ready_iff_pdflatex (check_print_assumptions.py)
+     cannot see this: a reviewer redefined Faithful as `oracle_ok (render d)
+     <-> decide C d = ProvenReady` -- which makes the corollary a tautology
+     -- and coqc printed the same statement, Closed. Independently of the
+     pin, the body must mention `Runs` and none of `decide`/`run`/`step`
+     (the decider must never be smuggled into the premise), and Bridge.v may
+     define nothing but Faithful (no shadowing Definition/Notation/...).
+     check_print_assumptions.py pins the ELABORATED body too (coqc `Print`).
 
 Run: python3 scripts/tools/check_strict_kernel.py [--repo .]
 """
@@ -411,6 +422,48 @@ def required_cells(syntax: str, sem: str, sigs: dict) -> tuple[set[str], set[str
     return need_ok, need_out, finds
 
 
+# ------------------------------------ check 10 (OPEN-121 review M-1) ---
+
+FAITHFUL_BODY = ("forall d, in_strict_doc C d -> "
+                 "(oracle_ok (render d) <-> Runs C init (flatten_doc d) Compiles)")
+FAITHFUL_HEAD = ("Definition Faithful (oracle_ok : list Ascii.ascii -> Prop) "
+                 "(C : contract) : Prop :=")
+# Identifiers the premise must never mention: the decider and its machinery.
+FAITHFUL_FORBIDDEN = ("decide", "run", "step")
+# Vernacular that could define or shadow a name inside Bridge.v.
+_DEFINERS = r"Definition|Fixpoint|CoFixpoint|Let|Notation|Infix|Instance|" \
+    r"Inductive|CoInductive|Record|Structure|Class|Axiom|Axioms|Parameter|" \
+    r"Parameters|Hypothesis|Hypotheses|Variable|Variables|Conjecture|" \
+    r"Coercion|Canonical|Ltac|Module|Section|Context|Program|Local|Global"
+
+
+def faithful_findings(bridge: str) -> list[str]:
+    code = strip_coq_comments(bridge)
+    out: list[str] = []
+    defs = re.findall(rf"(?m)^\s*({_DEFINERS})\b\s*(\S*)", code)
+    if [d for d in defs if d != ("Definition", "Faithful")]:
+        out.append(f"Bridge.v: defines more than Faithful: {defs} (a name defined here "
+                   f"could shadow what Faithful's body reads; OPEN-121 review M-1)")
+    head = " ".join(FAITHFUL_HEAD.split())
+    norm = " ".join(code.split())
+    i = norm.find(head)
+    if i < 0:
+        return out + [f"Bridge.v: no `{head}` (OPEN-121 review M-1)"]
+    j = norm.find(". ", i)
+    body = norm[i + len(head):j if j >= 0 else len(norm)].strip()
+    if body != " ".join(FAITHFUL_BODY.split()):
+        out.append(f"Bridge.v: Faithful's body is not the pinned one (OPEN-121 review M-1)\n"
+                   f"      pinned: {FAITHFUL_BODY}\n      found:  {body}")
+    idents = set(re.findall(r"[A-Za-z_][A-Za-z_0-9']*", body))
+    if "Runs" not in idents:
+        out.append("Bridge.v: Faithful's body does not mention Runs (OPEN-121 review M-1)")
+    bad = sorted(idents & set(FAITHFUL_FORBIDDEN))
+    if bad:
+        out.append(f"Bridge.v: Faithful's body mentions {bad} -- the decider must never "
+                   f"be a premise's content (OPEN-121 review M-1)")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=".")
@@ -595,6 +648,9 @@ def main() -> int:
                      f"(at least 6, all agreeing)")
     if sum(1 for r in rp.get("outside_tier", []) if r.get("family") == "BOUND-OUT") < 2:
         fails.append("rule_probes: fewer than 2 BOUND-OUT documents outside the tier")
+
+    # 10. Faithful's body is pinned (OPEN-121 review M-1)
+    fails += faithful_findings((repo / "proofs/Strict/Bridge.v").read_text())
 
     if fails:
         for m in fails:

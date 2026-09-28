@@ -31,6 +31,17 @@ For each capstone, `Print Assumptions` must print exactly "Closed under the glob
 context". Anything else — an axiom list, a Section variable, a missing constant — is
 a failure, and the offending assumptions are echoed so the break is actionable.
 
+It also pins, by coqc's own output: the STATEMENT of the strict bridge corollary
+(`Check`) and the BODY of the premise it names (`Print Faithful`, BODY_PINS).
+The body pin exists because a pinned statement cannot see what a premise
+MEANS: the OPEN-121 final review redefined Faithful as `oracle_ok (render d)
+<-> decide C d = ProvenReady` (the corollary then proves decide = decide),
+and `Check` printed the same statement while Print Assumptions stayed Closed.
+`Print` shows the ELABORATED body with qualified names, so a local shadowing
+of `Runs` or `flatten_doc` also changes the output; the body must further
+mention Semantics.Runs and no Decide.* constant. The textual twin of this pin
+(pure, kill-tested) is check 10 of check_strict_kernel.py.
+
 USAGE
     python3 scripts/tools/check_print_assumptions.py [--repo .] [--build]
 
@@ -43,6 +54,7 @@ Exit 0 if every capstone is closed; exit 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -171,12 +183,36 @@ STATEMENT_PINS = [
 ]
 
 
+# (constant, modules to Require, the pinned `Print` output up to `Arguments`,
+#  identifiers the body MUST mention, identifier prefixes it must NOT mention)
+BODY_PINS = [
+    (
+        "LaTeXPerfectionist.Strict.Bridge.Faithful",
+        "LaTeXPerfectionist.Strict.Bridge",
+        "Faithful = fun (oracle_ok : list Ascii.ascii -> Prop) (C : Contract.contract) "
+        "=> forall d : Syntax.doc, Decide.in_strict_doc C d -> "
+        "oracle_ok (Syntax.render d) <-> "
+        "Semantics.Runs C Semantics.init (Syntax.flatten_doc d) Semantics.Compiles "
+        ": (list Ascii.ascii -> Prop) -> Contract.contract -> Prop",
+        ["Semantics.Runs"],
+        # Decide.in_strict_doc is the structural membership premise; any other
+        # Decide.* constant (decide, run, step, ...) is the decider itself.
+        ["Decide.decide", "Decide.run", "Decide.step", "Semantics.step",
+         "Semantics.run"],
+    ),
+]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=".")
     ap.add_argument(
         "--build", action="store_true", help="run `dune build proofs` before checking"
     )
+    ap.add_argument(
+        "--vodir", default=None,
+        help="built proofs directory (default <repo>/_build/default/proofs); "
+             "lets a kill-test point the gate at a mutated build")
     args = ap.parse_args()
     repo = Path(args.repo).resolve()
 
@@ -191,7 +227,8 @@ def main() -> int:
             print("[print-assumptions] FAIL: `dune build proofs` failed", file=sys.stderr)
             return 1
 
-    vodir = repo / "_build" / "default" / "proofs"
+    vodir = (Path(args.vodir).resolve() if args.vodir
+             else repo / "_build" / "default" / "proofs")
     gendir = vodir / "generated"
     if not vodir.is_dir():
         print(
@@ -264,6 +301,35 @@ def main() -> int:
                 )
             else:
                 print(f"[print-assumptions] OK   {thm}: statement pinned")
+
+        for idx, (const, module, want, must, mustnot) in enumerate(BODY_PINS):
+            src = workdir / f"BP{idx}.v"
+            src.write_text(f"Require Import {module}.\nPrint {const}.\n", encoding="utf-8")
+            proc = subprocess.run(
+                [coqc, "-R", str(vodir), "LaTeXPerfectionist",
+                 "-Q", str(gendir), "LaTeXPerfectionist.Generated", src.name],
+                cwd=workdir, capture_output=True, text=True,
+            )
+            out = proc.stdout or ""  # Coq's warnings go to stderr
+            got = " ".join(out.split("Arguments", 1)[0].split())
+            short = const.rsplit(".", 1)[1]
+            if proc.returncode != 0 or got != " ".join(want.split()):
+                failures.append(
+                    f"{short}: body is not the pinned one (a premise's statement "
+                    f"can stay pinned while its meaning changes; OPEN-121 review M-1).\n"
+                    f"      pinned: {' '.join(want.split())}\n"
+                    f"      Coq:    {got or out.strip()[:400]}"
+                )
+            else:
+                print(f"[print-assumptions] OK   {const}: body pinned")
+            idents = set(re.findall(r"[A-Za-z_][A-Za-z_0-9'.]*", got))
+            for m in must:
+                if m not in idents:
+                    failures.append(f"{short}: body does not mention {m}")
+            bad = sorted(i for i in idents for b in mustnot if i == b)
+            if bad:
+                failures.append(f"{short}: body mentions {bad} -- the decider must "
+                                f"never be a premise's content")
 
     if failures:
         print("\n[print-assumptions] FAIL — capstone(s) depend on unproved assumptions:\n")

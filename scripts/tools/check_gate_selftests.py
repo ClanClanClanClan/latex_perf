@@ -653,6 +653,21 @@ def strict_signature_candidate_dropped(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def strict_faithful_is_decide(text: str) -> str:
+    """The final review's MEDIUM-1 redefinition, verbatim: Faithful's body
+    becomes `oracle_ok (render d) <-> decide C d = ProvenReady` and the
+    corollary's proof `symmetry; apply HF; exact Hs` -- the decide=decide
+    tautology. coqc printed the same pinned statement and Print Assumptions
+    stayed Closed; only the body pin can see it."""
+    old_body = "(oracle_ok (render d) <-> Runs C init (flatten_doc d) Compiles)."
+    old_proof = ("  destruct (strict_decider_exact C d Hs) as [Hready _].\n"
+                 "  rewrite Hready. symmetry. apply HF. exact Hs.\n")
+    assert text.count(old_body) == 1 and text.count(old_proof) == 1, \
+        "Bridge.v drifted; update registry"
+    return (text.replace(old_body, "(oracle_ok (render d) <-> decide C d = ProvenReady).")
+                .replace(old_proof, "  symmetry. apply HF. exact Hs.\n"))
+
+
 REGISTRY = [
     GateTest(
         "check_strict_kernel",
@@ -731,6 +746,26 @@ REGISTRY = [
                      r"FAIL rule_probes: ran another extraction",
                      old="[@@@warning \"-a\"]\n",
                      new="[@@@warning \"-a\"]\n\nlet _lp_kill = ()\n"),
+            # OPEN-121 final review MEDIUM-1: Faithful redefined as the
+            # decider (a tautology) under an unchanged pinned statement.
+            Mutation("Faithful is redefined as the decider (review repro)",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: Faithful's body is not the pinned one.*"
+                     r"FAIL Bridge\.v: Faithful's body does not mention Runs.*"
+                     r"FAIL Bridge\.v: Faithful's body mentions \['decide'\]",
+                     transform=strict_faithful_is_decide),
+            Mutation("Faithful's body conjoins the decider to Runs",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: Faithful's body mentions \['decide'\]",
+                     old="Runs C init (flatten_doc d) Compiles).",
+                     new="Runs C init (flatten_doc d) Compiles /\\ "
+                         "decide C d = ProvenReady)."),
+            Mutation("Bridge.v shadows a name Faithful reads",
+                     "proofs/Strict/Bridge.v",
+                     r"FAIL Bridge\.v: defines more than Faithful",
+                     old="Definition Faithful (oracle_ok",
+                     new="Local Notation flatten_doc := flatten_doc.\n"
+                         "Definition Faithful (oracle_ok"),
             # A name written into the kernel instead of the contract.
             Mutation("a control-word name is written into the Coq kernel",
                      "proofs/Strict/Semantics.v",

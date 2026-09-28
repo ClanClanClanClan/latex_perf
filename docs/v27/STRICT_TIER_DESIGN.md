@@ -1,6 +1,6 @@
 # Design: the contract-bounded proven tier
 
-**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestones M0 and M1 slice 1 (§F) are implemented. M2 phase 1, the Coq kernel of the fragment L_S0 (§I.4), is proved and attested, but no product verdict uses it: the CLI's strict tier is still a stub, so nothing a user sees is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status:** approved design, adopted by [ADR-012](adr/ADR-012-contract-bounded-proven-tier.md) on 2026-09-26, which records the owner's answers to §H verbatim. Milestones M0 and M1 slice 1 (§F) are implemented. M2 phase 1, the Coq kernel of the fragment L_S0 (§I.4), and M2 phase 2, the decision on the BYTES of a file with its verified reader (§I.5, a stacked branch), are proved and attested, but no product verdict uses them: the CLI's strict tier is still a stub, so nothing a user sees is proven yet. Programme ledger row: OPEN-116 in [PROJECT_STATE.md](PROJECT_STATE.md).
 
 **Paths.** Repository paths below are relative to the repository root. A `file:line` reference gives the line as of commit `978601ee` and may have moved since. Anything marked *(scratch-only)* was produced by the design spikes in a private scratch area and is **not in the repository**; it is cited as evidence for a measured figure, not as a file you can open.
 
@@ -1020,8 +1020,8 @@ version 2 rejected.
 **Deviations from §C.3, and what is not done.**
 
 - No parser: documents are trees, printed by `render`. `parse`, `parse_exact`
-  and the bytes-level form of the bridge are phase 2; so is
-  `no_turing_construct`.
+  and the bytes-level form of the bridge are phase 2 (done: §I.5);
+  `no_turing_construct` is not done.
 - The fatal-reason set is phase 1's (E0, E1, E3, E4, E5, E6). E2, E7 and E11
   need environments, arguments and Unicode, which the fragment does not have.
   Unclosed math at `\end{document}` and a missing `\end{document}` are
@@ -1040,3 +1040,127 @@ version 2 rejected.
   duplicates M1 slice 2's `contract_signatures.py` (branch
   `feat/v27165-contract-signatures`); the two must converge onto one
   signature source before M3 (OPEN-121).
+
+### I.5 M2 phase 2: from bytes to the proven decision (2026-09-28)
+
+Phase 1 decided documents given as trees and printed by `render`. A user's
+file is arbitrary bytes. Phase 2 closes that gap for L_S0: a verified reader
+from bytes to the kernel's token stream, the front matter, and the proven
+decision on the bytes themselves, with the line of a NOT-READY. It is proved
+and attested, and still wired into nothing but `strict_decide.exe`'s file
+mode (the CLI's strict tier stays the M0 stub until M3). Branch
+`feat/v27165-strict-bytes`, STACKED on `feat/v27165-strict-kernel`. Ledger
+row: OPEN-121.
+
+| deliverable | where |
+|---|---|
+| the lexical contract `lexcon` (catcode of every byte, `\endlinechar`, the structural names), a parameter of every theorem; the declarative reading `LexFile` (TeX Live's first-line directive `FirstLine`, its line splitting `Lines`, TeX's states N/M/S per line `LineLex`, the line bound `LinesLex`); the executable `lex`; `lex_exact`, `lexfile_deterministic` | `proofs/Strict/Lexer.v` |
+| the front matter `Prologue`, the body `Body` (kernel tokens with their lines), `Parse`; the executable `parse`; `parse_exact`, `parse_deterministic` | `proofs/Strict/Front.v` |
+| membership `in_strict_bytes` (decidable), the decider `decide_bytes`, the declarative location `Determined`/`ReportedLine`, `decide_bytes_exact`, `decide_bytes_not_strict_iff`, `determined_threshold_unique` | `proofs/Strict/DecideBytes.v` |
+| `FaithfulBytes` (a Definition premise over bytes, stated against `Parse` and `Runs`) and `strict_ready_iff_pdflatex_bytes`, `strict_not_ready_pdflatex_bytes` | `proofs/Strict/BridgeBytes.v` |
+| the diagnostic `explain` (first offending byte and construct; not proved, checked against the verdict on every evidence file) | `proofs/Strict/Explain.v` |
+| extraction, separate from phase 1's (which stays byte for byte, so the phase-1 evidence stays fresh) | `proofs/Strict/ExtractBytes.v`, `scripts/tools/regen_strict_bytes_extract.sh`, `latex-parse/strict/strict_bytes_extracted.ml` (checked by `check_extract_identity.py`) |
+| the lexical contract, dumped from the pinned image at body start of `article`; its structural names READ from phase 1's renderer (`Syntax.v`), not written | `scripts/tools/gen_strict_lexical.py`, `corpora/contracts/strict/article-s0-lexical.json` |
+| driver: `--bytes` (JSON lines) and file mode `strict_decide.exe FILE.tex` (PROVEN-READY / PROVEN-NOT-READY reason l.N / NOT-IN-FRAGMENT byte offset and construct; exit 0, 0, 3) | `latex-parse/strict/strict_decide.ml`; unit tests `latex-parse/strict/test_strict_bytes.ml` |
+| byte-level generators, probe families and differential | `scripts/tools/_strict_bytes.py`, `scripts/tools/strict_differential.py --bytes-rules / --bytes N`, `corpora/strict_s0/bytes_probes.json`, `corpora/strict_s0/bytes_differential.json` |
+| pure gate over the reader, its evidence and the pin of `FaithfulBytes` (spec-drift, 18 kill-tests) | `scripts/tools/check_strict_bytes.py` |
+
+**Theorems** (all `Qed`, `Print Assumptions` Closed, registered in
+`check_print_assumptions.py`, which also pins the bytes bridge's statement,
+`FaithfulBytes`' printed body and its kernel convertibility against fully
+qualified names, as C-87 does for `Faithful`):
+
+- `lex_exact : lex L b = ts <-> LexFile L b ts` (both directions; reading is
+  total, a byte outside the fragment is a `RBad` token, never a failure), and
+  `lexfile_deterministic`.
+- `parse_exact : parse L b = Some ks <-> Parse L b ks`, `parse_deterministic`.
+- `in_strict_bytes_dec`.
+- `decide_bytes_exact`: for a file in the fragment with parse `ks`,
+  `decide_bytes C b = ProvenReady <-> Runs K init (toks_of ks) Compiles`, and
+  `decide_bytes C b = ProvenNotReady r ln <-> exists l, Runs K init (toks_of
+  ks) (Fatal r l) /\ ReportedLine K ks (Fatal r l) ln`.
+- `decide_bytes_not_strict_iff : decide_bytes C b = NotStrict <-> ~
+  in_strict_bytes C b`.
+- `strict_ready_iff_pdflatex_bytes : FaithfulBytes oracle_ok C ->
+  in_strict_bytes C b -> (decide_bytes C b = ProvenReady <-> oracle_ok b)`,
+  and its NOT-READY corollary. As for phase 1, the bridge covers READY iff
+  compiles only; the reason and the line are exact against `Runs` and
+  `ReportedLine` and agree with pdfTeX by the probes and the differential.
+
+**The line of a NOT-READY, declaratively.** `Runs` gives a reason and the
+INDEX of a token; pdfTeX prints `l.N`, the line its reader stands on, which
+can be after that token (C-84: after a `$` in display math TeX reads and
+expands the next token first). The definition needs no knowledge of which
+rule fired: `Determined K ts n o` says every stream sharing the first `n`
+tokens of `ts` has outcome `o`; the reported token is the `k` with
+`Determined (S k)` and not `Determined k` (unique by monotonicity:
+`determined_threshold_unique`), i.e. the last token the outcome depends on;
+the reported line is that token's line (a kernel token's line is the line of
+its last raw token: `\end{docu%` newline `ment}` in math is reported on the
+line of its `}`, MEASURED), or 0 when no prefix determines the outcome (no
+`\end{document}`: "Emergency stop", no `l.N`). `decide_bytes` computes it with
+`rd`, the number of tokens `run` read, and the proof shows the two agree.
+
+**What the reader models, each rule measured** (the constructors cite
+`probe L0/<constructor>`): TeX Live ends a line at LF, CR and CR LF (CR alone
+MEASURED; CR LF CR LF is one blank line; LF CR is two lines); a last line
+without a terminator is a line; trailing spaces are trimmed and
+`\endlinechar` (13, category 5) appended; states N/M/S as tex.web §343-356
+(spaces and tabs collapse and are skipped at a line start and after a control
+word; a blank or spaces-only line is `\par`; a comment discards the rest of
+its line and the end-of-line character, any byte allowed in it); control
+words (maximal letters) and the four control symbols `\( \) \[ \]`.
+OUTSIDE (never a verdict): a byte of category 4, 6, 9, 13 or 15 (`&`, `#`,
+`~`, bytes 1-8, 11, 12, 14-31, 127, 0 and every byte >= 128), TeX's `^^`
+notation (anywhere, after the escape character and after a control word's
+letters), any other control symbol (including `\ ` and `\` at a line end), a
+line over 10,000 bytes, a file over 1,000,000 bytes, a first line starting
+with `%&` (C-89), and a kernel stream ending with `$` (MEASURED: `$$x$%` at
+the end of a file is "Emergency stop", not the "Display math should end with
+$$" of `R_dollar_display_eof`, which was attested with the end-of-line space).
+After `^`/`_` TeX's math scanner skips spaces (§1151), so they are not in the
+kernel stream (`B_space_script`).
+
+**The front matter** (MEASURED): any blank lines, spaces, tabs, comments and
+`\par` before `\documentclass`, between `}` and `\begin`, and nothing between
+`\documentclass` and its brace other than what the reader drops (a line end
+after a control word, spaces, a comment); `\documentclass{art%` newline
+`icle}` is the same token list and compiles. A blank line after
+`\documentclass` ("Paragraph ended before \@fileswith@ptions was complete")
+or `\begin` is outside. **After `\end{document}` pdfTeX reads nothing**
+(MEASURED: every byte 0-255 on its line and later lines, a 300,000-byte next
+line, `\zzundefined`, `^^`, `}`, `$`, another `\begin{document}` all give rc
+0); the one effect of its line's tail is TeX Live's 200,000-byte buffer (a
+300,000-byte tail on that line gives rc 1), which the 10,000-byte line bound
+covers.
+
+**Evidence** (the pinned oracle; `check_strict_bytes.py`):
+
+- `bytes_probes.json` (seed 2): 3,907 files, 2,167 graded and 2,167 agree with the oracle on verdict, message class and LINE (READY 826, E0 42, E1 94, E3 150, E4 67, E5 821, E6 167; 0 timeouts or infrastructure failures); 1,740 outside by design, every one decided NOT-IN-FRAGMENT (the reader's outside rules, 139 near-misses (every outside construct in each reader state among them), and the phase-1 MATRIX-OUT documents re-laid out). Every constructor of the reader and the front matter is used by an agreeing graded probe except the outside rules (used by files decided outside) and `LL_nullcs` (unreachable under the article contract); the reader's branch matrix (N/M/S x every catcode class present) and the kernel's 230-cell matrix are covered at the byte level. The 501 graded phase-1 rule probes appear four times each: as rendered, with lines joined, joined through comments holding any byte, and with mixed CR/CR LF/LF line ends, padding, front-matter and `\end{document}` variants and bytes after it. `R_dollar_display_eof` is exercised by no byte-level file: its only byte-level path, a stream ending with `$`, is outside the fragment (above)
+- `bytes_differential.json` (seed 5): 5,000 files in the fragment, 2,500 phase-1 generated trees re-laid out (joined, comment-joined, mixed) and 2,500 generated directly as byte strings (105 direct candidates that fell outside the fragment were replaced and are counted), 5,000 of 5,000 agree with the oracle on verdict, message class and line (READY 2,007, E0 465, E1 544, E3 705, E4 208, E5 831, E6 240; 0 timeouts or infrastructure failures); the 103 near-misses are all NOT-IN-FRAGMENT; exact one-sided 95% upper bound on the disagreement rate 0.06% overall and 0.15% on READY, OVER THIS GENERATOR'S DISTRIBUTION, not over L_S0 (C-85). A class of files the generators do not draw is not bounded.
+- The tree decider (phase 1, with its harness line computation) and the bytes
+  decider (proved location) give the same verdict, reason and line on all
+  897 phase-1 renderings.
+
+**Findings of phase 2**, each an F-defect fixed at its source before any
+evidence was committed:
+
+- C-89 (reader): TeX Live's first-line directive `%&` — `%&latex` loads the
+  DVI format, rc 0 and no PDF, a false READY the reader (which read the line
+  as a comment) would have given.
+
+**Deviations and what is not done.**
+
+- The fragment's bytes are phase 1's characters (`safe_char`) plus spaces,
+  tabs, line ends, comments of any bytes, and the text after
+  `\end{document}`; widening the character set (quotes, brackets, UTF-8) is
+  grammar widening (M7+), each with its probes.
+- `^^` and the other outside constructs are excluded conservatively (TeX needs
+  a third byte for `^^`; with `\endlinechar` appended there always is one).
+- `LL_nullcs` is unreachable under the article contract (every buffer ends
+  with `\endlinechar`), and `LL_end` is reached only after a control symbol
+  consumed it (outside); the gate derives both facts from the data.
+- The structural names come from phase 1's renderer; for another
+  configuration (M3) the class comes from its contract.
+- Not wired into `validators_cli` (M3), no per-document closed-world check yet
+  (as phase 1), and no `no_turing_construct` corollary yet.

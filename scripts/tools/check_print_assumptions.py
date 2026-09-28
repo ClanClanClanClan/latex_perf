@@ -179,6 +179,65 @@ CAPSTONES = [
         "the NOT-READY side of the bridge under the same premise (OPEN-121 "
         "re-review 2: it was neither Closed-checked nor statement-pinned).",
     ),
+    # M2 phase 2: the decision on the BYTES of a file (proofs/Strict/Lexer.v,
+    # Front.v, DecideBytes.v, BridgeBytes.v).
+    (
+        "LaTeXPerfectionist.Strict.Lexer.lex_exact",
+        "LaTeXPerfectionist.Strict.Lexer",
+        "the executable lexer equals the declarative reading of a file (TeX Live's "
+        "lines, states N/M/S, comments, control sequences) in both directions.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Lexer.lexfile_deterministic",
+        "LaTeXPerfectionist.Strict.Lexer",
+        "a file is read one way only.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Front.parse_exact",
+        "LaTeXPerfectionist.Strict.Front",
+        "the executable parser (front matter, body, kernel tokens with lines) equals "
+        "the declarative Parse in both directions.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Front.parse_deterministic",
+        "LaTeXPerfectionist.Strict.Front",
+        "a file parses one way at most.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.in_strict_bytes_dec",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "membership of a file in the strict fragment is decidable.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.decide_bytes_exact",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "ADR-012 trust layer (2) on bytes: READY iff Runs Compiles, and NOT-READY r "
+        "on line ln iff Runs Fatal r l with ln the declarative reported line (the "
+        "line of the last token the outcome depends on).",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.decide_bytes_not_strict_iff",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "the bytes decider answers NotStrict exactly outside the fragment.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.DecideBytes.determined_threshold_unique",
+        "LaTeXPerfectionist.Strict.DecideBytes",
+        "the reported token of a NOT-READY is unique (the declarative location is "
+        "a function of the outcome).",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_ready_iff_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "ADR-012 bridge on bytes: under the named premise FaithfulBytes (a "
+        "Definition, never an Axiom), PROVEN READY on a file iff the oracle "
+        "compiles that file.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_not_ready_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "under FaithfulBytes, a file the bytes decider rejects does not compile.",
+    ),
 ]
 
 # The bridge corollary's STATEMENT, pinned (design §0: "a new gate checks the
@@ -194,6 +253,15 @@ STATEMENT_PINS = [
         "forall (oracle_ok : list Ascii.ascii -> Prop) (C : contract) (d : doc), "
         "Faithful oracle_ok C -> in_strict_doc C d -> "
         "decide C d = ProvenReady <-> oracle_ok (render d)",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.strict_ready_iff_pdflatex_bytes",
+        "LaTeXPerfectionist.Strict.Syntax LaTeXPerfectionist.Strict.Contract "
+        "LaTeXPerfectionist.Strict.Decide LaTeXPerfectionist.Strict.DecideBytes "
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "forall (oracle_ok : list Ascii.ascii -> Prop) (C : bcontract) (b : list Ascii.ascii), "
+        "FaithfulBytes oracle_ok C -> in_strict_bytes C b -> "
+        "decide_bytes C b = ProvenReady <-> oracle_ok b",
     ),
 ]
 
@@ -214,6 +282,22 @@ BODY_PINS = [
         # Decide.* constant (decide, run, step, ...) is the decider itself.
         ["Decide.decide", "Decide.run", "Decide.step", "Semantics.step",
          "Semantics.run"],
+    ),
+    (
+        "LaTeXPerfectionist.Strict.BridgeBytes.FaithfulBytes",
+        "LaTeXPerfectionist.Strict.BridgeBytes",
+        "FaithfulBytes = fun (oracle_ok : list Ascii.ascii -> Prop) "
+        "(C : DecideBytes.bcontract) => forall (b : list Ascii.ascii) "
+        "(ks : list Front.ktok), DecideBytes.in_strict_bytes C b -> "
+        "Front.Parse (DecideBytes.bc_lex C) b ks -> oracle_ok b <-> "
+        "Semantics.Runs (DecideBytes.bc_kernel C) Semantics.init (Front.toks_of ks) "
+        "Semantics.Compiles : (list Ascii.ascii -> Prop) -> DecideBytes.bcontract -> Prop",
+        ["Semantics.Runs", "Front.Parse"],
+        # DecideBytes.in_strict_bytes is the structural membership premise; the
+        # decider, the executable reader and parser are never its content.
+        ["DecideBytes.decide_bytes", "DecideBytes.rd", "Decide.decide", "Decide.run",
+         "Decide.step", "Front.parse", "Front.front", "Front.body", "Front.prologue",
+         "Lexer.lex", "Lexer.lexl", "Lexer.lex_lines", "DecideBytes.in_strict_bytes_b"],
     ),
 ]
 
@@ -276,7 +360,18 @@ CONVERTIBILITY_PINS = [
         f"{_S}Decide.decide C d = {_S}Decide.ProvenNotReady r l -> "
         f"Coq.Init.Logic.not (oracle_ok ({_S}Syntax.render d))",
     ),
-
+    (
+        _S + "BridgeBytes.FaithfulBytes",
+        _S + "BridgeBytes",
+        "body",
+        f"fun (oracle_ok : {_LIST_ASCII} -> Prop) "
+        f"(C : {_S}DecideBytes.bcontract) => "
+        f"forall b ks, {_S}DecideBytes.in_strict_bytes C b -> "
+        f"{_S}Front.Parse ({_S}DecideBytes.bc_lex C) b ks -> "
+        f"(oracle_ok b <-> {_S}Semantics.Runs "
+        f"({_S}DecideBytes.bc_kernel C) {_S}Semantics.init "
+        f"({_S}Front.toks_of ks) {_S}Semantics.Compiles)",
+    ),
 ]
 
 # The kernel's own list of what Bridge.v defines (`Print Module`, one field

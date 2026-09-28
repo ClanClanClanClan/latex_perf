@@ -307,7 +307,7 @@ type verdict =
   - `\frac` in text, undefined cs, undefined env, `$\frac{1}$`, `\newcommand{\text}`, missing graphic, `≈`, cleveref-before-hyperref, blank line in `align`.
   - M0 re-creates them as fixtures: only one spike document survived *(scratch-only)*, so they were rebuilt from their descriptions. They live in `corpora/strict_battery/`, graded under the pin by `scripts/tools/gen_strict_battery.py`, which writes `corpora/strict_battery/manifest.json`.
   - Every one must become PROVEN NOT-READY with the right E-code by M3.
-- **Sample hygiene.** Sample 2 has now been used for configuration statistics, ceiling sets and package ranking, so it is **design-seen**. Rankings use frame∖eval. The headline number comes from **sample 3** (ranks 401–600), drawn and graded only after every graded artefact has been re-graded under the frozen oracle image (ADR-012 decision 7). Sample 4 is held in reserve.
+- **Sample hygiene.** Sample 2 has now been used for configuration statistics, ceiling sets and package ranking, so it is **design-seen**. Rankings use frame∖eval. The headline number comes from **sample 3** (frame offset 720, ranks 721–920; ranks 401–600 were planned here first, but offsets 400–719 are the OPEN-110 fixer window, so OPEN-118 moved it), drawn and graded only after every graded artefact had been re-graded under the frozen oracle image (ADR-012 decision 7). It is sealed for measurement only (OPEN-119): it is never used for configuration statistics, ceiling sets or package ranking. Sample 4 is held in reserve.
 - **Expected trajectory (honest).**
   - M0 publishes 0/200.
   - Upper bounds from sample 2, based on root-only or regex scans: 51/200 Turing-free with no local style; ~11–22/200 at top-80 packages with article/amsart; 13/200 after intersecting with LP-Core text. Construct-level greedy: 500 constructs → ≤8, 1,000 → ≤15, 2,000 → ≤24 [M].
@@ -405,7 +405,7 @@ not restated here; each lives in the artefact named.
 | `--require-proof` (exit 4 unless proven; always 4 in M0) | `latex-parse/src/validators_cli.ml`, test `latex-parse/src/test_verdict.ml` |
 | closure-scoped boundary scan, `--strict-boundary FILE` | `latex-parse/src/strict_boundary.ml`, measured by `scripts/tools/measure_strict_boundary.py` into `corpora/real_roots/strict_boundary_sample2.json` |
 | standing battery | `corpora/strict_battery/`, graded by `scripts/tools/gen_strict_battery.py` |
-| strict-tier North Star and heuristic block | `scripts/tools/gen_project_state.py` from `corpora/real_roots/proven_coverage_sample1.json` and `corpora/real_roots/proven_coverage_sample2.json` (field `verdict_tier`) |
+| strict-tier North Star and heuristic block | `scripts/tools/gen_project_state.py` from `corpora/real_roots/proven_coverage_sample1.json` and `corpora/real_roots/proven_coverage_sample2.json` (field `verdict_tier`); sample 3 joined on 2026-09-27, see I.3 |
 
 **Machine consumers of `--compile-check` and how each was kept working.** The
 `MODEL-CONNECTED` line, the `READY\t`/`NOT-READY\t` token line and the indented
@@ -813,3 +813,18 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 - The §B.2 attestation of `files_read` (re-run with the file hidden; the expected fatal must appear) is not implemented.
 - `complete` is configuration-scoped (above); the per-document self-check is M2's.
 - The file-token reading of the universe is an over-approximation checked by the hash count, not a proof by itself; a configuration whose count is not 0 is reported incomplete rather than guessed.
+
+### I.3 Sample 3 drawn (2026-09-27)
+
+The virgin sample of §E, drawn at frame offset 720 (OPEN-118 moved it off the
+OPEN-110 fixer window) and graded once under the pinned image, at a `main`
+commit. It is sealed for measurement only (OPEN-119). The numbers are not
+restated here.
+
+| deliverable | where |
+|---|---|
+| graded rows and the frame manifest | `corpora/real_roots/results_sample3.json`, `corpora/real_roots/manifest_sample3.json` (`scripts/tools/diff_real_roots.py --offset 720 --record`) |
+| strict-tier and heuristic rows | `corpora/real_roots/proven_coverage_sample3.json` (`scripts/tools/gen_proven_coverage.py`) |
+| closure boundary scan (measurement only, never used for ranking) | `corpora/real_roots/strict_boundary_sample3.json` (`scripts/tools/measure_strict_boundary.py`) |
+| publication, with samples 1 and 2 beside it and the 10 repo-named ids split out | `scripts/tools/gen_project_state.py` into `docs/v27/PROJECT_STATE.md` §1 |
+| staleness, claim and cell checks; oracle fingerprint check | `scripts/tools/check_project_state.py`, `scripts/tools/check_oracle_pin.py`, kill-tests in `scripts/tools/check_gate_selftests.py` |

@@ -1,0 +1,1823 @@
+{
+ "oracle": {
+  "engine": "pdflatex",
+  "distribution": "TeX Live 2026",
+  "version": "pdfTeX 3.141592653-2.6-1.40.29",
+  "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint), PDF recorded (compiles = rc 0 AND a PDF)",
+  "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+  "arch": "aarch64",
+  "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
+  "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
+  "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
+  "backend": "container"
+ },
+ "frame": {
+  "corpus": "LP_v24_FULL_BACKUP_20250716_165548/corpus/papers",
+  "frame_size": 2719,
+  "selection": "sha256(arxiv_id) ascending",
+  "n": 200,
+  "offset": 720
+ },
+ "docs": [
+  {
+   "arxiv_id": "2507.10104v1",
+   "toplevel": "SCPMA.tex",
+   "bytes": 42767,
+   "sha256_toplevel": "f03d346a2e46ea6985c95e5d268caf355fff5a0114b7bb6f857ff92f69124cbc",
+   "sha256_tree": "ddd2323c6c8a5468b9d803090e7be9fd045345d9d5b236253e4f3d68bda1a476",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09721v1",
+   "toplevel": "AAS_I.tex",
+   "bytes": 96923,
+   "sha256_toplevel": "68dfd27bdcc9f52ca38e7a9982087d09d940fdc79215392cb48056fd424b3ff8",
+   "sha256_tree": "8aa41ce508510c369e6d7e11696ac8c422c1f1157cff818e79c322d1311d071b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11424v1",
+   "toplevel": "main.tex",
+   "bytes": 65813,
+   "sha256_toplevel": "f218a7925a5c6c4ba9963fe9d73033e9977a8d0f357ad4ed1ac4c01122cb075a",
+   "sha256_tree": "2d87b79343fbb8b3b6713275e1051e529f885018a8ea8d54ca424079080dfa1b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05689v1",
+   "toplevel": "nptree.tex",
+   "bytes": 88422,
+   "sha256_toplevel": "e931f0f269761df929e8b0024db7bf5d33a926f3fb213250290fd61709c87d15",
+   "sha256_tree": "c5ef4e8092eb2e5688dfc134e534a15385d8cb9c06ba84365f2eec0f5d2c47e2",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09271v1",
+   "toplevel": "Char_DivPoly-Shift.tex",
+   "bytes": 37926,
+   "sha256_toplevel": "c8b5c30008ada38497170a712c87363447dabf1dc695117a56262f4768a97647",
+   "sha256_tree": "4ebd126e504bb2cdf0502fbc80c803ff2898cd3d69a1be31bba5a52b8a28184f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11136v1",
+   "toplevel": "main.tex",
+   "bytes": 5563,
+   "sha256_toplevel": "ece67868f8102274b5cb71407796b7cfedfcf2710251fc8207545026e03a76b4",
+   "sha256_tree": "e59533e2edc88d20c0e2bd1cd45e34d5210293ffc35a142481c25562c7c272bb",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.05393v1",
+   "toplevel": "article.tex",
+   "bytes": 42428,
+   "sha256_toplevel": "655138840e510bf34f1b30523694762cae99f84962ee6fe13070ddb065ca8747",
+   "sha256_tree": "2eaaf3327fba63bae2c90c5f2c272a892f67c71e9e4f8107422f40bd40fb2800",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11005v1",
+   "toplevel": "main.tex",
+   "bytes": 2493,
+   "sha256_toplevel": "86053df95e85c78116a63829d6a92ab2763b27e76cb9ec1c22751237313ef19d",
+   "sha256_tree": "01a6ad8d6a18f5120b8260a3424b791e48dea182ed57663d561738c80af1724b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09767v1",
+   "toplevel": "main.tex",
+   "bytes": 71009,
+   "sha256_toplevel": "073a5679b3ca953b206abd7c823e343ba70065c7550575aceb5f467a770edee9",
+   "sha256_tree": "44f7fb504266ff6f98b05316d5cbf369c46a3647fc21c5aa780da07676c6675b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.07779v1",
+   "toplevel": "arxiv.tex",
+   "bytes": 50857,
+   "sha256_toplevel": "c0189c5fa446a2839df5ca63afb46bfdb347a724dc83d5306f151477a35140f3",
+   "sha256_tree": "38951fe590de81841c894a5c136951fe7c5039aeb70b0ee44b0dcccf76034a68",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.04008v1",
+   "toplevel": "cas-dc-sample.tex",
+   "bytes": 48053,
+   "sha256_toplevel": "52a9b726b912a0d72a346589577077db466e70076dba09a12720cb5afb20c114",
+   "sha256_tree": "cefe425ae46099e9e9e2409e4b6b85e2890474074bc87c8b2c5975e72eb84c45",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.02003v2",
+   "toplevel": "main.tex",
+   "bytes": 25317,
+   "sha256_toplevel": "89932f12e5990908aac391bde2fe5c2efe72001749caebca937a9fd76840b2cf",
+   "sha256_tree": "4e4d0c767e7c2714af167484793eefa753bb1f25c985ca0b31c019767ef670d7",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.19796v1",
+   "toplevel": "main.tex",
+   "bytes": 95547,
+   "sha256_toplevel": "c2f2d864147f380d8befd6e900bcd00743c61532e494a7f7785692ed6aea13e5",
+   "sha256_tree": "c37074d1d1ef77f9dc43492eb721582ef4468274f2efd7c1c37875c9bd179c26",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10538v1",
+   "toplevel": "PoroSplitPaper.tex",
+   "bytes": 99017,
+   "sha256_toplevel": "4322ed0211f5ce05da8452ff6b6b10afbb6e49fcadac19ca2938d1e81c70e902",
+   "sha256_tree": "c29ebacf442c5ff6cfe1933b0d3d876cf9037b04ef82c94de9f100596bc4d824",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09590v1",
+   "toplevel": "main.tex",
+   "bytes": 74931,
+   "sha256_toplevel": "013efc245856aa36cdf77a04c148aa7d826a0b75d9a3b81b96ccf8669a7d9df1",
+   "sha256_tree": "d13beac426339fcbd8156f1423ffd9f0169f2cd9558958e0178e99a76a501daa",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.00660v2",
+   "toplevel": "Paper-3656.tex",
+   "bytes": 29524,
+   "sha256_toplevel": "37851f9db9bd9ae56ade8d9e7d4286880f404cfaefdef5d104393baf8481018b",
+   "sha256_tree": "d3f29b10889ebb3f73d700ba71297ccf3e11663d678ccde8c175df65fae0074b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10335v1",
+   "toplevel": "GSI25-110.tex",
+   "bytes": 33895,
+   "sha256_toplevel": "aef3c4b9f165eb02ea231d29959f747f571641fcc740c3fbbb3dec83d0e04d6e",
+   "sha256_tree": "9a1fef2f045d6c01751f3702eaae7eb0f73af46ab13eb713e0934e1f69ef3f81",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08676v1",
+   "toplevel": "main_magicNHqubit.tex",
+   "bytes": 103120,
+   "sha256_toplevel": "493c09e608a48e63f844b49d0903f0092534e9ed015feeffa4919cc6bd09a7cb",
+   "sha256_tree": "37f49c5acf358a3fe1cd0da95bf9bdc8be1f3d1cb503c96109b19c940b76745c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10425v1",
+   "toplevel": "main.tex",
+   "bytes": 3627,
+   "sha256_toplevel": "7565f27303b15a426053c9368452a658ab67c1f69b4c813837ed245c6826de64",
+   "sha256_tree": "4f37c52d9745be2cb7000cc9580af804126007c4e7c388abeb08798af2bf912c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05005v1",
+   "toplevel": "main.tex",
+   "bytes": 83502,
+   "sha256_toplevel": "e5c35b6b35ecc457902c82469c38b77f742b2e8964b47408a56d1aeac7566699",
+   "sha256_tree": "c40d83fd777fb0d1fa0e61fe7e6cfe8662fe65b561ead305b32f3ad26c635b1f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.00633v1",
+   "toplevel": "nc-resolution_v1.tex",
+   "bytes": 162233,
+   "sha256_toplevel": "5a19ce3d521cf97e27c36d66ea567d5d860312f5425f6a8967d8419f93609b9c",
+   "sha256_tree": "efb6f9cde8a98d9d499b5485b4a2ccd8c30cb7eb0aab673627b39ea9b9b45337",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.00736v2",
+   "toplevel": "main.tex",
+   "bytes": 65764,
+   "sha256_toplevel": "49476a61e1bb2adf5fceb35edf618e27b5512d702f3322e6b78ffd32e060587f",
+   "sha256_tree": "15569b6cdd75812083c6f7e38f12a278e4c6ee5844226f080e89c198f9dbea84",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08136v1",
+   "toplevel": "main.tex",
+   "bytes": 3565,
+   "sha256_toplevel": "7857dec1dc397b926725e91590d01e6e5a870be125d0cb23233c2b4b4056260e",
+   "sha256_tree": "1be9d9ed59dc4a3dad5991f02bb680b4cf2966ea5f94ac22e83dd41d778cc5d2",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.01761v1",
+   "toplevel": "main.tex",
+   "bytes": 134308,
+   "sha256_toplevel": "dde012e37a92cb18f4549c927f361ccfacf9da2341b77dd61d03d79dc97571fb",
+   "sha256_tree": "e1d56266a94f6a674281c92e2c90ffdc4e4bbd58cd9c71903840d919494f9794",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10707v1",
+   "toplevel": "absence-of-BJ-arXiv1.tex",
+   "bytes": 142282,
+   "sha256_toplevel": "45839d7890e4728f1f3150a73315420b168eb0a3c94af1b6d030af4f0e3799bf",
+   "sha256_tree": "74f1579d1ae3471c56a3c5674362a98cdbdef361eaecbfe88fbb187fd773fdba",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.20935v1",
+   "toplevel": "ATD2023JASA2025.tex",
+   "bytes": 52944,
+   "sha256_toplevel": "9d4c0bf03930df51c1a37775cbba5308802bc29ac6e8d361158f6e259e7f0812",
+   "sha256_tree": "b941707d922772c80ac687c04c8134575a054cea72adbaea773df54d2d9fbc5d",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.00451v1",
+   "toplevel": "sample.tex",
+   "bytes": 88582,
+   "sha256_toplevel": "b184efb310e2fcd3ce92c7295c822a2a6d03ed576ed7c8afc95c043e1247c986",
+   "sha256_tree": "595f920cfa304b11be315eee09cca84e42a4a1d0a1e5a3489612a127593ec591",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.06865v1",
+   "toplevel": "main.tex",
+   "bytes": 249626,
+   "sha256_toplevel": "a6c0d87b3cf01e0c5a47e20f8c0604db8c47d3c835cb48bb3f4b5a3b2d8c4591",
+   "sha256_tree": "e1cb6019503dfed160febf62c751bb2811578d9b5cda3e74c502a805d9fe9d5c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09991v1",
+   "toplevel": "transform.tex",
+   "bytes": 29623,
+   "sha256_toplevel": "dbb1e51be48d36758fdb9c3b7f42fea34172a67f21d6674329d7cf8acc0657f9",
+   "sha256_tree": "5b59aae906a8e6697a09dea640de9e79e1766969f8ff88b61c5c70e323f4aeac",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.18508v1",
+   "toplevel": "paper.tex",
+   "bytes": 1227,
+   "sha256_toplevel": "0fcb59b67918a4fd78ee3aff60802e02e344240789d21fb472ef92d7b79fd0d6",
+   "sha256_tree": "8011709961245e92be59b40329cc90aad2aee9c3b51cd50378df2a1e97dea396",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.17464v1",
+   "toplevel": "paper_variational.tex",
+   "bytes": 1121,
+   "sha256_toplevel": "734b4472d0124be74704d6226dd69e871b9a9d5efd60454c9797eeb32c6e7c68",
+   "sha256_tree": "3a5f84215aeae0350ac9ff6c0c6b8ac27c6925d677d4a3254d604f95041bd88a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.22578v1",
+   "toplevel": "neurips_2025.tex",
+   "bytes": 101551,
+   "sha256_toplevel": "984641538968fb215eedad29bc9f5b0de707bd048467713af90b9bb0d1d55820",
+   "sha256_tree": "9e0d8a66d8acb388aa7c3b7b7f2c6384fefebe56650c9ccb289c00c63a499cf4",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11538v1",
+   "toplevel": "paper.tex",
+   "bytes": 69648,
+   "sha256_toplevel": "48f6ea6674d819df8f64462565ae47dd573b20800038dfd2d3a228064d53ae7c",
+   "sha256_tree": "93007f9afecef3146e9cec0ccac4220c4265a60c07f19278aa77e80fc5137179",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23099v1",
+   "toplevel": "sesquilinear.tex",
+   "bytes": 39322,
+   "sha256_toplevel": "0761d92e3e330b3c9de2c7bb94f164d937ecfe3db85218afc197e958179a6e63",
+   "sha256_tree": "a5884e9db0a0860b2478e1ba7d1316aa534b3ae9e86d2d47fc30d550c26b92bd",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.12342v1",
+   "toplevel": "dedekind.tex",
+   "bytes": 65986,
+   "sha256_toplevel": "233bea80e52fcd101c482f9bea86767cec899a4360789ea110bdeac7b1e1b1d4",
+   "sha256_tree": "e441d972b64299981e77311ddcc0ea879771fe19f4b2eee0cdba17bca1a8f96c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09524v1",
+   "toplevel": "main.tex",
+   "bytes": 2382,
+   "sha256_toplevel": "53ea4a9da74ea4ef18d4e59891855687453aae4a248279c98ca39504717aa2fc",
+   "sha256_tree": "1c6f986c0e1adc6171b2d2007138591b10d7b78d31c4746f03691871450c95cf",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05815v1",
+   "toplevel": "MICCAI2025_paper_template.tex",
+   "bytes": 25536,
+   "sha256_toplevel": "b91bd57665193d24054b7c3ce812a84cbc9ca10cc7dae1095ed07792cf67cc42",
+   "sha256_tree": "b5c248dbecf5ef6e342a7b621cae1ebb45e60d7871a6629cb98faa8ae9e05858",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08287v1",
+   "toplevel": "main.tex",
+   "bytes": 51625,
+   "sha256_toplevel": "1014b1fcac707e360a9cd40a89b96ef0331623ec696d7a557716fe0ec11ba477",
+   "sha256_tree": "c2d9fffac29806b20313c9d78048fec01ae38e247a3aba6dab102abb0f816ca4",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10549v1",
+   "toplevel": "main.tex",
+   "bytes": 77107,
+   "sha256_toplevel": "14a257a447300909a32dfad710c320ece78dd736ae7d6b8e0f00a24cc28517a5",
+   "sha256_tree": "335fe14c3aafe8a70d5772ccbe0833e0126d6b3fabeafefe52ec7af345b29db2",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23619v1",
+   "toplevel": "main_short.tex",
+   "bytes": 67420,
+   "sha256_toplevel": "d4ba3d3ced4a165ceca55541b63511f0bd6ba827a69bc54e77e747e239f31cb6",
+   "sha256_tree": "a98298049ced748a5a66d49e176fa17c5afe4c38bb0fc671991f996869ac6d04",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11138v1",
+   "toplevel": "main.tex",
+   "bytes": 58344,
+   "sha256_toplevel": "dba8b194bae00307d253cc940ceb29b622e8e7b82d1db8d0706c998b574d4857",
+   "sha256_tree": "90acb3ebc7b710722e8c4c0b3631bbff109d747d8e1650eac3515853df4e05ce",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05647v1",
+   "toplevel": "Template.tex",
+   "bytes": 24315,
+   "sha256_toplevel": "584906b81ff64c79e011973dd52d8e885eea1d55b7b5fa62f326ff83edb05442",
+   "sha256_tree": "09cc9730aaa5976c9e903dc98ab084ccd6758dc7320be9e147f9e80ee0112d2a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.06120v2",
+   "toplevel": "Characterizing_Spheres_Submitted.tex",
+   "bytes": 22200,
+   "sha256_toplevel": "4231b7cd3748072de2cacf916cdf42b0fbca047d969519b84e17708b7db781a8",
+   "sha256_tree": "c029dd3c537e8bcab1dbd55680584bad622d8212d66022dc072b8ed1a01932d6",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.04103v1",
+   "toplevel": "neurips_2025.tex",
+   "bytes": 69881,
+   "sha256_toplevel": "63db5e7f8938cebf05b2eebae8a0aee1ddb2eb5c8fd2130fff3fdda892b64b4e",
+   "sha256_tree": "990f55497b84a4ffc3bce02d8fae960670b865e7971e433b3e93611c736888ed",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10926v1",
+   "toplevel": "main.tex",
+   "bytes": 78487,
+   "sha256_toplevel": "d3ec8636a2ebbdc922d0427c56fbdcd24926e218255d99109bd45c5988812954",
+   "sha256_tree": "777e292a8fc0b94db91bfbb3174bdd1523ce3551ce1847e5a037a24f89d87bcd",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.12918v1",
+   "toplevel": "char.tex",
+   "bytes": 62791,
+   "sha256_toplevel": "ef2e1f7df853c0704102d3c8fb13c782ab609088e052e412b1470a03cc773680",
+   "sha256_tree": "5189c16a55565623dbee2e61ca8647ff1144feca0baa41ddaa9b50293870c154",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.01473v1",
+   "toplevel": "main.tex",
+   "bytes": 52733,
+   "sha256_toplevel": "1712a79f1c195ed8c88d9ef6066567115eda1644049826f9e1c8a9aba5c61954",
+   "sha256_tree": "9c59463adfe033bcde186bea5b954d7799ba2571f533a041aa113eb0bb0a48b3",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05656v2",
+   "toplevel": "elsarticle-template-harv.tex",
+   "bytes": 87099,
+   "sha256_toplevel": "487c00a9d9d69d4d541872f8362e506d8568f1977ba01b42339eff4d2adf2860",
+   "sha256_tree": "ccb9376f6e217760b95ea0943a7a4ca64759e3f4321f3b1470c1357893cc07f8",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.11459v4",
+   "toplevel": "Equations_defining_Jacobians_.tex",
+   "bytes": 113140,
+   "sha256_toplevel": "d086fd34d51bafc66dadd548a8ad309d30d7bac3bb622d6d064e22bc7d40b11b",
+   "sha256_tree": "ae66006d2a89da50a92e767d149c8d59dff1747c8624634888b8010b3ca4965a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09560v1",
+   "toplevel": "sample-sigconf.tex",
+   "bytes": 95782,
+   "sha256_toplevel": "58f750cf2e9c70992eab410207e9ed185700c1d485076fdf55ce02446dae86ac",
+   "sha256_tree": "612f3ca47c68c49dd4f53c1f409e46e4fe3f515f574eb10481556ff12747817e",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09880v1",
+   "toplevel": "bmvc_final.tex",
+   "bytes": 1728,
+   "sha256_toplevel": "33480504c658e7a702d640d991867b64c18bb802f54152ac22a1529a0e962b4a",
+   "sha256_tree": "0004aa7e9d72aeac941f67efa58c74fe5ba8b053cdd6fd34a97da55fd6ae9cb8",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.04973v1",
+   "toplevel": "SSX2025final.tex",
+   "bytes": 105955,
+   "sha256_toplevel": "729b1491931c05267c3ca5446aad0002d44b47fbb43bf9d23e7225339a49683f",
+   "sha256_tree": "bb95a935da649c8683ef5ee04eee91f08b821899b01777797b0d3c816c45a074",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.03453v1",
+   "toplevel": "arXiv_coadjoint_250704.tex",
+   "bytes": 77476,
+   "sha256_toplevel": "58e2a89ae93a7bc982cd6e0b17522dd0e5a3343d501cc22c4ff2fe03d86abe88",
+   "sha256_tree": "82f5a4672d023cba6da601caff31a9363b65b101ef6973abd41d9e448ed4545e",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.19274v1",
+   "toplevel": "VBSurrogate_arxiv.tex",
+   "bytes": 30294,
+   "sha256_toplevel": "b529b120acbe2929275e8d6507f1e05cc567a4b8a46312abb6e91cafdd945178",
+   "sha256_tree": "1bc41448572aed3d2976c5c9cb57c14023c8903df0fbdf8cd88757ff0c0d7fee",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09674v1",
+   "toplevel": "aa53104-24.tex",
+   "bytes": 149607,
+   "sha256_toplevel": "50b4f93c632ecfbf703d88b0ad82312a3084ade279ef0fdbe1a6e8ddecb7850f",
+   "sha256_tree": "8595dbe1f611e8f1527feee7c2b334105751b6200b2d1f409fc4be9a9daf8f3f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.20928v1",
+   "toplevel": "main.tex",
+   "bytes": 43571,
+   "sha256_toplevel": "eee2a13bdcc2367c4508bcc85d9d3b05af36cf25669db0a623668f5721cc974c",
+   "sha256_tree": "c8676e5c67489e0dfc9ca7b037d96f8c9e9480bbdc624e1930dc38d6945a563b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.20350v1",
+   "toplevel": "bare_jrnl.tex",
+   "bytes": 62702,
+   "sha256_toplevel": "c22726736d0d2d587c3590b2b3c7b29cb008fba2a1e4c4ee67c8a14dae2d29dc",
+   "sha256_tree": "2b5d16a1138c92309946c90eb4305b6f4e216c208cef042a379c4b7524f74841",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.04441v1",
+   "toplevel": "main.tex",
+   "bytes": 251861,
+   "sha256_toplevel": "062538002922d6ba909ac87b03bc2f364e7d8e301d3de0b015d4f2e238421255",
+   "sha256_tree": "9bad83585abf475138f94267c3e034ef2996d402ed32fdc5edac1ca162612200",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.03784v1",
+   "toplevel": "main.tex",
+   "bytes": 59287,
+   "sha256_toplevel": "b40abd290007ca993d61137478e99f02f4eed3a99ff5987fcdb0a619cedefe40",
+   "sha256_tree": "c0eaa86b5053a2f7cf3178faa8320fe277aac0d57121c7352f079a5cd9734132",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.20406v1",
+   "toplevel": "JASA-template.tex",
+   "bytes": 354198,
+   "sha256_toplevel": "cd65a9c6034eddd3db14f70ff8cdc9f0781f804238e2e0a99dbb28c702b1ee14",
+   "sha256_tree": "4f2d066654dc87aa355699c54f156abe3a411944fbb23ee185417bafe7a54430",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.07994v2",
+   "toplevel": "main.tex",
+   "bytes": 3858,
+   "sha256_toplevel": "be9f91c6ad5fdf5f07c29f3a0eb3beb3ee2bdd21419932f3f0827b01fcdfd3ed",
+   "sha256_tree": "2729cc76e2864210d089b75a4ac44bf8e6a1508a2c297e66514f19bf1de4b191",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23184v1",
+   "toplevel": "main.tex",
+   "bytes": 47925,
+   "sha256_toplevel": "7e62d3ceb6930406ebf00588faa0ec81b843a9a69762a667dfdcf44cf2579548",
+   "sha256_tree": "050eb61e837d146e857f1068538d83eaac4c3c6968756bd05d139769b47f0325",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05428v1",
+   "toplevel": "main.tex",
+   "bytes": 1669,
+   "sha256_toplevel": "be0e2f6007c2f6af824fb3808373eb00305a5ef69c79635fde85efd0cf81861f",
+   "sha256_tree": "f0ba99aaea1ae76f0b82de93e43a294674371a77fbe2ea412e14b1da7c9eaca6",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.18249v1",
+   "toplevel": "PCA-based_Quantile_Sampling_arXiv_20250620.tex",
+   "bytes": 152189,
+   "sha256_toplevel": "16e0bcf3b987023a61ff9aaba48621bb07bae84dbac9dd92071d65e00147f8d7",
+   "sha256_tree": "e7ff7a765a4438b9cdaf1ae7862ec8bd5efdcd8a184ea137886cbdaaaa28f047",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.03772v2",
+   "toplevel": "main.tex",
+   "bytes": 76142,
+   "sha256_toplevel": "95f8149d831ec48d071c07abcd259f918aa42db36a1e6ce2899d36ae0b544e82",
+   "sha256_tree": "ca8d7e3f7aec5b2a3f9b872d2f026fb5b164f09c2202cfb92a5719a9cf558a8b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.01353v1",
+   "toplevel": "radon_partitions.tex",
+   "bytes": 62428,
+   "sha256_toplevel": "6052a7f4a426aeec7afb42b1851638b82f1cb0109b292454e74e7f0c0362fb43",
+   "sha256_tree": "14b215f2b500d84aa800e1a9e8519ef1dd00158acc7f722e60300220798d4fb7",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.07516v1",
+   "toplevel": "arXiv_v1.tex",
+   "bytes": 156621,
+   "sha256_toplevel": "0253ae945b7179263e0508b459723c7c4748868283b59beb729e1afaf6f98baf",
+   "sha256_tree": "3ceddb349753ce9f4c11448489962e130144cae3e5fdd26ab9dc1fa6877d3e84",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09865v1",
+   "toplevel": "main.tex",
+   "bytes": 195887,
+   "sha256_toplevel": "070eae1a67ad500db6db124113df74cbd1570cbc9ea74a4743c9a691b40bd80f",
+   "sha256_tree": "79fc223a4b5de43b7588008e7d6d3f57e291d59c93ade9cf9a4333c82d84c9af",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11153v1",
+   "toplevel": "main.tex",
+   "bytes": 45579,
+   "sha256_toplevel": "d34af77f2c763a93a153995d7cf279577a9855657b22408174e5af5eb51ce1d3",
+   "sha256_tree": "69ff84a6d09118b5908efe47d8a3b58138ff71f1c1c8bca2e0a5a349a0bef5f7",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.01291v1",
+   "toplevel": "main.tex",
+   "bytes": 44635,
+   "sha256_toplevel": "8f67d641dc240531adf444b11fb0871e8fb3784922cb1d9e7e9de268c130473d",
+   "sha256_tree": "f36bf5a4976201522af07f6910e3a38698a2d09c3248c6cc8531ba0c0603c75c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.04179v1",
+   "toplevel": "binomial-convolution-sequences-20250704.tex",
+   "bytes": 53116,
+   "sha256_toplevel": "cbbd87bddcd56014607bb2324352ce6c79cbe4bedf7a05ae14ca3581341c2aaa",
+   "sha256_tree": "40aae3fb52cd8cac736784bbe9aafb93eafe5a2de6d4f52a64dd381a0d761cc6",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.00398v1",
+   "toplevel": "fetal_weight_estimation.tex",
+   "bytes": 36149,
+   "sha256_toplevel": "ccd2fdc066ed6c7c87ad6eb7803806d83c3e11a2e9379c2ba625782ab5879019",
+   "sha256_tree": "644588ecf7d778647e8463dcd8b1295f9a5b7fb3c8597d72e8fc430557e70ac0",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.02999v1",
+   "toplevel": "main.tex",
+   "bytes": 39750,
+   "sha256_toplevel": "01575c37d86861a59f8980bfe74cc730ab8f416870012590437ba66413984465",
+   "sha256_tree": "a9de03b1c3181440436abe7b368f84fa89eada92d8710db117328be9455455fd",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08262v1",
+   "toplevel": "main.tex",
+   "bytes": 2802,
+   "sha256_toplevel": "c12db6ac2f93829eb100809a32d4f044c69a77edbec3963671d82569a25f2328",
+   "sha256_tree": "68d1ac8ce92fae2890c3fea95e4d300e7dd313fa5c80a41564baa1724d9095ac",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23533v1",
+   "toplevel": "lift-high-dim-5_2.tex",
+   "bytes": 87323,
+   "sha256_toplevel": "a7c95690219e4dda0fa0e5388d419edb3b64f499391398eb0a115767add801b2",
+   "sha256_tree": "a99b8c05397dabceab04f954c9b5984691dc6af93650cb1e13524247b0cd2903",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.03121v1",
+   "toplevel": "ChustCoelhoRiedtmannFunctors.tex",
+   "bytes": 84880,
+   "sha256_toplevel": "5c7b2b383fb979041db8ffa2b89bf0bd15f6fbdb9b1555db6b9928b0efdac026",
+   "sha256_tree": "4197a080a27f33a192db3586fdb62c76b5f90eccc5808871f65cf18d7d4f3b05",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11023v1",
+   "toplevel": "ojaqso.tex",
+   "bytes": 42304,
+   "sha256_toplevel": "98d496692ef58b1ca30a54fbaad76cd0575fb85aea058005ab314816f44aabb8",
+   "sha256_tree": "bfbbb12ea1463dfba8eb1e8129983e356b9e687fc9b09288ba8dfefc2c6156f6",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11032v1",
+   "toplevel": "aa54775-25.tex",
+   "bytes": 133979,
+   "sha256_toplevel": "ff586dd2a739dc045ab2b6ddb778ed383ce092f4f2ac0245e9f994b7aaef3385",
+   "sha256_tree": "8aa7eb9248d9b63b4583de8eaf4a1281e2f0d958b0c49b2833432e6a6f585cbe",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.03207v1",
+   "toplevel": "main.tex",
+   "bytes": 102149,
+   "sha256_toplevel": "f8ddbe0615a5c12bf066c3dc832ef15fad743ec9a4b9722b0ba3e0ec908a7e75",
+   "sha256_tree": "efce703ccf0db581f5f2b38a76f92f0a30f14f977176b157c54ae019cca6a726",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23790v1",
+   "toplevel": "main.tex",
+   "bytes": 103964,
+   "sha256_toplevel": "8d51bfaef943ff10baa82e7ede8b5ee8d92fa236d54be9e01beb6d51d3c84f59",
+   "sha256_tree": "4abf5eab1958cf99aba89ff29b2d062ab601e9d3bb9a04e953d206eea56f7aeb",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.12999v2",
+   "toplevel": "main.tex",
+   "bytes": 70660,
+   "sha256_toplevel": "1af1ad21190971f06e5c8d55cc2ce6ff7ae955aa2a2906f499987310f457166f",
+   "sha256_tree": "90ac7e8831ec70692777c9898d06803fd23eee9fddb0f2147d58717b697840ba",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.07022v1",
+   "toplevel": "07_07_VectorSpreadBorel.tex",
+   "bytes": 53914,
+   "sha256_toplevel": "b61073d805a6b78c8dde0393b3d5bb8e6bd6e4b6690caf35b6e3bae337d18f1d",
+   "sha256_tree": "e45aeeadf928ba9d42722e927e4092633202123512b6fbc7a98310cb23e42feb",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.02437v1",
+   "toplevel": "main.tex",
+   "bytes": 4240,
+   "sha256_toplevel": "2015994e1b6e6b7281a99cf4bbe8c18d5ef8874c8e63bd98cfedf9e5a68ed829",
+   "sha256_tree": "add38f099e420c43b6633c94eec5063fbcd5da3c038fcf46d668311ba4fa6341",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.01831v1",
+   "toplevel": "arxiv.tex",
+   "bytes": 91953,
+   "sha256_toplevel": "8ac64b829b9f8d31ae88df06283452fa7e4b586f45e39002785c186dd018f075",
+   "sha256_tree": "2471506531257e1fb3a4e050dbc550e35726a5d6dfa184967f81980186b21768",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.22918v2",
+   "toplevel": "markov.tex",
+   "bytes": 308705,
+   "sha256_toplevel": "95c40c6c102dca430c9dc65ae856802b84a92a440494f2ae2b5d3bec6846dadd",
+   "sha256_tree": "8a5dc90624a72ac5b4b112e67bfa6d9e49658c6b4832d053f931c46700d02285",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.13633v1",
+   "toplevel": "main.tex",
+   "bytes": 283947,
+   "sha256_toplevel": "054fff8cfad22b036ca9f8b2e16f895e97c169c3e97a7a91506dd1cfe3ba82ba",
+   "sha256_tree": "7cee00f75effed6b35dfb8ebca6ac420bbc105bfb282f0940a6781f66df78740",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.16961v1",
+   "toplevel": "main.tex",
+   "bytes": 4273,
+   "sha256_toplevel": "f1474296db1f549d46fa2467818dce490b99b2c2ca2dbb9f3fa5831da7a8d09d",
+   "sha256_tree": "38499f227465c60b7c9863529b706713587ba4dbac8edcb681735715413da242",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.15747v1",
+   "toplevel": "root.tex",
+   "bytes": 96906,
+   "sha256_toplevel": "e4a13336ad073003c622cdf93ca6b45c2a2187fb8458d160a9ec634ec74ce6a4",
+   "sha256_tree": "97188242f6573e4128653129601c10f977fb75269339e566a3d37b4df90eb4a9",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.20173v1",
+   "toplevel": "main.tex",
+   "bytes": 97844,
+   "sha256_toplevel": "7ebb5c723351291f35f812d81ac0906b1b3b2a736f9b3dc7e409bc567b5987a7",
+   "sha256_tree": "dfad0aee0db2725ddc9bb771ed1851d7afd0e8a048e39d6393915e853b032bb1",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.19234v1",
+   "toplevel": "bare_conf.tex",
+   "bytes": 70182,
+   "sha256_toplevel": "3a009a6ed031c6c8be944bd308702c7be48c82922505bf961d5e0796562fddfb",
+   "sha256_tree": "6972b00f545b1d2cbae8b4ba2e2b8a0d3b28a2b1663531e482ba1f096ad80e3b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.23892v1",
+   "toplevel": "main.tex",
+   "bytes": 104289,
+   "sha256_toplevel": "efb46afb160b265015f6f397268e7f6bafc450065e9630af420c66d9714de0db",
+   "sha256_tree": "673fd7b3d8b84d3a5f9f51fd66bc37917db9a1ad1a424353e6545af98e36b9e9",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10203v1",
+   "toplevel": "main.tex",
+   "bytes": 2086,
+   "sha256_toplevel": "12454fcb81b49a58835296e3ce4e8a51a617696b985c004da39d3625b9a054c2",
+   "sha256_tree": "11bbbd8f20cb68fd442d13f9ee240446a8e85b587f42f0f8894b824f4c89eb04",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.00871v1",
+   "toplevel": "main.tex",
+   "bytes": 106625,
+   "sha256_toplevel": "867264b524dfaeccc33e9fe2e10d3b34c7c6a0dd15a7ce6f6cdccd0aa0e44758",
+   "sha256_tree": "3c06e2721fd58f3f33a25753ed9f2269d48b9dbba07534a9c86220c92d68b9ef",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.02769v1",
+   "toplevel": "epall_1_arXiv.tex",
+   "bytes": 260233,
+   "sha256_toplevel": "854e2882003b0a5071dd4a519964455be37ff88c992345b189ca78e9d380c183",
+   "sha256_tree": "5728e12a803ffc82d38850e4f076a845b40d3690cc1030b0c6777f1648029525",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.03379v1",
+   "toplevel": "main.tex",
+   "bytes": 68151,
+   "sha256_toplevel": "03d35240cfbcbdbebc6cc5fe61c0028e43699e091ecdd7450c8d50c452542749",
+   "sha256_tree": "deff714669ad6612ab18e2cba96114a946c3d812b86d03ae30b60281cd46c202",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11415v1",
+   "toplevel": "Paper2891.tex",
+   "bytes": 40987,
+   "sha256_toplevel": "d12c1241e1b2458c907d6f448b7b87d86e0f5999363b9d25ecbfb4f554d1ac52",
+   "sha256_tree": "7c0b7c4497b9d62375a0eece2af382f99572a2c5c05c67023306d5667c0ac82d",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11441v1",
+   "toplevel": "main.tex",
+   "bytes": 2726,
+   "sha256_toplevel": "8a35cb2ac888839a3c4c5aa7cdd1d18e16348afbc196ebfc39f0bdc7f883a621",
+   "sha256_tree": "46fc14fa3b4de0c562ccb38b51efd9cd89303f623bc30c80be6e20e54f42c184",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09773v1",
+   "toplevel": "2_jacquet.tex",
+   "bytes": 119735,
+   "sha256_toplevel": "769a2c2edfa64bb6e44752fb788beecab9f7a698f639236ff56e4aced30eef8a",
+   "sha256_tree": "fa95c2ebda30d0c3cbaa3ba9b983e1e252fd3d2975518f5edf44719fb19c977d",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.07940v1",
+   "toplevel": "main.tex",
+   "bytes": 3175,
+   "sha256_toplevel": "7bfe979dec6a616064d2ad537ec28d17675df2b5f5febccf3676bbdf2650be87",
+   "sha256_tree": "b7b043f157c4d575efee83578044270aa2c824416cc600655d3b93c1b44dbb01",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10048v1",
+   "toplevel": "draft.tex",
+   "bytes": 79701,
+   "sha256_toplevel": "be2243e50cc5ef8867b13c2fbf284d8862fbe7758a0be2ef1326a1c24b512bab",
+   "sha256_tree": "9d4ef8ff87828e12ea7bf218ed8a8d4f4b13b0589c77df7f29572a337b86baf5",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09122v1",
+   "toplevel": "neurips_2025.tex",
+   "bytes": 35268,
+   "sha256_toplevel": "3628c9cef429b59fd7df844593c518b5d2e6806402055e8a970c9a7b1de97a36",
+   "sha256_tree": "59b5c688684d18ab640613e69f09cf9c58f01860784f786cec6f25da63ebce5f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.08520v1",
+   "toplevel": "bare_jrnl_new_sample4.tex",
+   "bytes": 85289,
+   "sha256_toplevel": "128532412687850ec0f48cb6d6572abca9e3d4bc9e7eaeeb5cf8c89293f221e7",
+   "sha256_tree": "9e51e860ba9daa1d5b1e5259f2a33132facb992b6d26f8a0f4d7b849e6a41600",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.01295v1",
+   "toplevel": "LRD_adv.tex",
+   "bytes": 37897,
+   "sha256_toplevel": "44a17ea35b3ad9844d1a2cf491242938154376d16ab4397ed8d39d31c054dc0a",
+   "sha256_tree": "49501bf0baf5b08835449f4450d281dc788decc79051022adb3c7ab3964b282a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10904v1",
+   "toplevel": "main.tex",
+   "bytes": 2075,
+   "sha256_toplevel": "76f5095b50296af2925b6aa5aaaad81e5577a689cd071e576efc43fb8dd0efa4",
+   "sha256_tree": "d122a6b665ef8331cd58eaf7eb349b05f5843d9e90c3bba1b05737cb141ee923",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.03264v1",
+   "toplevel": "Minimum_degree_and_sparse_connected_spanning_subgraphs.tex",
+   "bytes": 42000,
+   "sha256_toplevel": "de1f2004c8f0a1308d4649f1016eefc5206fb0a13636436b7b89b0675bef50d6",
+   "sha256_tree": "5199215bed49979dff94f4fc1bde8d92eb59e3924b3d12aebc5104137151da2f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.08574v1",
+   "toplevel": "templateArxiv.tex",
+   "bytes": 43716,
+   "sha256_toplevel": "7c1ab17d744e7023f51451c443abe5c17001389f065805986d3e7a8b22768daa",
+   "sha256_tree": "7c154d99dfecf4142a1eb6265e7507e53cef8b884c74e6ee3c1ba205af7ec234",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.13733v1",
+   "toplevel": "main.tex",
+   "bytes": 214406,
+   "sha256_toplevel": "a78212d49e25471e88ef5fd43e3384cd1d49d12d28dc2619d9e6fd6d84d906ec",
+   "sha256_tree": "510f4eca9a0f2d23fc7a70c68f04b099ac102bfc71303d01fb73326741149b93",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.01806v1",
+   "toplevel": "main.tex",
+   "bytes": 98734,
+   "sha256_toplevel": "70cdaba4a02a9215b6e3fa05415b811d70f87644c4aa0ffdd3355b6dba060e4f",
+   "sha256_tree": "0e0cf7a255b0e0e8773703c5aa9320ff2b9b0be4b212ac4d18e061ebf1c9090b",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09944v1",
+   "toplevel": "main.tex",
+   "bytes": 17495,
+   "sha256_toplevel": "75f5842c223ef3c25985a9199eef2b98c8e6c16561981948b933c1cec65023f8",
+   "sha256_tree": "a50789a55950dd60195d51d0e54688b5322c88746980d4c23fc267aa57aec28e",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09511v1",
+   "toplevel": "main.tex",
+   "bytes": 60785,
+   "sha256_toplevel": "c6982deb85761b8f5e5b674f16467b847d79dae4281f57b418c411ec0bdc0856",
+   "sha256_tree": "985df7b268a47ce1dbfd47f0bc1f897f38fcd8bb3165aa5f29c9332d90b30e2c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.01565v1",
+   "toplevel": "ictcs_hypercube.tex",
+   "bytes": 27679,
+   "sha256_toplevel": "5167a4cc5691c5be805d92beebf11cc33c9631500f56ec4fc8e939d1b8542f97",
+   "sha256_tree": "1ac34e01d06536a989b762152383fc64c609e400324cac93a1ebea0b132d1400",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.15064v1",
+   "toplevel": "main.tex",
+   "bytes": 67917,
+   "sha256_toplevel": "b63199452f9d29bb04a2926e4246eb30a102b39957162321648e55d2ecc8ffbf",
+   "sha256_tree": "7ee565dc817de518d68e09f2a6f4c330fed7851b054aaa7478d99d555087f885",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.00426v1",
+   "toplevel": "List-square-subcubic-No-C4C5-Final.tex",
+   "bytes": 34729,
+   "sha256_toplevel": "8220c32f19d1ebb4baab6b9c62ace061fdd4c8539934faf407b9357a50f0d3c7",
+   "sha256_tree": "d5a327c7cafda1ea341636d313b4b7185e0a5acc8f048314b171f05a69eb3e5e",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.17471v1",
+   "toplevel": "main_strip.tex",
+   "bytes": 129881,
+   "sha256_toplevel": "625254f45364fdc7e49761fb517022fc4e0681213994491c890dfbb296def23d",
+   "sha256_tree": "d6dce7ac2573e76848c321c9549133f2d4910aab62001ae1bc265defb75cd0ff",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.08271v1",
+   "toplevel": "ph2.tex",
+   "bytes": 80426,
+   "sha256_toplevel": "c5454e11febe3404e7c0f1017fc40fac60d323444dd6474ee67bfcf7d0ce48c5",
+   "sha256_tree": "ef868fe35cfb6e675a50b59fdfd61324f3c037c0603ed337172026c37d96ca79",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05034v1",
+   "toplevel": "main.tex",
+   "bytes": 71844,
+   "sha256_toplevel": "cf3a902b060940e53226c303e22b511b7e29079ec6de480324e0bad82df7b64f",
+   "sha256_tree": "2f6b7ae68892297d551d78e0ebc0b880e19d6ddf6495745debde118adc7781ba",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.20940v1",
+   "toplevel": "main.tex",
+   "bytes": 115423,
+   "sha256_toplevel": "df6b61f58b5735fde672e5ef62841c639ad7c03db70949dd0d4ab3ea69e12a17",
+   "sha256_tree": "3c648af0da94e000dc15d89218905c36d176876c0e90e03b55c302a75c4af4c2",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.01608v1",
+   "toplevel": "main.tex",
+   "bytes": 36551,
+   "sha256_toplevel": "6a0094406f77db89b88ee104bf981282cf8f213da3511203591ba06cc443abff",
+   "sha256_tree": "26c4f9dc70cffba5417efba5c7673d7ffef9758a1335dde53046b2aadea2191f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09131v1",
+   "toplevel": "main.tex",
+   "bytes": 8342,
+   "sha256_toplevel": "cf00ec9c467d13a39918821031b4b0429dd0101474ffc834994351b074dade78",
+   "sha256_tree": "b5c6e8dd8a0421a6277d7175f39e2a0454b526fbe601efafb9062541497e93f0",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.04361v1",
+   "toplevel": "ECKansa.tex",
+   "bytes": 78426,
+   "sha256_toplevel": "c85c7a8d4e9de999402ebf8f4b1b605192177b57115ea11890416b800b7087e8",
+   "sha256_tree": "78a772436311bd3aa8ee6c2e22b7cb0920893640f95f3dc1e28a73a278653035",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.07828v1",
+   "toplevel": "main.tex",
+   "bytes": 35187,
+   "sha256_toplevel": "80ee42cf970ab17463ca938b1be21d0b3951234d65c31a21eaf5ccfacae6febc",
+   "sha256_tree": "c0b057200f4986f7c8b175c30e398e1b9c5b7babebf68cda4f9db11ddc696ad0",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.02377v1",
+   "toplevel": "neurips_2025.tex",
+   "bytes": 56843,
+   "sha256_toplevel": "0e685ff4ec6f33ba05cc2fe431424d68a4bd4f9d882603138488b6a192beddd8",
+   "sha256_tree": "8c6c196a032bc4e608c286cac1add4fec912991fc651f21c4c230fe78249b80c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23950v3",
+   "toplevel": "HigherDimv3A.tex",
+   "bytes": 59478,
+   "sha256_toplevel": "25a2bfc7a9e61dc1acde21e31304ff847854591c0102331928aa20bf233e53d3",
+   "sha256_tree": "9dfff73733b71872bfad57e2ca389d1238cd58818ae9fa98f8e93edc117b0f9d",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.12451v1",
+   "toplevel": "main.tex",
+   "bytes": 66718,
+   "sha256_toplevel": "e7019cf68410b166c436e99d2a5fc3a20126e41b6e80c6ba01a36e41f852bd78",
+   "sha256_tree": "0f574e053c99f70d7adf8cf3d03253315227fcc0d5ae2f56bf9194cce50e842f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.07860v1",
+   "toplevel": "main.tex",
+   "bytes": 90049,
+   "sha256_toplevel": "77375a81fc7e96e57e6b46fb0a600df4340aa623405680cf487e5c2f54d4dc5f",
+   "sha256_tree": "2d64123c14665af60b39fad58c04ae3f67d53471dc77278bb3a6aa50a4e1e4f0",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05905v2",
+   "toplevel": "Congruence_Siegel_5.tex",
+   "bytes": 76458,
+   "sha256_toplevel": "ad48b08893c32378684ae4141bcd0baf197c3fbb95f00095859cf34e885ba546",
+   "sha256_tree": "b3199d19c771addaaf5e9a4c107dad8bfc0691340be1256eb5710628364fe637",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09181v1",
+   "toplevel": "ABL-I-062625-ArXiv.tex",
+   "bytes": 89061,
+   "sha256_toplevel": "28f070b96abbffc5a95625dc88ebd08790cb94434f5fd647aff29fa022561794",
+   "sha256_tree": "d95fd957ea08ecf24bf4f258c15bf0ea75a92566a68d74a228edf89861a0c2df",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23354v1",
+   "toplevel": "partitiondiamonds.tex",
+   "bytes": 22574,
+   "sha256_toplevel": "0de97825fe1cae4a592621420b6edebd7660e70ee3747a46c86abca3c9a6fcb0",
+   "sha256_tree": "fe4de6124b8307b88bfabb1ee2717f280ca2d7f292ce05c847009492ad1dbe3e",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10544v1",
+   "toplevel": "paper.tex",
+   "bytes": 76810,
+   "sha256_toplevel": "05483d903208a673c9e6baa91d157c29819fce5a89d67d68889e1da47b229524",
+   "sha256_tree": "837ef6a39094bcbe90857a2396b4bf83c002e843403174326d51aa822b9c8ba6",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10913v1",
+   "toplevel": "main-camera-ready.tex",
+   "bytes": 63896,
+   "sha256_toplevel": "8fba5ea6c323f5fa6ee58ece435a23ae1fd97d68766a045f06c98c9204ded5a4",
+   "sha256_tree": "77ba5835c44b303b0b1edbac82ed0d2adcb8b9db10b2143051b0811171f1cb78",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.16457v1",
+   "toplevel": "main.tex",
+   "bytes": 4823,
+   "sha256_toplevel": "03c152ad22e945134ac279171ab4a8a666045708f9c20db7c789f145099629ac",
+   "sha256_tree": "b2f6e99b3548c3860c8119b1abbf61263c9653dc4d49ac685c110a944de3b392",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.00073v1",
+   "toplevel": "main.tex",
+   "bytes": 45365,
+   "sha256_toplevel": "025dc6414d2d28c364159ab02cfc115af747874c8e65668eebc5a9543ee2a187",
+   "sha256_tree": "04f1be4c9a4d75225e1ce84c17dbbe7cd5ce20a795f00286a3ee3e2b88c70db5",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.06390v2",
+   "toplevel": "DMcompletepartiteSubmitted.tex",
+   "bytes": 16682,
+   "sha256_toplevel": "60ec1d29086b5bfcc9f72f5937a3c9928d224a6cbb1e99529bc552762d74af63",
+   "sha256_tree": "ed90bbf5daf661989bd7afc7b93da745b4d4a9116daad23ce52f44c4207e5acb",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08757v1",
+   "toplevel": "StrongExistence.tex",
+   "bytes": 124078,
+   "sha256_toplevel": "fa2a4e07c5437f15b816f09b97382765786789b0711ca6ea7661afa11a43d2f1",
+   "sha256_tree": "eb8acb7ce4e4df0d31eca80d9327cb9e2990c7badf29a8d6687b04908f9cd70a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.04402v1",
+   "toplevel": "On_Minimal_Excludant_over_Overpartitions.tex",
+   "bytes": 30356,
+   "sha256_toplevel": "a2475c1902d8930984e695bb661e9e00ce0c3703b499e3e3004428493171f2bf",
+   "sha256_tree": "81251341db729b46673ac337a1d93c7f38172ef30378e8c3c8d720a0a61afbcc",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08347v1",
+   "toplevel": "PCFquadsPrePer07.02.25.tex",
+   "bytes": 146477,
+   "sha256_toplevel": "50a37d4bcb9fd0f8171ef6ffc6e4cc93c0bca81d3adafe1f2f768ea952615808",
+   "sha256_tree": "3a6f64e2db434f742936d88d118a3ad4a666a023e644bd80d4ae8e863aa74949",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08150v1",
+   "toplevel": "main.tex",
+   "bytes": 132863,
+   "sha256_toplevel": "48785f3583451e471dcbe18227ccd72ce1fa0814fe99dcf073dd47651fa31c0a",
+   "sha256_tree": "e674adf3f444cb97302a0c38e526f645b4e32f9f1f4cddd7335119b1ab97ef48",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.22826v1",
+   "toplevel": "arXiv.tex",
+   "bytes": 38270,
+   "sha256_toplevel": "59c9523db36ed330327529d168ba24f032f27780f986a13607919c7b6556aca5",
+   "sha256_tree": "dad2521387a67b5003f4066b885d481bf07cb574f5fa4f3dde7e8c176fafb392",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05725v1",
+   "toplevel": "2025_04_final-v2.tex",
+   "bytes": 111671,
+   "sha256_toplevel": "c2d8ccdfbf979a5211ff73539b2175ed1ae56927493c44d1c63c5d950399a278",
+   "sha256_tree": "257991b9c6037d85c162771fddeb180812d90fafc5c0e4558e33ffff001a259a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08692v1",
+   "toplevel": "Higher-Order-Survey.tex",
+   "bytes": 133637,
+   "sha256_toplevel": "5063193ebd86e9ff17f052f3022a3ec4bf500c0f4e75a155c86b52202823f0e4",
+   "sha256_tree": "3829960dfa1e0500f17be6ad36c0f815766ae4a68398ffdd729c4534195578c1",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09480v1",
+   "toplevel": "sn-article.tex",
+   "bytes": 146856,
+   "sha256_toplevel": "7df947d0a88b7c6600d54d30b215e4fadf16613e3a4e231bb952f2377d6b6b9a",
+   "sha256_tree": "dd1cdea3713b045f6eadb2b981c4d304cd3070095b525862452ab34288e00f36",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10088v1",
+   "toplevel": "sample-sigconf.tex",
+   "bytes": 94249,
+   "sha256_toplevel": "8692f780d4a1c5585f7c2b63b78e3432014f92ee383b152f00b469ac03f1f532",
+   "sha256_tree": "1ab82db490ad1192e7f62f745b38ed26e09e9443f94315bfff64269078cb0a9d",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08114v1",
+   "toplevel": "main.tex",
+   "bytes": 29561,
+   "sha256_toplevel": "396fb4a303504d17bddc9e4007426c86d1b3c37f9d0692b0c34c5613667c0357",
+   "sha256_tree": "b4dd8d2b3fc63a88385d89677ec1c8c18a6a83b2f678471b73797b14b9765f84",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.06268v1",
+   "toplevel": "collectivist-ai.tex",
+   "bytes": 47989,
+   "sha256_toplevel": "421aa8fe21ca344e3e352626fc5f38f0e313a52582c60daffa44182a4d00dcd0",
+   "sha256_tree": "d89f6ab607ed52515db1ebd50b8588992f56a24df817c9edd83c953c32f5d6c9",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.17796v1",
+   "toplevel": "00_main.tex",
+   "bytes": 1711,
+   "sha256_toplevel": "84793edff586ac6455a2a4751737341ee3f3b81e4f1b8fcf9b75add5da4d0bf6",
+   "sha256_tree": "7e2a9fd2474b8f54ab82a38e2167dd2c70b65fa96fbff7d9ecb70105c513e7a4",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.14152v1",
+   "toplevel": "manuscript.tex",
+   "bytes": 79432,
+   "sha256_toplevel": "4a6d3f98f810f3be83d10bc5fe823deabc2637569a9b555398d5c73f83e66cbb",
+   "sha256_tree": "766913bafed9a467e43183afc329242186b6099ba0646e6a57efebbc675d3cd7",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.18356v1",
+   "toplevel": "main.tex",
+   "bytes": 98600,
+   "sha256_toplevel": "e8a7bb6f248f9359646868cb3dd43348c7ee20d129ba56e56dfb5a2110305fa6",
+   "sha256_tree": "80b61e90fc0a7cadf5015f232d4904ba198ff5335c0bbe34bdb7dbae63bd07db",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.19726v1",
+   "toplevel": "main_v2.tex",
+   "bytes": 56929,
+   "sha256_toplevel": "264aacb34ffeb344eba6b154476415e1b5cdeca089ff25193779399c6b450d49",
+   "sha256_tree": "9059128ea364e241edf53b8632eba53ef215f8112d84d512204a4914458c7545",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10626v1",
+   "toplevel": "soccer.tex",
+   "bytes": 64161,
+   "sha256_toplevel": "3ca82a7979b937fddd3695ff405005e5d3d360a31d5ebdd7aa556f2f1564e302",
+   "sha256_tree": "54a004566a7800d004d45feeacde693399d23efa5d577455219d7ef414a104c0",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05037v1",
+   "toplevel": "Rev_Blockings.tex",
+   "bytes": 50857,
+   "sha256_toplevel": "10646ed24d46ca855496874d5f3c30e5b5539e9e8676db8170b381c2d5c3aa19",
+   "sha256_tree": "c0cc38ac4020824fb2f25cf559476272ab84dade6ed1f27db8dad9fbd82ed2c4",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.03828v1",
+   "toplevel": "main.tex",
+   "bytes": 1541,
+   "sha256_toplevel": "6d6c3e29ec2d71eb95f6875ddc369c456800ad9543052e2b0762ebb32454c208",
+   "sha256_tree": "458f16cf33ef16a2d5e1640bf6a77fbc6a6b6e6e7e9936b93d84d54773730692",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08956v1",
+   "toplevel": "arxiv_main.tex",
+   "bytes": 130694,
+   "sha256_toplevel": "22763141e4a737b41a71ac966d534cf77858253bf7fea96a62688f08110586c9",
+   "sha256_tree": "97214a6fe4d7c21ce4c8e3bf98bdc346589c607af160c0fea1c9b93ebdd46976",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05806v2",
+   "toplevel": "main.tex",
+   "bytes": 56216,
+   "sha256_toplevel": "d9e05826e334ab2775b0c7923cf5d5a8ebe2dff5c46f06ec129a9ea155d2baa9",
+   "sha256_tree": "7ba8d725d15c557d1ee0323c80473fe47cd57a36b82a3be3babc9fc7d0866d20",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09881v1",
+   "toplevel": "main.tex",
+   "bytes": 69686,
+   "sha256_toplevel": "bc91f556d4898f6bdb67d118e1ac0afa5d1951d84a96b58ba61a6a9bf698b2f6",
+   "sha256_tree": "22d9db21277736f88ec83c67538a51e8c9640e3afccb3f440888a7bf3be6ab76",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09873v1",
+   "toplevel": "main.tex",
+   "bytes": 60453,
+   "sha256_toplevel": "8a80b0e6c45363eafaa6010b873ad38c00337c9521accfd24edaad75664bea90",
+   "sha256_tree": "24f62008d3e28d9fcaaa40a557ff9f9b82fdfef91875732c6c845ffffd03a366",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08441v1",
+   "toplevel": "main.tex",
+   "bytes": 34505,
+   "sha256_toplevel": "8b0c50af0d39a783e01a1160c5f25f0ecc557d16b8bb66d0d54502d08c390da4",
+   "sha256_tree": "8aec968553761f08d1280456feb95f4cb031ddb5ce54b87e930460263a7a504f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.21851v1",
+   "toplevel": "root.tex",
+   "bytes": 30463,
+   "sha256_toplevel": "fd42678be4ff5fdd3e0bbf98500731552cd7a1eb8bb526489c05614c6d045d51",
+   "sha256_tree": "8b22dcfbd5f26ced6f45155f9d75cd01b9be0aff6048bddd4e7c7fff955f6268",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11207v1",
+   "toplevel": "max.curves.tex",
+   "bytes": 44539,
+   "sha256_toplevel": "3efe8b9bcd0af36687917f1e0c9775036245f95417c3800260e861d306c385c9",
+   "sha256_tree": "0b5d66325d9776d497d83fa3865f136ee8e7d41ecbe10d11ba8a330613c17222",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.08309v1",
+   "toplevel": "acl_latex.tex",
+   "bytes": 56362,
+   "sha256_toplevel": "c0ca8dca829c34f40313f6371cd58071042654f615c7372dab037ec496297db0",
+   "sha256_tree": "d32363048c3f357a0d789c17cc3e4db30ffb82f9569b91e147e9d1a470cc3362",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.17549v1",
+   "toplevel": "arxive.tex",
+   "bytes": 38572,
+   "sha256_toplevel": "4cc3a6b2a6a4baea26589ca8ba11889f4b2133d9d53a2eacefdde9cac6eeb028",
+   "sha256_tree": "4449d6a37089bd8c5376e26d8e2b7a632e5f3d3104d9b5de338ceb08a915ccc7",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.11228v1",
+   "toplevel": "main.tex",
+   "bytes": 5500,
+   "sha256_toplevel": "47306a436088d3d268df18afc1348f97023a5b2da7b7fb6de9059d83a42f81db",
+   "sha256_tree": "79ca758ab7f14ba78bb73750141fe6e10494c9554430bdebc8df747ff9305e68",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.18332v1",
+   "toplevel": "main.tex",
+   "bytes": 66903,
+   "sha256_toplevel": "0354bb6cbe7137c569d6b2a3fc148097666f0c7c860270ac014b27b2cfa2a7ea",
+   "sha256_tree": "c70c2e2d0cfa200214d5cdba0482952436d6cc0b5632b2d341ac0148c70900a1",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.22615v2",
+   "toplevel": "ex_article.tex",
+   "bytes": 74239,
+   "sha256_toplevel": "5e7c49fb821f437f35c23ccf4ff02a5fd2402b3201a2185dd79888c2f9e40f4e",
+   "sha256_tree": "daecb9261e3e2c71200ef79d3a6ba736296e2e0ca4f3faa4e6f03224791d77be",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.05027v1",
+   "toplevel": "growth_ggcd.tex",
+   "bytes": 88342,
+   "sha256_toplevel": "2cdfbb7d806c1259ba50734c1c2d08cd80fb1a8cc8d39448112f09eb2f75473a",
+   "sha256_tree": "4b24393a42dc4025f8aa7f31c0c77610613468318227c58e161aba51f688257a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.06169v1",
+   "toplevel": "main.tex",
+   "bytes": 78869,
+   "sha256_toplevel": "0cb410c734cbd1a24030388e7a64151f9421d00fccd60c0bcd8c0052e0644117",
+   "sha256_tree": "e81302491cc0df423b90a396f6f889cc39ad0d3adf29c298df72b5fd41d7b0fe",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.17874v2",
+   "toplevel": "main.tex",
+   "bytes": 4164,
+   "sha256_toplevel": "88e603498c5c3b0b2596c2f9440298b438de2da2a4627cba02cde1eb7a9c16f5",
+   "sha256_tree": "9ed2e18482b251b748e1e91e0c857fd16963c71b62ca98a08a0b832c9a8721dd",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.09304v1",
+   "toplevel": "paper.tex",
+   "bytes": 98192,
+   "sha256_toplevel": "8248be7c83c86f1459025e148d9cb9a70f275a1047de79415845c9ed13e79ab6",
+   "sha256_tree": "ca4af8452554d491c8de6c75df556d283abe70601d536549c8f0e29ed749380c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10714v1",
+   "toplevel": "ml_param.tex",
+   "bytes": 62994,
+   "sha256_toplevel": "0a18ad6f06cbd630278184582df256ff586493ad43266020ab8bb78f6624c689",
+   "sha256_tree": "d3e0570396c07b1cfbda7830f7782809f38f91170ffb1da92cbb076ced9fdccc",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09034v1",
+   "toplevel": "apssamp.tex",
+   "bytes": 70254,
+   "sha256_toplevel": "3680322de1d8a54c2a3ff560841807580062acf8d549c1d5eb265583df736605",
+   "sha256_tree": "36755e1036511ebc6015d962b22cc7ea95f163d0cd3d2df1f07599cb276fd1f5",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.04572v1",
+   "toplevel": "KG.tex",
+   "bytes": 62623,
+   "sha256_toplevel": "5e86e28085a0b18a489c3958efdf781d33377e4558adf94dbeba92bab511261c",
+   "sha256_tree": "e94cf18513ec2bb46fab2ff5c9e43d6fa532e11fc04f22d1b70efeb717b71b1f",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.22292v1",
+   "toplevel": "cas_sc_template.tex",
+   "bytes": 57400,
+   "sha256_toplevel": "667368578579855fbfa8ac3c301ea99a9269acde9b5d3660418be021ab4ab98f",
+   "sha256_tree": "17932d68d97fc7103410bbaceb2d73a6c6116426bd8bd0fcb56436f0a5a945ae",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09851v1",
+   "toplevel": "Manuscript.tex",
+   "bytes": 29712,
+   "sha256_toplevel": "91375adb1aea6691e38402a49949d7891f19879a6430dd2b8f683d20e7a5579b",
+   "sha256_tree": "f2893a0edcced08f6cd555432ef830b08903fc86bcf9d75b925b28afdf0efb86",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.15165v1",
+   "toplevel": "main.tex",
+   "bytes": 56595,
+   "sha256_toplevel": "3e18b0fa7220ea0345293ccd803f7bbdcdf8fc38b5a0913097e4ffd1cbe86e5e",
+   "sha256_tree": "f622bb22c17ca301f98641bba1e9f60fc295d647ad545304979a08c4fdf31970",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.07812v1",
+   "toplevel": "main.tex",
+   "bytes": 87736,
+   "sha256_toplevel": "3582ccd90e8baae67db6addb3f1c8615da67eb9643e2e8e0cbc8d781e481011a",
+   "sha256_tree": "8f4a104e762ba320afde92ed8116d0e1197a8012f4760507140094e1a153ca89",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.16750v1",
+   "toplevel": "autoconv.tex",
+   "bytes": 34924,
+   "sha256_toplevel": "72788c49227308c8e1d36db9ea5eefdb1605533f6c05f130914e26a1c1a22baf",
+   "sha256_tree": "d6db2d6a9fe69a192dce566a2643ef50014e022ee7b9143d2d4ea4f521c88740",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.05441v1",
+   "toplevel": "main.tex",
+   "bytes": 64587,
+   "sha256_toplevel": "9ec439d1568dc5f1d59c6fa5021e3b9abc98bc79bd8ad12592000220df8b93c7",
+   "sha256_tree": "812e33b5ea715a2412686df67f1d36cbd6834bfbcf180ff608e14917a176f835",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.18187v1",
+   "toplevel": "main.tex",
+   "bytes": 14275,
+   "sha256_toplevel": "4725d032f6c54115acfa912d013e64884c4e21096b5a934798751952b0517fda",
+   "sha256_tree": "781b51af5af9d5c055ee4d814111b59b1addf2d7429dbf786c659b82fda599b7",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.08913v1",
+   "toplevel": "icml_2025.tex",
+   "bytes": 125889,
+   "sha256_toplevel": "ad1b8931c711238bbc91777aa53f16476c6c030cd0ff9a49bf791b62cac95742",
+   "sha256_tree": "80a15e6b00b43785e2da137e8606ec096a96b355af13e747197bc73b4f24a5f5",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.02248v1",
+   "toplevel": "version4.tex",
+   "bytes": 116632,
+   "sha256_toplevel": "3417f77e77c5da9953c894b1a7089f85af3686676ad1e6f99fdc4bc6e037f025",
+   "sha256_tree": "69f0ea4895bd20211fad80be3b3dd84cba62abd5e4e4973f2b79f70f53764fc3",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09093v1",
+   "toplevel": "arxiv.tex",
+   "bytes": 140501,
+   "sha256_toplevel": "570a14f9a7fcd6d3280c3a2946cce3345c3b1d697f34b66d5e1cdbbf6dfab431",
+   "sha256_tree": "c9c9c55a6daf29eacb2a8a789cee19c4336fb3e47c85e175c008f1d96c7f1c08",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.04254v1",
+   "toplevel": "main.tex",
+   "bytes": 26715,
+   "sha256_toplevel": "3a94da3496739b58c2faacfa8b837ed94bf1dbf3aa850b7f6904c0edde29fe1c",
+   "sha256_tree": "ca2479ebad1d3542887723f447871d62b0353e63e20bbe5aee680a9dd079ace4",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10752v1",
+   "toplevel": "bec-scalar-arxiv-v5.tex",
+   "bytes": 107437,
+   "sha256_toplevel": "0a69917b61c80feb77ed02c62a9018a408eae05b46ef8a303e82b8ffcfda0413",
+   "sha256_tree": "3c38cc4e9da7b50536722fcd5ff631dc66f3d3eed862f1c92db0ec58aa58dd1a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.08494v1",
+   "toplevel": "top.tex",
+   "bytes": 3280,
+   "sha256_toplevel": "05cce514613a3e4fba3d04d2a19b1f2927bebd73567a31b8d1ed3cd49f82c55c",
+   "sha256_tree": "9e2900bb9e8d0324213fd2c295db5d28c16db21e6028e68b31b44ab67df17952",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.13554v1",
+   "toplevel": "preprint.tex",
+   "bytes": 51778,
+   "sha256_toplevel": "de42ba85b537525e87ccb6470e7796ce3d0f7c7c1a65440645cf1325d117241f",
+   "sha256_tree": "ee3fcd049a5845ca1a67c8a2adf72656a8083572e12c6492051fd80d4e9031da",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10805v1",
+   "toplevel": "main_apj.tex",
+   "bytes": 68219,
+   "sha256_toplevel": "59b930702f5d300e678efa702942f1b2d9320e84c1017e389f4f7f088cc9df66",
+   "sha256_tree": "856c676404f67e79e32ac19d9d0435ec43d79907080ec77a0ba02cc1c2d5b9db",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.07222v1",
+   "toplevel": "neurips_2025.tex",
+   "bytes": 113649,
+   "sha256_toplevel": "a3ef39966842be8b152ded9eeaf15b5321f3a5fd60cd0d4f1eac27842f5db96f",
+   "sha256_tree": "b5dcd3766bee562d45ff6e64d14f0d4ce97ea85afce692aa2f9a665a1bf8645e",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.20206v2",
+   "toplevel": "main.tex",
+   "bytes": 73424,
+   "sha256_toplevel": "8d6a33ca2477d26321804cc4270618673c6b8037f3c11f98a1cff732b6f01336",
+   "sha256_tree": "5dcb2b902e1cc2cd160cb9955178fe9b41ab10cfea83b3104c85656eea079de4",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.11262v1",
+   "toplevel": "LyAm.tex",
+   "bytes": 45012,
+   "sha256_toplevel": "28865a37d8eb1b8a391f60da01dec581fd9a8d57e8b81ee08945ea738280c0dd",
+   "sha256_tree": "3baa6f8cbd11cce1dd1ae59684a23d0ee4c7c85ba4bc80277b9675fcf1fe7675",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10037v1",
+   "toplevel": "main.tex",
+   "bytes": 80289,
+   "sha256_toplevel": "f7ccb7b27c008af294517f7cf4edfdcc5434c411a3cce5d8f634b736f4983d29",
+   "sha256_tree": "46d764cc9a9344b46720455df9137a2d4bbbf30d10b13c0cc4416a0d2ee3a87e",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.08205v1",
+   "toplevel": "KenTMI2025_arxiv.tex",
+   "bytes": 89847,
+   "sha256_toplevel": "18bf1b362aedef3c25161021d5b83e51af737bcc58d469272224be2ed3c3d653",
+   "sha256_tree": "d0f3b60359f90ffcf075458d2d3ed66aa5aa51c1d5aa9dce4cbed279e53afe06",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.09514v1",
+   "toplevel": "example_paper.tex",
+   "bytes": 6795,
+   "sha256_toplevel": "019aadeb20430cc957c5a765dfff545e2332bd8c12f77f1c804218825b1bf259",
+   "sha256_tree": "8484975891bda031182a16fa219407e0b7f3e036748946cf1f8ba9e74adb3c55",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.18058v1",
+   "toplevel": "paper_corrosion.tex",
+   "bytes": 124996,
+   "sha256_toplevel": "e34d8cee8ed1dcffa34bb80ae5e488fb3e5011846cd31a21a2865c586071a2e2",
+   "sha256_tree": "ceabc3d770d8b90c5053e81fe6f812e0e527678364491cf0cdd116bbe360ce5c",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.14455v1",
+   "toplevel": "nry_unified.tex",
+   "bytes": 270433,
+   "sha256_toplevel": "397bf82699b82564f5bb3aed28564b2a968313c05d1da8e67b8999642c2c7618",
+   "sha256_tree": "fc8cf734fdaf9fab9cc57b2fb8155b6962b9976bc2e3ee4cfc15e521d4dc2d66",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.17092v1",
+   "toplevel": "paper.tex",
+   "bytes": 49648,
+   "sha256_toplevel": "8746a023a15eeec760db4ec23847f9d9d6807a51215cd13eb506db9f10999a1f",
+   "sha256_tree": "d6a781ba987d829a2f89010250eb56c1617dd0a7b0346a25cf10cc7d684af24a",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2506.16045v1",
+   "toplevel": "arxiv_sgn_article.tex",
+   "bytes": 2251,
+   "sha256_toplevel": "37119df9155d8734d367e2e6ed3a190e9cd425711b9b35423e859157641cd2fe",
+   "sha256_tree": "6edd9ab0f60a40c0ca8119172e89d47af9ab9e98785a3244703571644f059a47",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.10778v1",
+   "toplevel": "main.tex",
+   "bytes": 3881,
+   "sha256_toplevel": "392a608e332dacb06a81d7e635458d2473650e489a8ed96b7c5f3a3b83304804",
+   "sha256_tree": "060ecd6369f9dda8ff7cf1e855f0c7a441105998e60c6e87f2d136f9818eac22",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.01891v1",
+   "toplevel": "main.tex",
+   "bytes": 105544,
+   "sha256_toplevel": "7d1692ea4f9a211343403a7eee7edda2bd52adb0900bbe7734a57713ea490cdb",
+   "sha256_tree": "704ead29584daca8061940a9f81a0634569db147609a840a16fe3003af9fe0dd",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2506.23033v1",
+   "toplevel": "main.tex",
+   "bytes": 45302,
+   "sha256_toplevel": "b904f4db15f20e55414589587436468a3d9a47c94dfa0bb334bbf9863779b3f1",
+   "sha256_tree": "e028dcbf94ce5accd999e2222e4087027bcf1612473a3fd87766e2dff4aad261",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  },
+  {
+   "arxiv_id": "2507.10050v1",
+   "toplevel": "APS-arXiv.tex",
+   "bytes": 49098,
+   "sha256_toplevel": "305968650ac464913a41b6109eff7595e60981eb18a3b1d360011e7bc29c7f68",
+   "sha256_tree": "75f3635cb649a43b5f96642c5b87222d8cad4c5bf43b983b6e330259a05233c9",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": null
+  },
+  {
+   "arxiv_id": "2507.03163v1",
+   "toplevel": "planar3colouring.tex",
+   "bytes": 68142,
+   "sha256_toplevel": "a3134c1b67abf42597759f6f700aa3061c716a1262d991947e24dc1993461a62",
+   "sha256_tree": "1a1275aa13e88f8957ac6706aa91555729f057d3a9c72809171bbe9bc7117cee",
+   "declared_compiler": "pdflatex",
+   "declared_texlive": 2023
+  }
+ ]
+}

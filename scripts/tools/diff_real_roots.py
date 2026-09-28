@@ -363,7 +363,7 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
 
 
 def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
-                     timeout: int) -> int:
+                     timeout: int, results_name: str = "results.json") -> int:
     """Recompute ONLY the CLI verdict, reusing the recorded pdflatex results.
 
     A full run recompiles 200 papers with pdflatex and takes ~20 minutes. That
@@ -383,9 +383,17 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
     binary, so it can be carried forward. The CLI verdict cannot, so it is
     recomputed. If either condition fails this refuses and tells you to run the
     full sweep.
+
+    `results_name` picks the artefact; a sample drawn with --offset has its
+    own manifest, named the way --record names it (results_sample3.json ->
+    manifest_sample3.json). Sample 3 is the sealed VIRGIN sample (OPEN-119):
+    refreshing its CLI side is a re-measurement, taken only after a change
+    was validated on other documents.
     """
-    results_path = outdir / "results.json"
-    manifest_path = outdir / "manifest.json"
+    results_path = outdir / results_name
+    manifest_path = outdir / (
+        "manifest.json" if results_name == "results.json"
+        else results_name.replace("results", "manifest", 1))
     if not results_path.is_file() or not manifest_path.is_file():
         return die(2, "no recorded results to refresh — run a full sweep first")
     res = json.loads(results_path.read_text())
@@ -876,7 +884,8 @@ def main() -> int:  # noqa: C901
         return die(2, "--rebaseline-oracle needs --repass --repass-scope all")
 
     if ns.refresh_cli:
-        return refresh_cli_only(repo, root, outdir, banner, ns.timeout)
+        return refresh_cli_only(repo, root, outdir, banner, ns.timeout,
+                                results_name=ns.results)
 
     frame = build_frame(root)
     if len(frame) < ns.offset + ns.n:

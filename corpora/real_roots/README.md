@@ -88,6 +88,35 @@ not yet record which side each failure falls on. Until it does, read
 - This is one snapshot of arXiv, pdflatex-only. It is the first honest reading
   of the metric; it is **not** a representative sample of research LaTeX.
 
+## The three samples, and which one is virgin
+
+| sample | frame ranks (0-indexed offset) | files | status |
+|---|---|---|---|
+| 1 | 0-199 | `results.json`, `manifest.json`, `proven_coverage_sample1.json` | **tuned**: every fix of the #565-#572 run was measured on it |
+| 2 | 200-399 | `results_sample2.json`, `proven_coverage_sample2.json`, `strict_boundary_sample2.json` | untuned for the heuristic tier, **design-seen** since ADR-012 |
+| 3 | 720-919 | `results_sample3.json`, `manifest_sample3.json`, `proven_coverage_sample3.json`, `strict_boundary_sample3.json` | **VIRGIN, sealed for measurement** (OPEN-119) |
+
+Offsets 400-719 are the OPEN-110 fixer window, which is why sample 3 starts at
+720 (OPEN-118). Sample 3 was drawn and graded once, at a `main` commit, under
+the pinned image, with
+
+```
+python3 scripts/tools/diff_real_roots.py --repo . --corpus-root $LP_REAL_CORPUS \
+    --offset 720 --n 200 --results results_sample3.json --record --timeout 600
+```
+
+and `--record` refuses to overwrite either file, so it cannot be re-drawn by
+accident. **Sealed means:** no individual failure on it is inspected beyond
+checking that the harness graded real pdflatex outcomes; nothing is fixed,
+tuned or triaged on it; its boundary scan is not used to rank constructs or
+packages. A change is validated on other documents first, and only then is the
+CLI side re-measured here (`--refresh-cli --results results_sample3.json`,
+which carries the pdflatex grades forward after asserting the corpus and the
+oracle are unchanged). Ten of its ids were already named in the repo by
+whole-corpus sweeps before the draw; `gen_project_state.py` publishes the
+reading with and without them. The numbers live in the generated block of
+`docs/v27/PROJECT_STATE.md`, never here.
+
 ## Exit codes
 
 Identical in meaning to `diff_compile_check.sh`, deliberately:

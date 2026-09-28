@@ -437,6 +437,18 @@ def restrand_ungraded_row(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def drop_one_passes_count(text: str) -> str:
+    """OPEN-119. Strip `pdflatex_passes` from one row of a results artefact
+    whose protocol claims the multi-pass protocol wholesale (no APPLIED-TO
+    clause). The claim-provenance check (C-28) must see that the published
+    protocol no longer describes every row. It was written for results.json
+    alone; this proves the sample-3 arm of the loop is reached."""
+    d = json.loads(text)
+    row = next(r for r in d["docs"] if r.get("pdflatex_passes"))
+    del row["pdflatex_passes"]
+    return json.dumps(d, indent=1) + "\n"
+
+
 def drift_baseline_split(text: str) -> str:
     """C-43. Push baseline.error_halt off the live fixture split.
 
@@ -1023,6 +1035,13 @@ REGISTRY = [
                      r"starts a TeX engine directly",
                      old="        rc, timed_out = get_oracle().run_once(pathlib.Path(work), top, env, 180)\n",
                      new="        E = {\"tex\": \"pdflatex\"}\n        rc, timed_out = subprocess.run([E[\"tex\"], top]).returncode, False\n"),
+            # OPEN-119: the virgin sample is a graded artefact like any other;
+            # its frame manifest losing the image is a host grade again.
+            Mutation("the virgin sample's manifest stops naming the pinned image",
+                     "corpora/real_roots/manifest_sample3.json",
+                     r"manifest_sample3\.json: graded by .*not the pinned image",
+                     old='"image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b"',
+                     new='"image": null'),
             Mutation("an engine split by implicit string concatenation",
                      "scripts/tools/ablate_fix_classes.py",
                      r"starts a TeX engine directly",
@@ -1267,6 +1286,22 @@ REGISTRY = [
                      "corpora/real_roots/results.json",
                      r"but its recorded outcome says it COMPILES",
                      transform=restrand_ungraded_row),
+            # OPEN-119: the three checks above must also watch sample 3, the
+            # virgin sample. Each regex names results_sample3 so a finding
+            # about another artefact cannot supply a false kill.
+            Mutation("virgin-sample provenance unresolvable (OPEN-119)",
+                     "corpora/real_roots/results_sample3.json",
+                     r"results_sample3\.json.{0,200}cannot be resolved in this clone",
+                     transform=prov_unresolvable_sha),
+            Mutation("virgin-sample row re-stranded while it compiles (OPEN-119)",
+                     "corpora/real_roots/results_sample3.json",
+                     r"results_sample3\.json: \S+ is 'ungraded-infra' but its "
+                     r"recorded outcome says it COMPILES",
+                     transform=restrand_ungraded_row),
+            Mutation("virgin-sample protocol claim outruns its rows (OPEN-119)",
+                     "corpora/real_roots/results_sample3.json",
+                     r"results_sample3\.json protocol claims multi-pass wholesale",
+                     transform=drop_one_passes_count),
         ]),
     GateTest(
         "check_unused_hypotheses", [PY, f"{TOOLS}/check_unused_hypotheses.py"],
@@ -1338,8 +1373,10 @@ REGISTRY = [
                      r"Python gate silent-except: FAIL: "
                      r"scripts/tools/check_project_state\.py:\d+: broad "
                      r"`except Exception` produces a fallback and continues",
+                     # Re-anchored 2026-09-27 (OPEN-119): the read now loops
+                     # over results.json and results_sample3.json.
                      old='        except (json.JSONDecodeError, OSError) as exc:\n'
-                         '            findings.append(f"corpora/real_roots/results.json is unreadable: {exc}")\n'
+                         '            findings.append(f"corpora/real_roots/{rr.name} is unreadable: {exc}")\n'
                          '            sha, rr_data = "unreadable", None\n',
                      new='        except Exception:  # noqa: BLE001\n'
                          '            sha, rr_data = None, None\n'),

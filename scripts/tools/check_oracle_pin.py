@@ -85,6 +85,10 @@ GRADED = (
     ("corpora/real_roots/results.json", ("oracle",)),
     ("corpora/real_roots/manifest.json", ("oracle",)),
     ("corpora/real_roots/results_sample2.json", ("oracle",)),
+    # Sample 3, the VIRGIN North-Star sample (OPEN-119): graded once, under
+    # the pinned image, and both of its files record who graded it.
+    ("corpora/real_roots/results_sample3.json", ("oracle",)),
+    ("corpora/real_roots/manifest_sample3.json", ("oracle",)),
     ("corpora/apply_fixes_real/results.json", ("provenance", "oracle")),
     ("corpora/apply_fixes_real/results_virgin.json", ("provenance", "oracle")),
     ("corpora/apply_fixes_real/results_fresh.json", ("provenance", "oracle")),

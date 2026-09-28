@@ -1,7 +1,7 @@
 # Configuration contracts (ADR-012, milestone M1)
 
 Generated data. Nothing here is written by hand. The first consumer is the
-strict kernel of milestone M2 phase 1 (`docs/v27/STRICT_TIER_DESIGN.md` §I.3):
+strict kernel of milestone M2 phase 1 (`docs/v27/STRICT_TIER_DESIGN.md` §I.4):
 its harness (`latex-parse/strict/strict_decide.ml`) builds the kernel's
 contract record from `article.json`, the kernel file and
 `strict/article-s0-signatures.json`. No product verdict reads any of it yet.

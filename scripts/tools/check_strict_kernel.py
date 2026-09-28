@@ -120,7 +120,7 @@ MAX_BRACE_DEPTH = 200
 MAX_TOKENS = 200 * 100
 
 # ---------------------------------------------------------------------------
-# RULE R-INERT (design §I.3, correction C-85): a control word that is not
+# RULE R-INERT (design §I.4, correction C-85): a control word that is not
 # INERT is never admitted, whatever its probes say. Probes attest behaviour in
 # the contexts they build; a name whose effect reaches beyond its own
 # occurrence (it changes how later input is read, skipped, expanded, traced or
@@ -154,7 +154,7 @@ MAX_TOKENS = 200 * 100
 #         every token of letters and @ in an expansion text to its recorded
 #         meaning, transitively. It does not follow a name holding other
 #         characters (\T1\IJ, \?-cmd): a screen, not a proof, recorded in
-#         §I.3; the probes (follower, repetition, interleaving) remain the
+#         §I.4; the probes (follower, repetition, interleaving) remain the
 #         behavioural check.
 # ---------------------------------------------------------------------------
 NON_INERT_PRIMITIVE_CLASSES = {

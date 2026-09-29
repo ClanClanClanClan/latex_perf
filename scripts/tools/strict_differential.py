@@ -1389,7 +1389,19 @@ def main() -> int:
         label, default_out = "rules", OUT_DIR / "rule_probes.json"
     elif args.random:
         gen = Gen(random.Random(args.seed), nm)
-        docs = [{"doc": gen.document()} for _ in range(args.random)]
+        # a drawn document the extracted decider places outside the tier (the
+        # generator's own mode tracking can be wrong after an empty `$$`,
+        # which opens display math; C-98 found one inest walk at 201 groups)
+        # is replaced, never graded, and counted
+        docs, replaced = [], 0
+        rk = S.Kernel(signatures=sig_path)
+        while len(docs) < args.random:
+            batch = [{"doc": gen.document()} for _ in range(args.random - len(docs))]
+            for q, m in zip(batch, rk.run(batch)):
+                if m["verdict"] == "not_strict":
+                    replaced += 1
+                else:
+                    docs.append(q)
         families = None
         label, default_out = "random", DIFFERENTIAL
     else:
@@ -1412,6 +1424,8 @@ def main() -> int:
         "rules_never_exercised": [r for r in RULES if by_rule.get(r, {}).get("docs", 0) == 0],
         "outside_tier_by_design": len(outside),
     }
+    if args.random:
+        summary["generated_outside_replaced"] = replaced
     if not dis and graded:
         # Exact one-sided 95% (Clopper-Pearson) upper bound for 0 failures in n.
         summary["upper_bound_95"] = {

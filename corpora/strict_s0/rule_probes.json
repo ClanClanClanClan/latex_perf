@@ -12,32 +12,20 @@
   "contract_sha256": "6de6d4c0d7f98c979c83ebd3c46792d4b96cbf42d4470f96a43e18f274e4f932",
   "contract_config_key": "80abd84bd7677c84ab1478ba239e32daad1374056a5328722dcec5a70e9ced12"
  },
- "signatures_sha256": "0337e2113fa798ee4c595916d9bda7731b3de83ed022ca05c9bdc0e56387034f",
- "arg_signatures_sha256": "3f66faf66519e02ee214e5b26ccb48edb0cd86766b76014407b42a63c42ec25f",
+ "signatures_sha256": "2779ce815845276365bc8a37c6241cda90c359d72930597f7e25dfef916719d3",
+ "arg_signatures_sha256": "2b228728a4168514ec6cff9f7e4743e2141def6490dc290415f6f7f46c564dec",
  "reuse": {
-  "grades_reused": 542,
+  "grades_reused": 665,
   "sources": [
    {
     "file": "corpora/strict_s0/rule_probes.json",
-    "commit": "12ede3efe5259563143b3cc447c1ef4dafb826a3",
-    "sha256": "c20ee4ed64f515b7390f83fdc0a7822063c9b34064b3737a975722f2a29762da",
-    "records": 680
-   },
-   {
-    "file": "corpora/strict_s0/differential_v3.json",
-    "commit": "12ede3efe5259563143b3cc447c1ef4dafb826a3",
-    "sha256": "77d054495ebb86feabab2e065a6a17f40d626f96f5000b7e755bd6fe3c62a3af",
-    "records": 3000
-   },
-   {
-    "file": "corpora/strict_s0/bytes_probes.json",
-    "commit": "12ede3efe5259563143b3cc447c1ef4dafb826a3",
-    "sha256": "f372a25eacb21f3325fab133bd443b5cb0a6a00b72648043e9564e0daf4f9f4d",
-    "records": 2847
+    "commit": "b060eacecf0e4cdf2eebdd0ad51c89c354ef1442",
+    "sha256": "36fe4bd95ec76998990afb5d0feb384b59ad8dbbf1ba4cf5ac0a07cf99836ab7",
+    "records": 737
    }
   ]
  },
- "kernel_extract_sha256": "29bc22f815099f1ce3606a8634d2dcedd6e472edeeed4ce2d23aa985f7545081",
+ "kernel_extract_sha256": "ff083cf3f190963975e89250c8f8b414a13c8c4e8adf0180aa0b5de0dee13d8a",
  "oracle": {
   "engine": "pdflatex",
   "distribution": "TeX Live 2026",
@@ -2550,7 +2538,7 @@
    "i": 40,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "a3902f20a8c75fb8",
+   "tex_sha256": "a0b82643e5f5ab07",
    "oracle": [
     1,
     false,
@@ -2581,7 +2569,7 @@
          [
           [
            "cmd",
-           "ASiSJ"
+           "AO"
           ]
          ]
         ]
@@ -4314,7 +4302,7 @@
    "i": 72,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "ad32d7b784d2b812",
+   "tex_sha256": "9fea4cf13b654466",
    "oracle": [
     1,
     false,
@@ -4333,7 +4321,7 @@
      "body": [
       [
        "cmd",
-       "ASiSJ"
+       "AO"
       ]
      ],
      "has_end": true
@@ -4351,7 +4339,7 @@
    "i": 73,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "700e264d7c3c6ebe",
+   "tex_sha256": "dd4287ed0e028050",
    "oracle": [
     1,
     false,
@@ -4378,7 +4366,7 @@
         ],
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ]
        ]
       ]
@@ -84338,7 +84326,7 @@
    "i": 144,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "d78a1be0c26f8855",
+   "tex_sha256": "6d116cb517c77c14",
    "oracle": [
     1,
     false,
@@ -84359,7 +84347,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -84908,7 +84896,7 @@
    "i": 198,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "ad32d7b784d2b812",
+   "tex_sha256": "9fea4cf13b654466",
    "oracle": [
     1,
     false,
@@ -84926,7 +84914,7 @@
     "toks": [
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -85877,7 +85865,7 @@
    "i": 222,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "5407d7fca52ced7d",
+   "tex_sha256": "bd65af0bf400c248",
    "oracle": [
     1,
     false,
@@ -85902,7 +85890,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -86537,7 +86525,7 @@
    "i": 276,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "f882ccdcb550805b",
+   "tex_sha256": "3773a2b74e4cd39f",
    "oracle": [
     1,
     false,
@@ -86559,7 +86547,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -87642,7 +87630,7 @@
    "i": 300,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "29b236865d74cefa",
+   "tex_sha256": "eaaa113c0a1216fe",
    "oracle": [
     1,
     false,
@@ -87670,7 +87658,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -88396,7 +88384,7 @@
    "i": 354,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "b9e76a9b7920f908",
+   "tex_sha256": "0377ad8a07a47c48",
    "oracle": [
     1,
     false,
@@ -88421,7 +88409,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -89506,7 +89494,7 @@
    "i": 378,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "c2fd8b8e35aa88e6",
+   "tex_sha256": "c5972b8b602f11ee",
    "oracle": [
     1,
     false,
@@ -89534,7 +89522,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -90240,7 +90228,7 @@
    "i": 432,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "4ec4d6a524141908",
+   "tex_sha256": "8679197a10577ded",
    "oracle": [
     1,
     false,
@@ -90265,7 +90253,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -91644,7 +91632,7 @@
    "i": 455,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "4714d1a2d1efed38",
+   "tex_sha256": "a5709bce5b065020",
    "oracle": [
     1,
     false,
@@ -91686,7 +91674,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -92658,7 +92646,7 @@
    "i": 509,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "068c04faeca20244",
+   "tex_sha256": "7ea15af604dabbce",
    "oracle": [
     1,
     false,
@@ -92697,7 +92685,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -93782,7 +93770,7 @@
    "i": 532,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "d08782bac13bddc9",
+   "tex_sha256": "c98386060fe0727a",
    "oracle": [
     1,
     false,
@@ -93810,7 +93798,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -94524,7 +94512,7 @@
    "i": 586,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "5d26129894469ffe",
+   "tex_sha256": "1134c26b750ad29e",
    "oracle": [
     1,
     false,
@@ -94549,7 +94537,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -95997,7 +95985,7 @@
    "i": 609,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "e6a451d3b0e46e50",
+   "tex_sha256": "6f429708d0987cd8",
    "oracle": [
     1,
     false,
@@ -96042,7 +96030,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -97067,7 +97055,7 @@
    "i": 663,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "a924524b3efe648c",
+   "tex_sha256": "1b48e05ead745482",
    "oracle": [
     1,
     false,
@@ -97109,7 +97097,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -98305,7 +98293,7 @@
    "i": 686,
    "class": "E5",
    "agree": true,
-   "tex_sha256": "b96dd5a778c56cda",
+   "tex_sha256": "78894678565b4d75",
    "oracle": [
     1,
     false,
@@ -98336,7 +98324,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -99136,7 +99124,7 @@
    "i": 740,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "7f07f0fa6467f152",
+   "tex_sha256": "be82cefc7e63596a",
    "oracle": [
     1,
     false,
@@ -99164,7 +99152,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -100834,7 +100822,7 @@
    "i": 763,
    "class": "E5",
    "agree": true,
-   "tex_sha256": "aabe9795da42d727",
+   "tex_sha256": "a09120e545b21de2",
    "oracle": [
     1,
     false,
@@ -100886,7 +100874,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -102069,7 +102057,7 @@
    "i": 817,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "7011a9feb9157fa0",
+   "tex_sha256": "517e2f92c8970aba",
    "oracle": [
     1,
     false,
@@ -102118,7 +102106,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -103389,7 +103377,7 @@
    "i": 841,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "971f386b53eca3f1",
+   "tex_sha256": "779761179d1d23fd",
    "oracle": [
     1,
     false,
@@ -103415,7 +103403,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "par",
@@ -103507,7 +103495,7 @@
    "i": 843,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "cf610a6c97b0c129",
+   "tex_sha256": "9c213eb4b22aac0c",
    "oracle": [
     1,
     false,
@@ -103533,7 +103521,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "par",
@@ -104593,7 +104581,7 @@
    "i": 861,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "ad32d7b784d2b812",
+   "tex_sha256": "9fea4cf13b654466",
    "oracle": [
     1,
     false,
@@ -104612,7 +104600,7 @@
      "body": [
       [
        "cmd",
-       "ASiSJ"
+       "AO"
       ]
      ],
      "has_end": true
@@ -104681,7 +104669,7 @@
    "i": 863,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "c00d2d1717729a2a",
+   "tex_sha256": "59b15770d3330d7d",
    "oracle": [
     1,
     false,
@@ -104711,7 +104699,7 @@
         ],
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "text",
@@ -104744,7 +104732,7 @@
    "i": 864,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "e00691b9a78ce0c3",
+   "tex_sha256": "5a7e1b22ba3ddabb",
    "oracle": [
     1,
     false,
@@ -104770,7 +104758,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ]
        ]
       ]
@@ -104796,7 +104784,7 @@
    "i": 865,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "acd86fb96768c29b",
+   "tex_sha256": "708084acba2e6942",
    "oracle": [
     1,
     false,
@@ -104822,7 +104810,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "group",
@@ -104867,7 +104855,7 @@
    "i": 866,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "dea3c71c06fad37e",
+   "tex_sha256": "fe94ffd15387af5b",
    "oracle": [
     1,
     false,
@@ -104893,7 +104881,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "group",
@@ -104932,7 +104920,7 @@
    "i": 867,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "19fa80d64f36e5fc",
+   "tex_sha256": "40fc118629adfe90",
    "oracle": [
     1,
     false,
@@ -104958,7 +104946,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "text",
@@ -105004,7 +104992,7 @@
    "i": 868,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "2514c94ba9b7267d",
+   "tex_sha256": "235c0ef1cfd9e4ca",
    "oracle": [
     1,
     false,
@@ -105034,7 +105022,7 @@
         ],
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "text",
@@ -105067,7 +105055,7 @@
    "i": 869,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "a0cbcea3e814b0a2",
+   "tex_sha256": "58d74c4608399ae2",
    "oracle": [
     1,
     false,
@@ -105093,7 +105081,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ]
        ]
       ]
@@ -105119,7 +105107,7 @@
    "i": 870,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "44eee12b8ef46e0d",
+   "tex_sha256": "96718e362bb854a0",
    "oracle": [
     1,
     false,
@@ -105145,7 +105133,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "group",
@@ -105190,7 +105178,7 @@
    "i": 871,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "3fa6b6426507c234",
+   "tex_sha256": "da6ce850f5f632c8",
    "oracle": [
     1,
     false,
@@ -105216,7 +105204,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "group",
@@ -105255,7 +105243,7 @@
    "i": 872,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "b23ebcc0383fe431",
+   "tex_sha256": "3e6fa79a0b1b564f",
    "oracle": [
     1,
     false,
@@ -105281,7 +105269,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "text",
@@ -105327,7 +105315,7 @@
    "i": 873,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "57d2c363700785b4",
+   "tex_sha256": "febfeb18a9395330",
    "oracle": [
     1,
     false,
@@ -105357,7 +105345,7 @@
         ],
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "text",
@@ -105390,7 +105378,7 @@
    "i": 874,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "069172467d974872",
+   "tex_sha256": "30b79090989e5a17",
    "oracle": [
     1,
     false,
@@ -105416,7 +105404,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ]
        ]
       ]
@@ -105442,7 +105430,7 @@
    "i": 875,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "b0a9eb96ff8c3ce4",
+   "tex_sha256": "e967aff1ecc23c64",
    "oracle": [
     1,
     false,
@@ -105468,7 +105456,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "group",
@@ -105513,7 +105501,7 @@
    "i": 876,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "977cddb0b5d7be2b",
+   "tex_sha256": "b5cddd51d8fb2495",
    "oracle": [
     1,
     false,
@@ -105539,7 +105527,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "group",
@@ -105578,7 +105566,7 @@
    "i": 877,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "db834192a9c337a5",
+   "tex_sha256": "85ac0299a79e18c9",
    "oracle": [
     1,
     false,
@@ -105604,7 +105592,7 @@
        [
         [
          "cmd",
-         "ASiSJ"
+         "AO"
         ],
         [
          "text",
@@ -108032,7 +108020,7 @@
    "i": 1255,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "bd43245d3e551974",
+   "tex_sha256": "20d3b043ee2541b7",
    "oracle": [
     1,
     false,
@@ -108064,7 +108052,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -108854,7 +108842,7 @@
    "i": 1312,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "53e5f4f7c3e04b74",
+   "tex_sha256": "93bfe887759e388f",
    "oracle": [
     1,
     false,
@@ -108883,7 +108871,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -110217,7 +110205,7 @@
    "i": 1358,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "692f26ad0f7b830a",
+   "tex_sha256": "b70e8c5da110c316",
    "oracle": [
     1,
     false,
@@ -110252,7 +110240,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -111114,7 +111102,7 @@
    "i": 1415,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "bc8cb47416167717",
+   "tex_sha256": "5c88d6d8b7e6a9fb",
    "oracle": [
     1,
     false,
@@ -111146,7 +111134,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -112548,7 +112536,7 @@
    "i": 1461,
    "class": "E5",
    "agree": true,
-   "tex_sha256": "f750ab262eafa492",
+   "tex_sha256": "3c1688108ff9f6fd",
    "oracle": [
     1,
     false,
@@ -112583,7 +112571,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -113458,7 +113446,7 @@
    "i": 1518,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "cc5226144b157394",
+   "tex_sha256": "ca5de6f47b47f2c2",
    "oracle": [
     1,
     false,
@@ -113490,7 +113478,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -115212,7 +115200,7 @@
    "i": 1585,
    "class": "E5",
    "agree": true,
-   "tex_sha256": "f2c963f7659734e6",
+   "tex_sha256": "75f2414fca25226a",
    "oracle": [
     1,
     false,
@@ -115261,7 +115249,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -116403,7 +116391,7 @@
    "i": 1642,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "163c537667ac538c",
+   "tex_sha256": "d5bf097646aac13c",
    "oracle": [
     1,
     false,
@@ -116449,7 +116437,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -116768,7 +116756,7 @@
    "i": 1689,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "61ef33e5e5d1db3f",
+   "tex_sha256": "4552a5f63b30fcfc",
    "oracle": [
     1,
     false,
@@ -116793,7 +116781,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "char",
@@ -116826,7 +116814,7 @@
    "i": 1690,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "b006b32b756a437d",
+   "tex_sha256": "1d363f956c27e676",
    "oracle": [
     1,
     false,
@@ -116851,7 +116839,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -116894,7 +116882,7 @@
    "i": 1691,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "662387048f456d30",
+   "tex_sha256": "b408bbdfbcf0dd67",
    "oracle": [
     1,
     false,
@@ -116919,7 +116907,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "space"
@@ -116951,7 +116939,7 @@
    "i": 1692,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "e505d7407b0b314c",
+   "tex_sha256": "c0e49a8338d6f482",
    "oracle": [
     1,
     false,
@@ -116976,7 +116964,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117018,7 +117006,7 @@
    "i": 1693,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "80e291bf3372145f",
+   "tex_sha256": "3cf266c664180acb",
    "oracle": [
     1,
     false,
@@ -117043,7 +117031,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "par",
@@ -117077,7 +117065,7 @@
    "i": 1694,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "94853e5754f06ec5",
+   "tex_sha256": "a17133178084cf1c",
    "oracle": [
     1,
     false,
@@ -117102,7 +117090,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117146,7 +117134,7 @@
    "i": 1695,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "290305671b8ed31c",
+   "tex_sha256": "6e465e12802930a6",
    "oracle": [
     1,
     false,
@@ -117171,7 +117159,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "par",
@@ -117205,7 +117193,7 @@
    "i": 1696,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "4a0efb04b72efde9",
+   "tex_sha256": "ca3a849207376093",
    "oracle": [
     1,
     false,
@@ -117230,7 +117218,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117274,7 +117262,7 @@
    "i": 1697,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "7e09454ab817f801",
+   "tex_sha256": "b2462aeea02174a7",
    "oracle": [
     1,
     false,
@@ -117299,7 +117287,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117337,7 +117325,7 @@
    "i": 1698,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "b9b4371c78825346",
+   "tex_sha256": "409c781146355f7e",
    "oracle": [
     1,
     false,
@@ -117362,7 +117350,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117407,7 +117395,7 @@
    "i": 1699,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "e00691b9a78ce0c3",
+   "tex_sha256": "5a7e1b22ba3ddabb",
    "oracle": [
     1,
     false,
@@ -117432,7 +117420,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "close"
@@ -117460,7 +117448,7 @@
    "i": 1700,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "7e09454ab817f801",
+   "tex_sha256": "b2462aeea02174a7",
    "oracle": [
     1,
     false,
@@ -117485,7 +117473,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117523,7 +117511,7 @@
    "i": 1701,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "bce9570e660dd963",
+   "tex_sha256": "6261086824a7a809",
    "oracle": [
     1,
     false,
@@ -117548,7 +117536,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "dollar"
@@ -117580,7 +117568,7 @@
    "i": 1702,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "c5f9c86fa711b952",
+   "tex_sha256": "e5afc1f88120189a",
    "oracle": [
     1,
     false,
@@ -117605,7 +117593,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117647,7 +117635,7 @@
    "i": 1703,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "e4580068b0aceebb",
+   "tex_sha256": "639a5adbe0f9758b",
    "oracle": [
     1,
     false,
@@ -117672,7 +117660,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open_paren"
@@ -117704,7 +117692,7 @@
    "i": 1704,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "9a38a6269ced08de",
+   "tex_sha256": "d5a6c1536376ce80",
    "oracle": [
     1,
     false,
@@ -117729,7 +117717,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117771,7 +117759,7 @@
    "i": 1705,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "c37a4970caa38b2b",
+   "tex_sha256": "e3c582ea8fc2a17a",
    "oracle": [
     1,
     false,
@@ -117796,7 +117784,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "close_paren"
@@ -117828,7 +117816,7 @@
    "i": 1706,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "3277924ee3c94334",
+   "tex_sha256": "c63e4338e94a1137",
    "oracle": [
     1,
     false,
@@ -117853,7 +117841,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -117895,7 +117883,7 @@
    "i": 1707,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "0e5d4838bf8f6c86",
+   "tex_sha256": "8b3ffd8390e7674e",
    "oracle": [
     1,
     false,
@@ -117920,7 +117908,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open_bracket"
@@ -117952,7 +117940,7 @@
    "i": 1708,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "47dddfcae96751a5",
+   "tex_sha256": "c590cad0561e9186",
    "oracle": [
     1,
     false,
@@ -117977,7 +117965,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -118019,7 +118007,7 @@
    "i": 1709,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "0c8aabb71e07515f",
+   "tex_sha256": "cf3243dca32db4df",
    "oracle": [
     1,
     false,
@@ -118044,7 +118032,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "close_bracket"
@@ -118076,7 +118064,7 @@
    "i": 1710,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "15c70eac7c557f5c",
+   "tex_sha256": "936715aa0362a26b",
    "oracle": [
     1,
     false,
@@ -118101,7 +118089,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -118143,7 +118131,7 @@
    "i": 1711,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "54e4fbc54b269f9a",
+   "tex_sha256": "ab05f20372b14f07",
    "oracle": [
     1,
     false,
@@ -118168,7 +118156,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "sup"
@@ -118205,7 +118193,7 @@
    "i": 1712,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "e6c684c30fb9bbf6",
+   "tex_sha256": "96c66aba8afe3882",
    "oracle": [
     1,
     false,
@@ -118230,7 +118218,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -118277,7 +118265,7 @@
    "i": 1713,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "979ad72567cd68df",
+   "tex_sha256": "1517fcf11d59c773",
    "oracle": [
     1,
     false,
@@ -118302,7 +118290,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "sub"
@@ -118339,7 +118327,7 @@
    "i": 1714,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "c3bf9cf174e0a791",
+   "tex_sha256": "ebb7a0a864df7024",
    "oracle": [
     1,
     false,
@@ -118364,7 +118352,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
@@ -118411,7 +118399,7 @@
    "i": 1715,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "ee58639ff689a897",
+   "tex_sha256": "fda198023baeedf6",
    "oracle": [
     1,
     false,
@@ -118436,11 +118424,11 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "close"
@@ -118468,7 +118456,7 @@
    "i": 1716,
    "class": "E1",
    "agree": true,
-   "tex_sha256": "6f9105bb4bff4639",
+   "tex_sha256": "00276ffe4ba75cd4",
    "oracle": [
     1,
     false,
@@ -118493,14 +118481,14 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "open"
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ],
      [
       "close"
@@ -126573,7 +126561,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -126926,7 +126914,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -127343,7 +127331,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -127791,7 +127779,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -128290,7 +128278,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -128814,7 +128802,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -129338,7 +129326,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -129862,7 +129850,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -130592,7 +130580,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -131420,7 +131408,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -132042,7 +132030,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -132566,7 +132554,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -133335,7 +133323,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -134220,7 +134208,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -134911,7 +134899,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -135511,7 +135499,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -136420,7 +136408,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -137476,7 +137464,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -138134,7 +138122,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -138672,7 +138660,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -139309,7 +139297,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -139975,7 +139963,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -140579,7 +140567,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -141499,7 +141487,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -142439,7 +142427,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -143219,7 +143207,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -143823,7 +143811,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -144791,7 +144779,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -145794,7 +145782,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -146658,7 +146646,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -147346,7 +147334,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -148485,7 +148473,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -149677,7 +149665,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -150584,7 +150572,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -151278,7 +151266,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -152010,7 +151998,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -152804,7 +152792,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -153578,7 +153566,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -154398,7 +154386,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -155188,7 +155176,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -155903,7 +155891,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -156699,7 +156687,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -157471,7 +157459,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -158534,7 +158522,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -159628,7 +159616,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -160800,7 +160788,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true
@@ -161908,7 +161896,7 @@
      ],
      [
       "cs",
-      "ASiSJ"
+      "AO"
      ]
     ],
     "close": true

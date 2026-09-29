@@ -1473,7 +1473,7 @@ artefact.
 | capacity (pdfTeX) | value in the image | the fragment's account | bound | measured at the bounds | margin | status |
 |---|---|---|---|---|---|---|
 | grouping levels | 255 (the body holds K = 254; `capacity.json` `measured`) | `groups` = 1 per frame, `g` per argument frame, over every reached state (`peak`) | `max_groups` = 200 | every one of the 321 model pairs, repeated to 200 groups, compiles/agrees; pdfTeX's first overflow is at 255 groups for 320 pairs and 254 for 1 (a paragraph start in vertical mode, transient +1): the account is EXACT | 254 - 200 - 8 (largest transient: the output routine at a page break or at `\end{document}`; `\[` 3, a paragraph start 1, none in math) = 46 | PROVED bound (Coq) + MEASURED exactness |
-| main memory | 5,000,000 words | through `max_tokens` = 20,000 and `max_groups` | none of its own | 758,796 (20,000 characters in one paragraph); 1,000,000 characters overflow (C-86) | 6.6x | MEASURED |
+| main memory | 5,000,000 words | ~~through `max_tokens` and `max_groups`~~ — WRONG: argument copies make it depth x tokens; superseded by C-98 (below) | — | the 758,796 was a flat document, not the worst case | — | refuted (C-98) |
 | string pool | 5,408,265 free at body start | every name pdfTeX reads enters it, defined or not; <= `max_tokens` names of <= `max_name` = 100 letters | `max_name` (Coq, `short_names`) | 1,939,424 (19,994 distinct 100-letter undefined names read whole as one `\mbox` argument; E1 agrees) | 2.8x | PROVED bound + MEASURED |
 | strings | 467,099 free | <= `max_tokens` new names | via `max_tokens` | 19,741 | 23x | MEASURED |
 | hash (multi-letter control sequences) | 15,000 + 600,000 | <= `max_tokens` new names | via `max_tokens` | 49,161 | 12x | MEASURED |
@@ -1566,3 +1566,94 @@ differential (seed 6) 3,500 of 3,500. The reviewer's files `over128*.tex`
 are NOT-IN-FRAGMENT ("capacity bound"); so are 101, 126 and 127 levels (the
 bound is conservative: pdfTeX compiles 127); 100 levels are PROVEN-READY and
 compile.
+
+**C-98: the SAME class again, for main memory — the capacity table's own
+numbers were never measured at the worst case (BLOCKING, round-2 review,
+2026-09-29).** The table above said main memory was bounded "through
+`max_tokens`" (758,796 words, 6.6x), measured on 20,000 flat characters.
+But pdfTeX keeps a COPY of every argument a command is running, and a
+command nested in an argument reads its argument out of the outer copy:
+memory grows with DEPTH x TOKENS. MEASURED by the reviewer: 197 `\mbox`
+levels around 6,427 `\frame{}` (19,983 tokens, 200 groups) were PROVEN-READY
+and give "! TeX capacity exceeded, sorry [main memory size=5000000]"; 5,000
+to 6,000 frames compile at 4.19M to 4.93M words; the real margin was ~1.05x.
+The gate's "usage at most half the capacity" read the table's own
+`max_used`, which was never measured at the worst case. This is the second
+multiplicative miss in a row (C-94 was groups x frame kinds), so the METHOD
+changed, not the instance:
+
+- **Every capacity gets a worst-case account in the model's terms, each
+  coefficient measured by an adversarial maximiser, and the bound goes into
+  the Coq membership.** For main memory: `Decide.mem C ts = node_cost +
+  held` (pinned). Every token costs its `c_cost`, a new field of
+  `Contract.v`: the words its nodes and its running take. It is MEASURED
+  per admitted name by the phase-1 generator's stage C (the name repeated
+  4,000 times in text, in a formula and in a display, and again at the
+  memory bound, until pdfTeX's report is within the account); every other
+  token costs the structural stage's most per token, 18 words. Every token
+  inside an argument also costs its command's `as_copy`, a new field of
+  `asig`, MEASURED by the argument generator's stage G as the slope of
+  memory over the tokens held: 2.01 words per model token for every admitted
+  command (two TeX tokens per model token of the rendered form), rounded up
+  to 3. `held` sums over EVERY argument the stream reads, an over-count of
+  what is alive at once. `bounded` requires `mem <= max_mem` = 2,000,000
+  words; with the 435,796 words pdfTeX reports at body start the account is
+  2,435,796, under half of main memory. `strict_mem_bounded` (Closed,
+  capstone 28).
+- **The maximiser at the bound and one past it, for every admitted name and
+  command, graded.** Phase 1 (stage 3c): each name repeated to the memory
+  bound — the costliest, `\ddots` at 156 words, 12,819 times in one formula,
+  reports 2,411,456 words, under the account's 2,435,770 and under half of
+  main memory (2.07x) — and once more, which is outside. Slice A (stage 3c):
+  for each command and mode, as many levels as the group bound allows (200,
+  or 66 for `\frame` and for `\underline` in text), the costliest filler
+  valid in a box (`\fmtversion`, 62 words) innermost and at the outermost
+  level, tuned to `mem` within one token of 2,000,000; all 18 compile (the
+  worst, `\underline` in math, reports 1,187,124 words); one more character
+  is outside every time. The reviewer's file is NOT-IN-FRAGMENT ("capacity
+  bound": its account is ~11.4M).
+- **The other capacities, and why each is additive (no product term).** The
+  string pool, strings and hash take one entry per NAME READ; a copy of an
+  argument re-reads no name (the names are already in the hash): bounded by
+  `max_tokens` x `max_name`. The input stack takes one level per running
+  argument plus a constant for the macro being expanded, the parameter stack
+  one per running argument, the semantic nest one per hbox, formula or math
+  group plus the paragraph, the save stack a constant per group (a local
+  assignment is saved once per group level, TeX's `eq_save`): each is
+  bounded by the frames alive, i.e. by `max_groups`. The buffer holds one
+  line; font memory the fixed set of fonts. Expansion depth is per command,
+  not per frame. pdfTeX's own report of each, maximised over EVERY graded
+  document (the pairs at 200 groups and their overflow searches, the
+  transients, the usage documents, all memory worst cases and bound
+  documents), is in `capacity.json`'s evidence; check_strict_kernel.py
+  recomputes that maximum from the records and fails on any capacity more
+  than half used.
+- **Gates recompute every derived number from primary records (M-1,
+  M-2).** check_strict_kernel.py re-derives the token cost, every name's
+  cost, every command's copy factor and cost floor (from the graded
+  documents' reported memory), every command's groups `g` (from stage G's
+  graded depths, not from the count stored beside them), the grouping
+  capacity and the largest transient (from the recorded bisection steps),
+  and the capacity maxima (from every record). The new
+  check_strict_capacity.py (binary level, in ci.yml's build job) re-runs the
+  extracted decider: the SET of frame pairs (not the count), the bytes, peak
+  and verdict of every pair stream, and the bytes, memory account and
+  verdict of every memory worst case and phase-1 memory document.
+  Kill-tests: a pair dropped with its count decremented, a forged peak, a
+  forged worst-case account, a consistent forged `g`, a forged low name
+  cost, the memory bound dropped from `bounded`.
+
+**R-INERT, LOW-4 of the round-2 review.** The closure now also rejects a
+name whose expansion reaches a DEFINITION or an ASSIGNMENT primitive
+(`\def` ... `\let`, `\global`, `\advance`, `\multiply`, `\divide`,
+`\setbox`): `\gdef\mbox{x}` in a closure changes what a later token means.
+Measured: 3 phase-1 names drop (`\thicklines`: `\let`, changes `\frame`'s
+rule width; `\reversemarginpar`: `\global\let`; `\narrower`: `\advance`);
+84 remain; no argument command is affected. KNOWN LIMITS of the screen
+(none live today by the reviewer's TeX scan; the probes remain the
+behavioural check): an assignment to a register or an internal parameter
+written as `\dimen13=...` or `\hsize=...` is invisible in a printed meaning
+(the register token reads as a value); an active character that is not
+active at body start but is made active inside a closure; `^^`-notation
+names read as `\^`; token lists run implicitly by primitives (`\everypar`
+via `\indent`/`\leavevmode`, `\everyhbox` via `\hbox`, the output routine).

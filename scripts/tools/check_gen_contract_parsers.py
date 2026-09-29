@@ -905,8 +905,11 @@ check("sig v3: the transition probe (the use then the target cell's material) mu
 r_redef = fake_sig(fake_macro(0, follow=lambda c: "redef"))
 r_alloc = fake_sig(fake_macro(0, follow=lambda c: "state"))
 check("sig v3: a use that redefines a body-typeable name or allocates a register is "
-      "unresolved (HIGH-4)", r_redef["status"] == "unresolved" and
-      r_alloc["status"] == "unresolved")
+      "unresolved, by the follow fact of exactness (HIGH-4)",
+      r_redef["status"] == "unresolved" and r_alloc["status"] == "unresolved" and
+      {a.get("reason") for a in r_redef["attempts"].values()} == {sg.EXACT_REASONS["follow"]}
+      and {a.get("reason") for a in r_alloc["attempts"].values()} ==
+      {sg.EXACT_REASONS["follow"]}, (r_redef.get("attempts"), r_alloc.get("attempts")))
 r_rep = fake_sig(fake_macro(0, special=_fails(lambda c, u: u.count("\\lpx") > 1)))
 check("sig v3: a use whose repetition fails is unresolved (definers, nesting, dead cycles)",
       r_rep["status"] == "unresolved" and

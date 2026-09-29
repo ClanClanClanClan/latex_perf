@@ -1093,8 +1093,8 @@ REGISTRY = [
             Mutation("the group bound is taken on the initial state only (C-94)",
                      "proofs/Strict/Decide.v",
                      r"FAIL Decide\.v: bounded is not the pinned account",
-                     old="Nat.leb (peak C init ts) max_groups.",
-                     new="Nat.leb (groups (s_frames init)) max_groups."),
+                     old="Nat.leb (peak C init ts) max_groups\n",
+                     new="Nat.leb (groups (s_frames init)) max_groups\n"),
             # C-94: a frame-kind pair of the model not probed at the bound.
             Mutation("a frame-kind pair is not probed at the bound (C-94)",
                      "corpora/strict_s0/capacity.json",

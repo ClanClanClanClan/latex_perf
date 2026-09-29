@@ -1662,3 +1662,16 @@ written as `\dimen13=...` or `\hsize=...` is invisible in a printed meaning
 active at body start but is made active inside a closure; `^^`-notation
 names read as `\^`; token lists run implicitly by primitives (`\everypar`
 via `\indent`/`\leavevmode`, `\everyhbox` via `\hbox`, the output routine).
+
+**Re-attested after C-98** (supersedes the counts of the paragraph "Re-attested
+after C-94 and C-96" above; the pinned image, a private container; every
+reused grade from a committed file): phase-1 signatures (generator version 6)
+84 admitted, every one with a measured cost and at the memory bound; argument
+signatures (version 3) 9 admitted, copy factor 3, costs 1 (`\mbox`) to 124
+(`\frame`), 18 memory worst cases; `capacity.json` (version 2) 321 of 321
+frame pairs at 200 groups, 201 outside, overflow in the account's window,
+every bisection step and transient step recorded; rule probes 737 of 737
+graded agree; differential v4 (seed 4) 3,000 of 3,000 (one generated draw
+outside the tier, after an empty `$$` opened display math, replaced and
+counted); byte-level probes 3,064 of 3,064 (the reviewer's memory file among
+the near-misses, outside); byte-level differential (seed 6) 3,500 of 3,500.

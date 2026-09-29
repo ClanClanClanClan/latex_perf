@@ -780,6 +780,16 @@ def strict_name_cost_forged(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def strict_inert_definition(text: str) -> str:
+    """LOW-4 of the round-2 review: an admitted name whose code redefines
+    another name (\\gdef\\mbox{x}) must not be inert."""
+    d = json.loads(text)
+    n = _first_admitted(d)
+    d["meanings"][n] = "macro:->\\gdef \\mbox {x}"
+    d["meanings"].setdefault("gdef", "\\gdef")
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_arg_not_inert(text: str) -> str:
     """R-INERT on an admitted one-argument command's recorded meaning."""
     d = json.loads(text)
@@ -1108,6 +1118,11 @@ REGISTRY = [
                      "corpora/contracts/strict/article-s1-arg-signatures.json",
                      r"FAIL arg signatures: '.*'s groups in text \(\d+\) are not what stage G",
                      transform=strict_arg_groups_forged),
+            # LOW-4 of the round-2 review: a definition in a closure.
+            Mutation("R-INERT passes a closure that redefines a name (LOW-4)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' is not inert: expansion reaches \\gdef",
+                     transform=strict_inert_definition),
             # C-98: a name's memory cost below its measurement.
             Mutation("a name's memory cost is forged low (C-98)",
                      "corpora/contracts/strict/article-s0-signatures.json",

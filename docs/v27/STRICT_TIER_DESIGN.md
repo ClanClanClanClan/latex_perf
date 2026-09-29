@@ -1549,3 +1549,20 @@ sha256); the local grade store is gone (a grade nobody else can read is
 not evidence); `check_strict_kernel.py` / `check_strict_bytes.py` check 12
 refuse any other source and verify the sha256 when the commit is present.
 Every evidence file of this step was regenerated under the rule.
+
+**Re-attested after C-94 and C-96** (the pinned image, a private container
+of it; every reused grade from a committed evidence file, by path, commit
+and sha256): `capacity.json` 321 of 321 frame-kind pairs agree at 200
+groups, are outside at 201, and overflow in pdfTeX where the account says;
+rule probes 737 of 737 graded agree (980 outside by design; dormant under
+the contract: `R_arg_{text,math}_{now,after}`, `R_par_short`,
+`SC_par_outer`, `SC_par_short` and now `R_cs_math_fatal`, since C-96 left no
+admitted name that is fatal in math); differential v4 (generator version 4,
+seed 4) 3,000 of 3,000 agree — 133 of its documents stack three or more
+frame kinds past 50 groups and 40 sit at exactly 200; byte-level probes
+3,064 of 3,064 (the L0-bounds family now at the group bound, and the
+reviewer's shape one level past it among the near-misses); byte-level
+differential (seed 6) 3,500 of 3,500. The reviewer's files `over128*.tex`
+are NOT-IN-FRAGMENT ("capacity bound"); so are 101, 126 and 127 levels (the
+bound is conservative: pdfTeX compiles 127); 100 levels are PROVEN-READY and
+compile.

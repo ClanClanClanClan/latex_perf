@@ -19,8 +19,8 @@ registered gate it:
 
   1. runs the gate clean — must exit 0 (an already-red gate cannot be
      selftested; that is reported as infrastructure, exit 2);
-  2. for each registered mutation: backs the target file up (content + mtime),
-     applies a known-bad edit, runs the gate, and asserts BOTH a non-zero exit
+  2. for each registered mutation: records the target file (content + mode +
+     mtime), applies a known-bad edit, runs the gate, and asserts BOTH a non-zero exit
      AND an expected message regex — the regex is the defence against a gate
      failing for the WRONG reason (e.g. the edit breaking YAML parsing rather
      than triggering the arm under test);
@@ -44,9 +44,31 @@ binary (needs the built validators_cli.exe; runs in the required build job) |
 all. A missing CLI at binary level is a FAILURE (exit 2), not a skip — a
 skipped selftest that reports green is the exact disease this file treats.
 
-Safety: refuses to run if any target file is git-dirty (the mutations are
-in-place; a crash must not be able to eat uncommitted work) unless CI=true or
---force. Every mutation runs under try/finally restore.
+ISOLATION AND PARALLELISM (default). Every gate run happens in a disposable
+`git worktree add --detach` copy of HEAD under the system temp directory, with
+the working tree's uncommitted and untracked files overlaid (and the index
+copied when it differs from HEAD), so a copy reproduces the checkout byte for
+byte — the harness PROVES that (sha256 + executable bit of every tracked and
+untracked file) before any gate runs and again after the last mutation.
+`_build` is a symlink to the source checkout's, so the CLI a gate hashes is
+the one it would hash in place. `--jobs` copies (default: CPU count) run
+concurrently; each mutation writes its target in ONE copy, runs the gate end
+to end, restores the file (content, mode, mtime) and proves it, and checks
+`git status` of the copy is unchanged. Verdicts come from the same `classify`
+as the in-place mode, on output with the copy's path rewritten to the
+checkout's, and are reported in registry order. Every run also sends a CANARY
+through the pool — a no-op edit that MUST come out as a surviving mutant — so
+a parallel defect that loses or masks a survivor fails the run (exit 2) instead
+of reading as a kill. Mutations are computed once, in registry order, before
+any gate runs, so registry rot is reported deterministically. The user's
+working tree is never written, and no backup ever lands in it (OPEN-108).
+
+Safety of `--in-place` (the original serial mode, kept for debugging against
+the real checkout): refuses to run if any target file is git-dirty (the
+mutations are in-place; a crash must not be able to eat uncommitted work)
+unless CI=true or --force. Every mutation runs under try/finally restore, from
+an fsynced backup in .gate-selftest-backups/. Both modes take the
+single-instance lock.
 """
 from __future__ import annotations
 
@@ -55,12 +77,21 @@ import hashlib
 import json
 import os
 import re
+import queue
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 MIN_MUTATIONS = 12
 
+# The harness imports gate helpers (e.g. _measurement_provenance) while
+# computing mutation payloads; it must not leave __pycache__ in the checkout
+# (review LOW-2).
+sys.dont_write_bytecode = True
 REPO = Path(__file__).resolve().parent.parent.parent
 PY = sys.executable
 TOOLS = "scripts/tools"
@@ -97,9 +128,33 @@ class Mutation:
     def __init__(self, label, target, expect_regex, old=None, new=None,
                  transform=None):
         self.label, self.target = label, REPO / target
+        self.rel = target  # repo-relative: the same file in an isolated copy
         self.expect = re.compile(expect_regex, re.S)
         self.expect_src = expect_regex
         self.old, self.new, self.transform = old, new, transform
+
+    def mutated(self, text: str) -> str:
+        """The mutated text of the target, or exit 2 on registry rot.
+
+        Pure: the same function feeds the in-place mode (`apply`) and the
+        isolated mode (which computes every mutation ONCE, in registry order,
+        before any gate runs — so rot is reported deterministically)."""
+        if self.transform is not None:
+            return self.transform(text)
+        n = text.count(self.old)
+        if n != 1:
+            # Registry rot: the anchor drifted. Loud infra failure, never a skip.
+            print(f"[gate-selftests] REGISTRY ROT: anchor for '{self.label}' "
+                  f"occurs {n}x in {self.target.name} (need exactly 1). "
+                  f"Update the registry deliberately.")
+            sys.exit(2)
+        return text.replace(self.old, self.new)
+
+    def mutated_bytes(self) -> bytes:
+        """Exactly the bytes `apply` would write (read_text + write_text on
+        POSIX: universal-newline read, utf-8 encode, no newline translation)."""
+        return self.mutated(
+            self.target.read_text(encoding="utf-8")).encode("utf-8")
 
     def apply(self) -> None:
         # ⚠ PRESERVE THE FILE MODE. write_text/write_bytes create the file with
@@ -111,19 +166,7 @@ class Mutation:
         # validate_catalogue.sh died `Permission denied` (exit 126).
         self._mode = self.target.stat().st_mode
         text = self.target.read_text(encoding="utf-8")
-        if self.transform is not None:
-            self.target.write_text(self.transform(text), encoding="utf-8")
-            os.chmod(self.target, self._mode)
-            return
-        n = text.count(self.old)
-        if n != 1:
-            # Registry rot: the anchor drifted. Loud infra failure, never a skip.
-            print(f"[gate-selftests] REGISTRY ROT: anchor for '{self.label}' "
-                  f"occurs {n}x in {self.target.name} (need exactly 1). "
-                  f"Update the registry deliberately.")
-            sys.exit(2)
-        self.target.write_text(text.replace(self.old, self.new),
-                               encoding="utf-8")
+        self.target.write_text(self.mutated(text), encoding="utf-8")
         os.chmod(self.target, self._mode)
 
 
@@ -259,9 +302,13 @@ def prov_stale_build(text: str) -> str:
     tgt["cli_platform"] = _plat()
     # And claim THIS checkout built it: a hash built in another checkout
     # directory is a note, not a kill, because the build embeds absolute paths
-    # (C-72). Without this the mutation would only produce a note.
-    from _measurement_provenance import build_root_fingerprint as _root
-    tgt["cli_build_root"] = _root(REPO)
+    # (C-72). Without this the mutation would only produce a note. Recorded
+    # exactly as every producer records it, from the CLI's resolved path, so a
+    # symlinked _build is fingerprinted as the checkout that really built it
+    # (review LOW-1: _root(REPO) made this a false blind spot there).
+    from _measurement_provenance import cli_build_root as _root
+    tgt["cli_build_root"] = _root(
+        REPO / "_build/default/latex-parse/src/validators_cli.exe")
     return _json.dumps(d, indent=2)
 
 
@@ -607,6 +654,37 @@ def strict_admitted_not_inert(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def strict_admitted_is_clock(text: str) -> str:
+    """OPEN-118 (b) / R-CLOCK: an admitted name that IS \\year (\\let to
+    the primitive). R-INERT admits it (an integer parameter is none of its
+    classes); only the clock rule sees it."""
+    d = json.loads(text)
+    d["meanings"][_first_admitted(d)] = "\\year"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_expands_to_clock(text: str) -> str:
+    """OPEN-118 (b) / R-CLOCK: an admitted macro whose expansion reaches
+    \\time through another macro (the closure, not the name, reads it)."""
+    d = json.loads(text)
+    d["meanings"][_first_admitted(d)] = "macro:->\\lpclockstamp x"
+    d["meanings"]["lpclockstamp"] = "macro:->\\time "
+    d["meanings"]["time"] = "\\time"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_expands_to_random(text: str) -> str:
+    """OPEN-118 (b) / R-CLOCK, clock review MEDIUM-1: an admitted macro whose
+    expansion reaches \\pdfuniformdeviate (seeded from the real time on every
+    run). Before the rule covered the run-dependent pdfTeX primitives, this
+    passed both R-INERT and R-CLOCK."""
+    d = json.loads(text)
+    d["meanings"][_first_admitted(d)] = "macro:->\\lprandom x"
+    d["meanings"]["lprandom"] = "macro:->\\pdfuniformdeviate 10 "
+    d["meanings"]["pdfuniformdeviate"] = "\\pdfuniformdeviate"
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_admitted_transparent(text: str) -> str:
     """C-85: an admitted name that is transparent after a $ in display math
     (its display-follower grade compiles)."""
@@ -794,6 +872,18 @@ def strict_arg_not_inert(text: str) -> str:
     """R-INERT on an admitted one-argument command's recorded meaning."""
     d = json.loads(text)
     d["meanings"][_first_arg(d)] = "\\iftrue"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_expands_to_clock(text: str) -> str:
+    """OPEN-118 (b) / R-CLOCK on the argument commands (merge of main's
+    R-CLOCK into C-94..C-98): an admitted one-argument command whose
+    expansion reaches \\time through another macro. R-INERT admits it (an
+    integer parameter read, no assignment); only the clock rule sees it."""
+    d = json.loads(text)
+    d["meanings"][_first_arg(d)] = "\\long macro:#1->\\lpargclock #1"
+    d["meanings"]["lpargclock"] = "macro:->\\time "
+    d["meanings"]["time"] = "\\time"
     return json.dumps(d, indent=1) + "\n"
 
 
@@ -1047,6 +1137,23 @@ REGISTRY = [
                      "corpora/contracts/strict/article-s0-signatures.json",
                      r"FAIL signatures: admitted '.*' is not inert: conditional",
                      transform=strict_admitted_not_inert),
+            # OPEN-118 known limit (b) / R-CLOCK: a clock reader admitted,
+            # directly and through its expansion closure.
+            Mutation("an admitted name is the clock primitive \\year",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' reads the clock: it is the "
+                     r"run-dependent primitive \\year \(R-CLOCK\)",
+                     transform=strict_admitted_is_clock),
+            Mutation("an admitted macro expands to \\time",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' reads the clock: expansion "
+                     r"reaches the run-dependent primitive \\time via \\lpclockstamp",
+                     transform=strict_admitted_expands_to_clock),
+            Mutation("an admitted macro expands to \\pdfuniformdeviate",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' reads the clock: expansion "
+                     r"reaches the run-dependent primitive \\pdfuniformdeviate via \\lprandom",
+                     transform=strict_admitted_expands_to_random),
             # C-85: a name transparent to the display-$ look-ahead admitted.
             Mutation("an admitted name is transparent after a display $",
                      "corpora/contracts/strict/article-s0-signatures.json",
@@ -1243,6 +1350,11 @@ REGISTRY = [
                      "corpora/contracts/strict/article-s1-arg-signatures.json",
                      r"FAIL arg signatures: admitted '.*' is not inert: conditional",
                      transform=strict_arg_not_inert),
+            Mutation("an admitted one-argument command expands to \\time",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: admitted '.*' reads the clock: expansion "
+                     r"reaches the run-dependent primitive \\time via \\lpargclock",
+                     transform=strict_arg_expands_to_clock),
             Mutation("an admitted one-argument command overflows grouping levels",
                      "corpora/contracts/strict/article-s1-arg-signatures.json",
                      r"FAIL arg signatures: admitted '.*' does not compile under "
@@ -2612,14 +2724,39 @@ REGISTRY = [
 
 GATE_TIMEOUT = 300  # seconds — a hung gate must not hold a mutated tree open
 
+LOCK_NAME = ".gate-selftests.lock"
+BACKUP_DIR = ".gate-selftest-backups"
 
-def run_gate(cmd) -> tuple[int, str]:
+
+def run_gate(cmd, cwd: Path = REPO) -> tuple[int, str]:
     try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True,
+        r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
                            timeout=GATE_TIMEOUT)
     except subprocess.TimeoutExpired:
         return -1, "GATE TIMEOUT — treated as a crash, never as a kill"
     return r.returncode, r.stdout + r.stderr
+
+
+def classify(g, m, rc: int, out: str) -> str | None:
+    """THE verdict, shared by both modes: None = killed with the expected
+    message; otherwise the failure line this run must report."""
+    if rc == 0:
+        return (f"{g.name} / '{m.label}': gate PASSED a known-bad "
+                f"mutation — it is blind to this defect class")
+    if "Traceback (most recent call last)" in out or rc == -1:
+        # A crash is NEVER a kill, whatever the regex says: a crashing gate
+        # prints its own source line, which can contain the very words the
+        # regex expects (measured: a KeyError in check_known_false_ready
+        # emitted "baseline" twice).
+        return (f"{g.name} / '{m.label}': gate CRASHED on the "
+                f"mutation instead of detecting it — a crash is "
+                f"not detection. Output head: {out[:300]!r}")
+    if not m.expect.search(out):
+        return (f"{g.name} / '{m.label}': gate failed but WITHOUT "
+                f"the expected message /{m.expect_src}/ — it is "
+                f"failing for the wrong reason. Output head: "
+                f"{out[:300]!r}")
+    return None
 
 
 def check_spec_drift_coverage() -> list[str]:
@@ -2671,12 +2808,425 @@ def check_spec_drift_coverage() -> list[str]:
     return problems
 
 
+class HarnessInfra(Exception):
+    """The harness itself could not establish a trustworthy run (exit 2)."""
+
+
+def _git(args, cwd, check=True) -> bytes:
+    r = subprocess.run(["git", "--no-optional-locks", *args], cwd=cwd,
+                       capture_output=True)
+    if check and r.returncode != 0:
+        raise HarnessInfra(
+            f"`git {' '.join(map(str, args))}` failed in {cwd}: "
+            f"{r.stderr.decode('utf-8', 'replace').strip()}")
+    return r.stdout
+
+
+def _zpaths(raw: bytes) -> list[str]:
+    return [os.fsdecode(p) for p in raw.split(b"\0") if p]
+
+
+def _fingerprint(root: Path, paths) -> dict:
+    """Content + executable bit (or link target) of every path that exists."""
+    fp = {}
+    for p in paths:
+        f = root / p
+        if f.is_symlink():
+            fp[p] = ("link", os.readlink(f))
+        elif f.is_file():
+            fp[p] = (sha(f), bool(f.stat().st_mode & 0o111))
+    return fp
+
+
+class SourceState:
+    """What an isolated copy must reproduce: HEAD, the git index, and every
+    tracked or untracked-unignored file of the working tree, byte for byte."""
+
+    def __init__(self):
+        self.head = _git(["rev-parse", "HEAD"], REPO).decode().strip()
+        tracked = _zpaths(_git(["ls-files", "-z"], REPO))
+        untracked = [p for p in _zpaths(_git(
+            ["ls-files", "-z", "--others", "--exclude-standard"], REPO))
+            if p.split("/")[0] not in (LOCK_NAME, BACKUP_DIR)]
+        # Working-tree differences from HEAD (staged or not, incl. deletions).
+        changed = _zpaths(_git(["diff", "--name-only", "-z", "HEAD"], REPO))
+        self.overlay = sorted(set(changed) | set(untracked))
+        # A staged state that differs from HEAD (a `git add`ed new file is
+        # tracked here and would be untracked in a bare HEAD checkout, which
+        # `git ls-files`-driven gates would see).
+        self.index_dirty = subprocess.run(
+            ["git", "--no-optional-locks", "diff", "--cached", "--quiet",
+             "HEAD"], cwd=REPO).returncode != 0
+        self.paths = sorted(set(tracked) | set(untracked))
+        self.fingerprint = _fingerprint(REPO, self.paths)
+
+
+class Copy:
+    """One disposable git worktree of the source state, owned by one worker
+    at a time. The user's working tree is never written by isolated mode."""
+
+    def __init__(self, root: Path):
+        self.root = root
+        self.status0 = b""
+
+    def status(self) -> bytes:
+        return _git(["status", "--porcelain", "-z", "--untracked-files=no"],
+                    self.root)
+
+
+def make_copy(base: Path, i: int, src: SourceState) -> Copy:
+    root = base / f"w{i}"
+    # Hooks off: a post-checkout hook must not run in (or on) a copy.
+    _git(["-c", "core.hooksPath=/dev/null", "worktree", "add", "--detach",
+          "--quiet", str(root), src.head], REPO)
+    c = Copy(root)
+    for p in src.overlay:
+        # _build is linked below, never overlaid: a SYMLINKED _build is not
+        # matched by .gitignore's directory-only '_build/' and so shows up as
+        # untracked (review MEDIUM-1: FileExistsError in make_copy).
+        if Path(p).parts[:1] == ("_build",):
+            continue
+        s, d = REPO / p, root / p
+        if d.is_symlink() or d.is_file():
+            d.unlink()
+        if s.is_symlink() or s.is_file():
+            d.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(s, d, follow_symlinks=False)
+    if src.index_dirty:
+        idx = Path(_git(["rev-parse", "--path-format=absolute",
+                         "--git-path", "index"], REPO).decode().strip())
+        cidx = Path(_git(["rev-parse", "--path-format=absolute",
+                          "--git-path", "index"], root).decode().strip())
+        shutil.copy2(idx, cidx)
+        subprocess.run(["git", "update-index", "-q", "--refresh"], cwd=root,
+                       capture_output=True)
+    # Build products are read-only inputs of the binary level (and of pure
+    # gates that consult a CLI when one exists). A symlink, not a copy: the
+    # resolved path is the SOURCE checkout, so C-72's build-root fingerprint
+    # of the CLI is the same one the in-place run computes.
+    b = REPO / "_build"
+    if b.exists():
+        link = root / "_build"
+        if link.is_symlink() or link.is_file():
+            link.unlink()
+        os.symlink(b.resolve(), link)
+    got = _fingerprint(root, src.paths)
+    if got != src.fingerprint:
+        bad = sorted(p for p in set(got) | set(src.fingerprint)
+                     if got.get(p) != src.fingerprint.get(p))
+        raise HarnessInfra(f"isolated copy {root} does not reproduce the "
+                           f"working tree: {bad[:10]}")
+    return c
+
+
+def remove_copies(base: Path) -> None:
+    """Deregister and delete EVERY copy under `base` — including one whose
+    creation failed half-way, which never made it into the worker list."""
+    leftovers = []
+    for root in sorted(base.glob("w*")):
+        link = root / "_build"
+        if link.is_symlink():
+            link.unlink()  # never let a recursive delete follow it
+        r = subprocess.run(["git", "worktree", "remove", "--force", "--force",
+                            str(root)], cwd=REPO, capture_output=True)
+        if r.returncode != 0:
+            leftovers.append(str(root))
+    shutil.rmtree(base, ignore_errors=True)
+    if leftovers:
+        print(f"[gate-selftests] WARNING: could not deregister worktree(s) "
+              f"{leftovers}; `git worktree prune` clears the stale entries")
+
+
+def run_isolated(gates, jobs: int, records: list) -> int:
+    """Every gate run happens in a disposable worktree copy; `jobs` copies
+    run concurrently. Verdicts are the in-place mode's, byte for byte:
+    same `classify`, output with the copy's path rewritten to REPO's."""
+    # Every mutation computed ONCE, in registry order, BEFORE any gate runs:
+    # registry rot is reported deterministically and never from a thread.
+    payload = {}
+    for gi, g in enumerate(gates):
+        for mi, m in enumerate(g.mutations):
+            payload[gi, mi] = m.mutated_bytes()
+
+    src = SourceState()
+    n_tasks = sum(len(g.mutations) for g in gates) + 1
+    n = max(1, min(jobs, n_tasks))
+    base = Path(tempfile.mkdtemp(prefix="gate-selftests-")).resolve()
+    copies = []
+    try:
+        # Distinct basenames, so concurrent `worktree add`s never contend
+        # for the same .git/worktrees/<name> entry.
+        with ThreadPoolExecutor(max_workers=n) as ex:
+            futs = [ex.submit(make_copy, base, i, src) for i in range(n)]
+        for f in futs:
+            copies.append(f.result())  # raises the first failure, if any
+        # Refresh each copy's index once its files are older than the index
+        # (git re-hashes "racily clean" entries on every status otherwise:
+        # measured 0.10 s -> 0.03 s per status, one status per task).
+        time.sleep(1.1)
+        for c in copies:
+            subprocess.run(["git", "update-index", "-q", "--refresh"],
+                           cwd=c.root, capture_output=True)
+            c.status0 = c.status()
+        print(f"[gate-selftests] isolated mode: {n} worktree cop"
+              f"{'y' if n == 1 else 'ies'} of HEAD {src.head[:12]}"
+              f"{f' + {len(src.overlay)} working-tree file(s)' if src.overlay else ''}"
+              f", {n} gate run(s) at a time; the working tree is never "
+              f"mutated")
+        free: queue.Queue = queue.Queue()
+        for c in copies:
+            free.put(c)
+
+        def norm(out: str, c: Copy) -> str:
+            return out.replace(str(c.root), str(REPO))
+
+        def clean_run(g):
+            c = free.get()
+            try:
+                t = time.monotonic()
+                rc, out = run_gate(g.cmd, c.root)
+                secs = time.monotonic() - t
+                if c.status() != c.status0:
+                    raise HarnessInfra(
+                        f"{g.name}'s clean run modified tracked files in "
+                        f"{c.root}")
+                return rc, norm(out, c), secs
+            finally:
+                free.put(c)
+
+        def mutation_run(g, m, data: bytes):
+            c = free.get()
+            try:
+                tgt = c.root / m.rel
+                orig = tgt.read_bytes()
+                st = tgt.stat()
+                t = time.monotonic()
+                try:
+                    tmp = tgt.with_name(tgt.name + ".mutate-tmp")
+                    tmp.write_bytes(data)
+                    os.chmod(tmp, st.st_mode)
+                    os.replace(tmp, tgt)
+                    rc, out = run_gate(g.cmd, c.root)
+                finally:
+                    tmp = tgt.with_name(tgt.name + ".restore-tmp")
+                    tmp.write_bytes(orig)
+                    os.chmod(tmp, st.st_mode)
+                    os.replace(tmp, tgt)
+                    os.utime(tgt, ns=(st.st_atime_ns, st.st_mtime_ns))
+                secs = time.monotonic() - t
+                now = tgt.stat()
+                if (tgt.read_bytes() != orig or now.st_mode != st.st_mode
+                        or now.st_mtime_ns != st.st_mtime_ns):
+                    raise HarnessInfra(
+                        f"restoration of {tgt} in its isolated copy is NOT "
+                        f"identical (content, mode or mtime) — the harness "
+                        f"is broken; no verdict of this run can be trusted")
+                if c.status() != c.status0:
+                    raise HarnessInfra(
+                        f"{g.name} / '{m.label}' left tracked files modified "
+                        f"in {c.root} beyond its restored target")
+                return rc, norm(out, c), secs
+            finally:
+                free.put(c)
+
+        with ThreadPoolExecutor(max_workers=n) as ex:
+            # Phase 1 — every gate clean. A red gate cannot be selftested.
+            base_res = list(ex.map(clean_run, gates))
+            for g, (rc, out, secs) in zip(gates, base_res):
+                records.append(dict(gate=g.name, kind="baseline", label=None,
+                                    rc=rc, secs=secs, verdict=None, out=out))
+            for g, (rc, out, _) in zip(gates, base_res):
+                if rc != 0:
+                    print(f"[gate-selftests] ABORT: {g.name} is ALREADY RED "
+                          f"before any mutation — fix the gate first, then "
+                          f"selftest it")
+                    print(out[:800])
+                    return 2
+
+            # Phase 2 — every mutation, longest gate first (the clean run
+            # predicts its mutations' cost), plus the CANARY: a no-op edit
+            # that goes through the same pool, the same verdict and the same
+            # aggregation, and MUST come out as a surviving mutant. If it does
+            # not, the parallel machinery can mask a survivor, and nothing
+            # this run says can be trusted.
+            gi0 = min(range(len(gates)), key=lambda i: base_res[i][2])
+            g0 = gates[gi0]
+            canary = Mutation("harness canary: a no-op edit, which MUST be "
+                              "reported as a surviving mutant",
+                              g0.mutations[0].rel, r"(?!)")
+            payload["canary"] = (REPO / canary.rel).read_bytes()
+            order = sorted((k for k in payload if k != "canary"),
+                           key=lambda k: (-base_res[k[0]][2], k)) + ["canary"]
+            pairs = {k: ((g0, canary) if k == "canary"
+                         else (gates[k[0]], gates[k[0]].mutations[k[1]]))
+                     for k in payload}
+            futs = {k: ex.submit(mutation_run, *pairs[k], payload[k])
+                    for k in order}
+            res = {k: f.result() for k, f in futs.items()}
+
+            # Aggregate in REGISTRY order, canary last, through one path.
+            failures = []
+            keys = sorted(k for k in res if k != "canary") + ["canary"]
+            for k in keys:
+                g, m = pairs[k]
+                rc, out, secs = res[k]
+                v = classify(g, m, rc, out)
+                records.append(dict(gate=g.name, kind="canary" if k ==
+                                    "canary" else "mutation", label=m.label,
+                                    rc=rc, secs=secs, verdict=v, out=out))
+                if v is not None:
+                    failures.append(v)
+            want = (f"{g0.name} / '{canary.label}': gate PASSED a known-bad "
+                    f"mutation — it is blind to this defect class")
+            if failures.count(want) != 1:
+                print(f"[gate-selftests] FATAL: the harness canary (a no-op "
+                      f"edit to {canary.rel} under {g0.name}) was NOT "
+                      f"reported as a surviving mutant — the parallel "
+                      f"machinery can mask a survivor, so no verdict of this "
+                      f"run can be trusted. Canary result: rc={res['canary'][0]}")
+                return 2
+            failures.remove(want)
+
+            # Phase 3 — every copy still reproduces the working tree, then
+            # every gate clean again (in any copy: they are all proven equal).
+            for c in copies:
+                got = _fingerprint(c.root, src.paths)
+                if got != src.fingerprint:
+                    print(f"[gate-selftests] FATAL: isolated copy {c.root} no "
+                          f"longer reproduces the working tree after the "
+                          f"mutations — the selftest damaged its inputs")
+                    return 2
+            post_res = list(ex.map(clean_run, gates))
+            for g, (rc, out, secs) in zip(gates, post_res):
+                records.append(dict(gate=g.name, kind="post", label=None,
+                                    rc=rc, secs=secs, verdict=None, out=out))
+            for g, (rc, out, _) in zip(gates, post_res):
+                if rc != 0:
+                    print(f"[gate-selftests] FATAL: {g.name} is red AFTER "
+                          f"restoration — the selftest damaged its inputs")
+                    print(out[:800])
+                    return 2
+    finally:
+        remove_copies(base)
+    return report(gates, failures)
+
+
+def report(gates, failures) -> int:
+    if failures:
+        print(f"[gate-selftests] FAIL: {len(failures)} blind spot(s)")
+        for f in failures:
+            print(f"  - {f}")
+        return 1
+    ran = sum(len(g.mutations) for g in gates)
+    print(f"[gate-selftests] PASS: {ran} mutation(s) across "
+          f"{len(gates)} gate(s) — every one killed its gate with the expected "
+          f"message, and every restoration is byte-identical.")
+    return 0
+
+
+def run_in_place(gates, records: list) -> int:
+    """The original serial mode: each mutation edits the WORKING TREE.
+
+    Kept for debugging a single gate against the real checkout; isolated mode
+    is the default. Backups live on disk before the mutation does."""
+    # ⚠ BACKUPS LIVE ON DISK BEFORE THE MUTATION DOES. v1 held the backup only
+    # in process memory with a truncate-write restore and no subprocess
+    # timeout — a hard kill (SIGKILL skips finally) in the mutation window
+    # left the tree mutated with NOTHING on disk to recover from. Now: the
+    # original bytes are written to .gate-selftest-backups/<name> and fsynced
+    # BEFORE the target is touched, the restore goes through a temp file +
+    # os.replace (atomic on POSIX), and the backup is deleted only after the
+    # sha256 round-trip is proven.
+    bdir = REPO / BACKUP_DIR
+    bdir.mkdir(exist_ok=True)
+
+    failures = []
+    try:
+        for g in gates:
+            t = time.monotonic()
+            rc, out = run_gate(g.cmd)
+            records.append(dict(gate=g.name, kind="baseline", label=None,
+                                rc=rc, secs=time.monotonic() - t,
+                                verdict=None, out=out))
+            if rc != 0:
+                print(f"[gate-selftests] ABORT: {g.name} is ALREADY RED before "
+                      f"any mutation — fix the gate first, then selftest it")
+                print(out[:800])
+                return 2
+            for m in g.mutations:
+                before = sha(m.target)
+                st = m.target.stat()
+                bfile = bdir / m.target.name
+                bfile.write_bytes(m.target.read_bytes())
+                bfd = os.open(bfile, os.O_RDONLY)
+                os.fsync(bfd)
+                os.close(bfd)
+                try:
+                    t = time.monotonic()
+                    m.apply()
+                    rc, out = run_gate(g.cmd)
+                    v = classify(g, m, rc, out)
+                    records.append(dict(gate=g.name, kind="mutation",
+                                        label=m.label, rc=rc,
+                                        secs=time.monotonic() - t,
+                                        verdict=v, out=out))
+                    if v is not None:
+                        failures.append(v)
+                finally:
+                    tmp = m.target.with_suffix(m.target.suffix + ".restore-tmp")
+                    mode = m.target.stat().st_mode
+                    tmp.write_bytes(bfile.read_bytes())
+                    os.chmod(tmp, mode)
+                    os.replace(tmp, m.target)  # atomic: never a torn restore
+                    # Preserve mtime at ns precision: a fresh mtime on a
+                    # restored .ml makes dune rebuild the world for a no-op.
+                    os.utime(m.target, ns=(st.st_atime_ns, st.st_mtime_ns))
+                if sha(m.target) != before:
+                    print(f"[gate-selftests] FATAL: restoration of {m.target} "
+                          f"is NOT byte-identical — recover from {bfile} NOW")
+                    return 2
+                bfile.unlink()  # only after the round-trip is proven
+            t = time.monotonic()
+            rc, out = run_gate(g.cmd)
+            records.append(dict(gate=g.name, kind="post", label=None, rc=rc,
+                                secs=time.monotonic() - t, verdict=None,
+                                out=out))
+            if rc != 0:
+                print(f"[gate-selftests] FATAL: {g.name} is red AFTER "
+                      f"restoration — the selftest damaged its inputs")
+                print(out[:800])
+                return 2
+    finally:
+        try:
+            bdir.rmdir()  # succeeds only when empty = every backup consumed
+        except OSError:
+            print(f"[gate-selftests] WARNING: {bdir} is not empty — a backup "
+                  f"was not consumed; inspect before trusting the tree")
+    return report(gates, failures)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--level", choices=["pure", "binary", "all"], default="all")
     ap.add_argument("--force", action="store_true",
-                    help="run even if target files are git-dirty")
+                    help="--in-place only: run even if target files are "
+                         "git-dirty")
+    ap.add_argument("--jobs", "-j", type=int, default=os.cpu_count() or 1,
+                    help="isolated worktree copies run concurrently "
+                         "(default: CPU count)")
+    ap.add_argument("--in-place", action="store_true",
+                    help="the old serial mode: mutate the working tree itself "
+                         "(backup-restored, refuses a dirty tree)")
+    ap.add_argument("--only", action="append", default=[], metavar="GATE",
+                    help="restrict to the named gate(s); a PARTIAL run")
+    ap.add_argument("--inject-survivor", action="store_true",
+                    help="harness self-test: register a no-op mutation on the "
+                         "first selected gate; the run MUST fail with exit 1")
+    ap.add_argument("--report-json", metavar="PATH",
+                    help="write every gate run (rc, seconds, verdict, output)")
     ns = ap.parse_args()
+    if ns.jobs < 1:
+        ap.error("--jobs must be >= 1")
 
     gates = [g for g in REGISTRY
              if ns.level == "all" or g.level == ns.level]
@@ -2707,28 +3257,49 @@ def main() -> int:
             print("[gate-selftests] note: CLI not built; binary-level gates "
                   "excluded from this ALL run (they run in the build job)")
 
-    # In-place mutations must not be able to eat uncommitted work.
-    targets = sorted({str(m.target.relative_to(REPO))
-                      for g in gates for m in g.mutations})
-    # "CI" must mean CI: direnv/nix setups export CI=false, and any non-empty
-    # string is truthy in Python — so `CI=false` used to skip the dirty check.
-    in_ci = os.environ.get("CI", "").strip().lower() in ("1", "true", "yes")
-    if not (ns.force or in_ci):
-        r = subprocess.run(["git", "--no-optional-locks", "status",
-                            "--porcelain", "--", *targets],
-                           cwd=REPO, capture_output=True, text=True)
-        if r.stdout.strip():
-            print("[gate-selftests] REFUSING: mutation targets are git-dirty "
-                  "(a crash mid-mutation would eat uncommitted work):\n"
-                  + r.stdout + "  commit/stash first, or pass --force")
+    if ns.only:
+        unknown = set(ns.only) - {g.name for g in gates}
+        if unknown:
+            print(f"[gate-selftests] --only names no selected gate: "
+                  f"{sorted(unknown)}")
             return 2
+        gates = [g for g in gates if g.name in ns.only]
+        print(f"[gate-selftests] note: PARTIAL run (--only) — "
+              f"{len(gates)} gate(s); this is not the selftest CI requires")
+    if ns.inject_survivor:
+        g = gates[0]
+        g.mutations = list(g.mutations) + [Mutation(
+            "INJECTED SURVIVOR (--inject-survivor): a no-op edit no gate can "
+            "detect", g.mutations[0].rel, r"(?!)", transform=lambda t: t)]
+
+    if ns.in_place:
+        # In-place mutations must not be able to eat uncommitted work.
+        targets = sorted({str(m.target.relative_to(REPO))
+                          for g in gates for m in g.mutations})
+        # "CI" must mean CI: direnv/nix setups export CI=false, and any
+        # non-empty string is truthy in Python — so `CI=false` used to skip
+        # the dirty check.
+        in_ci = os.environ.get("CI", "").strip().lower() in ("1", "true",
+                                                             "yes")
+        if not (ns.force or in_ci):
+            r = subprocess.run(["git", "--no-optional-locks", "status",
+                                "--porcelain", "--", *targets],
+                               cwd=REPO, capture_output=True, text=True)
+            if r.stdout.strip():
+                print("[gate-selftests] REFUSING: mutation targets are "
+                      "git-dirty (a crash mid-mutation would eat uncommitted "
+                      "work):\n" + r.stdout + "  commit/stash first, or pass "
+                      "--force")
+                return 2
 
     # ⚠ A SINGLE-INSTANCE LOCK, because two concurrent runs poison each
     # other's backups: B (started inside A's mutation window) backs up A's
     # MUTATED bytes as its "original", both restore "successfully", and the
-    # tree ends permanently mutated while both exit green. O_EXCL is atomic;
+    # tree ends permanently mutated while both exit green. Isolated mode takes
+    # it too: it COPIES the working tree, and a copy taken inside an in-place
+    # run's mutation window would carry that run's mutant. O_EXCL is atomic;
     # a stale lock is reported with its pid, never silently stolen.
-    lock = REPO / ".gate-selftests.lock"
+    lock = REPO / LOCK_NAME
     try:
         fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         os.write(fd, f"{os.getpid()}\n".encode())
@@ -2736,99 +3307,29 @@ def main() -> int:
     except FileExistsError:
         print(f"[gate-selftests] REFUSING: {lock} exists (pid "
               f"{lock.read_text().strip()!r}). Another selftest run is active "
-              f"— or crashed; inspect, restore from .gate-selftest-backups/ "
+              f"— or crashed; inspect, restore from {BACKUP_DIR}/ "
               f"if needed, then remove the lock by hand.")
         return 2
 
-    # ⚠ BACKUPS LIVE ON DISK BEFORE THE MUTATION DOES. v1 held the backup only
-    # in process memory with a truncate-write restore and no subprocess
-    # timeout — a hard kill (SIGKILL skips finally) in the mutation window
-    # left the tree mutated with NOTHING on disk to recover from. Now: the
-    # original bytes are written to .gate-selftest-backups/<name> and fsynced
-    # BEFORE the target is touched, the restore goes through a temp file +
-    # os.replace (atomic on POSIX), and the backup is deleted only after the
-    # sha256 round-trip is proven.
-    bdir = REPO / ".gate-selftest-backups"
-    bdir.mkdir(exist_ok=True)
-
-    failures, ran = [], 0
+    records: list = []
     try:
-        for g in gates:
-            rc, out = run_gate(g.cmd)
-            if rc != 0:
-                print(f"[gate-selftests] ABORT: {g.name} is ALREADY RED before "
-                      f"any mutation — fix the gate first, then selftest it")
-                print(out[:800])
-                return 2
-            for m in g.mutations:
-                ran += 1
-                before = sha(m.target)
-                st = m.target.stat()
-                bfile = bdir / m.target.name
-                bfile.write_bytes(m.target.read_bytes())
-                bfd = os.open(bfile, os.O_RDONLY)
-                os.fsync(bfd)
-                os.close(bfd)
-                try:
-                    m.apply()
-                    rc, out = run_gate(g.cmd)
-                    if rc == 0:
-                        failures.append(
-                            f"{g.name} / '{m.label}': gate PASSED a known-bad "
-                            f"mutation — it is blind to this defect class")
-                    elif "Traceback (most recent call last)" in out or rc == -1:
-                        # A crash is NEVER a kill, whatever the regex says: a
-                        # crashing gate prints its own source line, which can
-                        # contain the very words the regex expects (measured:
-                        # a KeyError in check_known_false_ready emitted
-                        # "baseline" twice).
-                        failures.append(
-                            f"{g.name} / '{m.label}': gate CRASHED on the "
-                            f"mutation instead of detecting it — a crash is "
-                            f"not detection. Output head: {out[:300]!r}")
-                    elif not m.expect.search(out):
-                        failures.append(
-                            f"{g.name} / '{m.label}': gate failed but WITHOUT "
-                            f"the expected message /{m.expect_src}/ — it is "
-                            f"failing for the wrong reason. Output head: "
-                            f"{out[:300]!r}")
-                finally:
-                    tmp = m.target.with_suffix(m.target.suffix + ".restore-tmp")
-                    mode = m.target.stat().st_mode
-                    tmp.write_bytes(bfile.read_bytes())
-                    os.chmod(tmp, mode)
-                    os.replace(tmp, m.target)  # atomic: never a torn restore
-                    # Preserve mtime at ns precision: a fresh mtime on a
-                    # restored .ml makes dune rebuild the world for a no-op.
-                    os.utime(m.target, ns=(st.st_atime_ns, st.st_mtime_ns))
-                if sha(m.target) != before:
-                    print(f"[gate-selftests] FATAL: restoration of {m.target} "
-                          f"is NOT byte-identical — recover from {bfile} NOW")
-                    return 2
-                bfile.unlink()  # only after the round-trip is proven
-            rc, out = run_gate(g.cmd)
-            if rc != 0:
-                print(f"[gate-selftests] FATAL: {g.name} is red AFTER "
-                      f"restoration — the selftest damaged its inputs")
-                print(out[:800])
-                return 2
+        if ns.in_place:
+            return run_in_place(gates, records)
+        bdir = REPO / BACKUP_DIR
+        if bdir.is_dir() and any(bdir.iterdir()):
+            print(f"[gate-selftests] WARNING: {bdir} is not empty — a backup "
+                  f"of an earlier in-place run was not consumed; inspect "
+                  f"before trusting the tree")
+        try:
+            return run_isolated(gates, ns.jobs, records)
+        except HarnessInfra as exc:
+            print(f"[gate-selftests] FATAL (harness infrastructure): {exc}")
+            return 2
     finally:
         lock.unlink(missing_ok=True)
-        try:
-            bdir.rmdir()  # succeeds only when empty = every backup consumed
-        except OSError:
-            print(f"[gate-selftests] WARNING: {bdir} is not empty — a backup "
-                  f"was not consumed; inspect before trusting the tree")
-
-    if failures:
-        print(f"[gate-selftests] FAIL: {len(failures)} blind spot(s)")
-        for f in failures:
-            print(f"  - {f}")
-        return 1
-    print(f"[gate-selftests] PASS: {ran} mutation(s) across "
-          f"{len(gates)} gate(s) — every one killed its gate with the expected "
-          f"message, and every restoration is byte-identical.")
-    return 0
+        if ns.report_json:
+            Path(ns.report_json).write_text(json.dumps(records, indent=1),
+                                            encoding="utf-8")
 
 
 if __name__ == "__main__":

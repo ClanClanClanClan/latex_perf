@@ -302,7 +302,8 @@ def main() -> int:
             _dig(data, ("provenance", "cli_sha256")), cli_hash,
             (_dig(data, ("provenance", "src_tree_sha")) or data.get("src_tree_sha")),
             recorded_platform=_dig(data, ("provenance", "cli_platform")),
-            recorded_build_root=_dig(data, ("provenance", "cli_build_root")))
+            recorded_build_root=_dig(data, ("provenance", "cli_build_root")),
+            built_cli_path=cli_path if cli_hash else None)
         findings.extend(f_cli)
         skipped_binary_checks.extend(n_cli)
 

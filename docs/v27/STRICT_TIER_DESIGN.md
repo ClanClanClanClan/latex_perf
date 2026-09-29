@@ -57,7 +57,7 @@ A project `P` is STRICT with respect to contract `C` iff all six conditions hold
    - A name that is defined but whose signature is not attested in that (mode, context) is **outside** the tier. It is never guessed.
    - Loading tikz without using it can stay strict. This is sound here and was not in product-first, because the *configuration trace* (not a per-package overlay) has already recorded tikz's hooks, catcode changes and `load_outcome`.
 4. **Standard catcode regime.** No production exists for `\catcode`, `\makeatletter`, `\def`, `\let`, `\csname`, `\expandafter`, primitive `\if*`, `\write`/`\openout`/`\write18`, `\newif`, `\loop`, `\ifthenelse`, `\whiledo`, `\foreach`, `\ExplSyntaxOn`, `\NewDocumentCommand`, or `@`-names.
-   - Nor for any other name whose use changes a catcode or the group level, or takes the next token other than as a macro argument (review of 2026-09-27, C-82): `\obeylines`, `\obeyspaces`, `\dospecials`-style catcode changers, the `\@sanitize` users (`\index`, `\glossary`), `\string`, `\noexpand`, `\meaning`, `\aftergroup`, `\enddocument`, `\stop`, `\bgroup`/`\begingroup`. This list is not hand-maintained: since signature version 2 the **follow probe** (§I.4) attests, for every name and cell, that the token after the use is the next one executed with all 256 catcodes and the group level unchanged, and a name that fails it has no attested shape, so its uses are outside the tier. (`\dospecials` itself passes at body start in `article`: `\do` is `\noexpand` there, so it changes nothing.)
+   - Nor for any other name whose use changes a catcode or the group level, or takes the next token other than as a macro argument (review of 2026-09-27, C-82): `\obeylines`, `\obeyspaces`, `\dospecials`-style catcode changers, the `\@sanitize` users (`\index`, `\glossary`), `\string`, `\noexpand`, `\meaning`, `\aftergroup`, `\enddocument`, `\stop`, `\bgroup`/`\begingroup`. This list is not hand-maintained: since signature version 2 the **follow probe** (§I.4) attests, for every name and cell, that the token after the use is the next one executed with all 256 catcodes and the group level unchanged, and a name that fails it has no attested shape, so its uses are outside the tier. (`\dospecials` itself passes at body start in `article`: `\do` is `\noexpand` there, so it changes nothing.) Since signature version 3 (§I.4, round 2, C-87) the same probe also compares the group type, the conditional level and the kernel's allocation registers, reads the mode the use leaves (a use that leaves another mode composes only through an attested transition to the cell of that mode), and reads from `\tracingassigns` whether the use changed the meaning of any name a body can type; a use that allocates or redefines is outside the tier, as is one whose 300-fold repetition or whose run with every counter at 27 or −1 fails.
    - Active characters introduced by the configuration (babel french makes `! : ; ?` active, ngerman `"`, spanish `" < >` [M]) come from the contract's `catcodes` field. Each one either has a signature or is out of the tier.
    - Verbatim constructs (`\verb`, `verbatim`, `\url`) are productions with their own lexical rule, admitted at top level only.
 5. **Layout-independence side conditions** (graft from attestation-first). These make page-builder fatals structurally impossible rather than modelled.
@@ -129,7 +129,7 @@ The two-kind split is forced by measurement:
 | `files_read`, `lazy_files` | files read at load, and files read on first use (e.g. `\mathbb` → `umsa.fd`) | `pdflatex -recorder` `.fls` of the load, and of each positive probe, minus the empty-document baseline | re-run with the file hidden; the expected fatal must appear |
 | `defined_names` (closed world) | every name whose final meaning at body start differs from the kernel | pass 1: `\tracingassigns=1` over `\documentclass…\begin{document}`, with `\typeout` load boundaries and `max_print_line=1000000`. Pass 2: `\ifcsname`-guarded `\meaning` dump **after `AtBeginDocument`** (65 names assigned during load revert by body start [M]) | **closure self-check**: `\ifdefined` on a random 1% of the kernel∪contract universe plus every name the document uses must agree with membership. Any mismatch blocks the contract. As built (§I.2) the universe is also checked against TeX's own hash-table count, and the per-document part is M2's |
 | `meaning` | `Undefined \| Relax \| Primitive \| Char \| MathChar \| Register \| Macro{long, protected, robust, ltcmd-spec}` | pass 2 dump, a lazy closed-world memo (negatives are answers too; this settles ROADMAP G1's polarity split) | from the dump |
-| `signature(name, mode, context)` | `allowed : Ok \| Fatal msg`, plus `args : [kind ∈ {req, opt, star}, argty, long]` | Candidates come from the ltcmd spec in the meaning, the `\@protected@testopt`/`\@ifstar` idioms, and the outer-sentinel arity probe (`\outer\def\STOP{}`, then `\cs{x}^n\STOP`). **A shape read is a hint, never attestation**: static `#n` arity disagreed with behavioural arity on **121/405 = 30%** of macros [M]. Payload lattice: `{a}`, `{1pt}`, `{equation}`, `{example-image}`, `{http://x}`, `[width=1cm]`, a counter name | **solo** `-halt-on-error` probes, **one variable each**, classified by *error class*, not rc. Positive probes: a well-typed use compiles, in T, in M, and in each context. Negative probes: wrong mode, `\par` in the argument (long-ness), a missing argument. **Batched probes are triage only**: batch-vs-solo polarity agreement was 142/143 [M]. A 15 s timeout guards against the MetaPost-support hangs [M]. **As built since signature version 2 (§I.4, C-82):** the sentinel attests only macro-parameter consumption, so every shape also needs a passing *follow probe* in every cell it is used in, argument types are read from three error-class witnesses, and every type is confirmed through the configuration's consumers (and, for TyLabel, processed at the use) |
+| `signature(name, mode, context)` | `allowed : Ok \| Fatal msg`, plus `args : [kind ∈ {req, opt, star}, argty, long]` | Candidates come from the ltcmd spec in the meaning, the `\@protected@testopt`/`\@ifstar` idioms, and the outer-sentinel arity probe (`\outer\def\STOP{}`, then `\cs{x}^n\STOP`). **A shape read is a hint, never attestation**: static `#n` arity disagreed with behavioural arity on **121/405 = 30%** of macros [M]. Payload lattice: `{a}`, `{1pt}`, `{equation}`, `{example-image}`, `{http://x}`, `[width=1cm]`, a counter name | **solo** `-halt-on-error` probes, **one variable each**, classified by *error class*, not rc. Positive probes: a well-typed use compiles, in T, in M, and in each context. Negative probes: wrong mode, `\par` in the argument (long-ness), a missing argument. **Batched probes are triage only**: batch-vs-solo polarity agreement was 142/143 [M]. A 15 s timeout guards against the MetaPost-support hangs [M]. **As built since signature version 2 (§I.4, C-82):** the sentinel attests only macro-parameter consumption, so every shape also needs a passing *follow probe* in every cell it is used in, argument types are read from three error-class witnesses, and every type is confirmed through the configuration's consumers (and, for TyLabel, processed at the use). **Since version 3 (§I.4 round 2, C-87):** what a use leaves behind is attested too (mode and transition, allocation, redefinition, repetition, counter values, page position), typeset types must survive a moving argument, TyLabel is a key, and numeric types must take other values |
 | `environments` | begin-args, body mode, the context it pushes (list, float, alignment n, theorem, display) | `\X` and `\endX` both in `defined_names`, plus the same probe families | solo |
 | `definer_rules` | pin-level semantics of each admitted definer | a probe table (13 probes [M]). Plausible hand rules are false at the pin: `\newcounter{lemma}` followed by `\newtheorem{lemma}` **compiles** (in the kernel only: under amsthm it is fatal, C-81), and `\newcommand` on a `\relax`-meaning name compiles [M] | the table is the attestation |
 | `decl_templates` | per declaration command and **owner combination** (kernel / amsthm / amsthm+thmtools / ntheorem): the names it defines, `errors_if_defined`, and `requires` | fresh-name probe (`\newtheorem{zzq}[section]{Zzq}`), then a meaning diff of the zzq family, then collision probes. The amsthm+thmtools template differs, and it reproduces `Command \c@lemma already defined` [M] (graft from product-first). **Corrected by C-81 (measured at the pinned image, 2026-09-27):** it is not only amsthm+thmtools — amsthm ALONE already fails `\newcounter{lemma}\newtheorem{lemma}{Lemma}` (`Command \c@lemma already defined`; the kernel alone compiles it), and under amsthm+thmtools EVERY shared-counter `\newtheorem`, including `\newtheorem{thm}{T}\newtheorem{lemma}[thm]{L}`, is fatal on pass 1, and so is thmtools' own `\declaretheorem[sibling=thm]{lemma}` (amsthm alone compiles the shared form) | collision matrix |
@@ -819,8 +819,8 @@ following hold. Otherwise `incomplete_reasons` lists every failing check.
 
 *Version 1 as first built. Its exactness test, its argument typing and its
 gate were corrected by the adversarial review recorded in §I.4 (signature
-version 2, C-82); where the two disagree, §I.4 is current, and the measured
-figures below are version 1's.*
+version 2, C-82, and its round 2, version 3, C-87); where the two disagree,
+§I.4 is current, and the measured figures below are version 1's.*
 
 Data only: nothing reads a signature yet (M2 is the first consumer). Ledger row
 OPEN-120.
@@ -993,7 +993,7 @@ stops with `Forbidden control sequence found while scanning use of`
   full scope takes hours on this machine under load).
 - The sidecar is 4.5 MB (the probe log of every name is kept as evidence).
 
-### I.4 Signature version 2: the adversarial review of 2026-09-27 (C-81, C-82)
+### I.4 Signature versions 2 and 3: the adversarial reviews of 2026-09-27 and 2026-09-28 (C-81, C-82, C-87)
 
 An adversarial reviewer measured, under the pinned image, that version 1's
 signatures were unsound in two ways (C-82) and its gate re-derived too little.
@@ -1137,3 +1137,306 @@ container).**
 - `\dospecials` stays attested: at body start in `article` `\do` is
   `\noexpand`, so it changes no catcode.
 
+#### Round 2: signature version 3 (review of 2026-09-28, C-87)
+
+A second adversarial review of version 2 found that every version-2 fix held,
+and that five families of new holes had the same root cause: **a use attested
+in isolation was taken to compose.** Composition needs what a use *leaves
+behind*, and version 2 attested only that the next token runs next with the
+catcodes and group level unchanged. Version 3 attests what a use leaves, or
+puts the use outside the tier. The method changes are general. None of them
+lists a name.
+
+**HIGH-1: the mode after a use.** `\section`, `\par`, `\newpage`, `\item` and
+every `\endX` list-ender leave the mode they found. So `x \section{a}\\ y` is
+fatal although `\section` and `\\` were each attested in `text`.
+
+The follow probe now compares, besides the catcodes and group level:
+
+- the group type;
+- the conditional level;
+- the kernel's allocation registers;
+- the mode (`v`/`h`/`m`, plus `\ifinner`), separately.
+
+A change of the mode alone is `! LPMODE <mode>.`, recorded as the cell's
+`mode_after`.
+
+A new cell, `listv`, puts the use between paragraphs inside a list item.
+There `\item` keeps the mode it found; in `list` it ends a paragraph.
+
+A mode change composes only through a **transition**, (cell, mode after) →
+follower cell: `text`+`v` → `vertical`, `vertical`+`h` → `text`, `list`+`v` →
+`listv`, `listv`+`h` → `list`. A transition is attested only when two
+conditions hold:
+
+- the follower cell accepts the use with its own mode unchanged;
+- a *transition probe* compiles: the use followed by the follower cell's own
+  material, in the source cell.
+
+Only then is the cell `shape_checked`, with `follower_cell` recorded. M2 must
+read the next token in the follower cell. A mode change with no transition
+(into or out of math, typesetting in the preamble) leaves the cell
+unchecked. A name that has no checked cell at all is unresolved
+(`no cell lets the use compose`).
+
+**HIGH-2: TyLabel admitted fatal or deferred payloads.** TyLabel is now a
+**key**: a run of catcode-11/12 characters. It admits no control sequence,
+group, space or special character. The sidecar records this under
+`argty_payloads`.
+
+It is confirmed with two new sets of payloads in the consumer document:
+
+- a punctuated key, `a:1-b.c`;
+- keys that name something the configuration has: the lattice's counter and
+  environment payloads.
+
+`\value{enumi}` is `Missing number`, so `\value`'s slot is no longer TyLabel.
+`\DeclareEmphSequence{a^b}` and `{a&b}` do not lex as keys, so the reviewer's
+repros are outside the tier. The 75 slots whose log shows `\"a` as fatal
+now have one payload set: `\"a` is not a key.
+
+**HIGH-3: fragile commands in moving arguments.** Every typeset type
+(TyText, TyMath, TyInherit) must also take a moving witness in the consumer
+document. The witness is the payload `\lpfragile\lpfragilex`:
+
+- `\lpfragile` defines `\lpfragilet`;
+- `\lpfragilex` is `\ifx\lpfragilet\lpfragileo\else\number\lpfragileu\fi`.
+
+Executed in order, the two are harmless. Expanded without being executed,
+they are fatal:
+
+- `\protected@edef`, `\write` and `\mark` expand the still-undefined
+  `\lpfragilet`;
+- a case change (l3text, `\MakeUppercase`) leaves an undefined token
+  alone, but it expands `\lpfragilex` before the `\def` has run, and meets
+  `\number` of an undefined name.
+
+A slot written to the `.toc` or a running head, or case-changed, is
+therefore not TyText.
+
+The first witness, `\futurelet` alone, passed through `\MakeUppercase`.
+The re-run's moving census found this: `\MakeTitlecase{a
+\expandableinput{..} b}` and `\MakeTitlecase{a \refstepcounter{enumi} b}`
+are fatal. The witness was replaced before the final regeneration.
+
+A mandatory slot is also confirmed with every optional argument omitted.
+`\section[a]{..}` only typesets its mandatory argument. `\section{..}` also
+moves it. So `\section`'s mandatory slot is now untyped, and the reviewer's
+`\section{a \footnote{a} b}` is outside the tier.
+
+**HIGH-4: state carried from one use to the next.** Four general facts cover
+it.
+
+1. *Allocation* is in the follow probe's state. The registers are
+   `\count10`–`\count20`, `\float@count` and `\count256`: every register that
+   `\e@alloc` and `\extrafloats` advance at the pin (latex.ltx lines 331–450).
+   `\tableofcontents`, `\listoffigures`, `\newwrite`, `\newlength` and
+   `\newsavebox` therefore fail the follow probe.
+2. *Redefinition.* `\lpfsave` switches `\tracingassigns` and
+   `\tracingrestores` on for the use. The generator reads the NET change of
+   every name a body can type between two markers, after the use's own
+   groups are restored. Internal quantities (primitives and registers of the
+   closed world) do not count. A new or changed name is a closed-world change
+   the contract does not model, so the outcome is `! LPREDEFINES <names>.`
+   and the use is unresolved. Examples: `\newlength{\x}`,
+   `\DeclareRobustCommand`, `\appendix` (`\thesection`), `\centering` (`\\`),
+   bare `\quote` (`\par`, `\makelabel`).
+
+   A trace line of exactly 79 characters is ambiguous, because TeX wraps at
+   79. The text is therefore split again at every record start. The markers
+   are found in the raw log, and a trace without them fails closed.
+3. *Repetition.* The canonical use is repeated 300 times in its base cell,
+   and that must compile. This catches:
+   - a definer outside the NDef set failing its second use (`\NewHook`,
+     `\NewSocket`, `\NewTemplateType`, `\newcounteralias`);
+   - `\over` twice in one formula;
+   - a nesting (bare `\quote` ×7);
+   - dead cycles (`\clearpage` ×100);
+   - float exhaustion (`\marginpar`).
+4. *Counter witness.* The canonical use must also compile with every counter
+   of the configuration (`counters_set`) set to 27, and again to −1, before
+   it. This catches `\fnsymbol`, `\Alph` and `\alph` on a large or negative
+   value, and `\fnsymbol{page}`.
+
+**HIGH-5: the vertical cell tested only the top of page 1.** The vertical
+outcome is now also probed after a paragraph (`vmid:vertical`,
+`x\par <use>\par x`). If the two differ, the cell records
+`position_dependent` and decides nothing. `\vss` is the case: glue at the
+top of a page is discarded. `\hss` in `vertical` starts a paragraph (a mode
+change), and its transition probe `\hss z\par x` is fatal, so `\hss`
+composes nowhere.
+
+**MEDIUM.**
+
+- *Space before an optional argument.* Each consumed optional position
+  records `after_space`: whether ` [..]` (a space or newline first) is still
+  taken. `\\`'s is (`\@ifnextchar` skips spaces), so M2 must parse
+  `\\ [a]` as the optional argument. `a` is not a TyDimen, so that document is
+  outside the tier. `None` means unknown, and a spaced `[` is then outside
+  the tier.
+- *Parametricity.* TyNumber must also take `0`, `-1` and `300`, and TyDimen
+  must take `0pt`, `-1pt` and `1000pt`. Otherwise the slot is untyped:
+  `\symbol{300}` is `Bad character code`.
+
+**LOW.**
+
+- The gate now binds these fields to the contract and its kernel file:
+  - `config_key`, `configuration` and the whole `pin`;
+  - the signature set, which must equal the scope of the recorded `letters`
+    over the closed world, so adding `@` is seen;
+  - the environments, `counters_set`, the lattice and the definer targets.
+- It also requires every probe-design constant to equal this version's
+  (`design_header()`): `cells`, `transitions`, `follow_probe`, `witnesses`,
+  `consumers`, `sentinel`, `protocol`, `repeat`, `argty_payloads`.
+- `\footnote`'s position-0 optional argument stays `count 0, further None`:
+  M2 must treat a following `[` as outside the tier.
+
+**Measured.** (2026-09-28/29, under the image, arm64, the `article` contract.
+The figures come from a full regeneration: 7.2 h on 8 workers, in a
+container shared with another track, at load 30–350.)
+
+- **2,148 names: 1,197 attested, 951 unresolved.** 115 names moved from
+  attested to unresolved, and none moved the other way:
+  - 53 by redefinition. Examples: `\DeclareRobustCommand`, `\NewCommandCopy`,
+    `\appendix`, `\centering`, `\raggedright`, `\counterwithin`,
+    `\linespread`, the bare list starters `\quote`/`\center`/`\abstract`,
+    and `\newcommand`/`\newenvironment` used as ordinary names (as NDef
+    they go through `definer_rules`).
+  - 26 by allocation. Examples: `\tableofcontents`, `\listoffigures`,
+    `\listoftables`, every `\new<register>`, `\newlength`, `\newsavebox`,
+    `\newcounter`, `\newtheorem` as a name, `\extrafloats`, `\addlanguage`.
+  - 5 by the conditional level: `\iftrue` and the `\if?mode`/`\ifinner`
+    tests.
+  - 23 by repetition: the `\NewHook`/`\NewSocket` families, `\over` and
+    `\atop`/`\choose`/`\brace`/`\brack`, `\clearpage`,
+    `\cleardoublepage`, `\onecolumn`, `\twocolumn`, `\hss`, `\marginpar`,
+    `\IncludeInRelease`.
+  - 8 by the counter witness: `\Alph`, `\alph`, `\fnsymbol`,
+    `\theenumii`, `\theenumiv`, `\labelenumii`, `\labelenumiv`,
+    `\thempfootnote`.
+- **Transitions.** 47 `text`→`vertical` and 48 `list`→`listv` transitions
+  are attested (`\section` and its family, `\par`, `\newpage`, `\vfill`,
+  the list-enders, `\item`). So are 501 `vertical`→`text` and 501
+  `listv`→`list` transitions: every character-producing use starts a
+  paragraph. There is 1 position-dependent vertical cell (`\vss`). 9
+  accepting cells are unchecked.
+- **Types.** 270 slots are refuted as TyLabel:
+  - 189 sit beside two or more other text slots;
+  - 65 store their payload;
+  - 15 are refuted by the consumer document;
+  - 1 is refuted by a key naming the configuration's counter (`\value`).
+
+  9 typeset slots are refuted by the moving witness: 6 TyText (`\section`,
+  `\subsection`, `\subsubsection`, `\paragraph`, `\subparagraph`,
+  `\part`) and 3 TyInherit (`\MakeUppercase`, `\MakeLowercase`,
+  `\MakeTitlecase`). 13 TyNumber slots are refuted by value (`\symbol`,
+  `\mathhexbox`, `\sbox`, `\savebox`, `\usebox`, `\magstep`, …), and 1
+  TyDimen slot (`\tmspace`).
+
+  Totals: TyLabel 88, TyText 84, TyInherit 77, TyMath 29, TyNumber 26, TyDimen
+  24, TyCounter 8, TyFile 5, TyCsName 1, untyped 326. Every one of the 58
+  consumed optional positions is `after_space: true`.
+- **Environments: 30 → 10 attested.** Still attested: `math`, `displaymath`,
+  `equation`, `eqnarray(*)`, `minipage`, `lrbox`, `sloppypar`, `titlepage`,
+  `theindex`. They left for two reasons:
+  - Every list-based environment (`itemize`, `enumerate`, `description`,
+    `center`, `flushleft`/`flushright`, `quote`, `quotation`, `verse`,
+    `abstract`, `verbatim(*)`, `thebibliography`, `trivlist`, `list`,
+    `tabbing`) ends with `\par` redefined. `\@doendpe` suppresses the next
+    paragraph's indentation that way, and the redefinition fact sees it.
+  - `figure`, `table` and their starred forms exhaust the float list under
+    repetition.
+- 73,630 solo probes (the 42-row calibration included) and 192,580 engine
+  runs. Batch triage: 49,554 agree, 1,396 disagree, 9,917 inconclusive,
+  12,597 skipped. The sidecar is 14.4 MB (the 300-fold repetitions are in
+  its log). The pure gate replays it in about 9 s.
+- **The reviewers' scripts, re-run against this sidecar (all under the
+  image).**
+  - Every repro of the review is now decided correctly or is outside the
+    tier (24 documents). `x \section{a}\\ y`, `x \par\\ y` and
+    `x \newpage\\ y` now compose through their transition to `vertical`,
+    where `\\` is fatal. `\begin{itemize}\item\\ x\end{itemize}` is
+    `\item` in `listv`, then `\\` is fatal there. All the other repros are
+    outside the tier (an untyped or non-key slot, an unresolved name, a
+    position-dependent cell).
+  - Mode census: 4,632 checked cells, 0 whose mode after the use differs
+    from the recorded one (version 2: 71 of 993 text uses left horizontal
+    mode unrecorded).
+  - Fresh-position test with the transition model (the follower judged in
+    the follower cell): 1,167 and 1,120 pairs over two seeds, 0 mismatches
+    (version 2: 15 of 917).
+  - Vertical-checked uses followed by material, at the top and after a
+    paragraph: 1,774 probes, 0 fatal (version 2: 2 of 988).
+  - Moving census: typed slots × checked same-mode uses in the consumer
+    document, 1,200 + 1,198 + 1,197 documents over three seeds, 0 fatal.
+    The first version-3 run had 5. Three were the case-changers, which led
+    to the new witness. Two were `\item[a \providecommand{a}[1][a]{a} b]`
+    and `\item[a \nolinebreak[1] b]`: an unbraced `]` ends an optional
+    argument, a grammar rule for M2 and not a type.
+  - 300-fold repetition in the base cells: 1,215 variants, 0 errors. 2
+    timed out at 15 s under load (`\IfFileExists`, `\include` in the
+    preamble); re-run with a longer timeout, both compile (9.1 s and
+    16.3 s).
+  - Look-ahead census (w6): 0 of 847. Spot re-check (w2): 256 probes, 0
+    mismatches. Regeneration (w5): 35 of 35.
+- **Reproducibility.** The committed sidecar is the byte output of that
+  full regeneration. An independent `check_contracts_reproducible.py
+  --signatures --signatures-sample 60 --signatures-seed
+  review-round2-final-2026-09-29` regenerated, record for record:
+  - 110 names: 60 drawn plus the 52 adversarial ones, which now include the
+    25 of this review, with two overlapping;
+  - 7 environments;
+  - all 124 definer rows;
+  - the calibration.
+
+  The same run reproduced the contract and the kernel file byte for byte.
+  It passed all 56 TeX kill-tests (33 of them signature kill-tests), 16 of
+  them new:
+  - ten on synthetic macros, one per fix: a paragraph-ender, a definer, an
+    allocator, a toc-moved slot, a case-changed slot, a counter-dependent
+    use, vertical glue, a counter-named key, a value-dependent number, a
+    spaced optional argument;
+  - six on the review's own names on the committed contract.
+
+  `newtheorem.json` was regenerated twice under version 3, and the two runs are byte-identical. Only `signature_version` changed from version 2.
+
+**Known limits (recorded, not fixed).**
+
+- Repetition attests one name repeated. It does not attest two names that
+  share a resource. Examples: `\clearpage` and `\cleardoublepage` sharing
+  dead cycles, or `\marginpar` and a float sharing the float list. Floats are
+  the §A.1.5 `k_float` side condition, which M2 must count.
+- The redefinition fact reads only names a body can type. A use that changes
+  an internal macro another name later reads is caught only if the change
+  shows in that other name's own probes or in repetition. `\appendix` is
+  excluded because it changes `\thesection`, which is typeable. The generic
+  case is §G.1's parametricity risk, which only M2's differential tests.
+- A transition assumes that the state a mode-changing use leaves is the
+  follower cell's state. Examples: after `\section`, `\@nobreak` and
+  `\everypar` are pending; after `\item`, the label. The transition probe
+  and the fresh-position re-run above test this, and do not prove it.
+- Declarations that redefine a typeable name (`\centering`, `\raggedright`:
+  `\\`) are now unresolved. An alias model (`\\` := `\@centercr`, whose
+  own signature would then be needed) could readmit them.
+- **Coverage cost, the largest single item.** The list environments are
+  unresolved only because `\@doendpe` redefines `\par` until the next
+  paragraph starts. The first readmission target is a transient-state model:
+  attest that the redefinition is undone at the next paragraph boundary, and
+  that the follower cell's probes run under it.
+- `figure`/`table` wait on the §A.1.5 float count: repetition exhausts the
+  float list.
+- **Timeouts make three records load-dependent** (MEASURED: the two full
+  regenerations differed on `\include`, `\pdfmapfile` and `\pdfmapline`
+  only through 15 s timeouts). A timeout is never an attestation, so both
+  outcomes are sound. But a record holding one may not reproduce byte for
+  byte under another load, and the sampled check can then report it.
+- **Rules M2 must apply**, recorded here because no signature field can
+  carry them:
+  - Inside an argument, a use whose cell record has `mode_after` is outside
+    the tier: transitions are attested at top level only.
+  - A typeset slot's payload runs in the slot's mode. This may be the inner
+    one (`\mbox`). The moving census found no same-mode use that fails there
+    (MEASURED), but no inner cell is attested.
+  - An optional argument runs to the first unbraced `]`.
+  - An untyped slot admits only its canonical payload.
+  - A position-dependent cell decides nothing.

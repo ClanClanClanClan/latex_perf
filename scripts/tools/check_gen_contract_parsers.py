@@ -636,6 +636,63 @@ check("sig: the consumer cell: a \\title first, toc/lof/lot and headings before 
                     b"\\maketitle\\newpage x\\leftmark\\rightmark\n\\end{document}")
       and d7.startswith(pre + b"\\title{t}\n\\c{a}\n\\begin{document}\n\\pagestyle{headings}"))
 LET = set(range(65, 91)) | set(range(97, 123))
+# Version 3 (review round 2): the follow probe's new arms, read from SYNTHETIC
+# log text in TeX's printed form (\tracingassigns/\tracingrestores records).
+_MEM = {"thesection": "Macro", "baselineskip": "Primitive", "everypar": "Register:toks",
+        "title": "Macro+robust", "reserved@a": "Macro"}
+_LOG = "\n".join([
+    "LPFX<", "{into \\tracingassigns=1}",
+    "{changing \\reserved@a=macro:->x}", "{into \\reserved@a=macro:->y}",
+    "{changing \\baselineskip=12.0pt}", "{into \\baselineskip=10.0pt}",
+    "{globally changing \\thesection=macro:->\\@arabic \\c@section }",
+    "{into \\thesection=macro:->\\@Alph \\c@section }",
+    "{changing \\lpnew=undefined}", "{into \\lpnew=\\skip51}",
+    "{changing \\title=macro:->a}", "{into \\title=macro:->b}",
+    "{restoring \\title=macro:->a}",
+    "{changing \\tracingassigns=1}", "LPFX>"])
+check("sig v3: redefinitions are the NET meaning changes of body-typeable names, not of "
+      "internal quantities, @-names, the probe's own switches, or a group-local change",
+      sg.redefined_names(_LOG, _MEM, LET) == ["lpnew", "thesection"],
+      sg.redefined_names(_LOG, _MEM, LET))
+_R1 = "{changing \\\\=macro:->" + "v" * (79 - len("{changing \\\\=macro:->}")) + "}"
+check("sig v3: a whole record of exactly 79 characters followed by another is two records "
+      "(measured on \\centering)", len(_R1) == 79 and
+      sg.redefined_names("LPFX<\n" + _R1 + "\n{into \\\\=macro:->w}\nLPFX>", {}, LET) == ["\\"])
+check("sig v3: a marker after a 79-character line is still found; a trace without markers "
+      "fails closed", sg.redefined_names("x" * 79 + "\nLPFX<\n{changing \\lpq=undefined}\n"
+                                         "{into \\lpq=\\relax}\nLPFX>\n", {}, LET) == ["lpq"]
+      and sg.redefined_names("no markers", {}, LET) == [sg.UNREADABLE])
+check("sig v3: a truncated value counts as changed after an assignment, not after a group "
+      "end restored it (\\\\ inside center)",
+      sg.redefined_names("LPFX<\n{changing \\\\=macro:->x\\ETC.}\n{into \\\\=macro:->y}\n"
+                         "{restoring \\\\=macro:->x\\ETC.}\nLPFX>", {}, LET) == [] and
+      sg.redefined_names("LPFX<\n{changing \\lpy=macro:->x\\ETC.}\n"
+                         "{into \\lpy=macro:->x\\ETC.}\nLPFX>", {}, LET) == ["lpy"])
+_W = "{changing \\lpnew=macro:->" + "u" * 70 + "}"
+check("sig v3: a wrapped log line (79 characters) is rejoined before reading",
+      sg.redefined_names("LPFX<\n" + _W[:79] + "\n" + _W[79:] + "\n" +
+                         _W.replace("changing", "into") + "\nLPFX>", {}, LET) == [] and
+      sg._unwrap_log("a" * 79 + "\nb\nc") == ["a" * 79 + "b", "c"])
+check("sig v3: the mode a follow probe reports, and the pseudo-cells",
+      sg.mode_after({"o": "fatal", "e": "lp_mode_changed", "m": "LPMODE v."}) == "v" and
+      sg.mode_after({"o": "follow"}) is None and
+      sg.refine_class("other", "LPMODE hi.") == "lp_mode_changed" and
+      sg.refine_class("other", "LPREDEFINES x.") == "lp_redefines" and
+      sg.split_cell("ctr-1:text") == ("ctr-1:", "text") and
+      sg.split_cell(sg.VMID + "vertical") == (sg.VMID, "vertical") and
+      sg.split_cell("listv") == ("", "listv"))
+d8 = sg.cell_doc(pre, "ctr27:text", "\\c", ["enumi", "page"])
+d9 = sg.cell_doc(pre, sg.VMID + "vertical", "\\c")
+d10 = sg.cell_doc(pre, "listv", "\\c{\\lpfragile}")
+check("sig v3: the counter, mid-page and list-vertical documents, and the moving witness "
+      "defined iff used",
+      b"\\setcounter{enumi}{27}\\setcounter{page}{27}x \\c y" in d8 and
+      b"x\\par \\c\\par x" in d9 and
+      b"\\item x\\par " + sg.FRAGILE_DEF.encode() + b"" not in d10 and
+      sg.FRAGILE_DEF.encode() in d10 and b"\\item x\\par \\c{\\lpfragile}\\par y" in d10
+      and sg.FRAGILE_DEF.encode() not in d8)
+check("sig v3: an optional argument after a space", sg.build_use("\\\\", [("sopt", "a")]) ==
+      "\\\\ [a]")
 check("sig: names a body can type (letters run, or one non-letter byte)",
       sg.user_facing("textbf", LET) and sg.user_facing("\\", LET) and sg.user_facing("i", LET)
       and not sg.user_facing("@gobble", LET) and not sg.user_facing("c@page", LET)
@@ -691,18 +748,33 @@ class FakeSession(sg.Session):
         return self.memo[key]
 
 
-def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None):
+def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None, special=None):
+    """`follow(cell)`: True (follows), False (the next token is consumed), or
+    a string: `mode:<m>` (the use leaves mode m), `redef`, `state`.
+    `special(cell, use)`: an outcome for a pseudo-cell probe, a repetition or
+    a transition probe (None = the ordinary model)."""
     def model(cell, use):
-        cons = cell.startswith(sg.CONS)
-        base = cell[len(sg.CONS):] if cons else cell
+        prefix, base = sg.split_cell(cell)
+        cons = prefix == sg.CONS
+        if special is not None:
+            o = special(cell, use)
+            if o is not None:
+                return o
         pre = "\\lpfsave "
         if use.startswith(pre):
             o = model(cell, use[len(pre):-len("\\lpfollow\\lpnocs")])
             if o["o"] != "ok":
                 return o
             ok = follow(base) if follow else True
-            return {"o": "follow"} if ok else {"o": "fatal", "e": "undefined_cs",
-                                                "m": "Undefined control sequence."}
+            if ok is True:
+                return {"o": "follow"}
+            if isinstance(ok, str) and ok.startswith("mode:"):
+                return {"o": "fatal", "e": "lp_mode_changed", "m": "LPMODE %s." % ok[5:]}
+            if ok == "redef":
+                return {"o": "fatal", "e": "lp_redefines", "m": "LPREDEFINES lpy."}
+            if ok == "state":
+                return {"o": "fatal", "e": "lp_state_changed", "m": "LPSTATE."}
+            return {"o": "fatal", "e": "undefined_cs", "m": "Undefined control sequence."}
         rest = use[len("\\lpx"):]
         toks, i = [], 0
         while i < len(rest):
@@ -724,7 +796,7 @@ def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None):
         if base not in cells_ok:
             return {"o": "fatal", "e": "wrong_mode", "m": "You can't use that here."}
         for t in taken:
-            if t[0] == "G" and t[1] != "a":
+            if t[0] == "G":
                 res = pay(base, t[1], cons) if pay else "ok"
                 if res != "ok":
                     return {"o": "fatal", "e": res, "m": "M " + res}
@@ -732,9 +804,9 @@ def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None):
     return model
 
 
-def fake_sig(model):
+def fake_sig(model, lat=()):
     S = FakeSession(model)
-    rec = sg._record(sg.signature_for(S, "\\lpx", "", []), S, None)
+    rec = sg._record(sg.signature_for(S, "\\lpx", "", list(lat)), S, None)
     return rec
 
 
@@ -795,10 +867,103 @@ check("sig: a math-only command's argument is TyMath (\\pmod{\\\"a} is fatal; ve
       "$a$ toggled out of math and read it as not typeset)",
       r_pmod["status"] == "attested" and r_pmod["variants"][0]["base_cell"] == "math" and
       r_pmod["variants"][0]["args"][0]["argty"] == "TyMath", r_pmod.get("variants"))
+# Signature version 3 (review round 2). Each case is one of its findings'
+# shapes, on the fake TeX.
+def _cell(rec, c):
+    return rec["variants"][0]["cells"][c] if rec["status"] == "attested" else {}
+
+
+def _fails(pred):
+    return lambda cell, use: ({"o": "fatal", "e": "other", "m": "X."} if pred(cell, use)
+                              else None)
+
+
+r_parlike = fake_sig(fake_macro(0, follow=lambda c: {"text": "mode:v", "list": "mode:v"}
+                                .get(c, True)))
+check("sig v3: a use that leaves the paragraph (\\par, \\section, \\item) records the mode "
+      "after it and composes through the transition to the cell of that mode (HIGH-1)",
+      _cell(r_parlike, "text").get("mode_after") == "v" and
+      _cell(r_parlike, "text").get("follower_cell") == "vertical" and
+      _cell(r_parlike, "text").get("shape_checked") is True and
+      _cell(r_parlike, "list").get("follower_cell") == "listv" and
+      _cell(r_parlike, "list").get("shape_checked") is True, r_parlike.get("variants"))
+r_tomath = fake_sig(fake_macro(0, follow=lambda c: "mode:mi" if c == "text" else True))
+check("sig v3: a mode change with no attested transition is not shape-checked",
+      _cell(r_tomath, "text").get("shape_checked") is False and
+      _cell(r_tomath, "vertical").get("shape_checked") is True)
+r_hss = fake_sig(fake_macro(0, cells_ok=("vertical",),
+                            follow=lambda c: "mode:h" if c == "vertical" else True))
+check("sig v3: a mode change whose target cell rejects the use (\\hss) leaves no composing "
+      "cell: unresolved (HIGH-5)", r_hss["status"] == "unresolved" and
+      any(a.get("reason") == sg.NO_COMPOSE for a in r_hss["attempts"].values()), r_hss)
+r_hss2 = fake_sig(fake_macro(0, follow=lambda c: "mode:h" if c == "vertical" else True,
+                             special=_fails(lambda c, u: c == "vertical" and
+                                            u.endswith(sg.FOLLOWER["text"]))))
+check("sig v3: the transition probe (the use then the target cell's material) must compile",
+      _cell(r_hss2, "vertical").get("shape_checked") is False and
+      _cell(r_hss2, "text").get("shape_checked") is True)
+r_redef = fake_sig(fake_macro(0, follow=lambda c: "redef"))
+r_alloc = fake_sig(fake_macro(0, follow=lambda c: "state"))
+check("sig v3: a use that redefines a body-typeable name or allocates a register is "
+      "unresolved (HIGH-4)", r_redef["status"] == "unresolved" and
+      r_alloc["status"] == "unresolved")
+r_rep = fake_sig(fake_macro(0, special=_fails(lambda c, u: u.count("\\lpx") > 1)))
+check("sig v3: a use whose repetition fails is unresolved (definers, nesting, dead cycles)",
+      r_rep["status"] == "unresolved" and
+      {a.get("reason") for a in r_rep["attempts"].values()} == {sg.EXACT_REASONS["repeat"]},
+      r_rep.get("attempts"))
+r_ctr = fake_sig(fake_macro(0, special=_fails(lambda c, u: c.startswith(sg.CTR + "27:"))))
+check("sig v3: a use that fails with the counters at 27 is unresolved (\\fnsymbol, \\Alph)",
+      r_ctr["status"] == "unresolved" and
+      {a.get("reason") for a in r_ctr["attempts"].values()} == {sg.EXACT_REASONS["counters"]})
+r_vss = fake_sig(fake_macro(0, special=_fails(lambda c, u: c == sg.VMID + "vertical")))
+check("sig v3: a vertical outcome that differs after a paragraph is position-dependent and "
+      "unchecked (\\vss, HIGH-5)", "position_dependent" in _cell(r_vss, "vertical") and
+      _cell(r_vss, "vertical").get("shape_checked") is False and
+      _cell(r_vss, "text").get("shape_checked") is True)
+
+
+def text_pay(moving_fails):
+    def pay(cell, p, cons):
+        if p == sg.MATH_CONTENT:
+            return "missing_dollar"
+        if p == sg.NONE_CONTENT:
+            return "misplaced_tab"
+        if p == sg.MOVING_CONTENT and cons and moving_fails:
+            return "undefined_cs"
+        return "ok"
+    return pay
+
+
+r_sect = fake_sig(fake_macro(1, cells_ok=("text", "vertical"), pay=text_pay(True)))
+r_bf = fake_sig(fake_macro(1, cells_ok=("text", "vertical"), pay=text_pay(False)))
+a_sect = r_sect["variants"][0]["args"][0]
+check("sig v3: a text slot whose payload is moved (a fragile command is fatal in the "
+      "consumer document) is not TyText; one only typeset is (HIGH-3)",
+      a_sect["argty"] is None and (a_sect.get("refuted") or {}).get("argty") == "TyText" and
+      (a_sect["refuted"]["by"][1]).endswith("{%s}" % sg.MOVING_CONTENT) and
+      r_bf["variants"][0]["args"][0]["argty"] == "TyText", a_sect)
+LAT3 = [("TyNumber", "1"), ("TyCounter", "enumi"), ("TyEnvName", "center")]
+r_value = fake_sig(fake_macro(1, pay=lambda c, p, k: "missing_number" if p == "enumi" else
+                              label_pay()(c, p, k)), LAT3)
+a_value = r_value["variants"][0]["args"][0]
+check("sig v3: a key slot that fails when the key names a counter (\\value) is not TyLabel "
+      "(HIGH-2)", a_value["argty"] is None and
+      (a_value.get("refuted") or {}).get("argty") == "TyLabel", a_value)
+r_key = fake_sig(fake_macro(1, pay=label_pay()), LAT3)
+check("sig v3: a key slot taking a punctuated key and the configuration's counter and "
+      "environment names is TyLabel", r_key["variants"][0]["args"][0]["argty"] == "TyLabel")
+r_sym = fake_sig(fake_macro(1, pay=lambda c, p, k: "ok" if p in ("1", "0") else
+                            ("bad_char_code" if p in ("300", "-1") else "missing_number")), LAT3)
+a_sym = r_sym["variants"][0]["args"][0]
+check("sig v3: a number slot whose value matters (\\symbol{300}) is not TyNumber (MEDIUM)",
+      a_sym["argty"] is None and (a_sym.get("refuted") or {}).get("argty") == "TyNumber", a_sym)
+V3 = (r_parlike, r_tomath, r_hss, r_hss2, r_redef, r_alloc, r_rep, r_ctr, r_vss, r_sect, r_bf)
 # The replay verifier on the synthetic records: exact, and it sees a changed field.
 check("sig: replay re-derives the synthetic records exactly",
       all(sg.replay(r, "\\lpx", []) == [] for r in (r_string, r_relax, r_part, r_label, r_title,
-                                                     r_blank, r_pmod)))
+                                                     r_blank, r_pmod) + V3) and
+      all(sg.replay(r, "\\lpx", LAT3) == [] for r in (r_value, r_key, r_sym)))
 m_label = copy.deepcopy(r_label)
 m_label["variants"][0]["args"][0]["argty"] = "TyText"
 m_title = copy.deepcopy(r_title)
@@ -823,7 +988,8 @@ def _first(side, pred):
         r = side["signatures"][n]
         if r["status"] == "attested":
             for vi, v in enumerate(r["variants"]):
-                for ai, a in enumerate(v["args"]):
+                # A variant with no argument is still a candidate (\\vss).
+                for ai, a in enumerate(v["args"] or [{}]):
                     if pred(r, v, a):
                         return n, vi, ai
     return None
@@ -836,7 +1002,7 @@ for sf in sidecars:
     cp = REPO / side.get("contract", "")
     cbytes = cp.read_bytes() if cp.is_file() else None
     t0 = time.monotonic()
-    probs = sg.check_sidecar(side, cbytes)
+    probs = sg.check_sidecar(side, cbytes, REPO)
     check("sidecar %s: consistent with its contract, its calibration and its own probe log "
           "(every record re-derived by replay)" % sf.name, not probs, probs[:5])
     check("sidecar %s: solo count = calibration + name/environment probes + definer rows"
@@ -895,6 +1061,32 @@ for sf in sidecars:
          lambda loc: lambda rec: [c.update(follow="undefined_cs") for c in
                                   rec["variants"][loc[1]]["cells"].values()
                                   if c.get("follow") == "follow"][:1]),
+        # Version 3: the new per-cell fields.
+        ("a changed mode_after", lambda r, v, a: any(
+            c.get("mode_after") for c in v["cells"].values()),
+         lambda loc: lambda rec: [c.update(mode_after="mi") for c in
+                                  rec["variants"][loc[1]]["cells"].values()
+                                  if c.get("mode_after")][:1]),
+        ("a changed follower cell", lambda r, v, a: any(
+            c.get("follower_cell") for c in v["cells"].values()),
+         lambda loc: lambda rec: [c.update(follower_cell="math") for c in
+                                  rec["variants"][loc[1]]["cells"].values()
+                                  if c.get("follower_cell")][:1]),
+        ("an unchecked accepting cell marked checked", lambda r, v, a: any(
+            c.get("allowed") == "ok" and not c.get("shape_checked") for c in v["cells"].values()),
+         lambda loc: lambda rec: [c.update(shape_checked=True) for c in
+                                  rec["variants"][loc[1]]["cells"].values()
+                                  if c.get("allowed") == "ok" and not c.get("shape_checked")][:1]),
+        ("an erased position dependence", lambda r, v, a: any(
+            "position_dependent" in c for c in v["cells"].values()),
+         lambda loc: lambda rec: [c.pop("position_dependent") for c in
+                                  rec["variants"][loc[1]]["cells"].values()
+                                  if "position_dependent" in c][:1]),
+        ("a flipped after_space", lambda r, v, a: any(
+            p.get("after_space") is not None for p in v["optional_positions"].values()),
+         lambda loc: lambda rec: [p.update(after_space=not p["after_space"]) for p in
+                                  rec["variants"][loc[1]]["optional_positions"].values()
+                                  if p.get("after_space") is not None][:1]),
         ("a changed optional position", lambda r, v, a: v["r"] >= 1,
          lambda loc: lambda rec: rec["variants"][loc[1]]["optional_positions"]["0"].update(
              count=rec["variants"][loc[1]]["optional_positions"]["0"]["count"] + 1)),
@@ -916,7 +1108,7 @@ for sf in sidecars:
             body_mode="text" if rec["body_mode"] != "text" else "math"), env=True)
         killed("a changed push", envs[0], lambda rec: rec.update(
             pushes=sorted(set(rec["pushes"]) ^ {"caption"})), env=True)
-    n0 = _first(side, lambda r, v, a: a["kind"] == "req")[0]
+    n0 = _first(side, lambda r, v, a: a.get("kind") == "req")[0]
     bad = copy.deepcopy(side["signatures"][n0])
     bad["probes"] = [p for p in bad["probes"] if p[2] != "grab"]
     check("sidecar kill: dropping %s's grab probes is seen" % n0,
@@ -933,8 +1125,31 @@ for sf in sidecars:
           any(x.startswith("calibration") for x in fl), fl[:3])
     check("sidecar kill: a definer row flipped to fatal with no class is seen",
           any(x.startswith("definer") and "without an error class" in x for x in fl), fl[:3])
+    # Version 3 (review round 2, LOW): fields the replay never reads are
+    # bound to the contract and to the probe design.
+    for label, mutate, prefix in [
+            ("a letter added (@)", lambda m: m["letters"].append(64), "binding: the signatures"),
+            ("the pin's format hash", lambda m: m["pin"].update(fmt_sha256="0" * 64),
+             "binding: pin"),
+            ("the pin's image", lambda m: m["pin"].update(image="x"), "binding: pin"),
+            ("the config key", lambda m: m.update(config_key="x"), "binding: config_key"),
+            ("the follow probe's definitions",
+             lambda m: m["follow_probe"].update(definitions="x"), "design: recorded follow_probe"),
+            ("the consumers", lambda m: m["consumers"].update(body_after="x"),
+             "design: recorded consumers"),
+            ("the sentinel", lambda m: m.update(sentinel="x"), "design: recorded sentinel"),
+            ("the protocol", lambda m: m.update(protocol="x"), "design: recorded protocol"),
+            ("the long/stored witnesses", lambda m: m["witnesses"].update(long="x", stored="y"),
+             "design: recorded witnesses"),
+            ("the counters set", lambda m: m["counters_set"].append("zz"),
+             "binding: counters_set")]:
+        mm = copy.deepcopy(side)
+        mutate(mm)
+        fl = sg.check_sidecar(mm, cbytes, REPO)
+        check("sidecar kill: %s is seen" % label, any(x.startswith(prefix) for x in fl), fl[:3])
     check("sidecar kill: a stale contract is seen",
-          cbytes is not None and any("stale" in x for x in sg.check_sidecar(side, cbytes + b" ")))
+          cbytes is not None and any("stale" in x for x in sg.check_sidecar(side, cbytes + b" ",
+                                                                               REPO)))
     print("check_gen_contract_parsers: sidecar %s checked in %.1f s"
           % (sf.name, time.monotonic() - t0))
 DFILE = REPO / sg.DECL_DIR / "newtheorem.json"

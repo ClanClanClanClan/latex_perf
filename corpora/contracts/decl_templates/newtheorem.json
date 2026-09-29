@@ -2,7 +2,7 @@
  "declaration": "newtheorem",
  "generator": {
   "module": "scripts/tools/contract_signatures.py",
-  "signature_version": "2",
+  "signature_version": "3",
   "tool": "scripts/tools/gen_contract.py decl-templates",
   "version": "4"
  },

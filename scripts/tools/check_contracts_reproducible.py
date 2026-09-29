@@ -323,13 +323,36 @@ SIG_DEFINERS = (
     # Text-only: fails in math before taking its argument.
     "\\newcommand{\\lpsg}[1]{\\ifmmode\\lpundefinedsg\\fi#1}",
     # Version 2 (review C-82). Stores its argument for later: not TyLabel.
-    "\\newcommand{\\lpsh}[1]{\\gdef\\lpshx{#1}}",
+    "\\makeatletter\\newcommand{\\lpsh}[1]{\\gdef\\lps@hx{#1}}\\makeatother",
     # Its argument is typeset only by \\tableofcontents: not TyLabel.
     "\\newcommand{\\lpsi}[1]{\\addtocontents{toc}{#1}}",
     # Swallows the token after it without a parameter scan: unresolved.
     "\\newcommand{\\lpsj}{\\string}",
     # A key (message only): TyLabel.
     "\\newcommand{\\lpsk}[1]{\\typeout{#1}}",
+    # Version 3: its argument is case-changed (expanded, then typeset): not
+    # TyText (the round-2 moving census: \\MakeTitlecase).
+    "\\newcommand{\\lpsu}[1]{\\MakeUppercase{#1}}",
+    # Version 3 (review round 2). Leaves the paragraph: mode after it recorded,
+    # composes through the transition to `vertical`.
+    "\\newcommand{\\lpsl}{\\par}",
+    # Defines a body-typeable name at each use: unresolved (redefinition).
+    "\\newcommand{\\lpsm}{\\gdef\\lpsmx{}}",
+    # Allocates a \\write at each use: unresolved (allocation state).
+    "\\makeatletter\\newcommand{\\lpsn}{\\begingroup\\newwrite\\lps@w\\endgroup}\\makeatother",
+    # Typesets its argument AND moves it to the .toc: not TyText.
+    "\\newcommand{\\lpso}[1]{#1\\addcontentsline{toc}{section}{#1}}",
+    # Depends on a counter's value: unresolved (counter witness).
+    "\\newcommand{\\lpsp}{\\alph{page}}",
+    # Vertical glue: fine at the top of a page only (position-dependent).
+    "\\newcommand{\\lpsq}{\\vss}",
+    # A key that names a counter is fatal: not TyLabel.
+    "\\newcommand{\\lpsr}[1]{\\csname c@#1\\endcsname}",
+    # Its number's value matters: not TyNumber.
+    "\\newcommand{\\lpss}[1]{\\symbol{#1}}",
+    # An optional argument still taken after a space.
+    "\\makeatletter\\newcommand{\\lpst}{\\@ifnextchar[{\\lpstx}{\\lpstx[d]}}"
+    "\\def\\lpstx[#1]{#1}\\makeatother",
 )
 
 
@@ -344,7 +367,8 @@ def signature_kills(tex, pin, kernel, work) -> list:
     cp = tmpd / "sigkill.json"
     cp.write_text(gc.canonical_json(c), encoding="utf-8")
     res = sg.probe_names(cp, ["lpsa", "lpsc", "lpsd", "lpse", "lpsf", "lpsg", "lpsh", "lpsi",
-                              "lpsj", "lpsk", "lpnotaname"],
+                              "lpsj", "lpsk", "lpsl", "lpsm", "lpsn", "lpso", "lpsp", "lpsq",
+                              "lpsr", "lpss", "lpst", "lpsu", "lpnotaname"],
                          cache=tmpd / "cache", work=work)
 
     def shape(n, i=0):
@@ -357,6 +381,12 @@ def signature_kills(tex, pin, kernel, work) -> list:
         if r.get("status") != "attested":
             return "unresolved"
         return r["variants"][i]["args"][j].get("argty")
+
+    def cell(n, c, i=0):
+        r = res[n]
+        if r.get("status") != "attested" or len(r["variants"]) <= i:
+            return {}
+        return r["variants"][i]["cells"].get(c, {})
 
     def refuted(n, i=0, j=0):
         r = res[n]
@@ -387,12 +417,50 @@ def signature_kills(tex, pin, kernel, work) -> list:
         ("sig: a message-only slot is TyLabel", argty("lpsk") == "TyLabel"),
         ("sig: a name outside the closed world is E1, with no probe",
          res["lpnotaname"] == {"status": "undefined"}),
+        # Version 3 (review round 2).
+        ("sig v3: a use that ends the paragraph records mode_after v and composes through "
+         "the transition to `vertical` (HIGH-1)",
+         cell("lpsl", "text").get("mode_after") == "v" and
+         cell("lpsl", "text").get("follower_cell") == "vertical" and
+         cell("lpsl", "text").get("shape_checked") is True),
+        ("sig v3: a use that defines a body-typeable name is unresolved (HIGH-4)",
+         res["lpsm"].get("status") == "unresolved"),
+        ("sig v3: a use that allocates a register is unresolved (HIGH-4)",
+         res["lpsn"].get("status") == "unresolved"),
+        ("sig v3: a typeset slot that is also moved to the .toc is not TyText (HIGH-3)",
+         argty("lpso") is None and refuted("lpso") in ("TyText", "TyInherit")),
+        ("sig v3: a case-changed slot is not TyText (the moving witness sees expansion by "
+         "l3text, not only \\edef)", argty("lpsu") is None and
+         refuted("lpsu") in ("TyText", "TyInherit")),
+        ("sig v3: a use that depends on a counter's value is unresolved (HIGH-4)",
+         res["lpsp"].get("status") == "unresolved"),
+        ("sig v3: vertical glue is position-dependent in `vertical` (HIGH-5)",
+         "position_dependent" in cell("lpsq", "vertical") and
+         cell("lpsq", "vertical").get("shape_checked") is not True),
+        ("sig v3: a key slot that fails on a counter's name is not TyLabel (HIGH-2)",
+         argty("lpsr") is None and refuted("lpsr") == "TyLabel"),
+        ("sig v3: a number slot whose value matters is not TyNumber (MEDIUM)",
+         argty("lpss") is None and refuted("lpss") == "TyNumber"),
+        ("sig v3: an optional argument taken after a space is recorded so (MEDIUM)",
+         (res["lpst"].get("variants") or [{}])[0].get("optional_positions", {})
+         .get("0", {}).get("after_space") is True),
     ]
     # The 2026-09-27 review's own cases, on the committed article contract.
     art = gc.REPO / "corpora" / "contracts" / "article.json"
     rv = sg.probe_names(art, ["string", "noexpand", "index", "obeylines", "aftergroup",
                               "ifdefined", "pmod", "section", "title", "label", "matrix",
-                              "addtocontents"], cache=tmpd / "cache-art", work=work)
+                              "addtocontents",
+                              # Review round 2 (signature version 3).
+                              "par", "item", "newlength", "NewHook", "tableofcontents",
+                              "value", "fnsymbol", "Alph", "vss", "hss", "symbol", "\\",
+                              "quote", "over", "clearpage", "appendix", "centering"],
+                        cache=tmpd / "cache-art", work=work)
+
+    def rv_cell(n, c):
+        r = rv[n]
+        if r.get("status") != "attested":
+            return {}
+        return r["variants"][0]["cells"].get(c, {})
 
     def rv_arg(n, j):
         r = rv[n]
@@ -414,6 +482,28 @@ def signature_kills(tex, pin, kernel, work) -> list:
          rv_arg("label", 0) == "TyLabel"),
         ("sig: \\addtocontents's text is untyped (typeset when the file is toc)",
          rv_arg("addtocontents", 1) is None),
+        # Review round 2 (signature version 3).
+        ("sig v3: \\section and \\par in text, \\item in a list item, record the mode after "
+         "them and compose through the transition (HIGH-1)",
+         rv_cell("section", "text").get("follower_cell") == "vertical" and
+         rv_cell("par", "text").get("mode_after") == "v" and
+         rv_cell("item", "list").get("follower_cell") == "listv" and
+         rv_cell("item", "listv").get("shape_checked") is True),
+        ("sig v3: \\section's mandatory argument is not TyText (moving when the optional "
+         "argument is omitted, HIGH-3)", rv_arg("section", 1) is None),
+        ("sig v3: \\value's argument is not TyLabel (HIGH-2)", rv_arg("value", 0) is None),
+        ("sig v3: \\newlength, \\NewHook, \\tableofcontents, \\fnsymbol, \\Alph, "
+         "\\quote, \\over, \\clearpage, \\appendix, \\centering are unresolved (HIGH-4)",
+         all(rv[n].get("status") == "unresolved" for n in (
+             "newlength", "NewHook", "tableofcontents", "fnsymbol", "Alph", "quote", "over",
+             "clearpage", "appendix", "centering"))),
+        ("sig v3: \\vss is position-dependent in `vertical`, \\hss composes nowhere (HIGH-5)",
+         "position_dependent" in rv_cell("vss", "vertical") and
+         rv["hss"].get("status") == "unresolved"),
+        ("sig v3: \\symbol's argument is not TyNumber; \\\\'s optional argument is taken "
+         "after a space (MEDIUM)", rv_arg("symbol", 0) is None and
+         (rv["\\"].get("variants") or [{}])[0].get("optional_positions", {}).get("0", {})
+         .get("after_space") is True),
     ]
     # The cache answers the second call without TeX.
     rep: dict = {}

@@ -80,6 +80,11 @@ longer belong together:
      Bridge.v is pinned sentence by sentence (BRIDGE_SENTENCES, an
      allow-list: a sentence no keyword names still fails).
      check_print_assumptions.py pins the ELABORATED body too (coqc `Print`).
+ 11. NO ADMITTED NAME READS THE CLOCK (RULE R-CLOCK below, OPEN-118 known
+     limit (b)): no admitted name is, or expands through its recorded
+     meaning closure to, \\year/\\month/\\day/\\time or a date-dependent name
+     of the kernel file, so oracle_ok on the fragment cannot depend on the
+     day it is graded (MEASURED clock-independent, see the rule's comment).
 
 Run: python3 scripts/tools/check_strict_kernel.py [--repo .]
 """
@@ -289,6 +294,73 @@ def inertness_violation(name: str, meanings: dict[str, str],
             if q is not None and (q in MACRO_STATE_CHANGERS or q.startswith("tracing")):
                 via = "" if x == name else f" via \\{x}"
                 return f"expansion reaches \\{q}{via} (state-changing)"
+    return None
+
+
+# ---------------------------------------------------------------------------
+# RULE R-CLOCK (OPEN-118 known limit (b), measured 2026-09-28): no admitted
+# name reads the clock. The oracle imposes SOURCE_DATE_EPOCH=0, which pins the
+# PDF's dates only; \year, \month, \day and \time follow the container's clock
+# (FORCE_SOURCE_DATE is not set), so a name that reads them could make
+# oracle_ok depend on the day of grading, and Faithful (bytes -> outcome)
+# would not be a property of the bytes. MEASURED: every probe-family document
+# of the 130 admitted names, the interleaving documents, the rule probes and
+# 600 differential documents grade identically (rc, PDF, first error, line,
+# and the PDF's bytes with its dates and /ID removed) under the protocol and
+# under two forced dates that differ in every field (1971-02-03 04:05 and
+# 2049-11-28 23:59, FORCE_SOURCE_DATE=1). This rule keeps that true for the
+# next signature file: a name is a CLOCK READER when
+#   * its recorded meaning is one of CLOCK_PRIMITIVES (itself or \let to it),
+#   * the expansion closure (`closure`, the same as R-INERT's) meets a token
+#     whose recorded meaning is one of them, or
+#   * it or its closure names one of the kernel file's `date_dependent_names`
+#     (gen_contract.py measured those as differing between two dates: expl3's
+#     \c_sys_year_int and friends).
+# Only the four primitives are listed by hand; everything that reaches them is
+# derived from the recorded meanings, as R-INERT's closure is. The same screen
+# limit applies: a name of non-letter characters is not followed (§I.4), and a
+# name BUILT at run time (\csname year\endcsname) is not followed either — a
+# known limit, closed only by ADR-013's token-exact closure (instrument I1).
+# ---------------------------------------------------------------------------
+# Review of the clock branch (MEASURED 2026-09-29, protocol environment, the
+# same document five times): the four date primitives are not pdfTeX's only
+# per-run inputs. \pdfrandomseed is seeded from the real time on EVERY run
+# (246203157, 1742160, 176765163 on three runs) even with FORCE_SOURCE_DATE=1,
+# so \pdfuniformdeviate/\pdfnormaldeviate differ per run; \pdfelapsedtime is
+# a timer (44510, 61401, 60100); \pdffilemoddate returns a file's real
+# modification time and FORCE_SOURCE_DATE does not pin it. \pdfcreationdate
+# is pinned by SOURCE_DATE_EPOCH=0 and is left out. The rule therefore covers
+# every primitive whose value is not a function of the input bytes.
+CLOCK_PRIMITIVES = frozenset((
+    "year", "month", "day", "time",
+    "pdfrandomseed", "pdfsetrandomseed", "pdfuniformdeviate",
+    "pdfnormaldeviate", "pdfelapsedtime", "pdfresettimer", "pdffilemoddate",
+))
+
+
+def clock_violation(name: str, meanings: dict[str, str], primitives: set[str],
+                    date_names=()) -> str | None:
+    """None when `name` reads no clock by RULE R-CLOCK, else the reason.
+    Raises KeyError when the recorded closure of meanings is incomplete."""
+    p = primitive_of(meanings[name], primitives)
+    if p in CLOCK_PRIMITIVES:
+        return f"it is the run-dependent primitive \\{p}"
+    if name in date_names:
+        return "it is a date-dependent name of the kernel file"
+    reached, missing = closure(name, meanings)
+    if missing:
+        raise KeyError(f"meaning closure of {name} is incomplete: {sorted(missing)[:5]}")
+    dated = [re.compile(r"\\" + re.escape(d) + r"(?![A-Za-z@_:])") for d in date_names]
+    for x in sorted(reached):
+        via = "" if x == name else f" via \\{x}"
+        for t in body_tokens(meanings[x]) or ():
+            q = primitive_of(meanings.get(t), primitives)
+            if q in CLOCK_PRIMITIVES:
+                return f"expansion reaches the run-dependent primitive \\{q}{via}"
+        m = _MACRO.match(meanings[x])
+        for d, rx in zip(date_names, dated):
+            if m and rx.search(m.group(3)):
+                return f"expansion reaches the date-dependent name \\{d}{via}"
     return None
 
 
@@ -708,6 +780,22 @@ def main() -> int:
         if v:
             fails.append(f"signatures: admitted {n!r} is not inert: {v} (R-INERT)")
 
+    # 11. no admitted name reads the clock (RULE R-CLOCK, OPEN-118 (b))
+    missing_clock = sorted(CLOCK_PRIMITIVES - prims)
+    if missing_clock:
+        fails.append(f"kernel file: the primitives list lacks the clock primitives "
+                     f"{missing_clock} (RULE R-CLOCK would be vacuous)")
+    date_names = tuple(kern.get("date_dependent_names", []))
+    for n in sorted(sigs):
+        if n not in meanings:
+            continue  # reported by check 6
+        try:
+            v = clock_violation(n, meanings, prims, date_names)
+        except KeyError:
+            continue  # reported by check 6
+        if v:
+            fails.append(f"signatures: admitted {n!r} reads the clock: {v} (R-CLOCK)")
+
     # 7. branch matrix
     need_ok, need_out, finds = required_cells(syntax, sem, sigs)
     fails += [f"branch matrix: {m}" for m in finds]
@@ -784,7 +872,8 @@ def main() -> int:
           f"attested; {rp['summary']['graded']} rule probes and "
           f"{df['summary']['graded']} differential documents agree with the oracle; "
           f"branch matrix {len(need_ok)} + {len(need_out)} cells covered; "
-          f"{len(sigs)} signatures by the selection rule, every one inert, "
+          f"{len(sigs)} signatures by the selection rule, every one inert and "
+          f"clock-free, "
           f"with complete follower/repetition evidence")
     return 0
 

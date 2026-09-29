@@ -677,8 +677,8 @@ def _first_arg(d: dict, runs_text: bool = False) -> str:
 def strict_capacity_pair_unprobed(text: str) -> str:
     """C-94: the first frame-kind pair's at-bound document disagrees."""
     d = json.loads(text)
-    assert d["pairs"] and d["pairs"][0]["at"]["agree"], "capacity drifted; update registry"
-    d["pairs"][0]["at"]["agree"] = False
+    assert d["pairs"] and d["pairs"][0]["at"]["oracle"][0] == 0, "capacity drifted; update registry"
+    d["pairs"][0]["at"]["oracle"][0] = 1
     return json.dumps(d, indent=1) + "\n"
 
 
@@ -686,7 +686,12 @@ def strict_capacity_overflow_early(text: str) -> str:
     """C-94: pdfTeX overflows long before the account's window: the model
     under-counts a kind (the reviewer's defect, measured)."""
     d = json.loads(text)
-    d["pairs"][0]["overflow"]["first_fail"] = 128
+    steps = d["pairs"][0]["overflow_steps"]
+    ok = dict(steps[0])
+    ok.update(target=127, oracle=[0, True, "", None])
+    bad = dict(steps[0])
+    bad.update(target=128, oracle=[1, False, "! TeX capacity exceeded, sorry [grouping levels=255].", 3])
+    d["pairs"][0]["overflow_steps"] = [ok, bad] + steps
     return json.dumps(d, indent=1) + "\n"
 
 

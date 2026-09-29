@@ -1079,7 +1079,7 @@ def bytes_random_docs(nm: "Names", n: int, rng: random.Random, sig_path: Path):
     not graded and is replaced (the direct generator may draw a script without
     its argument or a ^^ on purpose); their number is reported."""
     gen, direct = Gen(rng, nm), SB.Direct(rng, byte_names(nm))
-    tree_kern = S.Kernel(signatures=None)  # the renderer only
+    tree_kern = S.Kernel(signatures=None, token_cost=0)  # the renderer only
     bk = S.BytesKernel(signatures=sig_path)
     out, discarded = [], {"TREE": 0, "DIRECT": 0}
     while len(out) < n:

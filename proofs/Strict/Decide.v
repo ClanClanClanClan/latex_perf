@@ -361,8 +361,9 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       group (bounded by [max_groups]) or per token read (bounded by
       [max_tokens]), never by their product: the design's table gives the
       account of each and pdfTeX's own report of it, maximised over every
-      graded document, the memory worst cases included (every one under a
-      fifth of its capacity).
+      graded document, the memory worst cases and the overflow searches past
+      the bounds included (the semantic nest 26%, every other one at most
+      10%).
     A document beyond a bound is outside the tier: never a verdict.  Every
     attested name is probed at the bounds (families R-NEST-*, R-BIG-* of
     gen_strict_signatures.py; A-R-*, A-CAP-* of gen_strict_arg_signatures.py),

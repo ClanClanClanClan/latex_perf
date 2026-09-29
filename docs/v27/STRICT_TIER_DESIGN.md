@@ -1625,9 +1625,14 @@ changed, not the instance:
   not per frame. pdfTeX's own report of each, maximised over EVERY graded
   document (the pairs at 200 groups and their overflow searches, the
   transients, the usage documents, all memory worst cases and bound
-  documents), is in `capacity.json`'s evidence; check_strict_kernel.py
-  recomputes that maximum from the records and fails on any capacity more
-  than half used.
+  documents), is in the evidence files; check_strict_kernel.py recomputes
+  that maximum from the records and fails on any capacity more than half
+  used. MEASURED maxima (over documents at AND past the bounds): main memory
+  2,411,456 of 5,000,000 (the `\ddots` bound document), string pool
+  1,939,424 of 5,408,265, semantic nest 255 of 1,000, buffer 20,110 of
+  200,000, hash 49,161 of 615,000, input stack 511 of 10,000, strings 19,741
+  of 467,099, font memory 627,721 of 8,000,000, parameter stack 255 of
+  20,000, save stack 1,793 of 200,000, fonts 40 of 9,000.
 - **Gates recompute every derived number from primary records (M-1,
   M-2).** check_strict_kernel.py re-derives the token cost, every name's
   cost, every command's copy factor and cost floor (from the graded

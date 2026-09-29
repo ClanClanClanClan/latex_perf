@@ -404,6 +404,12 @@ def near_miss_docs(rng: random.Random) -> list[tuple[str, bytes]]:
     out.append(("file one past the bound", big + b"x\n" + END + b"\n"))
     # capacity bounds of the kernel (Decide.v)
     out.append(("brace nesting past the bound", HEADER + b"{" * 201 + b"x" + b"}" * 201 + b"\n" + END))
+    # C-94: the group bound counts a formula as a group: $ and 200 braces,
+    # and the reviewer's box-and-formula shape one level past 200 groups
+    out.append(("formula and 200 braces past the group bound",
+                HEADER + b"$" + b"{" * 200 + b"x" + b"}" * 200 + b"$\n" + END))
+    out.append(("box and formula past the group bound",
+                HEADER + b"\\mbox{$" * 101 + b"x" + b"$}" * 101 + b"\n" + END))
     out.append(("tokens past the bound", HEADER + (b"x" * 5_000 + b"%\n") * 4 + b"xx\n" + END))
     return out
 
@@ -566,13 +572,15 @@ def lexer_families(names: dict, rng: random.Random) -> list[tuple[str, bytes]]:
     add("L0-bounds", file_at_bound())
     # the kernel's bounds (Decide.v) at the byte level: exactly 20,000 kernel
     # tokens (19,999 characters and \end{document}; comment-joined lines give
-    # no space tokens), in text and in one formula; 200 nested groups
-    # (the header's line ends in a comment: its end-of-line space would be a
-    # 20,001st token)
+    # no space tokens), in text and in one formula; 200 TeX groups (C-94: a
+    # formula is one of them) of braces, of a formula and braces, and of
+    # box-and-formula levels (the header's line ends in a comment: its
+    # end-of-line space would be a 20,001st token)
     H0 = b"\\documentclass{article}\n\\begin{document}%\n"
     chars = (b"x" * 5000 + b"%\n") * 3 + b"x" * 4999 + b"%\n"
     add("L0-bounds", H0 + chars + END + b"\n")
     add("L0-bounds", H0 + b"$" + (b"x" * 5000 + b"%\n") * 3 + b"x" * 4997 + b"$%\n" + END + b"\n")
     add("L0-bounds", d(b"{" * 200 + b"x" + b"}" * 200 + b"\n"))
-    add("L0-bounds", d(b"$" + b"{" * 200 + b"x" + b"}" * 200 + b"$\n"))
+    add("L0-bounds", d(b"$" + b"{" * 199 + b"x" + b"}" * 199 + b"$\n"))
+    add("L0-bounds", d(b"\\mbox{$" * 100 + b"x" + b"$}" * 100 + b"\n"))
     return f

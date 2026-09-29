@@ -32,9 +32,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
-from diff_real_roots import PIN, run_to_fixpoint  # noqa: E402
+from diff_real_roots import PIN, run_to_fixpoint_full  # noqa: E402
 from _oracle import (OracleError, get_oracle, job_output,  # noqa: E402
-                     oracle_tex_env, pdf_written)
+                     oracle_tex_env)
 import _measurement_provenance as _mp  # noqa: E402
 
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
@@ -89,10 +89,12 @@ def build(pkg, top, rule, timeout):
                     tex.write_bytes(r.stdout)
             if trace.is_file():
                 edits = sum(1 for _ in trace.read_text(errors="replace").splitlines())
-        rc, _ = run_to_fixpoint(work, top, tex_env(td), timeout)
-        # pdfTeX's job name and its own report of the PDF (C-95/C-97)
+        run = run_to_fixpoint_full(work, top, tex_env(td), timeout)
+        rc = run.rc
+        # pdfTeX's job name, and the PDF verdict of the oracle's one reader
+        # (OracleRun.pdf = _oracle.pdf_written: pdfTeX's own report, C-99)
         pdf = job_output(work, top, ".pdf")
-        if rc != 0 or not pdf_written(work, top):
+        if not run.compiles:
             return {"rc": rc, "edits": edits, "text": None, "layout": None,
                     "pages": None}
         txt = subprocess.run(["pdftotext", "-enc", "UTF-8", str(pdf), "-"],

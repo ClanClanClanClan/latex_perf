@@ -158,18 +158,23 @@ for f in "$CORPUS"/*.tex; do
   if [ "$envok" = yes ] && ! oracle_vet "$d" "$pout" -interaction=nonstopmode -halt-on-error "$base" 2>/dev/null; then
     envok=no
   fi
+  # The §B.4 predicate (STRICT_TIER_DESIGN.md, E0): COMPILES = rc 0 AND a PDF,
+  # and the PDF is pdfTeX's own final report in this run's log AND its
+  # terminal output ($pout, the shim's stdout), which must agree -- not a file
+  # named .pdf (a document can \openout one), nor a report it could forge
+  # (C-97, C-99): _oracle.pdf_written. Exit 1 = no PDF; else not a grade.
+  pv=0
+  oracle_pdf_written "$d" "$base" "$pout" 2>/dev/null || pv=$?
+  [ "$pv" -gt 1 ] && envok=no
   rm -f "$pout"
   if [ "$envok" = no ]; then
     printf '%-34s | %-10s | %-9s | %s\n' "$base" "$cc" "ENVFAIL" "not graded (work root short of space, or pdfTeX could not write its own output)"
     rm -rf "$d"; timeouts=$((timeouts+1)); continue
   fi
-  # The §B.4 predicate (STRICT_TIER_DESIGN.md, E0): COMPILES = rc 0 AND a PDF.
   # Grading by rc alone scored tolerated_write18.tex (rc 0, no PDF: its body
   # typesets nothing) COMPILES, i.e. a false-not-ready, where every other
   # grader in the repo scores it FAILS.
-  # ... and the PDF must be one pdfTeX reports writing in this run's log, not
-  # merely a file named .pdf (a document can \openout one, C-97).
-  oracle_pdf_written "$d" "$base" 2>/dev/null && pdf=yes || pdf=no
+  [ "$pv" = 0 ] && pdf=yes || pdf=no
   job="$(oracle_job "$base")"
   # Affirmative proof that pdfTeX ran, as false_ready_oracle.sh requires: the
   # banner pdfTeX writes as the first line of the log. $d is fresh per document

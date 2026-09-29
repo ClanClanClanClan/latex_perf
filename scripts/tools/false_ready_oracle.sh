@@ -228,10 +228,19 @@ run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
     # root is short of space.
     if ! oracle_vet "$wd" "$out" "${cmd[@]}" 2>/dev/null; then rc=ENVFAIL; break; fi
   done
+  # The PDF verdict is pdfTeX's own final report in this pass's log AND its
+  # terminal output ($out, the shim's stdout), which must agree -- not a
+  # file named .pdf, nor a report the document could forge (C-97, C-99):
+  # _oracle.pdf_written. Exit 1 = no PDF; anything else = not a grade.
+  pv=0
+  oracle_pdf_written "$wd" "$base" "$out" 2>/dev/null || pv=$?
   rm -f "$out"
-  # The PDF verdict is pdfTeX's own report in this pass's log, not a file
-  # named .pdf (a document can \openout one, C-97): _oracle.pdf_written.
-  oracle_pdf_written "$wd" "$base" 2>/dev/null && pdf=yes || pdf=no
+  case "$pv" in
+    0) pdf=yes ;;
+    1) pdf=no ;;
+    *) pdf=no
+       case "$rc" in 12[4-7]|NOPROOF|ENVFAIL) ;; *) rc=ENVFAIL ;; esac ;;
+  esac
   echo "$rc $pdf"
 }
 

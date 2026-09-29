@@ -89,7 +89,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _oracle import (OracleError, availability, get_oracle,  # noqa: E402
-                     host_has_pdflatex, job_output, pdf_written)
+                     host_has_pdflatex, job_output)
 
 CORPORA = ["corpora/compile_check", "corpora/apply_fixes"]
 MANIFEST = "corpora/apply_fixes/manifest.json"
@@ -156,14 +156,14 @@ def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 6
         o.remove([pdf] + [job_output(workdir, base, "." + j)
                           for j in also_remove])
         with o.tempdir(prefix="lp-rt-texmf-") as td:
-            rc, timed_out = o.run_once(workdir, base, o.tex_env(td), secs)
+            run = o.run_pass(workdir, base, o.tex_env(td), secs)
     except OracleError as e:
         print(f"[fixer-roundtrip] NOT GRADED ({base}): {e}", file=sys.stderr)
         return None
-    if timed_out:
+    if run.timed_out:
         return None
-    # pdfTeX's own report of the PDF, not a file named .pdf (C-97)
-    return rc == 0 and pdf_written(workdir, base)
+    # OracleRun.compiles: rc 0 and pdfTeX's own report of the PDF (C-97/C-99)
+    return run.compiles
 
 
 def main() -> int:

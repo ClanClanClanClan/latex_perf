@@ -28,9 +28,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
-from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+from diff_real_roots import PIN, build_frame, run_to_fixpoint_full  # noqa: E402
 from _oracle import (OracleError, get_oracle, job_output,  # noqa: E402
-                     oracle_tex_env, pdf_written)
+                     oracle_tex_env)
 import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import first_error  # noqa: E402
 
@@ -78,11 +78,13 @@ def arm(pkg, top, flag, timeout):
                     parts = line.split("\t")
                     if len(parts) >= 2:
                         rules[parts[1]] += 1
-        rc, _ = run_to_fixpoint(work, top, tex_env(td), timeout)
-        # pdfTeX's job name and its own report of the PDF (C-95/C-97)
+        run = run_to_fixpoint_full(work, top, tex_env(td), timeout)
+        rc = run.rc
+        # pdfTeX's job name, and the PDF verdict of the oracle's one reader
+        # (OracleRun.pdf = _oracle.pdf_written: pdfTeX's own report, C-99)
         pdf = job_output(work, top, ".pdf")
         text = None
-        if rc == 0 and pdf_written(work, top):
+        if run.compiles:
             text = subprocess.run(["pdftotext", "-enc", "UTF-8", str(pdf), "-"],
                                   capture_output=True).stdout.decode("utf-8", "replace")
         return {"rc": rc, "first_error": "" if rc == 0 else first_error(work, top),

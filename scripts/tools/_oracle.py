@@ -599,7 +599,7 @@ def check_engine_argv(args, cwd, *, graded: bool) -> None:
         raise OracleError(f"{what}: file argument {p!r:.100} starts with -, &, * "
                           f"or \\ (an option, a format selector, INITEX's "
                           f"switch or TeX code)")
-    if not graded:
+    if not graded and head[0] == "\\":
         return  # run_engine's argument is TeX code (INITEX's `\\dump`)
     if _UNSAFE_ARG_CHARS.search(p):
         raise OracleError(f"{what}: file argument {p!r:.100} holds whitespace or "
@@ -614,6 +614,48 @@ def check_engine_argv(args, cwd, *, graded: bool) -> None:
         except ValueError:
             raise OracleError(f"{what}: file argument {p!r:.100} is an absolute "
                               f"path outside the run directory {cwd}")
+    check_file_argument(p, cwd, what)
+
+
+# THE FILE ARGUMENT IS ONE THE ORACLE CAN NAME EXACTLY (C-95, review round 3,
+# M1/L1). pdftex_jobname models pdfTeX's job name from the argument's TEXT,
+# but pdfTeX derives it from the file kpathsea FINDS: for `a.b` it tries
+# `a.b.tex` first and, if that exists, the job is `a.b`, not `a` (MEASURED);
+# `a%b.tex` and `a~b.tex` make the job `texput` and read nothing (rc 1);
+# `doc.tex/` is not a file. Rather than model kpathsea's lookup, the oracle
+# REFUSES every argument whose outputs it cannot name with certainty (fail
+# closed, OracleError, never a grade): each path component is plain
+# ([A-Za-z0-9_+,=@-], then also `.`; no leading `.`, no empty component), the
+# file ends in a known TeX extension (.tex or .ltx, any case: the corpus has
+# .tex x 2828 and .TEX x 3, MEASURED over its 2,831 toplevels), it EXISTS in
+# the run directory as a regular file (not a symlink), and when the name does
+# not end in `.tex` there is no `<name>.tex` beside it (which kpathsea would
+# read instead).
+_ARG_COMPONENT = re.compile(r"[A-Za-z0-9_+,=@-][A-Za-z0-9_.+,=@-]*")
+TEX_EXTENSIONS = (".tex", ".ltx")
+
+
+def check_file_argument(p: str, cwd, what: str = "a graded pdflatex run") -> None:
+    rel = p
+    if os.path.isabs(p):
+        rel = str(Path(p).resolve().relative_to(Path(cwd).resolve()))
+    parts = rel.split("/")
+    bad = [c for c in parts if not _ARG_COMPONENT.fullmatch(c)]
+    if bad:
+        raise OracleError(f"{what}: file argument {p!r:.100} has a component "
+                          f"{bad[0]!r:.60} that is not a plain name (the oracle "
+                          f"cannot name its outputs as pdfTeX would)")
+    base = parts[-1]
+    if "." not in base or "." + base.rpartition(".")[2].lower() not in TEX_EXTENSIONS:
+        raise OracleError(f"{what}: file argument {p!r:.100} does not end in a "
+                          f"known TeX extension {TEX_EXTENSIONS}")
+    f = Path(cwd) / rel
+    if f.is_symlink() or not f.is_file():
+        raise OracleError(f"{what}: file argument {p!r:.100} is not a regular "
+                          f"file in {cwd}")
+    if not base.endswith(".tex") and (Path(cwd) / (rel + ".tex")).exists():
+        raise OracleError(f"{what}: {rel}.tex exists beside {p!r:.100}; kpathsea "
+                          f"would read it instead, so the job name is ambiguous")
 
 
 # POSITIVE PROOF THAT pdfTeX RAN (OPEN-118 review round 2). An exit code counts
@@ -723,24 +765,142 @@ def pdftex_jobname(args) -> str:
     return name.rpartition(".")[0] if "." in name else name
 
 
+class EngineRun(tuple):
+    """(rc, combined output, timed_out), unpackable as before, plus `stdout`:
+    pdfTeX's TERMINAL stream alone, the channel a document cannot write after
+    pdfTeX's final report (C-99)."""
+
+    def __new__(cls, rc, out, timed_out, stdout=b""):
+        t = super().__new__(cls, (rc, out, timed_out))
+        t.stdout = stdout
+        return t
+
+
+# THE DOCUMENT MUST NOT WRITE ANY FILE THE ORACLE READS AS EVIDENCE (C-99,
+# review round 3, H1). MEASURED by the review: under openout_any=p a document
+# may `\immediate\openout` its OWN \jobname.log while pdfTeX holds it open,
+# write past the log's real end and finish it with a forged
+# "Output written on \jobname.pdf (1 page, ...)", and with a .pdf it wrote
+# itself the oracle graded compiles although the same run's terminal ended
+# with pdfTeX's genuine "No pages of output.". Text evidence alone cannot be
+# made safe: a document can forge any log text, and it can print a forged
+# report on the terminal and then switch to \batchmode, which silences
+# pdfTeX's genuine one. So every engine run is SUPERVISED: a small process
+# (below) starts the engine in the run directory with stdin /dev/null, and
+# counts with inotify the IN_CLOSE_WRITE events of the job's evidence files
+# (<job>.log/.pdf/.fls/.fmt). pdfTeX opens each for writing exactly once
+# (MEASURED: 1 each, also with -recorder); a document that opens one of them
+# for writing -- by its name or through a symlink, which inotify reports
+# under the target's name (MEASURED) -- makes a second close-write, and the
+# run is REFUSED (OracleError: such a document is ungradable, never graded).
+# An inotify failure or a queue overflow is refused too (fail closed).
+_SUPERVISOR_SRC = r"""
+import ctypes, json, os, select, struct, subprocess, sys
+nonce, names, cmd = sys.argv[1], sys.argv[2].split("/"), sys.argv[3:]
+ev = {"cw": {}, "overflow": 0, "err": ""}
+fd = -1
+try:
+    libc = ctypes.CDLL(None, use_errno=True)
+    fd = libc.inotify_init1(0o4000)
+    if fd < 0 or libc.inotify_add_watch(fd, b".", 0x8) < 0:
+        raise OSError(ctypes.get_errno(), "inotify")
+except Exception as e:
+    ev["err"] = repr(e)[:200]
+def drain():
+    while fd >= 0:
+        try:
+            buf = os.read(fd, 65536)
+        except BlockingIOError:
+            return
+        off = 0
+        while off + 16 <= len(buf):
+            _, mask, _, ln = struct.unpack_from("iIII", buf, off)
+            name = buf[off + 16:off + 16 + ln].split(b"\0", 1)[0].decode("utf-8", "replace")
+            off += 16 + ln
+            if mask & 0x4000:
+                ev["overflow"] += 1
+            if mask & 0x8 and name in names:
+                ev["cw"][name] = ev["cw"].get(name, 0) + 1
+try:
+    child = subprocess.Popen(cmd, stdin=subprocess.DEVNULL)
+except OSError as e:
+    sys.stderr.write("%s\n" % e); sys.exit(127)
+while child.poll() is None:
+    if fd >= 0:
+        select.select([fd], [], [], 0.2)
+        drain()
+    else:
+        child.wait()
+drain()
+sys.stderr.write("\n%s_EVID=%s\n" % (nonce, json.dumps(ev, sort_keys=True)))
+sys.stderr.flush()
+rc = child.returncode
+sys.exit(rc if rc >= 0 else 128 - rc)
+"""
+
+
+def evidence_names(args) -> str:
+    """The evidence files of a run, as the supervisor's '/'-joined argument."""
+    job = pdftex_jobname(args)
+    return "/".join(job + e for e in _Base.RUN_OUTPUTS)
+
+
+def check_evidence(stderr: bytes, nonce: str, args, what: str) -> bytes:
+    """Refuse a run whose supervisor saw the document write an evidence file
+    (or saw nothing). Returns stderr without the evidence line."""
+    m = re.search(rb"^" + re.escape(nonce.encode()) + rb"_EVID=(.*)$", stderr, re.M)
+    if m is None:
+        raise OracleError(f"{what}: the run's supervisor reported no evidence "
+                          f"line, so whether the document wrote pdfTeX's own "
+                          f"output files is unknown; not a grade")
+    try:
+        ev = json.loads(m.group(1))
+    except ValueError:
+        raise OracleError(f"{what}: unreadable evidence line {m.group(1)[:200]!r}")
+    if ev.get("err") or ev.get("overflow"):
+        raise OracleError(f"{what}: the supervisor could not watch the run "
+                          f"directory ({ev.get('err') or 'inotify queue overflow'}); "
+                          f"not a grade (C-99)")
+    twice = sorted(n for n, c in ev.get("cw", {}).items() if c > 1)
+    if twice:
+        raise OracleError(
+            f"{what}: the document opened pdfTeX's own {twice} for writing "
+            f"(written {[ev['cw'][n] for n in twice]} times; pdfTeX writes each "
+            f"once): the evidence of the run is the document's, so it is "
+            f"ungradable -- refused, never graded (C-99)")
+    return stderr[:m.start()] + stderr[m.end():]
+
+
 def job_output(cwd, args, ext: str) -> Path:
     """cwd/<pdfTeX's job name><ext>: where pdfTeX writes the run's `ext` file."""
     return Path(cwd) / (pdftex_jobname(args) + ext)
 
 
-# THE PDF VERDICT (C-97 forge, review round 2): `compiles` = rc 0 AND a PDF
-# PDFTEX WROTE IN THIS RUN. A file named <job>.pdf is not evidence: MEASURED,
-# a document doing `\immediate\openout1=\jobname.pdf` and writing
-# "%PDF-1.5 not a pdf" with an empty body gets rc 0, "No pages of output." and
-# a <job>.pdf, and every grader said compiles. The evidence is pdfTeX's own
-# final report in THIS run's log (clear_outputs removed any earlier log):
-# the LAST "Output written on ..." / "No pages of output." line, followed by
-# nothing but pdfTeX's "PDF statistics:" block -- a document cannot print
-# after pdfTeX's final report, so a line it forged with \typeout earlier is
-# not the last one. The line must name <job>.pdf with >= 1 page, and
-# <job>.pdf must be a regular file (not a symlink).
-_FINAL_LINE = re.compile(rb"^(Output written on |No pages of output\.)")
-_OUTPUT_WRITTEN = re.compile(rb"^Output written on (.+)\.pdf \((\d+) pages?, \d+ bytes\)\.$")
+# THE PDF VERDICT (C-97 forge, review rounds 2 and 3; C-99). `compiles` = rc
+# 0 AND a PDF PDFTEX WROTE IN THIS RUN. A file named <job>.pdf is not
+# evidence (a document can \openout one, MEASURED), and neither is text a
+# document could have written. The verdict is pdfTeX's own FINAL REPORT --
+# "Output written on <job>.pdf (N page(s), M bytes).", "No pages of output."
+# or "!  ==> Fatal error occurred, no output PDF file produced!" -- read from
+# TWO channels:
+#   * the run's LOG, which the supervisor proves only pdfTeX wrote (C-99
+#     block above): the LAST report, followed only by pdfTeX's
+#     "PDF statistics:" block;
+#   * the run's TERMINAL (stdout), which a document cannot write after
+#     pdfTeX's final report (/dev/stdout and every absolute path are refused
+#     under openout_any=p): the LAST report, followed only by
+#     "Transcript written on <job>.log.". A document in \batchmode at the
+#     end silences the terminal's report (MEASURED: no report at all); then
+#     the log alone decides.
+# When both channels carry a report they must AGREE, else OracleError (a
+# document printed a forged report and silenced the real one: ungradable).
+# TeX wraps both streams at 79 bytes, and a line of exactly 79 bytes may be
+# a wrap OR a line followed by a print_nl (MEASURED: "...cmr10.pfb>" of 79
+# bytes then "Output written ..."), so the report is searched for anywhere in
+# the un-wrapped text, not only at a line start.
+_REPORT = re.compile(
+    rb"Output written on (?P<name>[^\n]+?)\.pdf \((?P<n>\d+) pages?, \d+ bytes\)\."
+    rb"|No pages of output\.|!  ==> Fatal error occurred, no output PDF file produced!")
 
 
 def _unwrap_log(data: bytes) -> list[bytes]:
@@ -757,21 +917,52 @@ def _unwrap_log(data: bytes) -> list[bytes]:
     return out
 
 
-def pdf_written(cwd, args) -> bool:
+def final_report(data: bytes, job: str, channel: str):
+    """pdfTeX's final report in `data` (a log or a terminal stream):
+    ("pdf", pages), ("none", 0), or None when there is none (a terminal
+    silenced by \batchmode; a log of a killed run). Raises OracleError when
+    text follows the report that pdfTeX never prints after it."""
+    flat = b"\n".join(_unwrap_log(data))
+    last = None
+    for m in _REPORT.finditer(flat):
+        last = m
+    if last is None:
+        return None
+    tail = [ln for ln in flat[last.end():].split(b"\n") if ln.strip()]
+    if channel == "log":
+        ok = all(ln == b"PDF statistics:" or ln.startswith(b" ") for ln in tail)
+    else:
+        ok = tail in ([], [b"Transcript written on " + job.encode() + b".log."])
+    if not ok:
+        raise OracleError(f"text follows pdfTeX's final report in the run's "
+                          f"{channel} ({tail[:2]!r:.200}); pdfTeX prints nothing "
+                          f"there, so the report cannot be trusted (C-99)")
+    if last.group("name") is None:
+        return ("none", 0)
+    if last.group("name") != job.encode():
+        return ("none", 0)
+    return ("pdf", int(last.group("n")))
+
+
+def pdf_written(cwd, args, stdout: bytes) -> bool:
     """Did pdfTeX itself write <job>.pdf, with pages, in the run whose log is
-    <job>.log? See the block above."""
+    <job>.log and whose terminal output is `stdout`? See the block above."""
+    if stdout is None:
+        raise OracleError("pdf_written needs the run's terminal output (C-99)")
+    job = pdftex_jobname(args)
     log, pdf = job_output(cwd, args, ".log"), job_output(cwd, args, ".pdf")
-    if pdf.is_symlink() or not pdf.is_file() or not log.is_file():
-        return False
-    lines = _unwrap_log(log.read_bytes())
-    k = max((i for i, ln in enumerate(lines) if _FINAL_LINE.match(ln)), default=None)
-    if k is None:
-        return False
-    tail = lines[k + 1:]
-    if any(ln and ln != b"PDF statistics:" and not ln.startswith(b" ") for ln in tail):
-        return False
-    m = _OUTPUT_WRITTEN.match(lines[k])
-    return bool(m) and m.group(1) == pdftex_jobname(args).encode() and int(m.group(2)) >= 1
+    log_r = final_report(log.read_bytes(), job, "log") if log.is_file() else None
+    term_r = final_report(stdout, job, "terminal")
+    if term_r is not None and log_r is not None and term_r[0] != log_r[0]:
+        raise OracleError(
+            f"the run's terminal says {term_r[0]!r} and its log says "
+            f"{log_r[0]!r}: a document printed a forged final report and "
+            f"silenced pdfTeX's (\\batchmode); ungradable, never graded (C-99)")
+    if term_r is not None and log_r is None:
+        raise OracleError("the terminal carries a final report and the log none; "
+                          "not a grade (C-99)")
+    return (log_r is not None and log_r[0] == "pdf" and log_r[1] >= 1
+            and pdf.is_file() and not pdf.is_symlink())
 
 
 def _require_output_written(out: bytes, args: list[str], what: str) -> None:
@@ -1074,9 +1265,19 @@ class _Base:
 
     def run_once(self, work: Path, toplevel: str, env: dict | None, timeout: int,
                  halt: bool = True) -> tuple[int, bool]:
+        r = self.run_pass(work, toplevel, env, timeout, halt)
+        return r.rc, r.timed_out
+
+    def run_pass(self, work: Path, toplevel: str, env: dict | None, timeout: int,
+                 halt: bool = True) -> OracleRun:
+        """ONE graded pass, with its PDF verdict (pdf_written, from this
+        pass's own terminal output and log)."""
         args = ["-interaction=nonstopmode"] + (["-halt-on-error"] if halt else []) + [toplevel]
-        rc, _, to = self.run_pdflatex(Path(work), args, env, timeout)
-        return (-1 if to else rc), to
+        r = self.run_pdflatex(Path(work), args, env, timeout)
+        rc, _, to = r
+        if to:
+            return OracleRun(-1, 1, False, True)
+        return OracleRun(rc, 1, pdf_written(Path(work), toplevel, r.stdout), False)
 
     def run_to_fixpoint(self, work: Path, toplevel: str, env: dict | None,
                         timeout: int, max_passes: int = MAX_PASSES) -> OracleRun:
@@ -1085,24 +1286,25 @@ class _Base:
         work = Path(work)
         # Each pass's PDF/log is its own: run_pdflatex clears them (C-95).
 
-        def one_pass():
-            return self.run_once(work, toplevel, env, timeout)
-
-        rc, passes = -1, 0
+        # The PDF verdict is the LAST pass's (the authoritative one), from
+        # its own terminal output and log (pdf_written, C-99); a timed-out
+        # pass has none.
+        passes = 0
+        r = None
         for _ in range(max_passes):
-            rc, to = one_pass()
+            r = self.run_pass(work, toplevel, env, timeout)
             passes += 1
-            if to:
-                return OracleRun(-1, passes, pdf_written(work, toplevel), True)
-            if rc == 0:
+            if r.timed_out:
+                return OracleRun(-1, passes, False, True)
+            if r.rc == 0:
                 break
-        if rc != 0:
-            return OracleRun(rc, passes, pdf_written(work, toplevel), False)
-        rc, to = one_pass()
+        if r.rc != 0:
+            return OracleRun(r.rc, passes, r.pdf, False)
+        r = self.run_pass(work, toplevel, env, timeout)
         passes += 1
-        if to:
-            return OracleRun(-1, passes, pdf_written(work, toplevel), True)
-        return OracleRun(rc, passes, pdf_written(work, toplevel), False)
+        if r.timed_out:
+            return OracleRun(-1, passes, False, True)
+        return OracleRun(r.rc, passes, r.pdf, False)
 
 
 class NativeOracle(_Base):
@@ -1143,23 +1345,41 @@ class NativeOracle(_Base):
         make_private_tmp(env or {})  # C-93: checked, then created
         env = engine_env(env, self.engine_base)
         _require_free_space(cwd, "before")
+        # Supervised (C-99), stdin /dev/null (review round 3: the engine
+        # used to inherit the grader's stdin), in its own process group so a
+        # timeout kills the engine and everything it started.
+        nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
         try:
-            p = subprocess.run([engine, *args], cwd=cwd, env=env,
-                               capture_output=True, timeout=timeout)
+            p = subprocess.Popen(["python3", "-I", "-c", _SUPERVISOR_SRC, nonce,
+                                  evidence_names(args), engine, *args],
+                                 cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 start_new_session=True)
+        except OSError as e:  # no supervisor: infrastructure, not a grade
+            raise OracleError(f"cannot execute the run supervisor: {e}") from e
+        try:
+            out, err = p.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
+            try:
+                os.killpg(p.pid, 9)
+            except OSError:
+                pass
+            p.communicate()
             _require_free_space(cwd, "after")
-            return 124, b"", True
-        except OSError as e:  # no engine at all: infrastructure, not a grade
-            raise OracleError(f"cannot execute {engine}: {e}") from e
-        _require_pdftex_ran(p.returncode, p.stdout, f"native {engine}")
-        _require_output_written(p.stdout + p.stderr, args, f"native {engine}")
+            return EngineRun(124, b"", True)
+        if p.returncode == 127:
+            raise OracleError(f"cannot execute {engine}: {err.decode(errors='replace')[:300]}")
+        err = check_evidence(err, nonce, args, f"native {engine}")
+        _require_pdftex_ran(p.returncode, out, f"native {engine}")
+        _require_output_written(out + err, args, f"native {engine}")
         _require_free_space(cwd, "after")
-        return p.returncode, p.stdout + p.stderr, False
+        return EngineRun(p.returncode, out + err, False, out)
 
     def _image_command(self, argv, cwd, timeout):
         try:
             p = subprocess.run(argv, cwd=cwd, capture_output=True, timeout=timeout,
-                               env=engine_env({}, self.engine_base))
+                               env=engine_env({}, self.engine_base),
+                               stdin=subprocess.DEVNULL)
         except (subprocess.TimeoutExpired, OSError) as e:
             raise OracleError(f"image command {argv[:1]} failed: {e}") from e
         return p.returncode, p.stdout, p.stderr
@@ -1246,7 +1466,9 @@ class ContainerOracle(_Base):
     def _dk(self, *args, timeout=120, check=False, input=None):
         try:
             p = subprocess.run([self.docker, *args], capture_output=True,
-                               timeout=timeout, input=input)
+                               timeout=timeout, input=input,
+                               **({} if input is not None else
+                                  {"stdin": subprocess.DEVNULL}))
         except subprocess.TimeoutExpired as e:
             raise OracleError(f"docker {' '.join(args[:2])} timed out") from e
         if check and p.returncode != 0:
@@ -1488,7 +1710,8 @@ class ContainerOracle(_Base):
             cmd += ["-w", str(Path(cwd).resolve())]
         try:
             p = subprocess.run([self.docker, *cmd, self.name, *argv],
-                               capture_output=True, timeout=timeout)
+                               capture_output=True, timeout=timeout,
+                               stdin=subprocess.DEVNULL)
         except subprocess.TimeoutExpired as e:
             raise OracleError(f"image command {argv[:1]} timed out") from e
         return p.returncode, p.stdout, p.stderr
@@ -1528,15 +1751,18 @@ class ContainerOracle(_Base):
         # per-run nonce; that line, not the docker CLI's exit code, is the rc
         # (see PDFTEX_BANNER above for why).
         nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
+        # The engine runs under the evidence supervisor (C-99), with stdin
+        # /dev/null (docker exec without -i attaches none; the docker client
+        # itself gets /dev/null too).
         script = LEAK_CHECK_SH + (
-            'n=$1; t=$2; e=$3; shift 3; lp_leak "$n" || exit 0; '
-            'timeout -k 10 "$t" "$e" "$@"; '
+            'n=$1; t=$2; sup=$3; names=$4; e=$5; shift 5; lp_leak "$n" || exit 0; '
+            'timeout -k 10 "$t" python3 -I -c "$sup" "$n" "$names" "$e" "$@"; '
             'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
-        cmd += [self.name, "sh", "-c", script, "sh", nonce, str(int(timeout)), engine,
-                *args]
+        cmd += [self.name, "sh", "-c", script, "sh", nonce, str(int(timeout)),
+                _SUPERVISOR_SRC, evidence_names(args), engine, *args]
         try:
             p = subprocess.run([self.docker, *cmd], capture_output=True,
-                               timeout=timeout + 90)
+                               timeout=timeout + 90, stdin=subprocess.DEVNULL)
         except subprocess.TimeoutExpired:
             # The docker client hung past the inner timeout's own kill: the
             # oracle did not answer. Unmeasured, not a pdflatex timeout.
@@ -1560,14 +1786,15 @@ class ContainerOracle(_Base):
         err = p.stderr[:m.start()] + p.stderr[m.end():]
         if rc in (124, 137):
             _require_free_space(cwd, "after")
-            return rc, p.stdout + err, True
+            return EngineRun(rc, p.stdout + err, True, p.stdout)
         if rc in (125, 126, 127):  # timeout(1) itself failed / engine missing
             raise OracleError(f"in-container timeout/{engine} failed rc={rc}: "
                               + err.decode(errors="replace")[:400])
+        err = check_evidence(err, nonce, args, f"container {self.name}")
         _require_pdftex_ran(rc, p.stdout, f"container {self.name}")
         _require_output_written(p.stdout + err, args, f"container {self.name}")
         _require_free_space(cwd, "after")
-        return rc, p.stdout + err, False
+        return EngineRun(rc, p.stdout + err, False, p.stdout)
 
     def stop(self):
         self._dk("rm", "-f", self.name)
@@ -1630,7 +1857,16 @@ def host_has_pdflatex() -> bool:
 def first_error_block(log: Path, lines: int = 4) -> str:
     """The first `!` line of a pdflatex log joined with its wrapped
     continuation (TeX hard-wraps at ~79 columns; concatenation, not a space,
-    is the inverse of the wrap)."""
+    is the inverse of the wrap).
+
+    A DIAGNOSTIC, NOT EVIDENCE (C-99, review round 3 (c)): the log is
+    pdfTeX's alone (the supervisor refuses a run whose document writes it),
+    but pdfTeX itself prints what the document asks it to -- `\\message` of
+    "! ..." or "l.N ..." lines lands on the terminal and in the log exactly
+    like an error of pdfTeX's (MEASURED), and `\\PackageError` raises any
+    message genuinely. So no grade may be decided from this text; the
+    graders' cells are functions of the rc, the PDF verdict and the CLI
+    verdict only (diff_real_roots.cell_of)."""
     if not Path(log).is_file():
         return ""
     ll = Path(log).read_text(errors="replace").split("\n")
@@ -1676,13 +1912,25 @@ def main(argv: list[str]) -> int:
         # The shell graders' readers of a run's outputs (C-95/C-97 review
         # round 2): the SAME job name and PDF verdict as the Python graders.
         #   job FILEARG            print pdfTeX's job name for FILEARG
-        #   pdf-written DIR FILEARG  exit 0 iff pdfTeX wrote DIR/<job>.pdf with
-        #                          pages in the run whose log is DIR/<job>.log
+        #   pdf-written DIR FILEARG STDOUT  exit 0 iff pdfTeX wrote DIR/<job>.pdf
+        #                          with pages, by its own report in the run's
+        #                          log DIR/<job>.log AND its terminal output
+        #                          (the file STDOUT: what the shim printed on
+        #                          stdout), which must agree (C-99); exit
+        #                          INFRA_RC when they disagree (not a grade)
         if cmd == "job":
             print(pdftex_jobname(rest[-1:]))
             return 0
         if cmd == "pdf-written":
-            return 0 if pdf_written(Path(rest[0]), rest[1:]) else 1
+            if len(rest) != 3:
+                print("[oracle] pdf-written DIR FILE STDOUTFILE", file=sys.stderr)
+                return INFRA_RC
+            try:
+                return 0 if pdf_written(Path(rest[0]), rest[1:2],
+                                        Path(rest[2]).read_bytes()) else 1
+            except (OracleError, OSError) as e:
+                print(f"[oracle] NOT GRADED: {e}", file=sys.stderr)
+                return INFRA_RC
         if cmd == "workroot":
             print(default_workroot().expanduser().resolve())
             return 0
@@ -1721,8 +1969,18 @@ def main(argv: list[str]) -> int:
                       f"host's {', '.join(dropped)} (protocol: "
                       f"{ORACLE_TEX_VARS})", file=sys.stderr)
             with o.tempdir(prefix="lp-oracle-shim-") as td:
-                rc, out, to = o.run_pdflatex(Path.cwd(), rest, o.tex_env(td), timeout)
-            sys.stdout.buffer.write(out)
+                r = o.run_pdflatex(Path.cwd(), rest, o.tex_env(td), timeout)
+            rc, out, to = r
+            # pdfTeX's terminal output on stdout, everything else (the engine's
+            # stderr, write18 children's) on stderr: the shell graders read
+            # the PDF verdict from stdout (C-99, oracle_pdf_written).
+            sys.stdout.buffer.write(r.stdout)
+            sys.stdout.buffer.flush()
+            rest = out[len(r.stdout):] if out.startswith(r.stdout) else b""
+            if hasattr(sys.stderr, "buffer"):
+                sys.stderr.buffer.write(rest)
+            else:  # a text-only stderr (a test harness)
+                sys.stderr.write(rest.decode(errors="replace"))
             return 124 if to else rc
     except BaseException as e:  # noqa: BLE001 -- every exception, see below
         if isinstance(e, SystemExit) and e.code in (0, None):

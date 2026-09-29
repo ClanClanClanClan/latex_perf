@@ -26,6 +26,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import fcntl
 import subprocess
 import sys
 from pathlib import Path
@@ -100,9 +101,42 @@ def source_block() -> dict:
     }
 
 
+def build_root() -> Path:
+    """The checkout that owns this checkout's `_build`: REPO itself, or --
+    when `_build` is a symlink, as in check_gate_selftests.py's isolated
+    worktree copies (#624) -- the checkout it points into. dune must run
+    THERE: run with --root at a copy, it re-digests the whole tree into a
+    `_build` (and a `.lock`) that every concurrent copy shares, so the copies
+    serialise on the lock and the binary level's check_strict_capacity hit
+    the harness's 300 s gate timeout (measured at the merge of #624 into
+    this branch: 2 of 3 kill-tests with 7 copies, 1 of 3 with 2, 0 of 3 in
+    place); and a copy's build would write into another checkout's
+    `_build`. The harness proves every copy reproduces that checkout's
+    working tree, and no binary-level mutation touches an OCaml source, so
+    the executable built there is the one the copy's sources give."""
+    b = REPO / "_build"
+    return b.resolve().parent if b.is_symlink() else REPO
+
+
 def build_exe() -> Path:
-    r = subprocess.run(["opam", "exec", "--", "dune", "build", "--root", str(REPO),
-                        EXE_REL], cwd=REPO, capture_output=True, text=True)
+    """Build the extracted decider, ONE dune at a time per build root.
+    MEASURED (dune 3.20.2, 2026-09-30): three concurrent `dune build --root R
+    latex-parse/strict/strict_decide.exe` -- one finished in 0 s, the other
+    two printed "Your build request is being forwarded to a running Dune
+    instance (pid N)" for a pid that had already exited and then slept
+    forever. Concurrent Kernel() constructions (the isolated kill-test
+    copies of #624, whose _build is shared, or two generators) therefore
+    hung; a flock on a file inside the build root's _build (ignored by git)
+    serialises them (a warm build takes well under a second)."""
+    root = build_root()
+    (root / "_build").mkdir(exist_ok=True)
+    with open(root / "_build" / ".lp-strict-build.lock", "a") as lk:
+        fcntl.flock(lk, fcntl.LOCK_EX)
+        try:
+            r = subprocess.run(["opam", "exec", "--", "dune", "build", "--root", str(root),
+                                EXE_REL], cwd=root, capture_output=True, text=True)
+        finally:
+            fcntl.flock(lk, fcntl.LOCK_UN)
     if r.returncode != 0:
         raise SystemExit(f"cannot build {EXE_REL}:\n{r.stderr[-2000:]}")
     return REPO / "_build/default" / EXE_REL

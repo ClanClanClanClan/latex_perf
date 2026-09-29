@@ -201,6 +201,12 @@ CAPSTONES = [
         "max_groups TeX groups (a formula and an argument's groups included).",
     ),
     (
+        "LaTeXPerfectionist.Strict.Decide.strict_mem_bounded",
+        "LaTeXPerfectionist.Strict.Decide",
+        "C-98: a strict document stays within the main-memory account (token "
+        "costs plus argument copies, which grow with depth x tokens).",
+    ),
+    (
         "LaTeXPerfectionist.Strict.Decide.in_strict_dec",
         "LaTeXPerfectionist.Strict.Decide",
         "membership in the strict fragment is decidable.",

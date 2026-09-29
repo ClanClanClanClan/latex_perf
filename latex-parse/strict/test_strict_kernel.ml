@@ -47,18 +47,21 @@ let contract =
           K.as_long = K.LShortInner;
           K.as_text = K.TRun (true, K.PText false, 1);
           K.as_math = K.MRun (K.PText true, 1);
+          K.as_copy = 3;
         } );
       ( "mathrm",
         {
           K.as_long = K.LShortOuter;
           K.as_text = K.TFatalNow K.E3;
           K.as_math = K.MRun (K.PMath, 1);
+          K.as_copy = 3;
         } );
       ( "mbox",
         {
           K.as_long = K.LLong;
           K.as_text = K.TRun (true, K.PText true, 1);
           K.as_math = K.MRun (K.PText true, 1);
+          K.as_copy = 3;
         } );
     ]
   in
@@ -71,6 +74,10 @@ let contract =
         || str n = "par");
     K.c_sig = (fun n -> List.assoc_opt (str n) sigs);
     K.c_arg = (fun n -> List.assoc_opt (str n) asigs);
+    (* C-98: the memory account; \\alpha costs as much as the costliest measured
+       name (\\ddots, 155 words) *)
+    K.c_cost =
+      (fun t -> match t with K.TCs n when str n = "alpha" -> 160 | _ -> 17);
   }
 
 let t w = K.NText (chars w)
@@ -249,6 +256,26 @@ let () =
     "E5@0";
   check "a name of 100 letters" (doc [ cmd (String.make 100 'q') ]) "E1@0";
   check "a name of 101 letters" (doc [ cmd (String.make 101 'q') ]) "not_strict";
+  (* C-98: argument copies. 197 box levels around 6,427 [\frame{}] overflow
+     pdfTeX's main memory (each level copies its whole argument); the bound is
+     on [held], the tokens the argument copies hold *)
+  let rec boxed k inner =
+    if k = 0 then inner else [ cmd "mbox"; g (boxed (k - 1) inner) ]
+  in
+  check "argument copies within the bound"
+    (doc (boxed 20 [ t (String.make 2000 'x') ]))
+    "ready";
+  check "argument copies past the bound"
+    (doc (boxed 190 [ t (String.make 5000 'x') ]))
+    "not_strict";
+  (* C-98: a costly name: 12,000 of them in one formula stay within the memory
+     account, 13,000 do not (160 words each) *)
+  check "costly name within the memory account"
+    (doc [ dollar (List.init 12000 (fun _ -> cmd "alpha")) ])
+    "ready";
+  check "costly name past the memory account"
+    (doc [ dollar (List.init 13000 (fun _ -> cmd "alpha")) ])
+    "not_strict";
   check "tokens at the bound" (doc [ t (String.make 19999 'x') ]) "ready";
   check "tokens past the bound" (doc [ t (String.make 20000 'x') ]) "not_strict";
   (* the renderer: exact bytes *)

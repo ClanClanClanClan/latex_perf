@@ -32,7 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
-from check_strict_kernel import MAX_GROUPS, MAX_NAME, MAX_TOKENS  # noqa: E402,F401
+from check_strict_kernel import MAX_GROUPS, MAX_MEM, MAX_NAME, MAX_TOKENS  # noqa: E402,F401
 
 REPO = Path(__file__).resolve().parents[2]
 CONTRACT = REPO / "corpora/contracts/article.json"
@@ -114,10 +114,15 @@ class Kernel:
     (slice A) defaults to the committed file when it exists."""
 
     def __init__(self, signatures: Path | None = SIGNATURES,
-                 arg_signatures: Path | None | str = "default"):
+                 arg_signatures: Path | None | str = "default",
+                 token_cost: int | None = None):
         self.exe = build_exe()
         self.args = [str(self.exe), "--kernel", str(kernel_path()),
                      "--contract", str(CONTRACT)]
+        # the cost of a token without a signature (C-98): from the phase-1
+        # signature file, or given by a generator that has no file yet
+        if token_cost is not None:
+            self.args += ["--token-cost", str(int(token_cost))]
         if signatures is not None:
             _check_source(signatures)
             self.args += ["--signatures", str(signatures)]

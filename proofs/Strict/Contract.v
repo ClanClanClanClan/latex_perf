@@ -108,12 +108,26 @@ Inductive arg_math :=
 | MFatalAfter (r : reason)
 | MRun (p : pay) (g : nat).
 
-Record asig := mkASig { as_long : longness; as_text : arg_text; as_math : arg_math }.
+(** [as_copy] (correction C-98): the main memory, in words, that each token
+    of the command's argument costs while the command runs.  pdfTeX keeps a
+    copy of an argument it has read, and a command nested in an argument
+    reads its own argument out of that copy: a new copy.  MEASURED per
+    command by the argument generator (the slope of memory over the tokens
+    held, stage G), rounded up. *)
+Record asig := mkASig { as_long : longness; as_text : arg_text; as_math : arg_math;
+                        as_copy : nat }.
 
+(** [c_cost] (correction C-98): the main memory, in words, a token costs
+    wherever it runs (the nodes it makes, and for a one-argument command the
+    memory its running holds besides its argument's copy), MEASURED per
+    admitted name by its generator (the name repeated in text, in math, in a
+    display) and per structural token by the phase-1 generator, rounded up;
+    never read from a definition. *)
 Record contract := mkContract {
   c_defined : name -> bool;
   c_sig : name -> option signature;
-  c_arg : name -> option asig   (* slice A: the one-argument commands *)
+  c_arg : name -> option asig;   (* slice A: the one-argument commands *)
+  c_cost : tok -> nat
 }.
 
 (** Well-formedness the loader checks (a signature only for a defined name,

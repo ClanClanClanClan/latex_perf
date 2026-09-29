@@ -49,7 +49,12 @@ import _oracle  # noqa: E402
 import _strict_capacity as C  # noqa: E402
 import _strict_s0 as S  # noqa: E402
 
-GENERATOR_VERSION = "1"
+# Version 2 (C-98): the memory account (a maximiser over every construct,
+# the per-held-token slope of every argument command, the worst case at the
+# bound and one token past it for every command), and every graded document
+# recorded with its bytes' sha256, grade and pdfTeX's capacity report, so the
+# gates recompute every derived number from these PRIMARY records.
+GENERATOR_VERSION = "2"
 OUT = S.REPO / "corpora/strict_s0/capacity.json"
 MAX_GROUPS, MAX_TOKENS, MAX_NAME = S.MAX_GROUPS, S.MAX_TOKENS, S.MAX_NAME
 # The search range of pdfTeX's own overflow, in model groups.
@@ -90,94 +95,132 @@ def undef_names(k: int, members: set[str]) -> list[str]:
     return out
 
 
+
+class Grades:
+    """Every grade of this run, keyed by the sha256 of the graded bytes, with
+    pdfTeX's capacity report; seeded only from COMMITTED capacity files
+    (S.committed_source, LOW-2)."""
+
+    def __init__(self, oracle, reuse: list[str]):
+        import threading
+        self.oracle, self.cache, self.lock = oracle, {}, threading.Lock()
+        self.reused, self.sources = 0, []
+        for spec in reuse:
+            text, src = S.committed_source(spec)
+            d = json.loads(text)
+            if d.get("oracle") != oracle.provenance():
+                raise SystemExit(f"--reuse {spec}: graded by another oracle")
+            n = 0
+            for r in _records(d):
+                if "sha256" in r and "oracle" in r and "stats" in r:
+                    rc, pdf, err, line = r["oracle"]
+                    self.cache[r["sha256"]] = {"rc": rc, "pdf": pdf, "error": err,
+                                               "line": line, "timed_out": False,
+                                               "passes": None, "stats": r["stats"]}
+                    n += 1
+            self.sources.append({**src, "records": n})
+
+    def grade(self, tex: str) -> dict:
+        h = hashlib.sha256(tex.encode()).hexdigest()
+        with self.lock:
+            g = self.cache.get(h)
+            if g is not None:
+                self.reused += 1
+                return g
+        g = S.grade(self.oracle, tex, stats=True)
+        with self.lock:
+            self.cache[h] = g
+        return g
+
+
+def _records(d: dict):
+    """Every per-document record of a capacity file."""
+    def walk(x):
+        if isinstance(x, dict):
+            if "sha256" in x and "oracle" in x:
+                yield x
+            for v in x.values():
+                yield from walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                yield from walk(v)
+    yield from walk(d)
+
+
+def record(m: dict, g: dict | None, **extra) -> dict:
+    """The primary record of one document: the model's verdict and counts,
+    and (when graded) the grade and pdfTeX's capacity report."""
+    r = {"sha256": hashlib.sha256(m["tex"].encode()).hexdigest(),
+         "verdict": m["verdict"], "reason": m.get("reason"), "ntoks": m["ntoks"],
+         "held": m.get("held"), "peak": m.get("peak_groups"), **extra}
+    if g is not None:
+        agree, why = S.agrees(m, g)
+        r.update({"oracle": [g["rc"], g["pdf"], g["error"], g["line"]],
+                  "stats": g.get("stats", {}), "agree": agree, "why": why})
+    return r
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--reuse", nargs="*", default=[],
+                    help="COMMITTED capacity files (REV:path) whose grades of "
+                         "byte-identical documents are reused")
     args = ap.parse_args()
     oracle = _oracle.get_oracle()
     kern = S.Kernel()
-    asig = json.loads(S.ARG_SIGNATURES.read_text())
-    groups = C.arg_groups(asig["arg_signatures"])
+    sig = json.loads(S.SIGNATURES.read_text())["signatures"]
+    asig = json.loads(S.ARG_SIGNATURES.read_text())["arg_signatures"]
+    groups = C.arg_groups(asig)
     pairs = kern.frame_pairs()
+    G = Grades(oracle, args.reuse)
     t0 = time.time()
 
-    def grade(tex: str) -> dict:
-        return S.grade(oracle, tex, stats=True)
+    def pmap(f, xs):
+        with ThreadPoolExecutor(args.workers) as ex:
+            return list(ex.map(f, xs))
 
-    # ---- 2. the pairs at the bound, past it, and pdfTeX's own overflow ----
-    items = []
-    for p in pairs["pairs"]:
+    # ---- 2. the pairs: at the bound, past it, pdfTeX's own overflow --------
+    def one_pair(p):
         b, a = p["below"], p["above"]
         at = C.stream(pairs, b, a, MAX_GROUPS, groups)
         past = C.stream(pairs, b, a, MAX_GROUPS + 1, groups)
         if at is None or past is None:
-            items.append({"below": b, "above": a, "error": "no stream reaches the bound"})
-            continue
-        items.append({"below": b, "above": a, "at": at, "past": past})
-    reqs = [C.request(it[k][0]) for it in items if "at" in it for k in ("at", "past")]
-    models = kern.run(reqs)
-    k = 0
-    for it in items:
-        if "at" not in it:
-            continue
-        for key in ("at", "past"):
-            it[key + "_model"] = models[k]
-            k += 1
+            return {"below": b, "above": a, "error": "no stream reaches the bound"}
+        m, mp = kern.run([C.request(at[0]), C.request(past[0])])
+        g = G.grade(m["tex"])
+        rec = {"below": b, "above": a, "chain": at[1],
+               "at": record(m, g, frames=m["peak_frames"],
+                            adjacent=C.adjacent(m["peak_frames"], b, a)),
+               "past": record(mp, G.grade(mp["tex"]))}
+        # pdfTeX's own overflow, by bisection over the target; EVERY step is
+        # recorded (the gate recomputes the first failing target from them)
+        steps = []
 
-    def one(it):
-        if "at" not in it:
-            return it
-        m = it["at_model"]
-        g = grade(m["tex"])
-        agree, why = S.agrees(m, g)
-        rec = {"below": it["below"], "above": it["above"],
-               "chain": it["at"][1],
-               "at": {"peak": m["peak_groups"], "frames": m["peak_frames"],
-                      "adjacent": C.adjacent(m["peak_frames"], it["below"], it["above"]),
-                      "verdict": m["verdict"], "reason": m.get("reason"),
-                      "sha256": hashlib.sha256(m["tex"].encode()).hexdigest(),
-                      "oracle": [g["rc"], g["pdf"], g["error"], g["line"]],
-                      "stats": g.get("stats", {}), "agree": agree, "why": why}}
-        mp = it["past_model"]
-        gp = grade(mp["tex"])
-        rec["past"] = {"peak": mp["peak_groups"], "verdict": mp["verdict"],
-                       "oracle": [gp["rc"], gp["pdf"], gp["error"], gp["line"]]}
-        # pdfTeX's own overflow: the first failing peak, by bisection over the
-        # target (every target is met exactly; costs are 1 or a measured g)
-        lo, hi = MAX_GROUPS + 1, SEARCH_HI
-        if gp["rc"] != 0:
-            lo = MAX_GROUPS
-        hs = C.stream(pairs, it["below"], it["above"], hi, groups)
-        mh = kern.run([C.request(hs[0])])[0]
-        gh = grade(mh["tex"])
-        if gh["rc"] == 0:
-            rec["overflow"] = {"first_fail": None, "searched_to": hi}
-            return rec
-        fail_err = gh["error"]
-        while hi - lo > 1:
-            mid = (lo + hi) // 2
-            sm = C.stream(pairs, it["below"], it["above"], mid, groups)
-            if sm is None:
-                break
+        def probe(T):
+            sm = C.stream(pairs, b, a, T, groups)
             mm = kern.run([C.request(sm[0])])[0]
-            gm = grade(mm["tex"])
-            if gm["rc"] == 0 and gm["pdf"]:
-                lo = mid
-            else:
-                hi, fail_err = mid, gm["error"]
-        rec["overflow"] = {"first_fail": hi, "last_ok": lo, "error": fail_err}
+            gm = G.grade(mm["tex"])
+            steps.append(record(mm, gm, target=T))
+            return gm["rc"] == 0 and gm["pdf"]
+        lo, hi = MAX_GROUPS, SEARCH_HI
+        if not probe(hi):
+            while hi - lo > 1:
+                mid = (lo + hi) // 2
+                if probe(mid):
+                    lo = mid
+                else:
+                    hi = mid
+        rec["overflow_steps"] = sorted(steps, key=lambda r: r["target"])
         return rec
 
-    with ThreadPoolExecutor(args.workers) as ex:
-        recs = []
-        for i, r in enumerate(ex.map(one, items)):
-            recs.append(r)
-            if (i + 1) % 20 == 0:
-                print(f"[capacity] pairs {i + 1}/{len(items)} ({time.time() - t0:.0f}s)",
-                      flush=True)
+    recs = []
+    for i, r in enumerate(pmap(one_pair, pairs["pairs"])):
+        recs.append(r)
+    print(f"[capacity] {len(recs)} pairs ({time.time() - t0:.0f}s)", flush=True)
 
-    # ---- 3. transients: the deepest simple nesting each construct survives --
+    # ---- 3. transients: the deepest nesting each construct survives --------
     x = S.text("x")
 
     def nest(k, inner):
@@ -186,8 +229,6 @@ def main() -> int:
             node = [S.group(*node)]
         return node
 
-    # requests: a tree, or a token stream (\end{document} inside k open
-    # braces, which a tree cannot express)
     trans_fams = {
         "paragraph_start": lambda k: {"doc": S.doc(*nest(k, [x]))},
         "display_bracket": lambda k: {"doc": S.doc(x, *nest(k, [S.math("bracket", x)]))},
@@ -198,31 +239,29 @@ def main() -> int:
     }
 
     def deepest(fam):
-        mk = trans_fams[fam]
+        mk, steps = trans_fams[fam], []
+
+        def probe(k):
+            mm = kern.run([mk(k)])[0]
+            gm = G.grade(mm["tex"])
+            steps.append(record(mm, gm, depth=k))
+            return gm["rc"] == 0 and gm["pdf"]
         lo, hi = 150, 300
-        ok = kern.run([mk(lo), mk(hi)])
-        g_lo, g_hi = grade(ok[0]["tex"]), grade(ok[1]["tex"])
-        if not (g_lo["rc"] == 0 and g_lo["pdf"]) or (g_hi["rc"] == 0):
-            return {"error": "bracket search failed", "lo": g_lo["error"], "hi": g_hi["error"]}
-        peak_lo, err = ok[0]["peak_groups"], g_hi["error"]
-        while hi - lo > 1:
-            mid = (lo + hi) // 2
-            mm = kern.run([mk(mid)])[0]
-            gm = grade(mm["tex"])
-            if gm["rc"] == 0 and gm["pdf"]:
-                lo, peak_lo = mid, mm["peak_groups"]
-            else:
-                hi, err = mid, gm["error"]
-        return {"last_ok_peak": peak_lo, "error": err}
+        if probe(lo) and not probe(hi):
+            while hi - lo > 1:
+                mid = (lo + hi) // 2
+                if probe(mid):
+                    lo = mid
+                else:
+                    hi = mid
+        return {"steps": sorted(steps, key=lambda r: r["depth"])}
 
-    with ThreadPoolExecutor(args.workers) as ex:
-        trans = dict(zip(trans_fams, ex.map(deepest, list(trans_fams))))
+    trans = dict(zip(trans_fams, pmap(deepest, list(trans_fams))))
+    print(f"[capacity] transients ({time.time() - t0:.0f}s)", flush=True)
 
-    # ---- 4. usage at the other bounds -------------------------------------
-    members = S.members()
-    names = undef_names(MAX_TOKENS - 10, members)
-    sig = json.loads(S.SIGNATURES.read_text())["signatures"]
-    runner = sorted(n for n, h in asig["arg_signatures"].items() if h["text"][0] == "run")[0]
+    # ---- 4. usage at the other bounds ---------------------------------------
+    names = undef_names(MAX_TOKENS - 10, S.members())
+    runner = sorted(n for n, h in asig.items() if h["text"][0] == "run")[0]
     mathname = sorted(n for n, h in sig.items() if h["math"] == "noad")[0]
     usage_docs = {
         "tokens_text": S.doc(S.text("x" * (MAX_TOKENS - 1))),
@@ -231,69 +270,52 @@ def main() -> int:
         "most_names": S.doc(S.cmd(runner), S.group(*[S.cmd(n) for n in names])),
     }
     um = kern.run([{"doc": d} for d in usage_docs.values()])
-    with ThreadPoolExecutor(args.workers) as ex:
-        ug = list(ex.map(lambda m: grade(m["tex"]), um))
-    usage_rec = {}
-    for (fam, _), m, g in zip(usage_docs.items(), um, ug):
-        agree, why = S.agrees(m, g)
-        usage_rec[fam] = {"verdict": m["verdict"], "reason": m.get("reason"),
-                          "ntoks": m["ntoks"], "peak": m["peak_groups"],
-                          "bytes": len(m["tex"]),
-                          "oracle": [g["rc"], g["pdf"], g["error"], g["line"]],
-                          "agree": agree, "why": why, "stats": g.get("stats", {})}
+    usage_rec = {f: record(m, g) for f, m, g in
+                 zip(usage_docs, um, pmap(lambda m: G.grade(m["tex"]), um))}
 
-    # ---- the capacity table --------------------------------------------------
-    ok_pairs = [r for r in recs if "at" in r]
-    capacity = max((r["overflow"]["first_fail"] - 1 for r in ok_pairs
-                    if r.get("overflow", {}).get("first_fail")), default=None)
-    t_max = max((capacity - v["last_ok_peak"] for v in trans.values()
-                 if "last_ok_peak" in v), default=None)
-    table = {}
-    sources = [(f"pair {r['below']}>{r['above']}", r["at"]["stats"]) for r in ok_pairs] + \
-        [(f"usage {f}", v["stats"]) for f, v in usage_rec.items()]
-    for src, st in sources:
-        for res, (used, of) in st.items():
-            cur = table.get(res)
-            if cur is None or used > cur["max_used"]:
-                table[res] = {"max_used": used, "capacity": of, "at": src,
-                              "fraction": round(used / of, 4) if of else None}
+    # ---- 5. main memory (C-98) --------------------------------------------
+    # The account is attested by the generators, per name and command (costs,
+    # copy factors, the worst case at the bound and one past it); this file
+    # records the account's constants and the margin they give, for the
+    # design's table. check_strict_kernel.py recomputes all of it from the
+    # generators' primary records.
+    s1 = json.loads(S.SIGNATURES.read_text())
+    a1 = json.loads(S.ARG_SIGNATURES.read_text())
+    m0 = s1["memory"]["structural"]["BASE"]["used"]
+    cap_words = s1["memory"]["structural"]["BASE"]["of"]
+    worst = [(n, w, r["at"]["used"]) for n, d in a1["capacity"]["memory_bound"].items()
+             if isinstance(d, dict) for w, r in d.items() if isinstance(r, dict) and "at" in r]
+    memory = {"M0": m0, "capacity": cap_words, "max_mem": S.MAX_MEM,
+              "token_cost": s1["token_cost"],
+              "account": "used <= M0 + mem (Decide.mem <= max_mem)",
+              "predicted_worst": m0 + S.MAX_MEM,
+              "margin": round(cap_words / (m0 + S.MAX_MEM), 3),
+              "maximiser_worst_measured": max(worst, key=lambda q: q[2]) if worst else None}
+
     out = {
-        "schema": "lp-strict-capacity/1",
+        "schema": "lp-strict-capacity/2",
         "generator": "scripts/tools/measure_strict_capacity.py",
         "generator_version": GENERATOR_VERSION,
-        "correction": "C-94",
+        "correction": "C-94, C-98",
         "oracle": oracle.provenance(),
         "source": S.source_block(),
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
         "signatures_sha256": S.sha256_file(S.SIGNATURES),
         "arg_signatures_sha256": S.sha256_file(S.ARG_SIGNATURES),
         "bounds": {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
-                   "max_name": MAX_NAME},
+                   "max_name": MAX_NAME, "max_mem": S.MAX_MEM},
         "texmf": texmf(oracle),
         "frame_pairs": {"depth": pairs["depth"], "alphabet": pairs["alphabet"],
                         "n": len(pairs["pairs"])},
-        "measured": {"grouping_capacity": capacity, "max_transient": t_max,
-                     "margin": (capacity - t_max - MAX_GROUPS)
-                     if capacity is not None and t_max is not None else None},
+        "reuse": {"grades_reused": G.reused, "sources": G.sources},
         "transients": trans,
         "usage": usage_rec,
-        "table": table,
+        "memory": memory,
         "pairs": recs,
-        "summary": {
-            "pairs": len(recs),
-            "at_bound_agree": sum(1 for r in ok_pairs if r["at"]["agree"]
-                                  and r["at"]["peak"] == MAX_GROUPS and r["at"]["adjacent"]),
-            "past_bound_outside": sum(1 for r in ok_pairs if r["past"]["verdict"] == "not_strict"
-                                      and r["past"]["peak"] == MAX_GROUPS + 1),
-            "overflow_in_window": sum(
-                1 for r in ok_pairs if r.get("overflow", {}).get("first_fail")
-                and capacity is not None and t_max is not None
-                and capacity + 1 - t_max <= r["overflow"]["first_fail"] <= capacity + 1),
-            "seconds": round(time.time() - t0),
-        },
+        "seconds": round(time.time() - t0),
     }
     Path(args.out).write_text(json.dumps(out, indent=1) + "\n")
-    print(f"[capacity] {out['summary']} capacity={capacity} max_transient={t_max}")
+    print(f"[capacity] done ({out['seconds']}s): memory {memory}")
     return 0
 
 

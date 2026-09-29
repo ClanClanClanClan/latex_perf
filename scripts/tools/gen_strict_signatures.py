@@ -103,6 +103,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
+import _strict_capacity as C_  # noqa: E402
 import check_strict_kernel as CK  # noqa: E402
 
 # Version 4 (C-92): stage 0's meaning closure follows robust commands
@@ -360,7 +361,7 @@ class Grader:
 
         def g(kt):
             k, tex = kt
-            r = S.grade(self.oracle, tex, timeout=300)
+            r = S.grade(self.oracle, tex, timeout=300, stats=True)
             done[0] += 1
             if done[0] % 200 == 0:
                 print(f"[signatures:{label}] graded {done[0]}/{len(todo)} "
@@ -513,7 +514,22 @@ def main() -> int:
     oracle = _oracle.get_oracle()
     # phase-1 names only: the one-argument commands (slice A) are attested by
     # gen_strict_arg_signatures.py, against this file's final set
-    kern = S.Kernel(signatures=None, arg_signatures=None)
+    # S. the memory costs of the structural tokens (C-98): each structural
+    # shape repeated to the token bound, and the base document; a token's
+    # cost is the most memory per token any shape takes over the base,
+    # rounded up, plus one (the base's preallocated slack). Rendering needs
+    # no cost: a provisional kernel renders them.
+    kern0 = S.Kernel(signatures=None, arg_signatures=None, token_cost=0)
+    struct = C_.structural_docs(S, MAX_TOKENS)
+    grader0 = Grader(oracle, args.workers)
+    sm = kern0.run([{"doc": d} for _, d in struct])
+    sg = grader0.grade_all([m["tex"] for m in sm], "structural")
+    memory = {"structural": {f: C_.memory_record(m, g) for (f, _), m, g in zip(struct, sm, sg)}}
+    M0 = memory["structural"]["BASE"]["used"]
+    token_cost = C_.token_cost(memory["structural"])
+    memory["token_cost"] = token_cost
+    print(f"[signatures] stage S: base {M0} words, token cost {token_cost}", flush=True)
+    kern = S.Kernel(signatures=None, arg_signatures=None, token_cost=token_cost)
     names = candidates(args.n)
     if {UNDEF_A, UNDEF_B} & S.members():
         raise SystemExit("the look-ahead probes' undefined names are defined")
@@ -573,6 +589,65 @@ def main() -> int:
             rejected[x] = f"ambiguous: {len(f)} hypotheses fit"
     print(f"[signatures] stage 3 (admission): {len(signatures)} admitted", flush=True)
 
+    # C. the memory cost of every admitted name (C-98): the name repeated
+    # 4,000 times in text, in a formula and in a display (the modes it does
+    # not stop in); its cost is the most memory per occurrence over the base
+    # and the other tokens' cost, rounded up, plus one.
+    MEMN = 4000
+    cdocs = []
+    for x in sorted(signatures):
+        h = signatures[x]
+        c_ = S.cmd(x)
+        if not isinstance(h["text"], list):
+            cdocs.append((x, "R-MEM-TEXT", S.doc(*([c_] * MEMN), S.text("x"))))
+        if not isinstance(h["math"], list):
+            cdocs.append((x, "R-MEM-MATH", S.doc(S.math("paren", *([c_] * MEMN)))))
+            cdocs.append((x, "R-MEM-DISPLAY", S.doc(S.math("bracket", *([c_] * MEMN)))))
+    cm = kern.run([{"doc": d} for _, _, d in cdocs])
+    cg = grader.grade_all([m["tex"] for m in cm], "costs")
+    memory["names"] = {}
+    for (x, f, _), m, g in zip(cdocs, cm, cg):
+        memory["names"].setdefault(x, {})[f] = C_.memory_record(m, g, count=MEMN)
+    for x in sorted(signatures):
+        c = C_.name_cost(list(memory["names"].get(x, {}).values()), M0, token_cost)
+        signatures[x] = {**signatures[x], "cost": token_cost if c is None else max(c, token_cost)}
+    print(f"[signatures] stage C: costs of {len(signatures)} names, "
+          f"max {max(h['cost'] for h in signatures.values())}", flush=True)
+
+    # 3c. every admitted name at the MEMORY bound (C-98): repeated as often as
+    # the token and memory bounds allow (the model with its measured cost must
+    # decide it and pdfTeX agree), and once more, which the model must place
+    # outside the fragment when the memory bound is the one reached.
+    capdocs = []
+    for x in sorted(signatures):
+        h, c_ = signatures[x], S.cmd(x)
+        cost = h["cost"]
+        for where, mk in (("TEXT", lambda k: S.doc(*([c_] * k), S.text("x"))),
+                          ("MATH", lambda k: S.doc(S.math("paren", *([c_] * k))))):
+            if isinstance(h["text" if where == "TEXT" else "math"], list):
+                continue
+            k = min(MAX_TOKENS - 3, (CK.MAX_MEM - 4 * token_cost) // cost)
+            capdocs.append((x, f"R-CAP-{where}", mk(k), True, k))
+            if (k + 1) * cost + 4 * token_cost > CK.MAX_MEM and k + 1 <= MAX_TOKENS - 3:
+                capdocs.append((x, f"R-CAP-{where}-PAST", mk(k + 1), False, k + 1))
+    reqs = [{"doc": d, "signatures": {x: signatures[x]}} for x, _, d, _, _ in capdocs]
+    capm = kern.run(reqs)
+    atm = [(i, m) for i, (m, q) in enumerate(zip(capm, capdocs)) if q[3]]
+    capg = dict(zip([i for i, _ in atm], grader.grade_all([m["tex"] for _, m in atm], "memcap")))
+    memory["cap"] = {}
+    for i, ((x, f, _, at, cnt), m) in enumerate(zip(capdocs, capm)):
+        g = capg.get(i)
+        memory["cap"].setdefault(x, {})[f] = C_.memory_record(m, g, count=cnt)
+        if at:
+            ok, why = S.agrees(m, g)
+            if not ok:
+                rejected[x] = f"stage 3c (memory bound, {f}): {why}"
+                signatures.pop(x, None)
+        elif m["verdict"] != "not_strict":
+            rejected[x] = f"stage 3c (memory bound, {f}): one past the bound is {m['verdict']}"
+            signatures.pop(x, None)
+    print(f"[signatures] stage 3c (memory bound): {len(signatures)} admitted", flush=True)
+
     # 4. interleaving, to a fixpoint
     import tempfile
     fd, tmpname = tempfile.mkstemp(prefix="lp-strict-sig-", suffix=".json")
@@ -582,7 +657,7 @@ def main() -> int:
     rounds = []
 
     def ktmp(sigs):
-        body = {"source": S.source_block(), "signatures": sigs}
+        body = {"source": S.source_block(), "signatures": sigs, "token_cost": token_cost}
         sig_tmp.write_text(json.dumps(body))
         return S.Kernel(signatures=sig_tmp, arg_signatures=None)
 
@@ -644,7 +719,8 @@ def main() -> int:
     summary = {"candidates": len(names), "admitted": len(signatures),
                "rejected": len(rejected),
                "rejected_by_stage": {k: sum(1 for v in rejected.values() if v.startswith(k))
-                                     for k in ("stage 0", "stage 1", "stage 2", "ambiguous", "stage 4")},
+                                     for k in ("stage 0", "stage 1", "stage 2", "ambiguous",
+                                               "stage 3c", "stage 4")},
                "documents_graded_now": grader.graded,
                "grades_reused": grader.reused,
                "oracle_timeouts": sum(1 for g in grader.cache.values() if g["timed_out"])}
@@ -677,6 +753,8 @@ def main() -> int:
                           "of the admitted set agrees",
         "summary": summary,
         "interleaving": {"seeds": args.interleave_seeds, "rounds": rounds},
+        "token_cost": token_cost,
+        "memory": memory,
         "signatures": dict(sorted(signatures.items())),
         "rejected": dict(sorted(rejected.items())),
         "meanings": dict(sorted(meanings.items())),

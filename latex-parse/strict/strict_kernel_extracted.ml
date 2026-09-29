@@ -17,6 +17,7 @@
 [@@@warning "-a"]
 
 let negb = function true -> false | false -> true
+let fst = function x, _ -> x
 
 let length x =
   let rec length0 = function
@@ -146,6 +147,13 @@ let existsb f =
 let forallb f =
   let rec forallb0 = function [] -> true | a :: l0 -> f a && forallb0 l0 in
   forallb0
+
+let filter f =
+  let rec filter0 = function
+    | [] -> []
+    | x :: l0 -> if f x then x :: filter0 l0 else filter0 l0
+  in
+  filter0
 
 let compare0 c1 c2 =
   let cmp = Char.compare c1 c2 in
@@ -318,12 +326,18 @@ type arg_math =
   | MFatalAfter of reason
   | MRun of pay * int
 
-type asig = { as_long : longness; as_text : arg_text; as_math : arg_math }
+type asig = {
+  as_long : longness;
+  as_text : arg_text;
+  as_math : arg_math;
+  as_copy : int;
+}
 
 type contract = {
   c_defined : name -> bool;
   c_sig : name -> signature option;
   c_arg : name -> asig option;
+  c_cost : tok -> int;
 }
 
 type frame =
@@ -1391,6 +1405,7 @@ let ten =
 let max_groups = Nat.mul (Stdlib.Int.succ (Stdlib.Int.succ 0)) (Nat.mul ten ten)
 let max_tokens = Nat.mul max_groups (Nat.mul ten ten)
 let max_name = Nat.mul ten ten
+let max_mem = Nat.mul max_tokens (Nat.mul ten ten)
 
 let frame_groups = function
   | FSimple -> Stdlib.Int.succ 0
@@ -1431,8 +1446,70 @@ let short_names ts =
       | TEnd -> true)
     ts
 
+let copy_of c n0 = match c.c_arg n0 with Some a -> a.as_copy | None -> 0
+
+let rec open_copies = function
+  | [] -> 0
+  | p :: r ->
+      let _, c = p in
+      add c (open_copies r)
+
+let rec held_from c b opens = function
+  | [] -> 0
+  | t :: r ->
+      add (open_copies opens)
+        (match t with
+        | TChar _ -> held_from c b opens r
+        | TSpace -> held_from c b opens r
+        | TPar _ -> held_from c b opens r
+        | TOpen -> held_from c (Stdlib.Int.succ b) opens r
+        | TClose ->
+            held_from c (pred b)
+              (filter (fun x -> Nat.ltb (fst x) (pred b)) opens)
+              r
+        | TDollar -> held_from c b opens r
+        | TMOpenInline -> held_from c b opens r
+        | TMCloseInline -> held_from c b opens r
+        | TMOpenDisplay -> held_from c b opens r
+        | TMCloseDisplay -> held_from c b opens r
+        | TScript _ -> held_from c b opens r
+        | TCs n0 ->
+            if is_argcmd c n0 then
+              match r with
+              | [] -> held_from c b opens r
+              | t0 :: r' -> (
+                  match t0 with
+                  | TChar _ -> held_from c b opens r
+                  | TSpace -> held_from c b opens r
+                  | TPar _ -> held_from c b opens r
+                  | TOpen ->
+                      add (open_copies opens)
+                        (held_from c (Stdlib.Int.succ b)
+                           ((b, copy_of c n0) :: opens)
+                           r')
+                  | TClose -> held_from c b opens r
+                  | TDollar -> held_from c b opens r
+                  | TMOpenInline -> held_from c b opens r
+                  | TMCloseInline -> held_from c b opens r
+                  | TMOpenDisplay -> held_from c b opens r
+                  | TMCloseDisplay -> held_from c b opens r
+                  | TScript _ -> held_from c b opens r
+                  | TCs _ -> held_from c b opens r
+                  | TEnd -> held_from c b opens r)
+            else held_from c b opens r
+        | TEnd -> held_from c b opens r)
+
+let held c ts = held_from c 0 [] ts
+
+let rec node_cost c = function
+  | [] -> 0
+  | t :: r -> add (c.c_cost t) (node_cost c r)
+
+let mem c ts = add (node_cost c ts) (held c ts)
+
 let bounded c ts =
-  (length ts <= max_tokens && short_names ts) && peak c init ts <= max_groups
+  ((length ts <= max_tokens && short_names ts) && peak c init ts <= max_groups)
+  && mem c ts <= max_mem
 
 let in_strict_b c d =
   ((forallb (tok_ok c) (flatten_doc d) && scripts_ok (flatten_doc d))

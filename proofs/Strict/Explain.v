@@ -180,6 +180,37 @@ Fixpoint first_over (K : contract) (s : state) (ks : list ktok) : option ktok :=
       end
   end.
 
+(** The first token at which the memory account ([Decide.mem], C-98),
+    counted as [mem] counts it, passes [max_mem]. *)
+Fixpoint first_heavy (K : contract) (b : nat) (opens : list (nat * nat)) (acc : nat)
+  (ks : list ktok) : option ktok :=
+  match ks with
+  | [] => None
+  | k :: r =>
+      let acc1 := acc + c_cost K (k_tok k) + open_copies opens in
+      if Nat.ltb max_mem acc1 then Some k else
+      match k_tok k with
+      | TCs n =>
+          if is_argcmd K n then
+            match r with
+            | k2 :: r' =>
+                match k_tok k2 with
+                | TOpen =>
+                    let acc2 := acc1 + c_cost K TOpen + open_copies opens in
+                    if Nat.ltb max_mem acc2 then Some k2
+                    else first_heavy K (S b) ((b, copy_of K n) :: opens) acc2 r'
+                | _ => first_heavy K b opens acc1 r
+                end
+            | [] => None
+            end
+          else first_heavy K b opens acc1 r
+      | TOpen => first_heavy K (S b) opens acc1 r
+      | TClose =>
+          first_heavy K (pred b) (filter (fun x => Nat.ltb (fst x) (pred b)) opens) acc1 r
+      | _ => first_heavy K b opens acc1 r
+      end
+  end.
+
 Definition off_or (o : option ktok) (dflt : nat) : nat :=
   match o with Some k => k_off k | None => dflt end.
 
@@ -216,9 +247,13 @@ Definition explain (C : bcontract) (b : list ascii) : option (nat * why_out) :=
                           match first_over K init ks with
                           | Some k => Some (k_off k, WBound)
                           | None =>
+                          match first_heavy K 0 [] 0 ks with
+                          | Some k => Some (k_off k, WBound)
+                          | None =>
                               if ends_dollar (toks_of ks)
                               then Some (off_or (last (map Some ks) None) (length b), WEndsDollar)
                               else None
+                          end
                           end
                           end
                       end

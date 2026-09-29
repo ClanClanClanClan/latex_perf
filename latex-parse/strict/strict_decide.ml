@@ -112,6 +112,19 @@ let content_key path field =
   | `String s -> s
   | _ -> die "strict_decide: %s has no %s" path field
 
+(* The memory account's costs (Contract.v [c_cost], C-98): per admitted name,
+   from its signature file ("cost", MEASURED by its generator), and one cost for
+   every other token ("token_cost" of the phase-1 file, MEASURED over the
+   structural shapes; or --token-cost for a generator that has no file yet). A
+   name without a cost in a committed file is refused, never defaulted. *)
+let costs : (string, int) Hashtbl.t = Hashtbl.create 512
+let token_cost = ref (-1)
+
+let int_field what v k =
+  match member k v with
+  | `Int i when i >= 0 -> i
+  | _ -> die "strict_decide: %s has no %s (C-98)" what k
+
 let load_signatures path members ~kernel_key ~contract_key =
   let tbl = Hashtbl.create 512 in
   (match path with
@@ -128,6 +141,11 @@ let load_signatures path members ~kernel_key ~contract_key =
             "strict_decide: %s was generated from other kernel/contract files \
              than the ones given"
             p);
+      let tc = int_field p j "token_cost" in
+      if !token_cost >= 0 && !token_cost <> tc then
+        die "strict_decide: --token-cost %d differs from %s's %d" !token_cost p
+          tc;
+      token_cost := tc;
       match member "signatures" j with
       | `Assoc l ->
           List.iter
@@ -135,6 +153,7 @@ let load_signatures path members ~kernel_key ~contract_key =
               (* contract_wf: a signature only for a defined name *)
               if not (Hashtbl.mem members n) then
                 die "strict_decide: signature for undefined name %S" n;
+              Hashtbl.replace costs n (int_field (p ^ ": " ^ n) v "cost");
               Hashtbl.replace tbl n
                 {
                   K.sig_text = text_beh_of (member "text" v);
@@ -189,6 +208,10 @@ let asig_of v =
     K.as_long = longness_of (member "long" v);
     K.as_text = arg_text_of (member "text" v);
     K.as_math = arg_math_of (member "math" v);
+    K.as_copy =
+      (match member "copy" v with
+      | `Int c when c >= 0 -> c
+      | _ -> failwith "no copy (C-98)");
   }
 
 (* contract_wf (Contract.v): an argument signature only for a defined name that
@@ -219,7 +242,8 @@ let load_arg_signatures path members sigs ~kernel_key ~contract_key =
                 die "strict_decide: %S has both kinds of signature" n;
               Hashtbl.replace tbl n
                 (try asig_of v
-                 with Failure m -> die "strict_decide: %s: %s: %s" p n m))
+                 with Failure m -> die "strict_decide: %s: %s: %s" p n m);
+              Hashtbl.replace costs n (int_field (p ^ ": " ^ n) v "cost"))
             l
       | _ -> die "strict_decide: %s has no arg_signatures" p));
   tbl
@@ -775,6 +799,8 @@ let peak_frames c toks =
 let peak_fields c toks =
   let p, labels = peak_frames c toks in
   [
+    ("held", `Int (K.held c toks));
+    ("mem", `Int (K.mem c toks));
     ("peak_groups", `Int p);
     ("peak_frames", `List (List.map (fun l -> `String l) labels));
   ]
@@ -898,12 +924,20 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
      the request has none of the other kind. *)
   let contract_for extra extra_arg =
     let local = Hashtbl.create 8 and local_arg = Hashtbl.create 8 in
+    let local_cost = Hashtbl.create 8 in
+    (* a hypothesis may carry its cost; without one it costs a token *)
+    let note_cost n v =
+      match member "cost" v with
+      | `Int c when c >= 0 -> Hashtbl.replace local_cost n c
+      | _ -> ()
+    in
     (match extra with
     | `Assoc l ->
         List.iter
           (fun (n, v) ->
             if not (Hashtbl.mem members n) then
               failwith ("signature for undefined name " ^ n);
+            note_cost n v;
             Hashtbl.replace local n
               {
                 K.sig_text = text_beh_of (member "text" v);
@@ -919,6 +953,7 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
               failwith ("argument signature for undefined name " ^ n);
             if Hashtbl.mem local n then
               failwith ("both kinds of signature for " ^ n);
+            note_cost n v;
             Hashtbl.replace local_arg n (asig_of v))
           l
     | _ -> ());
@@ -937,6 +972,23 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
           match Hashtbl.find_opt local_arg n with
           | Some x -> Some x
           | None -> if Hashtbl.mem local n then None else Hashtbl.find_opt ag n);
+      K.c_cost =
+        (fun t ->
+          let tc = !token_cost in
+          if tc < 0 then
+            failwith "no token cost (--token-cost or a signature file)";
+          match t with
+          | K.TCs n -> (
+              let n = string_of_chars n in
+              match Hashtbl.find_opt local_cost n with
+              | Some c -> c
+              | None -> (
+                  if Hashtbl.mem local n || Hashtbl.mem local_arg n then tc
+                  else
+                    match Hashtbl.find_opt costs n with
+                    | Some c -> c
+                    | None -> tc))
+          | _ -> tc);
     }
   in
   if pairs then (
@@ -1108,6 +1160,7 @@ let b_asig (a : K.asig) : B.asig =
       | K.MFatalNow r -> B.MFatalNow (b_reason r)
       | K.MFatalAfter r -> B.MFatalAfter (b_reason r)
       | K.MRun (p, g) -> B.MRun (b_pay p, g));
+    B.as_copy = a.K.as_copy;
   }
 
 let k_tok = function
@@ -1465,11 +1518,22 @@ let bytes_contract ~kernel ~contract ~sigs ~asigs ~lexical =
   let sg = load_signatures sigs members ~kernel_key ~contract_key in
   let ag = load_arg_signatures asigs members sg ~kernel_key ~contract_key in
   let lx = load_lexcon lexical ~kernel_key ~contract_key in
+  let kcost t =
+    let tc = !token_cost in
+    if tc < 0 then die "strict_decide: no token cost (C-98)";
+    match t with
+    | K.TCs n -> (
+        match Hashtbl.find_opt costs (string_of_chars n) with
+        | Some c -> c
+        | None -> tc)
+    | _ -> tc
+  in
   let kc =
     {
       K.c_defined = (fun n -> Hashtbl.mem members (string_of_chars n));
       K.c_sig = (fun n -> Hashtbl.find_opt sg (string_of_chars n));
       K.c_arg = (fun n -> Hashtbl.find_opt ag (string_of_chars n));
+      K.c_cost = kcost;
     }
   in
   let bc =
@@ -1483,6 +1547,7 @@ let bytes_contract ~kernel ~contract ~sigs ~asigs ~lexical =
           B.c_arg =
             (fun n ->
               Option.map b_asig (Hashtbl.find_opt ag (string_of_chars n)));
+          B.c_cost = (fun t -> kcost (k_tok t));
         };
       B.bc_lex = lx;
     }
@@ -1516,6 +1581,8 @@ let decide_bytes_json kc (bc : B.bcontract) (b : char list) =
       ("in_strict", `Bool (B.in_strict_bytes_b bc b));
       ("rules", strs rules);
       ("peak_groups", `Int (fst (peak_frames kc ktoks)));
+      ("held", `Int (K.held kc ktoks));
+      ("mem", `Int (K.mem kc ktoks));
       ("branches", strs branches);
       ("lex_rules", strs (lrules @ frules));
       ("lex_branches", strs (lbranches @ fbranches));
@@ -1618,6 +1685,7 @@ let () =
   let asigs = ref None in
   let lexical = ref "" and bytes = ref false and file = ref None in
   let pairs = ref false in
+  let tcost = ref (-1) in
   Arg.parse
     [
       ("--kernel", Arg.Set_string kernel, "kernel names file");
@@ -1628,6 +1696,9 @@ let () =
         "one-argument commands' signatures file (slice A)" );
       ("--lexical", Arg.Set_string lexical, "lexical contract (bytes)");
       ("--bytes", Arg.Set bytes, "JSON lines of files as hex (bytes mode)");
+      ( "--token-cost",
+        Arg.Set_int tcost,
+        "the cost of a token without a signature (a generator's, C-98)" );
       ( "--frame-pairs",
         Arg.Set pairs,
         "print the frame-kind combinations of the model (C-94) and exit" );
@@ -1638,6 +1709,7 @@ let () =
      strict_decide.exe --bytes --kernel K --contract C --signatures S \
      [--arg-signatures A] --lexical X\n\
      strict_decide.exe FILE.tex   (contracts from the repository)";
+  if !tcost >= 0 then token_cost := !tcost;
   match !file with
   | Some path ->
       let repo =

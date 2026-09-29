@@ -731,6 +731,50 @@ def strict_inert_expl3(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def strict_capacity_pair_forged(text: str) -> str:
+    """M-1: drop a pair AND decrement frame_pairs.n (consistent forgery the
+    pure count check passes)."""
+    d = json.loads(text)
+    d["pairs"] = d["pairs"][1:]
+    d["frame_pairs"]["n"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_capacity_peak_forged(text: str) -> str:
+    d = json.loads(text)
+    d["pairs"][0]["at"]["peak"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_memory_bound_forged(text: str) -> str:
+    """M-2: a memory worst case whose recorded account is not the model's."""
+    d = json.loads(text)
+    mb = d["capacity"]["memory_bound"]
+    n = sorted(k for k in mb if k != "filler")[0]
+    w = sorted(mb[n])[0]
+    mb[n][w]["at"]["mem"] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_groups_forged(text: str) -> str:
+    """M-2: a consistent forged g, in the signature AND in the stored summary
+    of stage G (the gate re-derives g from the graded depths)."""
+    d = json.loads(text)
+    n = _first_arg(d, runs_text=True)
+    d["arg_signatures"][n]["text"][3] += 1
+    d["capacity"]["groups"][n]["text"] += 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_name_cost_forged(text: str) -> str:
+    """C-98: an admitted name whose cost is lower than its memory documents
+    give."""
+    d = json.loads(text)
+    n = sorted(d["signatures"])[0]
+    d["signatures"][n]["cost"] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_arg_not_inert(text: str) -> str:
     """R-INERT on an admitted one-argument command's recorded meaning."""
     d = json.loads(text)
@@ -1054,6 +1098,21 @@ REGISTRY = [
                      "corpora/contracts/strict/article-s1-arg-signatures.json",
                      r"FAIL arg signatures: '.*' runs in text without its measured TeX groups",
                      transform=strict_arg_groups_dropped),
+            # M-2 of the round-2 review: g re-derived from stage G's grades.
+            Mutation("a consistent forged g (M-2)",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: '.*'s groups in text \(\d+\) are not what stage G",
+                     transform=strict_arg_groups_forged),
+            # C-98: a name's memory cost below its measurement.
+            Mutation("a name's memory cost is forged low (C-98)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: '.*'s cost 1 is not what its memory documents give",
+                     transform=strict_name_cost_forged),
+            Mutation("the memory bound is dropped from membership (C-98)",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: bounded is not the pinned account",
+                     old="\n  && Nat.leb (mem C ts) max_mem.",
+                     new="."),
             # LOW-2 of the C-94 review: grades reused from a local file.
             Mutation("grades are reused from a file nobody else can read (LOW-2)",
                      "corpora/strict_s0/rule_probes.json",
@@ -2473,6 +2532,25 @@ REGISTRY = [
                      ".github/actions/setup-ocaml-env/action.yml",
                      r"attempts have DRIFTED",
                      transform=drift_second_setup_ocaml),
+        ]),
+    # C-98, M-1/M-2 of the round-2 review: the capacity evidence re-derived by
+    # the extracted decider (the pure gate cannot run it).
+    GateTest(
+        "check_strict_capacity", [PY, f"{TOOLS}/check_strict_capacity.py", "--repo", "."],
+        "binary",
+        [
+            Mutation("a frame pair dropped and its count decremented (M-1)",
+                     "corpora/strict_s0/capacity.json",
+                     r"FAIL capacity: the recorded frame pairs are not the model's",
+                     transform=strict_capacity_pair_forged),
+            Mutation("a pair's recorded peak is not the model's (M-1)",
+                     "corpora/strict_s0/capacity.json",
+                     r"FAIL capacity: pair \S+ at: the model gives",
+                     transform=strict_capacity_peak_forged),
+            Mutation("a memory worst case's recorded account is not the model's (M-2)",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: memory worst case \S+ at: the model gives",
+                     transform=strict_memory_bound_forged),
         ]),
     GateTest(
         "check_project_state (binary arm)",

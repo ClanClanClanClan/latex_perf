@@ -106,6 +106,13 @@ jobs:
         # needed here); refresh locally via scripts/tools/false_ready_oracle.sh.
         run: python3 scripts/tools/check_known_false_ready.py --repo .
 
+      - name: Strict capacity evidence re-derived by the extraction (C-98)
+        # The pure gates recompute every derived number from the records;
+        # this one re-derives the records' MODEL side (the frame-pair set,
+        # every stream's bytes, peak and memory account) with the extracted
+        # decider, which exists in this job.
+        run: python3 scripts/tools/check_strict_capacity.py --repo .
+
       - name: Gate self-tests, binary level (OPEN-036)
         # The CLI exists in this job, so the kill-tests that need it run here.
         # A gate that cannot be made to fail is not a gate (C-27/C-28/C-29).

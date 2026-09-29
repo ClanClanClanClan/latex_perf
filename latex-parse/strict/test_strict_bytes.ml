@@ -78,24 +78,28 @@ let kernel =
           B.as_long = B.LShortInner;
           B.as_text = B.TRun (true, B.PText false, 1);
           B.as_math = B.MRun (B.PText true, 1);
+          B.as_copy = 3;
         } );
       ( "textit",
         {
           B.as_long = B.LShortInner;
           B.as_text = B.TRun (true, B.PText false, 1);
           B.as_math = B.MRun (B.PText true, 1);
+          B.as_copy = 3;
         } );
       ( "mathrm",
         {
           B.as_long = B.LShortOuter;
           B.as_text = B.TFatalNow B.E3;
           B.as_math = B.MRun (B.PMath, 1);
+          B.as_copy = 3;
         } );
       ( "mbox",
         {
           B.as_long = B.LLong;
           B.as_text = B.TRun (true, B.PText true, 1);
           B.as_math = B.MRun (B.PText true, 1);
+          B.as_copy = 3;
         } );
     ]
   in
@@ -107,6 +111,10 @@ let kernel =
         || List.mem (str n) [ "end"; "par"; "begin"; "documentclass" ]);
     B.c_sig = (fun n -> List.assoc_opt (str n) sigs);
     B.c_arg = (fun n -> List.assoc_opt (str n) asigs);
+    (* C-98: the memory account; \\alpha costs as much as the costliest measured
+       name (\\ddots, 155 words) *)
+    B.c_cost =
+      (fun t -> match t with B.TCs n when str n = "alpha" -> 160 | _ -> 17);
   }
 
 let contract = { B.bc_kernel = kernel; B.bc_lex = lexcon }

@@ -307,10 +307,14 @@ def all_words() -> list[str]:
 
 # ----------------------------------------------------------------- fitting ---
 
-def with_g(h: dict, gt: int, gm: int) -> dict:
+def with_g(h: dict, gt: int, gm: int, copy: int = 1, cost: int | None = None) -> dict:
     """A hypothesis with the command's TeX groups in its run behaviours
-    (the loader refuses a run behaviour without them, C-94)."""
+    (the loader refuses a run behaviour without them, C-94), its copy factor
+    and, once measured, its memory cost (C-98)."""
     h = json.loads(json.dumps(h))
+    h["copy"] = copy
+    if cost is not None:
+        h["cost"] = cost
     if h["text"][0] == "run":
         h["text"] = h["text"][:3] + [gt]
     if h["math"][0] == "run":
@@ -319,13 +323,14 @@ def with_g(h: dict, gt: int, gm: int) -> dict:
 
 
 def fit(kern, x: str, reqs: dict[str, dict], grades: dict[str, dict],
-        hyps: list[dict], gt: int = 1, gm: int = 1) -> tuple[list[dict], dict]:
+        hyps: list[dict], gt: int = 1, gm: int = 1, copy: int = 1,
+        cost: int | None = None) -> tuple[list[dict], dict]:
     """The hypotheses under which the extracted kernel agrees with every
     grade. Before stage G has measured the command's groups, gt = gm = 1
     stands in: no probe of stage 1 comes near the group bound, so the
     groups cannot change a verdict there (they only decide membership)."""
     fams = list(reqs)
-    preq = [dict(_req(reqs[f]), arg_signatures={x: with_g(h, gt, gm)})
+    preq = [dict(_req(reqs[f]), arg_signatures={x: with_g(h, gt, gm, copy, cost)})
             for h in hyps for f in fams]
     preds = kern.run(preq)
     fits, miss = [], {}
@@ -399,9 +404,16 @@ def measure_groups(grader, kern, names: list[str], hi: int = 300) -> dict:
         fams[(x, "math")] = (lambda x_: lambda j: S.doc(_dollar(*A(x_, *_braces(j, [t("x")])))))(x)
     keys = sorted(fams)
 
+    raw: dict = {f"{k[0]}/{k[1]}": [] for k in keys}
+
     def ok_all(pts):
         texs = render_all(kern, [fams[k](j) for k, j in pts])
         grs = grader.grade_all(texs, "groups")
+        # the PRIMARY record the gate re-derives every count from (M-2 of
+        # the round-2 review): each graded depth, its bytes and its grade
+        for (k, j), tex, gr in zip(pts, texs, grs):
+            raw[f"{k[0]}/{k[1]}"].append(
+                [j, hashlib.sha256(tex.encode()).hexdigest(), gr["rc"], gr["pdf"], gr["error"]])
         return [gr["rc"] == 0 and gr["pdf"] for gr in grs], grs
 
     lo_ok, _ = ok_all([(k, 0) for k in keys])
@@ -438,9 +450,48 @@ def measure_groups(grader, kern, names: list[str], hi: int = 300) -> dict:
                      "overflow_text": None if jt is None else jt[2],
                      "overflow_math": None if jm is None else jm[2]}
     return {"K": K, "K_overflow": state[("K", "math")][2], "groups": groups,
+            "probes": {k: sorted(v) for k, v in raw.items()},
             "rule": "K = 1 + the deepest brace nesting pdfTeX survives inside $...$; "
                     "a command's groups = K - jmax in text, K - 1 - jmax in math, jmax "
                     "the deepest brace nesting it survives inside the command's argument"}
+
+
+def measure_memory(grader, kern, names: list[str], cap: dict, tcost: int) -> dict:
+    """Stage G's memory documents (C-98), per command and mode it compiles
+    in: FLAT / FLATX (the command with an empty / one-character argument,
+    repeated), SHALLOW / DEEP / DEEP-HALF (5,000 characters inside 2 and D
+    levels of it, and 2,500 inside D). The model counts the tokens held at
+    copy factor 1 (the raw count the slope is taken over)."""
+    raw = {"long": "long", "text": ["run", True, "text_restricted", 1],
+           "math": ["run", "text_restricted", 1], "copy": 1, "cost": tcost}
+    docs = []
+    for x in names:
+        gg = cap["groups"][x]
+        gmax = max(v for v in (gg["text"], gg["math"], 1) if v)
+        D = max(3, min(60, (MAX_GROUPS - 2) // gmax))
+        for w in ("text", "math"):
+            if gg[w] is None:
+                continue
+            root = (lambda b: S.doc(*b)) if w == "text" else \
+                (lambda b: S.doc(_paren(*b)))
+            docs += [
+                (x, f"G-MEM-FLAT:{w}", root([n for _ in range(4000) for n in A(x)]),
+                 {"count": 4000}),
+                (x, f"G-MEM-FLATX:{w}", root([n for _ in range(3000) for n in A(x, t("x"))]),
+                 {"count": 3000}),
+                (x, f"G-MEM-SHALLOW:{w}", root(C.nested(S, x, 2, [t("x" * 5000)])),
+                 {"depth": 2}),
+                (x, f"G-MEM-DEEP:{w}", root(C.nested(S, x, D, [t("x" * 5000)])),
+                 {"depth": D}),
+                (x, f"G-MEM-DEEP-HALF:{w}", root(C.nested(S, x, D, [t("x" * 2500)])),
+                 {"depth": D}),
+            ]
+    ms = kern.run([dict(_req(d), arg_signatures={x: raw}) for x, _, d, _ in docs])
+    gs = grader.grade_all([m["tex"] for m in ms], "memory")
+    out: dict = {}
+    for (x, f, _, extra), m, g in zip(docs, ms, gs):
+        out.setdefault(x, {})[f] = C.memory_record(m, g, **extra)
+    return out
 
 
 # ------------------------------------------------------------ interleaving ---
@@ -570,6 +621,19 @@ def main() -> int:
     cap = measure_groups(grader, kern, alive)
     gt_of = {x: cap["groups"][x]["text"] or 1 for x in alive}
     gm_of = {x: cap["groups"][x]["math"] or 1 for x in alive}
+    # G (memory, C-98): the copy factor and the memory cost of each command,
+    # from its memory documents (C_.copy_and_cost), against the phase-1
+    # file's base and token cost
+    mem1 = sig1["memory"]
+    M0, T = mem1["structural"]["BASE"]["used"], sig1["token_cost"]
+    gmem = measure_memory(grader, kern, alive, cap, T)
+    cc = {x: C.copy_and_cost(gmem[x], M0, T) for x in alive}
+    for x in alive:
+        if cc[x]["copy"] is None:
+            cc[x] = {"copy": 3, "cost": T, "note": "no memory document ran"}
+    cap["memory"] = {"records": gmem, "derived": cc, "M0": M0, "token_cost": T}
+    print(f"[arg-signatures] stage G (memory): "
+          f"{ {x: (cc[x]['copy'], cc[x]['cost']) for x in alive} }", flush=True)
     print(f"[arg-signatures] stage G: capacity K = {cap['K']}; groups "
           f"{ {x: (cap['groups'][x]['text'], cap['groups'][x]['math']) for x in alive} }",
           flush=True)
@@ -583,9 +647,10 @@ def main() -> int:
     for i, x in enumerate(alive):
         grades_of[x].update(zip(fam2, g2[i * len(fam2):(i + 1) * len(fam2)]))
         allp = {**base_probes(x), **stage2_probes(x, gt_of[x], gm_of[x])}
-        f, miss = fit(kern, x, allp, grades_of[x], fits1[x][0], gt_of[x], gm_of[x])
+        f, miss = fit(kern, x, allp, grades_of[x], fits1[x][0], gt_of[x], gm_of[x],
+                      cc[x]["copy"], cc[x]["cost"])
         if len(f) == 1:
-            signatures[x] = with_g(f[0], gt_of[x], gm_of[x])
+            signatures[x] = with_g(f[0], gt_of[x], gm_of[x], cc[x]["copy"], cc[x]["cost"])
         elif not f:
             ex_ = sorted(miss.items())[0]
             rejected[x] = f"stage 2 (follower/display/repetition probes): no hypothesis fits; e.g. {ex_[0]} fails {ex_[1]}"
@@ -762,8 +827,52 @@ def main() -> int:
                 rejected[x] = f"stage 3b (capacity, A-CAP): {why}"
                 signatures.pop(x, None)
 
+    # 3c. the MEMORY worst case (C-98): for every admitted command and mode,
+    # C.mem_maximiser's document at the memory bound (the model decides it,
+    # pdfTeX agrees, and pdfTeX's own report is at most half of main memory:
+    # the account's 2x margin, measured) and with one more character (the
+    # model must place it outside the fragment). The filler is the costliest
+    # token per token valid inside a box argument.
+    memcap = {}
+
+    def stage3c() -> None:
+        k = ktmp(signatures)
+        sig1s = sig1["signatures"]
+        cands = [([S.cmd(n)], sig1s[n]["cost"]) for n in sorted(sig1s)
+                 if not isinstance(sig1s[n]["text"], list)]
+        cands += [(A(n), (signatures[n]["cost"] + 2 * T) / 3) for n in sorted(signatures)
+                  if signatures[n]["text"][0] == "run"]
+        cands.append(([t("x")], T))
+        unit, per_tok = max(cands, key=lambda c: c[1])
+        memcap["filler"] = {"unit": unit, "cost_per_token": per_tok}
+        model = lambda d: k.run([_req(d)])[0]  # noqa: E731
+        jobs = []
+        for n in sorted(signatures):
+            for w in ("text", "math"):
+                if signatures[n][w][0] == "run":
+                    r = C.mem_maximiser(S, model, n, w, unit, MAX_GROUPS, MAX_TOKENS,
+                                        CK.MAX_MEM)
+                    jobs.append((n, w, r))
+        ats = k.run([_req(r["at"]) for _, _, r in jobs])
+        pasts = k.run([_req(r["past"]) for _, _, r in jobs])
+        gs = grader.grade_all([m["tex"] for m in ats], "memory-maximiser")
+        for (n, w, r), m, mp, g in zip(jobs, ats, pasts, gs):
+            rec = {**{kk: v for kk, v in r.items() if kk not in ("at", "past")},
+                   "at": C.memory_record(m, g), "past": C.memory_record(mp, None)}
+            memcap.setdefault(n, {})[w] = rec
+            ok, why = S.agrees(m, g)
+            half = rec["at"].get("used") is not None and rec["at"]["used"] * 2 <= rec["at"]["of"]
+            if not ok or not half or mp["verdict"] != "not_strict":
+                rejected[n] = (f"stage 3c (memory bound, {w}): agree {ok} ({why}), "
+                               f"{rec['at'].get('used')} of {rec['at'].get('of')} words, "
+                               f"one past: {mp['verdict']}")
+                signatures.pop(n, None)
+        print(f"[arg-signatures] stage 3c (memory bound): {len(jobs)} documents, "
+              f"{len(signatures)} admitted", flush=True)
+
     try:
         stage3b()
+        stage3c()
         while True:
             stage4()
             if not stage5():
@@ -782,7 +891,7 @@ def main() -> int:
                "rejected": len(rejected),
                "rejected_by_stage": {k: sum(1 for v in rejected.values() if v.startswith(k))
                                      for k in ("stage 0", "stage 1", "stage 2", "ambiguous",
-                                               "stage 3b", "stage 4", "stage 5")},
+                                               "stage 3b", "stage 3c", "stage 4", "stage 5")},
                "documents_graded_now": grader.graded, "grades_reused": grader.reused,
                "oracle_timeouts": sum(1 for gr in grader.cache.values() if gr["timed_out"]),
                "admitted_by_class": dict(sorted(by.items()))}
@@ -805,7 +914,7 @@ def main() -> int:
         "selection_meanings": dict(sorted(wm.items())),
         "bounds": {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
                    "repeat": REPEAT},
-        "capacity": {**cap, "stage3b_rounds": capacity_rounds},
+        "capacity": {**cap, "stage3b_rounds": capacity_rounds, "memory_bound": memcap},
         "reuse": reuse,
         "probes": {**base_probes("X"), **stage2_probes("X")},
         "probe_stages": {"1": fam1, "2": fam2},

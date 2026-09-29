@@ -174,6 +174,7 @@ STRUCTURAL = {"par", "begin", "end"}
 MAX_GROUPS = 200
 MAX_TOKENS = 200 * 100
 MAX_NAME = 100
+MAX_MEM = 20000 * 100
 CAPACITY = "corpora/strict_s0/capacity.json"
 
 # ---------------------------------------------------------------------------
@@ -207,7 +208,9 @@ CAPACITY = "corpora/strict_s0/capacity.json"
 #         with "if", or \unless, against \fi), or
 #       - its expansion CLOSURE reaches a primitive of MACRO_STATE_CHANGERS
 #         (code tables, interaction, input/output, diagnostics and tracing,
-#         deferred execution, \immediate, \scantokens). The closure follows
+#         deferred execution, \immediate, \scantokens, and since C-98 the
+#         definitions \def ... \let and the assignments \global, \advance,
+#         \multiply, \divide, \setbox). The closure follows
 #         every control sequence of an expansion text to its recorded
 #         meaning, transitively, and every character that is ACTIVE at body
 #         start to the active character's meaning.
@@ -284,6 +287,12 @@ MACRO_STATE_CHANGERS = (
     | NON_INERT_PRIMITIVE_CLASSES["code table / reading state"]
     | NON_INERT_PRIMITIVE_CLASSES["deferred execution"]
     | {"immediate", "scantokens"}
+    # C-98 LOW-4 of the round-2 review: a definition or an assignment the
+    # expansion makes (\gdef\mbox{x}, \thicklines' \let, \narrower's
+    # \advance) changes what a LATER token means or measures: the screen
+    # rejects it rather than model it (3 phase-1 names left, measured)
+    | NON_INERT_PRIMITIVE_CLASSES["definition"]
+    | {"global", "advance", "multiply", "divide", "setbox"}
 )
 STRUCTURAL_CHARACTER_MEANINGS = (
     "begin-group character", "end-group character", "math shift character",
@@ -923,7 +932,25 @@ CAPACITY_ACCOUNT = [
      "match rest with [] => 0 | _ :: rest' => peak C s' rest' end | _ => 0 end) end.",
      "peak"),
     ("Definition bounded (C : contract) (ts : list tok) : bool := Nat.leb (length ts) "
-     "max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups.", "bounded"),
+     "max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups && Nat.leb "
+     "(mem C ts) max_mem.", "bounded"),
+    # C-98: the main-memory account
+    ("Definition copy_of (C : contract) (n : name) : nat := match c_arg C n with "
+     "Some a => as_copy a | None => 0 end.", "copy_of"),
+    ("Fixpoint open_copies (opens : list (nat * nat)) : nat := match opens with [] => 0 "
+     "| (_, c) :: r => c + open_copies r end.", "open_copies"),
+    ("Fixpoint held_from (C : contract) (b : nat) (opens : list (nat * nat)) (ts : list "
+     "tok) : nat := match ts with | [] => 0 | t :: r => open_copies opens + match t with "
+     "| TCs n => if is_argcmd C n then match r with | TOpen :: r' => open_copies opens + "
+     "held_from C (S b) ((b, copy_of C n) :: opens) r' | _ => held_from C b opens r end "
+     "else held_from C b opens r | TOpen => held_from C (S b) opens r | TClose => "
+     "held_from C (pred b) (filter (fun x => Nat.ltb (fst x) (pred b)) opens) r | _ => "
+     "held_from C b opens r end end.", "held_from"),
+    ("Definition held (C : contract) (ts : list tok) : nat := held_from C 0 [] ts.", "held"),
+    ("Fixpoint node_cost (C : contract) (ts : list tok) : nat := match ts with [] => 0 | "
+     "t :: r => c_cost C t + node_cost C r end.", "node_cost"),
+    ("Definition mem (C : contract) (ts : list tok) : nat := node_cost C ts + held C ts.",
+     "mem"),
 ]
 # The frame-kind labels of strict_decide.ml pushed_label, by the constructor
 # of the extracted `frame` type each one names.
@@ -957,7 +984,7 @@ def capacity_findings(repo: Path, ext_sha: str, sig_sha: str, asig_sha: str | No
     if d.get("signatures_sha256") != sig_sha or d.get("arg_signatures_sha256") != asig_sha:
         out.append(f"{CAPACITY}: ran other signature files; re-run it")
     if d.get("bounds") != {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
-                           "max_name": MAX_NAME}:
+                           "max_name": MAX_NAME, "max_mem": MAX_MEM}:
         out.append(f"{CAPACITY}: bounds {d.get('bounds')} are not Decide.v's")
     ml = extract.read_text()
     toks = _ocaml_ctors(ml, "tok")
@@ -987,26 +1014,55 @@ def capacity_findings(repo: Path, ext_sha: str, sig_sha: str, asig_sha: str | No
             if h[w][0] == "run" and not any(lab.endswith(f":{n}{suf}") for lab in labels):
                 out.append(f"{CAPACITY}: the argument frame of {n!r} pushed in {w} is in "
                            f"no probed pair")
-    meas = d.get("measured", {})
-    capv, tmax = meas.get("grouping_capacity"), meas.get("max_transient")
-    if not isinstance(capv, int) or not isinstance(tmax, int):
+    # every derived number is recomputed here from the primary records
+    # (M-1/M-2 of the round-2 review), never read from a stored summary
+    def first_fail(steps, key):
+        ok = {r[key] for r in steps if (r.get("oracle") or [1])[0] == 0 and r["oracle"][1]}
+        bad = {r[key] for r in steps if r.get("oracle") and not (r["oracle"][0] == 0
+                                                                 and r["oracle"][1])}
+        if not bad:
+            return None
+        f = min(bad)
+        return f if (f - 1) in ok else None
+    fails_at = {}
+    for r in pairs:
+        fails_at[f"{r.get('below')}>{r.get('above')}"] = first_fail(
+            r.get("overflow_steps", []), "target")
+    known = [v for v in fails_at.values() if v]
+    capv = max(known) - 1 if known else None
+    lasts = []
+    for fam, t in sorted(d.get("transients", {}).items()):
+        ff = first_fail(t.get("steps", []), "depth")
+        okp = [r["peak"] for r in t.get("steps", []) if ff and r["depth"] == ff - 1]
+        if not okp:
+            out.append(f"{CAPACITY}: transient {fam} is not a measured bracket")
+        else:
+            lasts.append(okp[0])
+    if capv is None or not lasts:
         out.append(f"{CAPACITY}: no measured grouping capacity / transient")
         capv, tmax = 10 ** 9, 0
-    elif capv - tmax - MAX_GROUPS < 1:
-        out.append(f"{CAPACITY}: no margin: capacity {capv} - transient {tmax} "
-                   f"<= max_groups {MAX_GROUPS}")
+    else:
+        tmax = max(capv - p for p in lasts)
+        if capv - tmax - MAX_GROUPS < 1:
+            out.append(f"{CAPACITY}: no margin: capacity {capv} - transient {tmax} "
+                       f"<= max_groups {MAX_GROUPS}")
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import _strict_capacity as C
     bad = 0
     for r in pairs:
         tag = f"{r.get('below')}>{r.get('above')}"
-        at, past, ov = r.get("at", {}), r.get("past", {}), r.get("overflow", {})
+        at, past = r.get("at", {}), r.get("past", {})
+        o = at.get("oracle") or [1, False]
         why = None
-        if not (at.get("agree") and at.get("peak") == MAX_GROUPS and at.get("adjacent")):
-            why = f"not probed at the bound (agree {at.get('agree')}, peak {at.get('peak')})"
+        if not (at.get("verdict") == "ready" and o[0] == 0 and o[1]
+                and at.get("peak") == MAX_GROUPS
+                and C.adjacent(at.get("frames", []), r.get("below"), r.get("above"))):
+            why = f"not probed at the bound (verdict {at.get('verdict')}, peak {at.get('peak')})"
         elif not (past.get("verdict") == "not_strict" and past.get("peak") == MAX_GROUPS + 1):
-            why = f"one group past the bound is not outside the fragment ({past})"
-        elif not (isinstance(ov.get("first_fail"), int)
-                  and capv + 1 - tmax <= ov["first_fail"] <= capv + 1):
-            why = (f"pdfTeX overflows at {ov.get('first_fail')} groups, outside the "
+            why = "one group past the bound is not outside the fragment"
+        elif not (isinstance(fails_at[tag], int)
+                  and capv + 1 - tmax <= fails_at[tag] <= capv + 1):
+            why = (f"pdfTeX overflows at {fails_at[tag]} groups, outside the "
                    f"account's window [{capv + 1 - tmax}, {capv + 1}]")
         if why:
             bad += 1
@@ -1014,14 +1070,129 @@ def capacity_findings(repo: Path, ext_sha: str, sig_sha: str, asig_sha: str | No
                 out.append(f"{CAPACITY}: pair {tag} {why}")
     if bad > 10:
         out.append(f"{CAPACITY}: {bad} pairs fail in all")
-    for res, v in sorted(d.get("table", {}).items()):
-        if not (isinstance(v.get("max_used"), int) and isinstance(v.get("capacity"), int)
-                and v["max_used"] * 2 <= v["capacity"]):
-            out.append(f"{CAPACITY}: {res}: {v.get('max_used')} of {v.get('capacity')} used "
-                       f"at the bounds, more than half (C-94 margin)")
     for fam, v in sorted(d.get("usage", {}).items()):
-        if not v.get("agree"):
-            out.append(f"{CAPACITY}: usage document {fam} disagrees ({v.get('why')})")
+        o = v.get("oracle") or [1, False]
+        if not ((v.get("verdict") == "ready") == (o[0] == 0 and o[1])):
+            out.append(f"{CAPACITY}: usage document {fam} disagrees")
+    return out
+
+
+def capacity_table(*files: dict) -> dict:
+    """pdfTeX's report of every capacity, maximised over EVERY graded record
+    of the given evidence files (pairs, transients, usage, the memory
+    documents and the memory worst cases): {resource: (used, of, where)}."""
+    table = {}
+
+    def walk(x, where):
+        if isinstance(x, dict):
+            st = x.get("stats")
+            if isinstance(st, dict) and "sha256" in x:
+                for res, uo in st.items():
+                    if isinstance(uo, list) and len(uo) == 2:
+                        if res not in table or uo[0] > table[res][0]:
+                            table[res] = (uo[0], uo[1], where)
+            for k, v in x.items():
+                walk(v, f"{where}/{k}" if len(where) < 120 else where)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v, where)
+    for i, f in enumerate(files):
+        walk(f, f"file{i}")
+    return table
+
+
+def _jmax(steps: list) -> int | None:
+    """The deepest depth that compiled, from stage G's PRIMARY records
+    [depth, sha256, rc, pdf, error], provided the next depth is recorded
+    failing (else None: the measurement is not a bracket)."""
+    ok = {j for j, _, rc, pdf, _ in steps if rc == 0 and pdf}
+    bad = {j for j, _, rc, pdf, _ in steps if not (rc == 0 and pdf)}
+    if not ok:
+        return None
+    j = max(ok)
+    return j if (j + 1) in bad and not any(b < j for b in bad) else None
+
+
+def derived_groups(cap: dict, n: str, w: str) -> int | None:
+    """A command's TeX groups re-derived from stage G's graded depths (M-2 of
+    the round-2 review: never from a count stored beside them)."""
+    pr = cap.get("probes", {})
+    kj = _jmax(pr.get("K/math", []))
+    nj = _jmax(pr.get(f"{n}/{w}", []))
+    if kj is None or nj is None:
+        return None
+    K = kj + 1
+    return K - nj if w == "text" else K - 1 - nj
+
+
+def _ok(r: dict) -> bool:
+    o = r.get("oracle")
+    return bool(o) and o[0] == 0 and o[1] and r.get("used") is not None
+
+
+def memory_findings(sig: dict, asig: dict) -> list[str]:
+    """Check 13 (C-98): every cost of the memory account re-derived from the
+    generators' PRIMARY records (each graded document's model counts and
+    pdfTeX's reported memory), with the same functions the generators use
+    (_strict_capacity); the account's margin (the base plus max_mem at most
+    half of main memory); every admitted name at the memory bound compiling
+    and one past it outside; every argument command's worst case at the
+    bound compiling within half of main memory and one character past it
+    outside."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import _strict_capacity as C
+    out = []
+    mem1 = sig.get("memory", {})
+    st = mem1.get("structural", {})
+    if "BASE" not in st:
+        return ["signatures: no memory records (C-98; regenerate)"]
+    m0, cap = st["BASE"]["used"], st["BASE"]["of"]
+    T = C.token_cost(st)
+    if sig.get("token_cost") != T:
+        out.append(f"signatures: token_cost {sig.get('token_cost')} is not what the "
+                   f"structural records give ({T})")
+    if (m0 + MAX_MEM) * 2 > cap:
+        out.append(f"memory account: base {m0} + max_mem {MAX_MEM} is more than half of "
+                   f"main memory {cap} (C-98 margin)")
+    for n, h in sorted(sig.get("signatures", {}).items()):
+        c = C.name_cost(list(mem1.get("names", {}).get(n, {}).values()), m0, T)
+        want = T if c is None else max(c, T)
+        if h.get("cost") != want:
+            out.append(f"signatures: {n!r}'s cost {h.get('cost')} is not what its memory "
+                       f"documents give ({want}; C-98)")
+        for f, r in mem1.get("cap", {}).get(n, {}).items():
+            if f.endswith("-PAST"):
+                if r.get("verdict") != "not_strict":
+                    out.append(f"signatures: {n!r} {f} is {r.get('verdict')}, not outside")
+            elif not (r.get("verdict") in ("ready", "not_ready") and r.get("oracle")
+                      and (r["oracle"][0] == 0) == (r["verdict"] == "ready")):
+                out.append(f"signatures: {n!r} at the memory bound ({f}) does not agree")
+        if not any(not f.endswith("-PAST") for f in mem1.get("cap", {}).get(n, {})):
+            out.append(f"signatures: {n!r} has no document at the memory bound (C-98)")
+    cap_a = asig.get("capacity", {})
+    am = cap_a.get("memory", {})
+    for n, h in sorted(asig.get("arg_signatures", {}).items()):
+        d = C.copy_and_cost(am.get("records", {}).get(n, {}), m0, T)
+        if d.get("copy") is None or (h.get("copy"), h.get("cost")) != (d["copy"], d["cost"]):
+            out.append(f"arg signatures: {n!r}'s copy/cost {h.get('copy')}/{h.get('cost')} "
+                       f"are not what its memory documents give "
+                       f"({d.get('copy')}/{d.get('cost')}; C-98)")
+        mb = cap_a.get("memory_bound", {}).get(n, {})
+        for w in ("text", "math"):
+            if h[w][0] != "run":
+                continue
+            r = mb.get(w)
+            if not r:
+                out.append(f"arg signatures: {n!r} has no memory worst case in {w} (C-98)")
+                continue
+            at, past = r["at"], r["past"]
+            if not (at.get("verdict") == "ready" and _ok(at) and at["used"] * 2 <= at["of"]
+                    and at.get("mem", MAX_MEM + 1) <= MAX_MEM):
+                out.append(f"arg signatures: {n!r}'s memory worst case in {w} does not compile "
+                           f"within half of main memory ({at.get('used')} of {at.get('of')})")
+            if not (past.get("verdict") == "not_strict" and past.get("mem", 0) > MAX_MEM):
+                out.append(f"arg signatures: {n!r}'s memory worst case plus one in {w} is "
+                           f"not outside the fragment")
     return out
 
 
@@ -1346,10 +1517,11 @@ def main() -> int:
     code_d = " ".join(strip_coq_comments(decide_v).split())
     for pin in ("Example max_groups_is_200 : max_groups = 200.",
                 "Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100.",
-                "Example max_name_is_100 : max_name = 100."):
+                "Example max_name_is_100 : max_name = 100.",
+                "Example max_mem_is_100_tokens : max_mem = Nat.mul max_tokens 100."):
         if pin not in decide_v:
             fails.append(f"Decide.v: missing the pin `{pin}`")
-    if (MAX_GROUPS, MAX_TOKENS, MAX_NAME) != (200, 200 * 100, 100):
+    if (MAX_GROUPS, MAX_TOKENS, MAX_NAME, MAX_MEM) != (200, 200 * 100, 100, 200 * 100 * 100):
         fails.append("check_strict_kernel: MAX_GROUPS/MAX_TOKENS/MAX_NAME differ from Decide.v")
     for want, what in CAPACITY_ACCOUNT:
         if want not in code_d:
@@ -1377,13 +1549,21 @@ def main() -> int:
                 fails.append(f"arg signatures: {n!r} runs in {w} without its measured "
                              f"TeX groups (C-94)")
             elif h[w][0] == "run":
-                gm = asig.get("capacity", {}).get("groups", {}).get(n, {}).get(w)
+                gm = derived_groups(asig.get("capacity", {}), n, w)
                 if gm != run_groups(h[w], w):
                     fails.append(f"arg signatures: {n!r}'s groups in {w} "
-                                 f"({run_groups(h[w], w)}) are not stage G's measure ({gm})")
+                                 f"({run_groups(h[w], w)}) are not what stage G's graded "
+                                 f"depths give ({gm}; M-2)")
+    # 13. THE MEMORY ACCOUNT IS RECOMPUTED FROM PRIMARY RECORDS (C-98)
+    fails += memory_findings(sig, asig)
     # 11. THE CAPACITY ACCOUNT IS PROBED (C-94)
     fails += capacity_findings(repo, ext_sha, sha(sig_path),
                                sha(asig_path) if asig else None, asigs, extract)
+    capd = json.loads((repo / CAPACITY).read_text()) if (repo / CAPACITY).is_file() else {}
+    for res, (used, of, where) in sorted(capacity_table(capd, sig, asig).items()):
+        if used * 2 > of:
+            fails.append(f"capacity: {res}: {used} of {of} used by a graded document "
+                         f"({where}), more than half (C-94/C-98 margin)")
     # 12. REUSE PROVENANCE (LOW-2 of the C-94 review): every reused grade comes
     # from a committed file, named by path, commit and sha256
     fails += reuse_findings(repo, "signatures", sig.get("reuse"))

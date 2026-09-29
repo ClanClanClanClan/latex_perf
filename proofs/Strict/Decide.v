@@ -364,6 +364,7 @@ Definition ten : nat := 10.
 Definition max_groups : nat := Nat.mul 2 (Nat.mul ten ten).
 Definition max_tokens : nat := Nat.mul max_groups (Nat.mul ten ten).
 Definition max_name : nat := Nat.mul ten ten.
+Definition max_mem : nat := Nat.mul max_tokens (Nat.mul ten ten).
 
 Example max_groups_is_200 : max_groups = 200.
 Proof. reflexivity. Qed.
@@ -372,6 +373,11 @@ Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100.
 Proof. reflexivity. Qed.
 
 Example max_name_is_100 : max_name = 100.
+Proof. reflexivity. Qed.
+
+(* 2,000,000 words: with the 435,796 words pdfTeX reports at body start,
+   under half of main memory (5,000,000) *)
+Example max_mem_is_100_tokens : max_mem = Nat.mul max_tokens 100.
 Proof. reflexivity. Qed.
 
 (** The TeX groups a frame holds. *)
@@ -468,8 +474,57 @@ Proof. intros C ts s B. apply (peak_spec_n C (length ts)). apply le_n. Qed.
 Definition short_names (ts : list tok) : bool :=
   forallb (fun t => match t with TCs n => Nat.leb (length n) max_name | _ => true end) ts.
 
+(** MAIN MEMORY (correction C-98).  pdfTeX's main memory holds what the
+    format and the class leave at body start, the nodes the typeset material
+    makes, and a COPY of every argument a command is running: an argument
+    command nested inside another argument reads its argument out of the
+    outer copy, so the copies grow with depth x tokens (the reviewer's
+    document: 197 [\mbox] levels around 6,427 [\frame{}] overflow "[main
+    memory size=5000000]" with 19,983 tokens and 200 groups).  The account:
+    [mem C ts] = the sum of the tokens' costs ([c_cost]) plus, for every
+    argument the stream reads, its command's [as_copy] per token inside it
+    ([held]: for each token, the copy factors of the arguments open around
+    it, the command name and the brace of an inner argument included).  It
+    over-counts what is held at once (sibling arguments are not alive
+    together) and charges every token its worst measured cost, never less.
+    [opens] holds, for each open argument, the brace depth at which it was
+    opened and its command's copy factor; a [}] back to that depth closes
+    it. *)
+Definition copy_of (C : contract) (n : name) : nat :=
+  match c_arg C n with Some a => as_copy a | None => 0 end.
+
+Fixpoint open_copies (opens : list (nat * nat)) : nat :=
+  match opens with [] => 0 | (_, c) :: r => c + open_copies r end.
+
+Fixpoint held_from (C : contract) (b : nat) (opens : list (nat * nat)) (ts : list tok) : nat :=
+  match ts with
+  | [] => 0
+  | t :: r =>
+      open_copies opens +
+      match t with
+      | TCs n =>
+          if is_argcmd C n then
+            match r with
+            | TOpen :: r' => open_copies opens + held_from C (S b) ((b, copy_of C n) :: opens) r'
+            | _ => held_from C b opens r
+            end
+          else held_from C b opens r
+      | TOpen => held_from C (S b) opens r
+      | TClose => held_from C (pred b) (filter (fun x => Nat.ltb (fst x) (pred b)) opens) r
+      | _ => held_from C b opens r
+      end
+  end.
+
+Definition held (C : contract) (ts : list tok) : nat := held_from C 0 [] ts.
+
+Fixpoint node_cost (C : contract) (ts : list tok) : nat :=
+  match ts with [] => 0 | t :: r => c_cost C t + node_cost C r end.
+
+Definition mem (C : contract) (ts : list tok) : nat := node_cost C ts + held C ts.
+
 Definition bounded (C : contract) (ts : list tok) : bool :=
-  Nat.leb (length ts) max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups.
+  Nat.leb (length ts) max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups
+  && Nat.leb (mem C ts) max_mem.
 
 Definition in_strict_doc (C : contract) (d : doc) : Prop :=
   in_strict_toks C (flatten_doc d) /\ bounded C (flatten_doc d) = true.
@@ -497,8 +552,16 @@ Corollary strict_groups_bounded : forall C d s,
   in_strict_doc C d -> Reaches C init (flatten_doc d) s -> groups (s_frames s) <= max_groups.
 Proof.
   intros C d s [_ Hb] R. unfold bounded in Hb. rewrite !andb_true_iff in Hb.
-  destruct Hb as [_ Hp]. apply Nat.leb_le in Hp.
+  destruct Hb as [[_ Hp] _]. apply Nat.leb_le in Hp.
   exact (proj1 (peak_spec C _ init max_groups) Hp s R).
+Qed.
+
+(** C-98: a document of the tier stays within the main-memory account. *)
+Corollary strict_mem_bounded : forall C d,
+  in_strict_doc C d -> mem C (flatten_doc d) <= max_mem.
+Proof.
+  intros C d [_ Hb]. unfold bounded in Hb. rewrite !andb_true_iff in Hb.
+  destruct Hb as [_ Hh]. apply Nat.leb_le in Hh. exact Hh.
 Qed.
 
 Inductive verdict :=

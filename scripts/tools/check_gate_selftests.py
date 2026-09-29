@@ -607,6 +607,25 @@ def strict_admitted_not_inert(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def strict_admitted_is_clock(text: str) -> str:
+    """OPEN-118 (b) / R-CLOCK: an admitted name that IS \\year (\\let to
+    the primitive). R-INERT admits it (an integer parameter is none of its
+    classes); only the clock rule sees it."""
+    d = json.loads(text)
+    d["meanings"][_first_admitted(d)] = "\\year"
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_admitted_expands_to_clock(text: str) -> str:
+    """OPEN-118 (b) / R-CLOCK: an admitted macro whose expansion reaches
+    \\time through another macro (the closure, not the name, reads it)."""
+    d = json.loads(text)
+    d["meanings"][_first_admitted(d)] = "macro:->\\lpclockstamp x"
+    d["meanings"]["lpclockstamp"] = "macro:->\\time "
+    d["meanings"]["time"] = "\\time"
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_admitted_transparent(text: str) -> str:
     """C-85: an admitted name that is transparent after a $ in display math
     (its display-follower grade compiles)."""
@@ -712,6 +731,18 @@ REGISTRY = [
                      "corpora/contracts/strict/article-s0-signatures.json",
                      r"FAIL signatures: admitted '.*' is not inert: conditional",
                      transform=strict_admitted_not_inert),
+            # OPEN-118 known limit (b) / R-CLOCK: a clock reader admitted,
+            # directly and through its expansion closure.
+            Mutation("an admitted name is the clock primitive \\year",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' reads the clock: it is the "
+                     r"clock primitive \\year \(R-CLOCK\)",
+                     transform=strict_admitted_is_clock),
+            Mutation("an admitted macro expands to \\time",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' reads the clock: expansion "
+                     r"reaches the clock primitive \\time via \\lpclockstamp",
+                     transform=strict_admitted_expands_to_clock),
             # C-85: a name transparent to the display-$ look-ahead admitted.
             Mutation("an admitted name is transparent after a display $",
                      "corpora/contracts/strict/article-s0-signatures.json",

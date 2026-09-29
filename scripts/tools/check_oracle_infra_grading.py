@@ -41,6 +41,16 @@ the image's own environment (`_oracle.IMAGE_ENV`) plus the run's TeX
 variables -- and the container backend must refuse a container whose own
 environment is not the image's.
 
+C-93 (2026-09-29): a PRIVATE TMPDIR per run. MEASURED: a restricted-\\write18
+repstopdf -> Ghostscript conversion killed by the protocol's timeout left
+/tmp/gs_* in the long-lived container, and check_state then refused every
+later session (java under texosquery-jre8 touched /tmp/hsperfdata_root on
+every run). Every run now gets TMPDIR=TMP=TEMP=<run dir>/lp-tmp and a
+JAVA_TOOL_OPTIONS naming it; the checks read back that the engine got them,
+that the directory existed before it started, that a TMPDIR which is not the
+run's own is refused, and that the container backend refuses one outside the
+work root.
+
 This gate is PURE (no docker, no TeX): it drives the real grading code with
 FAKE docker/engine executables that reproduce each failure shape, including the
 re-reviewer's dead-socket one, and asserts each is refused, while a genuine
@@ -87,6 +97,10 @@ import os, sys
 a = sys.argv[1:]
 if os.environ.get("FAKE_ARGV"):
     open(os.environ["FAKE_ARGV"], "w").write("\0".join(a))
+    # C-93: did the run's private TMPDIR exist when the engine would start?
+    t = [x[7:] for x in a if x.startswith("TMPDIR=")]
+    open(os.environ["FAKE_ARGV"] + ".tmpdir", "w").write(
+        "1" if t and os.path.isdir(t[0]) else "0")
 if a[-2:] == ["env", "-0"]:            # the container's own environment
     sys.stdout.write(open(os.environ["FAKE_CENV"]).read()); sys.exit(0)
 if a[:1] == ["inspect"] and "{{.Created}}" in a:   # check_state's reference
@@ -132,6 +146,13 @@ elif mode == "cantlog":
     sys.stdout.write(banner + "! I can't write on file `t.log'.\n"); rcline(1)
 elif mode == "openout":
     sys.stdout.write(banner + "! I can't write on file `../x.tex'.\n"); rcline(1)
+elif mode == "okpdf":      # a pass that ships pages: writes <cwd>/<job>.pdf
+    cwd = a[a.index("-w") + 1]
+    job = os.path.splitext(os.path.basename(a[-1]))[0]
+    open(os.path.join(cwd, job + ".pdf"), "w").write("%PDF-1.5 pass\n")
+    sys.stdout.write(banner + "Output written on %s.pdf (1 page).\n" % job); rcline(0)
+elif mode == "nopages":    # rc 0 and no PDF written (aux oscillation, C-95)
+    sys.stdout.write(banner + "No pages of output.\n"); rcline(0)
 '''
 
 # A fake ENGINE for the shell grader's run_pdflatex: modes as above, stdout only.
@@ -292,6 +313,28 @@ class Checker:
                             f"no proof pdfTeX ran) as {r!r}", False)
             except _oracle.OracleError:
                 self.expect("-", True)
+
+        # C-95: each pass's evidence is its own. Pass 1 ships a page, the
+        # confirming pass exits 0 with "No pages of output." -- the PDF on
+        # disk is pass 1's, and must not make the run `compiles`. Also a PDF
+        # left in the work directory by an EARLIER run (gen_apply_fixes_real's
+        # run1 reuses run0's directory) must not count for a later one.
+        for plan, pre in (("okpdf,nopages", False), ("nopages", True)):
+            stale = self.workroot / "t.pdf"
+            stale.unlink(missing_ok=True)
+            if pre:
+                stale.write_text("%PDF-1.5 stale\n")
+            o = self.oracle(plan)
+            try:
+                r = o.run_to_fixpoint(self.workroot, "t.tex", self.tv(), 60)
+                self.expect(f"run_to_fixpoint graded plan '{plan}'"
+                            f"{' after a stale PDF' if pre else ''} as compiling "
+                            f"although its confirming pass wrote no PDF (a stale "
+                            f"PDF was read as this pass's, C-95)",
+                            not r.compiles and r.pdf is False, repr(r))
+            except _oracle.OracleError as e:
+                self.expect(f"run_to_fixpoint refused plan '{plan}'", False, str(e))
+            stale.unlink(missing_ok=True)
 
         # check_apply_fixes_roundtrip.pdflatex_ok: None (not graded), never False.
         import check_apply_fixes_roundtrip as rt
@@ -463,7 +506,12 @@ class Checker:
         hostile = {"SOURCE_DATE_EPOCH": "1700000000", "openin_any": "a",
                    "openout_any": "a", "FORCE_SOURCE_DATE": "1",
                    "max_print_line": "1000", "TEXINPUTS": f"{self.workroot}/inp:",
+                   # C-93: a caller's/host's temporary directories never reach
+                   # the engine (TMPDIR itself: see host_tmp below)
+                   "TMP": "/tmp", "TEMP": "/tmp",
+                   "JAVA_TOOL_OPTIONS": "-XX:+UsePerfData",
                    **KPATHSEA_HOSTILE}
+        host_tmp = {"TMPDIR": "/tmp"}
         want_fixed = dict(_oracle.ORACLE_TEX_VARS)
         argv_file = self.td / "argv-env"
 
@@ -473,7 +521,12 @@ class Checker:
             return dict(a[j + 1].split("=", 1) for j in range(len(a) - 1)
                         if a[j] == "-e" and j < i)
 
-        def exactly_protocol(got: dict, texmf_host: str | None) -> str:
+        def tmp_created() -> bool:
+            f = Path(str(argv_file) + ".tmpdir")
+            return f.exists() and f.read_text() == "1"
+
+        def exactly_protocol(got: dict, texmf_host: str | None,
+                             tmp_existed: bool) -> str:
             """'' when `got` is the protocol's environment, else what is wrong."""
             bad = []
             for k, v in want_fixed.items():
@@ -485,13 +538,34 @@ class Checker:
             for k in _oracle._GRADING_TEXMF:
                 if not got.get(k) or got.get(k) == texmf_host:
                     bad.append(f"{k}={got.get(k)!r} is not a private per-run one")
-            leak = not_allowed(got, set(want_fixed) | set(_oracle._GRADING_TEXMF))
+            # C-93: the private temporary directory, beside the private
+            # trees, created before the run; TMP/TEMP/java's derived from it.
+            tv_dir = got.get("TEXMFVAR")
+            want_tmp = (str(Path(tv_dir).parent / _oracle.PRIVATE_TMP_NAME)
+                        if tv_dir else None)
+            if not want_tmp or got.get("TMPDIR") != want_tmp:
+                bad.append(f"TMPDIR={got.get('TMPDIR')!r} is not the run's private "
+                           f"temporary directory {want_tmp!r}")
+            elif not tmp_existed:
+                bad.append(f"the run's private TMPDIR {want_tmp} was not created "
+                           f"before the engine started")
+            for k in ("TMP", "TEMP"):
+                if got.get(k) != got.get("TMPDIR"):
+                    bad.append(f"{k}={got.get(k)!r} is not the private TMPDIR")
+            jto = got.get("JAVA_TOOL_OPTIONS", "")
+            if ("-XX:-UsePerfData" not in jto.split()
+                    or f"-Djava.io.tmpdir={got.get('TMPDIR')}" not in jto.split()
+                    or "-XX:+UsePerfData" in jto):
+                bad.append(f"JAVA_TOOL_OPTIONS={jto!r} does not keep java out of "
+                           f"/tmp (-XX:-UsePerfData, java.io.tmpdir=TMPDIR)")
+            leak = not_allowed(got, set(want_fixed) | set(_oracle._GRADING_TEXMF)
+                               | {"TMPDIR", "TMP", "TEMP", "JAVA_TOOL_OPTIONS"})
             if leak:
                 bad.append(f"not on the allow-list (image env + protocol): {leak}")
             return "; ".join(bad)
 
         saved = {k: os.environ.get(k) for k in list(hostile) + ["FAKE_ARGV",
-                                                                  "TEXMFHOME"]}
+                                                                  "TEXMFHOME", "TMPDIR"]}
         os.environ["FAKE_ARGV"] = str(argv_file)
         host_th = str(self.workroot / "host-th")
         try:
@@ -499,7 +573,7 @@ class Checker:
             o = self.oracle("ok")
             o.run_pdflatex(self.workroot, ["-interaction=nonstopmode", "t.tex"],
                            dict(self.tv(), **hostile), 60)
-            why = exactly_protocol(forwarded(), None)
+            why = exactly_protocol(forwarded(), None, tmp_created())
             self.expect("ContainerOracle.run_pdflatex forwards a caller's TeX "
                         "variables instead of imposing the protocol's", not why, why)
             # (2) no private TEXMF: refused, not run in the shared TEXMFVAR.
@@ -511,8 +585,33 @@ class Checker:
                             "TEXMFVAR would carry state)", False)
             except _oracle.OracleError:
                 self.expect("-", True)
+            # (2b) C-93: a caller's TMPDIR that is not the run's private one
+            # (the host's /tmp: the long-lived container's shared /tmp, where
+            # a killed repstopdf -> gs left /tmp/gs_*) is refused, not run.
+            for bad_tmp in ("/tmp", None, str(self.workroot / "elsewhere")):
+                env = dict(self.tv())
+                if bad_tmp is None:
+                    env.pop("TMPDIR")
+                else:
+                    env["TMPDIR"] = bad_tmp
+                o = self.oracle("ok")
+                try:
+                    o.run_pdflatex(self.workroot, ["t.tex"], env, 60)
+                    self.expect(f"run_pdflatex graded a run whose TMPDIR is "
+                                f"{bad_tmp!r}, not its private one (C-93)", False)
+                except _oracle.OracleError:
+                    self.expect("-", True)
+            # (2c) the per-run environment itself carries the private TMPDIR.
+            self.expect("oracle_tex_vars carries no private TMPDIR/TMP/TEMP/"
+                        "JAVA_TOOL_OPTIONS (C-93)",
+                        {k: self.tv().get(k) for k in ("TMPDIR", "TMP", "TEMP")}
+                        == dict.fromkeys(("TMPDIR", "TMP", "TEMP"),
+                                         str(self.workroot / "tx"
+                                             / _oracle.PRIVATE_TMP_NAME))
+                        and "-XX:-UsePerfData" in self.tv().get("JAVA_TOOL_OPTIONS", ""),
+                        repr({k: self.tv().get(k) for k in _oracle._GRADING_TMP}))
             # (3) the shim, under a hostile HOST environment.
-            os.environ.update(hostile, TEXMFHOME=host_th)
+            os.environ.update(hostile, TEXMFHOME=host_th, **host_tmp)
             cwd = os.getcwd()
             os.chdir(self.workroot)
             try:
@@ -521,7 +620,7 @@ class Checker:
                                               "-interaction=nonstopmode", "t.tex"])
             finally:
                 os.chdir(cwd)
-            why = exactly_protocol(forwarded(), host_th) if rc == 0 else f"rc {rc}"
+            why = exactly_protocol(forwarded(), host_th, tmp_created()) if rc == 0 else f"rc {rc}"
             self.expect("the _oracle.py pdflatex shim (the shell graders' path) "
                         "does not give its run the protocol's environment", not why,
                         why)
@@ -532,7 +631,9 @@ class Checker:
             dump = self.td / "native-env"
             eng = bindir / _oracle.ENGINE_PDFLATEX
             eng.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
-                           f"env > '{dump}'\nexit 0\n")
+                           f"env > '{dump}'\n"
+                           f"if [ -d \"$TMPDIR\" ]; then echo 1; else echo 0; fi "
+                           f"> '{dump}.tmpdir'\nexit 0\n")
             eng.chmod(0o755)
             n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
             _oracle._Base.__init__(n)
@@ -546,18 +647,22 @@ class Checker:
                 os.chdir(cwd)
             got = (dict(x.split("=", 1) for x in dump.read_text().splitlines()
                         if "=" in x) if dump.exists() else {})
-            why = exactly_protocol(got, host_th) if rc == 0 else f"rc {rc}"
+            made = Path(f"{dump}.tmpdir")
+            why = (exactly_protocol(got, host_th, made.exists()
+                                    and made.read_text().strip() == "1")
+                   if rc == 0 else f"rc {rc}")
             self.expect("the shim on the native backend does not give its run the "
                         "protocol's environment", not why, why)
             for k in hostile:
                 os.environ.pop(k, None)
             os.environ.pop("TEXMFHOME", None)
+            os.environ.pop("TMPDIR", None)
             # (5) check_apply_fixes_roundtrip.pdflatex_ok, a grader that
             # passed `dict(os.environ)` until C-91.
             import check_apply_fixes_roundtrip as rt
             self.oracle("ok")
             got = _silenced(rt.pdflatex_ok, self.workroot, "t.tex", None)
-            why = exactly_protocol(forwarded(), None) if got is not None else "not graded"
+            why = exactly_protocol(forwarded(), None, tmp_created()) if got is not None else "not graded"
             self.expect("check_apply_fixes_roundtrip.pdflatex_ok does not grade "
                         "in the protocol's environment", not why, why)
         finally:
@@ -732,6 +837,26 @@ class Checker:
                         "(the container's persistent one is searched first)", False)
         except _oracle.OracleError:
             self.expect("-", True)
+        # (b2) C-93: the container backend itself refuses a temporary
+        # directory outside the work root, or TMP/TEMP/java's not derived from
+        # it, on EVERY engine run (run_engine does not pass graded_env).
+        outside = "/tmp/lp-c93-outside"
+        for label, override in (
+                ("a TMPDIR outside the work root",
+                 _oracle.private_tmp_vars("/tmp/lp-c93-outside-td")),
+                ("a TMPDIR that is not one plain path",
+                 _oracle.private_tmp_vars(str(self.workroot) + "/a b")),
+                ("a TMP not derived from TMPDIR", {"TMP": outside}),
+                ("a JAVA_TOOL_OPTIONS not derived from TMPDIR",
+                 {"JAVA_TOOL_OPTIONS": "-XX:+UsePerfData"})):
+            o = self.oracle("ok")
+            try:
+                o.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini", "\\dump"],
+                             dict(tv, **override), 60)
+                self.expect(f"the container backend ran an engine with {label} "
+                            f"(C-93)", False)
+            except _oracle.OracleError:
+                self.expect("-", True)
         # (c) the container's state
         import json as _json
         arch = sorted(_oracle.TREE_FINGERPRINTS)[0]

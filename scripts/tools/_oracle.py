@@ -144,7 +144,8 @@ TREE_FINGERPRINTS = {
 _ENV_FORWARD = re.compile(
     r"^(TEXMFHOME|TEXMFVAR|TEXMFCONFIG|openin_any|openout_any|"
     r"SOURCE_DATE_EPOCH|FORCE_SOURCE_DATE|max_print_line|error_line|"
-    r"half_error_line|TEXINPUTS|BIBINPUTS|BSTINPUTS|L0_VALIDATORS)$")
+    r"half_error_line|TEXINPUTS|BIBINPUTS|BSTINPUTS|L0_VALIDATORS|"
+    r"TMPDIR|TMP|TEMP|JAVA_TOOL_OPTIONS)$")
 # Search-path variables. A host value would change a grade silently: without an
 # empty component it REPLACES the image's own search path (every document then
 # fails), and an absolute component outside the work root points at a
@@ -188,9 +189,86 @@ def private_texmf_vars(td) -> dict:
             "TEXMFCONFIG": str(td / "tc")}
 
 
+# A PRIVATE TEMPORARY DIRECTORY PER RUN (C-93, OPEN-118 known limit (i)).
+# Restricted \write18 (the protocol's default) runs the programs of the
+# image's shell_escape_commands, and kpathsea runs mktex* for a missing font;
+# those write temporary files, and with the image's defaults they wrote them
+# in the LONG-LIVED container's /tmp. MEASURED 2026-09-29 in a fresh container
+# of the pinned digest, each command driven from a document and the
+# container's root filesystem diffed (find / -xdev -newerct) around the run:
+#   repstopdf -> gs      /tmp/gs_XXXXXX scratch files: removed on a normal
+#                        exit, LEFT (3 per conversion, 0 bytes) when the
+#                        protocol's timeout kills the run. That is how the
+#                        shared container got its six /tmp/gs_* (two timed-out
+#                        EPS conversions, 2026-09-28 21:48) and #622's
+#                        check_state then refused every later session.
+#                        gs honours TMPDIR (measured: the files land in it).
+#   mktextfm/mktexpk/    /tmp/mt$$.tmp, or $TMPDIR/mt$$.tmp (mktex.opt);
+#   mktexmf              removed by its trap on TERM, left on KILL.
+#   texosquery-jre8      java: /tmp/hsperfdata_root/<pid>, a FIXED path that
+#                        ignores TMPDIR and java.io.tmpdir; the directory's
+#                        ctime moves on EVERY run, which check_state refuses.
+#                        -XX:-UsePerfData (JAVA_TOOL_OPTIONS) stops it
+#                        (measured: nothing under /tmp changes).
+#   latexminted, memoize-extract.py/.pl, bibtex, bibtex8, makeindex,
+#   extractbb, gregorio, l3sys-query, kpsewhich, r-mpost: no path outside the
+#                        run directory changed (measured). Python's tempfile
+#                        reads TMPDIR/TEMP/TMP, Perl's File::Temp TMPDIR.
+# So every graded run gets TMPDIR=TMP=TEMP=<td>/lp-tmp and a JAVA_TOOL_OPTIONS
+# naming it, and the oracle creates the directory before the run (a missing
+# TMPDIR makes gs and mktex.opt fail, which WOULD change a grade). Same rc and
+# byte-identical PDF with and without, for every command above (measured).
+# The state check stays strict: a /tmp file is never a graded run's now.
+PRIVATE_TMP_NAME = "lp-tmp"
+# What a TMPDIR may not hold: whitespace (JAVA_TOOL_OPTIONS is split on it),
+# control characters, and what kpathsea or a shell would expand.
+_PLAIN_PATH_BAD = re.compile(r"[\s\x00-\x1f\x7f~$!{}:,;'\"\\`*?]")
+_GRADING_TMP =("TMPDIR", "TMP", "TEMP", "JAVA_TOOL_OPTIONS")
+
+
+def java_tool_options(tmpdir: str) -> str:
+    return f"-XX:-UsePerfData -Djava.io.tmpdir={tmpdir}"
+
+
+def private_tmp_vars(td) -> dict:
+    """TMPDIR/TMP/TEMP (and java's) in a private directory below `td`."""
+    t = str(Path(td) / PRIVATE_TMP_NAME)
+    return {"TMPDIR": t, "TMP": t, "TEMP": t,
+            "JAVA_TOOL_OPTIONS": java_tool_options(t)}
+
+
+def check_private_tmp(env: dict, inside=None) -> str | None:
+    """Refuse (OracleError) temporary-directory variables that are not ONE
+    plain absolute path (inside the work root when `inside` is given), with
+    TMP/TEMP/JAVA_TOOL_OPTIONS exactly derived from TMPDIR. Returns TMPDIR
+    (None when the run has none: run_engine may, a graded run may not)."""
+    tmp = env.get("TMPDIR")
+    if tmp is None:
+        extra = [k for k in _GRADING_TMP if k in env]
+        if extra:
+            raise OracleError(f"{extra} without TMPDIR")
+        return None
+    if (not os.path.isabs(tmp) or _PLAIN_PATH_BAD.search(tmp)
+            or ".." in Path(tmp).parts or (inside is not None and not inside(Path(tmp)))):
+        raise OracleError(f"TMPDIR={tmp} is not one plain absolute path"
+                          + (" inside the oracle work root" if inside else ""))
+    want = {"TMP": tmp, "TEMP": tmp, "JAVA_TOOL_OPTIONS": java_tool_options(tmp)}
+    bad = [k for k, v in want.items() if env.get(k) != v]
+    if bad:
+        raise OracleError(f"{bad} are not derived from TMPDIR={tmp}")
+    return tmp
+
+
+def make_private_tmp(env: dict, inside=None) -> None:
+    """Create the run's TMPDIR (checked first) before the engine starts."""
+    tmp = check_private_tmp(env, inside)
+    if tmp is not None:
+        Path(tmp).mkdir(parents=True, exist_ok=True)
+
+
 def oracle_tex_vars(td) -> dict:
     """ONLY the variables that shape a graded run (no host environment)."""
-    return {**private_texmf_vars(td), **ORACLE_TEX_VARS}
+    return {**private_texmf_vars(td), **private_tmp_vars(td), **ORACLE_TEX_VARS}
 
 
 def oracle_tex_env(td) -> dict:
@@ -217,6 +295,8 @@ def oracle_tex_env(td) -> dict:
 #     forwarded);
 #   * the private TEXMFHOME/TEXMFVAR the caller names, which are REQUIRED (a
 #     run without them would share the container's persistent TEXMFVAR);
+#   * the private TMPDIR beside them, REQUIRED (C-93), with TMP, TEMP and
+#     JAVA_TOOL_OPTIONS derived from it (see private_tmp_vars);
 #   * nothing else: every other `_ENV_FORWARD` variable (FORCE_SOURCE_DATE,
 #     max_print_line, error_line, half_error_line, TEXINPUTS, BIBINPUTS,
 #     BSTINPUTS) is DROPPED. No grader sets one, so one in the dict came from
@@ -233,7 +313,9 @@ _GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG")
 
 def graded_env(env: dict | None) -> dict:
     """The TeX variables of a GRADED pdflatex run built from `env`: its
-    private TEXMFHOME/TEXMFVAR/TEXMFCONFIG (required), ORACLE_TEX_VARS imposed, every other
+    private TEXMFHOME/TEXMFVAR/TEXMFCONFIG (required), its private TMPDIR
+    beside them (required; TMP/TEMP/JAVA_TOOL_OPTIONS derived from it, C-93),
+    ORACLE_TEX_VARS imposed, every other
     `_ENV_FORWARD` variable dropped. See the block above. Non-TeX keys of `env`
     are kept here but never reach the engine: each backend passes only
     `engine_env` (the image's environment plus `_ENV_FORWARD` variables)."""
@@ -244,8 +326,21 @@ def graded_env(env: dict | None) -> dict:
             f"a graded run needs a private {'/'.join(missing)} (oracle_tex_vars "
             f"or tex_env): without one the container's persistent TEXMFVAR "
             f"carries state from run to run")
+    # C-93: the run's temporary files live with its private trees. TMPDIR is
+    # REQUIRED and must be the private one beside TEXMFVAR (a host TMPDIR --
+    # /tmp, /var/folders/... -- is refused, not forwarded); TMP, TEMP and
+    # JAVA_TOOL_OPTIONS are derived from it, never taken from `env`.
+    tmp = env.get("TMPDIR")
+    want_tmp = private_tmp_vars(Path(env["TEXMFVAR"]).parent)["TMPDIR"]
+    if tmp != want_tmp:
+        raise OracleError(
+            f"a graded run needs its private TMPDIR={want_tmp} (oracle_tex_vars "
+            f"or tex_env), got {tmp!r}: without it restricted \\write18 "
+            f"(repstopdf -> gs, mktex*) leaves temporary files in the "
+            f"long-lived container's /tmp (C-93)")
     out = {k: v for k, v in env.items() if not _ENV_FORWARD.match(k)}
     out.update({k: env[k] for k in _GRADING_TEXMF if k in env})
+    out.update(private_tmp_vars(Path(env["TEXMFVAR"]).parent))
     out.update(ORACLE_TEX_VARS)
     return out
 
@@ -327,6 +422,9 @@ def host_tex_overrides(environ=None) -> list[str]:
     return sorted(f"{k}={v}" for k, v in environ.items()
                   if (_ENV_FORWARD.match(k) or _HOST_TEX_NOTE.match(k))
                   and k != "L0_VALIDATORS"
+                  # a host TMPDIR is ubiquitous (macOS sets one) and shapes no
+                  # grade; the run's own private one replaces it (C-93)
+                  and k not in ("TMPDIR", "TMP", "TEMP")
                   and not (k in ORACLE_TEX_VARS and v == ORACLE_TEX_VARS[k])
                   and not (k in IMAGE_ENV and v == IMAGE_ENV[k]))
 
@@ -866,9 +964,26 @@ class _Base:
         docstring for why each step exists."""
         work = Path(work)
         pdf_path = work / (Path(toplevel).stem + ".pdf")
+        log_path = work / (Path(toplevel).stem + ".log")
+
+        # EACH PASS'S EVIDENCE IS ITS OWN (C-95). pdfTeX opens its PDF at the
+        # first shipout, so a pass with "No pages of output." leaves the
+        # PREVIOUS pass's PDF in place, and `compiles = rc 0 AND a PDF` was
+        # read off a stale file: an aux-oscillating document (pages on one
+        # pass, none on the confirming one) graded compiles. So the PDF and
+        # the log (which graders read for the first error) are deleted before
+        # every pass, through the oracle (ContainerOracle.remove keeps the
+        # guest's dentry cache coherent). The .aux/.toc/... stay: carrying
+        # them from pass to pass IS the protocol.
+        def one_pass():
+            stale = [p for p in (pdf_path, log_path) if p.exists()]
+            if stale:
+                self.remove(stale)
+            return self.run_once(work, toplevel, env, timeout)
+
         rc, passes = -1, 0
         for _ in range(max_passes):
-            rc, to = self.run_once(work, toplevel, env, timeout)
+            rc, to = one_pass()
             passes += 1
             if to:
                 return OracleRun(-1, passes, pdf_path.is_file(), True)
@@ -876,7 +991,7 @@ class _Base:
                 break
         if rc != 0:
             return OracleRun(rc, passes, pdf_path.is_file(), False)
-        rc, to = self.run_once(work, toplevel, env, timeout)
+        rc, to = one_pass()
         passes += 1
         if to:
             return OracleRun(-1, passes, pdf_path.is_file(), True)
@@ -918,6 +1033,7 @@ class NativeOracle(_Base):
         # image's environment plus the forwarded TeX variables of `env`, and
         # nothing else of the caller's dict or the host's. graded_env and
         # run_engine have already chosen those TeX variables.
+        make_private_tmp(env or {})  # C-93: checked, then created
         env = engine_env(env, self.engine_base)
         _require_free_space(cwd, "before")
         try:
@@ -1169,12 +1285,26 @@ class ContainerOracle(_Base):
                 continue  # an empty tree's directories; files: check_texmf_trees
             bad.append(path)
         if bad:
+            # WHEN each changed (its ctime), so the run that left it can be
+            # found in a grader's log: a graded run's temporary files live in
+            # its own work directory since C-93, so a /tmp/gs_* or
+            # /tmp/mt*.tmp here was left by a run killed mid-conversion under
+            # an older oracle, or by an exec outside the protocol.
+            st = self._dk("exec", self.name, "stat", "--format=%z %n", "--",
+                          *bad[:6], timeout=60)
+            when = st.stdout.decode(errors="replace").strip().splitlines()
             raise OracleError(
                 f"container {self.name}: {len(bad)} path(s) changed since it was "
-                f"created ({created}), e.g. {bad[:6]}. The container is no longer "
-                f"the pinned image; refusing to grade. Inspect them (`docker "
-                f"exec {self.name} ls -la --time-style=full-iso PATH`), then "
-                f"`_oracle.py stop` so the oracle starts a clean one.")
+                f"created ({created}), e.g. {bad[:6]}"
+                + (f" (ctime: {'; '.join(when)})" if when else "")
+                + f". The container is no longer the pinned image; refusing to "
+                f"grade. Inspect them (`docker exec {self.name} ls -la "
+                f"--time-style=full-iso PATH`), then `_oracle.py stop` so the "
+                f"oracle starts a clean one. A graded run keeps its temporary "
+                f"files in its own work directory (TMPDIR, C-93): a leftover "
+                f"/tmp/gs_* (Ghostscript under repstopdf) or /tmp/mt*.tmp "
+                f"(mktex*) comes from a run killed mid-conversion by an older "
+                f"oracle or from something outside the protocol.")
 
     def tempdir(self, prefix: str = "lp-oracle-"):
         return tempfile.TemporaryDirectory(prefix=prefix, dir=self.workroot)
@@ -1234,6 +1364,10 @@ class ContainerOracle(_Base):
                 f"{cwd} is outside the oracle work root {self.workroot}, so the "
                 f"container cannot see it. Create work directories with "
                 f"oracle.tempdir().")
+        # C-93: the run's private TMPDIR, checked (one plain absolute path
+        # inside the work root, TMP/TEMP/JAVA_TOOL_OPTIONS derived from it)
+        # and created on the host, where the container sees it.
+        make_private_tmp(env or {}, self._inside)
         _require_free_space(cwd, "before")
         cmd = ["exec", "-w", str(cwd), "-e", "HOME=/tmp"]
         for k, v in sorted((env or {}).items()):

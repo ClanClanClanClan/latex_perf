@@ -149,8 +149,11 @@ let load_signatures path members ~kernel_key ~contract_key =
 (* The one-argument commands' signatures (Contract.v [asig]), written by
    scripts/tools/gen_strict_arg_signatures.py from solo probes. JSON per name:
    {"long": "long"|"short_inner"|"short_outer", "text": ["now", R] | ["after",
-   R] | ["run", material, P], "math": ["now", R] | ["after", R] | ["run", P]}
-   with P one of "text", "text_restricted", "math". *)
+   R] | ["run", material, P, G], "math": ["now", R] | ["after", R] | ["run", P,
+   G]} with P one of "text", "text_restricted", "math" and G the number of TeX
+   groups the command holds open while its argument runs (Contract.v
+   [TRun]/[MRun], measured by the generator's capacity stage, C-94); a run
+   behaviour without G is refused, never defaulted. *)
 let longness_of = function
   | `String "long" -> K.LLong
   | `String "short_inner" -> K.LShortInner
@@ -171,13 +174,14 @@ let string_of_pay = function
 let arg_text_of = function
   | `List [ `String "now"; `String r ] -> K.TFatalNow (reason_of_string r)
   | `List [ `String "after"; `String r ] -> K.TFatalAfter (reason_of_string r)
-  | `List [ `String "run"; `Bool m; p ] -> K.TRun (m, pay_of p)
+  | `List [ `String "run"; `Bool m; p; `Int g ] when g >= 0 ->
+      K.TRun (m, pay_of p, g)
   | _ -> failwith "bad argument text behaviour"
 
 let arg_math_of = function
   | `List [ `String "now"; `String r ] -> K.MFatalNow (reason_of_string r)
   | `List [ `String "after"; `String r ] -> K.MFatalAfter (reason_of_string r)
-  | `List [ `String "run"; p ] -> K.MRun (pay_of p)
+  | `List [ `String "run"; p; `Int g ] when g >= 0 -> K.MRun (pay_of p, g)
   | _ -> failwith "bad argument math behaviour"
 
 let asig_of v =
@@ -426,9 +430,9 @@ let head_label = function
   | K.FShift (false, _, _) :: _ -> "inline"
   | K.FShift (true, _, _) :: _ -> "display"
   | K.FMGroup _ :: _ -> "mgroup"
-  | K.FArg (_, K.PText false, _, _) :: _ -> "arg.text"
-  | K.FArg (_, K.PText true, _, _) :: _ -> "arg.textr"
-  | K.FArg (_, K.PMath, _, _) :: _ -> "arg.math"
+  | K.FArg (_, K.PText false, _, _, _) :: _ -> "arg.text"
+  | K.FArg (_, K.PText true, _, _, _) :: _ -> "arg.textr"
+  | K.FArg (_, K.PMath, _, _, _) :: _ -> "arg.math"
 
 let text_cls = function
   | K.TxMaterial -> "material"
@@ -445,13 +449,13 @@ let math_cls = function
 let arg_text_cls = function
   | K.TFatalNow r -> "now." ^ string_of_reason r
   | K.TFatalAfter r -> "after." ^ string_of_reason r
-  | K.TRun (m, p) ->
+  | K.TRun (m, p, _) ->
       "run." ^ (if m then "material." else "noop.") ^ string_of_pay p
 
 let arg_math_cls = function
   | K.MFatalNow r -> "now." ^ string_of_reason r
   | K.MFatalAfter r -> "after." ^ string_of_reason r
-  | K.MRun p -> "run." ^ string_of_pay p
+  | K.MRun (p, _) -> "run." ^ string_of_pay p
 
 let cs_label c math n =
   if not (c.K.c_defined n) then "cs:undef"
@@ -700,8 +704,183 @@ let event_fields c toks l =
         ("deferred", `Bool false);
       ]
 
+(* ---- capacity (C-94): the frame stack at the run's peak ----------------- *)
+
+(* FOR THE CAPACITY PROBES' COVERAGE ONLY (check_strict_kernel.py, item 9):
+   the label of the frame a step just pushed, by the frame's constructor and
+   the token that opened it -- the grammar has two openers for each kind of
+   formula, and an argument frame is labelled by its command's name. The
+   GROUP COUNTS reported next to these labels are the extracted Coq functions'
+   ([Decide.groups], [Decide.peak]); only the labels are this file's. *)
+let pushed_label (t : K.tok) (fs : K.frame list) =
+  match fs with
+  | [] -> "?"
+  | f :: _ -> (
+      match f with
+      | K.FSimple -> if K.restricted fs then "simple.r" else "simple"
+      | K.FShift (false, _, _) -> (
+          match t with
+          | K.TMOpenInline -> "inline.paren"
+          | _ -> "inline.dollar")
+      | K.FShift (true, _, _) -> (
+          match t with
+          | K.TMOpenDisplay -> "display.bracket"
+          | _ -> "display.dollars")
+      | K.FMGroup (true, _, _) -> "script"
+      | K.FMGroup (false, _, _) -> "mgroup"
+      | K.FArg (_, p, _, _, _) ->
+          "arg." ^ string_of_pay p ^ ":"
+          ^ (match t with K.TCs n -> string_of_chars n | _ -> "?"))
+
+(* One step of [run] (Go1/Go2) with the label stack kept beside the frames:
+   the new state, the rest of the stream, the new labels; None when the run
+   stops (a stop halts pdfTeX; a deferred error only scans). *)
+let label_step c (s : K.state) labels t rest =
+  let nx = match rest with x :: _ -> Some x | [] -> None in
+  let adv (s' : K.state) rest' =
+    let n0 = List.length s.K.s_frames and n1 = List.length s'.K.s_frames in
+    let labels' =
+      if n1 > n0 then pushed_label t s'.K.s_frames :: labels
+      else if n1 < n0 then match labels with _ :: l -> l | [] -> []
+      else labels
+    in
+    Some (s', rest', labels')
+  in
+  match K.step c s t nx with
+  | K.Go1 s' -> adv s' rest
+  | K.Go2 s' -> ( match rest with _ :: r -> adv s' r | [] -> None)
+  | K.Stop _ | K.Stuck | K.Defer _ | K.Defer2 _ -> None
+
+(* The most groups a state of the run holds ([K.peak], the extracted
+   function) and the labels of that state's frames, innermost first. *)
+let peak_frames c toks =
+  let rec go s labels best = function
+    | [] -> best
+    | t :: rest -> (
+        match label_step c s labels t rest with
+        | None -> best
+        | Some (s', rest', labels') ->
+            let g = K.groups s'.K.s_frames in
+            let best = if g > fst best then (g, labels') else best in
+            go s' labels' best rest')
+  in
+  let g, labels = go K.init [] (0, []) toks in
+  let p = K.peak c K.init toks in
+  if p <> g then failwith "peak_frames: the label walk disagrees with Decide.peak";
+  (p, labels)
+
+let peak_fields c toks =
+  let p, labels = peak_frames c toks in
+  [
+    ("peak_groups", `Int p);
+    ("peak_frames", `List (List.map (fun l -> `String l) labels));
+  ]
+
+let json_of_tok = function
+  | K.TChar ch -> `List [ `String "char"; `String (String.make 1 ch) ]
+  | K.TSpace -> `List [ `String "space" ]
+  | K.TPar e -> `List [ `String "par"; `Bool e ]
+  | K.TCs n -> `List [ `String "cs"; `String (string_of_chars n) ]
+  | t -> `List [ `String (tok_name t) ]
+
+(* THE FRAME-KIND COMBINATIONS (C-94), derived from the extracted model: a
+   breadth-first search from [K.init] over every token of the grammar (every
+   constructor of [tok]: a character, a space, both paragraph breaks, the
+   braces, $, the four delimiters, both scripts, \end{document}, an undefined
+   control word, every admitted name of each signature class and every
+   one-argument command of the contract), each with every possible next
+   token, through the extracted [K.step]. Every step that pushes a frame gives
+   a pair (the label below, the label pushed) with the token path from [init]
+   that reaches it. Frame stacks are explored to [depth] labels. *)
+let frame_pairs c ~names ~depth =
+  let letters n = K.TCs (chars_of_string n) in
+  let alphabet =
+    [
+      K.TChar 'x';
+      K.TSpace;
+      K.TPar false;
+      K.TPar true;
+      K.TOpen;
+      K.TClose;
+      K.TDollar;
+      K.TMOpenInline;
+      K.TMCloseInline;
+      K.TMOpenDisplay;
+      K.TMCloseDisplay;
+      K.TScript true;
+      K.TScript false;
+      K.TEnd;
+    ]
+    @ List.map letters names
+  in
+  (* exhaustive over [tok]: a constructor added to the grammar and missing
+     from the alphabet fails to compile here *)
+  List.iter
+    (function
+      | K.TChar _ | K.TSpace | K.TPar _ | K.TOpen | K.TClose | K.TDollar
+      | K.TMOpenInline | K.TMCloseInline | K.TMOpenDisplay | K.TMCloseDisplay
+      | K.TScript _ | K.TCs _ | K.TEnd ->
+          ())
+    alphabet;
+  let nexts = None :: List.map (fun t -> Some t) alphabet in
+  let pairs = Hashtbl.create 64 and order = ref [] in
+  let seen = Hashtbl.create 1024 in
+  let q = Queue.create () in
+  Queue.add (K.init, [], []) q;
+  while not (Queue.is_empty q) do
+    let s, labels, path = Queue.pop q in
+    if List.length labels < depth then
+      List.iter
+        (fun t ->
+          List.iter
+            (fun nx ->
+              let rest = match nx with Some x -> [ x ] | None -> [] in
+              match label_step c s labels t rest with
+              | Some (s', rest', labels')
+                when List.length s'.K.s_frames > List.length s.K.s_frames ->
+                  let consumed =
+                    if List.length rest' < List.length rest then [ t; List.hd rest ]
+                    else [ t ]
+                  in
+                  let below = match labels with l :: _ -> l | [] -> "top" in
+                  let above = List.hd labels' in
+                  let path' = path @ [ consumed ] in
+                  let key = below ^ " > " ^ above in
+                  if not (Hashtbl.mem pairs key) then (
+                    Hashtbl.replace pairs key (below, above, path', nx);
+                    order := key :: !order);
+                  let skey = String.concat "/" labels' in
+                  if not (Hashtbl.mem seen skey) then (
+                    Hashtbl.replace seen skey ();
+                    Queue.add (s', labels', path') q)
+              | _ -> ())
+            nexts)
+        alphabet
+  done;
+  let js =
+    List.rev_map
+      (fun key ->
+        let below, above, path, _ = Hashtbl.find pairs key in
+        `Assoc
+          [
+            ("below", `String below);
+            ("above", `String above);
+            ( "path",
+              `List
+                (List.map (fun toks -> `List (List.map json_of_tok toks)) path)
+            );
+          ])
+      !order
+  in
+  `Assoc
+    [
+      ("depth", `Int depth);
+      ("alphabet", `List (List.map json_of_tok alphabet));
+      ("pairs", `List js);
+    ]
+
 (* The tree mode of phase 1: JSON lines of trees or token streams. *)
-let tree_mode ~kernel ~contract ~sigs ~asigs =
+let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
   let members = load_members kernel contract in
   let kernel_key = content_key kernel "meanings_sha256" in
   let contract_key = content_key contract "config_key" in
@@ -756,6 +935,29 @@ let tree_mode ~kernel ~contract ~sigs ~asigs =
           | None -> if Hashtbl.mem local n then None else Hashtbl.find_opt ag n);
     }
   in
+  if pairs then (
+    (* --frame-pairs: every one-argument command, one admitted name of each
+       signature class (a name without an argument never pushes a frame, but
+       it is a token of the grammar), and an undefined name *)
+    let c = contract_for `Null `Null in
+    let reps = Hashtbl.create 16 in
+    Hashtbl.iter
+      (fun n (x : K.signature) ->
+        let k = text_cls x.K.sig_text ^ "/" ^ math_cls x.K.sig_math in
+        match Hashtbl.find_opt reps k with
+        | Some m when m <= n -> ()
+        | _ -> Hashtbl.replace reps k n)
+      sg;
+    let args = Hashtbl.fold (fun n _ acc -> n :: acc) ag [] in
+    let names =
+      List.sort compare args
+      @ List.sort compare (Hashtbl.fold (fun _ n acc -> n :: acc) reps [])
+      @ [ "lpqundefa" ]
+    in
+    if Hashtbl.mem members "lpqundefa" then
+      failwith "frame pairs: lpqundefa is defined";
+    print_endline (Yojson.Safe.to_string (frame_pairs c ~names ~depth:4)))
+  else
   try
     while true do
       let line = input_line stdin in
@@ -789,7 +991,7 @@ let tree_mode ~kernel ~contract ~sigs ~asigs =
                     List.for_all (fun t -> K.tok_ok c t) toks
                     && K.scripts_ok toks
                     && K.wfa c 0 toks
-                    && K.bounded toks
+                    && K.bounded c toks
                   in
                   ( toks,
                     string_of_chars (K.header @ K.render_toks toks),
@@ -814,6 +1016,7 @@ let tree_mode ~kernel ~contract ~sigs ~asigs =
                 ("rules", `List (List.map (fun r -> `String r) rules));
                 ("branches", `List (List.map (fun b -> `String b) branches));
               ]
+              @ peak_fields c toks
             in
             match verdict with
             | K.ProvenReady -> `Assoc (base @ [ ("verdict", `String "ready") ])
@@ -895,12 +1098,12 @@ let b_asig (a : K.asig) : B.asig =
       (match a.K.as_text with
       | K.TFatalNow r -> B.TFatalNow (b_reason r)
       | K.TFatalAfter r -> B.TFatalAfter (b_reason r)
-      | K.TRun (m, p) -> B.TRun (m, b_pay p));
+      | K.TRun (m, p, g) -> B.TRun (m, b_pay p, g));
     B.as_math =
       (match a.K.as_math with
       | K.MFatalNow r -> B.MFatalNow (b_reason r)
       | K.MFatalAfter r -> B.MFatalAfter (b_reason r)
-      | K.MRun p -> B.MRun (b_pay p));
+      | K.MRun (p, g) -> B.MRun (b_pay p, g));
   }
 
 let k_tok = function
@@ -1308,6 +1511,7 @@ let decide_bytes_json kc (bc : B.bcontract) (b : char list) =
       ("nbytes", `Int (List.length b));
       ("in_strict", `Bool (B.in_strict_bytes_b bc b));
       ("rules", strs rules);
+      ("peak_groups", `Int (fst (peak_frames kc ktoks)));
       ("branches", strs branches);
       ("lex_rules", strs (lrules @ frules));
       ("lex_branches", strs (lbranches @ fbranches));
@@ -1409,6 +1613,7 @@ let () =
   let kernel = ref "" and contract = ref "" and sigs = ref None in
   let asigs = ref None in
   let lexical = ref "" and bytes = ref false and file = ref None in
+  let pairs = ref false in
   Arg.parse
     [
       ("--kernel", Arg.Set_string kernel, "kernel names file");
@@ -1419,6 +1624,9 @@ let () =
         "one-argument commands' signatures file (slice A)" );
       ("--lexical", Arg.Set_string lexical, "lexical contract (bytes)");
       ("--bytes", Arg.Set bytes, "JSON lines of files as hex (bytes mode)");
+      ( "--frame-pairs",
+        Arg.Set pairs,
+        "print the frame-kind combinations of the model (C-94) and exit" );
     ]
     (fun f -> file := Some f)
     "strict_decide.exe --kernel K --contract C [--signatures S] \
@@ -1476,4 +1684,5 @@ let () =
         bytes_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs ~asigs:!asigs
           ~lexical:!lexical)
       else
-        tree_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs ~asigs:!asigs
+        tree_mode ~pairs:!pairs ~kernel:!kernel ~contract:!contract ~sigs:!sigs
+          ~asigs:!asigs ()

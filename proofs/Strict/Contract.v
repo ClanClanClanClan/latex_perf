@@ -80,7 +80,16 @@ Record signature := mkSig { sig_text : text_beh; sig_math : math_beh }.
       something even for an empty argument).  In math a run argument always
       leaves a fresh tail: the result is a noad, or a node that is not one (a
       box, a choice), and then TeX gives a following script a new empty
-      noad. *)
+      noad.
+    - [g] of [TRun]/[MRun] (correction C-94): the number of TeX GROUPS the
+      command holds open while its argument runs (an hbox is one, the
+      [\hmode@bgroup] of a text font command is one, [\underline] in text
+      opens a formula, a math group and an hbox: three).  It is the
+      argument frame's share of TeX's grouping level (Decide.v [groups]),
+      MEASURED per name and per mode by the capacity probes of
+      gen_strict_arg_signatures.py (the deepest nesting of the argument
+      that compiles, against the measured capacity of the body), never read
+      from a definition. *)
 
 Inductive longness := LLong | LShortInner | LShortOuter.
 
@@ -92,12 +101,12 @@ Inductive pay := PText (restricted : bool) | PMath.
 Inductive arg_text :=
 | TFatalNow (r : reason)
 | TFatalAfter (r : reason)
-| TRun (material : bool) (p : pay).
+| TRun (material : bool) (p : pay) (g : nat).
 
 Inductive arg_math :=
 | MFatalNow (r : reason)
 | MFatalAfter (r : reason)
-| MRun (p : pay).
+| MRun (p : pay) (g : nat).
 
 Record asig := mkASig { as_long : longness; as_text : arg_text; as_math : arg_math }.
 

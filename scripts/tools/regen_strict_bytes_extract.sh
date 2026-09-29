@@ -63,7 +63,7 @@ HEADER='(* GENERATED — DO NOT EDIT BY HAND.
    (scripts/tools/strict_differential.py --bytes).
 
    nat is extracted to OCaml int (ExtrOcamlNatInt): token positions, line
-   numbers, byte offsets and lengths, all non-negative. *)
+   numbers, byte offsets, lengths and TeX group counts, all non-negative. *)
 
 [@@@warning "-a"]
 '

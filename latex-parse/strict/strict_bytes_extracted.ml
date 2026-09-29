@@ -15,7 +15,7 @@
    (scripts/tools/strict_differential.py --bytes).
 
    nat is extracted to OCaml int (ExtrOcamlNatInt): token positions, line
-   numbers, byte offsets and lengths, all non-negative. *)
+   numbers, byte offsets, lengths and TeX group counts, all non-negative. *)
 
 [@@@warning "-a"]
 
@@ -43,12 +43,6 @@ let pred n = Stdlib.max 0 (n - 1)
 let rec add = ( + )
 
 module Nat = struct
-  let pred n0 =
-    (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
-      (fun _ -> n0)
-      (fun u -> u)
-      n0
-
   let rec add n0 m =
     (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
       (fun _ -> m)
@@ -62,6 +56,16 @@ module Nat = struct
       n0
 
   let ltb n0 m = Stdlib.Int.succ n0 <= m
+
+  let rec max n0 m =
+    (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+      (fun _ -> m)
+      (fun n' ->
+        (fun fO fS n -> if n = 0 then fO () else fS (n - 1))
+          (fun _ -> n0)
+          (fun m' -> Stdlib.Int.succ (max n' m'))
+          m)
+      n0
 end
 
 type positive = XI of positive | XO of positive | XH
@@ -233,9 +237,13 @@ type pay = PText of bool | PMath
 type arg_text =
   | TFatalNow of reason
   | TFatalAfter of reason
-  | TRun of bool * pay
+  | TRun of bool * pay * int
 
-type arg_math = MFatalNow of reason | MFatalAfter of reason | MRun of pay
+type arg_math =
+  | MFatalNow of reason
+  | MFatalAfter of reason
+  | MRun of pay * int
+
 type asig = { as_long : longness; as_text : arg_text; as_math : arg_math }
 
 type contract = {
@@ -248,7 +256,7 @@ type frame =
   | FSimple
   | FShift of bool * bool * bool
   | FMGroup of bool * bool * bool
-  | FArg of longness * pay * bool * bool
+  | FArg of longness * pay * int * bool * bool
 
 type state = { s_frames : frame list; s_out : bool; s_pos : int }
 
@@ -263,7 +271,8 @@ let in_math = function
       | FSimple -> false
       | FShift (_, _, _) -> true
       | FMGroup (_, _, _) -> true
-      | FArg (_, p, _, _) -> ( match p with PText _ -> false | PMath -> true))
+      | FArg (_, p, _, _, _) -> (
+          match p with PText _ -> false | PMath -> true))
 
 let tail_has up = function
   | [] -> false
@@ -272,7 +281,7 @@ let tail_has up = function
       | FSimple -> false
       | FShift (_, sp0, sb) -> if up then sp0 else sb
       | FMGroup (_, sp0, sb) -> if up then sp0 else sb
-      | FArg (_, p, sp0, sb) -> (
+      | FArg (_, p, _, sp0, sb) -> (
           match p with PText _ -> false | PMath -> if up then sp0 else sb))
 
 let fresh_tail fs =
@@ -283,7 +292,7 @@ let fresh_tail fs =
       | FSimple -> fs
       | FShift (d, _, _) -> FShift (d, false, false) :: r
       | FMGroup (g, _, _) -> FMGroup (g, false, false) :: r
-      | FArg (l, p, _, _) -> FArg (l, p, false, false) :: r)
+      | FArg (l, p, g, _, _) -> FArg (l, p, g, false, false) :: r)
 
 let mark_script up fs =
   match fs with
@@ -295,8 +304,9 @@ let mark_script up fs =
           FShift (d, (if up then true else sp0), if up then sb else true) :: r
       | FMGroup (g, sp0, sb) ->
           FMGroup (g, (if up then true else sp0), if up then sb else true) :: r
-      | FArg (l, p, sp0, sb) ->
-          FArg (l, p, (if up then true else sp0), if up then sb else true) :: r)
+      | FArg (l, p, g, sp0, sb) ->
+          FArg (l, p, g, (if up then true else sp0), if up then sb else true)
+          :: r)
 
 let mgroup_head = function
   | [] -> false
@@ -305,7 +315,8 @@ let mgroup_head = function
       | FSimple -> false
       | FShift (_, _, _) -> false
       | FMGroup (_, _, _) -> true
-      | FArg (_, p, _, _) -> ( match p with PText _ -> false | PMath -> true))
+      | FArg (_, p, _, _, _) -> (
+          match p with PText _ -> false | PMath -> true))
 
 let rec restricted = function
   | [] -> false
@@ -314,25 +325,25 @@ let rec restricted = function
       | FSimple -> restricted r
       | FShift (_, _, _) -> false
       | FMGroup (_, _, _) -> false
-      | FArg (_, p, _, _) -> ( match p with PText b -> b | PMath -> false))
+      | FArg (_, p, _, _, _) -> ( match p with PText b -> b | PMath -> false))
 
 let is_arg_frame = function
   | FSimple -> false
   | FShift (_, _, _) -> false
   | FMGroup (_, _, _) -> false
-  | FArg (_, _, _, _) -> true
+  | FArg (_, _, _, _, _) -> true
 
 let is_brace = function
   | FSimple -> true
   | FShift (_, _, _) -> false
   | FMGroup (_, _, _) -> true
-  | FArg (_, _, _, _) -> true
+  | FArg (_, _, _, _, _) -> true
 
 let short_frame = function
   | FSimple -> false
   | FShift (_, _, _) -> false
   | FMGroup (_, _, _) -> false
-  | FArg (l, _, _, _) -> (
+  | FArg (l, _, _, _, _) -> (
       match l with LLong -> false | LShortInner -> true | LShortOuter -> true)
 
 let in_arg fs = existsb is_arg_frame fs
@@ -362,7 +373,7 @@ let rec outer_short = function
         | FSimple -> false
         | FShift (_, _, _) -> false
         | FMGroup (_, _, _) -> false
-        | FArg (l, _, _, _) -> (
+        | FArg (l, _, _, _, _) -> (
             match l with
             | LLong -> false
             | LShortInner -> false
@@ -489,42 +500,6 @@ let rec wfa c need = function
           else wfa c need r
       | TEnd -> need = 0)
 
-let ten =
-  Stdlib.Int.succ
-    (Stdlib.Int.succ
-       (Stdlib.Int.succ
-          (Stdlib.Int.succ
-             (Stdlib.Int.succ
-                (Stdlib.Int.succ
-                   (Stdlib.Int.succ
-                      (Stdlib.Int.succ (Stdlib.Int.succ (Stdlib.Int.succ 0)))))))))
-
-let max_brace_depth =
-  Nat.mul (Stdlib.Int.succ (Stdlib.Int.succ 0)) (Nat.mul ten ten)
-
-let max_tokens = Nat.mul max_brace_depth (Nat.mul ten ten)
-
-let rec depth_ok_from k = function
-  | [] -> true
-  | t :: r -> (
-      match t with
-      | TChar _ -> depth_ok_from k r
-      | TSpace -> depth_ok_from k r
-      | TPar _ -> depth_ok_from k r
-      | TOpen ->
-          Nat.ltb k max_brace_depth && depth_ok_from (Stdlib.Int.succ k) r
-      | TClose -> depth_ok_from (Nat.pred k) r
-      | TDollar -> depth_ok_from k r
-      | TMOpenInline -> depth_ok_from k r
-      | TMCloseInline -> depth_ok_from k r
-      | TMOpenDisplay -> depth_ok_from k r
-      | TMCloseDisplay -> depth_ok_from k r
-      | TScript _ -> depth_ok_from k r
-      | TCs _ -> depth_ok_from k r
-      | TEnd -> depth_ok_from k r)
-
-let bounded ts = length ts <= max_tokens && depth_ok_from 0 ts
-
 type step_res =
   | Go1 of state
   | Go2 of state
@@ -618,7 +593,7 @@ let step c s t nx =
           | FShift (_, _, _) -> halt fs E5 p
           | FMGroup (_, _, _) ->
               Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
-          | FArg (_, _, _, _) ->
+          | FArg (_, _, _, _, _) ->
               Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }))
   | TDollar -> (
       match fs with
@@ -988,7 +963,7 @@ let step c s t nx =
                         s_out = true;
                         s_pos = Stdlib.Int.succ p;
                       })
-          | FArg (_, _, _, _) -> (
+          | FArg (_, _, _, _, _) -> (
               if mgroup_head fs then halt fs E5 p
               else if restricted fs then
                 Go1
@@ -1118,7 +1093,7 @@ let step c s t nx =
               if display then halt fs E5 p
               else Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
           | FMGroup (_, _, _) -> halt fs E5 p
-          | FArg (_, _, _, _) -> halt fs E5 p))
+          | FArg (_, _, _, _, _) -> halt fs E5 p))
   | TMOpenDisplay ->
       if in_math fs then halt fs E5 p
       else if restricted fs then
@@ -1141,7 +1116,7 @@ let step c s t nx =
                 Go1 { s_frames = r; s_out = o; s_pos = Stdlib.Int.succ p }
               else halt fs E5 p
           | FMGroup (_, _, _) -> halt fs E5 p
-          | FArg (_, _, _, _) -> halt fs E5 p))
+          | FArg (_, _, _, _, _) -> halt fs E5 p))
   | TScript up -> (
       if negb (in_math fs) then halt fs E3 p
       else if tail_has up fs then halt fs E4 p
@@ -1215,7 +1190,8 @@ let step c s t nx =
                           | TOpen ->
                               Defer2
                                 (start_scan
-                                   (FArg (a.as_long, PText false, false, false)
+                                   (FArg
+                                      (a.as_long, PText false, 0, false, false)
                                    :: fs)
                                    r)
                           | TClose -> Stuck
@@ -1228,7 +1204,7 @@ let step c s t nx =
                           | TCs _ -> Stuck
                           | TEnd -> Stuck)
                       | None -> Stuck)
-                  | MRun pl -> (
+                  | MRun (pl, g) -> (
                       match nx with
                       | Some t0 -> (
                           match t0 with
@@ -1239,7 +1215,7 @@ let step c s t nx =
                               Go2
                                 {
                                   s_frames =
-                                    FArg (a.as_long, pl, false, false)
+                                    FArg (a.as_long, pl, g, false, false)
                                     :: fresh_tail fs;
                                   s_out = o;
                                   s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
@@ -1267,7 +1243,8 @@ let step c s t nx =
                           | TOpen ->
                               Defer2
                                 (start_scan
-                                   (FArg (a.as_long, PText false, false, false)
+                                   (FArg
+                                      (a.as_long, PText false, 0, false, false)
                                    :: fs)
                                    r)
                           | TClose -> Stuck
@@ -1280,7 +1257,7 @@ let step c s t nx =
                           | TCs _ -> Stuck
                           | TEnd -> Stuck)
                       | None -> Stuck)
-                  | TRun (m, pl) -> (
+                  | TRun (m, pl, g) -> (
                       match nx with
                       | Some t0 -> (
                           match t0 with
@@ -1291,7 +1268,7 @@ let step c s t nx =
                               Go2
                                 {
                                   s_frames =
-                                    FArg (a.as_long, pl, false, false) :: fs;
+                                    FArg (a.as_long, pl, g, false, false) :: fs;
                                   s_out = o || m;
                                   s_pos = Stdlib.Int.succ (Stdlib.Int.succ p);
                                 }
@@ -1326,6 +1303,62 @@ let rec run c s = function
           | [] -> None
           | _ :: rest' ->
               scan_run sc (Stdlib.Int.succ (Stdlib.Int.succ s.s_pos)) rest'))
+
+let ten =
+  Stdlib.Int.succ
+    (Stdlib.Int.succ
+       (Stdlib.Int.succ
+          (Stdlib.Int.succ
+             (Stdlib.Int.succ
+                (Stdlib.Int.succ
+                   (Stdlib.Int.succ
+                      (Stdlib.Int.succ (Stdlib.Int.succ (Stdlib.Int.succ 0)))))))))
+
+let max_groups = Nat.mul (Stdlib.Int.succ (Stdlib.Int.succ 0)) (Nat.mul ten ten)
+let max_tokens = Nat.mul max_groups (Nat.mul ten ten)
+let max_name = Nat.mul ten ten
+
+let frame_groups = function
+  | FSimple -> Stdlib.Int.succ 0
+  | FShift (_, _, _) -> Stdlib.Int.succ 0
+  | FMGroup (_, _, _) -> Stdlib.Int.succ 0
+  | FArg (_, _, g, _, _) -> g
+
+let rec groups = function [] -> 0 | f :: r -> add (frame_groups f) (groups r)
+
+let rec peak c s = function
+  | [] -> groups s.s_frames
+  | t :: rest ->
+      Nat.max (groups s.s_frames)
+        (match step c s t (hd_error rest) with
+        | Go1 s' -> peak c s' rest
+        | Go2 s' -> ( match rest with [] -> 0 | _ :: rest' -> peak c s' rest')
+        | Stop _ -> 0
+        | Stuck -> 0
+        | Defer _ -> 0
+        | Defer2 _ -> 0)
+
+let short_names ts =
+  forallb
+    (fun t ->
+      match t with
+      | TChar _ -> true
+      | TSpace -> true
+      | TPar _ -> true
+      | TOpen -> true
+      | TClose -> true
+      | TDollar -> true
+      | TMOpenInline -> true
+      | TMCloseInline -> true
+      | TMOpenDisplay -> true
+      | TMCloseDisplay -> true
+      | TScript _ -> true
+      | TCs n0 -> length n0 <= max_name
+      | TEnd -> true)
+    ts
+
+let bounded c ts =
+  (length ts <= max_tokens && short_names ts) && peak c init ts <= max_groups
 
 type verdict = ProvenReady | ProvenNotReady of reason * int | NotStrict
 
@@ -2319,7 +2352,7 @@ let ends_dollar ts =
   | TEnd -> false
 
 let strict_ks_b k ts =
-  (((forallb (tok_ok k) ts && scripts_ok ts) && wfa k 0 ts) && bounded ts)
+  (((forallb (tok_ok k) ts && scripts_ok ts) && wfa k 0 ts) && bounded k ts)
   && negb (ends_dollar ts)
 
 let in_strict_bytes_b c b =
@@ -2343,7 +2376,7 @@ let reads_next s = function
           | FSimple -> false
           | FShift (display, _, _) -> if display then true else false
           | FMGroup (_, _, _) -> false
-          | FArg (_, _, _, _) -> false))
+          | FArg (_, _, _, _, _) -> false))
   | TMOpenInline -> false
   | TMCloseInline -> false
   | TMOpenDisplay -> false
@@ -2746,25 +2779,43 @@ let rec first_bad_arg k need = function
           else first_bad_arg k need r
       | TEnd -> if need = 0 then None else Some (Some k0))
 
-let rec first_too_deep d = function
+let rec first_long_name = function
   | [] -> None
   | k :: r -> (
       match k.k_tok with
-      | TChar _ -> first_too_deep d r
-      | TSpace -> first_too_deep d r
-      | TPar _ -> first_too_deep d r
-      | TOpen ->
-          if Nat.ltb d max_brace_depth then first_too_deep (Stdlib.Int.succ d) r
-          else Some k
-      | TClose -> first_too_deep (Nat.pred d) r
-      | TDollar -> first_too_deep d r
-      | TMOpenInline -> first_too_deep d r
-      | TMCloseInline -> first_too_deep d r
-      | TMOpenDisplay -> first_too_deep d r
-      | TMCloseDisplay -> first_too_deep d r
-      | TScript _ -> first_too_deep d r
-      | TCs _ -> first_too_deep d r
-      | TEnd -> first_too_deep d r)
+      | TChar _ -> first_long_name r
+      | TSpace -> first_long_name r
+      | TPar _ -> first_long_name r
+      | TOpen -> first_long_name r
+      | TClose -> first_long_name r
+      | TDollar -> first_long_name r
+      | TMOpenInline -> first_long_name r
+      | TMCloseInline -> first_long_name r
+      | TMOpenDisplay -> first_long_name r
+      | TMCloseDisplay -> first_long_name r
+      | TScript _ -> first_long_name r
+      | TCs n0 -> if length n0 <= max_name then first_long_name r else Some k
+      | TEnd -> first_long_name r)
+
+let rec first_over k s = function
+  | [] -> None
+  | k0 :: r -> (
+      match
+        step k s k0.k_tok (option_map (fun k1 -> k1.k_tok) (hd_error r))
+      with
+      | Go1 s' ->
+          if Nat.ltb max_groups (groups s'.s_frames) then Some k0
+          else first_over k s' r
+      | Go2 s' -> (
+          match r with
+          | [] -> None
+          | _ :: r' ->
+              if Nat.ltb max_groups (groups s'.s_frames) then Some k0
+              else first_over k s' r')
+      | Stop _ -> None
+      | Stuck -> None
+      | Defer _ -> None
+      | Defer2 _ -> None)
 
 let off_or o dflt = match o with Some k -> k.k_off | None -> dflt
 
@@ -2798,14 +2849,19 @@ let explain c b =
                                 ( off_or (nth_error ks max_tokens) (length b),
                                   WBound )
                             else
-                              match first_too_deep 0 ks with
+                              match first_long_name ks with
                               | Some k0 -> Some (k0.k_off, WBound)
-                              | None ->
-                                  if ends_dollar (toks_of ks) then
-                                    Some
-                                      ( off_or
-                                          (last (map (fun x -> Some x) ks) None)
-                                          (length b),
-                                        WEndsDollar )
-                                  else None))))
+                              | None -> (
+                                  match first_over k init ks with
+                                  | Some k0 -> Some (k0.k_off, WBound)
+                                  | None ->
+                                      if ends_dollar (toks_of ks) then
+                                        Some
+                                          ( off_or
+                                              (last
+                                                 (map (fun x -> Some x) ks)
+                                                 None)
+                                              (length b),
+                                            WEndsDollar )
+                                      else None)))))
             | None -> Some (length b, WToken)))

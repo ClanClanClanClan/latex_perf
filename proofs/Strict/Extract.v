@@ -16,11 +16,13 @@
     ADR-012 M0/M2).
 
     ── nat mapping ─────────────────────────────────────────────────────
-    [nat] is extracted to OCaml [int] (ExtrOcamlNatInt; OPEN-096).  The only
-    nats of the kernel are token positions: [init] starts at 0 and every
+    [nat] is extracted to OCaml [int] (ExtrOcamlNatInt; OPEN-096).  The
+    nats of the kernel are token positions ([init] starts at 0 and every
     change is a successor, so every value is a non-negative int bounded by
-    the length of the token list.  No [Nat.pow], subtraction or division is
-    reached.  [ascii] is extracted to OCaml [char] (ExtrOcamlChar), whose
+    the length of the token list) and TeX group counts ([Decide.groups],
+    [peak]: sums and maxima of the frames' counts, each 1 or a signature's
+    [g], which the loader reads as a small non-negative int).  No
+    [Nat.pow], subtraction or division is reached.  [ascii] is extracted to OCaml [char] (ExtrOcamlChar), whose
     [Ascii.compare] realisation is the byte order the proofs use. *)
 
 From Coq Require Import Extraction.

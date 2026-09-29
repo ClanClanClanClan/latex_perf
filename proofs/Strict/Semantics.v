@@ -22,9 +22,12 @@
       the math-shift group;
     - [FMGroup script sp sb]: a brace group opened in math (TeX's
       [math_group]): after [^]/[_] ([script = true]) or as a sub-formula;
-    - [FArg l p sp sb] (step 2, slice A): the argument of a one-argument
+    - [FArg l p g sp sb] (step 2, slice A): the argument of a one-argument
       command (Contract.v [asig]) while it runs, in a group of mode [p]; [l]
-      is the command's [longness].
+      is the command's [longness], [g] the number of TeX groups the command
+      holds open meanwhile (Contract.v [TRun]/[MRun], C-94).
+    Each frame is one or more TeX groups; their total is the fragment's
+    capacity measure (Decide.v [groups], [bounded]).
     Every math frame carries the scripts of its list's TAIL noad
     ([sp]: has a superscript, [sb]: has a subscript); [false, false] also
     stands for "no noad yet", where TeX inserts an empty noad for [^]/[_]
@@ -60,7 +63,7 @@ Inductive frame :=
 | FSimple
 | FShift (display : bool) (sp sb : bool)
 | FMGroup (script : bool) (sp sb : bool)
-| FArg (l : longness) (p : pay) (sp sb : bool).
+| FArg (l : longness) (p : pay) (g : nat) (sp sb : bool).
 
 Record state := mkState { s_frames : list frame; s_out : bool; s_pos : nat }.
 
@@ -72,14 +75,14 @@ Inductive outcome :=
 
 Definition in_math (fs : list frame) : bool :=
   match fs with
-  | FShift _ _ _ :: _ | FMGroup _ _ _ :: _ | FArg _ PMath _ _ :: _ => true
+  | FShift _ _ _ :: _ | FMGroup _ _ _ :: _ | FArg _ PMath _ _ _ :: _ => true
   | _ => false
   end.
 
 (** Does the tail noad of the innermost math list already have the script? *)
 Definition tail_has (up : bool) (fs : list frame) : bool :=
   match fs with
-  | FShift _ sp sb :: _ | FMGroup _ sp sb :: _ | FArg _ PMath sp sb :: _ =>
+  | FShift _ sp sb :: _ | FMGroup _ sp sb :: _ | FArg _ PMath _ sp sb :: _ =>
       if up then sp else sb
   | _ => false
   end.
@@ -89,7 +92,7 @@ Definition fresh_tail (fs : list frame) : list frame :=
   match fs with
   | FShift d _ _ :: r => FShift d false false :: r
   | FMGroup g _ _ :: r => FMGroup g false false :: r
-  | FArg l p _ _ :: r => FArg l p false false :: r
+  | FArg l p g _ _ :: r => FArg l p g false false :: r
   | r => r
   end.
 
@@ -100,8 +103,8 @@ Definition mark_script (up : bool) (fs : list frame) : list frame :=
       FShift d (if up then true else sp) (if up then sb else true) :: r
   | FMGroup g sp sb :: r =>
       FMGroup g (if up then true else sp) (if up then sb else true) :: r
-  | FArg l p sp sb :: r =>
-      FArg l p (if up then true else sp) (if up then sb else true) :: r
+  | FArg l p g sp sb :: r =>
+      FArg l p g (if up then true else sp) (if up then sb else true) :: r
   | r => r
   end.
 
@@ -109,7 +112,7 @@ Definition mark_script (up : bool) (fs : list frame) : list frame :=
     math argument), where a [$] meets the group: "Missing } inserted". *)
 Definition mgroup_head (fs : list frame) : bool :=
   match fs with
-  | FMGroup _ _ _ :: _ | FArg _ PMath _ _ :: _ => true
+  | FMGroup _ _ _ :: _ | FArg _ PMath _ _ _ :: _ => true
   | _ => false
   end.
 
@@ -118,21 +121,21 @@ Definition mgroup_head (fs : list frame) : bool :=
 Fixpoint restricted (fs : list frame) : bool :=
   match fs with
   | FSimple :: r => restricted r
-  | FArg _ (PText b) _ _ :: _ => b
+  | FArg _ (PText b) _ _ _ :: _ => b
   | _ => false
   end.
 
 (** ** Arguments: where an error inside one is reported *)
 
 Definition is_arg_frame (f : frame) : bool :=
-  match f with FArg _ _ _ _ => true | _ => false end.
+  match f with FArg _ _ _ _ _ => true | _ => false end.
 
 (** A frame TeX opened with a brace (every frame but a formula). *)
 Definition is_brace (f : frame) : bool :=
   match f with FShift _ _ _ => false | _ => true end.
 
 Definition short_frame (f : frame) : bool :=
-  match f with FArg LLong _ _ _ => false | FArg _ _ _ _ => true | _ => false end.
+  match f with FArg LLong _ _ _ _ => false | FArg _ _ _ _ _ => true | _ => false end.
 
 Definition in_arg (fs : list frame) : bool := existsb is_arg_frame fs.
 
@@ -166,7 +169,7 @@ Fixpoint outer_short (fs : list frame) : bool :=
   | [] => false
   | f :: r =>
       if in_arg r then outer_short r
-      else match f with FArg LShortOuter _ _ _ => true | _ => false end
+      else match f with FArg LShortOuter _ _ _ _ => true | _ => false end
   end.
 
 (** The argument scanner's state: the reason of the deferred error, the
@@ -382,9 +385,9 @@ Inductive Runs (C : contract) : state -> list tok -> outcome -> Prop :=
 (* probe S0/R_close_arg: the closing brace of an argument that ran without
    an error: the command is done (in math the enclosing list's tail is as
    the command's opening left it: fresh). *)
-| R_close_arg : forall fs o p l pl sp sb rest out,
+| R_close_arg : forall fs o p l pl g sp sb rest out,
     Runs C (mkState fs o (S p)) rest out ->
-    Runs C (mkState (FArg l pl sp sb :: fs) o p) (TClose :: rest) out
+    Runs C (mkState (FArg l pl g sp sb :: fs) o p) (TClose :: rest) out
 
 (* probe S0/R_close_shift: } whose innermost group is the formula itself:
    "! Extra }, or forgotten $." *)
@@ -650,21 +653,23 @@ Inductive Runs (C : contract) : state -> list tok -> outcome -> Prop :=
     Runs C (mkState fs o p) (TCs n :: rest) out
 
 (* probe S0/R_arg_text_after + signature families A-*: reads the argument,
-   then stops (on the line of its closing brace, or earlier by [Scans]). *)
+   then stops (on the line of its closing brace, or earlier by [Scans]).  The
+   argument is only scanned, never run: its frame holds no TeX group (the
+   [0]; [start_scan] reads only the braces, C-94). *)
 | R_arg_text_after : forall fs o p n a r rest out,
     c_defined C n = true -> c_sig C n = None -> c_arg C n = Some a ->
     as_text a = TFatalAfter r ->
     in_math fs = false ->
-    Scans (start_scan (FArg (as_long a) (PText false) false false :: fs) r) (S (S p)) rest out ->
+    Scans (start_scan (FArg (as_long a) (PText false) 0 false false :: fs) r) (S (S p)) rest out ->
     Runs C (mkState fs o p) (TCs n :: TOpen :: rest) out
 
 (* probe S0/R_arg_text_run + signature families A-*: reads the argument and
    runs it in a group of mode [pl]. *)
-| R_arg_text_run : forall fs o p n a m pl rest out,
+| R_arg_text_run : forall fs o p n a m pl g rest out,
     c_defined C n = true -> c_sig C n = None -> c_arg C n = Some a ->
-    as_text a = TRun m pl ->
+    as_text a = TRun m pl g ->
     in_math fs = false ->
-    Runs C (mkState (FArg (as_long a) pl false false :: fs) (o || m) (S (S p))) rest out ->
+    Runs C (mkState (FArg (as_long a) pl g false false :: fs) (o || m) (S (S p))) rest out ->
     Runs C (mkState fs o p) (TCs n :: TOpen :: rest) out
 
 (* probe S0/R_arg_math_now + signature families A-* *)
@@ -680,14 +685,14 @@ Inductive Runs (C : contract) : state -> list tok -> outcome -> Prop :=
     c_defined C n = true -> c_sig C n = None -> c_arg C n = Some a ->
     as_math a = MFatalAfter r ->
     in_math fs = true ->
-    Scans (start_scan (FArg (as_long a) (PText false) false false :: fs) r) (S (S p)) rest out ->
+    Scans (start_scan (FArg (as_long a) (PText false) 0 false false :: fs) r) (S (S p)) rest out ->
     Runs C (mkState fs o p) (TCs n :: TOpen :: rest) out
 
 (* probe S0/R_arg_math_run + signature families A-*: the result is a fresh
    tail of the enclosing list. *)
-| R_arg_math_run : forall fs o p n a pl rest out,
+| R_arg_math_run : forall fs o p n a pl g rest out,
     c_defined C n = true -> c_sig C n = None -> c_arg C n = Some a ->
-    as_math a = MRun pl ->
+    as_math a = MRun pl g ->
     in_math fs = true ->
-    Runs C (mkState (FArg (as_long a) pl false false :: fresh_tail fs) o (S (S p))) rest out ->
+    Runs C (mkState (FArg (as_long a) pl g false false :: fresh_tail fs) o (S (S p))) rest out ->
     Runs C (mkState fs o p) (TCs n :: TOpen :: rest) out.

@@ -67,11 +67,11 @@ Definition in_strict_bytes (C : bcontract) (b : list ascii) : Prop :=
   length b <= max_file_bytes /\
   exists ks, Parse (bc_lex C) b ks /\
     in_strict_toks (bc_kernel C) (toks_of ks) /\
-    bounded (toks_of ks) = true /\
+    bounded (bc_kernel C) (toks_of ks) = true /\
     ends_dollar (toks_of ks) = false.
 
 Definition strict_ks_b (K : contract) (ts : list tok) : bool :=
-  forallb (tok_ok K) ts && scripts_ok ts && wfa K 0 ts && bounded ts
+  forallb (tok_ok K) ts && scripts_ok ts && wfa K 0 ts && bounded K ts
   && negb (ends_dollar ts).
 
 Definition in_strict_bytes_b (C : bcontract) (b : list ascii) : bool :=
@@ -83,7 +83,7 @@ Definition in_strict_bytes_b (C : bcontract) (b : list ascii) : bool :=
 
 Lemma strict_ks_b_spec : forall K ts,
   strict_ks_b K ts = true <->
-  in_strict_toks K ts /\ bounded ts = true /\ ends_dollar ts = false.
+  in_strict_toks K ts /\ bounded K ts = true /\ ends_dollar ts = false.
 Proof.
   intros K ts. unfold strict_ks_b, in_strict_toks.
   rewrite !andb_true_iff, forallb_forall, Forall_forall, negb_true_iff. tauto.
@@ -344,7 +344,7 @@ Proof.
   destruct t; try (rewrite <- H; reflexivity).
   - (* TDollar *)
     cbn [step s_frames s_out s_pos] in *. unfold halt in *.
-    destruct fs as [|[|[] sp sb|g sp sb|l [[]|] sp sb] r]; cbn [mgroup_head restricted] in *;
+    destruct fs as [|[|[] sp sb|g sp sb|l [[]|] ga sp sb] r]; cbn [mgroup_head restricted] in *;
       try exact H;
       try (destruct (in_arg _); discriminate);
       try (destruct nx as [[]|]; try discriminate;
@@ -374,7 +374,7 @@ Proof.
   destruct t; try (rewrite <- H; reflexivity).
   - (* TDollar *)
     cbn [step s_frames s_out s_pos reads_next] in *. unfold halt in *.
-    destruct fs as [|[|[] sp sb|g sp sb|l [[]|] sp sb] r]; cbn [mgroup_head restricted] in *;
+    destruct fs as [|[|[] sp sb|g sp sb|l [[]|] ga sp sb] r]; cbn [mgroup_head restricted] in *;
       try discriminate; try exact H.
     all: try (destruct (restricted r); [discriminate|]; destruct nx as [[]|]; discriminate).
     all: try (destruct nx as [[]|]; discriminate).
@@ -415,7 +415,7 @@ Lemma step_reads_display : forall s t,
   exists sp sb r, t = TDollar /\ s_frames s = FShift true sp sb :: r.
 Proof.
   intros [fs o p] t H. destruct t; try discriminate.
-  destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] r]; try discriminate.
+  destruct fs as [|[|[] sp sb|g sp sb|l pl ga sp sb] r]; try discriminate.
   exists sp, sb, r. split; reflexivity.
 Qed.
 

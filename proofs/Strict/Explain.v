@@ -149,16 +149,34 @@ Fixpoint first_bad_arg (K : contract) (need : nat) (ks : list ktok) : option (op
       end
   end.
 
-(** The first [{] beyond the nesting bound, counted as [Decide.depth_ok_from]
-    counts. *)
-Fixpoint first_too_deep (d : nat) (ks : list ktok) : option ktok :=
+(** The first token past a capacity bound, counted as [Decide.bounded]
+    counts (C-94): a control word longer than [max_name] letters, or the
+    token whose step first makes the run hold more than [max_groups] TeX
+    groups ([Decide.groups]; for a two-token step, its first token). *)
+Fixpoint first_long_name (ks : list ktok) : option ktok :=
   match ks with
   | [] => None
   | k :: r =>
       match k_tok k with
-      | TOpen => if Nat.ltb d max_brace_depth then first_too_deep (S d) r else Some k
-      | TClose => first_too_deep (Nat.pred d) r
-      | _ => first_too_deep d r
+      | TCs n => if Nat.leb (length n) max_name then first_long_name r else Some k
+      | _ => first_long_name r
+      end
+  end.
+
+Fixpoint first_over (K : contract) (s : state) (ks : list ktok) : option ktok :=
+  match ks with
+  | [] => None
+  | k :: r =>
+      match step K s (k_tok k) (option_map k_tok (hd_error r)) with
+      | Go1 s' =>
+          if Nat.ltb max_groups (groups (s_frames s')) then Some k else first_over K s' r
+      | Go2 s' =>
+          match r with
+          | [] => None
+          | _ :: r' =>
+              if Nat.ltb max_groups (groups (s_frames s')) then Some k else first_over K s' r'
+          end
+      | _ => None
       end
   end.
 
@@ -192,12 +210,16 @@ Definition explain (C : bcontract) (b : list ascii) : option (nat * why_out) :=
                         if negb (Nat.leb (length ks) max_tokens)
                         then Some (off_or (nth_error ks max_tokens) (length b), WBound)
                         else
-                          match first_too_deep 0 ks with
+                          match first_long_name ks with
+                          | Some k => Some (k_off k, WBound)
+                          | None =>
+                          match first_over K init ks with
                           | Some k => Some (k_off k, WBound)
                           | None =>
                               if ends_dollar (toks_of ks)
                               then Some (off_or (last (map Some ks) None) (length b), WEndsDollar)
                               else None
+                          end
                           end
                       end
                     end

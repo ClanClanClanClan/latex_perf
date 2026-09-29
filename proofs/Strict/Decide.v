@@ -119,70 +119,6 @@ Fixpoint wfa (C : contract) (need : nat) (ts : list tok) : bool :=
 Definition in_strict_toks (C : contract) (ts : list tok) : Prop :=
   Forall (fun t => tok_ok C t = true) ts /\ scripts_ok ts = true /\ wfa C 0 ts = true.
 
-(** ** TeX's global capacities (correction C-86)
-
-    pdfTeX has fixed capacities that no rule of [Runs] models, and a document
-    that exceeds one stops with "! TeX capacity exceeded" whatever [Runs]
-    says.  MEASURED under the pinned oracle (2026-09-27): 253 nested brace
-    groups compile and 254 give "[grouping levels=255]", in text, in math
-    and in nested script groups; a formula of 1,000,000 characters, and
-    100,000 occurrences of an attested math name in one formula, give
-    "[main memory size=5000000]".  The fragment is therefore BOUNDED: the
-    brace nesting of a strict document is at most [max_brace_depth] and its
-    token stream has at most [max_tokens] tokens.  Both bounds leave a
-    margin under the measured limits (the margin absorbs the groups LaTeX
-    opens internally, e.g. at a paragraph start); every attested name is
-    probed at both bounds (families R-NEST-* and R-BIG-* of
-    gen_strict_signatures.py) and the structure at the bounds by the rule
-    probes (S0/bounds), so the margin is attested, not assumed.  A document
-    beyond a bound is outside the tier: never a verdict. *)
-
-(* Written as products so that the extraction (nat = OCaml int, successor
-   chains for literals) stays short: 200 and 20,000. *)
-Definition ten : nat := 10.
-Definition max_brace_depth : nat := Nat.mul 2 (Nat.mul ten ten).
-Definition max_tokens : nat := Nat.mul max_brace_depth (Nat.mul ten ten).
-
-Example max_brace_depth_is_200 : max_brace_depth = 200.
-Proof. reflexivity. Qed.
-
-Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100.
-Proof. reflexivity. Qed.
-
-(** The deepest brace nesting a stream reaches, counted from [k] open
-    braces, is within [max_brace_depth].  A [}] with no [{] open is a fatal
-    of the semantics (it stops the run), so the count never goes below 0. *)
-Fixpoint depth_ok_from (k : nat) (ts : list tok) : bool :=
-  match ts with
-  | [] => true
-  | TOpen :: r => Nat.ltb k max_brace_depth && depth_ok_from (S k) r
-  | TClose :: r => depth_ok_from (Nat.pred k) r
-  | _ :: r => depth_ok_from k r
-  end.
-
-Definition bounded (ts : list tok) : bool :=
-  Nat.leb (length ts) max_tokens && depth_ok_from 0 ts.
-
-Definition in_strict_doc (C : contract) (d : doc) : Prop :=
-  in_strict_toks C (flatten_doc d) /\ bounded (flatten_doc d) = true.
-
-Definition in_strict_b (C : contract) (d : doc) : bool :=
-  forallb (tok_ok C) (flatten_doc d) && scripts_ok (flatten_doc d)
-  && wfa C 0 (flatten_doc d) && bounded (flatten_doc d).
-
-Lemma in_strict_b_spec : forall C d, in_strict_b C d = true <-> in_strict_doc C d.
-Proof.
-  intros C d. unfold in_strict_b, in_strict_doc, in_strict_toks.
-  rewrite !andb_true_iff, forallb_forall, Forall_forall. tauto.
-Qed.
-
-Theorem in_strict_dec : forall C d, {in_strict_doc C d} + {~ in_strict_doc C d}.
-Proof.
-  intros C d. destruct (in_strict_b C d) eqn:E.
-  - left. apply in_strict_b_spec. exact E.
-  - right. intro H. apply in_strict_b_spec in H. rewrite H in E. discriminate.
-Qed.
-
 (** ** The transition function *)
 
 Inductive step_res :=
@@ -245,7 +181,7 @@ Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_re
       match fs with
       | FSimple :: r => Go1 (mkState r o (S p))
       | FMGroup _ _ _ :: r => Go1 (mkState r o (S p))
-      | FArg _ _ _ _ :: r => Go1 (mkState r o (S p))
+      | FArg _ _ _ _ _ :: r => Go1 (mkState r o (S p))
       | FShift _ _ _ :: _ => halt fs E5 p
       | [] => Stop (Fatal E5 p)
       end
@@ -324,13 +260,13 @@ Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_re
                   | MFatalAfter r =>
                       match nx with
                       | Some TOpen =>
-                          Defer2 (start_scan (FArg (as_long a) (PText false) false false :: fs) r)
+                          Defer2 (start_scan (FArg (as_long a) (PText false) 0 false false :: fs) r)
                       | _ => Stuck
                       end
-                  | MRun pl =>
+                  | MRun pl g =>
                       match nx with
                       | Some TOpen =>
-                          Go2 (mkState (FArg (as_long a) pl false false :: fresh_tail fs) o (S (S p)))
+                          Go2 (mkState (FArg (as_long a) pl g false false :: fresh_tail fs) o (S (S p)))
                       | _ => Stuck
                       end
                   end
@@ -340,13 +276,13 @@ Definition step (C : contract) (s : state) (t : tok) (nx : option tok) : step_re
                   | TFatalAfter r =>
                       match nx with
                       | Some TOpen =>
-                          Defer2 (start_scan (FArg (as_long a) (PText false) false false :: fs) r)
+                          Defer2 (start_scan (FArg (as_long a) (PText false) 0 false false :: fs) r)
                       | _ => Stuck
                       end
-                  | TRun m pl =>
+                  | TRun m pl g =>
                       match nx with
                       | Some TOpen =>
-                          Go2 (mkState (FArg (as_long a) pl false false :: fs) (o || m) (S (S p)))
+                          Go2 (mkState (FArg (as_long a) pl g false false :: fs) (o || m) (S (S p)))
                       | _ => Stuck
                       end
                   end
@@ -368,6 +304,198 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
           match rest with [] => None | _ :: rest' => scan_run sc (S (S (s_pos s))) rest' end
       end
   end.
+
+(** ** TeX's global capacities (corrections C-86, C-94)
+
+    pdfTeX has fixed capacities that no rule of [Runs] models: a document
+    that exceeds one stops with "! TeX capacity exceeded" whatever [Runs]
+    says.  The fragment is therefore BOUNDED, and each bound is an EXACT
+    account, in the model's own terms, of what the capacity counts, never a
+    proxy for it.  Correction C-94: the first version (C-86) bounded the
+    BRACE depth by 200, because 254 nested braces overflow TeX's 255
+    grouping levels; but a formula is a TeX group too, and slice A let a
+    formula open inside an argument, so [\mbox{$\mbox{$ ... $}$}] held two
+    groups per brace and overflowed at 128 levels, inside the old bound
+    (a PROVEN-READY that did not compile).  The accounting, with every
+    number measured under the pinned oracle
+    (corpora/strict_s0/capacity.json, docs/v27/STRICT_TIER_DESIGN.md §I.6):
+
+    - GROUPING LEVELS.  Every frame of the state is ONE TeX group (a text
+      brace group, a formula's math-shift group, a math brace group), except
+      an argument frame, which is the [g] groups its command holds open
+      while the argument runs ([frame_groups]; Contract.v [TRun]/[MRun]).
+      So [groups fs] is TeX's grouping level above the body's own.  The body
+      holds 254 groups and a 255th overflows, in every frame kind and every
+      combination of kinds the capacity probes build; on top of the frames a
+      construct adds at most 8 groups while it runs (the output routine, at
+      a page break or at \end{document}; \[ adds 4, a paragraph start 1).
+      [max_groups] = 200 leaves 54.  [peak] is the most groups any state of
+      the run holds, the run being [step] iterated as [run] iterates it, up
+      to where it stops: a stop halts pdfTeX (-halt-on-error), and the
+      argument scanner that locates a deferred error opens no group (pdfTeX
+      had read the whole argument before running any of it).
+    - BUFFER, STRING POOL, NUMBER OF STRINGS, HASH.  Every control word
+      pdfTeX reads is entered in its hash table and string pool, defined or
+      not (an argument is read whole, so a stream can make it read up to
+      [max_tokens] names).  A name of the fragment has at most [max_name]
+      letters ([short_names]): the pool then needs at most
+      [max_tokens * max_name] = 2,000,000 characters (5,408,265 are free at
+      body start), the strings and the hash at most [max_tokens] entries
+      (467,099 and 585,149 free), and a rendered line (Syntax.v [render])
+      at most [max_tokens + max_name + 2] bytes (the buffer is 200,000).
+    - MAIN MEMORY, SAVE STACK, INPUT STACK, PARAMETER STACK, SEMANTIC NEST,
+      EXPANSION DEPTH, FONTS.  Bounded through [max_tokens] and
+      [max_groups]: the capacity probes measure the use of each at the
+      bounds (every one below a fifth of its capacity; §I.6), so none needs
+      a bound of its own.
+    A document beyond a bound is outside the tier: never a verdict.  Every
+    attested name is probed at the bounds (families R-NEST-*, R-BIG-* of
+    gen_strict_signatures.py; A-R-*, A-CAP-* of gen_strict_arg_signatures.py),
+    and every combination of frame kinds the model can stack at the bound
+    and one group past it (S0/capacity, checked by check_strict_kernel.py). *)
+
+(* Written as products so that the extraction (nat = OCaml int, successor
+   chains for literals) stays short: 200, 20,000 and 100. *)
+Definition ten : nat := 10.
+Definition max_groups : nat := Nat.mul 2 (Nat.mul ten ten).
+Definition max_tokens : nat := Nat.mul max_groups (Nat.mul ten ten).
+Definition max_name : nat := Nat.mul ten ten.
+
+Example max_groups_is_200 : max_groups = 200.
+Proof. reflexivity. Qed.
+
+Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100.
+Proof. reflexivity. Qed.
+
+Example max_name_is_100 : max_name = 100.
+Proof. reflexivity. Qed.
+
+(** The TeX groups a frame holds. *)
+Definition frame_groups (f : frame) : nat :=
+  match f with
+  | FArg _ _ g _ _ => g
+  | _ => 1
+  end.
+
+(** TeX's grouping level above the body's own: the groups of every frame. *)
+Fixpoint groups (fs : list frame) : nat :=
+  match fs with
+  | [] => 0
+  | f :: r => frame_groups f + groups r
+  end.
+
+(** The most groups a state of the run from [s] holds ([run]'s steps). *)
+Fixpoint peak (C : contract) (s : state) (ts : list tok) : nat :=
+  match ts with
+  | [] => groups (s_frames s)
+  | t :: rest =>
+      Nat.max (groups (s_frames s))
+        (match step C s t (hd_error rest) with
+         | Go1 s' => peak C s' rest
+         | Go2 s' => match rest with [] => 0 | _ :: rest' => peak C s' rest' end
+         | _ => 0
+         end)
+  end.
+
+(** The states the run from [s] passes through, declaratively. *)
+Inductive Reaches (C : contract) : state -> list tok -> state -> Prop :=
+| Reach_here : forall s ts, Reaches C s ts s
+| Reach_go1 : forall s t rest s' s'',
+    step C s t (hd_error rest) = Go1 s' -> Reaches C s' rest s'' ->
+    Reaches C s (t :: rest) s''
+| Reach_go2 : forall s t t2 rest s' s'',
+    step C s t (Some t2) = Go2 s' -> Reaches C s' rest s'' ->
+    Reaches C s (t :: t2 :: rest) s''.
+
+(* A step that consumes nothing more: the state itself is the only one. *)
+Local Ltac peak_nogo E :=
+  split;
+  [ intros [H1 _] s' R; inversion R as [|? ? ? s1' ? E' R'|? ? ? ? s1' ? E' R']; subst;
+    [ exact H1
+    | rewrite E in E'; discriminate
+    | cbn [hd_error] in E, E'; rewrite E in E'; discriminate ]
+  | intros H; split; [apply H; constructor|lia] ].
+
+(** [peak] is the maximum over the reached states. *)
+Lemma peak_spec_n : forall C k ts s B, length ts <= k ->
+  (peak C s ts <= B <-> forall s', Reaches C s ts s' -> groups (s_frames s') <= B).
+Proof.
+  intros C k. induction k as [|k IH]; intros ts s B Hl.
+  - destruct ts; [|simpl in Hl; lia]. cbn [peak]. split.
+    + intros H s' R. inversion R; subst. exact H.
+    + intros H. apply H. constructor.
+  - destruct ts as [|t rest].
+    + cbn [peak]. split.
+      * intros H s' R. inversion R; subst. exact H.
+      * intros H. apply H. constructor.
+    + simpl in Hl. cbn [peak]. rewrite Nat.max_lub_iff.
+      destruct (step C s t (hd_error rest)) as [s1|s1|o| |sc|sc] eqn:E.
+      * rewrite (IH rest s1 B) by lia. split.
+        -- intros [H1 H2] s' R. inversion R as [|? ? ? s1' ? E' R'|? ? t2 ? s1' ? E' R']; subst.
+           ++ exact H1.
+           ++ rewrite E in E'. injection E' as <-. apply H2. exact R'.
+           ++ cbn [hd_error] in E, E'. rewrite E in E'. discriminate.
+        -- intros H. split; [apply H; constructor|].
+           intros s' R. apply H. eapply Reach_go1; eassumption.
+      * destruct rest as [|t2 rest'].
+        -- split.
+           ++ intros [H1 _] s' R. inversion R as [|? ? ? s1' ? E' R'|]; subst; [exact H1|].
+              cbn [hd_error] in E, E'. rewrite E in E'. discriminate.
+           ++ intros H. split; [apply H; constructor|lia].
+        -- simpl in Hl. rewrite (IH rest' s1 B) by lia. split.
+           ++ intros [H1 H2] s' R.
+              inversion R as [|? ? ? s1' ? E' R'|? ? ? ? s1' ? E' R']; subst.
+              ** exact H1.
+              ** rewrite E in E'. discriminate.
+              ** cbn [hd_error] in E, E'. rewrite E in E'. injection E' as <-. apply H2. exact R'.
+           ++ intros H. split; [apply H; constructor|].
+              intros s' R. apply H. eapply Reach_go2; [exact E|exact R].
+      * peak_nogo E.
+      * peak_nogo E.
+      * peak_nogo E.
+      * peak_nogo E.
+Qed.
+
+Theorem peak_spec : forall C ts s B,
+  peak C s ts <= B <-> forall s', Reaches C s ts s' -> groups (s_frames s') <= B.
+Proof. intros C ts s B. apply (peak_spec_n C (length ts)). apply le_n. Qed.
+
+(** Every control word has at most [max_name] letters. *)
+Definition short_names (ts : list tok) : bool :=
+  forallb (fun t => match t with TCs n => Nat.leb (length n) max_name | _ => true end) ts.
+
+Definition bounded (C : contract) (ts : list tok) : bool :=
+  Nat.leb (length ts) max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups.
+
+Definition in_strict_doc (C : contract) (d : doc) : Prop :=
+  in_strict_toks C (flatten_doc d) /\ bounded C (flatten_doc d) = true.
+
+Definition in_strict_b (C : contract) (d : doc) : bool :=
+  forallb (tok_ok C) (flatten_doc d) && scripts_ok (flatten_doc d)
+  && wfa C 0 (flatten_doc d) && bounded C (flatten_doc d).
+
+Lemma in_strict_b_spec : forall C d, in_strict_b C d = true <-> in_strict_doc C d.
+Proof.
+  intros C d. unfold in_strict_b, in_strict_doc, in_strict_toks.
+  rewrite !andb_true_iff, forallb_forall, Forall_forall. tauto.
+Qed.
+
+Theorem in_strict_dec : forall C d, {in_strict_doc C d} + {~ in_strict_doc C d}.
+Proof.
+  intros C d. destruct (in_strict_b C d) eqn:E.
+  - left. apply in_strict_b_spec. exact E.
+  - right. intro H. apply in_strict_b_spec in H. rewrite H in E. discriminate.
+Qed.
+
+(** A document of the tier: its run never holds more than [max_groups]
+    groups, in any state it reaches. *)
+Corollary strict_groups_bounded : forall C d s,
+  in_strict_doc C d -> Reaches C init (flatten_doc d) s -> groups (s_frames s) <= max_groups.
+Proof.
+  intros C d s [_ Hb] R. unfold bounded in Hb. rewrite !andb_true_iff in Hb.
+  destruct Hb as [_ Hp]. apply Nat.leb_le in Hp.
+  exact (proj1 (peak_spec C _ init max_groups) Hp s R).
+Qed.
 
 Inductive verdict :=
 | ProvenReady
@@ -526,7 +654,7 @@ Proof.
         destruct fs as [|f fs'].
         -- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
            injection Hrun as <-. apply R_close_top.
-        -- destruct f as [|d sp sb|g sp sb|l pl sp sb].
+        -- destruct f as [|d sp sb|g sp sb|l pl ga sp sb].
            ++ rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun.
               apply R_close_simple. apply IH; assumption.
            ++ apply R_close_shift.
@@ -547,7 +675,7 @@ Proof.
               try (apply R_dollar_inline_open; [reflexivity|reflexivity|exact I|apply IH; assumption]).
               apply R_dollar_display_open; [reflexivity|reflexivity|].
               apply IH; [simpl in Hl1; lia|exact Hrun].
-        -- destruct f as [|d sp sb|g sp sb|l pl sp sb].
+        -- destruct f as [|d sp sb|g sp sb|l pl ga sp sb].
            ++ (* FSimple: text *)
               destruct (restricted (FSimple :: fs')) eqn:Hr.
               ** rewrite run_step in Hrun. cbn [step s_frames s_out s_pos mgroup_head] in Hrun.
@@ -615,7 +743,7 @@ Proof.
                          apply IH; [simpl in Hl1; lia|exact Hrun].
               ** (* math argument *)
                  apply R_dollar_group; [reflexivity|].
-                 rewrite (run_halt C _ _ _ (FArg l PMath sp sb :: fs') E5 p) in Hrun by reflexivity.
+                 rewrite (run_halt C _ _ _ (FArg l PMath ga sp sb :: fs') E5 p) in Hrun by reflexivity.
                  apply halt_out_sound. exact Hrun.
       * (* TMOpenInline *)
         destruct (in_math fs) eqn:Hm.
@@ -626,7 +754,7 @@ Proof.
         -- rewrite run_step in Hrun. cbn [step s_frames s_out s_pos] in Hrun. rewrite Hm in Hrun.
            apply R_mopen_inline; [exact Hm|]. apply IH; assumption.
       * (* TMCloseInline *)
-        destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+        destruct fs as [|[|[] sp sb|g sp sb|l pl ga sp sb] fs'];
           try (apply R_mclose_inline_bad; [exact I|];
                rewrite (run_halt C _ _ _ _ E5 p) in Hrun by reflexivity;
                apply halt_out_sound; exact Hrun).
@@ -643,7 +771,7 @@ Proof.
            ++ apply R_mopen_display_restricted; [exact Hm|exact Hr|]. apply IH; assumption.
            ++ apply R_mopen_display; [exact Hm|exact Hr|]. apply IH; assumption.
       * (* TMCloseDisplay *)
-        destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+        destruct fs as [|[|[] sp sb|g sp sb|l pl ga sp sb] fs'];
           try (apply R_mclose_display_bad; [exact I|];
                rewrite (run_halt C _ _ _ _ E5 p) in Hrun by reflexivity;
                apply halt_out_sound; exact Hrun).
@@ -696,7 +824,7 @@ Proof.
                      apply halt_out_sound. exact Hrun.
            ++ destruct (c_arg C n) as [a|] eqn:Ha.
               ** destruct (in_math fs) eqn:Hm.
-                 --- destruct (as_math a) as [r|r|pl] eqn:Ham.
+                 --- destruct (as_math a) as [r|r|pl ga] eqn:Ham.
                      +++ eapply R_arg_math_now; try eassumption.
                          rewrite (run_halt C _ _ _ fs r p) in Hrun
                            by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Ham; reflexivity).
@@ -713,7 +841,7 @@ Proof.
                          cbn [hd_error] in Hrun. destruct t2; try discriminate.
                          eapply R_arg_math_run; try eassumption.
                          apply IH; [simpl in Hl1; lia|exact Hrun].
-                 --- destruct (as_text a) as [r|r|m pl] eqn:Hat.
+                 --- destruct (as_text a) as [r|r|m pl ga] eqn:Hat.
                      +++ eapply R_arg_text_now; try eassumption.
                          rewrite (run_halt C _ _ _ fs r p) in Hrun
                            by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Hat; reflexivity).
@@ -781,16 +909,16 @@ Proof.
   - (* R_close_top *) reflexivity.
   - (* R_dollar_display_open *)
     rewrite run_step.
-    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] ga sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
       cbn [step s_frames s_out s_pos mgroup_head restricted hd_error]; try rewrite H0; exact IHRuns.
   - (* R_dollar_inline_open *)
     rewrite run_step.
-    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] ga sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
       cbn [step s_frames s_out s_pos mgroup_head restricted]; try rewrite H0;
       (destruct rest as [|[] rest']; simpl in H1; try contradiction; exact IHRuns).
   - (* R_dollar_restricted_open *)
     rewrite run_step.
-    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] ga sp sb] fs']; simpl in H, H0; try discriminate; try subst b;
       cbn [step s_frames s_out s_pos mgroup_head restricted]; try rewrite H0; exact IHRuns.
   - (* R_dollar_inline_close *) exact IHRuns.
   - (* R_dollar_display_close *) exact IHRuns.
@@ -805,13 +933,13 @@ Proof.
   - (* R_dollar_display_eof *) by_stops H. reflexivity.
   - (* R_dollar_group *)
     by_stops H0.
-    destruct fs as [|[|d sp sb|g sp sb|l [b|] sp sb] fs']; simpl in H; try discriminate; reflexivity.
+    destruct fs as [|[|d sp sb|g sp sb|l [b|] ga sp sb] fs']; simpl in H; try discriminate; reflexivity.
   - (* R_mopen_inline *) rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H. exact IHRuns.
   - (* R_mopen_inline_bad *) by_stops H0. cbn [step s_frames s_out s_pos]. rewrite H. reflexivity.
   - (* R_mclose_inline *) exact IHRuns.
   - (* R_mclose_inline_bad *)
     by_stops H0.
-    destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs']; simpl in H; try contradiction; reflexivity.
+    destruct fs as [|[|[] sp sb|g sp sb|l pl ga sp sb] fs']; simpl in H; try contradiction; reflexivity.
   - (* R_mopen_display *)
     rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite H, H0. exact IHRuns.
   - (* R_mopen_display_restricted *)
@@ -820,7 +948,7 @@ Proof.
   - (* R_mclose_display *) exact IHRuns.
   - (* R_mclose_display_bad *)
     by_stops H0.
-    destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs']; simpl in H; try contradiction; reflexivity.
+    destruct fs as [|[|[] sp sb|g sp sb|l pl ga sp sb] fs']; simpl in H; try contradiction; reflexivity.
   - (* R_script_text *) by_stops H0. cbn [step s_frames s_out s_pos]. rewrite H. reflexivity.
   - (* R_script_double *)
     by_stops H1. cbn [step s_frames s_out s_pos]. rewrite H, H0. reflexivity.
@@ -862,19 +990,19 @@ Qed.
 (** ** Determinism of the semantics, proved on [Runs] itself *)
 
 Lemma mgroup_in_math : forall fs, mgroup_head fs = true -> in_math fs = true.
-Proof. intros [|[|d sp sb|g sp sb|l [b|] sp sb] r] H; simpl in H; try discriminate; reflexivity. Qed.
+Proof. intros [|[|d sp sb|g sp sb|l [b|] ga sp sb] r] H; simpl in H; try discriminate; reflexivity. Qed.
 
 (* Two premises reading the same contract entry name the same entry. *)
 Local Ltac unify_entries :=
   repeat match goal with
   | [ H1 : ?x = Some ?a, H2 : ?x = Some ?b |- _ ] =>
       rewrite H1 in H2; injection H2 as <-
-  | [ H1 : as_text ?a = TRun ?m ?p, H2 : as_text ?a = TRun ?m' ?p' |- _ ] =>
-      rewrite H1 in H2; injection H2 as <- <-
+  | [ H1 : as_text ?a = TRun ?m ?p ?g, H2 : as_text ?a = TRun ?m' ?p' ?g' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <- <- <-
   | [ H1 : as_text ?a = TFatalAfter ?r, H2 : as_text ?a = TFatalAfter ?r' |- _ ] =>
       rewrite H1 in H2; injection H2 as <-
-  | [ H1 : as_math ?a = MRun ?p, H2 : as_math ?a = MRun ?p' |- _ ] =>
-      rewrite H1 in H2; injection H2 as <-
+  | [ H1 : as_math ?a = MRun ?p ?g, H2 : as_math ?a = MRun ?p' ?g' |- _ ] =>
+      rewrite H1 in H2; injection H2 as <- <-
   | [ H1 : as_math ?a = MFatalAfter ?r, H2 : as_math ?a = MFatalAfter ?r' |- _ ] =>
       rewrite H1 in H2; injection H2 as <-
   | [ H1 : as_text ?a = TFatalNow ?r, H2 : as_text ?a = TFatalNow ?r' |- _ ] =>
@@ -976,8 +1104,8 @@ Proof.
   destruct (in_arg fs); reflexivity.
 Qed.
 
-Lemma arg_depth_push_arg : forall l pl sp sb fs,
-  arg_depth (FArg l pl sp sb :: fs) = S (arg_depth fs).
+Lemma arg_depth_push_arg : forall l pl g sp sb fs,
+  arg_depth (FArg l pl g sp sb :: fs) = S (arg_depth fs).
 Proof.
   intros. cbn [arg_depth is_brace is_arg_frame].
   destruct (in_arg fs) eqn:E; [reflexivity|]. rewrite (arg_depth_out fs E). reflexivity.
@@ -1087,7 +1215,7 @@ Proof.
       cbn [wfa] in Hw.
       destruct fs as [|f fs'].
       * rewrite run_step. cbn [step s_frames s_out s_pos]. discriminate.
-      * destruct f as [|dd sp sb|g sp sb|l pl sp sb].
+      * destruct f as [|dd sp sb|g sp sb|l pl ga sp sb].
         -- rewrite run_step. cbn [step s_frames s_out s_pos].
            apply IH; try assumption. cbn [s_frames].
            rewrite (arg_depth_pop FSimple fs' eq_refl). exact Hw.
@@ -1098,7 +1226,7 @@ Proof.
            rewrite (arg_depth_pop (FMGroup g sp sb) fs' eq_refl). exact Hw.
         -- rewrite run_step. cbn [step s_frames s_out s_pos].
            apply IH; try assumption. cbn [s_frames].
-           rewrite (arg_depth_pop (FArg l pl sp sb) fs' eq_refl). exact Hw.
+           rewrite (arg_depth_pop (FArg l pl ga sp sb) fs' eq_refl). exact Hw.
     + (* TDollar *)
       assert (Hw' : wfa C d rest = true) by (cbn [wfa] in Hw; exact Hw).
       destruct fs as [|f fs'] eqn:Efs.
@@ -1110,7 +1238,7 @@ Proof.
         { simpl in Hsc1. exact Hsc1. }
         cbn [s_frames]. rewrite arg_depth_shift. cbn [wfa] in Hw'. exact Hw'.
       * subst d.
-        destruct f as [|dd sp sb|g sp sb|l pl sp sb].
+        destruct f as [|dd sp sb|g sp sb|l pl ga sp sb].
         -- (* FSimple *)
            rewrite run_step. cbn [step s_frames s_out s_pos mgroup_head].
            destruct (restricted (FSimple :: fs')).
@@ -1162,7 +1290,7 @@ Proof.
                  apply IH; [simpl in Hl1; lia|inversion Hrest; assumption| |].
                  { simpl in Hsc1. exact Hsc1. }
                  cbn [s_frames]. rewrite arg_depth_shift. cbn [wfa] in Hw'. exact Hw'.
-           ++ rewrite (run_halt C _ _ _ (FArg l PMath sp sb :: fs') E5 p) by reflexivity.
+           ++ rewrite (run_halt C _ _ _ (FArg l PMath ga sp sb :: fs') E5 p) by reflexivity.
               apply (halt_total C). exact Hw.
     + (* TMOpenInline *)
       destruct (in_math fs) eqn:Hm.
@@ -1171,7 +1299,7 @@ Proof.
       * rewrite run_step. cbn [step s_frames s_out s_pos]. rewrite Hm.
         apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; cbn [wfa] in Hw. exact Hw.
     + (* TMCloseInline *)
-      destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+      destruct fs as [|[|[] sp sb|g sp sb|l pl ga sp sb] fs'];
         try (rewrite (run_halt C _ _ _ _ E5 p) by reflexivity; apply (halt_total C); exact Hw).
       rewrite run_step. cbn [step s_frames s_out s_pos].
       apply IH; try assumption. cbn [s_frames].
@@ -1185,7 +1313,7 @@ Proof.
         -- apply IH; try assumption.
         -- apply IH; try assumption; cbn [s_frames]; rewrite arg_depth_shift; exact Hw.
     + (* TMCloseDisplay *)
-      destruct fs as [|[|[] sp sb|g sp sb|l pl sp sb] fs'];
+      destruct fs as [|[|[] sp sb|g sp sb|l pl ga sp sb] fs'];
         try (rewrite (run_halt C _ _ _ _ E5 p) by reflexivity; apply (halt_total C); exact Hw).
       rewrite run_step. cbn [step s_frames s_out s_pos].
       apply IH; try assumption. cbn [s_frames].
@@ -1235,7 +1363,7 @@ Proof.
            ++ assert (Harg : is_argcmd C n = true) by (unfold is_argcmd; rewrite Hd, Hs, Ha; reflexivity).
               assert (Hw2 := Hw). cbn [wfa] in Hw2. rewrite Harg in Hw2.
               destruct (in_math fs) eqn:Hm.
-              ** destruct (as_math a) as [r|r|pl] eqn:Ham.
+              ** destruct (as_math a) as [r|r|pl ga] eqn:Ham.
                  --- rewrite (run_halt C _ _ _ fs r p)
                        by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Ham; reflexivity).
                      apply (halt_total C). exact Hw.
@@ -1251,7 +1379,7 @@ Proof.
                      inversion Hrest as [|? ? _ Hr']; subst.
                      apply IH; [simpl in Hl1; lia|exact Hr'|simpl in Hsc1; exact Hsc1|].
                      cbn [s_frames]. rewrite arg_depth_push_arg, arg_depth_fresh. exact Hw2.
-              ** destruct (as_text a) as [r|r|m pl] eqn:Hat.
+              ** destruct (as_text a) as [r|r|m pl ga] eqn:Hat.
                  --- rewrite (run_halt C _ _ _ fs r p)
                        by (cbn [step s_frames s_out s_pos]; rewrite Hd, Hs, Ha, Hm, Hat; reflexivity).
                      apply (halt_total C). exact Hw.

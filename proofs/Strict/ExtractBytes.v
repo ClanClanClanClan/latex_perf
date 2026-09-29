@@ -20,7 +20,8 @@
     [nat] is extracted to OCaml [int] (ExtrOcamlNatInt; OPEN-096).  The nats
     here are token positions, line numbers, byte offsets and lengths: every
     one starts at 0 or 1 and changes only by successor or [pred] of a
-    positive value (DecideBytes.rd_pos), and every constant is a product of
+    positive value (DecideBytes.rd_pos), or TeX group counts (sums and
+    maxima of small non-negative ints, [Decide.groups]); every constant is a product of
     small literals ([max_line_bytes], [max_file_bytes]).  [ascii_of_nat] is
     applied only to 10, 13 and 32.  [ascii] is extracted to OCaml [char]
     (ExtrOcamlChar). *)

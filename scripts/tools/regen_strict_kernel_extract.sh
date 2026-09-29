@@ -57,8 +57,9 @@ HEADER='(* GENERATED — DO NOT EDIT BY HAND.
    product links this module: phase 1 runs it only in the generated
    differential (scripts/tools/strict_differential.py via strict_decide.exe).
 
-   nat is extracted to OCaml int (ExtrOcamlNatInt): the only nats are token
-   positions, non-negative and bounded by the length of the token list. *)
+   nat is extracted to OCaml int (ExtrOcamlNatInt): token positions,
+   non-negative and bounded by the length of the token list, and TeX group
+   counts (sums of small non-negative ints). *)
 
 [@@@warning "-a"]
 '

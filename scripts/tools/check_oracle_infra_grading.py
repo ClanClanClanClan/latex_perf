@@ -571,15 +571,19 @@ class Checker:
         try:
             # (1) the Python API: a caller dict carrying the hostile values.
             o = self.oracle("ok")
-            o.run_pdflatex(self.workroot, ["-interaction=nonstopmode", "t.tex"],
-                           dict(self.tv(), **hostile), 60)
-            why = exactly_protocol(forwarded(), None, tmp_created())
+            try:
+                o.run_pdflatex(self.workroot, ["-interaction=nonstopmode", "t.tex"],
+                               dict(self.tv(), **hostile), 60)
+                why = exactly_protocol(forwarded(), None, tmp_created())
+            except _oracle.OracleError as e:
+                why = f"the protocol's own run was refused: {e}"
             self.expect("ContainerOracle.run_pdflatex forwards a caller's TeX "
                         "variables instead of imposing the protocol's", not why, why)
             # (2) no private TEXMF: refused, not run in the shared TEXMFVAR.
             o = self.oracle("ok")
             try:
-                o.run_pdflatex(self.workroot, ["t.tex"], dict(want_fixed), 60)
+                o.run_pdflatex(self.workroot, ["t.tex"], dict(
+                    want_fixed, **_oracle.private_tmp_vars(self.workroot / "tx")), 60)
                 self.expect("run_pdflatex graded a run with no private "
                             "TEXMFHOME/TEXMFVAR (the container's persistent "
                             "TEXMFVAR would carry state)", False)
@@ -591,7 +595,7 @@ class Checker:
             for bad_tmp in ("/tmp", None, str(self.workroot / "elsewhere")):
                 env = dict(self.tv())
                 if bad_tmp is None:
-                    env.pop("TMPDIR")
+                    env.pop("TMPDIR", None)
                 else:
                     env["TMPDIR"] = bad_tmp
                 o = self.oracle("ok")
@@ -1034,11 +1038,18 @@ def main() -> int:
     saved = {k: os.environ.get(k) for k in ("FAKE_PLAN", "FAKE_COUNT", "DEAD_MSG")}
     with tempfile.TemporaryDirectory(prefix="oracle-infra-") as td:
         c = Checker(repo, Path(td))
-        c.python_graders()
-        c.generator_client()
-        c.grading_env()
-        c.argv_and_state()
-        c.shell_grader()
+        # An OracleError a section did not expect is a FAILURE of that
+        # section (the oracle refused a run the protocol makes), reported
+        # with its message, never a crash that hides the other sections.
+        for section in (c.python_graders, c.generator_client, c.grading_env,
+                        c.argv_and_state, c.shell_grader):
+            try:
+                section()
+            except _oracle.OracleError as e:
+                c.expect(f"{section.__name__}: the oracle refused a run the "
+                         f"protocol makes", False, str(e)[:300])
+            finally:
+                _oracle._ORACLE = None
     for k, v in saved.items():
         if v is None:
             os.environ.pop(k, None)

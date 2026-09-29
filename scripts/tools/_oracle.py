@@ -331,8 +331,9 @@ def graded_env(env: dict | None) -> dict:
     # /tmp, /var/folders/... -- is refused, not forwarded); TMP, TEMP and
     # JAVA_TOOL_OPTIONS are derived from it, never taken from `env`.
     tmp = env.get("TMPDIR")
-    want_tmp = private_tmp_vars(Path(env["TEXMFVAR"]).parent)["TMPDIR"]
-    if tmp != want_tmp:
+    want_tmp = (private_tmp_vars(Path(env["TEXMFVAR"]).parent)["TMPDIR"]
+                if env.get("TEXMFVAR") else tmp)  # TEXMFVAR: required above
+    if not tmp or tmp != want_tmp:
         raise OracleError(
             f"a graded run needs its private TMPDIR={want_tmp} (oracle_tex_vars "
             f"or tex_env), got {tmp!r}: without it restricted \\write18 "
@@ -340,7 +341,8 @@ def graded_env(env: dict | None) -> dict:
             f"long-lived container's /tmp (C-93)")
     out = {k: v for k, v in env.items() if not _ENV_FORWARD.match(k)}
     out.update({k: env[k] for k in _GRADING_TEXMF if k in env})
-    out.update(private_tmp_vars(Path(env["TEXMFVAR"]).parent))
+    if tmp:  # always, unless the check above is gone
+        out.update(private_tmp_vars(Path(tmp).parent))
     out.update(ORACLE_TEX_VARS)
     return out
 

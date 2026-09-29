@@ -786,9 +786,9 @@ class Gen:
 
     def nest(self, clean: bool):
         """Deep brace nesting, up to the bound of Decide.v (C-86)."""
-        k = self.pick([(6, 10), (4, 50), (3, 120), (2, MAX_BRACE_DEPTH - 1)])
+        k = self.pick([(6, 10), (4, 50), (3, 120), (2, MAX_GROUPS - 1)])
         # an argument inside would add braces past the bound (slice A)
-        saved, self.ARG_P = self.ARG_P, (0 if k > MAX_BRACE_DEPTH - 20 else self.ARG_P)
+        saved, self.ARG_P = self.ARG_P, (0 if k > MAX_GROUPS - 20 else self.ARG_P)
         inner = self.seq(3, "text", clean, 1, 3)
         self.ARG_P = saved
         node = inner

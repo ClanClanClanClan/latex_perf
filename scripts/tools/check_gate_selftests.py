@@ -917,13 +917,13 @@ REGISTRY = [
                      r"FAIL rule_probes: family R_script_double: 1 of",
                      transform=strict_family_one_disagrees),
             Mutation("the differential reports a disagreement",
-                     "corpora/strict_s0/differential_v3.json",
+                     "corpora/strict_s0/differential_v4.json",
                      r"FAIL differential: 1 disagreement",
                      transform=strict_differential_one_disagreement),
             # C-85: the published bound must be one over the generator's
             # distribution, not over L_S0.
             Mutation("the differential's bound drops its scope",
-                     "corpora/strict_s0/differential_v3.json",
+                     "corpora/strict_s0/differential_v4.json",
                      r"FAIL differential: the upper bound does not state",
                      transform=strict_bound_scope_dropped),
             # C-85 / R-INERT: a non-inert name admitted.
@@ -1171,8 +1171,9 @@ REGISTRY = [
             Mutation("in_strict_bytes no longer excludes a stream ending with $",
                      "proofs/Strict/DecideBytes.v",
                      r"FAIL DecideBytes\.v: in_strict_bytes no longer requires `ends_dollar",
-                     old="    bounded (toks_of ks) = true /\\\n    ends_dollar (toks_of ks) = false.\n",
-                     new="    bounded (toks_of ks) = true.\n"),
+                     old="    bounded (bc_kernel C) (toks_of ks) = true /\\\n"
+                         "    ends_dollar (toks_of ks) = false.\n",
+                     new="    bounded (bc_kernel C) (toks_of ks) = true.\n"),
             Mutation("the line bound's pin changes",
                      "proofs/Strict/Lexer.v",
                      r"FAIL Lexer\.v: missing the pin",

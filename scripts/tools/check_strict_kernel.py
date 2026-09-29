@@ -93,7 +93,7 @@ import sys
 from pathlib import Path
 
 MIN_DIFFERENTIAL = 3000
-DIFFERENTIAL = "corpora/strict_s0/differential_v3.json"
+DIFFERENTIAL = "corpora/strict_s0/differential_v4.json"
 # ADR-012 step 2, slice A: the one-argument commands' signatures
 ARG_SIGNATURES = "corpora/contracts/strict/article-s1-arg-signatures.json"
 REQUIRED_ARG_FAMILIES = [
@@ -141,10 +141,14 @@ REPETITION_MATH = ["R-MATH", "R-MATH-ALT", "R-FORMULAS", "R-DISPLAYS",
                    "R-NEST-MATH", "R-NEST-EACH-MATH", "R-BIG-MATH"]
 STRUCTURAL = {"par", "begin", "end"}
 
-# The kernel's capacity bounds (proofs/Strict/Decide.v, C-86). Checked below
-# against the Coq source: the definitions and their pinning Examples.
-MAX_BRACE_DEPTH = 200
+# The kernel's capacity bounds (proofs/Strict/Decide.v, C-86, C-94). Checked
+# below against the Coq source: the definitions and their pinning Examples.
+# MAX_GROUPS bounds TeX's grouping level (Decide.groups over every state of
+# the run), not a brace depth (C-94).
+MAX_GROUPS = 200
 MAX_TOKENS = 200 * 100
+MAX_NAME = 100
+CAPACITY = "corpora/strict_s0/capacity.json"
 
 # ---------------------------------------------------------------------------
 # RULE R-INERT (design §I.4, correction C-85): a control word that is not
@@ -178,12 +182,40 @@ MAX_TOKENS = 200 * 100
 #       - its expansion CLOSURE reaches a primitive of MACRO_STATE_CHANGERS
 #         (code tables, interaction, input/output, diagnostics and tracing,
 #         deferred execution, \immediate, \scantokens). The closure follows
-#         every token of letters and @ in an expansion text to its recorded
-#         meaning, transitively, and (since C-92) every robust-command
-#         reference `\protect \Y  ` to the meaning of the inner name "Y ".
-#         It does not follow a name holding other characters (\T1\IJ,
-#         \?-cmd): a screen, not a proof, recorded in §I.4; the probes
-#         (follower, repetition, interleaving) remain the behavioural check.
+#         every control sequence of an expansion text to its recorded
+#         meaning, transitively, and every character that is ACTIVE at body
+#         start to the active character's meaning.
+#
+# HOW AN EXPANSION TEXT IS READ (correction C-96; C-92 was the first
+# instance). \meaning prints a token list as text, and until C-96 the closure
+# took `\\([A-Za-z@]+)` of that text as the control words: `\hook_use:nnw`
+# was read as `\hook` (recorded meaning "undefined"), and the walk stopped
+# there silently, so no expl3 code was ever screened (six admitted names reach
+# \par, whose code is expl3: paragraph hooks and a conditional). The text
+# follows TeX's printing rules exactly (tex.web print_cs): a control sequence
+# of two or more characters is printed as \name and ONE space, a
+# one-character name c as \c, followed by a space only when c is a letter at
+# print time. A name may itself hold spaces and backslashes, and \meaning
+# hides category codes, so the text of one token list can have several
+# readings (the ambiguity recorded in D-3). The closure therefore takes
+# EVERY reading: at each backslash, every name of the closed world (the
+# kernel's names, updated by the configuration) that the printing rule
+# allows there, and the longest printed name even outside the closed world
+# (dumped like any other: an undefined name has meaning "undefined"); and a
+# printed backslash may also be a CHARACTER token (\@backslashchar's text is
+# one backslash), which runs no code. Every name the walk reaches must have a
+# meaning of a kind the rule classifies (`meaning_kind`: a macro, a
+# primitive, undefined, a character, a register or \chardef-like constant,
+# a font); a meaning of any other shape is UNRESOLVABLE, and a name whose
+# closure holds one is REJECTED, never passed silently. Every printed character that
+# may be an active character at body start (the lexical contract's catcode
+# 13: `~`, the ^^ notation of control characters, every byte of a non-ASCII
+# character) is followed to that active character's meaning (key
+# "active:<code>"). Over-reading only adds names to a closure, so it can
+# reject more names, never admit more.
+#         The closure is a screen, not a proof (design §I.4): it does not
+#         evaluate \csname targets or conditionals; the probes (follower,
+#         repetition, interleaving) remain the behavioural check.
 # ---------------------------------------------------------------------------
 NON_INERT_PRIMITIVE_CLASSES = {
     "expansion control": {
@@ -232,31 +264,145 @@ STRUCTURAL_CHARACTER_MEANINGS = (
     "alignment tab character", "macro parameter character",
     "superscript character", "subscript character",
 )
-_MACRO = re.compile(r"^((?:\\(?:long|protected|outer) )*)macro:(.*?)->(.*)$", re.S)
+_MACRO = re.compile(r"^((?:\\(?:long|protected|outer) ?)*)macro:(.*?)->(.*)$", re.S)
 _REGISTER = re.compile(r"^\\(count|dimen|skip|muskip|toks)\d+$")
-_TOKEN = re.compile(r"\\([A-Za-z@]+)")
-# LaTeX's robust commands (\DeclareRobustCommand): \X is `\protect \X  ` and
-# the command's code is the meaning of the name "X " (a trailing space in the
-# name; \meaning prints it, then its separating space). Correction C-92: the
-# closure of generator version 3 did not follow this edge, so a robust name's
-# own code was never screened (\bf, \it, \sf, \tt reach \afterassignment,
-# \centering and \raggedleft \immediate, through their robust inner names).
-_ROBUST = re.compile(r"\\protect \\([A-Za-z@]+)  ")
+# One reading of a printed control sequence may be at most this long (the
+# closed world's longest name has 90 characters).
+MAX_PRINTED_NAME = 128
+ACTIVE_PREFIX = "active:"
+# The characters that are active at body start in `article` (the lexical
+# contract's catcode 13: the control characters but tab, line feed and
+# return, `~`, and every byte from 128); used when no contract is given.
+DEFAULT_ACTIVE = frozenset(list(range(1, 9)) + [11, 12] + list(range(14, 32))
+                           + [126] + list(range(128, 256)))
+
+
+def _is_letter(c: str) -> bool:
+    return c.isascii() and c.isalpha()
+
+
+def expansion_text(meaning: str) -> str | None:
+    m = _MACRO.match(meaning)
+    return m.group(3) if m else None
+
+
+def body_readings(text: str, world: set[str], active=DEFAULT_ACTIVE,
+                  occurrences: list | None = None) -> tuple[set[str], list[str]]:
+    """(every name and active character a printed expansion text may hold,
+    the backslashes that have no reading). See HOW AN EXPANSION TEXT IS
+    READ above. `occurrences`, when given, receives the readings of each
+    backslash in order (one list per control sequence printed)."""
+    names: set[str] = set()
+    unresolved: list[str] = []
+    covered = -1  # the end of the longest reading of an earlier backslash
+    n = len(text)
+    i = 0
+    while i < n:
+        c = text[i]
+        if c == "\\":
+            cands, longest = [], None
+            for ln in range(1, min(MAX_PRINTED_NAME, n - i - 1) + 1):
+                nm = text[i + 1:i + 1 + ln]
+                if ln == 1:
+                    ok = (not _is_letter(nm)) or text[i + 2:i + 3] == " "
+                else:
+                    ok = text[i + 1 + ln:i + 2 + ln] == " "
+                if not ok:
+                    continue
+                if longest is None and ln >= 2 and " " not in nm:
+                    longest = nm
+                if nm in world or (ln == 1 and not _is_letter(nm)):
+                    cands.append(nm)
+            if longest is not None:
+                cands.append(longest)
+            # with no reading as a control sequence, the backslash is a
+            # character token (catcode other), or part of an earlier reading
+            if cands and occurrences is not None:
+                occurrences.append(cands)
+            for nm in cands:
+                names.add(nm)
+                covered = max(covered, i + 1 + len(nm))
+            i += 1
+            continue
+        # a character that may be active at body start
+        if c == "^" and text[i:i + 2] == "^^" and i + 2 < n:
+            h = text[i + 2:i + 4]
+            if re.fullmatch(r"[0-9a-f]{2}", h):
+                names.add(f"{ACTIVE_PREFIX}{int(h, 16)}")
+            o = ord(text[i + 2])
+            if o < 128:
+                names.add(f"{ACTIVE_PREFIX}{(o + 64) % 128 if o < 64 else o - 64}")
+        elif ord(c) in active and c.isascii():
+            names.add(f"{ACTIVE_PREFIX}{ord(c)}")
+        elif not c.isascii():
+            for b in c.encode("utf-8", "surrogateescape"):
+                if b in active:
+                    names.add(f"{ACTIVE_PREFIX}{b}")
+        i += 1
+    return {x for x in names if not x.startswith(ACTIVE_PREFIX)
+            or int(x[len(ACTIVE_PREFIX):]) in active}, unresolved
+
+
+_KIND_PATTERNS = (
+    ("undefined", re.compile(r"^undefined$")),
+    ("character", re.compile(r"^(the letter|the character|begin-group character|"
+                             r"end-group character|math shift character|"
+                             r"alignment tab character|macro parameter character|"
+                             r"superscript character|subscript character|"
+                             r"blank space|active character) ", re.S)),
+    ("constant", re.compile(r"^\\(char|mathchar|count|dimen|skip|muskip|toks|"
+                            r"attribute)\"?[0-9A-F]+$")),
+    ("font", re.compile(r"^select font ")),
+)
+
+
+def meaning_kind(meaning: str | None, primitives: set[str]) -> str | None:
+    """The kind of a recorded meaning, or None when the rule cannot classify
+    it (C-96: an unresolvable step, which rejects every name reaching it)."""
+    if meaning is None:
+        return None
+    if _MACRO.match(meaning):
+        return "macro"
+    if primitive_of(meaning, primitives) is not None:
+        return "primitive"
+    for k, pat in _KIND_PATTERNS:
+        if pat.search(meaning):
+            return k
+    return None
+
+
+def body_tokens(meaning: str, world: set[str] | None = None,
+                active=DEFAULT_ACTIVE) -> list[str] | None:
+    """The names (and active characters) a macro's expansion text may hold,
+    by every reading (None if the meaning is not a macro). Without a
+    `world`, only the longest printed names are read."""
+    t = expansion_text(meaning)
+    if t is None:
+        return None
+    got, _ = body_readings(t, world or set(), active)
+    return sorted(got)
+
+
+def closed_world(repo: Path) -> set[str]:
+    """The article configuration's closed world at body start: the kernel's
+    names, updated by the contract's defined_names (the loader's rule)."""
+    contract = json.loads((Path(repo) / "corpora/contracts/article.json").read_text())
+    kern = json.loads((Path(repo) / contract["kernel"]["file"]).read_text())
+    world = set(kern["names"])
+    for n, v in contract["defined_names"].items():
+        (world.discard if v.get("kind") == "Undefined" else world.add)(n)
+    return world
+
+
+def active_chars(repo: Path) -> frozenset:
+    """The characters of catcode 13 at body start (the lexical contract)."""
+    lx = json.loads((Path(repo) / "corpora/contracts/strict/article-s0-lexical.json"
+                     ).read_text())
+    return frozenset(i for i, c in enumerate(lx["catcodes"]) if c == 13)
 
 
 def _conditional(p: str) -> bool:
     return p.startswith("if") or p in {"else", "fi", "or", "unless"}
-
-
-def body_tokens(meaning: str) -> list[str] | None:
-    """The letter/@ control-word names of a macro's expansion text (None if
-    the meaning is not a macro), and for every robust-command reference
-    `\\protect \\Y  ` also the inner name "Y " (with its trailing space,
-    C-92)."""
-    m = _MACRO.match(meaning)
-    if not m:
-        return None
-    return _TOKEN.findall(m.group(3)) + [y + " " for y in _ROBUST.findall(m.group(3))]
 
 
 def primitive_of(meaning: str | None, primitives: set[str]) -> str | None:
@@ -265,10 +411,15 @@ def primitive_of(meaning: str | None, primitives: set[str]) -> str | None:
     return None
 
 
-def closure(name: str, meanings: dict[str, str]) -> tuple[set[str], set[str]]:
-    """(the macros reached from `name` through expansion texts, the tokens
-    met without a recorded meaning)."""
-    seen, missing, stack = set(), set(), [name]
+def closure(name: str, meanings: dict[str, str], world: set[str] | None = None,
+            active=DEFAULT_ACTIVE, primitives: set[str] | None = None
+            ) -> tuple[set[str], set[str], dict[str, str]]:
+    """(the names reached from `name` through expansion texts, by every
+    reading; the names met without a recorded meaning; the reached names
+    whose meaning `meaning_kind` cannot classify, with that meaning -- only
+    when `primitives` is given)."""
+    world = world or set()
+    seen, missing, unresolved, stack = set(), set(), {}, [name]
     while stack:
         x = stack.pop()
         if x in seen:
@@ -277,15 +428,21 @@ def closure(name: str, meanings: dict[str, str]) -> tuple[set[str], set[str]]:
             missing.add(x)
             continue
         seen.add(x)
-        for t in body_tokens(meanings[x]) or ():
-            stack.append(t)
-    return seen, missing
+        if primitives is not None and meaning_kind(meanings[x], primitives) is None:
+            unresolved[x] = meanings[x]
+        t = expansion_text(meanings[x])
+        if t is None:
+            continue
+        stack.extend(body_readings(t, world, active)[0])
+    return seen, missing, unresolved
 
 
 def inertness_violation(name: str, meanings: dict[str, str],
-                        primitives: set[str]) -> str | None:
+                        primitives: set[str], world: set[str] | None = None,
+                        active=DEFAULT_ACTIVE) -> str | None:
     """None when `name` is inert by RULE R-INERT, else the reason. Raises
-    KeyError when the recorded closure of meanings is incomplete."""
+    KeyError when the recorded closure of meanings is incomplete. `world` is
+    the closed world at body start (the readings of printed names, C-96)."""
     meaning = meanings[name]
     p = primitive_of(meaning, primitives)
     if p is not None:
@@ -303,21 +460,35 @@ def inertness_violation(name: str, meanings: dict[str, str],
         return f"not a command of the fragment ({meaning})"
     if _REGISTER.match(meaning):
         return f"register ({meaning}): as a command it reads an assignment"
-    toks = body_tokens(meaning)
-    if toks is None:
+    text = expansion_text(meaning)
+    if text is None:
         return None
-    if _MACRO.match(meaning).group(3).strip() == "":
+    if text.strip() == "":
         return "macro with an empty expansion text (transparent to expansion)"
-    opens = sum(1 for t in toks if t.startswith("if") or t == "unless")
-    closes = sum(1 for t in toks if t == "fi")
+    reached, missing, unresolved = closure(name, meanings, world, active, primitives)
+    if missing:
+        raise KeyError(f"meaning closure of {name} is incomplete: {sorted(missing)[:5]}")
+    # the conditionals of the name's OWN text: a control sequence one of whose
+    # readings is a conditional primitive (\\if..., \\unless) or \\fi (a name
+    # beginning "if" counts too, as before C-96)
+    occ: list = []
+    body_readings(text, world or set(), active, occ)
+
+    def is_(cands, pred):
+        return any(pred(c, primitive_of(meanings.get(c), primitives) or "") for c in cands)
+    opens = sum(1 for cs in occ if is_(cs, lambda c, q: c.startswith("if") or c == "unless"
+                                       or (q.startswith("if") or q == "unless")))
+    closes = sum(1 for cs in occ if is_(cs, lambda c, q: c == "fi" or q == "fi"))
     if opens != closes:
         return (f"macro whose expansion text has unbalanced conditionals "
                 f"({opens} if-tokens, {closes} \\fi)")
-    reached, missing = closure(name, meanings)
-    if missing:
-        raise KeyError(f"meaning closure of {name} is incomplete: {sorted(missing)[:5]}")
+    if unresolved:
+        x = sorted(unresolved)[0]
+        return (f"its expansion closure reaches \\{x}, whose meaning the rule cannot "
+                f"classify ({unresolved[x][:60]!r}; C-96: unresolvable, rejected)")
     for x in sorted(reached):
-        for t in body_tokens(meanings[x]) or ():
+        t_ = expansion_text(meanings[x])
+        for t in (sorted(body_readings(t_, world or set(), active)[0]) if t_ is not None else ()):
             q = primitive_of(meanings.get(t), primitives)
             if q is not None and (q in MACRO_STATE_CHANGERS or q.startswith("tracing")):
                 via = "" if x == name else f" via \\{x}"
@@ -325,7 +496,7 @@ def inertness_violation(name: str, meanings: dict[str, str],
     return None
 
 
-_MACRO_PARAMS = re.compile(r"^((?:\\(?:long|protected|outer) )*)macro:(.*?)->", re.S)
+_MACRO_PARAMS = re.compile(r"^((?:\\(?:long|protected|outer) ?)*)macro:(.*?)->", re.S)
 
 
 def arg_candidates(meanings: dict[str, str], admitted1: set[str]) -> list[str]:
@@ -488,9 +659,21 @@ def _acls(h: dict, where: str) -> str:
     return f"run.{b[1]}"
 
 
+def run_pay(b: list, where: str) -> str:
+    """The payload mode of a run behaviour: ["run", material, P, G] in text,
+    ["run", P, G] in math (G: the command's TeX groups, C-94)."""
+    return b[2] if where == "text" else b[1]
+
+
+def run_groups(b: list, where: str) -> int:
+    """The TeX groups a run behaviour holds open (C-94)."""
+    return b[3] if where == "text" else b[2]
+
+
 def arg_runs(asigs: dict) -> set[str]:
     """The payload modes the admitted argument signatures run in."""
-    return {h[w][-1] for h in asigs.values() for w in ("text", "math") if h[w][0] == "run"}
+    return {run_pay(h[w], w) for h in asigs.values() for w in ("text", "math")
+            if h[w][0] == "run"}
 
 
 def required_cells(syntax: str, sem: str, sigs: dict, asigs: dict | None = None
@@ -699,6 +882,146 @@ def faithful_findings(bridge: str) -> list[str]:
     return out
 
 
+# The capacity account (Decide.v, C-94), pinned token for token (comments
+# stripped, whitespace normalised): a frame is one TeX group, an argument its
+# command's g; the account is taken over every state of the run; and it is
+# part of `bounded` with the token and name bounds.
+CAPACITY_ACCOUNT = [
+    ("Definition frame_groups (f : frame) : nat := match f with | FArg _ _ g _ _ => g "
+     "| _ => 1 end.", "frame_groups"),
+    ("Fixpoint groups (fs : list frame) : nat := match fs with | [] => 0 | f :: r => "
+     "frame_groups f + groups r end.", "groups"),
+    ("Fixpoint peak (C : contract) (s : state) (ts : list tok) : nat := match ts with "
+     "| [] => groups (s_frames s) | t :: rest => Nat.max (groups (s_frames s)) "
+     "(match step C s t (hd_error rest) with | Go1 s' => peak C s' rest | Go2 s' => "
+     "match rest with [] => 0 | _ :: rest' => peak C s' rest' end | _ => 0 end) end.",
+     "peak"),
+    ("Definition bounded (C : contract) (ts : list tok) : bool := Nat.leb (length ts) "
+     "max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups.", "bounded"),
+]
+# The frame-kind labels of strict_decide.ml pushed_label, by the constructor
+# of the extracted `frame` type each one names.
+LABEL_CTOR = (("simple", "FSimple"), ("inline.", "FShift"), ("display.", "FShift"),
+              ("mgroup", "FMGroup"), ("script", "FMGroup"), ("arg.", "FArg"))
+
+
+def _ocaml_ctors(ml: str, typ: str) -> set[str]:
+    m = re.search(rf"^type {typ} =(.*?)(?=^\S)", ml, re.S | re.M)
+    return set(re.findall(r"\|\s*([A-Z]\w*)", m.group(1))) if m else set()
+
+
+def capacity_findings(repo: Path, ext_sha: str, sig_sha: str, asig_sha: str | None,
+                      asigs: dict, extract: Path) -> list[str]:
+    """Check 11 (C-94): corpora/strict_s0/capacity.json, made by
+    measure_strict_capacity.py from the committed extraction and contract,
+    probes EVERY pair of frame kinds the extracted model can stack (its
+    --frame-pairs search over every token of the grammar): at the group
+    bound, agreeing with pdfTeX with the pair on the peak's frame stack; one
+    group past it, outside the fragment; and pdfTeX's own overflow within the
+    window the account predicts. The frame kinds are the extracted `frame`
+    type's constructors and the search alphabet covers the extracted `tok`
+    type's: derived from the model, not listed here."""
+    out: list[str] = []
+    p = repo / CAPACITY
+    if not p.is_file():
+        return [f"{CAPACITY}: missing (run measure_strict_capacity.py; C-94)"]
+    d = json.loads(p.read_text())
+    if d.get("kernel_extract_sha256") != ext_sha:
+        out.append(f"{CAPACITY}: ran another extraction; re-run measure_strict_capacity.py")
+    if d.get("signatures_sha256") != sig_sha or d.get("arg_signatures_sha256") != asig_sha:
+        out.append(f"{CAPACITY}: ran other signature files; re-run it")
+    if d.get("bounds") != {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
+                           "max_name": MAX_NAME}:
+        out.append(f"{CAPACITY}: bounds {d.get('bounds')} are not Decide.v's")
+    ml = extract.read_text()
+    toks = _ocaml_ctors(ml, "tok")
+    frames = _ocaml_ctors(ml, "frame")
+    if not toks or not frames:
+        out.append("capacity: cannot read the extracted tok/frame types")
+    alpha = {a[0] for a in d.get("frame_pairs", {}).get("alphabet", [])}
+    tok_of_label = {"char": "TChar", "space": "TSpace", "par": "TPar", "open": "TOpen",
+                    "close": "TClose", "dollar": "TDollar", "open_paren": "TMOpenInline",
+                    "close_paren": "TMCloseInline", "open_bracket": "TMOpenDisplay",
+                    "close_bracket": "TMCloseDisplay", "sup": "TScript", "sub": "TScript",
+                    "cs": "TCs", "end": "TEnd"}
+    covered = {tok_of_label.get(a) for a in alpha}
+    if toks - covered:
+        out.append(f"{CAPACITY}: the frame-pair search's alphabet misses the token "
+                   f"constructors {sorted(toks - covered)} of the extracted model")
+    pairs = d.get("pairs", [])
+    if len(pairs) != d.get("frame_pairs", {}).get("n", -1) or not pairs:
+        out.append(f"{CAPACITY}: {len(pairs)} pair records for "
+                   f"{d.get('frame_pairs', {}).get('n')} model pairs")
+    labels = {x for r in pairs for x in (r.get("below"), r.get("above")) if x != "top"}
+    ctors = {c for lab in labels for pre, c in LABEL_CTOR if lab.startswith(pre)}
+    if frames - ctors:
+        out.append(f"{CAPACITY}: no probed pair has a frame of kind {sorted(frames - ctors)}")
+    for n, h in asigs.items():
+        for w, suf in (("text", "/t"), ("math", "/m")):
+            if h[w][0] == "run" and not any(lab.endswith(f":{n}{suf}") for lab in labels):
+                out.append(f"{CAPACITY}: the argument frame of {n!r} pushed in {w} is in "
+                           f"no probed pair")
+    meas = d.get("measured", {})
+    capv, tmax = meas.get("grouping_capacity"), meas.get("max_transient")
+    if not isinstance(capv, int) or not isinstance(tmax, int):
+        out.append(f"{CAPACITY}: no measured grouping capacity / transient")
+        capv, tmax = 10 ** 9, 0
+    elif capv - tmax - MAX_GROUPS < 1:
+        out.append(f"{CAPACITY}: no margin: capacity {capv} - transient {tmax} "
+                   f"<= max_groups {MAX_GROUPS}")
+    bad = 0
+    for r in pairs:
+        tag = f"{r.get('below')}>{r.get('above')}"
+        at, past, ov = r.get("at", {}), r.get("past", {}), r.get("overflow", {})
+        why = None
+        if not (at.get("agree") and at.get("peak") == MAX_GROUPS and at.get("adjacent")):
+            why = f"not probed at the bound (agree {at.get('agree')}, peak {at.get('peak')})"
+        elif not (past.get("verdict") == "not_strict" and past.get("peak") == MAX_GROUPS + 1):
+            why = f"one group past the bound is not outside the fragment ({past})"
+        elif not (isinstance(ov.get("first_fail"), int)
+                  and capv + 1 - tmax <= ov["first_fail"] <= capv + 1):
+            why = (f"pdfTeX overflows at {ov.get('first_fail')} groups, outside the "
+                   f"account's window [{capv + 1 - tmax}, {capv + 1}]")
+        if why:
+            bad += 1
+            if bad <= 10:
+                out.append(f"{CAPACITY}: pair {tag} {why}")
+    if bad > 10:
+        out.append(f"{CAPACITY}: {bad} pairs fail in all")
+    for res, v in sorted(d.get("table", {}).items()):
+        if not (isinstance(v.get("max_used"), int) and isinstance(v.get("capacity"), int)
+                and v["max_used"] * 2 <= v["capacity"]):
+            out.append(f"{CAPACITY}: {res}: {v.get('max_used')} of {v.get('capacity')} used "
+                       f"at the bounds, more than half (C-94 margin)")
+    for fam, v in sorted(d.get("usage", {}).items()):
+        if not v.get("agree"):
+            out.append(f"{CAPACITY}: usage document {fam} disagrees ({v.get('why')})")
+    return out
+
+
+def reuse_findings(repo: Path, label: str, reuse) -> list[str]:
+    """Check 12 (LOW-2 of the C-94 review): a reused grade's source is a
+    COMMITTED file, recorded by repository path, commit and sha256, never a
+    local path or store; when the commit is available the file's sha256 is
+    verified."""
+    if not reuse:
+        return []
+    srcs = reuse.get("sources") if isinstance(reuse, dict) and "sources" in reuse else [reuse]
+    out = []
+    for src in srcs:
+        f, c, h = src.get("file", ""), src.get("commit", ""), src.get("sha256", "")
+        if (not re.fullmatch(r"[0-9a-f]{40}", str(c)) or not re.fullmatch(r"[0-9a-f]{64}", str(h))
+                or not f or f.startswith("/") or ".." in Path(f).parts):
+            out.append(f"{label}: grades reused from {f or src} which is not a committed "
+                       f"file (path, commit, sha256; LOW-2)")
+            continue
+        import subprocess
+        g = subprocess.run(["git", "show", f"{c}:{f}"], cwd=repo, capture_output=True)
+        if g.returncode == 0 and hashlib.sha256(g.stdout).hexdigest() != h:
+            out.append(f"{label}: reuse source {f}@{c[:12]} does not have the recorded sha256")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=".")
@@ -875,6 +1198,9 @@ def main() -> int:
     # 6. every admitted name is inert (RULE R-INERT)
     meanings = sig.get("meanings", {})
     prims = set(kern.get("primitives", {}).get("names", []))
+    world = set(members)
+    lexp = repo / "corpora/contracts/strict/article-s0-lexical.json"
+    active = (active_chars(repo) if lexp.is_file() else DEFAULT_ACTIVE)
     if not prims:
         fails.append("kernel file: no primitives list (RULE R-INERT needs it)")
     for n in sorted(sigs):
@@ -882,7 +1208,7 @@ def main() -> int:
             fails.append(f"signatures: admitted {n!r} has no recorded meaning (R-INERT)")
             continue
         try:
-            v = inertness_violation(n, meanings, prims)
+            v = inertness_violation(n, meanings, prims, world, active)
         except KeyError as e:
             fails.append(f"signatures: {e.args[0]} (R-INERT)")
             continue
@@ -891,7 +1217,7 @@ def main() -> int:
     ameanings = asig.get("meanings", {})
     for n in sorted(asigs):
         try:
-            v = inertness_violation(n, ameanings, prims)
+            v = inertness_violation(n, ameanings, prims, world, active)
         except KeyError as e:
             fails.append(f"arg signatures: {e.args[0]} (R-INERT)")
             continue
@@ -972,23 +1298,29 @@ def main() -> int:
         if ctx.get("disagree") != 0:
             fails.append(f"arg signatures: the context stage has {ctx.get('disagree')} "
                          f"disagreement(s) (phase-1 names in an argument's mode)")
-        need_ctx = {f"{w}/{h[w][-1]}" for h in asigs.values() for w in ("text", "math")
-                    if h[w][0] == "run" and h[w][-1] != "math"
-                    and not (w == "text" and h[w][-1] == "text")}
+        need_ctx = {f"{w}/{run_pay(h[w], w)}" for h in asigs.values()
+                    for w in ("text", "math")
+                    if h[w][0] == "run" and run_pay(h[w], w) != "math"
+                    and not (w == "text" and run_pay(h[w], w) == "text")}
         if need_ctx - set(ctx.get("carriers", {})):
             fails.append(f"arg signatures: no context evidence for the modes "
                          f"{sorted(need_ctx - set(ctx.get('carriers', {})))}")
 
-    # 9. capacity bounds
-    for pin in ("Example max_brace_depth_is_200 : max_brace_depth = 200.",
-                "Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100."):
+    # 9. capacity bounds (C-86, C-94): the pins, and the account pinned
+    code_d = " ".join(strip_coq_comments(decide_v).split())
+    for pin in ("Example max_groups_is_200 : max_groups = 200.",
+                "Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100.",
+                "Example max_name_is_100 : max_name = 100."):
         if pin not in decide_v:
             fails.append(f"Decide.v: missing the pin `{pin}`")
-    if (MAX_BRACE_DEPTH, MAX_TOKENS) != (200, 200 * 100):
-        fails.append("check_strict_kernel: MAX_BRACE_DEPTH/MAX_TOKENS differ from Decide.v")
-    if not re.search(r"Definition in_strict_doc .*\n.*bounded \(flatten_doc d\) = true",
+    if (MAX_GROUPS, MAX_TOKENS, MAX_NAME) != (200, 200 * 100, 100):
+        fails.append("check_strict_kernel: MAX_GROUPS/MAX_TOKENS/MAX_NAME differ from Decide.v")
+    for want, what in CAPACITY_ACCOUNT:
+        if want not in code_d:
+            fails.append(f"Decide.v: {what} is not the pinned account `{want}` (C-94)")
+    if not re.search(r"Definition in_strict_doc .*\n.*bounded C \(flatten_doc d\) = true",
                      decide_v):
-        fails.append("Decide.v: in_strict_doc no longer requires `bounded` (C-86)")
+        fails.append("Decide.v: in_strict_doc no longer requires `bounded` (C-86, C-94)")
     # slice A: an argument that does not close before \end{document} or the
     # end of the stream is outside the tier (pdfTeX reads on past what the
     # fragment models), and so is a one-argument command without its brace
@@ -1001,6 +1333,28 @@ def main() -> int:
                      f"(at least 6, all agreeing)")
     if sum(1 for r in rp.get("outside_tier", []) if r.get("family") == "BOUND-OUT") < 2:
         fails.append("rule_probes: fewer than 2 BOUND-OUT documents outside the tier")
+    for n, h in sorted(asigs.items()):
+        for w in ("text", "math"):
+            if h[w][0] == "run" and not (len(h[w]) == (4 if w == "text" else 3)
+                                         and isinstance(run_groups(h[w], w), int)
+                                         and run_groups(h[w], w) >= 0):
+                fails.append(f"arg signatures: {n!r} runs in {w} without its measured "
+                             f"TeX groups (C-94)")
+            elif h[w][0] == "run":
+                gm = asig.get("capacity", {}).get("groups", {}).get(n, {}).get(w)
+                if gm != run_groups(h[w], w):
+                    fails.append(f"arg signatures: {n!r}'s groups in {w} "
+                                 f"({run_groups(h[w], w)}) are not stage G's measure ({gm})")
+    # 11. THE CAPACITY ACCOUNT IS PROBED (C-94)
+    fails += capacity_findings(repo, ext_sha, sha(sig_path),
+                               sha(asig_path) if asig else None, asigs, extract)
+    # 12. REUSE PROVENANCE (LOW-2 of the C-94 review): every reused grade comes
+    # from a committed file, named by path, commit and sha256
+    fails += reuse_findings(repo, "signatures", sig.get("reuse"))
+    if asig:
+        fails += reuse_findings(repo, "arg signatures", asig.get("reuse"))
+    fails += reuse_findings(repo, "rule_probes", rp.get("reuse"))
+    fails += reuse_findings(repo, "differential", df.get("reuse"))
 
     # 10. Faithful's body is pinned (OPEN-121 review M-1)
     fails += faithful_findings((repo / "proofs/Strict/Bridge.v").read_text())

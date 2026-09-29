@@ -729,8 +729,10 @@ let pushed_label (t : K.tok) (fs : K.frame list) =
       | K.FMGroup (true, _, _) -> "script"
       | K.FMGroup (false, _, _) -> "mgroup"
       | K.FArg (_, p, _, _, _) ->
+          (* the mode it was pushed from: a command's groups are per mode *)
           "arg." ^ string_of_pay p ^ ":"
-          ^ (match t with K.TCs n -> string_of_chars n | _ -> "?"))
+          ^ (match t with K.TCs n -> string_of_chars n | _ -> "?")
+          ^ if K.in_math (List.tl fs) then "/m" else "/t")
 
 (* One step of [run] (Go1/Go2) with the label stack kept beside the frames:
    the new state, the rest of the stream, the new labels; None when the run

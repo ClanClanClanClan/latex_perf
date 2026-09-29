@@ -75,14 +75,22 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
+import _strict_capacity as C  # noqa: E402
 import _strict_s0 as S  # noqa: E402
 import check_strict_kernel as CK  # noqa: E402
 import gen_strict_signatures as G  # noqa: E402
 
-GENERATOR_VERSION = "1"
+# Version 2 (C-94, C-96): a run behaviour carries the TeX GROUPS the command
+# holds open while its argument runs, MEASURED (stage G: the deepest brace
+# nesting inside the argument that pdfTeX survives, against the body's
+# measured capacity); the nesting families sit at the TeX-group bound; stage
+# 3b grades every frame-kind pair the model can stack with the command, at
+# the bound (A-CAP-*); stage 0 reads expansion texts by every reading
+# (check_strict_kernel.body_readings); reuse sources are committed files.
+GENERATOR_VERSION = "2"
 OUT = S.ARG_SIGNATURES
 UNDEF = "lpqundefa"
-MAX_BRACE_DEPTH, MAX_TOKENS = CK.MAX_BRACE_DEPTH, CK.MAX_TOKENS
+MAX_GROUPS, MAX_TOKENS = CK.MAX_GROUPS, CK.MAX_TOKENS
 REPEAT = 300
 SAFE_CHARS = G.SAFE_CHARS
 
@@ -182,7 +190,10 @@ FOLLOWERS = {
 }
 
 
-def stage2_probes(x: str) -> dict[str, dict]:
+def stage2_probes(x: str, gt: int = 1, gm: int = 1) -> dict[str, dict]:
+    """Stage 2's families; the nesting families depend on the command's
+    measured groups in text (gt) and math (gm): they sit at the TeX-group
+    bound (C-94). The recorded templates are those of g = 1."""
     y = t("y")
     p: dict[str, dict] = {}
     for k, f in FOLLOWERS.items():
@@ -207,14 +218,19 @@ def stage2_probes(x: str) -> dict[str, dict]:
     p["A-R-MATH"] = S.doc(_dollar(*(one * REPEAT)))
     p["A-R-FORMULAS"] = S.doc(*[_dollar(*one) for _ in range(REPEAT)])
     p["A-R-DISPLAYS"] = S.doc(*[_display(*one) for _ in range(REPEAT)])
-    # nesting to the brace bound: the command 200 levels deep
+    # nesting to the TeX-group bound (Decide.v max_groups, C-94): as many
+    # levels of the command as its groups allow; in math the formula is one
+    # of the groups (an inner level runs from the argument's mode, so it
+    # costs gt or gm: the larger is taken, and the exact bound for every
+    # combination is stage 3b's)
     def nest(k):
         inner = [y]
         for _ in range(k):
             inner = A(x, *inner)
         return inner
-    p["A-R-NEST-TEXT"] = S.doc(*nest(MAX_BRACE_DEPTH))
-    p["A-R-NEST-MATH"] = S.doc(_dollar(*nest(MAX_BRACE_DEPTH)))
+    p["A-R-NEST-TEXT"] = S.doc(*nest(MAX_GROUPS // max(gt, 1)))
+    p["A-R-NEST-MATH"] = S.doc(_dollar(*A(x, *nest((MAX_GROUPS - 1 - gm)
+                                                    // max(gt, gm, 1)))))
     # to the token bound: the command with a one-character argument (4 tokens)
     k = (MAX_TOKENS - 4) // 4
     p["A-R-BIG-TEXT"] = S.doc(*(one * k))
@@ -291,10 +307,26 @@ def all_words() -> list[str]:
 
 # ----------------------------------------------------------------- fitting ---
 
+def with_g(h: dict, gt: int, gm: int) -> dict:
+    """A hypothesis with the command's TeX groups in its run behaviours
+    (the loader refuses a run behaviour without them, C-94)."""
+    h = json.loads(json.dumps(h))
+    if h["text"][0] == "run":
+        h["text"] = h["text"][:3] + [gt]
+    if h["math"][0] == "run":
+        h["math"] = h["math"][:2] + [gm]
+    return h
+
+
 def fit(kern, x: str, reqs: dict[str, dict], grades: dict[str, dict],
-        hyps: list[dict]) -> tuple[list[dict], dict]:
+        hyps: list[dict], gt: int = 1, gm: int = 1) -> tuple[list[dict], dict]:
+    """The hypotheses under which the extracted kernel agrees with every
+    grade. Before stage G has measured the command's groups, gt = gm = 1
+    stands in: no probe of stage 1 comes near the group bound, so the
+    groups cannot change a verdict there (they only decide membership)."""
     fams = list(reqs)
-    preq = [dict(_req(reqs[f]), arg_signatures={x: h}) for h in hyps for f in fams]
+    preq = [dict(_req(reqs[f]), arg_signatures={x: with_g(h, gt, gm)})
+            for h in hyps for f in fams]
     preds = kern.run(preq)
     fits, miss = [], {}
     k = 0
@@ -315,12 +347,15 @@ def render_all(kern, reqs: list[dict]) -> list[str]:
     return [o["tex"] for o in kern.run([_req(r) for r in reqs])]
 
 
-def seed_from(grader, kern, path: Path, oracle) -> dict:
-    old = json.loads(path.read_text())
+def seed_from(grader, kern, spec: str, oracle) -> dict:
+    """Seed the grades of a previous argument-signature file COMMITTED to the
+    repository (S.committed_source; LOW-2 of the C-94 review)."""
+    text, src = S.committed_source(spec)
+    old = json.loads(text)
     prov, cur = old.get("oracle", {}), oracle.provenance()
     diff = sorted(k for k in set(prov) | set(cur) if prov.get(k) != cur.get(k))
     if diff:
-        raise SystemExit(f"--reuse {path}: graded by another oracle ({diff} differ)")
+        raise SystemExit(f"--reuse {spec}: graded by another oracle ({diff} differ)")
     fams = old["probes"]
     reqs, keys = [], []
     for x, ev in old["evidence"].items():
@@ -337,8 +372,75 @@ def seed_from(grader, kern, path: Path, oracle) -> dict:
             "rc": rc, "pdf": pdf, "passes": None, "timed_out": rc == -1,
             "error": err, "line": line}
     grader.reused = len(outs)
-    return {"file": str(path), "sha256": S.sha256_file(path),
-            "generator_version": old.get("generator_version"), "grades_reused": len(outs)}
+    return {**src, "generator_version": old.get("generator_version"),
+            "grades_reused": len(outs)}
+
+
+# -------------------------------------------------------------- capacity ---
+
+def _braces(j: int, inner: list) -> list:
+    node = inner
+    for _ in range(j):
+        node = [g(*node)]
+    return node
+
+
+def measure_groups(grader, kern, names: list[str], hi: int = 300) -> dict:
+    """Stage G (C-94). K: the body's grouping capacity, as the formula plus
+    the deepest brace nesting in it that pdfTeX survives. For each command
+    and mode, the deepest brace nesting inside its argument that pdfTeX
+    survives, jmax; the command's groups are then K - jmax in text and
+    K - 1 - jmax in math (the formula is one). None when the argument does
+    not run there (the command alone does not compile). Bisection, all
+    commands in lockstep; every document is graded by the one oracle."""
+    fams = {("K", "math"): lambda j: S.doc(_dollar(*_braces(j, [t("x")])))}
+    for x in names:
+        fams[(x, "text")] = (lambda x_: lambda j: S.doc(*A(x_, *_braces(j, [t("x")]))))(x)
+        fams[(x, "math")] = (lambda x_: lambda j: S.doc(_dollar(*A(x_, *_braces(j, [t("x")])))))(x)
+    keys = sorted(fams)
+
+    def ok_all(pts):
+        texs = render_all(kern, [fams[k](j) for k, j in pts])
+        grs = grader.grade_all(texs, "groups")
+        return [gr["rc"] == 0 and gr["pdf"] for gr in grs], grs
+
+    lo_ok, _ = ok_all([(k, 0) for k in keys])
+    hi_ok, hi_gr = ok_all([(k, hi) for k in keys])
+    state = {}
+    for k, a, b, gr in zip(keys, lo_ok, hi_ok, hi_gr):
+        if not a:
+            state[k] = None
+        elif b:
+            raise SystemExit(f"stage G: {k} survives {hi} braces: the search range is wrong")
+        else:
+            state[k] = [0, hi, gr["error"]]
+    while True:
+        todo = [k for k in keys if state[k] and state[k][1] - state[k][0] > 1]
+        if not todo:
+            break
+        mids = [(k, (state[k][0] + state[k][1]) // 2) for k in todo]
+        oks, grs = ok_all(mids)
+        for (k, m), ok, gr in zip(mids, oks, grs):
+            if ok:
+                state[k][0] = m
+            else:
+                state[k][1], state[k][2] = m, gr["error"]
+    if state[("K", "math")] is None:
+        raise SystemExit("stage G: a formula alone does not compile")
+    K = state[("K", "math")][0] + 1
+    groups = {}
+    for x in names:
+        jt, jm = state[(x, "text")], state[(x, "math")]
+        groups[x] = {"text": None if jt is None else K - jt[0],
+                     "math": None if jm is None else K - 1 - jm[0],
+                     "jmax_text": None if jt is None else jt[0],
+                     "jmax_math": None if jm is None else jm[0],
+                     "overflow_text": None if jt is None else jt[2],
+                     "overflow_math": None if jm is None else jm[2]}
+    return {"K": K, "K_overflow": state[("K", "math")][2], "groups": groups,
+            "rule": "K = 1 + the deepest brace nesting pdfTeX survives inside $...$; "
+                    "a command's groups = K - jmax in text, K - 1 - jmax in math, jmax "
+                    "the deepest brace nesting it survives inside the command's argument"}
 
 
 # ------------------------------------------------------------ interleaving ---
@@ -347,7 +449,7 @@ def payload_mode(h: dict, where: str) -> str | None:
     """The mode a command's argument runs in when the command is used in
     `where` (text or math); None when it does not run there."""
     b = h["text"] if where == "text" else h["math"]
-    return b[-1] if b[0] == "run" else None
+    return CK.run_pay(b, where) if b[0] == "run" else None
 
 
 def interleave_docs(sigs: dict[str, dict], w_t: list[str], w_m: list[str],
@@ -406,7 +508,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--out", default=str(OUT))
-    ap.add_argument("--reuse", help="a previous argument-signature file of the same oracle")
+    ap.add_argument("--reuse", help="a previous argument-signature file of the same "
+                    "oracle, COMMITTED (REV:path, or a tracked unmodified path)")
     ap.add_argument("--interleave-seeds", type=int, default=3)
     ap.add_argument("--only", help="comma-separated candidate names (debugging; "
                     "the output is then not the rule's and the gate refuses it)")
@@ -419,7 +522,7 @@ def main() -> int:
     if UNDEF in S.members():
         raise SystemExit("the probes' undefined name is defined")
     grader = G.Grader(oracle, args.workers)
-    reuse = seed_from(grader, kern, Path(args.reuse), oracle) if args.reuse else None
+    reuse = seed_from(grader, kern, args.reuse, oracle) if args.reuse else None
 
     # the selection rule, over the whole closed world's meanings
     words = all_words()
@@ -432,11 +535,12 @@ def main() -> int:
     print(f"[arg-signatures] {len(names)} candidates by the selection rule", flush=True)
 
     # 0. inertness rule
-    meanings = G.meaning_closure(oracle, names)
+    world, active = CK.closed_world(S.REPO), CK.active_chars(S.REPO)
+    meanings = G.meaning_closure(oracle, names, world, active)
     prims = S.primitives()
     rejected: dict[str, str] = {}
     for x in names:
-        v = CK.inertness_violation(x, meanings, prims)
+        v = CK.inertness_violation(x, meanings, prims, world, active)
         if v:
             rejected[x] = f"stage 0 (inertness rule): {v}"
     alive0 = [x for x in names if x not in rejected]
@@ -457,17 +561,31 @@ def main() -> int:
             rejected[x] = f"stage 1 (base probes): no hypothesis fits; e.g. {ex_[0]} fails {ex_[1]}"
     print(f"[arg-signatures] stage 1: {len(alive)} names still fit", flush=True)
 
-    # 2. follower, display-follower, repetition families
+    # G. the TeX groups each surviving command holds open while its argument
+    # runs, per mode (C-94): the deepest brace nesting inside the argument
+    # that pdfTeX survives, against the body's capacity K measured here the
+    # same way (a formula and braces in it). A command whose argument does
+    # not run in a mode has no count there (1 stands in; no run hypothesis
+    # of that mode can fit it).
+    cap = measure_groups(grader, kern, alive)
+    gt_of = {x: cap["groups"][x]["text"] or 1 for x in alive}
+    gm_of = {x: cap["groups"][x]["math"] or 1 for x in alive}
+    print(f"[arg-signatures] stage G: capacity K = {cap['K']}; groups "
+          f"{ {x: (cap['groups'][x]['text'], cap['groups'][x]['math']) for x in alive} }",
+          flush=True)
+
+    # 2. follower, display-follower, repetition families (the nesting ones
+    # at the group bound for the command's measured groups)
     fam2 = list(stage2_probes("X"))
-    r2 = [stage2_probes(x)[f] for x in alive for f in fam2]
+    r2 = [stage2_probes(x, gt_of[x], gm_of[x])[f] for x in alive for f in fam2]
     g2 = grader.grade_all(render_all(kern, r2), "stage2")
     signatures: dict[str, dict] = {}
     for i, x in enumerate(alive):
         grades_of[x].update(zip(fam2, g2[i * len(fam2):(i + 1) * len(fam2)]))
-        allp = {**base_probes(x), **stage2_probes(x)}
-        f, miss = fit(kern, x, allp, grades_of[x], fits1[x][0])
+        allp = {**base_probes(x), **stage2_probes(x, gt_of[x], gm_of[x])}
+        f, miss = fit(kern, x, allp, grades_of[x], fits1[x][0], gt_of[x], gm_of[x])
         if len(f) == 1:
-            signatures[x] = f[0]
+            signatures[x] = with_g(f[0], gt_of[x], gm_of[x])
         elif not f:
             ex_ = sorted(miss.items())[0]
             rejected[x] = f"stage 2 (follower/display/repetition probes): no hypothesis fits; e.g. {ex_[0]} fails {ex_[1]}"
@@ -587,7 +705,65 @@ def main() -> int:
                         signatures.pop(n)
             return True
 
+    # 3b. CAPACITY (C-94): every frame-kind pair the extracted model can
+    # stack with an admitted command (strict_decide.exe --frame-pairs under
+    # the admitted set), as a stream repeating the pair to exactly the group
+    # bound: the model must decide it and agree with pdfTeX; one group past
+    # it, the model must place it outside the fragment. A command in a
+    # failing pair leaves, and the stage repeats on the smaller set.
+    capacity_rounds = []
+
+    def stage3b() -> None:
+        while signatures:
+            k = ktmp(signatures)
+            pairs = k.frame_pairs()
+            groups = C.arg_groups(signatures)
+            items = []
+            for p_ in pairs["pairs"]:
+                who = sorted({lab[4:].split(":", 1)[1].rsplit("/", 1)[0]
+                              for lab in (p_["below"], p_["above"]) if lab.startswith("arg.")})
+                if not who:
+                    continue
+                at = C.stream(pairs, p_["below"], p_["above"], MAX_GROUPS, groups)
+                past = C.stream(pairs, p_["below"], p_["above"], MAX_GROUPS + 1, groups)
+                items.append((p_["below"], p_["above"], who, at, past))
+            bad: dict[str, str] = {}
+            reqs = []
+            for b_, a_, who, at, past in items:
+                if at is None or past is None:
+                    for x in who:
+                        bad.setdefault(x, f"{b_}>{a_}: no stream reaches the bound")
+                    continue
+                reqs += [C.request(at[0]), C.request(past[0])]
+            models = k.run(reqs)
+            ats = models[0::2]
+            grs = grader.grade_all([m["tex"] for m in ats], "capacity")
+            i = 0
+            for b_, a_, who, at, past in items:
+                if at is None or past is None:
+                    continue
+                m, mp, gr = ats[i], models[2 * i + 1], grs[i]
+                i += 1
+                ok, why = S.agrees(m, gr)
+                if not (m["peak_groups"] == MAX_GROUPS and C.adjacent(m["peak_frames"], b_, a_)):
+                    ok, why = False, f"the stream peaks at {m['peak_groups']} without the pair"
+                if not (mp["verdict"] == "not_strict" and mp["peak_groups"] == MAX_GROUPS + 1):
+                    ok, why = False, f"one group past the bound: {mp['verdict']} {mp['peak_groups']}"
+                for x in who:
+                    grades_of[x][f"A-CAP:{b_}>{a_}"] = gr
+                    if not ok:
+                        bad.setdefault(x, f"{b_}>{a_}: {why}")
+            capacity_rounds.append({"pairs": len(items), "rejected": sorted(bad)})
+            print(f"[arg-signatures] stage 3b (capacity): {len(items)} pairs, "
+                  f"{len(bad)} commands fail", flush=True)
+            if not bad:
+                return
+            for x, why in bad.items():
+                rejected[x] = f"stage 3b (capacity, A-CAP): {why}"
+                signatures.pop(x, None)
+
     try:
+        stage3b()
         while True:
             stage4()
             if not stage5():
@@ -606,7 +782,7 @@ def main() -> int:
                "rejected": len(rejected),
                "rejected_by_stage": {k: sum(1 for v in rejected.values() if v.startswith(k))
                                      for k in ("stage 0", "stage 1", "stage 2", "ambiguous",
-                                               "stage 4")},
+                                               "stage 3b", "stage 4", "stage 5")},
                "documents_graded_now": grader.graded, "grades_reused": grader.reused,
                "oracle_timeouts": sum(1 for gr in grader.cache.values() if gr["timed_out"]),
                "admitted_by_class": dict(sorted(by.items()))}
@@ -627,8 +803,9 @@ def main() -> int:
         # every closed-world control word's meaning at body start (and the
         # inner meaning of every robust one): the gate re-applies the rule
         "selection_meanings": dict(sorted(wm.items())),
-        "bounds": {"max_brace_depth": MAX_BRACE_DEPTH, "max_tokens": MAX_TOKENS,
+        "bounds": {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
                    "repeat": REPEAT},
+        "capacity": {**cap, "stage3b_rounds": capacity_rounds},
         "reuse": reuse,
         "probes": {**base_probes("X"), **stage2_probes("X")},
         "probe_stages": {"1": fam1, "2": fam2},
@@ -636,8 +813,11 @@ def main() -> int:
         "admission_rule": "stage 0: check_strict_kernel.inertness_violation(meaning) is "
                           "None; stages 1-3: exactly one hypothesis makes the extracted "
                           "decider agree (_strict_s0.agrees) with the oracle on every "
-                          "probe of stages 1 and 2; stage 4: every interleaving document "
-                          "of the admitted set agrees",
+                          "probe of stages 1 and 2 (with the command's TeX groups measured "
+                          "by stage G); stage 3b: every frame-kind pair the model stacks "
+                          "with the command agrees at the group bound and is outside the "
+                          "fragment one group past it (A-CAP-*); stage 4: every "
+                          "interleaving document of the admitted set agrees",
         "summary": summary,
         "interleaving": {"seeds": args.interleave_seeds, "rounds": rounds},
         "context": context,

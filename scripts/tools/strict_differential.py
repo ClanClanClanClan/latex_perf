@@ -32,13 +32,15 @@ Two modes:
                      capacity bounds of Decide.v; C-86), written to
                      corpora/strict_s0/rule_probes.json
   --random N         N generated documents (seeded, reproducible), written to
-                     corpora/strict_s0/differential_v3.json (version 3, slice A:
-                     the one-argument commands; version 2 is in git history)
+                     corpora/strict_s0/differential_v4.json (version 4, C-94:
+                     deep interleaved nesting to the TeX-group bound; versions
+                     2 and 3 are in git history)
 
-GRADE REUSE: --reuse FILE... takes the grades of byte-identical documents from
-evidence files graded by the same oracle (every provenance field equal), and
---grade-store PATH keeps a local JSON-lines store of new grades; the output
-records how many grades were reused and from which files (_strict_s0.GradeCache).
+GRADE REUSE: --reuse SPEC... takes the grades of byte-identical documents from
+COMMITTED evidence files graded by the same oracle (every provenance field
+equal; SPEC is REV:path or a tracked, unmodified path); the output records how
+many grades were reused and from which file, commit and sha256
+(_strict_s0.GradeCache). A local grade store is not a source (LOW-2, C-94).
 
 WHAT THE RANDOM MODE'S NUMBER MEANS. Its upper bound on the disagreement rate
 is a bound over the documents THIS GENERATOR draws (its version, weights and
@@ -71,17 +73,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
+import check_strict_kernel as CK  # noqa: E402
 from _strict_s0 import cmd, doc, group, par, script, space, stray, text  # noqa: E402
 
 # Version 3 (ADR-012 step 2, slice A): the one-argument commands in the rule
 # probes (families R_arg_*, R_close_arg, R_par_short, the restricted-mode
 # rules, Stops and Scans; the branch matrix's argument heads and argument
 # tokens; the scanner's matrix SCAN) and in the generated documents (Gen.arg,
-# weighted toward the hazards of step 2).
-GENERATOR_VERSION = "3"
+# weighted toward the hazards of step 2). Version 4 (C-94): deep INTERLEAVED
+# nesting of every frame kind up to the TeX-group bound (Gen.inest), and the
+# BOUND family at that bound (a formula counts as a group).
+GENERATOR_VERSION = "4"
 OUT_DIR = S.REPO / "corpora/strict_s0"
-DIFFERENTIAL = OUT_DIR / "differential_v3.json"
-MAX_BRACE_DEPTH, MAX_TOKENS = S.MAX_BRACE_DEPTH, S.MAX_TOKENS
+DIFFERENTIAL = OUT_DIR / "differential_v4.json"
+MAX_GROUPS, MAX_TOKENS = S.MAX_GROUPS, S.MAX_TOKENS
 # Families whose documents are OUTSIDE the tier by design (recorded, never
 # graded): the bound's other side, and the matrix cells membership excludes.
 EXPECT_NOT_STRICT = {"BOUND-OUT", "MATRIX-OUT"}
@@ -141,7 +146,7 @@ class Names:
             for where in ("text", "math"):
                 b = h[where]
                 if b[0] == "run":
-                    self.arg_run[where][b[-1]].append(n)
+                    self.arg_run[where][CK.run_pay(b, where)].append(n)
                 else:
                     self.arg_fatal[where].append(n)
         self.text_ok = [n for n in self.all if _cls(sig[n]["text"]) != "fatal"]
@@ -288,7 +293,7 @@ def rule_docs(nm: Names) -> list[tuple[str, dict]]:
     ):
         for n in nm.by[key][:3]:
             fam.append((rule, mk(n)))
-    fam += bound_docs()
+    fam += bound_docs(nm)
     fam += matrix_docs(nm, phase1_only=True)
     # slice A's families come LAST, so the phase-1 probes (and the byte-level
     # re-layouts drawn after them from one seeded generator) stay byte for byte
@@ -448,25 +453,58 @@ def _script_nest(depth: int) -> list:
     return node
 
 
-def bound_docs() -> list[tuple[str, dict]]:
+def _boxes(k: int, x: str, inner: list, opener) -> list:
+    """k levels of the argument command x, each holding `opener` around the
+    next level (C-94: every level is the argument's groups AND the
+    opener's)."""
+    node = inner
+    for _ in range(k):
+        node = [cmd(x), group(opener(*node))]
+    return node
+
+
+def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
     """The structure AT the capacity bounds of Decide.v (inside the tier,
-    graded) and one past them (outside the tier, recorded as such; C-86)."""
-    B, L = MAX_BRACE_DEPTH, MAX_TOKENS
+    graded) and one past them (outside the tier, recorded as such; C-86,
+    C-94). The group bound counts TeX GROUPS (Decide.groups), a formula's
+    included: `$` and 199 braces is at the bound, `$` and 200 past it. Every
+    combination of frame kinds at the bound is the capacity probes'
+    (measure_strict_capacity.py, corpora/strict_s0/capacity.json); these are
+    the rule probes' sample of it."""
+    B, L = MAX_GROUPS, MAX_TOKENS
     x = text("x")
-    return [
+    out = [
         ("BOUND", doc(*_nest(B, [x]))),
         ("BOUND", doc(x, *_nest(B, [x]))),
-        ("BOUND", doc(dollar(*_nest(B, [x])))),
-        ("BOUND", doc(display(*_nest(B, [x])))),
-        ("BOUND", doc(dollar(*_script_nest(B)))),
-        ("BOUND", doc(*_nest(B, [dollar(x), par(), x]))),
+        ("BOUND", doc(dollar(*_nest(B - 1, [x])))),
+        ("BOUND", doc(display(*_nest(B - 1, [x])))),
+        ("BOUND", doc(dollar(*_script_nest(B - 1)))),
+        ("BOUND", doc(*_nest(B - 1, [dollar(x), par(), x]))),
         ("BOUND", doc(text("x" * (L - 1)))),
         ("BOUND", doc(paren(text("x" * (L - 3))))),
         ("BOUND", doc(*[m for _ in range(L // 3) for m in (dollar(x),)][: L // 3 - 1])),
+        ("BOUND", doc(cmd("q" * S.MAX_NAME))),
         ("BOUND-OUT", doc(*_nest(B + 1, [x]))),
-        ("BOUND-OUT", doc(dollar(*_script_nest(B + 1)))),
+        ("BOUND-OUT", doc(dollar(*_script_nest(B)))),
+        ("BOUND-OUT", doc(dollar(*_nest(B, [x])))),
         ("BOUND-OUT", doc(text("x" * L))),
+        ("BOUND-OUT", doc(cmd("q" * (S.MAX_NAME + 1)))),
     ]
+    # the reviewer's class (C-94): a formula inside a box argument, two
+    # groups a level; at the bound and one level past it
+    runs = sorted(n for n in (nm.arg_run["text"].get("text_restricted", []) if nm else [])
+                  if n in nm.arg_run["math"].get("text_restricted", []))
+    if runs:
+        a = runs[0]
+        g = nm.args[a]["text"][3]
+        k = B // (g + 1)
+        out += [
+            ("BOUND", doc(*_boxes(k, a, [x], dollar))),
+            ("BOUND", doc(*_boxes(k, a, [x], paren))),
+            ("BOUND-OUT", doc(*_boxes(k + 1, a, [x], dollar))),
+            ("BOUND-OUT", doc(*_boxes(k + 1, a, [x], paren))),
+        ]
+    return out
 
 
 # The BRANCH MATRIX (C-85; check_strict_kernel.py check 7). One token prefix
@@ -630,7 +668,9 @@ class Gen:
     def seq(self, depth: int, mode: str, clean: bool, lo=0, hi=5) -> list:
         out = []
         for _ in range(self.r.randint(lo, hi)):
-            if self.r.random() < 0.06:
+            if mode == "text" and depth == 0 and self.r.random() < 0.03:
+                out += self.inest(clean)
+            elif self.r.random() < 0.06:
                 out += self.run(mode, clean)
             elif self.nm.args and depth < 6 and self.r.random() < self.ARG_P:
                 out += self.arg(depth, mode, clean)
@@ -667,7 +707,7 @@ class Gen:
             return []
         x = self.r.choice(sorted(pool))
         b = self.nm.args[x][where]
-        pm = b[-1] if b[0] == "run" else "text"
+        pm = CK.run_pay(b, where) if b[0] == "run" else "text"
         sub = {"text": "text", "text_restricted": "rtext", "math": "math"}[pm]
         if self.r.random() < 0.08:
             # repeated: a global resource shows only under repetition (C-85)
@@ -756,6 +796,66 @@ class Gen:
             node = [group(*node)]
         return node[0]
 
+    def inest(self, clean: bool) -> list:
+        """Version 4 (C-94): deep INTERLEAVED nesting. A random walk over the
+        frame kinds -- a brace group, the four formula openers, math and
+        script groups, the one-argument commands in each mode they run in --
+        to a TeX-group count (Decide.groups: one per frame, an argument's g)
+        up to the capacity bound, and at it. Version 3 nested braces only, so
+        a formula inside a box argument (two groups a level, the reviewer's
+        \\mbox{$\\mbox{$ ... $}$}) was never drawn deep. The innermost
+        content opens no frame."""
+        target = self.pick([(3, 20), (3, 80), (2, 150), (2, MAX_GROUPS - 5),
+                            (3, MAX_GROUPS)])
+        args = {w: [(n, CK.run_groups(self.nm.args[n][w], w),
+                     CK.run_pay(self.nm.args[n][w], w))
+                    for n in sorted(self.nm.args) if self.nm.args[n][w][0] == "run"]
+                for w in ("text", "math")}
+        walk, cost, mode, unrestricted = [], 0, "text", True
+        while True:
+            if mode == "text":
+                opts = [(3, ("brace",)), (3, ("dollar",)), (2, ("paren",))]
+                if unrestricted:
+                    opts += [(1, ("display",)), (1, ("bracket",))]
+            else:
+                opts = [(3, ("mgroup",)), (3, ("script",))]
+            opts += [(4, ("arg", n, g, pm)) for n, g, pm in args[mode]]
+            opts = [(w, o) for w, o in opts if cost + (o[2] if o[0] == "arg" else 1) <= target]
+            if not opts:
+                break
+            o = self.pick(opts)
+            walk.append(o)
+            cost += o[2] if o[0] == "arg" else 1
+            if o[0] in ("dollar", "paren", "display", "bracket", "mgroup", "script"):
+                mode = "math"
+            elif o[0] == "arg":
+                mode = "math" if o[3] == "math" else "text"
+                unrestricted = o[3] == "text" and unrestricted
+        if mode == "text":
+            inner = [text(self.word(1, 3))]
+            if self.r.random() < 0.5:
+                inner.append(cmd(self.name("text", clean)))
+        else:
+            inner = [text(self.word(1, 2))]
+            if self.r.random() < 0.5:
+                inner.append(cmd(self.name("math", clean)))
+            if self.r.random() < 0.3:
+                inner.append(script(self.r.random() < 0.5, text("a")))
+        if not clean and self.r.random() < 0.5:
+            inner.insert(self.r.randrange(len(inner) + 1),
+                         self.r.choice([stray(), par(), cmd(self.r.choice(self.nm.undefined))]))
+        node = inner
+        for o in reversed(walk):
+            if o[0] in ("brace", "mgroup"):
+                node = [group(*node)]
+            elif o[0] == "script":
+                node = [script(self.r.random() < 0.5, group(*node))]
+            elif o[0] == "arg":
+                node = [cmd(o[1]), group(*node)]
+            else:
+                node = [S.math(o[0], *node)]
+        return node
+
     def node(self, depth: int, mode: str, clean: bool):
         deep = depth >= 3
         if mode == "dmath" and not deep and self.r.random() < (0.05 if clean else 0.15):
@@ -806,7 +906,7 @@ class Gen:
 
 # ------------------------------------------------------------- running ---
 
-CACHE: "S.GradeCache | None" = None  # set by main (--reuse, --grade-store)
+CACHE: "S.GradeCache | None" = None  # set by main (--reuse)
 
 
 def run_all(requests: list[dict], sig_path: Path, workers: int, label: str):
@@ -940,7 +1040,7 @@ def byte_names(nm: "Names") -> dict:
     # slice A: (name, the mode its argument runs in) per mode of use
     arg_run = {w: [(n, pm) for pm, ns in sorted(nm.arg_run[w].items()) for n in ns]
                for w in ("text", "math")}
-    arg_all = [(n, nm.args[n]["text"][-1] if nm.args[n]["text"][0] == "run" else "text")
+    arg_all = [(n, CK.run_pay(nm.args[n]["text"], "text") if nm.args[n]["text"][0] == "run" else "text")
                for n in nm.arg_all]
     return {"undefined": nm.undefined, "text_material": tm, "math_only": mo,
             "text_ok": nm.text_ok, "math_ok": nm.math_ok, "all": nm.all,
@@ -1267,15 +1367,14 @@ def main() -> int:
     ap.add_argument("--bytes", type=int, default=0,
                     help="M2 phase 2: N generated files (bytes)")
     ap.add_argument("--reuse", nargs="*", default=[],
-                    help="evidence files of the same oracle whose grades of "
-                         "byte-identical files are reused (recorded in the output)")
-    ap.add_argument("--grade-store", help="a local JSON-lines grade store (read and appended)")
+                    help="COMMITTED evidence files of the same oracle (REV:path, or a "
+                         "tracked unmodified path) whose grades of byte-identical files "
+                         "are reused (recorded in the output by path, commit and sha256)")
     args = ap.parse_args()
     sig_path = Path(args.signatures)
     global CACHE
-    if args.reuse or args.grade_store:
-        CACHE = S.GradeCache(_oracle.get_oracle(), [Path(p) for p in args.reuse],
-                             Path(args.grade_store) if args.grade_store else None)
+    if args.reuse:
+        CACHE = S.GradeCache(_oracle.get_oracle(), args.reuse)
     nm = Names(sig_path, random.Random(args.seed), S.ARG_SIGNATURES)
     if args.bytes_rules or args.bytes:
         return main_bytes(args, nm, sig_path)

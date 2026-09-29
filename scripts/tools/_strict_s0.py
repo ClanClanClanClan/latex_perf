@@ -32,7 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
-from check_strict_kernel import MAX_BRACE_DEPTH, MAX_TOKENS  # noqa: E402,F401
+from check_strict_kernel import MAX_GROUPS, MAX_NAME, MAX_TOKENS  # noqa: E402,F401
 
 REPO = Path(__file__).resolve().parents[2]
 CONTRACT = REPO / "corpora/contracts/article.json"
@@ -128,6 +128,15 @@ class Kernel:
             self.args += ["--arg-signatures", str(arg_signatures)]
         self.arg_signatures = arg_signatures
 
+    def frame_pairs(self) -> dict:
+        """The frame-kind combinations of the extracted model under this
+        contract (strict_decide.exe --frame-pairs; C-94)."""
+        p = subprocess.run(self.args + ["--frame-pairs"], capture_output=True, text=True)
+        if p.returncode != 0:
+            raise SystemExit(f"strict_decide --frame-pairs failed rc={p.returncode}: "
+                             f"{p.stderr[-2000:]}")
+        return json.loads(p.stdout)
+
     def run(self, requests: list[dict]) -> list[dict]:
         """Each request: {"doc": {...}, optional "signatures": {...}}."""
         payload = "".join(json.dumps({"id": i, **r}) + "\n"
@@ -221,9 +230,42 @@ def _first_error(log_text: str) -> tuple[str, int | None]:
 GRADE_TIMEOUT_S = 300
 
 
-def grade(oracle, tex: str, timeout: int = GRADE_TIMEOUT_S) -> dict:
+_STACKS = re.compile(r" (\d+)i,(\d+)n,(\d+)p,(\d+)b,(\d+)s stack positions out of "
+                     r"(\d+)i,(\d+)n,(\d+)p,(\d+)b,(\d+)s")
+_USAGE = (
+    ("strings", r" (\d+) strings out of (\d+)"),
+    ("pool_size", r" (\d+) string characters out of (\d+)"),
+    ("main_memory", r" (\d+) words of memory out of (\d+)"),
+    ("hash", r" (\d+) multiletter control sequences out of (\d+)\+(\d+)"),
+    ("font_mem", r" (\d+) words of font info for \d+ fonts?, out of (\d+)"),
+    ("fonts", r" \d+ words of font info for (\d+) fonts?, out of \d+ for (\d+)"),
+)
+
+
+def log_stats(log_text: str) -> dict:
+    """pdfTeX's own account of its capacities, from the log's closing
+    "Here is how much of TeX's memory you used": {resource: [used, of]}
+    (C-94: the capacity table is MEASURED from these). Empty when the log
+    has none."""
+    out = {}
+    for k, pat in _USAGE:
+        m = re.search(pat, log_text)
+        if m:
+            g = [int(x) for x in m.groups()]
+            out[k] = [g[0], sum(g[1:])]
+    m = _STACKS.search(log_text)
+    if m:
+        g = [int(x) for x in m.groups()]
+        for i, k in enumerate(("input_stack", "semantic_nest", "param_stack",
+                               "buffer", "save_stack")):
+            out[k] = [g[i], g[i + 5]]
+    return out
+
+
+def grade(oracle, tex: str, timeout: int = GRADE_TIMEOUT_S, stats: bool = False) -> dict:
     """One document through the oracle's protocol. An OracleError propagates:
-    an infrastructure failure is never a grade."""
+    an infrastructure failure is never a grade. With `stats`, also the log's
+    capacity use (`log_stats`) of the authoritative pass."""
     with oracle.tempdir("lp-strict-s0-") as td:
         td = Path(td)
         (td / "main.tex").write_text(tex, encoding="ascii")
@@ -231,8 +273,11 @@ def grade(oracle, tex: str, timeout: int = GRADE_TIMEOUT_S) -> dict:
         log = td / "main.log"
         text = log.read_text(errors="replace") if log.is_file() else ""
         msg, ln = _first_error(text)
-        return {"rc": r.rc, "pdf": r.pdf, "passes": r.passes,
-                "timed_out": r.timed_out, "error": msg, "line": ln}
+        out = {"rc": r.rc, "pdf": r.pdf, "passes": r.passes,
+               "timed_out": r.timed_out, "error": msg, "line": ln}
+        if stats:
+            out["stats"] = log_stats(text)
+        return out
 
 
 def grade_bytes(oracle, b: bytes, timeout: int = GRADE_TIMEOUT_S) -> dict:
@@ -248,18 +293,57 @@ def grade_bytes(oracle, b: bytes, timeout: int = GRADE_TIMEOUT_S) -> dict:
                 "timed_out": r.timed_out, "error": msg, "line": ln}
 
 
+def committed_source(spec: str) -> tuple[str, dict]:
+    """A reuse source that anyone can re-read: a file COMMITTED to this
+    repository (LOW-2 of the C-94 review: evidence files named ephemeral
+    /private/tmp paths as the sources of reused grades, which nobody can
+    check). `spec` is `REV:path` (any revision git resolves) or a
+    repository-relative path, which must then be tracked and unmodified, and
+    is read at HEAD. Returns (the file's text at that commit, the provenance
+    record {"file", "commit", "sha256"}). Anything else is refused."""
+    rev, path = (spec.split(":", 1) if ":" in spec else ("HEAD", spec))
+    p = Path(path)
+    if p.is_absolute():
+        try:
+            p = p.resolve().relative_to(REPO)
+        except ValueError:
+            raise SystemExit(f"grade reuse: {spec} is not a file of this repository; "
+                             f"only committed files are reuse sources (LOW-2)")
+    rel = p.as_posix()
+    if rel.startswith("..") or rel.startswith("/"):
+        raise SystemExit(f"grade reuse: {spec} is outside the repository")
+    if rev == "HEAD":
+        d = subprocess.run(["git", "status", "--porcelain", "--", rel], cwd=REPO,
+                           capture_output=True, text=True)
+        if d.returncode != 0 or d.stdout.strip():
+            raise SystemExit(f"grade reuse: {rel} is untracked or modified; commit it, or "
+                             f"name a revision (REV:{rel})")
+    c = subprocess.run(["git", "rev-parse", "--verify", f"{rev}^{{commit}}"], cwd=REPO,
+                       capture_output=True, text=True)
+    if c.returncode != 0:
+        raise SystemExit(f"grade reuse: {rev} is not a commit")
+    commit = c.stdout.strip()
+    b = subprocess.run(["git", "show", f"{commit}:{rel}"], cwd=REPO, capture_output=True)
+    if b.returncode != 0:
+        raise SystemExit(f"grade reuse: {rel} is not in commit {commit[:12]}")
+    return b.stdout.decode(), {"file": rel, "commit": commit,
+                               "sha256": hashlib.sha256(b.stdout).hexdigest()}
+
+
 class GradeCache:
     """Grades of files already graded by the SAME oracle, keyed by the sha256
     of the exact bytes pdflatex ran on (a grade is a function of the bytes and
-    the oracle, nothing else: the protocol is fixed). Seeded from committed
-    evidence files, each accepted only when its recorded oracle provenance
-    equals this oracle's in every field (else refused, never mixed), and from
-    a local JSON-lines store the harness appends to (same rule, per line).
-    Tree evidence records a 16-hex prefix of the sha256, byte evidence the
-    whole; both are honoured. Every tool that uses it records how many grades
-    it reused and from which files."""
+    the oracle, nothing else: the protocol is fixed). Seeded from COMMITTED
+    evidence files only (`committed_source`: a file of a commit, recorded by
+    path, commit and sha256, so anyone can re-read every reused grade), each
+    accepted only when its recorded oracle provenance equals this oracle's in
+    every field (else refused, never mixed). There is no local grade store:
+    a grade nobody else can read is not evidence (LOW-2, C-94). Tree evidence
+    records a 16-hex prefix of the sha256, byte evidence the whole; both are
+    honoured. Every tool that uses it records how many grades it reused and
+    from which files."""
 
-    def __init__(self, oracle, sources: list[Path] = (), store: Path | None = None):
+    def __init__(self, oracle, sources: list[str] = ()):
         import threading
         self._lock = threading.Lock()
         self.prov = oracle.provenance()
@@ -267,37 +351,30 @@ class GradeCache:
         self.short: dict[str, dict] = {}
         self.sources = []
         self.hits = 0
-        self.store = Path(store) if store else None
-        for p in sources:
-            self._load_evidence(Path(p))
-        if self.store and self.store.is_file():
-            for line in self.store.read_text().splitlines():
-                r = json.loads(line)
-                if r.get("oracle") == self.prov:
-                    self.full[r["sha256"]] = r["grade"]
-            self.sources.append({"file": str(self.store), "kind": "local store"})
+        for spec in sources:
+            self._load_evidence(str(spec))
 
-    def _load_evidence(self, p: Path) -> None:
-        d = json.loads(p.read_text())
+    def _load_evidence(self, spec: str) -> None:
+        text, rec = committed_source(spec)
+        d = json.loads(text)
         if d.get("oracle") != self.prov:
             diff = sorted(k for k in set(d.get("oracle", {})) | set(self.prov)
                           if d.get("oracle", {}).get(k) != self.prov.get(k))
-            raise SystemExit(f"grade reuse: {p} was graded by another oracle ({diff})")
+            raise SystemExit(f"grade reuse: {spec} was graded by another oracle ({diff})")
         n = 0
         for key in ("probes", "documents"):
-            for rec in d.get(key, []):
-                if "oracle" not in rec:
+            for r in d.get(key, []):
+                if "oracle" not in r:
                     continue
-                rc, pdf, err, line = rec["oracle"]
+                rc, pdf, err, line = r["oracle"]
                 g = {"rc": rc, "pdf": pdf, "error": err, "line": line,
                      "timed_out": False, "passes": None}
-                if "sha256" in rec:
-                    self.full[rec["sha256"]] = g
-                elif "tex_sha256" in rec:
-                    self.short[rec["tex_sha256"]] = g
+                if "sha256" in r:
+                    self.full[r["sha256"]] = g
+                elif "tex_sha256" in r:
+                    self.short[r["tex_sha256"]] = g
                 n += 1
-        self.sources.append({"file": str(p.relative_to(REPO)) if p.is_relative_to(REPO)
-                             else str(p), "sha256": sha256_file(p), "records": n})
+        self.sources.append({**rec, "records": n})
 
     def get(self, b: bytes) -> dict | None:
         h = hashlib.sha256(b).hexdigest()
@@ -307,11 +384,8 @@ class GradeCache:
         return g
 
     def put(self, b: bytes, g: dict) -> None:
-        h = hashlib.sha256(b).hexdigest()
-        self.full[h] = g
-        if self.store and not g.get("timed_out"):
-            with self._lock, self.store.open("a") as f:
-                f.write(json.dumps({"sha256": h, "oracle": self.prov, "grade": g}) + "\n")
+        with self._lock:
+            self.full[hashlib.sha256(b).hexdigest()] = g
 
     def record(self) -> dict:
         return {"grades_reused": self.hits, "sources": self.sources}

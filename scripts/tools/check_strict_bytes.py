@@ -90,7 +90,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_strict_kernel import (  # noqa: E402
-    _CONTROL_PREFIX, coq_sentences, required_cells, strip_coq_comments)
+    _CONTROL_PREFIX, coq_sentences, required_cells, reuse_findings, strip_coq_comments)
 
 MIN_BYTES_DIFFERENTIAL = 3000
 MIN_NEAR = 50
@@ -413,6 +413,8 @@ def main() -> int:
         for k in ("kernel_sha256", "contract_sha256"):
             if d.get("source", {}).get(k) != cur_src[k]:
                 fails.append(f"{label}: source {k} is not the committed file's")
+        # reused grades come from committed files only (LOW-2, C-94)
+        fails += reuse_findings(repo, label, d.get("reuse"))
 
         # 4. no disagreement
         s_ = d.get("summary", {})
@@ -538,7 +540,7 @@ def main() -> int:
     body = m.group(1) if m else ""
     for need in ("length b <= max_file_bytes", "Parse (bc_lex C) b ks",
                  "in_strict_toks (bc_kernel C) (toks_of ks)",
-                 "bounded (toks_of ks) = true", "ends_dollar (toks_of ks) = false"):
+                 "bounded (bc_kernel C) (toks_of ks) = true", "ends_dollar (toks_of ks) = false"):
         if need not in body:
             fails.append(f"DecideBytes.v: in_strict_bytes no longer requires `{need}`")
     b = fam.get("L0-bounds", {})

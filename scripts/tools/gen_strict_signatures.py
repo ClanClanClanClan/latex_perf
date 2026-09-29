@@ -108,7 +108,12 @@ import check_strict_kernel as CK  # noqa: E402
 # Version 4 (C-92): stage 0's meaning closure follows robust commands
 # (`\protect \X  ` to the inner name "X "); nothing else changed, and every
 # probe grade of version 3 is reused (--reuse).
-GENERATOR_VERSION = "4"
+# Version 5 (C-94, C-96): the nesting families sit at the TeX-GROUP bound (a
+# formula is a group: R-NEST-MATH is $ and 199 braces, no longer 200); stage
+# 0 reads expansion texts by TeX's printing rules, every reading, and follows
+# expl3 names and active characters (check_strict_kernel.body_readings); a
+# reuse source is a committed file (REV:path), recorded with its commit.
+GENERATOR_VERSION = "5"
 STRUCTURAL = CK.STRUCTURAL
 # Two control words outside the closed world (checked in main()).
 UNDEF_A, UNDEF_B = "lpqundefa", "lpqundefb"
@@ -119,7 +124,7 @@ HYPOTHESES = [{"text": t, "math": m} for t in TEXT_H for m in MATH_H]
 
 # The kernel's bounds (proofs/Strict/Decide.v, C-86); check_strict_kernel.py
 # checks these equal the Coq definitions.
-MAX_BRACE_DEPTH = CK.MAX_BRACE_DEPTH
+MAX_GROUPS = CK.MAX_GROUPS
 MAX_TOKENS = CK.MAX_TOKENS
 REPEAT = 300
 # Every character of the fragment (Decide.v safe_char), in a fixed order.
@@ -235,11 +240,12 @@ def stage2_probes(x: str) -> dict[str, dict]:
         "R-MATH-ALT": S.doc(_dollar(*[n for _ in range(REPEAT) for n in (c, t("x"))])),
         "R-FORMULAS": S.doc(*[_dollar(c, t("x")) for _ in range(REPEAT)]),
         "R-DISPLAYS": S.doc(*[_display(c, t("x")) for _ in range(REPEAT)]),
-        # at the nesting bound (Decide.v max_brace_depth)
-        "R-NEST-TEXT": S.doc(*_nest(MAX_BRACE_DEPTH, [c, t("x")])),
-        "R-NEST-MATH": S.doc(_dollar(*_nest(MAX_BRACE_DEPTH, [c, t("x")]))),
-        "R-NEST-EACH-TEXT": S.doc(*_nest_each(MAX_BRACE_DEPTH, c)),
-        "R-NEST-EACH-MATH": S.doc(_dollar(*_nest_each(MAX_BRACE_DEPTH, c))),
+        # at the TeX-group bound (Decide.v max_groups, C-94): the formula is
+        # one of the groups
+        "R-NEST-TEXT": S.doc(*_nest(MAX_GROUPS, [c, t("x")])),
+        "R-NEST-MATH": S.doc(_dollar(*_nest(MAX_GROUPS - 1, [c, t("x")]))),
+        "R-NEST-EACH-TEXT": S.doc(*_nest_each(MAX_GROUPS, c)),
+        "R-NEST-EACH-MATH": S.doc(_dollar(*_nest_each(MAX_GROUPS - 1, c))),
         # at the token bound (Decide.v max_tokens): the whole document one
         # paragraph / one formula of X
         "R-BIG-TEXT": S.doc(*([c] * (MAX_TOKENS - 2)), t("x")),
@@ -259,22 +265,33 @@ def candidates(n: int) -> list[str]:
 
 def dump_meanings(oracle, names: list[str]) -> dict[str, str]:
     r"""`\meaning` of every name at body start, from the pinned image. One
-    job; the document is a generator tool, not a graded probe. `\ifcsname`
-    reads a name without defining it (an undefined name is reported as
-    `undefined`, and \csname would have made it \relax). Meanings are
-    written with \immediate\write to a file (no line wrapping) and read
-    back; an unreadable or incomplete dump is an oracle failure."""
+    job; the document is a generator tool, not a graded probe. Every name is
+    given by the hex of its bytes (`\pdfunescapehex`), so a name of any
+    characters -- expl3's `_` and `:`, spaces, backslashes, non-ASCII -- is
+    read exactly (C-96: the name set used to be restricted to letters and @,
+    so the closure could not follow expl3 code). `\ifcsname` reads a name
+    without defining it (an undefined name is reported as `undefined`, and
+    \csname would have made it \relax). A key "active:<code>" is the meaning
+    of that ACTIVE character (written in ^^ notation, which makes it one).
+    Meanings are written with \immediate\write, \newlinechar -1, to a file
+    (no line wrapping) and read back byte for byte (UTF-8, surrogateescape);
+    an unreadable or incomplete dump is an oracle failure."""
     lines = [r"\documentclass{article}", r"\newwrite\lpqmw",
              r"\immediate\openout\lpqmw=lpqmeanings.txt\relax",
-             r"\begin{document}"]
+             r"\begin{document}", r"\newlinechar=-1\relax"]
     for i, n in enumerate(names):
-        # letters and @; a robust command's inner name ends with one space
-        # (check_strict_kernel.body_tokens, C-92)
-        if not re.fullmatch(r"[A-Za-z@]+ ?", n):
-            raise ValueError(f"meaning dump: unexpected name {n!r}")
-        lines.append(r"\immediate\write\lpqmw{LPQ:%d:\ifcsname %s\endcsname"
-                     r"\expandafter\meaning\csname %s\endcsname\else undefined\fi}"
-                     % (i, n, n))
+        if n.startswith(CK.ACTIVE_PREFIX):
+            code = int(n[len(CK.ACTIVE_PREFIX):])
+            if not 0 < code < 256:
+                raise ValueError(f"meaning dump: bad active character {n!r}")
+            lines.append(r"\immediate\write\lpqmw{LPQ:%d:\meaning ^^%02x}" % (i, code))
+            continue
+        if not n:
+            raise ValueError("meaning dump: the empty name")
+        h = n.encode("utf-8", "surrogateescape").hex()
+        lines.append(r"\immediate\write\lpqmw{LPQ:%d:\ifcsname\pdfunescapehex{%s}"
+                     r"\endcsname\expandafter\meaning\csname\pdfunescapehex{%s}"
+                     r"\endcsname\else undefined\fi}" % (i, h, h))
     lines += [r"\immediate\write\lpqmw{LPQEND}", r"\immediate\closeout\lpqmw",
               r"\end{document}"]
     with oracle.tempdir("lp-strict-meanings-") as td:
@@ -284,12 +301,12 @@ def dump_meanings(oracle, names: list[str]) -> dict[str, str]:
             td, _oracle.ENGINE_PDFLATEX, ["-interaction=nonstopmode", "-halt-on-error", "m.tex"],
             _oracle.oracle_tex_vars(td), 300)
         f = td / "lpqmeanings.txt"
-        text = f.read_text(errors="replace") if f.is_file() else ""
+        text = (f.read_bytes().decode("utf-8", "surrogateescape") if f.is_file() else "")
     if rc != 0 or to or not text.rstrip().endswith("LPQEND"):
         raise _oracle.OracleError(f"meaning dump failed: rc={rc} timed_out={to}")
     got = {}
-    for line in text.splitlines():
-        m = re.match(r"^LPQ:(\d+):(.*)$", line)
+    for line in text.split("\n"):
+        m = re.match(r"^LPQ:(\d+):(.*)$", line, re.S)
         if m:
             got[names[int(m.group(1))]] = m.group(2)
     missing = [n for n in names if n not in got]
@@ -298,17 +315,26 @@ def dump_meanings(oracle, names: list[str]) -> dict[str, str]:
     return got
 
 
-def meaning_closure(oracle, names: list[str]) -> dict[str, str]:
-    """The meanings of `names` and of every token of letters and @ that
-    their expansion texts reach, transitively (check_strict_kernel.closure):
-    dumped round by round until no new token appears."""
-    meanings = dump_meanings(oracle, names)
-    while True:
-        new = sorted({t for v in meanings.values() for t in CK.body_tokens(v) or ()}
-                     - set(meanings))
-        if not new:
-            return meanings
-        meanings.update(dump_meanings(oracle, new))
+def meaning_closure(oracle, names: list[str], world: set[str] | None = None,
+                    active=None) -> dict[str, str]:
+    """The meanings of `names` and of every name and active character that
+    their expansion texts may hold, by every reading
+    (check_strict_kernel.body_readings, C-96), transitively: dumped round by
+    round until no new name appears."""
+    world = CK.closed_world(S.REPO) if world is None else world
+    active = CK.active_chars(S.REPO) if active is None else active
+    meanings = {}
+    todo = sorted(set(names))
+    while todo:
+        for i in range(0, len(todo), 4000):
+            meanings.update(dump_meanings(oracle, todo[i:i + 4000]))
+        new = set()
+        for v in list(meanings.values()):
+            t = CK.expansion_text(v)
+            if t is not None:
+                new |= CK.body_readings(t, world, active)[0]
+        todo = sorted(new - set(meanings))
+    return meanings
 
 
 # ---------------------------------------------------------------- grading ---
@@ -348,12 +374,16 @@ class Grader:
         return [self.cache[self.key(t)] for t in texs]
 
 
-def seed_from(grader: Grader, kern, path: Path, oracle) -> dict:
-    old = json.loads(path.read_text())
+def seed_from(grader: Grader, kern, spec: str, oracle) -> dict:
+    """Seed the grades of a previous signature file COMMITTED to the
+    repository (S.committed_source: REV:path or a tracked, unmodified path;
+    LOW-2 of the C-94 review)."""
+    text, src = S.committed_source(spec)
+    old = json.loads(text)
     prov, cur = old.get("oracle", {}), oracle.provenance()
     diff = sorted(k for k in set(prov) | set(cur) if prov.get(k) != cur.get(k))
     if diff:
-        raise SystemExit(f"--reuse {path}: graded by another oracle ({diff} differ)")
+        raise SystemExit(f"--reuse {spec}: graded by another oracle ({diff} differ)")
     fams = old["probes"]
     reqs, keys = [], []
     for x, ev in old["evidence"].items():
@@ -370,8 +400,7 @@ def seed_from(grader: Grader, kern, path: Path, oracle) -> dict:
             "rc": rc, "pdf": pdf, "passes": None, "timed_out": rc == -1,
             "error": err, "line": line}
     grader.reused = len(outs)
-    return {"file": str(path.relative_to(S.REPO)) if path.is_relative_to(S.REPO) else str(path),
-            "sha256": S.sha256_file(path), "generator_version": old.get("generator_version"),
+    return {**src, "generator_version": old.get("generator_version"),
             "grades_reused": len(outs)}
 
 
@@ -476,7 +505,8 @@ def main() -> int:
     ap.add_argument("--n", type=int, default=400)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", default=str(S.SIGNATURES))
-    ap.add_argument("--reuse", help="a previous signature file of the same oracle")
+    ap.add_argument("--reuse", help="a previous signature file of the same oracle, "
+                    "COMMITTED (REV:path, or a tracked unmodified path)")
     ap.add_argument("--interleave-seeds", type=int, default=3)
     args = ap.parse_args()
 
@@ -488,17 +518,18 @@ def main() -> int:
     if {UNDEF_A, UNDEF_B} & S.members():
         raise SystemExit("the look-ahead probes' undefined names are defined")
     grader = Grader(oracle, args.workers)
-    reuse = seed_from(grader, kern, Path(args.reuse), oracle) if args.reuse else None
+    reuse = seed_from(grader, kern, args.reuse, oracle) if args.reuse else None
     if reuse:
         print(f"[signatures] reused {reuse['grades_reused']} grades from {reuse['file']}",
               flush=True)
 
     # 0. inertness rule over the meanings at body start
-    meanings = meaning_closure(oracle, names)
+    world, active = CK.closed_world(S.REPO), CK.active_chars(S.REPO)
+    meanings = meaning_closure(oracle, names, world, active)
     prims = S.primitives()
     rejected: dict[str, str] = {}
     for x in names:
-        v = CK.inertness_violation(x, meanings, prims)
+        v = CK.inertness_violation(x, meanings, prims, world, active)
         if v:
             rejected[x] = f"stage 0 (inertness rule): {v}"
     print(f"[signatures] stage 0: {len(rejected)} of {len(names)} not inert", flush=True)
@@ -633,7 +664,7 @@ def main() -> int:
         "selection": {"rule": "control words (ASCII letters) of the closed world "
                               "minus par/begin/end, sorted by sha256(name), first n",
                       "n": args.n},
-        "bounds": {"max_brace_depth": MAX_BRACE_DEPTH, "max_tokens": MAX_TOKENS,
+        "bounds": {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
                    "repeat": REPEAT},
         "reuse": reuse,
         "probes": {**base_probes("X"), **stage2_probes("X")},

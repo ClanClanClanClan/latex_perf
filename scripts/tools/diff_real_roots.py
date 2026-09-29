@@ -48,7 +48,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _oracle import (  # noqa: E402
-    IMAGE as ORACLE_IMAGE, OracleError, get_oracle)
+    IMAGE as ORACLE_IMAGE, OracleError, get_oracle, job_output)
 
 PIN = "pdfTeX 3.141592653-2.6-1.40.29"
 ORACLE = {
@@ -323,7 +323,7 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
         out["pdflatex_passes"] = run.passes
         out["pdflatex_pdf"] = run.pdf
 
-        log = work / (Path(rec["toplevel"]).stem + ".log")
+        log = job_output(work, rec["toplevel"], ".log")  # pdfTeX's job name
         first_full = ""
         if log.is_file():
             loglines = log.read_text(errors="replace").split("\n")
@@ -609,7 +609,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
             run = run_to_fixpoint_full(work, d["toplevel"], oracle.tex_env(td),
                                        timeout)
             first = ""
-            log = work / (Path(d["toplevel"]).stem + ".log")
+            log = job_output(work, d["toplevel"], ".log")  # pdfTeX's job name
             if log.is_file():
                 ll = log.read_text(errors="replace").split("\n")
                 for i, line in enumerate(ll):

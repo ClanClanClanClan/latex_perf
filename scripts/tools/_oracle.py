@@ -113,6 +113,7 @@ MAX_PASSES = 3
 # than the container's own `sleep infinity`, or a zombie, older than 2 s and still
 # there 1 s later. Refused (OracleError), never graded.
 PIDS_LIMIT = 4096
+CONTAINER_CONFIG_TAG = f"-init-p{PIDS_LIMIT}"
 LEAK_CHECK_SH = (
     'lp_leak_list() { ps -eo pid=,ppid=,stat=,etimes=,args= | '
     'awk \'($2 == 1 && !($5 == "sleep" && $6 == "infinity" && NF == 6) && $4 >= 2) '
@@ -696,21 +697,81 @@ def _require_free_space(d: Path, when: str) -> None:
             f"'the document does not compile'; this run is not a grade.")
 
 
-def jobname_of(args: list[str]) -> str | None:
-    """The job name pdflatex uses for ARGS: `-jobname=X`, else the stem of the
-    last non-option argument. None when it cannot be derived (a `\\input`-style
-    first line)."""
-    job = None
+def pdftex_jobname(args) -> str:
+    """THE job name pdfTeX gives a run with argv `args` (a list, or one file
+    argument as a str) -- the ONE source of every output name the oracle
+    clears or reads (C-95, review round 2). MEASURED 2026-09-29 in the pinned
+    image (web2c pdfTeX 1.40.29): `-jobname=X` wins; otherwise the file
+    argument, with every `"` removed and its directory dropped, loses its LAST
+    `.` and everything after it, whatever the case or the extension:
+    a.b.tex -> a.b, doc.ltx / doc.TEX / Doc.TeX -> doc / Doc, doc. -> doc,
+    doc.tex. -> doc.tex, a.b (a file) -> a, doc -> doc, d/in.tex -> in,
+    .tex -> "" (outputs .log/.pdf), "doc.tex" -> doc; a first argument that
+    is TeX code (`\\dump`) gives `texput`. Stripping only a lowercase `.tex`
+    (the function this replaces) named doc.TEX's outputs doc.TEX.pdf, so the
+    stale doc.pdf survived and graded compiles."""
+    if isinstance(args, (str, Path)):
+        args = [str(args)]
     for a in args:
         for pre in ("-jobname=", "--jobname="):
             if a.startswith(pre):
-                return a[len(pre):].strip('"')
-    pos = [a for a in args if not a.startswith("-") and not a.startswith("&")]
-    if pos and not pos[-1].startswith("\\"):
-        job = Path(pos[-1]).name
-        if job.endswith(".tex"):
-            job = job[:-4]
-    return job or None
+                return a[len(pre):].replace('"', "")
+    pos = [a for a in args if not a.startswith("-")]
+    if not pos or pos[-1].lstrip(" \t").startswith(("\\", "&", "*")):
+        return "texput"
+    name = pos[-1].replace('"', "").rsplit("/", 1)[-1]
+    return name.rpartition(".")[0] if "." in name else name
+
+
+def job_output(cwd, args, ext: str) -> Path:
+    """cwd/<pdfTeX's job name><ext>: where pdfTeX writes the run's `ext` file."""
+    return Path(cwd) / (pdftex_jobname(args) + ext)
+
+
+# THE PDF VERDICT (C-97 forge, review round 2): `compiles` = rc 0 AND a PDF
+# PDFTEX WROTE IN THIS RUN. A file named <job>.pdf is not evidence: MEASURED,
+# a document doing `\immediate\openout1=\jobname.pdf` and writing
+# "%PDF-1.5 not a pdf" with an empty body gets rc 0, "No pages of output." and
+# a <job>.pdf, and every grader said compiles. The evidence is pdfTeX's own
+# final report in THIS run's log (clear_outputs removed any earlier log):
+# the LAST "Output written on ..." / "No pages of output." line, followed by
+# nothing but pdfTeX's "PDF statistics:" block -- a document cannot print
+# after pdfTeX's final report, so a line it forged with \typeout earlier is
+# not the last one. The line must name <job>.pdf with >= 1 page, and
+# <job>.pdf must be a regular file (not a symlink).
+_FINAL_LINE = re.compile(rb"^(Output written on |No pages of output\.)")
+_OUTPUT_WRITTEN = re.compile(rb"^Output written on (.+)\.pdf \((\d+) pages?, \d+ bytes\)\.$")
+
+
+def _unwrap_log(data: bytes) -> list[bytes]:
+    """TeX hard-wraps log lines at max_print_line (79 bytes); a line of
+    exactly 79 continues on the next (concatenation is the inverse)."""
+    out, cur = [], b""
+    for line in data.split(b"\n"):
+        cur += line
+        if len(line) != 79:
+            out.append(cur)
+            cur = b""
+    if cur:
+        out.append(cur)
+    return out
+
+
+def pdf_written(cwd, args) -> bool:
+    """Did pdfTeX itself write <job>.pdf, with pages, in the run whose log is
+    <job>.log? See the block above."""
+    log, pdf = job_output(cwd, args, ".log"), job_output(cwd, args, ".pdf")
+    if pdf.is_symlink() or not pdf.is_file() or not log.is_file():
+        return False
+    lines = _unwrap_log(log.read_bytes())
+    k = max((i for i, ln in enumerate(lines) if _FINAL_LINE.match(ln)), default=None)
+    if k is None:
+        return False
+    tail = lines[k + 1:]
+    if any(ln and ln != b"PDF statistics:" and not ln.startswith(b" ") for ln in tail):
+        return False
+    m = _OUTPUT_WRITTEN.match(lines[k])
+    return bool(m) and m.group(1) == pdftex_jobname(args).encode() and int(m.group(2)) >= 1
 
 
 def _require_output_written(out: bytes, args: list[str], what: str) -> None:
@@ -720,7 +781,7 @@ def _require_output_written(out: bytes, args: list[str], what: str) -> None:
             f"{what}: pdfTeX could not write its own output "
             f"({m.group(0).decode()!r}); the work root is full or failing, so "
             f"this rc is not a property of the document")
-    job = jobname_of(args)
+    job = pdftex_jobname(args)
     i = out.find(_CANT_WRITE)
     while i != -1:
         # TeX hard-wraps terminal lines at max_print_line (79); concatenation,
@@ -904,7 +965,7 @@ class _Base:
         """Delete files in a work directory that pdflatex will write again.
         See ContainerOracle.remove for why this must go through the oracle."""
         for p in paths:
-            Path(p).unlink(missing_ok=True)
+            Path(p).unlink(missing_ok=True)  # unlink never follows a symlink
 
     def mkdtemp(self, prefix: str = "lp-oracle-") -> Path:
         """A work directory the oracle can run in that outlives a `with`
@@ -942,11 +1003,18 @@ class _Base:
     RUN_OUTPUTS = (".pdf", ".log", ".fls", ".fmt")
 
     def clear_outputs(self, cwd: Path, args: list[str]) -> None:
-        job = jobname_of(args)
-        if job is None:  # INITEX's `\dump`-only argv names no file
-            return
-        stale = [cwd / (job + e) for e in self.RUN_OUTPUTS]
-        stale = [q for q in stale if q.exists() or q.is_symlink()]
+        stale = [job_output(cwd, args, e) for e in self.RUN_OUTPUTS]
+        # A document that ships its own output name as a SYMLINK (doc.pdf ->
+        # fig.pdf) is not graded: pdfTeX would write through it into the
+        # target (MEASURED, review round 2: rc 1 without clearing, the figure
+        # deleted by a clearing that followed the link, rc 0 by one that
+        # unlinked it -- three answers, none the document's). 0 symlinks in
+        # the 2,719-paper corpus (measured).
+        links = [q.name for q in stale if q.is_symlink()]
+        if links:
+            raise OracleError(f"{links} in {cwd} is a symlink: pdfTeX would write "
+                              f"through it into its target, so no grade (C-95)")
+        stale = [q for q in stale if q.exists()]
         if stale:
             self.remove(stale)
 
@@ -1015,7 +1083,6 @@ class _Base:
         """The recorded protocol; see diff_real_roots.run_to_fixpoint's
         docstring for why each step exists."""
         work = Path(work)
-        pdf_path = work / (Path(toplevel).stem + ".pdf")
         # Each pass's PDF/log is its own: run_pdflatex clears them (C-95).
 
         def one_pass():
@@ -1026,16 +1093,16 @@ class _Base:
             rc, to = one_pass()
             passes += 1
             if to:
-                return OracleRun(-1, passes, pdf_path.is_file(), True)
+                return OracleRun(-1, passes, pdf_written(work, toplevel), True)
             if rc == 0:
                 break
         if rc != 0:
-            return OracleRun(rc, passes, pdf_path.is_file(), False)
+            return OracleRun(rc, passes, pdf_written(work, toplevel), False)
         rc, to = one_pass()
         passes += 1
         if to:
-            return OracleRun(-1, passes, pdf_path.is_file(), True)
-        return OracleRun(rc, passes, pdf_path.is_file(), False)
+            return OracleRun(-1, passes, pdf_written(work, toplevel), True)
+        return OracleRun(rc, passes, pdf_written(work, toplevel), False)
 
 
 class NativeOracle(_Base):
@@ -1162,8 +1229,13 @@ class ContainerOracle(_Base):
             raise OracleError(f"oracle work root {wr} is inside a synced folder; "
                               "the container must never write there")
         self.workroot.mkdir(parents=True, exist_ok=True)
+        # The container CONFIGURATION is part of the name (C-97, review round
+        # 2): an older oracle's container (no --init, no pids limit) keeps
+        # its own name and is never replaced under a grader still running
+        # it; stop it by hand once nothing uses it.
         self.name = ("lp-oracle-" + IMAGE.split("sha256:")[-1][:12] + "-"
-                     + hashlib.sha256(wr.encode()).hexdigest()[:8])
+                     + hashlib.sha256(wr.encode()).hexdigest()[:8]
+                     + CONTAINER_CONFIG_TAG)
         self._ensure_container()
         # Verify the tree EAGERLY, as NativeOracle does. Lazily (only when a
         # caller asked for provenance) meant graders that never did --
@@ -1392,8 +1464,11 @@ class ContainerOracle(_Base):
         protocols, so it hit this on most fixtures (57 of 85 "no pdfTeX log
         produced", reproduced with the pre-fix script too). A deletion made
         through the container keeps the guest cache coherent (measured)."""
-        paths = [Path(p).resolve() for p in paths]
-        outside = [str(p) for p in paths if not self._inside(p)]
+        # The PARENT is resolved, never the name: resolving the name follows a
+        # symlink, and clearing doc.pdf -> fig.pdf deleted the figure (review
+        # round 2, LOW-2). `rm -f` on the link removes the link itself.
+        paths = [Path(p).parent.resolve() / Path(p).name for p in paths]
+        outside = [str(p) for p in paths if not self._inside(p.parent)]
         if outside:
             raise OracleError(f"refusing to delete outside the work root: {outside[:3]}")
         for i in range(0, len(paths), 200):
@@ -1598,6 +1673,16 @@ def main(argv: list[str]) -> int:
                 print(f"[oracle] NOT GRADED: {e}", file=sys.stderr)
                 return INFRA_RC
             return 0
+        # The shell graders' readers of a run's outputs (C-95/C-97 review
+        # round 2): the SAME job name and PDF verdict as the Python graders.
+        #   job FILEARG            print pdfTeX's job name for FILEARG
+        #   pdf-written DIR FILEARG  exit 0 iff pdfTeX wrote DIR/<job>.pdf with
+        #                          pages in the run whose log is DIR/<job>.log
+        if cmd == "job":
+            print(pdftex_jobname(rest[-1:]))
+            return 0
+        if cmd == "pdf-written":
+            return 0 if pdf_written(Path(rest[0]), rest[1:]) else 1
         if cmd == "workroot":
             print(default_workroot().expanduser().resolve())
             return 0

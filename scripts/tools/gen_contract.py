@@ -1153,7 +1153,10 @@ class Tex:
             args.append("-jobname=" + jobname)
         args.append("job.tex")
         rc, secs = self.run_engine(jobdir, _oracle.ENGINE_PDFLATEX, args, timeout, env)
-        logp, flsp = jobdir / (jobname + ".log"), jobdir / (jobname + ".fls")
+        # pdfTeX's job name for these args, and its own report of the PDF
+        # (C-95/C-97): the one definition in _oracle.
+        logp, flsp = (_oracle.job_output(jobdir, args, ".log"),
+                      _oracle.job_output(jobdir, args, ".fls"))
         if not logp.exists() and rc != TIMEOUT_RC:
             # pdflatex always writes a log; no log means docker or the
             # container failed, which must never read as a TeX outcome.
@@ -1162,7 +1165,7 @@ class Tex:
         log = logp.read_bytes() if logp.exists() else b""
         fls = flsp.read_bytes() if flsp.exists() else b""
         return {"rc": rc, "secs": secs, "log": log, "fls": fls,
-                "pdf": (jobdir / (jobname + ".pdf")).exists(),
+                "pdf": _oracle.pdf_written(jobdir, args),
                 "tex_sha256": sha256_bytes(tex)}
 
     def fixpoint(self, jobdir: Path, tex: bytes, *, env: str = "grading",

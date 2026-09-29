@@ -33,7 +33,8 @@ from concurrent.futures import ThreadPoolExecutor
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, run_to_fixpoint  # noqa: E402
-from _oracle import OracleError, get_oracle, oracle_tex_env  # noqa: E402
+from _oracle import (OracleError, get_oracle, job_output,  # noqa: E402
+                     oracle_tex_env, pdf_written)
 import _measurement_provenance as _mp  # noqa: E402
 
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
@@ -89,8 +90,9 @@ def build(pkg, top, rule, timeout):
             if trace.is_file():
                 edits = sum(1 for _ in trace.read_text(errors="replace").splitlines())
         rc, _ = run_to_fixpoint(work, top, tex_env(td), timeout)
-        pdf = work / (pathlib.Path(top).stem + ".pdf")
-        if rc != 0 or not pdf.is_file():
+        # pdfTeX's job name and its own report of the PDF (C-95/C-97)
+        pdf = job_output(work, top, ".pdf")
+        if rc != 0 or not pdf_written(work, top):
             return {"rc": rc, "edits": edits, "text": None, "layout": None,
                     "pages": None}
         txt = subprocess.run(["pdftotext", "-enc", "UTF-8", str(pdf), "-"],

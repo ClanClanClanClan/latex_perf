@@ -186,15 +186,25 @@ elif mode == "cantlog":
     sys.stdout.write(banner + "! I can't write on file `t.log'.\n"); rcline(1)
 elif mode == "openout":
     sys.stdout.write(banner + "! I can't write on file `../x.tex'.\n"); rcline(1)
-elif mode == "okpdf":      # a pass that ships pages: writes <cwd>/<job>.pdf
-    cwd = a[a.index("-w") + 1]
-    job = os.path.splitext(os.path.basename(a[-1]))[0]
-    open(os.path.join(cwd, job + ".pdf"), "w").write("%PDF-1.5 pass\n")
-    sys.stdout.write(banner + "Output written on %s.pdf (1 page).\n" % job); rcline(0)
 elif mode == "leak":       # the in-container leak check refused (C-97)
     sys.stderr.write("\n%s_LEAK=301:gs:Z \n" % nonce)
-elif mode == "nopages":    # rc 0 and no PDF written (aux oscillation, C-95)
-    sys.stdout.write(banner + "No pages of output.\n"); rcline(0)
+elif mode in ("okpdf", "nopages", "forge"):
+    # okpdf: pdfTeX ships a page (writes <job>.pdf, reports it in <job>.log);
+    # nopages: rc 0, "No pages of output." (aux oscillation, C-95);
+    # forge: the DOCUMENT wrote <job>.pdf itself (\openout), pdfTeX shipped
+    # no page (C-97 review round 2). The job name as pdfTeX forms it:
+    # quotes removed, directory dropped, the LAST extension stripped.
+    cwd = a[a.index("-w") + 1]
+    name = a[-1].replace('"', "").rsplit("/", 1)[-1]
+    job = name.rpartition(".")[0] if "." in name else name
+    final = ("Output written on %s.pdf (1 page, 999 bytes)." % job
+             if mode == "okpdf" else "No pages of output.")
+    if mode != "nopages":
+        open(os.path.join(cwd, job + ".pdf"), "w").write("%PDF-1.5 x\n")
+    open(os.path.join(cwd, job + ".log"), "w").write(
+        banner + "Output written on %s.pdf (1 page, 9 bytes).\n" % job  # forged
+        + final + "\nPDF statistics:\n 3 PDF objects out of 1000\n\n")
+    sys.stdout.write(banner + final + "\n"); rcline(0)
 '''
 
 # A fake ENGINE for the shell grader's run_pdflatex: modes as above, stdout only.
@@ -210,6 +220,13 @@ case "${plan[$i]}" in
           echo "!pdfTeX error: pdflatex (file t.pdf): fwrite() failed"; exit 1 ;;
   openout) echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"
           echo "! I can't write on file \`../x.tex'."; exit 1 ;;
+  okpdf|forge)   # okpdf: pdfTeX ships a page; forge: the document wrote t.pdf
+    echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"
+    j="${!#}"; j="${j%.*}"; echo x > "$j.pdf"
+    if [ "${plan[$i]}" = okpdf ]; then f="Output written on $j.pdf (1 page, 9 bytes)."
+    else f="No pages of output."; fi
+    printf 'This is pdfTeX\nOutput written on %s.pdf (1 page, 1 bytes).\n%s\nPDF statistics:\n 3 objects\n' "$j" "$f" > "$j.log"
+    exit 0 ;;
   *)    exit 1 ;;
 esac
 '''
@@ -361,6 +378,31 @@ class Checker:
         # disk is pass 1's, and must not make the run `compiles`. Also a PDF
         # left in the work directory by an EARLIER run (gen_apply_fixes_real's
         # run1 reuses run0's directory) must not count for a later one.
+        # C-97 review round 2: pdfTeX's job name is the ONE name for clearing
+        # and reading, whatever the extension (doc.TEX -> doc.pdf), and the
+        # PDF verdict is pdfTeX's own report: a document-written .pdf is not.
+        for top in ("t.TEX", "t.ltx", "a.b.tex", "t", "t.Tex"):
+            for plan, want in (("okpdf", True), ("okpdf,nopages", False),
+                               ("forge", False), ("okpdf,forge", False)):
+                o = self.oracle(plan)
+                try:
+                    r = o.run_to_fixpoint(self.workroot, top, self.tv(), 60)
+                    got = r.compiles
+                except _oracle.OracleError as e:
+                    got = f"OracleError {e}"
+                self.expect(f"run_to_fixpoint of {top!r} under plan '{plan}' graded "
+                            f"compiles={got}, expected {want} (pdfTeX's job name / "
+                            f"its own PDF report, C-95/C-97)", got is want)
+                for f in self.workroot.iterdir():
+                    if f.suffix in (".pdf", ".log") :
+                        f.unlink()
+        measured = {"a.b.tex": "a.b", "doc.ltx": "doc", "doc.TEX": "doc",
+                    "Doc.TeX": "Doc", "doc.": "doc", "doc.tex.": "doc.tex",
+                    "a.b": "a", "doc": "doc", "d/in.tex": "in", ".tex": "",
+                    '"doc.tex"': "doc", 'a"b".tex': "ab", "./x.tex": "x"}
+        got = {k: _oracle.pdftex_jobname(k) for k in measured}
+        self.expect("pdftex_jobname no longer gives pdfTeX's MEASURED job names",
+                    got == measured, repr({k: v for k, v in got.items() if v != measured[k]}))
         for plan, pre in (("okpdf,nopages", False), ("nopages", True)):
             stale = self.workroot / "t.pdf"
             stale.unlink(missing_ok=True)
@@ -390,7 +432,7 @@ class Checker:
             self.oracle("nopages")
             rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
                                           "-interaction=nonstopmode", "t.tex"])
-            left = [f.name for f in outs if f.exists()]
+            left = [f.name for f in outs if f.exists() and f.read_text() == "stale\n"]
             self.expect(f"the _oracle.py pdflatex shim left an earlier run's "
                         f"{left} in place for a run that wrote none (a stale PDF "
                         f"read as this pass's, C-95; false_ready_oracle.sh)",
@@ -400,10 +442,10 @@ class Checker:
         for f in outs:
             f.write_text("stale\n")
         try:
-            self.oracle("nopages").run_engine(
+            self.oracle("timeout").run_engine(
                 self.workroot, _oracle.ENGINE_PDFLATEX,
                 ["-interaction=nonstopmode", "t.tex"], self.tv(), 60)
-            left = [f.name for f in outs if f.exists()]
+            left = [f.name for f in outs if f.exists() and f.read_text() == "stale\n"]
             self.expect(f"run_engine left an earlier run's {left} in place for a "
                         f"run that wrote none (gen_contract.py read them, C-95)",
                         not left)
@@ -850,6 +892,46 @@ class Checker:
         is replaced, never graded in; one that still lacks them after
         creation is refused. Drives the real _ensure_container against the
         fake docker, reading back its docker calls."""
+        # Review round 2 (LOW-4): the configuration is part of the container's
+        # NAME, so an older oracle's container is never replaced under a
+        # grader still running it.
+        import inspect
+        src = inspect.getsource(_oracle.ContainerOracle.__init__)
+        tag = _oracle.CONTAINER_CONFIG_TAG
+        self.expect("the oracle's container name no longer carries its "
+                    "configuration (--init, the pids limit)",
+                    "+ CONTAINER_CONFIG_TAG" in src and "init" in tag
+                    and str(_oracle.PIDS_LIMIT) in tag)
+        # Review round 2 (LOW-2): clearing an output never follows a symlink.
+        link, target = self.workroot / "t.pdf", self.workroot / "fig.pdf"
+        for f in (link, target):
+            f.unlink(missing_ok=True)
+        target.write_text("figure\n")
+        link.symlink_to(target.name)
+        try:
+            self.oracle("ok").remove([link])
+            ok = target.exists() and not link.is_symlink()
+        except _oracle.OracleError:
+            ok = False
+        self.expect("ContainerOracle.remove deleted a symlink's TARGET (clearing "
+                    "t.pdf -> fig.pdf deleted the figure) or kept the link", ok)
+        for f in (link, target):
+            f.unlink(missing_ok=True)
+        # ... and a document shipping its own output name as a symlink is not
+        # graded at all (pdfTeX would write through it into the target).
+        target.write_text("figure\n")
+        link.symlink_to(target.name)
+        try:
+            self.oracle("okpdf").run_to_fixpoint(self.workroot, "t.tex", self.tv(), 60)
+            refused = False
+        except _oracle.OracleError:
+            refused = True
+        self.expect("run_to_fixpoint graded a document whose t.pdf is a symlink "
+                    "(pdfTeX writes through it into fig.pdf)", refused and
+                    target.read_text() == "figure\n")
+        for f in (link, target, self.workroot / "t.log"):
+            f.unlink(missing_ok=True)
+        _oracle._ORACLE = None
         calls, state = self.td / "calls", self.td / "cstate"
         img = _oracle.IMAGE
         lim = str(_oracle.PIDS_LIMIT)
@@ -861,11 +943,11 @@ class Checker:
         saved = {k: os.environ.get(k) for k in
                  ("FAKE_CALLS", "FAKE_STATE", "FAKE_INSPECT", "FAKE_HOSTCFG")}
         try:
-            for label, inspect, hostcfg, want_replace, want_ok in cases:
+            for label, insp, hostcfg, want_replace, want_ok in cases:
                 calls.write_text("")
                 state.write_text("present")
                 os.environ.update(FAKE_CALLS=str(calls), FAKE_STATE=str(state),
-                                  FAKE_INSPECT=inspect, FAKE_HOSTCFG=hostcfg)
+                                  FAKE_INSPECT=insp, FAKE_HOSTCFG=hostcfg)
                 o = _oracle.ContainerOracle.__new__(_oracle.ContainerOracle)
                 _oracle._Base.__init__(o)
                 o.docker, o.workroot, o.name = str(self.fake), self.workroot, "lp-oracle-fake"
@@ -1087,9 +1169,14 @@ class Checker:
         if not m:
             self.expect("_oracle.sh no longer defines oracle_vet()", False)
             return
+        readers = re.findall(r"^oracle_(?:job|pdf_written)\(\) \{.*?\}$", osh, re.M)
+        if len(readers) != 2:
+            self.expect("_oracle.sh no longer defines oracle_job()/oracle_pdf_written()",
+                        False)
+            return
         lib = self.td / "fro_funcs.sh"
-        lib.write_text(f'ROOT="{self.repo}"\n' + m.group(0) + "\n"
-                       + funcs["run_pdflatex"] + "\n" + funcs["drift_class"] + "\n")
+        lib.write_text(f'ROOT="{self.repo}"\n' + m.group(0) + "\n" + "\n".join(readers)
+                       + "\n" + funcs["run_pdflatex"] + "\n" + funcs["drift_class"] + "\n")
         wd = self.td / "wd"
         wd.mkdir(exist_ok=True)
 
@@ -1123,6 +1210,16 @@ class Checker:
         got = run("openout")
         self.expect(f"run_pdflatex no longer grades a document's own \\openout "
                     f"refusal rc 1 (got '{got}')", got.split()[:1] == ["1"])
+        # C-97 review round 2: the PDF verdict is pdfTeX's own report in the
+        # pass's log -- a genuine page is "yes", a .pdf the document wrote
+        # itself is "no", and so is a stale one under a no-pages pass.
+        for plan, want in (("okpdf", "0 yes"), ("forge", "0 no"), ("okpdf,forge", "0 no")):
+            got = (wd / "t.pdf").unlink(missing_ok=True) or run(plan)
+            self.expect(f"false_ready_oracle.sh run_pdflatex graded plan '{plan}' "
+                        f"as '{got}', expected '{want}' (C-97: a .pdf pdfTeX did not "
+                        f"report writing is not a PDF)", got == want)
+        for f in ("t.pdf", "t.log"):
+            (wd / f).unlink(missing_ok=True)
         got = run("ok", LP_ORACLE_MIN_FREE_MB=str(10 ** 12))
         self.expect(f"run_pdflatex graded a run with the work root below the "
                     f"free-space floor as '{got}'", got.startswith("ENVFAIL")
@@ -1140,10 +1237,35 @@ class Checker:
                     "run AND the run's own output after it, before grading",
                     -1 not in (i_pre, i_run, i_post, i_ref, i_grade)
                     and i_pre < i_run < i_post < i_ref < i_grade)
+        # C-95/C-97 review round 2: diff_compile_check.sh's PDF verdict and log
+        # name come from the oracle's ONE reader, not `${base%.tex}.pdf`.
+        self.expect("diff_compile_check.sh no longer takes its PDF verdict from "
+                    "oracle_pdf_written (pdfTeX's own report) and its job name "
+                    "from oracle_job",
+                    'oracle_pdf_written "$d" "$base"' in dcc
+                    and 'job="$(oracle_job "$base")"' in dcc
+                    and "${base%.tex}" not in dcc and "${base%.tex}" not in fro)
+        # ... and NO grader forms a run's output name or PDF verdict itself:
+        # every reader takes _oracle.job_output / pdf_written (or the shell
+        # helpers). The shapes the review found: a stem (strips the last
+        # extension only by accident of pathlib, and forms its own name), a
+        # `${base%.tex}` (lowercase .tex only), a file named .pdf as verdict.
+        own_name = re.compile(r'stem \+ "\.(pdf|log|fls)"|\$\{base%\.tex\}\.|'
+                              r'with_suffix\("\.(pdf|log)"\)|stem\}\.(pdf|log)')
+        hits = []
+        for f in sorted((self.repo / "scripts/tools").glob("*")):
+            if f.suffix in (".py", ".sh") and not f.name.startswith(
+                    ("_oracle.", "check_oracle_infra_grading", "check_gate_selftests")):
+                hits += [f"{f.name}:{i}" for i, ln in enumerate(
+                    f.read_text(errors="replace").splitlines(), 1)
+                    if own_name.search(ln) and not ln.lstrip().startswith("#")]
+        self.expect(f"a grader forms a run's output name itself instead of "
+                    f"_oracle.job_output/pdf_written (C-95/C-97): {hits[:6]}",
+                    not hits)
         # The halt run's proof must be checked BEFORE its artefacts are deleted.
         i_halt = fro.find('read -r hrc hpdf <<<"$(run_pdflatex "$rundir" "$base" 1)"')
-        i_rm = fro.find('"${ORACLE_RM[@]}" "$rundir/${base%.tex}.pdf"')
-        i_chk = fro.find("grep -q 'This is pdfTeX' \"$rundir/${base%.tex}.log\"")
+        i_rm = fro.find('"${ORACLE_RM[@]}" "$rundir/$job.pdf"')
+        i_chk = fro.find("grep -q 'This is pdfTeX' \"$rundir/$job.log\"")
         i_nop = fro.find("124|125|126|127|NOPROOF|ENVFAIL)")
         self.expect("false_ready_oracle.sh checks the halt run's pdfTeX log and "
                     "NOPROOF only AFTER deleting it (or not at all)",

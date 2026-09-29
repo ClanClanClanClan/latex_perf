@@ -167,12 +167,15 @@ for f in "$CORPUS"/*.tex; do
   # Grading by rc alone scored tolerated_write18.tex (rc 0, no PDF: its body
   # typesets nothing) COMPILES, i.e. a false-not-ready, where every other
   # grader in the repo scores it FAILS.
-  [ -s "$d/${base%.tex}.pdf" ] && pdf=yes || pdf=no
+  # ... and the PDF must be one pdfTeX reports writing in this run's log, not
+  # merely a file named .pdf (a document can \openout one, C-97).
+  oracle_pdf_written "$d" "$base" 2>/dev/null && pdf=yes || pdf=no
+  job="$(oracle_job "$base")"
   # Affirmative proof that pdfTeX ran, as false_ready_oracle.sh requires: the
   # banner pdfTeX writes as the first line of the log. $d is fresh per document
   # and the protocol here is ONE pass, so a log carrying it can only be this
   # run's. (It used to match 'pdftex' anywhere, case-insensitively.)
-  if [ -s "$d/${base%.tex}.log" ] && grep -q 'This is pdfTeX' "$d/${base%.tex}.log" 2>/dev/null; then
+  if [ -s "$d/$job.log" ] && grep -q 'This is pdfTeX' "$d/$job.log" 2>/dev/null; then
     ran=yes
   else
     ran=no

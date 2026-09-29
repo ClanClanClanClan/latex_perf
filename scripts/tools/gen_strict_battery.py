@@ -45,7 +45,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from diff_real_roots import PIN, run_to_fixpoint_full  # noqa: E402
-from _oracle import OracleError, get_oracle  # noqa: E402
+from _oracle import OracleError, get_oracle, job_output  # noqa: E402
 
 BATTERY = Path("corpora/strict_battery")
 CLI = Path("_build/default/latex-parse/src/validators_cli.exe")
@@ -94,7 +94,7 @@ def grade(tex: Path, timeout: int = 300) -> dict:
         run = run_to_fixpoint_full(work, tex.name, get_oracle().tex_env(td),
                                    timeout)
         rc, passes, pdf = run.rc, run.passes, run.pdf
-        err = first_error(work / (tex.stem + ".log"))
+        err = first_error(job_output(work, tex.name, ".log"))
     return {"rc": rc, "passes": passes, "pdf": pdf,
             "compiles": rc == 0 and pdf, "first_error": err}
 

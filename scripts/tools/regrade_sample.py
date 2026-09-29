@@ -15,7 +15,7 @@ CLI = "/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/_
 MAX_PASSES, TIMEOUT = 3, 300
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from _oracle import get_oracle  # noqa: E402
+from _oracle import get_oracle, job_output, pdf_written  # noqa: E402
 
 
 def run_to_fixpoint(work, toplevel, env):
@@ -29,7 +29,7 @@ def run_to_fixpoint(work, toplevel, env):
 
 
 def first_error(work, toplevel):
-    log = pathlib.Path(work) / (pathlib.Path(toplevel).stem + ".log")
+    log = job_output(work, toplevel, ".log")  # pdfTeX's job name (C-95)
     if not log.exists():
         return ""
     for line in log.read_text(errors="replace").splitlines():
@@ -55,7 +55,7 @@ def grade(aid, top):
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
         rc, passes = run_to_fixpoint(str(work), top, get_oracle().tex_env(td))
-        pdf = (work / (pathlib.Path(top).stem + ".pdf")).exists()
+        pdf = pdf_written(work, top)  # pdfTeX's own report (C-97)
         err = first_error(str(work), top)
     if rc == -1:
         return dict(arxiv_id=aid, toplevel=top, cell="ungraded-infra",

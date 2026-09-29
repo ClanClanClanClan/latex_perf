@@ -75,7 +75,7 @@ classified by error class, never by rc; a shape read from \\meaning is a hint).
                    256 bytes and \\currentgrouplevel as \\lpfsave saved them
                    (`! LPFOLLOW.`); \\lpnocs (undefined) catches a use that
                    reorders or defers it.
-  version 3        (review round 2, C-87: what a use LEAVES BEHIND) the follow
+  version 3        (review round 2, C-90: what a use LEAVES BEHIND) the follow
                    probe also compares the group type, the conditional level
                    and the allocation registers, reports a change of the mode
                    alone as `! LPMODE <m>.`, and reads from \\tracingassigns the
@@ -88,6 +88,20 @@ classified by error class, never by rc; a shape read from \\meaning is a hint).
                    key confirmed on keys naming configuration objects, numeric
                    types take VALUE_WITNESSES; optional positions record
                    `after_space`.
+  version 4        (review round 3, C-90: state a use hands on is CONSUMED
+                   LATER, or is the state the NEXT use depends on) every cell
+                   of the main vertical list (`vertical`, `listv`,
+                   `preamble`) must agree at every page state of POSITIONS
+                   (\\unskip after glue on the page, \\unpenalty after glue on
+                   the contribution list); the counter witness runs in the
+                   consumer document, which also typesets the label the use
+                   leaves (`\\label` after it, `\\ref`/`\\pageref` at the
+                   end); a TyCounter/TyEnvName slot must take every member of
+                   its domain there; an environment's body is read with a
+                   cell only if the measured body-start probe shows a start
+                   mode that maps to one (BODY_CELL) and no redefinition;
+                   numeric slots take the bounds and units of LITERAL_FORMS;
+                   the gate reports a malformed record instead of crashing.
   per cell         the canonical use of each variant, solo: `ok` or the fatal
                    error class and message. In an accepting cell,
                    `shape_checked` records that the shape holds there: the
@@ -130,9 +144,11 @@ classified by error class, never by rc; a shape read from \\meaning is a hint).
   environments     every X whose \\X and \\endX are members, X letters with an
                    optional trailing `*`: begin-arguments by the same method
                    (head `\\begin{X}`, body `a` then `\\item a`), per cell, and
-                   one-variable body probes (`a^b`, `$a$`, `\\item a`,
-                   `a\\par b`, `\\caption{a}`, `a&b`) giving the body mode and
-                   the contexts the environment pushes.
+                   one-variable body probes (`a^b`, `\\"a`, `\\item a`,
+                   `a\\par b`, `\\caption{a}`, `a&b`) giving the contexts the
+                   environment pushes, and (version 4) the body-start probe
+                   per enclosing cell: `body_start` (the mode) and
+                   `body_cell` (the cell the body is read with, or None).
   definer_rules    a probe table: each admitted definer (\\newcommand,
                    \\renewcommand, \\providecommand, \\newenvironment,
                    \\renewenvironment, \\newcounter, \\setcounter,
@@ -187,7 +203,7 @@ SIG_SCHEMA = "lp-contract-signatures/1"
 DECL_SCHEMA = "lp-decl-templates/1"
 # Bumped by hand when the probe DESIGN changes the output on purpose (as
 # gen_contract.GENERATOR_VERSION; never a source hash, the C-68 lesson).
-SIGNATURE_VERSION = "3"
+SIGNATURE_VERSION = "4"
 SIG_DIR = gc.CONTRACT_DIR / "signatures"
 DECL_DIR = gc.CONTRACT_DIR / "decl_templates"
 CACHE = "~/.cache/lp-oracle/contracts/signatures"
@@ -227,9 +243,19 @@ FOLLOW_AUX = ("lpfone", "lpfgob", "lpfcc", "lpfst", "lpfmd", "lpfstate", "lpfnow
 FRAGILE = "lpfragile"
 FRAGILE_DEF = (r"\def\lpfragile{\def\lpfragilet{x}}\def\lpfragileo{x}"
                r"\def\lpfragilex{\ifx\lpfragilet\lpfragileo\else\number\lpfragileu\fi}")
+# The body-start probe (version 4, review round 3 HIGH-C): an environment's
+# body is a context of its own. `\lpbsave \begin{X}<args>\lpfbody\lpnocs`
+# stops at the start of the body with `! LPBODY <mode>.` if the catcodes, the
+# conditional level and the allocation registers are what \lpbsave saved
+# (the group level and type differ by design: the environment's group), else
+# `! LPSTATE.`; the trace between the markers gives the body-typeable names
+# the begin part REDEFINED (theindex's \item, center's \\). See BODY_CELL.
+BODY = "lpfbody"
+BSAVE = "lpbsave"
+BODY_AUX = ("lpfbst", "lpfbstate")
 RESERVED = (SENT, CSPAY, FRESH, "end" + FRESH, "c@" + FRESH, DECL_FRESH, "c@" + DECL_FRESH,
             FOLLOW, FSAVE, NOCS, FRAGILE, "lpfragilet", "lpfragileo", "lpfragilex",
-            "lpfragileu") + FOLLOW_AUX
+            "lpfragileu", BODY, BSAVE, "r@lpcons", "lpfpar", "lpfpst") + FOLLOW_AUX + BODY_AUX
 # The state the follow probe compares (version 3). Version 2 compared the
 # catcodes of all 256 bytes and \currentgrouplevel only, so a use that left
 # another mode (\section, \par, \item in a paragraph), allocated a register
@@ -257,6 +283,31 @@ FOLLOW_DEF = (r"\long\def\lpfone#1{#1}\long\def\lpfgob#1{}"
               r"\immediate\write-1{LPFX>}\edef\lpfnow{\lpfst}\edef\lpfnowm{\lpfmd}"
               r"\ifx\lpfstate\lpfnow\ifx\lpfmode\lpfnowm\errmessage{LPFOLLOW}\else"
               r"\errmessage{LPMODE \lpfnowm}\fi\else\errmessage{LPSTATE}\fi}")
+BODY_DEF = (r"\def\lpfbst{\lpfcc{0}/\the\currentiflevel/\the\count10,\the\count11,"
+            r"\the\count12,\the\count13,\the\count14,\the\count15,\the\count16,\the\count17,"
+            r"\the\count18,\the\count19,\the\count20,\the\csname float@count\endcsname,"
+            r"\the\count256}"
+            r"\def\lpbsave{\edef\lpfbstate{\lpfbst}\immediate\write-1{LPFX<}"
+            r"\tracingrestores=1 \tracingassigns=1 }"
+            r"\outer\def\lpfbody{\tracingassigns=0 \tracingrestores=0 "
+            r"\immediate\write-1{LPFX>}\edef\lpfnow{\lpfbst}\edef\lpfnowm{\lpfmd}"
+            r"\ifx\lpfbstate\lpfnow\errmessage{LPBODY \lpfnowm\space\lpfpst}\else"
+            r"\errmessage{LPSTATE}\fi}")
+BODY_MSG = "LPBODY "
+# The cell an environment's body is read with (version 4, HIGH-C), from the
+# enclosing cell and the mode the body starts in: the enclosing cell itself
+# when the mode is unchanged; `vertical` for a body that ends the paragraph
+# first (the state after a paragraph, one of the vertical cell's positions);
+# `math` for inline math (`\begin{math}` is `$`). Any other start mode
+# (internal vertical: minipage; display math: equation; restricted
+# horizontal: lrbox) has no cell, and neither has a body whose begin part
+# redefines a body-typeable name or changes the catcodes: its uses are
+# outside the tier. Version 3 read `body_mode: text` from a paragraph the
+# probe body itself started, so minipage, sloppypar, titlepage and theindex
+# read as text bodies where `\\` at the start is fatal.
+BODY_CELL = {("text", "h"): "text", ("text", "v"): "vertical", ("text", "mi"): "math",
+             ("vertical", "v"): "vertical", ("vertical", "mi"): "math",
+             ("math", "mi"): "math"}
 FOLLOW_OK = "LPFOLLOW."
 FOLLOW_STATE = "LPSTATE."
 FOLLOW_MODE = "LPMODE "
@@ -290,13 +341,58 @@ TRANSITIONS = {("text", "v"): "vertical", ("vertical", "h"): "text",
 # the SOURCE cell by the transition probe (\hss in `vertical` starts a
 # paragraph whose infinite shrink is fatal once material follows).
 FOLLOWER = {"vertical": "\\par ", "text": " z", "listv": "\\par ", "list": " z"}
-# Pseudo-cells (version 3): a probe of a cell under another document. `vmid:`
-# is the vertical cell NOT at the top of the page (x\par before the use: glue
-# at the top of a page is discarded, so \vss passed there, review round 2
-# HIGH-5); `ctr<v>:<cell>` sets every counter of the configuration to v
-# before the use (\fnsymbol, \Alph: `Counter too large`, HIGH-4).
-VMID = "vmid:"
-VMID_DOC = "x\\par %s\\par x"
+# Pseudo-cells (version 3): a probe of a cell under another document.
+# `pos<i>:<cell>` (version 4, review round 3 HIGH-A) is a cell of the MAIN
+# VERTICAL LIST with page material POSITIONS[cell][i] just before the use.
+# TeX decides \unskip, \unkern, \unpenalty and \lastbox there from the page
+# builder's state, not from the use: on the main vertical list with an empty
+# contribution list they are fatal (\unskip only when the last item that went
+# to the page was glue, even glue discarded at the top of a page), and with a
+# non-empty contribution list they act on its tail. Version 3 compared the
+# vertical cell (top of page 1) with ONE other state (after a paragraph), so
+# `x \section{a}\par\unskip x` (glue last on the page) was a false READY and
+# `x\par\vspace{1pt}\unpenalty\par x` (glue on the contribution list) a false
+# NOT-READY, and `listv` and `preamble`, which are main-list cells too, were
+# never compared at all (MEASURED: `\vspace{1pt}\par\unskip` is fatal in both).
+# Each cell's positions realise the states its own template can reach: a box
+# last on the page, glue last on the page, glue discarded at the top of a
+# page, and glue on the contribution list. A cell whose outcome differs at any
+# of them is `position_dependent` and decides nothing. `ctr<v>:<cell>` sets
+# every counter of the configuration to v before the use (\fnsymbol, \Alph:
+# `Counter too large`, HIGH-4), in the CONSUMER document (version 4, below).
+#
+# The positions also realise the PARAGRAPH-START states the kernel's structural
+# commands leave on the main list (measured on version 3 by the round-3 fix's
+# transition census, 2026-09-29: `\begin{itemize}\item \paragraph[a]{a}` is
+# `Something's wrong--perhaps a missing \item` while `listv`, after `\item
+# x\par`, accepted \paragraph and \item composes into `listv`; a false READY):
+# right after an item label (\item), a display heading (\section) and a
+# run-in heading (\paragraph). A use composes only into a state whose
+# behaviour was measured (PARSTATE below).
+POS = "pos"
+POSITIONS = {
+    "vertical": ("x\\par ", "x\\par\\vspace{1pt}\\par ", "\\vspace{1pt}\\par ",
+                 "x\\par\\vspace{1pt}", "x\\par\\section{a}", "x\\par\\paragraph{a}"),
+    "listv": ("\\vspace{1pt}\\par ", "\\vspace{1pt}", "\\item ", "\\paragraph{a}"),
+    "preamble": ("\\vspace{1pt}\\par ", "\\vspace{1pt}"),
+}
+# The paragraph-state fingerprint (version 4, the transition-state limit of
+# round 2 measured to be a real hole): the kernel's paragraph-start flags
+# (latex.ltx: \everypar reads them when the next paragraph starts; each a
+# \newif of the kernel) and whether \everypar is empty. `<use>\lpfpar` stops
+# with `! LPPAR [<letters>].`: the state the use hands to the next token.
+# `cell_states` records the fingerprint of every cell and position (the
+# states whose behaviour the cell's probes measure); a use is shape-checked
+# in a cell only if its fingerprint after it is one of its follower cell's.
+PARSTATE = "lpfpar"
+PARSTATE_FLAGS = (("nobreak", "N"), ("inlabel", "L"), ("noskipsec", "S"), ("newlist", "W"),
+                  ("noparitem", "P"), ("noparlist", "Q"), ("endpe", "E"),
+                  ("afterindent", "A"), ("minipage", "M"), ("ignore", "I"))
+PARSTATE_DEF = (r"\def\lpfpst{[" +
+                "".join(r"\csname if@%s\endcsname %s\fi" % (f, c) for f, c in PARSTATE_FLAGS) +
+                r"\if\relax\detokenize\expandafter{\the\everypar}\relax\else V\fi]}"
+                r"\def\lpfpar{\errmessage{LPPAR \lpfpst}}")
+PARSTATE_MSG = "LPPAR "
 CTR = "ctr"
 COUNTER_VALUES = ("27", "-1")
 # Every use is also repeated REPEAT times in its base cell (version 3, HIGH-4):
@@ -309,10 +405,20 @@ REPEAT = 300
 # \sectionmark through the running heads), across the pass protocol. A
 # consumer cell `consumers:<cell>` is <cell> with a \title given before the
 # use (\maketitle without one is an error at the pin) and these around it.
+#
+# Version 4 (review round 3 HIGH-B): the consumer document also consumes the
+# CROSS-REFERENCE state a use leaves: `\label{lpcons}` right after the use (at
+# the start of the body for a preamble use) records \@currentlabel, and
+# \ref/\pageref at the end typeset it on the next pass. \refstepcounter{enumii}
+# with enumii at 27 compiles (\@ctrerr is protected in the \edef) and is fatal
+# only when \ref typesets the label it left; no single use shows it. The
+# counter witness (`ctr<v>:`) runs in this document, so that a counter value
+# is consumed by every consumer, not only by the use itself.
 CONS = "consumers:"
 CONS_TITLE = "\\title{t}\n"
 CONS_PRE = "\\pagestyle{headings}\\tableofcontents\\listoffigures\\listoftables\n"
-CONS_POST = "\n\\maketitle\\newpage x\\leftmark\\rightmark"
+CONS_LABEL = "\\label{lpcons}"
+CONS_POST = "\n\\maketitle\\newpage x\\leftmark\\rightmark\\ref{lpcons}\\pageref{lpcons}"
 # The files the consumer suite reads back. A slot's consumption can depend on
 # another slot's value (\addtocontents{toc}{..} is typeset, {a}{..} is written
 # nowhere): a TyLabel candidate is also confirmed with each other text-like
@@ -347,8 +453,29 @@ MOVING_CONTENT = "\\lpfragile\\lpfragilex"
 # environment payloads.
 KEY_CONTENT = "a:1-b.c"
 # Value witnesses of the numeric lattice types (review round 2 MEDIUM,
-# parametricity): \symbol{300} is `Bad character code`.
-VALUE_WITNESSES = {"TyNumber": ("0", "-1", "300"), "TyDimen": ("0pt", "-1pt", "1000pt")}
+# parametricity): \symbol{300} is `Bad character code`. Version 4 (review
+# round 3 MEDIUM-D): also the ends of the range a literal may take (TeX's
+# own limits: `Number too big` from 2^31, `Dimension too large` from
+# 16384pt) and the units, so that LITERAL_FORMS below is attested at its
+# bounds, and a slot that fails at a bound or in a unit is untyped.
+VALUE_WITNESSES = {"TyNumber": ("0", "-1", "300", "2147483647", "-2147483647"),
+                   "TyDimen": ("0pt", "-1pt", "1000pt", "16383pt", "-16383pt", "1cm", "1mm",
+                               "1in", "1bp", "1em", "1ex")}
+# What M2's lexer may admit in a typed numeric slot: exactly the forms the
+# witnesses above attest (version 4, MEDIUM-D). Anything else (a register,
+# `\value{..}`, hexadecimal `"1F`, a glue specification with `plus`, a
+# unit not listed, a magnitude past the bound) is not attested for the slot.
+LITERAL_FORMS = {
+    "TyNumber": "an optional `-` and decimal digits, with |n| <= 2147483647",
+    "TyDimen": "an optional `-`, decimal digits with an optional `.` fraction, and one of "
+               "the units pt, cm, mm, in, bp, em, ex, with a magnitude of at most 16383pt",
+}
+# Lattice types whose values are the configuration's own objects (version 4,
+# review round 3 HIGH-B): a slot of such a type is attested only if EVERY
+# member of its domain works, in the base cell and at each counter value
+# (\refstepcounter{enumi} passes, \refstepcounter{enumii} leaves a label that
+# \ref cannot typeset at 27). The domains are recorded in the sidecar.
+DOMAIN_TYPES = ("TyCounter", "TyEnvName")
 GRAB_CLASS = "forbidden_cs_use"
 # Error classes that say the USE is in the wrong place (mode or context), so
 # that no payload can fix it in this cell: typing is skipped and the next cell
@@ -380,6 +507,10 @@ def refine_class(e: str, m: str | None) -> str:
         return "lp_mode_changed"
     if m and m.startswith(REDEFINES):
         return "lp_redefines"
+    if m and m.startswith(BODY_MSG):
+        return "lp_body"
+    if m and m.startswith(PARSTATE_MSG):
+        return "lp_par"
     if e == "latex_error" and m and m.startswith("LaTeX Error: No counter"):
         return "no_counter"
     if e == "other" and m and m.startswith("Please use \\mathaccent for accents in math mode"):
@@ -428,6 +559,40 @@ def mode_after(o: dict) -> str | None:
     if o.get("e") == "lp_mode_changed" and m.startswith(FOLLOW_MODE):
         return m[len(FOLLOW_MODE):].rstrip(".")
     return None
+
+
+def body_start(o: dict) -> str | None:
+    """`<mode> [<paragraph state>]` from a body-start probe's `! LPBODY
+    <mode> [<state>].`, else None (the probe failed, the state changed, or a
+    name was redefined)."""
+    m = o.get("m") or ""
+    if o.get("e") == "lp_body" and m.startswith(BODY_MSG):
+        return m[len(BODY_MSG):].rstrip(".")
+    return None
+
+
+def par_state(o: dict) -> str | None:
+    """The paragraph-state fingerprint `[<letters>]` of `! LPPAR [..].`,
+    else None."""
+    m = o.get("m") or ""
+    if o.get("e") == "lp_par" and m.startswith(PARSTATE_MSG):
+        return m[len(PARSTATE_MSG):].rstrip(".")
+    return None
+
+
+def state_use(use: str) -> str:
+    """The paragraph-state probe of a use: the fingerprint after it."""
+    return use + cs(PARSTATE)
+
+
+def body_use(head: str, args: str) -> str:
+    """The body-start probe of an environment use (version 4): the state
+    saved before \\begin, compared at the start of the body."""
+    return cs(BSAVE) + " " + head + args + cs(BODY) + cs(NOCS)
+
+
+def pos_cell(i: int, cell: str) -> str:
+    return "%s%d:%s" % (POS, i, cell)
 
 
 def _unwrap_log(text: str) -> list:
@@ -536,12 +701,11 @@ def _mentions(name: str, use: str) -> bool:
 
 
 def split_cell(cell: str) -> tuple:
-    """(prefix, base cell) of a probe cell: `consumers:`, `vmid:`,
+    """(prefix, base cell) of a probe cell: `consumers:`, `pos<i>:`,
     `ctr<v>:` or none."""
-    for p in (CONS, VMID):
-        if cell.startswith(p):
-            return p, cell[len(p):]
-    m = re.match(r"^(%s-?\d+:)(.*)$" % CTR, cell)
+    if cell.startswith(CONS):
+        return CONS, cell[len(CONS):]
+    m = re.match(r"^(%s-?\d+:|%s\d+:)(.*)$" % (CTR, POS), cell)
     if m:
         return m.group(1), m.group(2)
     return "", cell
@@ -553,29 +717,37 @@ def counter_setup(counters: list, value: str) -> str:
 
 def cell_doc(pre: bytes, cell: str, use: str, counters: list = ()) -> bytes:
     """The whole probe document: the configuration, then the use in `cell`.
-    The sentinel, the follow probe's macros and the moving witness are defined
-    iff the use mentions them, just before it. A `consumers:<cell>` cell is
-    <cell> with the consumer suite around the use (CONS_*); `vmid:vertical`
-    is the vertical cell after a paragraph; `ctr<v>:<cell>` is <cell> with
-    every counter in `counters` set to v just before the use."""
+    The sentinel, the follow and body-start probes' macros and the moving
+    witness are defined iff the use mentions them, just before it. A
+    `consumers:<cell>` cell is <cell> with the consumer suite around the use
+    (CONS_*, and CONS_LABEL right after it); `ctr<v>:<cell>` is the consumer
+    cell with every counter in `counters` set to v just before the use;
+    `pos<i>:<cell>` is <cell> with the page material POSITIONS[cell][i] just
+    before the use."""
     prefix, cell = split_cell(cell)
-    cons = prefix == CONS
+    cons = prefix == CONS or prefix.startswith(CTR)
     sdef = ("\\outer\\def%s{}" % cs(SENT)) if _mentions(SENT, use) else ""
-    if _mentions(FOLLOW, use):
+    if _mentions(FOLLOW, use) or _mentions(BODY, use):
         sdef += FOLLOW_DEF
+    if _mentions(BODY, use) or _mentions(PARSTATE, use):
+        sdef += PARSTATE_DEF
+    if _mentions(BODY, use):
+        sdef += BODY_DEF
     if _mentions(FRAGILE, use):
         sdef += FRAGILE_DEF
     if prefix.startswith(CTR):
         sdef += counter_setup(counters, prefix[len(CTR):-1])
+    material = POSITIONS[cell][int(prefix[len(POS):-1])] if prefix.startswith(POS) else ""
     top = CONS_TITLE.encode("utf-8") if cons else b""
     bpre, bpost = (CONS_PRE, CONS_POST) if cons else ("", "")
+    lab = CONS_LABEL if cons else ""
     if cell == "preamble":
-        return (pre + top + (sdef + use + "\n").encode("utf-8") +
-                ("\\begin{document}\n%sx%s\n\\end{document}\n" % (bpre, bpost)).encode("utf-8"))
-    tpl = VMID_DOC if prefix == VMID else CELL_DOC[cell]
+        return (pre + top + (sdef + material + use + "\n").encode("utf-8") +
+                ("\\begin{document}\n%s%sx%s\n\\end{document}\n" % (lab, bpre, bpost))
+                .encode("utf-8"))
     return (pre + top + b"\\begin{document}\n" +
-            (bpre + sdef + tpl % use + bpost + "\n").encode("utf-8")
-            + b"\\end{document}\n")
+            (bpre + sdef + CELL_DOC[cell] % (material + use + lab) + bpost + "\n")
+            .encode("utf-8") + b"\\end{document}\n")
 
 
 def letters_of(catcodes: list) -> set:
@@ -668,12 +840,42 @@ def content_kind(cell: str, m: str, t: str, n: str) -> str:
     return "restricted"
 
 
-def body_mode_of(m: str, t: str) -> str | None:
-    """An environment body's mode from the two mode witnesses' outcome words;
-    None unless one mode is shown (version 1 read `either` from `$a$`, which
-    toggled math, so `\begin{math}` read as either)."""
-    k = content_kind("", m, t, "fatal")
-    return k if k in ("math", "text") else None
+def body_cell_of(cell: str, o: dict, states: dict | None) -> str | None:
+    """The cell an environment's body is read with when the environment is
+    used in `cell`, from its body-start probe: BODY_CELL of the start mode,
+    and only if the paragraph state at the body's start is one the target
+    cell's probes measured (`states`, from cell_states). None when the probe
+    did not reach the body unchanged, the start mode has no cell, or the
+    state was not measured there."""
+    b = body_start(o)
+    if b is None or " " not in b:
+        return None
+    mode, fp = b.split(" ", 1)
+    t = BODY_CELL.get((cell, mode))
+    return t if t is not None and fp in (states or {}).get(t, ()) else None
+
+
+def cell_state_probes() -> list:
+    """(cell, use) of the configuration's cell states (version 4): the
+    paragraph-state fingerprint of every cell and every position, i.e. of
+    each state whose behaviour a cell's probes measure."""
+    out = [(c, cs(PARSTATE)) for c in CELLS]
+    for c in CELLS:
+        out += [(pos_cell(i, c), cs(PARSTATE)) for i in range(len(POSITIONS.get(c, ())))]
+    return out
+
+
+def states_of(rows: list) -> dict:
+    """{cell: [fingerprint]} from the recorded cell_states rows: the states
+    measured in each cell (its base and its positions). A row whose probe did
+    not give a fingerprint contributes nothing (fail closed)."""
+    out: dict = {}
+    for r in rows:
+        o = outcome_from_entry(r)
+        fp = par_state(o)
+        if fp is not None:
+            out.setdefault(split_cell(r[0])[1], set()).add(fp)
+    return {c: sorted(v) for c, v in sorted(out.items())}
 
 
 def argty_of(kinds: dict) -> str | None:
@@ -711,15 +913,27 @@ def config_counters(contract: dict) -> list:
                   if d.get("the") and re.fullmatch(r"[A-Za-z]+", n))
 
 
+def config_environments(members: dict) -> list:
+    """The configuration's environments a TyEnvName payload may name: every
+    letters-only X whose \\X and \\endX are both macros."""
+    return sorted(n for n in members if re.fullmatch(r"[A-Za-z]+", n)
+                  and members.get(n, "").startswith("Macro")
+                  and members.get("end" + n, "").startswith("Macro"))
+
+
+def domains_of(contract: dict, members: dict) -> dict:
+    """The domain of each DOMAIN_TYPES type (version 4): every value a slot
+    of that type must take."""
+    return {"TyCounter": config_counters(contract), "TyEnvName": config_environments(members)}
+
+
 def lattice(contract: dict, members: dict) -> list:
     """The payload lattice for non-text slots, [(argty, payload)], in the
     default order. The counter and environment payloads are the first (by
     name) of the configuration's own: a counter with \\theX, and an
     environment whose \\X and \\endX are both macros."""
     counters = config_counters(contract)
-    envs = sorted(n for n in members if re.fullmatch(r"[A-Za-z]+", n)
-                  and members.get(n, "").startswith("Macro")
-                  and members.get("end" + n, "").startswith("Macro"))
+    envs = config_environments(members)
     out = [("TyNumber", "1"), ("TyDimen", "1pt")]
     if counters:
         out.append(("TyCounter", counters[0]))
@@ -788,10 +1002,12 @@ class Prober:
                                 timeout=gc.PROBE_TIMEOUT)
         shutil.rmtree(jd, ignore_errors=True)
         out = outcome_of(gc.classify_outcome(res["rc"], res["log"], res["pdf"]))
-        if out["o"] == "follow" or out.get("e") == "lp_mode_changed":
+        if out["o"] == "follow" or out.get("e") in ("lp_mode_changed", "lp_body"):
             # The follow probe reached \lpfollow: a use that changed the
             # meaning of a name a body can type is not composable, whatever
-            # the mode (version 3).
+            # the mode (version 3). The body-start probe reached \lpfbody: a
+            # begin part that redefined one makes a body of its own context
+            # (version 4).
             red = redefined_names((res["log"] or b"").decode("latin-1"), self.members,
                                   self.letters)
             if red:
@@ -1164,11 +1380,15 @@ def star_test(S: Session, head: str, tail: str, cell: str, v: dict):
     return True if o["o"] == "grab" else None
 
 
-def _cells_for(S: Session, head: str, tail: str, v: dict, cells) -> dict:
+def _cells_for(S: Session, head: str, tail: str, v: dict, cells,
+               states: dict | None = None) -> dict:
     """Per cell: the canonical use's outcome; the shape checked there (in the
     base cell by discover; elsewhere nothing more is grabbed after the use
-    and the follow probe passes); in a checked text-like or math cell, the
-    three content witnesses of every text-like slot."""
+    and the follow probe passes; since version 4 the paragraph state after
+    the use is one its follower cell measured, `states`); in a checked
+    text-like or math cell, the three content witnesses of every text-like
+    slot."""
+    states = states or {}
     slots, star = v["slots"], v["star"]
     canon = build_use(head, _pairs(slots), star=star, tail=tail)
     out = {}
@@ -1183,13 +1403,16 @@ def _cells_for(S: Session, head: str, tail: str, v: dict, cells) -> dict:
             rec["error_class"] = u.get("e", u["o"])
             if u.get("m"):
                 rec["message"] = u["m"]
-        if cell == "vertical":
-            # Version 3 (review round 2 HIGH-5): the vertical cell is at the
-            # top of page 1, where glue is discarded; the use must behave the
-            # same after a paragraph, or the cell decides nothing.
-            mo = S.p(VMID + cell, canon)
+        for i in range(len(POSITIONS.get(cell, ()))):
+            # Version 3 (review round 2 HIGH-5) compared the vertical cell
+            # (top of page 1, where glue is discarded) with a mid-page run;
+            # version 4 (round 3 HIGH-A): every main-vertical-list cell, at
+            # every page state of POSITIONS. The use must behave the same at
+            # each (accepted or rejected alike), or the cell decides nothing.
+            mo = S.p(pos_cell(i, cell), canon)
             if (mo["o"] == "ok") != (u["o"] == "ok"):
-                rec["position_dependent"] = outcome_word(mo)
+                rec["position_dependent"] = "%s: %s" % (pos_cell(i, cell), outcome_word(mo))
+                break
         out[cell] = rec
         if u["o"] != "ok":
             continue
@@ -1203,8 +1426,14 @@ def _cells_for(S: Session, head: str, tail: str, v: dict, cells) -> dict:
             # Outside the base cell: nothing more is consumed after the use.
             o1 = S.p(cell, build_use(head, _pairs(slots), star=star, stop=True, tail=tail))
             ok_shape = ok_shape and o1["o"] == "ok"
+        if ok_shape:
+            # Version 4: the paragraph state the use hands on (a pending item
+            # label, heading or \everypar); it must be a state the follower
+            # cell measured.
+            so = S.p(cell, state_use(canon))
+            rec["state_after"] = par_state(so) or outcome_word(so)
         rec["shape_checked"] = ok_shape and fo["o"] == "follow" and \
-            "position_dependent" not in rec
+            "position_dependent" not in rec and rec.get("state_after") in states.get(cell, ())
         same[cell] = rec["shape_checked"]
     # Phase 2 (version 3, review round 2 HIGH-1): a use that leaves another
     # mode composes only through a transition: its follower is in the target
@@ -1220,7 +1449,8 @@ def _cells_for(S: Session, head: str, tail: str, v: dict, cells) -> dict:
         o1 = (S.p(cell, build_use(head, _pairs(slots), star=star, stop=True, tail=tail))
               if cell != v["cell"] else {"o": "ok"})
         target = TRANSITIONS.get((cell, ma))
-        ok = o1["o"] == "ok" and target is not None and same.get(target) is True
+        ok = o1["o"] == "ok" and target is not None and same.get(target) is True and \
+            rec.get("state_after") in states.get(target, ())
         if ok:
             ok = S.p(cell, canon + FOLLOWER[target])["o"] == "ok"
         if target is not None:
@@ -1322,8 +1552,27 @@ def _confirm_type(S: Session, head: str, tail: str, v: dict, i: int, argty: str,
     return None
 
 
+def _domain_refutation(S: Session, head: str, tail: str, v: dict, i: int, dom) -> list | None:
+    """A DOMAIN_TYPES slot (version 4, review round 3 HIGH-B) stands only if
+    every other member of its domain works in the base cell and at each
+    counter value (the consumer document with every counter set: a label the
+    use leaves is typeset by \\ref). Returns the refuting probe, or None."""
+    base = v["cell"]
+    for d in dom:
+        if d == v["slots"][i]["payload"]:
+            continue
+        trial = [dict(x) for x in v["slots"]]
+        trial[i]["payload"] = d
+        u = build_use(head, _pairs(trial), star=v["star"], tail=tail)
+        for c in (base,) + tuple(ctr_cell(val, base) for val in COUNTER_VALUES):
+            o = S.p(c, u)
+            if o["o"] != "ok":
+                return [c, u, outcome_word(o)]
+    return None
+
+
 def _finish_slots(S: Session, head: str, tail: str, v: dict, cells: dict,
-                  lat: list = ()) -> list:
+                  lat: list = (), domains: dict | None = None) -> list:
     """argty and long for every slot of a variant."""
     base = v["cell"]
     args = []
@@ -1367,6 +1616,14 @@ def _finish_slots(S: Session, head: str, tail: str, v: dict, cells: dict,
                     a["refuted"] = {"argty": a["argty"], "by": [base, u, outcome_word(o)]}
                     a["argty"] = None
                     break
+            if a["argty"] in DOMAIN_TYPES:
+                dom = (domains or {}).get(a["argty"])
+                # No domain given: the type cannot be attested (fail closed).
+                by = (["-", "no domain for %s" % a["argty"], "no_domain"] if dom is None else
+                      _domain_refutation(S, head, tail, v, i, dom))
+                if by is not None:
+                    a["refuted"] = {"argty": a["argty"], "by": by}
+                    a["argty"] = None
         args.append(a)
     if v["star"]:
         args.insert(0, {"kind": "star"})
@@ -1374,7 +1631,8 @@ def _finish_slots(S: Session, head: str, tail: str, v: dict, cells: dict,
 
 
 def signature_for(S: Session, head: str, tail: str, lat: list, *, base_order=CELLS,
-                  cells=CELLS) -> dict:
+                  cells=CELLS, domains: dict | None = None,
+                  states: dict | None = None) -> dict:
     """The whole signature of one head: variants (plain, and starred if `*` is
     a flag), each with its per-cell outcomes and typed arguments."""
     attempts = {}
@@ -1404,7 +1662,7 @@ def signature_for(S: Session, head: str, tail: str, lat: list, *, base_order=CEL
         return {"status": "unresolved", "attempts": attempts, "bare_use": bare}
     if v is None:
         return unresolved()
-    plain_cells = _cells_for(S, head, tail, v, cells)
+    plain_cells = _cells_for(S, head, tail, v, cells, states)
     if not any(c.get("shape_checked") for c in plain_cells.values()):
         # Version 3: the shape holds in its base cell, but no cell lets the
         # use compose (each leaves a mode with no attested transition, or is
@@ -1418,7 +1676,7 @@ def signature_for(S: Session, head: str, tail: str, lat: list, *, base_order=CEL
     variants.append({"star": False, "base_cell": v["cell"], "r": v["r"],
                      "optional_positions": v["optional_positions"],
                      "optional_status": v["optional_status"],
-                     "args": _finish_slots(S, head, tail, v, plain_cells, lat),
+                     "args": _finish_slots(S, head, tail, v, plain_cells, lat, domains),
                      "use": build_use(head, _pairs(v["slots"]), tail=tail),
                      "cells": plain_cells})
     out = {"status": "attested", "star": star, "variants": variants}
@@ -1426,14 +1684,14 @@ def signature_for(S: Session, head: str, tail: str, lat: list, *, base_order=CEL
         out["attempts"] = attempts
     if star:
         sv = discover(S, head, tail, v["cell"], lat, star=True)
-        sc = _cells_for(S, head, tail, sv, cells) if sv["status"] == "attested" else {}
+        sc = _cells_for(S, head, tail, sv, cells, states) if sv["status"] == "attested" else {}
         if sv["status"] == "attested" and not any(c.get("shape_checked") for c in sc.values()):
             sv = {"status": "unresolved", "reason": NO_COMPOSE}
         if sv["status"] == "attested":
             variants.append({"star": True, "base_cell": sv["cell"], "r": sv["r"],
                              "optional_positions": sv["optional_positions"],
                              "optional_status": sv["optional_status"],
-                             "args": _finish_slots(S, head, tail, sv, sc, lat),
+                             "args": _finish_slots(S, head, tail, sv, sc, lat, domains),
                              "use": build_use(head, _pairs(sv["slots"]), star=True, tail=tail),
                              "cells": sc})
         else:
@@ -1441,14 +1699,16 @@ def signature_for(S: Session, head: str, tail: str, lat: list, *, base_order=CEL
     return out
 
 
-def environment_for(S: Session, env: str, lat: list) -> dict:
+def environment_for(S: Session, env: str, lat: list, domains: dict | None = None,
+                    states: dict | None = None) -> dict:
     """An environment's begin-arguments, cells and body probes."""
     head = "\\begin{%s}" % env
     rec = None
     tried = {}
     for body in ("a", "\\item a"):
         tail = "%s\\end{%s}" % (body, env)
-        sig = signature_for(S, head, tail, lat, base_order=ENV_CELLS, cells=ENV_CELLS)
+        sig = signature_for(S, head, tail, lat, base_order=ENV_CELLS, cells=ENV_CELLS,
+                            domains=domains, states=states)
         if sig["status"] == "attested":
             rec = sig
             rec["body"] = body
@@ -1463,9 +1723,22 @@ def environment_for(S: Session, env: str, lat: list) -> dict:
     for key, body in ENV_BODIES:
         o = S.p(base, "%s%s%s\\end{%s}" % (head, args, body, env))
         body_probes[key] = outcome_word(o)
-    rec["body_mode"] = body_mode_of(body_probes["math_content"], body_probes["text_content"])
     rec["pushes"] = sorted(k for k in ("item", "caption", "alignment") if body_probes[k] == "ok")
     rec["body_probes"] = body_probes
+    # Version 4 (review round 3 HIGH-C): the body's context, measured per
+    # enclosing cell where the environment's shape holds: the mode the body
+    # starts in (or why the probe did not reach it unchanged), and the cell
+    # its uses are read with (None: outside the tier).
+    starts, bcells = {}, {}
+    for cell in ENV_CELLS:
+        if not v["cells"].get(cell, {}).get("shape_checked"):
+            continue
+        o = S.p(cell, body_use(head, args))
+        m = body_start(o)
+        starts[cell] = m if m is not None else outcome_word(o)
+        bcells[cell] = body_cell_of(cell, o, states)
+    rec["body_start"] = starts
+    rec["body_cell"] = bcells
     return rec
 
 
@@ -1700,9 +1973,28 @@ CALIBRATION = (
     ("text", "\\MakeUppercase{%s}" % MOVING_CONTENT, "fatal"),
     ("text", "\\textbf{%s}" % MOVING_CONTENT, "ok"),
     ("text", "\\label{%s}" % KEY_CONTENT, "ok"),
-    ("vertical", "\\vss", "ok"), (VMID + "vertical", "\\vss", "fatal"),
+    ("vertical", "\\vss", "ok"), (pos_cell(0, "vertical"), "\\vss", "fatal"),
     ("text", "\\alph{page}", "ok"), (CTR + "27:text", "\\alph{page}", "fatal"),
     ("text", " ".join(["\\quote"] * REPEAT), "fatal"),
+    # Version 4 (review round 3): the page states the positions realise
+    # (HIGH-A: an empty contribution list rejects \unpenalty, glue last on
+    # the page rejects \unskip, a non-empty contribution list accepts both, in
+    # every main-list cell); the consumer document with the counters set and
+    # its cross-reference consumer (HIGH-B); the body-start probe (HIGH-C).
+    ("vertical", "\\unpenalty", "fatal"), (pos_cell(3, "vertical"), "\\unpenalty", "ok"),
+    (pos_cell(1, "vertical"), "\\unskip", "fatal"), (pos_cell(2, "vertical"), "\\unskip", "fatal"),
+    ("listv", "\\unskip", "ok"), (pos_cell(0, "listv"), "\\unskip", "fatal"),
+    ("listv", "\\unpenalty", "fatal"), (pos_cell(1, "listv"), "\\unpenalty", "ok"),
+    ("preamble", "\\unskip", "ok"), (pos_cell(0, "preamble"), "\\unskip", "fatal"),
+    ("preamble", "\\unpenalty", "fatal"), (pos_cell(1, "preamble"), "\\unpenalty", "ok"),
+    (CTR + "27:text", "\\relax", "ok"), (CTR + "-1:vertical", "\\relax", "ok"),
+    (CTR + "27:preamble", "\\relax", "ok"), (CTR + "27:math", "\\relax", "ok"),
+    (CTR + "27:text", "\\refstepcounter{enumi}", "ok"),
+    (CTR + "27:text", "\\refstepcounter{enumii}", "fatal"),
+    ("text", body_use("\\begin{math}", ""), "lp_body"),
+    ("vertical", body_use("\\begin{lrbox}", "{0}"), "lp_body"),
+    ("vertical", body_use("\\begin{minipage}", "{1pt}"), "lp_redefines"),
+    ("vertical", body_use("\\begin{theindex}", ""), "lp_redefines"),
 )
 
 
@@ -1733,6 +2025,15 @@ def calibrate(prober) -> list:
     return rows
 
 
+def measure_cell_states(prober) -> list:
+    """The configuration's cell states (version 4): [cell, use, outcome(,
+    message)] of every cell_state_probes() probe, in order."""
+    S = Session(prober)
+    for cell, use in cell_state_probes():
+        S.p(cell, use)
+    return S.evidence()
+
+
 def hint_agreement(rec: dict) -> str | None:
     """Did the \\meaning hint predict the attested mandatory count?"""
     h = rec.get("hint") or {}
@@ -1742,9 +2043,10 @@ def hint_agreement(rec: dict) -> str | None:
 
 
 def probe_one_name(prober: Prober, name: str, lat: list, hint: dict | None,
-                   cells=CELLS) -> dict:
+                   cells=CELLS, domains: dict | None = None,
+                   states: dict | None = None) -> dict:
     S = Session(prober)
-    sig = signature_for(S, cs(name), "", lat, cells=cells)
+    sig = signature_for(S, cs(name), "", lat, cells=cells, domains=domains, states=states)
     return _record(sig, S, hint)
 
 
@@ -1785,10 +2087,12 @@ def run_batches(prober: Prober, records: dict, workers: int) -> dict:
 
 def batchable(cell: str, use: str) -> bool:
     """Batch triage covers the plain cells only: a pseudo-cell's document
-    (consumers, vmid, counters), the follow probe's error and the moving
-    witness's definition are not a segment of a shared run."""
+    (consumers, positions, counters), the follow and body-start probes'
+    errors and the moving witness's definition are not a segment of a shared
+    run."""
     return split_cell(cell)[0] == "" and not _mentions(FOLLOW, use) and \
-        not _mentions(FRAGILE, use)
+        not _mentions(FRAGILE, use) and not _mentions(BODY, use) and \
+        not _mentions(PARSTATE, use)
 
 
 def summarize(sigs: dict, envs: dict) -> dict:
@@ -1803,6 +2107,7 @@ def summarize(sigs: dict, envs: dict) -> dict:
     reasons: dict = {}
     outcomes: dict = {}
     trans: dict = {}
+    after: dict = {}
     posdep = 0
     probes = 0
     for rec in sigs.values():
@@ -1841,14 +2146,20 @@ def summarize(sigs: dict, envs: dict) -> dict:
                     unchecked += 1
                 if "position_dependent" in r:
                     posdep += 1
+                if r.get("state_after"):
+                    after[r["state_after"]] = after.get(r["state_after"], 0) + 1
                 if r.get("mode_after"):
                     k = "%s->%s:%s" % (c, r.get("follower_cell", r["mode_after"]),
                                        "checked" if r.get("shape_checked") else "not")
                     trans[k] = trans.get(k, 0) + 1
     env_st = {"attested": 0, "unresolved": 0}
+    body_cells: dict = {}
     for rec in envs.values():
         probes += len(rec["probes"])
         env_st[rec["status"]] += 1
+        for c, t in rec.get("body_cell", {}).items():
+            k = "%s->%s" % (c, t or "none")
+            body_cells[k] = body_cells.get(k, 0) + 1
     return {"names": len(sigs), "status": st, "base_cell": dict(sorted(base.items())),
             "argty": dict(sorted(argty.items())), "cells": dict(sorted(cells.items())),
             "star": star, "hint_arity_vs_attested": hint, "environments": len(envs),
@@ -1856,7 +2167,9 @@ def summarize(sigs: dict, envs: dict) -> dict:
             "types_refuted": dict(sorted(refuted.items())),
             "accepting_cells_shape_unchecked": unchecked,
             "mode_transitions": dict(sorted(trans.items())),
-            "position_dependent_vertical_cells": posdep,
+            "position_dependent_cells": posdep,
+            "paragraph_state_after": dict(sorted(after.items())),
+            "environment_body_cells": body_cells,
             "unresolved_attempt_reasons": dict(sorted(reasons.items())),
             "unresolved_by_fact_and_outcome": dict(sorted(outcomes.items()))}
 
@@ -1875,8 +2188,13 @@ ADVERSARIAL_NAMES = ("string", "noexpand", "meaning", "aftergroup", "expandafter
                      "enspace", "endflushright", "value", "DeclareEmphSequence", "footnote",
                      "fnsymbol", "Alph", "newlength", "newsavebox", "NewHook",
                      "DeclareRobustCommand", "tableofcontents", "quote", "over", "vss", "hss",
-                     "symbol", "appendix", "noindent")
-ADVERSARIAL_ENVS = ("math", "itemize", "equation", "center")
+                     "symbol", "appendix", "noindent",
+                     # Review round 3 (signature version 4).
+                     "unskip", "unpenalty", "unkern", "lastbox", "refstepcounter", "stepcounter",
+                     "setcounter", "ref", "pageref", "vspace", "paragraph", "subparagraph",
+                     "endquote", "setlength")
+ADVERSARIAL_ENVS = ("math", "itemize", "equation", "center", "minipage", "sloppypar",
+                    "titlepage", "theindex", "lrbox")
 
 
 def signature_sample(names, seed: str, n: int, fixed=ADVERSARIAL_NAMES) -> list:
@@ -1898,27 +2216,47 @@ def design_header() -> dict:
         "transitions": [{"cell": c, "mode_after": m, "follower_cell": t,
                          "follower_material": FOLLOWER[t]}
                         for (c, m), t in sorted(TRANSITIONS.items())],
-        "pseudo_cells": {"consumers": CONS + "<cell>", "vertical_mid_page": VMID + "vertical: " +
-                         VMID_DOC, "counters": "%s<v>:<cell>, every counter of counters_set "
-                         "set to v before the use, v in %s" % (CTR, list(COUNTER_VALUES))},
+        "pseudo_cells": {"consumers": CONS + "<cell>",
+                         "positions": "%s<i>:<cell>, the page material positions[<cell>][i] "
+                         "just before the use" % POS,
+                         "counters": "%s<v>:<cell>, the consumer cell with every counter of "
+                         "counters_set set to v before the use, v in %s"
+                         % (CTR, list(COUNTER_VALUES))},
+        "positions": {c: list(m) for c, m in sorted(POSITIONS.items())},
         "repeat": REPEAT,
         "sentinel": "\\outer\\def%s{}" % cs(SENT),
         "follow_probe": {"use": follow_use("<use>"), "definitions": FOLLOW_DEF,
                          "passes_on": "! %s" % FOLLOW_OK,
                          "mode_change": "! %s<mode>." % FOLLOW_MODE,
                          "redefinition": "! %s <names>. (read from the trace)" % REDEFINES},
+        "paragraph_state": {"use": state_use("<use>"), "definitions": PARSTATE_DEF,
+                            "gives": "! %s[<letters>]." % PARSTATE_MSG,
+                            "letters": {c: "\\if@" + f for f, c in PARSTATE_FLAGS},
+                            "V": "\\everypar not empty"},
+        "body_probe": {"use": body_use("\\begin{<env>}", "<args>"), "definitions": BODY_DEF,
+                       "reaches_body": "! %s<mode> [<paragraph state>]." % BODY_MSG,
+                       "body_cell": [{"cell": c, "start_mode": m, "body_cell": t}
+                                     for (c, m), t in sorted(BODY_CELL.items())]},
         "witnesses": {"math": MATH_CONTENT, "text": TEXT_CONTENT, "none": NONE_CONTENT,
                       "stored": STORED_CONTENT, "long": PAR_CONTENT, "moving": MOVING_CONTENT,
                       "moving_definition": FRAGILE_DEF, "key": KEY_CONTENT,
                       "values": {k: list(v) for k, v in sorted(VALUE_WITNESSES.items())}},
+        "literal_forms": dict(sorted(LITERAL_FORMS.items())),
+        "domain_types": list(DOMAIN_TYPES),
         "argty_payloads": {
             "TyLabel": "a key: a run of catcode-11/12 characters (no control sequence, "
                        "group, space or special character)",
             "TyText/TyMath/TyInherit": "typeset material; not a moving argument (the moving "
                                        "witness compiles in the consumer document)",
-            "untyped": "no payload is attested beyond the canonical one"},
+            "untyped": "no payload is attested beyond the canonical one",
+            "TyCounter/TyEnvName": "any member of the recorded domain (each is probed)",
+            "TyNumber/TyDimen": "a literal of literal_forms"},
         "consumers": {"preamble_before_use": CONS_TITLE.strip(), "body_before": CONS_PRE.strip(),
-                      "body_after": CONS_POST.strip(), "other_slot_keys": list(CONS_KEYS)},
+                      "after_use": CONS_LABEL, "body_after": CONS_POST.strip(),
+                      "other_slot_keys": list(CONS_KEYS)},
+        "unbound_fields": {"hint": "what a \\meaning suggests (arity, star, optional, "
+                                   "spec, via): not attested and not re-derived by the gate; "
+                                   "M2 never reads it"},
         "companion_files": sorted(COMPANIONS),
         "protocol": ("solo: %s -interaction=nonstopmode -halt-on-error, a fresh directory "
                      "holding the companion files, the grading environment, the oracle's "
@@ -1972,14 +2310,18 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
         todo = scope
     report["dump_secs"] = round(time.monotonic() - t0, 1)
     lat = lattice(contract, members)
+    domains = domains_of(contract, members)
     prober = Prober(tex, cfg, members=members, letters=letters,
                     counters=config_counters(contract))
     calibration = calibrate(prober)
+    cell_states = measure_cell_states(prober)
+    states = states_of(cell_states)
 
     t1 = time.monotonic()
     sigs: dict = {}
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = {n: ex.submit(probe_one_name, prober, n, lat, meaning_hint(n, meanings))
+        futs = {n: ex.submit(probe_one_name, prober, n, lat, meaning_hint(n, meanings),
+                             domains=domains, states=states)
                 for n in todo}
         for n, f in futs.items():
             sigs[n] = f.result()
@@ -1990,7 +2332,7 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
                 sorted(e for e in (environments or []) if e in environment_names(members)))
     def env_one(e):
         S = Session(prober)
-        return _record(environment_for(S, e, lat), S, None)
+        return _record(environment_for(S, e, lat, domains, states), S, None)
     with ThreadPoolExecutor(max_workers=workers) as ex:
         for e, rec in zip(env_todo, ex.map(env_one, env_todo)):
             envs[e] = rec
@@ -2030,8 +2372,10 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
         "letters": [b for b in sorted(letters)],
         **design_header(),
         "calibration": calibration,
+        "cell_states": cell_states,
         "lattice": [{"argty": ty, "payload": p} for ty, p in lat],
         "counters_set": config_counters(contract),
+        "domains": domains,
         "signatures": sigs,
         "environments": envs,
         "definer_targets": targets,
@@ -2052,7 +2396,8 @@ def generate_signatures(tex: "gc.Tex", repo: Path, contract_path: Path, *, worke
 # Consistency of a committed sidecar (pure; check_gen_contract_parsers.py)
 # ---------------------------------------------------------------------------
 
-def check_variant(v: dict, probes: list, head: str, tail: str) -> list:
+def check_variant(v: dict, probes: list, head: str, tail: str,
+                  states: dict | None = None) -> list:
     """The implications the probe log must support for one attested variant
     (a readable restatement of what replay() re-derives in full). Returns
     the failed ones."""
@@ -2096,13 +2441,29 @@ def check_variant(v: dict, probes: list, head: str, tail: str) -> list:
                            "attested transition" % c)
         if rec.get("shape_checked") and "position_dependent" in rec:
             bad.append("cell %s: shape_checked although position-dependent" % c)
+        if rec.get("shape_checked") and states is not None:
+            # Version 4: the state handed on was measured in the follower cell.
+            f = rec.get("follower_cell", c)
+            st = out.get((c, state_use(canon)))
+            if st != "lp_par" or rec.get("state_after") not in states.get(f, ()):
+                bad.append("cell %s: shape_checked, but the paragraph state after the use "
+                           "(%r) is not one %s measured" % (c, rec.get("state_after"), f))
+        if "position_dependent" not in rec:
+            # Version 4 (HIGH-A): a cell that decides must decide the same
+            # at every page state its positions realise.
+            for i in range(len(POSITIONS.get(c, ()))):
+                po = out.get((pos_cell(i, c), canon))
+                if po is None or (po == "ok") != (rec["allowed"] == "ok"):
+                    bad.append("cell %s: not position-dependent, but %s gave %r"
+                               % (c, pos_cell(i, c), po))
     for a in v["args"]:
         if a.get("argty") and a["payload"] != TEXT and not a.get("negative"):
             bad.append("typed slot %r without its negative" % a)
     return bad
 
 
-def replay(rec: dict, head: str, lat: list, *, env: str | None = None) -> list:
+def replay(rec: dict, head: str, lat: list, *, env: str | None = None,
+           domains: dict | None = None, states: dict | None = None) -> list:
     """Re-derive a whole record from its own probe log, with no TeX: the
     derivation (signature_for, or environment_for) is run again on a
     ReplaySession. It must ask for exactly the logged probes in the logged
@@ -2114,9 +2475,9 @@ def replay(rec: dict, head: str, lat: list, *, env: str | None = None) -> list:
     S = ReplaySession(rec["probes"])
     try:
         if env is not None:
-            new = environment_for(S, env, lat)
+            new = environment_for(S, env, lat, domains, states)
         else:
-            new = signature_for(S, head, "", lat, cells=CELLS)
+            new = signature_for(S, head, "", lat, cells=CELLS, domains=domains, states=states)
     except ReplayMiss as e:
         return ["replay: %s" % e]
     bad = []
@@ -2220,32 +2581,52 @@ def check_sidecar(side: dict, contract_bytes: bytes | None, repo: Path | None = 
                 bad.append("binding: the environments are not the closed world's")
             if side.get("counters_set") != config_counters(contract):
                 bad.append("binding: counters_set is not the configuration's counters")
+            if side.get("domains") != domains_of(contract, members):
+                bad.append("binding: the domains are not the configuration's")
             if [(x["argty"], x["payload"]) for x in side.get("lattice", [])] != \
                     lattice(contract, members):
                 bad.append("binding: the lattice is not the configuration's")
             if side.get("definer_targets") != definer_targets(members, contract):
                 bad.append("binding: the definer targets are not the closed world's")
     lat = [(x["argty"], x["payload"]) for x in side.get("lattice", [])]
-    for n, rec in side["signatures"].items():
+    doms = side.get("domains")
+    # Version 4: the cell states are the configuration's own measurements,
+    # re-used by every record; the rows must be exactly the design's probes,
+    # each a fingerprint.
+    crow = side.get("cell_states") or []
+    if [(r[0], r[1]) for r in crow] != cell_state_probes():
+        bad.append("cell_states: the recorded rows are not this version's probes")
+    for r in crow:
+        if r[2] != "lp_par" or par_state(outcome_from_entry(r)) is None:
+            bad.append("cell_states: %s gave %r, not a fingerprint" % (r[0], r[2]))
+    sts = states_of(crow)
+
+    def one_record(n, rec, env):
+        out = []
+        head = "\\begin{%s}" % n if env else cs(n)
         if rec["status"] == "attested":
+            tail = "%s\\end{%s}" % (rec["body"], n) if env else ""
             for v in rec["variants"]:
-                for p in check_variant(v, rec["probes"], cs(n), ""):
-                    bad.append("%s: %s" % (n, p))
+                out += check_variant(v, rec["probes"], head, tail, sts)
         elif rec["status"] != "unresolved":
-            bad.append("%s: status %r" % (n, rec["status"]))
+            out.append("status %r" % rec["status"])
         seen = [(p[0], p[1]) for p in rec["probes"]]
         if len(seen) != len(set(seen)):
-            bad.append("%s: a probe is logged twice" % n)
-        for p in replay(rec, cs(n), lat):
-            bad.append("%s: %s" % (n, p))
-    for e, rec in side.get("environments", {}).items():
-        if rec["status"] == "attested":
-            tail = "%s\\end{%s}" % (rec["body"], e)
-            for v in rec["variants"]:
-                for p in check_variant(v, rec["probes"], "\\begin{%s}" % e, tail):
-                    bad.append("env %s: %s" % (e, p))
-        for p in replay(rec, "", lat, env=e):
-            bad.append("env %s: %s" % (e, p))
+            out.append("a probe is logged twice")
+        out += (replay(rec, "", lat, env=n, domains=doms, states=sts) if env else
+                replay(rec, head, lat, domains=doms, states=sts))
+        return out
+
+    # Version 4 (review round 3, LOW-E): a malformed record is a problem
+    # reported, never a crash of the gate.
+    for env, table in ((False, side["signatures"]), (True, side.get("environments", {}))):
+        for n, rec in table.items():
+            try:
+                probs = one_record(n, rec, env)
+            except Exception as e:  # noqa: BLE001  (any malformation is a finding)
+                probs = ["malformed record (%s: %s)" % (type(e).__name__, e)]
+            for p in probs:
+                bad.append(("env %s: %s" if env else "%s: %s") % (n, p))
     rows = side.get("definer_rules", [])
     if rows != [dict(r, **{k: x[k] for k in x if k not in r})
                 for r, x in zip(definer_rows(side["definer_targets"]), rows)] or \
@@ -2254,7 +2635,10 @@ def check_sidecar(side: dict, contract_bytes: bytes | None, repo: Path | None = 
     for r in rows:
         for p in check_definer_row(r):
             bad.append("definer %s/%s: %s" % (r.get("id"), r.get("context"), p))
-    s = summarize(side["signatures"], side.get("environments", {}))
+    try:
+        s = summarize(side["signatures"], side.get("environments", {}))
+    except Exception as e:  # noqa: BLE001
+        s = "malformed (%s)" % type(e).__name__
     if s != side["summary"]:
         bad.append("summary does not match the entries")
     if side.get("consistent") != (not side.get("inconsistent_reasons")):
@@ -2308,6 +2692,7 @@ def probe_names(contract_path: Path, names: list, *, cells=CELLS, cache: Path | 
     if not todo:
         return out
     lat = lattice(contract, members)
+    doms = domains_of(contract, members)
     with gc.Tex(gc.read_image(repo), work) as tex:
         pin = gc.get_pin(tex, tex.image)
         if pin["fmt_sha256"] != contract["pin"]["fmt_sha256"]:
@@ -2317,6 +2702,7 @@ def probe_names(contract_path: Path, names: list, *, cells=CELLS, cache: Path | 
         prober = Prober(tex, contract["configuration"], members=members,
                         letters=letters_of(catcodes), counters=config_counters(contract))
         calibrate(prober)
+        sts = states_of(measure_cell_states(prober))
 
         def one(item):
             n, old = item
@@ -2329,7 +2715,8 @@ def probe_names(contract_path: Path, names: list, *, cells=CELLS, cache: Path | 
                 for entry in old["probes"]:
                     S.memo[(entry[0], entry[1])] = outcome_from_entry(entry)
                     S.log.append((entry[0], entry[1]))
-            sig = signature_for(S, cs(n), "", lat, cells=tuple(want))
+            sig = signature_for(S, cs(n), "", lat, cells=tuple(want), domains=doms,
+                                states=sts)
             rec = _record(sig, S, meaning_hint(n, meanings))
             rec["name"] = n
             rec["contract_sha256"] = csha

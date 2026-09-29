@@ -630,11 +630,14 @@ check("sig: the follow probe: state saved before the use, \\lpfollow and \\lpnoc
 d6 = sg.cell_doc(pre, sg.CONS + "vertical", "\\c{a}")
 d7 = sg.cell_doc(pre, sg.CONS + "preamble", "\\c{a}")
 check("sig: the consumer cell: a \\title first, toc/lof/lot and headings before the use, "
-      "\\maketitle, a new page and both marks after it",
+      "a label right after it (v4), \\maketitle, a new page, both marks and the label's "
+      "\\ref/\\pageref after it",
       d6.startswith(pre + b"\\title{t}\n\\begin{document}\n\\pagestyle{headings}"
-                    b"\\tableofcontents\\listoffigures\\listoftables\n\\c{a}\\par x\n"
-                    b"\\maketitle\\newpage x\\leftmark\\rightmark\n\\end{document}")
-      and d7.startswith(pre + b"\\title{t}\n\\c{a}\n\\begin{document}\n\\pagestyle{headings}"))
+                    b"\\tableofcontents\\listoffigures\\listoftables\n\\c{a}\\label{lpcons}"
+                    b"\\par x\n\\maketitle\\newpage x\\leftmark\\rightmark\\ref{lpcons}"
+                    b"\\pageref{lpcons}\n\\end{document}")
+      and d7.startswith(pre + b"\\title{t}\n\\c{a}\n\\begin{document}\n\\label{lpcons}"
+                        b"\\pagestyle{headings}"), d6)
 LET = set(range(65, 91)) | set(range(97, 123))
 # Version 3 (review round 2): the follow probe's new arms, read from SYNTHETIC
 # log text in TeX's printed form (\tracingassigns/\tracingrestores records).
@@ -679,14 +682,15 @@ check("sig v3: the mode a follow probe reports, and the pseudo-cells",
       sg.refine_class("other", "LPMODE hi.") == "lp_mode_changed" and
       sg.refine_class("other", "LPREDEFINES x.") == "lp_redefines" and
       sg.split_cell("ctr-1:text") == ("ctr-1:", "text") and
-      sg.split_cell(sg.VMID + "vertical") == (sg.VMID, "vertical") and
+      sg.split_cell(sg.pos_cell(2, "vertical")) == ("pos2:", "vertical") and
       sg.split_cell("listv") == ("", "listv"))
 d8 = sg.cell_doc(pre, "ctr27:text", "\\c", ["enumi", "page"])
-d9 = sg.cell_doc(pre, sg.VMID + "vertical", "\\c")
+d9 = sg.cell_doc(pre, sg.pos_cell(0, "vertical"), "\\c")
 d10 = sg.cell_doc(pre, "listv", "\\c{\\lpfragile}")
 check("sig v3: the counter, mid-page and list-vertical documents, and the moving witness "
-      "defined iff used",
-      b"\\setcounter{enumi}{27}\\setcounter{page}{27}x \\c y" in d8 and
+      "defined iff used (v4: the counter document is the consumer document)",
+      b"\\setcounter{enumi}{27}\\setcounter{page}{27}x \\c\\label{lpcons} y" in d8 and
+      d8.startswith(pre + b"\\title{t}\n") and b"\\ref{lpcons}" in d8 and
       b"x\\par \\c\\par x" in d9 and
       b"\\item x\\par " + sg.FRAGILE_DEF.encode() + b"" not in d10 and
       sg.FRAGILE_DEF.encode() in d10 and b"\\item x\\par \\c{\\lpfragile}\\par y" in d10
@@ -717,9 +721,36 @@ check("sig: argty table (TyLabel only when no cell typesets the payload)",
           {"text": "text", "list": "math"}, {"text": "restricted"}, {},
           {"text": "none", "math": "math"}, {"text": "opaque", "math": "opaque"})] ==
       ["TyText", "TyInherit", "TyMath", "TyLabel", "TyMath", None, None, None, None, None])
-check("sig: an environment body has a mode only when a witness shows typesetting",
-      [sg.body_mode_of(m, t) for m, t in ((W_OK, W_OK), (W_OK, W_MA), (W_TX, W_OK),
-                                          (W_TX, W_MA))] == [None, "math", "text", None])
+# Version 4 (review round 3 HIGH-C): an environment's body is read with a cell
+# only from its measured start mode, and never after a redefinition.
+_B = lambda m, f="[]": {"o": "fatal", "e": "lp_body",  # noqa: E731
+                        "m": "LPBODY %s %s." % (m, f)}
+_ST = {c: ["[]"] for c in sg.CELLS}
+check("sig v4: an environment body's cell is its measured start mode's (minipage vi, "
+      "equation m, lrbox hi: none; a redefining or failing begin part: none; a paragraph "
+      "state the target cell did not measure: none)",
+      [sg.body_cell_of(c, o, _ST) for c, o in (
+          ("vertical", _B("v")), ("text", _B("v")), ("text", _B("h")), ("text", _B("mi")),
+          ("vertical", _B("vi")), ("vertical", _B("m")), ("vertical", _B("hi")),
+          ("vertical", _B("h")), ("math", _B("mi")), ("vertical", _B("v", "[LV]")),
+          ("vertical", {"o": "fatal", "e": "lp_redefines", "m": "LPREDEFINES item."}),
+          ("vertical", {"o": "fatal", "e": "lp_state_changed", "m": "LPSTATE."}),
+          ("text", {"o": "grab"}))] ==
+      ["vertical", "vertical", "text", "math", None, None, None, None, "math", None, None, None,
+       None] and sg.body_cell_of("vertical", _B("v"), None) is None
+      and sg.refine_class("other", "LPBODY vi [].") == "lp_body")
+d11 = sg.cell_doc(pre, "vertical", sg.body_use("\\begin{x}", "{1pt}"))
+check("sig v4: the body-start probe: its macros defined iff used, state saved before \\begin",
+      sg.body_use("\\begin{x}", "{1pt}") == "\\lpbsave \\begin{x}{1pt}\\lpfbody\\lpnocs" and
+      sg.BODY_DEF.encode() in d11 and sg.FOLLOW_DEF.encode() in d11 and
+      sg.BODY_DEF.encode() not in d9 and not sg.batchable("vertical", sg.body_use("\\x", "")))
+d12 = sg.cell_doc(pre, sg.pos_cell(1, "listv"), "\\c")
+d13 = sg.cell_doc(pre, sg.pos_cell(0, "preamble"), "\\c")
+check("sig v4: every main-vertical-list cell has page positions, the material just before "
+      "the use (HIGH-A)", set(sg.POSITIONS) == {c for c in sg.CELLS if sg.CELL_MODE[c] == "v"}
+      and b"\\item x\\par \\vspace{1pt}\\c\\par y" in d12 and
+      b"\\vspace{1pt}\\par \\c\n\\begin{document}" in d13 and
+      all("x" not in m for m in sg.POSITIONS["preamble"]))
 # SYNTHETIC meanings in TeX's printed form: hints only, never attestation.
 mh = {"x": b"macro:->\\protect \\x  ", "x ": b"\\long macro:#1->\\textbf {#1}",
       "y": b"macro:->\\@ifstar \\ys \\yn ", "z": b"macro:->\\@protected@testopt \\z \\\\z {}"}
@@ -748,11 +779,12 @@ class FakeSession(sg.Session):
         return self.memo[key]
 
 
-def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None, special=None):
+def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None, special=None, state=None):
     """`follow(cell)`: True (follows), False (the next token is consumed), or
     a string: `mode:<m>` (the use leaves mode m), `redef`, `state`.
     `special(cell, use)`: an outcome for a pseudo-cell probe, a repetition or
-    a transition probe (None = the ordinary model)."""
+    a transition probe (None = the ordinary model). `state(cell)`: the
+    paragraph-state fingerprint after the use (default `[]`)."""
     def model(cell, use):
         prefix, base = sg.split_cell(cell)
         cons = prefix == sg.CONS
@@ -760,6 +792,12 @@ def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None, special=None):
             o = special(cell, use)
             if o is not None:
                 return o
+        if use.endswith("\\lpfpar"):
+            o = model(cell, use[:-len("\\lpfpar")])
+            if o["o"] != "ok":
+                return o
+            return {"o": "fatal", "e": "lp_par",
+                    "m": "LPPAR %s." % (state(base) if state else "[]")}
         pre = "\\lpfsave "
         if use.startswith(pre):
             o = model(cell, use[len(pre):-len("\\lpfollow\\lpnocs")])
@@ -804,9 +842,13 @@ def fake_macro(r, cells_ok=sg.CELLS, follow=None, pay=None, special=None):
     return model
 
 
-def fake_sig(model, lat=()):
+ALLST = {c: ["[]"] for c in sg.CELLS}
+
+
+def fake_sig(model, lat=(), domains=None, states=ALLST):
     S = FakeSession(model)
-    rec = sg._record(sg.signature_for(S, "\\lpx", "", list(lat)), S, None)
+    rec = sg._record(sg.signature_for(S, "\\lpx", "", list(lat), domains=domains,
+                                      states=states), S, None)
     return rec
 
 
@@ -919,11 +961,28 @@ r_ctr = fake_sig(fake_macro(0, special=_fails(lambda c, u: c.startswith(sg.CTR +
 check("sig v3: a use that fails with the counters at 27 is unresolved (\\fnsymbol, \\Alph)",
       r_ctr["status"] == "unresolved" and
       {a.get("reason") for a in r_ctr["attempts"].values()} == {sg.EXACT_REASONS["counters"]})
-r_vss = fake_sig(fake_macro(0, special=_fails(lambda c, u: c == sg.VMID + "vertical")))
+r_vss = fake_sig(fake_macro(0, special=_fails(lambda c, u: c == sg.pos_cell(0, "vertical"))))
 check("sig v3: a vertical outcome that differs after a paragraph is position-dependent and "
       "unchecked (\\vss, HIGH-5)", "position_dependent" in _cell(r_vss, "vertical") and
       _cell(r_vss, "vertical").get("shape_checked") is False and
       _cell(r_vss, "text").get("shape_checked") is True)
+# Version 4 (review round 3 HIGH-A): every page state, every main-list cell,
+# rejection as well as acceptance.
+r_unskip = fake_sig(fake_macro(0, special=_fails(lambda c, u: c in (
+    sg.pos_cell(1, "vertical"), sg.pos_cell(0, "listv"), sg.pos_cell(0, "preamble")))))
+r_unpen = fake_sig(fake_macro(0, cells_ok=("text", "math", "list"), special=lambda c, u: (
+    {"o": "ok"} if c == sg.pos_cell(3, "vertical") and u == "\\lpx" else None)))
+check("sig v4: an outcome that differs at ANY page state (glue last on the page: \\unskip) "
+      "makes vertical, listv and preamble position-dependent; a rejection that differs "
+      "(\\unpenalty after glue on the contribution list) too (HIGH-A)",
+      all("position_dependent" in _cell(r_unskip, c) and
+          _cell(r_unskip, c).get("shape_checked") is False
+          for c in ("vertical", "listv", "preamble")) and
+      _cell(r_unskip, "vertical")["position_dependent"].startswith("pos1:vertical") and
+      _cell(r_unpen, "vertical").get("allowed") == "fatal" and
+      "position_dependent" in _cell(r_unpen, "vertical") and
+      "position_dependent" not in _cell(r_unpen, "listv"),
+      (r_unskip.get("variants"), r_unpen.get("variants")))
 
 
 def text_pay(moving_fails):
@@ -961,19 +1020,101 @@ r_sym = fake_sig(fake_macro(1, pay=lambda c, p, k: "ok" if p in ("1", "0") else
 a_sym = r_sym["variants"][0]["args"][0]
 check("sig v3: a number slot whose value matters (\\symbol{300}) is not TyNumber (MEDIUM)",
       a_sym["argty"] is None and (a_sym.get("refuted") or {}).get("argty") == "TyNumber", a_sym)
-V3 = (r_parlike, r_tomath, r_hss, r_hss2, r_redef, r_alloc, r_rep, r_ctr, r_vss, r_sect, r_bf)
+# Version 4 (review round 3 MEDIUM-D): the literal bounds and units are value
+# witnesses, and LITERAL_FORMS states exactly what they attest.
+r_big = fake_sig(fake_macro(1, pay=lambda c, p, k: "ok" if p in ("1", "0", "-1", "300") else
+                            ("number_too_big" if p.startswith("2147") or p.startswith("-2147")
+                             else "missing_number")), LAT3)
+a_big = r_big["variants"][0]["args"][0]
+check("sig v4: a number slot that fails at the bound of LITERAL_FORMS is not TyNumber; the "
+      "witnesses hold both bounds of each numeric type and every unit LITERAL_FORMS names",
+      a_big["argty"] is None and a_big["refuted"]["by"][1] == "\\lpx{2147483647}" and
+      {"2147483647", "-2147483647"} <= set(sg.VALUE_WITNESSES["TyNumber"]) and
+      {"16383pt", "-16383pt"} <= set(sg.VALUE_WITNESSES["TyDimen"]) and
+      all(("1" + u) in sg.VALUE_WITNESSES["TyDimen"] or u == "pt"
+          for u in re.findall(r"\b(pt|cm|mm|in|bp|em|ex)\b", sg.LITERAL_FORMS["TyDimen"])),
+      a_big)
+# Version 4 (review round 3 HIGH-B): a counter slot must take every counter of
+# the configuration, in the base cell and in the counter documents (where
+# \\ref typesets the label the use left).
+DOM = {"TyCounter": ["enumi", "enumii"], "TyEnvName": ["center"]}
+
+
+def _cpay(cell, p, cons):
+    return "ok" if p in ("enumi", "enumii") else "no_counter"
+
+
+r_rsc = fake_sig(fake_macro(1, pay=_cpay, special=_fails(
+    lambda c, u: c == sg.ctr_cell("27", "text") and u == "\\lpx{enumii}")), LAT3, DOM)
+r_step = fake_sig(fake_macro(1, pay=_cpay), LAT3, DOM)
+r_nodom = fake_sig(fake_macro(1, pay=_cpay), LAT3, None)
+a_rsc = r_rsc["variants"][0]["args"][0]
+check("sig v4: a counter slot that fails for another counter at 27 (\\refstepcounter{enumii}: "
+      "\\ref of its label) is not TyCounter; one that takes every counter is; with no "
+      "domain the type is not attested (HIGH-B)",
+      a_rsc["argty"] is None and a_rsc["refuted"]["argty"] == "TyCounter" and
+      a_rsc["refuted"]["by"][:2] == [sg.ctr_cell("27", "text"), "\\lpx{enumii}"] and
+      r_step["variants"][0]["args"][0]["argty"] == "TyCounter" and
+      r_nodom["variants"][0]["args"][0]["argty"] is None and
+      r_nodom["variants"][0]["args"][0]["refuted"]["by"][2] == "no_domain",
+      (a_rsc, r_step["variants"][0]["args"][0], r_nodom["variants"][0]["args"][0]))
+check("sig v4: replay re-derives the domain records only with their domains",
+      all(sg.replay(r, "\\lpx", LAT3, domains=DOM, states=ALLST) == [] for r in (r_rsc, r_step))
+      and
+      sg.replay(r_nodom, "\\lpx", LAT3, states=ALLST) == [] and
+      sg.replay(r_step, "\\lpx", LAT3, states=ALLST) != [])
+# Version 4 (the transition-state limit, measured): a use that hands on a
+# paragraph state its follower cell did not measure (\\item's pending label,
+# in which \\paragraph fails) composes nowhere; one whose state the follower
+# measured (a position after \\item) composes.
+ALLST2 = dict(ALLST, vertical=["[]", "[LV]"])
+r_item = fake_sig(fake_macro(0, follow=lambda c: "mode:v" if c == "text" else True,
+                             state=lambda c: "[LV]" if c == "text" else "[]"))
+r_item2 = fake_sig(fake_macro(0, follow=lambda c: "mode:v" if c == "text" else True,
+                              state=lambda c: "[LV]" if c == "text" else "[]"), states=ALLST2)
+r_same = fake_sig(fake_macro(0, state=lambda c: "[NV]" if c == "vertical" else "[]"))
+check("sig v4: a use whose paragraph state after it was not measured in its follower cell "
+      "is not shape-checked there; measured, it composes (\\item then \\paragraph)",
+      _cell(r_same, "vertical").get("shape_checked") is False and
+      _cell(r_same, "text").get("shape_checked") is True and
+      _cell(r_item, "text").get("state_after") == "[LV]" and
+      _cell(r_item, "text").get("shape_checked") is False and
+      _cell(r_item, "vertical").get("shape_checked") is True and
+      _cell(r_item2, "text").get("shape_checked") is True and
+      sg.check_variant(r_item["variants"][0], r_item["probes"], "\\lpx", "", ALLST) == [] and
+      any("paragraph state" in x for x in sg.check_variant(
+          dict(r_item["variants"][0], cells=dict(r_item["variants"][0]["cells"], text=dict(
+              _cell(r_item, "text"), shape_checked=True))), r_item["probes"], "\\lpx", "",
+          ALLST)), (r_item.get("variants"), r_item2.get("variants")))
+check("sig v4: the paragraph-state fingerprint reads every kernel flag and \\everypar, and "
+      "the cell states are every cell and every position",
+      all(("if@" + f) in sg.PARSTATE_DEF for f, _ in sg.PARSTATE_FLAGS) and
+      "\\everypar" in sg.PARSTATE_DEF and
+      sg.par_state({"o": "fatal", "e": "lp_par", "m": "LPPAR [NV]."}) == "[NV]" and
+      sg.refine_class("other", "LPPAR [].") == "lp_par" and
+      len(sg.cell_state_probes()) == len(sg.CELLS) + sum(len(m) for m in sg.POSITIONS.values())
+      and sg.states_of([["vertical", "\\lpfpar", "lp_par", "LPPAR []."],
+                        [sg.pos_cell(4, "vertical"), "\\lpfpar", "lp_par", "LPPAR [NV]."],
+                        ["text", "\\lpfpar", "undefined_cs", "x"]]) ==
+      {"vertical": ["[NV]", "[]"]})
+V3 = (r_parlike, r_tomath, r_hss, r_hss2, r_redef, r_alloc, r_rep, r_ctr, r_vss, r_sect, r_bf,
+      r_unskip, r_unpen, r_same)
 # The replay verifier on the synthetic records: exact, and it sees a changed field.
 check("sig: replay re-derives the synthetic records exactly",
-      all(sg.replay(r, "\\lpx", []) == [] for r in (r_string, r_relax, r_part, r_label, r_title,
-                                                     r_blank, r_pmod) + V3) and
-      all(sg.replay(r, "\\lpx", LAT3) == [] for r in (r_value, r_key, r_sym)))
+      all(sg.replay(r, "\\lpx", [], states=ALLST) == [] for r in (
+          r_string, r_relax, r_part, r_label, r_title, r_blank, r_pmod) + V3) and
+      all(sg.replay(r, "\\lpx", LAT3, states=ALLST) == [] for r in (r_value, r_key, r_sym, r_big))
+      and sg.replay(r_item, "\\lpx", [], states=ALLST) == [] and
+      sg.replay(r_item2, "\\lpx", [], states=ALLST2) == [] and
+      sg.replay(r_item, "\\lpx", [], states=ALLST2) != [])
 m_label = copy.deepcopy(r_label)
 m_label["variants"][0]["args"][0]["argty"] = "TyText"
 m_title = copy.deepcopy(r_title)
 m_title["variants"][0]["args"][0].pop("refuted", None)
 m_title["variants"][0]["args"][0]["argty"] = "TyLabel"
 check("sig: replay sees a changed argty and an erased refutation",
-      sg.replay(m_label, "\\lpx", []) != [] and sg.replay(m_title, "\\lpx", []) != [])
+      sg.replay(m_label, "\\lpx", [], states=ALLST) != [] and
+      sg.replay(m_title, "\\lpx", [], states=ALLST) != [])
 # The reproducibility sample rotates with its seed and always holds the
 # adversarial names (review MEDIUM-2).
 _pool = ["n%04d" % i for i in range(2000)] + list(sg.ADVERSARIAL_NAMES)
@@ -1010,11 +1151,13 @@ for sf in sidecars:
           "(every record re-derived by replay)" % sf.name, not probs, probs[:5])
     check("sidecar %s: solo count = calibration + name/environment probes + definer rows"
           % sf.name, side["solo"]["probes"] == len(side.get("calibration", [])) +
+          len(side.get("cell_states", [])) +
           side["summary"]["solo_probes"] + len(side["definer_rules"]),
           (side["solo"], side["summary"]["solo_probes"], len(side["definer_rules"])))
     check("sidecar %s: covers its whole scope" % sf.name,
           side["scope"].get("names") != "subset" and side["summary"]["names"] > 0)
     lat = [(x["argty"], x["payload"]) for x in side.get("lattice", [])]
+    sts = sg.states_of(side.get("cell_states", []))
 
     # In-gate kill-tests of the check itself: each attested field, changed in
     # one record, must be seen (review MEDIUM-1: version 1 re-derived only the
@@ -1023,11 +1166,11 @@ for sf in sidecars:
         rec = copy.deepcopy((side["environments"] if env else side["signatures"])[name])
         mutate(rec)
         if env:
-            p = sg.replay(rec, "", lat, env=name)
+            p = sg.replay(rec, "", lat, env=name, domains=side.get("domains"), states=sts)
         else:
-            p = sg.replay(rec, sg.cs(name), lat)
+            p = sg.replay(rec, sg.cs(name), lat, domains=side.get("domains"), states=sts)
             for v in rec.get("variants", []):
-                p += sg.check_variant(v, rec["probes"], sg.cs(name), "")
+                p += sg.check_variant(v, rec["probes"], sg.cs(name), "", sts)
         check("sidecar kill: %s (%s) is seen" % (label, name), bool(p))
 
     def arg_at(loc):
@@ -1090,6 +1233,12 @@ for sf in sidecars:
          lambda loc: lambda rec: [p.update(after_space=not p["after_space"]) for p in
                                   rec["variants"][loc[1]]["optional_positions"].values()
                                   if p.get("after_space") is not None][:1]),
+        # Version 4: the paragraph state handed on.
+        ("a changed paragraph state after a use", lambda r, v, a: any(
+            c.get("state_after") for c in v["cells"].values()),
+         lambda loc: lambda rec: [c.update(state_after="[Z]") for c in
+                                  rec["variants"][loc[1]]["cells"].values()
+                                  if c.get("state_after")][:1]),
         ("a changed optional position", lambda r, v, a: v["r"] >= 1,
          lambda loc: lambda rec: rec["variants"][loc[1]]["optional_positions"]["0"].update(
              count=rec["variants"][loc[1]]["optional_positions"]["0"]["count"] + 1)),
@@ -1107,8 +1256,14 @@ for sf in sidecars:
             a.update(reason="x") for a in rec["attempts"].values()][:1])
     envs = sorted(e for e, r in side["environments"].items() if r["status"] == "attested")
     if envs:
-        killed("a changed body mode", envs[0], lambda rec: rec.update(
-            body_mode="text" if rec["body_mode"] != "text" else "math"), env=True)
+        # Version 4 (HIGH-C): the body's cell and start mode are re-derived.
+        benv = next((e for e in envs if side["environments"][e].get("body_cell")), envs[0])
+        killed("a changed body cell", benv, lambda rec: rec["body_cell"].update(
+            {c: ("text" if t != "text" else "math") for c, t in
+             list(rec["body_cell"].items())[:1]}), env=True)
+        killed("a changed body start", benv, lambda rec: rec["body_start"].update(
+            {c: "h" if m != "h" else "v" for c, m in list(rec["body_start"].items())[:1]}),
+            env=True)
         killed("a changed push", envs[0], lambda rec: rec.update(
             pushes=sorted(set(rec["pushes"]) ^ {"caption"})), env=True)
     n0 = _first(side, lambda r, v, a: a.get("kind") == "req")[0]
@@ -1145,11 +1300,60 @@ for sf in sidecars:
             ("the long/stored witnesses", lambda m: m["witnesses"].update(long="x", stored="y"),
              "design: recorded witnesses"),
             ("the counters set", lambda m: m["counters_set"].append("zz"),
-             "binding: counters_set")]:
+             "binding: counters_set"),
+            # Version 4 (review round 3).
+            ("a domain", lambda m: m["domains"]["TyCounter"].pop(), "binding: the domains"),
+            ("the positions", lambda m: m["positions"]["vertical"].pop(),
+             "design: recorded positions"),
+            ("the body probe", lambda m: m["body_probe"].update(definitions="x"),
+             "design: recorded body_probe"),
+            ("the literal forms", lambda m: m["literal_forms"].update(TyNumber="x"),
+             "design: recorded literal_forms"),
+            ("a cell state flipped", lambda m: m["cell_states"][0].__setitem__(2, "ok"),
+             "cell_states:"),
+            ("a cell state dropped", lambda m: m["cell_states"].pop(),
+             "cell_states: the recorded rows"),
+            ("the paragraph-state probe", lambda m: m["paragraph_state"].update(definitions="x"),
+             "design: recorded paragraph_state")]:
         mm = copy.deepcopy(side)
         mutate(mm)
         fl = sg.check_sidecar(mm, cbytes, REPO)
         check("sidecar kill: %s is seen" % label, any(x.startswith(prefix) for x in fl), fl[:3])
+    # Version 4 (review round 3, HIGH-A): a page-state probe flipped in the
+    # log is seen (the position arm of check_variant, and replay).
+    pl = _first(side, lambda r, v, a: any(
+        "position_dependent" not in c and c.get("shape_checked") and k in sg.POSITIONS
+        for k, c in v["cells"].items()))
+    if pl is not None:
+        prec = copy.deepcopy(side["signatures"][pl[0]])
+        pv = prec["variants"][pl[1]]
+        pc = next(k for k, c in pv["cells"].items() if "position_dependent" not in c and
+                  c.get("shape_checked") and k in sg.POSITIONS)
+        for e in prec["probes"]:
+            if e[0] == sg.pos_cell(0, pc) and e[1] == pv["use"]:
+                e[2:] = ["other", "X."]
+        pp = sg.check_variant(pv, prec["probes"], sg.cs(pl[0]), "")
+        check("sidecar kill: a page-state probe flipped in %s's log is seen by the position "
+              "arm" % pl[0], any("not position-dependent" in x for x in pp), pp[:3])
+    # Version 4 (review round 3, LOW-E): malformed records are reported, not a
+    # crash of the gate (a status flipped to attested without variants, an
+    # argty that is not a string).
+    unr = next((n for n, r in sorted(side["signatures"].items())
+                if r["status"] == "unresolved"), None)
+    mm = copy.deepcopy(side)
+    if unr is not None:
+        mm["signatures"][unr]["status"] = "attested"
+    loc = _first(side, lambda r, v, a: "argty" in a)
+    if loc is not None:
+        mm["signatures"][loc[0]]["variants"][loc[1]]["args"][loc[2]]["argty"] = True
+    try:
+        fl = sg.check_sidecar(mm, cbytes, REPO)
+        crashed = None
+    except Exception as e:  # noqa: BLE001
+        fl, crashed = [], repr(e)
+    check("sidecar kill: malformed records are reported, not a crash (LOW-E)",
+          crashed is None and any("malformed record" in x for x in fl) and
+          (loc is None or any(x.startswith(loc[0] + ":") for x in fl)), (crashed, fl[:3]))
     check("sidecar kill: a stale contract is seen",
           cbytes is not None and any("stale" in x for x in sg.check_sidecar(side, cbytes + b" ",
                                                                                REPO)))

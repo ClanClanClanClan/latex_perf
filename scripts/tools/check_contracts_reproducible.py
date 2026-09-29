@@ -453,7 +453,9 @@ def signature_kills(tex, pin, kernel, work) -> list:
                               # Review round 2 (signature version 3).
                               "par", "item", "newlength", "NewHook", "tableofcontents",
                               "value", "fnsymbol", "Alph", "vss", "hss", "symbol", "\\",
-                              "quote", "over", "clearpage", "appendix", "centering"],
+                              "quote", "over", "clearpage", "appendix", "centering",
+                              # Review round 3 (signature version 4).
+                              "unskip", "unpenalty", "refstepcounter", "stepcounter"],
                         cache=tmpd / "cache-art", work=work)
 
     def rv_cell(n, c):
@@ -504,6 +506,44 @@ def signature_kills(tex, pin, kernel, work) -> list:
          "after a space (MEDIUM)", rv_arg("symbol", 0) is None and
          (rv["\\"].get("variants") or [{}])[0].get("optional_positions", {}).get("0", {})
          .get("after_space") is True),
+    ]
+    out += [
+        # Review round 3 (signature version 4).
+        ("sig v4: \\unskip decides nothing in any main-vertical-list cell (fatal after glue "
+         "on the page; HIGH-A)", all("position_dependent" in rv_cell("unskip", c) and
+                                     rv_cell("unskip", c).get("shape_checked") is not True
+                                     for c in ("vertical", "listv", "preamble"))),
+        ("sig v4: \\unpenalty's rejection in `vertical` is position-dependent (it compiles "
+         "after glue on the contribution list; HIGH-A)",
+         rv_cell("unpenalty", "vertical").get("allowed") == "fatal" and
+         "position_dependent" in rv_cell("unpenalty", "vertical")),
+        ("sig v4: \\refstepcounter's counter is not TyCounter (\\ref of the label it leaves "
+         "at enumii 27 is fatal), \\stepcounter's is (HIGH-B)",
+         rv_arg("refstepcounter", 0) is None and rv_arg("stepcounter", 0) == "TyCounter"),
+    ]
+    # Environments (HIGH-C): the body-start probe decides the body's cell.
+    import json as _json
+    actr = _json.loads(art.read_text(encoding="utf-8"))
+    members = sg.closed_world_members(sg.load_kernel_file(gc.REPO, actr)["names"], actr)
+    _, catcodes = sg.body_start_dump(tex, actr["configuration"], [])
+    prober = sg.Prober(tex, actr["configuration"], members=members,
+                       letters=sg.letters_of(catcodes), counters=sg.config_counters(actr))
+    lat = sg.lattice(actr, members)
+    doms = sg.domains_of(actr, members)
+    envs = {e: sg.environment_for(sg.Session(prober), e, lat, doms)
+            for e in ("minipage", "math", "sloppypar", "theindex")}
+
+    def bcell(e, c):
+        return (envs[e].get("body_cell") or {}).get(c, "absent")
+    out += [
+        ("sig v4: minipage's body has no cell (it starts in internal vertical mode and "
+         "redefines \\thempfn; HIGH-C)", bcell("minipage", "vertical") is None),
+        ("sig v4: math's body is the math cell", bcell("math", "text") == "math"),
+        ("sig v4: sloppypar's body in a paragraph is the vertical cell (it ends the "
+         "paragraph first), so `\\\\` there is fatal as in `vertical` (HIGH-C)",
+         bcell("sloppypar", "text") == "vertical"),
+        ("sig v4: theindex's body has no cell (its begin part redefines \\item; HIGH-C)",
+         bcell("theindex", "vertical") is None),
     ]
     # The cache answers the second call without TeX.
     rep: dict = {}

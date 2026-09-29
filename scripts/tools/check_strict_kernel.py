@@ -1155,7 +1155,9 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
         out.append(f"memory account: base {m0} + max_mem {MAX_MEM} is more than half of "
                    f"main memory {cap} (C-98 margin)")
     for n, h in sorted(sig.get("signatures", {}).items()):
-        c = C.name_cost(list(mem1.get("names", {}).get(n, {}).values()), m0, T)
+        c = C.name_cost(list(mem1.get("names", {}).get(n, {}).values()) + [
+            r for f, r in mem1.get("cap", {}).get(n, {}).items() if not f.endswith("-PAST")],
+            m0, T)
         want = T if c is None else max(c, T)
         if h.get("cost") != want:
             out.append(f"signatures: {n!r}'s cost {h.get('cost')} is not what its memory "
@@ -1167,16 +1169,20 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
             elif not (r.get("verdict") in ("ready", "not_ready") and r.get("oracle")
                       and (r["oracle"][0] == 0) == (r["verdict"] == "ready")):
                 out.append(f"signatures: {n!r} at the memory bound ({f}) does not agree")
+            elif _ok(r) and r["used"] > m0 + r.get("mem", 0):
+                out.append(f"signatures: {n!r} at the memory bound ({f}) uses {r['used']} "
+                           f"words, more than the account {m0 + r.get('mem', 0)} (C-98)")
         if not any(not f.endswith("-PAST") for f in mem1.get("cap", {}).get(n, {})):
             out.append(f"signatures: {n!r} has no document at the memory bound (C-98)")
     cap_a = asig.get("capacity", {})
     am = cap_a.get("memory", {})
     for n, h in sorted(asig.get("arg_signatures", {}).items()):
         d = C.copy_and_cost(am.get("records", {}).get(n, {}), m0, T)
-        if d.get("copy") is None or (h.get("copy"), h.get("cost")) != (d["copy"], d["cost"]):
+        if d.get("copy") is None or h.get("copy") != d["copy"] or \
+                not isinstance(h.get("cost"), int) or h["cost"] < d["cost"]:
             out.append(f"arg signatures: {n!r}'s copy/cost {h.get('copy')}/{h.get('cost')} "
-                       f"are not what its memory documents give "
-                       f"({d.get('copy')}/{d.get('cost')}; C-98)")
+                       f"are not what its memory documents give (copy {d.get('copy')}, "
+                       f"cost at least {d.get('cost')}; C-98)")
         mb = cap_a.get("memory_bound", {}).get(n, {})
         for w in ("text", "math"):
             if h[w][0] != "run":
@@ -1186,6 +1192,10 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
                 out.append(f"arg signatures: {n!r} has no memory worst case in {w} (C-98)")
                 continue
             at, past = r["at"], r["past"]
+            if _ok(at) and at["used"] > m0 + at.get("mem", 0):
+                out.append(f"arg signatures: {n!r}'s memory worst case in {w} uses "
+                           f"{at['used']} words, more than the account "
+                           f"{m0 + at.get('mem', 0)} (C-98)")
             if not (at.get("verdict") == "ready" and _ok(at) and at["used"] * 2 <= at["of"]
                     and at.get("mem", MAX_MEM + 1) <= MAX_MEM):
                 out.append(f"arg signatures: {n!r}'s memory worst case in {w} does not compile "

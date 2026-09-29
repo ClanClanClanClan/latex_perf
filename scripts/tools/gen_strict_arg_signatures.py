@@ -836,39 +836,59 @@ def main() -> int:
     memcap = {}
 
     def stage3c() -> None:
-        k = ktmp(signatures)
         sig1s = sig1["signatures"]
-        cands = [([S.cmd(n)], sig1s[n]["cost"]) for n in sorted(sig1s)
-                 if not isinstance(sig1s[n]["text"], list)]
-        cands += [(A(n), (signatures[n]["cost"] + 2 * T) / 3) for n in sorted(signatures)
-                  if signatures[n]["text"][0] == "run"]
-        cands.append(([t("x")], T))
-        unit, per_tok = max(cands, key=lambda c: c[1])
-        memcap["filler"] = {"unit": unit, "cost_per_token": per_tok}
-        model = lambda d: k.run([_req(d)])[0]  # noqa: E731
-        jobs = []
-        for n in sorted(signatures):
-            for w in ("text", "math"):
-                if signatures[n][w][0] == "run":
-                    r = C.mem_maximiser(S, model, n, w, unit, MAX_GROUPS, MAX_TOKENS,
-                                        CK.MAX_MEM)
-                    jobs.append((n, w, r))
-        ats = k.run([_req(r["at"]) for _, _, r in jobs])
-        pasts = k.run([_req(r["past"]) for _, _, r in jobs])
-        gs = grader.grade_all([m["tex"] for m in ats], "memory-maximiser")
-        for (n, w, r), m, mp, g in zip(jobs, ats, pasts, gs):
-            rec = {**{kk: v for kk, v in r.items() if kk not in ("at", "past")},
-                   "at": C.memory_record(m, g), "past": C.memory_record(mp, None)}
-            memcap.setdefault(n, {})[w] = rec
-            ok, why = S.agrees(m, g)
-            half = rec["at"].get("used") is not None and rec["at"]["used"] * 2 <= rec["at"]["of"]
-            if not ok or not half or mp["verdict"] != "not_strict":
-                rejected[n] = (f"stage 3c (memory bound, {w}): agree {ok} ({why}), "
-                               f"{rec['at'].get('used')} of {rec['at'].get('of')} words, "
-                               f"one past: {mp['verdict']}")
-                signatures.pop(n, None)
-        print(f"[arg-signatures] stage 3c (memory bound): {len(jobs)} documents, "
-              f"{len(signatures)} admitted", flush=True)
+        for rnd in range(4):
+            k = ktmp(signatures)
+            cands = [([S.cmd(n)], sig1s[n]["cost"]) for n in sorted(sig1s)
+                     if not isinstance(sig1s[n]["text"], list)]
+            cands += [(A(n), (signatures[n]["cost"] + 2 * T) / 3) for n in sorted(signatures)
+                      if signatures[n]["text"][0] == "run"]
+            cands.append(([t("x")], T))
+            unit, per_tok = max(cands, key=lambda c: c[1])
+            memcap.clear()
+            memcap["filler"] = {"unit": unit, "cost_per_token": per_tok}
+            model = lambda d: k.run([_req(d)])[0]  # noqa: E731
+            jobs = []
+            for n in sorted(signatures):
+                for w in ("text", "math"):
+                    if signatures[n][w][0] == "run":
+                        r = C.mem_maximiser(S, model, n, w, unit, MAX_GROUPS, MAX_TOKENS,
+                                            CK.MAX_MEM)
+                        jobs.append((n, w, r))
+            ats = k.run([_req(r["at"]) for _, _, r in jobs])
+            pasts = k.run([_req(r["past"]) for _, _, r in jobs])
+            gs = grader.grade_all([m["tex"] for m in ats], "memory-maximiser")
+            raised = {}
+            for (n, w, r), m, mp, g in zip(jobs, ats, pasts, gs):
+                rec = {**{kk: v for kk, v in r.items() if kk not in ("at", "past")},
+                       "at": C.memory_record(m, g), "past": C.memory_record(mp, None)}
+                memcap.setdefault(n, {})[w] = rec
+                at = rec["at"]
+                if C._ok(at) and at["used"] > M0 + at["mem"]:
+                    # the account is low for this command: its cost takes the
+                    # deficit, spread over its D occurrences (C-98)
+                    deficit = at["used"] - M0 - at["mem"]
+                    raised[n] = max(raised.get(n, 0), -(-deficit // r["depth"]))
+            print(f"[arg-signatures] stage 3c round {rnd + 1}: {len(jobs)} documents, "
+                  f"{len(raised)} above the account", flush=True)
+            if not raised:
+                break
+            for n, dc in raised.items():
+                signatures[n] = {**signatures[n], "cost": signatures[n]["cost"] + dc}
+                cc[n] = {**cc[n], "raised_by_3c": cc[n].get("raised_by_3c", 0) + dc}
+        for n in list(signatures):
+            for w, rec in memcap.get(n, {}).items():
+                at, past = rec["at"], rec["past"]
+                o = at.get("oracle") or [1, False]
+                ok = at["verdict"] == "ready" and o[0] == 0 and o[1]
+                half = C._ok(at) and at["used"] * 2 <= at["of"]
+                within = C._ok(at) and at["used"] <= M0 + at["mem"]
+                if not (ok and half and within) or past["verdict"] != "not_strict":
+                    rejected[n] = (f"stage 3c (memory bound, {w}): compiles {ok}, "
+                                   f"{at.get('used')} of {at.get('of')} words against the "
+                                   f"account {M0 + at['mem']}, one past: {past['verdict']}")
+                    signatures.pop(n, None)
+                    break
 
     try:
         stage3b()

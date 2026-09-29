@@ -608,45 +608,73 @@ def main() -> int:
     memory["names"] = {}
     for (x, f, _), m, g in zip(cdocs, cm, cg):
         memory["names"].setdefault(x, {})[f] = C_.memory_record(m, g, count=MEMN)
-    for x in sorted(signatures):
-        c = C_.name_cost(list(memory["names"].get(x, {}).values()), M0, token_cost)
-        signatures[x] = {**signatures[x], "cost": token_cost if c is None else max(c, token_cost)}
-    print(f"[signatures] stage C: costs of {len(signatures)} names, "
-          f"max {max(h['cost'] for h in signatures.values())}", flush=True)
-
     # 3c. every admitted name at the MEMORY bound (C-98): repeated as often as
     # the token and memory bounds allow (the model with its measured cost must
     # decide it and pdfTeX agree), and once more, which the model must place
-    # outside the fragment when the memory bound is the one reached.
-    capdocs = []
-    for x in sorted(signatures):
-        h, c_ = signatures[x], S.cmd(x)
-        cost = h["cost"]
-        for where, mk in (("TEXT", lambda k: S.doc(*([c_] * k), S.text("x"))),
-                          ("MATH", lambda k: S.doc(S.math("paren", *([c_] * k))))):
-            if isinstance(h["text" if where == "TEXT" else "math"], list):
-                continue
-            k = min(MAX_TOKENS - 3, (CK.MAX_MEM - 4 * token_cost) // cost)
-            capdocs.append((x, f"R-CAP-{where}", mk(k), True, k))
-            if (k + 1) * cost + 4 * token_cost > CK.MAX_MEM and k + 1 <= MAX_TOKENS - 3:
-                capdocs.append((x, f"R-CAP-{where}-PAST", mk(k + 1), False, k + 1))
-    reqs = [{"doc": d, "signatures": {x: signatures[x]}} for x, _, d, _, _ in capdocs]
-    capm = kern.run(reqs)
-    atm = [(i, m) for i, (m, q) in enumerate(zip(capm, capdocs)) if q[3]]
-    capg = dict(zip([i for i, _ in atm], grader.grade_all([m["tex"] for _, m in atm], "memcap")))
+    # outside the fragment when the memory bound is the one reached. The cost
+    # is taken over the 4,000-repetition documents AND the bound documents,
+    # and the bound documents are rebuilt until pdfTeX's reported memory is
+    # within the account (base + Decide.mem): a cost measured on fewer
+    # repetitions can be low (\ddots: 152 words at 4,000, more at 13,000).
     memory["cap"] = {}
+    for rnd in range(5):
+        for x in sorted(signatures):
+            recs = list(memory["names"].get(x, {}).values()) + [
+                r for f, r in memory["cap"].get(x, {}).items() if not f.endswith("-PAST")]
+            c = C_.name_cost(recs, M0, token_cost)
+            signatures[x] = {**signatures[x],
+                             "cost": token_cost if c is None else max(c, token_cost)}
+        capdocs = []
+        for x in sorted(signatures):
+            h, c_ = signatures[x], S.cmd(x)
+            cost = h["cost"]
+            for where, mk in (("TEXT", lambda k: S.doc(*([c_] * k), S.text("x"))),
+                              ("MATH", lambda k: S.doc(S.math("paren", *([c_] * k))))):
+                if isinstance(h["text" if where == "TEXT" else "math"], list):
+                    continue
+                k = min(MAX_TOKENS - 3, (CK.MAX_MEM - 4 * token_cost) // cost)
+                capdocs.append((x, f"R-CAP-{where}", mk(k), True, k))
+                if (k + 1) * cost + 4 * token_cost > CK.MAX_MEM and k + 1 <= MAX_TOKENS - 3:
+                    capdocs.append((x, f"R-CAP-{where}-PAST", mk(k + 1), False, k + 1))
+        reqs = [{"doc": d, "signatures": {x: signatures[x]}} for x, _, d, _, _ in capdocs]
+        capm = kern.run(reqs)
+        atm = [(i, m) for i, (m, q) in enumerate(zip(capm, capdocs)) if q[3]]
+        capg = dict(zip([i for i, _ in atm],
+                        grader.grade_all([m["tex"] for _, m in atm], "memcap")))
+        memory["cap"] = {}
+        over = 0
+        for i, ((x, f, _, at, cnt), m) in enumerate(zip(capdocs, capm)):
+            r = C_.memory_record(m, capg.get(i), count=cnt)
+            memory["cap"].setdefault(x, {})[f] = r
+            if at and C_._ok(r) and r["used"] > M0 + r["mem"]:
+                over += 1
+        stable = all(
+            signatures[x]["cost"] == max(C_.name_cost(
+                list(memory["names"].get(x, {}).values()) + [
+                    r for f, r in memory["cap"].get(x, {}).items()
+                    if not f.endswith("-PAST")], M0, token_cost) or token_cost, token_cost)
+            for x in signatures)
+        print(f"[signatures] stage 3c round {rnd + 1}: {over} bound documents above "
+              f"the account; costs {'stable' if stable else 'moved'}", flush=True)
+        if not over and stable:
+            break
     for i, ((x, f, _, at, cnt), m) in enumerate(zip(capdocs, capm)):
+        if x not in signatures:
+            continue
         g = capg.get(i)
-        memory["cap"].setdefault(x, {})[f] = C_.memory_record(m, g, count=cnt)
         if at:
             ok, why = S.agrees(m, g)
-            if not ok:
-                rejected[x] = f"stage 3c (memory bound, {f}): {why}"
+            r = memory["cap"][x][f]
+            if not ok or (C_._ok(r) and r["used"] > M0 + r["mem"]):
+                rejected[x] = (f"stage 3c (memory bound, {f}): {why}; "
+                               f"{r.get('used')} words against the account {M0 + r['mem']}")
                 signatures.pop(x, None)
         elif m["verdict"] != "not_strict":
             rejected[x] = f"stage 3c (memory bound, {f}): one past the bound is {m['verdict']}"
             signatures.pop(x, None)
-    print(f"[signatures] stage 3c (memory bound): {len(signatures)} admitted", flush=True)
+    print(f"[signatures] stage C/3c: costs of {len(signatures)} names, max "
+          f"{max(h['cost'] for h in signatures.values())}; {len(signatures)} admitted",
+          flush=True)
 
     # 4. interleaving, to a fixpoint
     import tempfile

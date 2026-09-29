@@ -79,5 +79,35 @@ if mp.build_root_fingerprint(REPO / "scripts" / "..") != HERE_ROOT:
 else:
     print("ok   the fingerprint is of the resolved path")
 
+# built_cli_path: "this build root" is the binary's own, symlinks resolved.
+# A checkout whose _build is a symlink into THIS checkout's _build (the
+# isolated copies of check_gate_selftests) must reach the failure arm exactly
+# as this checkout does; a binary under another root must stay a note.
+import tempfile  # noqa: E402
+
+with tempfile.TemporaryDirectory() as td:
+    other = pathlib.Path(td).resolve() / "copy"
+    (other / "_build/default/latex-parse/src").mkdir(parents=True)
+    linked = other / "_build/default/latex-parse/src/validators_cli.exe"
+    linked.write_bytes(b"")
+    case("binary built in another root (by path)", "note",
+         built_cli_path=linked)
+    case("binary under a real _build of this root (by path)", "fail",
+         built_cli_path=REPO / "_build/default/latex-parse/src/validators_cli.exe")
+    via = other / "via"
+    via.mkdir()
+    (via / "_build").symlink_to(REPO / "_build")
+    case("_build symlinked into this checkout's _build (by path)", "fail",
+         built_cli_path=via / "_build/default/latex-parse/src/validators_cli.exe")
+    findings, notes = mp.check_cli_sha256(
+        via, "artefact", "howto", recorded_cli=A, built_cli=B,
+        src_tree_sha=HEAD_TREE, recorded_platform=PLAT,
+        recorded_build_root=HERE_ROOT)
+    ok = bool(notes) and not findings
+    print(f"{'ok  ' if ok else 'FAIL'} without built_cli_path the gate keeps "
+          f"the directory comparison: expected note, got "
+          f"{'fail' if findings else ('note' if notes else 'silent')}")
+    fails += not ok
+
 print(f"{'PASS' if not fails else 'FAILED'}: {fails} failing case(s)")
 sys.exit(1 if fails else 0)

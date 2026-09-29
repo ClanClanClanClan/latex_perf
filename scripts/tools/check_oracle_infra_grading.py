@@ -51,6 +51,18 @@ that the directory existed before it started, that a TMPDIR which is not the
 run's own is refused, and that the container backend refuses one outside the
 work root.
 
+C-95 (2026-09-29): each run's evidence is its own. A stale PDF (or log, .fls,
+.fmt) from an earlier pass or run was read as the current one's by three
+copies of the pass loop (run_to_fixpoint, false_ready_oracle.sh through the
+shim, gen_contract.py through run_engine). The per-run primitive now clears
+them; the checks drive each entry point with stale outputs present.
+
+C-97 (2026-09-29): the long-lived container reaps (--init), is bounded
+(--pids-limit), is replaced when an older oracle started it without them,
+and no run starts beside a leaked process (a zombie or an orphan of PID 1):
+MEASURED, leaked processes made a fork inside \\write18 fail silently and a
+compiling document grade rc 1.
+
 This gate is PURE (no docker, no TeX): it drives the real grading code with
 FAKE docker/engine executables that reproduce each failure shape, including the
 re-reviewer's dead-socket one, and asserts each is refused, while a genuine
@@ -101,6 +113,34 @@ if os.environ.get("FAKE_ARGV"):
     t = [x[7:] for x in a if x.startswith("TMPDIR=")]
     open(os.environ["FAKE_ARGV"] + ".tmpdir", "w").write(
         "1" if t and os.path.isdir(t[0]) else "0")
+if os.environ.get("FAKE_CALLS"):        # _ensure_container's docker calls
+    open(os.environ["FAKE_CALLS"], "a").write(" ".join(a) + "\n")
+st = os.environ.get("FAKE_STATE")
+if a[:1] == ["version"]:
+    print("27.0"); sys.exit(0)
+if a[:2] == ["image", "inspect"] or a[:1] == ["start"]:
+    sys.exit(0)
+if a[:2] == ["rm", "-f"]:
+    if st: open(st, "w").write("absent")
+    sys.exit(0)
+if a[:2] == ["run", "-d"]:
+    if st: open(st, "w").write("present")
+    sys.exit(0)
+if a[:1] == ["inspect"] and "--format" in a and st:
+    present = open(st).read() == "present"
+    f = a[a.index("--format") + 1]
+    if not present:
+        sys.exit(1)
+    if f.startswith("{{.State.Running}} {{.Config.Image}}"):
+        print(os.environ["FAKE_INSPECT"]); sys.exit(0)
+    if f == "{{.State.Running}}":
+        print("true"); sys.exit(0)
+    if f.startswith("{{.HostConfig.Init}}"):
+        print(os.environ.get("FAKE_HOSTCFG", "true 4096")); sys.exit(0)
+if a[:1] == ["inspect"] and len(a) == 2 and st:
+    sys.exit(0 if open(st).read() == "present" else 1)
+if a[:1] == ["exec"] and "cat" in a and st:   # the mount probe
+    sys.stdout.write(open(a[-1]).read()); sys.exit(0)
 if a[-2:] == ["env", "-0"]:            # the container's own environment
     sys.stdout.write(open(os.environ["FAKE_CENV"]).read()); sys.exit(0)
 if a[:1] == ["inspect"] and "{{.Created}}" in a:   # check_state's reference
@@ -151,6 +191,8 @@ elif mode == "okpdf":      # a pass that ships pages: writes <cwd>/<job>.pdf
     job = os.path.splitext(os.path.basename(a[-1]))[0]
     open(os.path.join(cwd, job + ".pdf"), "w").write("%PDF-1.5 pass\n")
     sys.stdout.write(banner + "Output written on %s.pdf (1 page).\n" % job); rcline(0)
+elif mode == "leak":       # the in-container leak check refused (C-97)
+    sys.stderr.write("\n%s_LEAK=301:gs:Z \n" % nonce)
 elif mode == "nopages":    # rc 0 and no PDF written (aux oscillation, C-95)
     sys.stdout.write(banner + "No pages of output.\n"); rcline(0)
 '''
@@ -247,7 +289,7 @@ class Checker:
 
     # ---------------------------------------------------------------- python
     def python_graders(self) -> None:
-        for mode in ("dead", "daemonerr", "cut", "nobanner"):
+        for mode in ("dead", "daemonerr", "cut", "nobanner", "leak"):
             got, err = self.run_pdflatex(mode)
             self.expect(f"ContainerOracle.run_pdflatex grades a '{mode}' run "
                         f"(no proof pdfTeX ran) instead of raising OracleError",
@@ -335,6 +377,41 @@ class Checker:
             except _oracle.OracleError as e:
                 self.expect(f"run_to_fixpoint refused plan '{plan}'", False, str(e))
             stale.unlink(missing_ok=True)
+        # The same defect in the pass loops OUTSIDE run_to_fixpoint (review of
+        # C-95): false_ready_oracle.sh runs its passes through the shim, and
+        # gen_contract.py through run_engine. Each is one call of the shared
+        # primitive, which must clear the job's .pdf/.log/.fls/.fmt first.
+        outs = [self.workroot / ("t" + e) for e in (".pdf", ".log", ".fls", ".fmt")]
+        cwd = os.getcwd()
+        os.chdir(self.workroot)
+        try:
+            for f in outs:
+                f.write_text("stale\n")
+            self.oracle("nopages")
+            rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
+                                          "-interaction=nonstopmode", "t.tex"])
+            left = [f.name for f in outs if f.exists()]
+            self.expect(f"the _oracle.py pdflatex shim left an earlier run's "
+                        f"{left} in place for a run that wrote none (a stale PDF "
+                        f"read as this pass's, C-95; false_ready_oracle.sh)",
+                        rc == 0 and not left, f"rc {rc}")
+        finally:
+            os.chdir(cwd)
+        for f in outs:
+            f.write_text("stale\n")
+        try:
+            self.oracle("nopages").run_engine(
+                self.workroot, _oracle.ENGINE_PDFLATEX,
+                ["-interaction=nonstopmode", "t.tex"], self.tv(), 60)
+            left = [f.name for f in outs if f.exists()]
+            self.expect(f"run_engine left an earlier run's {left} in place for a "
+                        f"run that wrote none (gen_contract.py read them, C-95)",
+                        not left)
+        except _oracle.OracleError as e:
+            self.expect("run_engine refused a protocol run", False, str(e))
+        for f in outs:
+            f.unlink(missing_ok=True)
+        _oracle._ORACLE = None
 
         # check_apply_fixes_roundtrip.pdflatex_ok: None (not graded), never False.
         import check_apply_fixes_roundtrip as rt
@@ -417,12 +494,38 @@ class Checker:
             probe = tb / "given-engine"
             probe.write_text("#!/bin/sh\necho GIVEN-ENGINE-RAN \"$@\"\n")
             probe.chmod(0o755)
-            r = subprocess.run(["sh", "-c", a[i + 1], "sh", "N", "60", str(probe), "x.tex"],
-                               capture_output=True, text=True,
-                               env=dict(os.environ, PATH=f"{tb}:/usr/bin:/bin"))
+            # A fake `ps` (the container's procps columns): FAKE_PS lines.
+            (tb / "ps").write_text('#!/bin/sh\nprintf "%b" "$FAKE_PS"\n')
+            (tb / "ps").chmod(0o755)
+            (tb / "sleep").write_text("#!/bin/sh\nexit 0\n")
+            (tb / "sleep").chmod(0o755)
+            clean_ps = ("    1     0 Ss     900 docker-init\\n"
+                        "    7     1 S      900 sleep infinity\\n"
+                        "   40     0 Ss       0 sh\\n")
+
+            def script(ps_out):
+                return subprocess.run(
+                    ["sh", "-c", a[i + 1], "sh", "N", "60", str(probe), "x.tex"],
+                    capture_output=True, text=True,
+                    env=dict(os.environ, PATH=f"{tb}:/usr/bin:/bin", FAKE_PS=ps_out))
+            r = script(clean_ps)
             self.expect("the in-container script runs the engine run_engine names",
                         "GIVEN-ENGINE-RAN x.tex" in r.stdout and "N=0" in r.stderr,
                         f"{r.stdout!r} {r.stderr!r}")
+            # C-97: a process left behind by an earlier run -- a zombie, or
+            # an orphan reparented to PID 1 -- stops the run BEFORE the
+            # engine starts; a young one (< 2 s, being reaped) does not.
+            for label, extra, want_leak in (
+                    ("a zombie", "  301   290 Z       40 gs\\n", True),
+                    ("an orphan of PID 1", "  302     1 S       40 gs\\n", True),
+                    ("an orphaned sleep", "  305     1 S       40 sleep 30\\n", True),
+                    ("a zombie orphan", "  303     1 Z      600 perl\\n", True),
+                    ("a process being reaped (<2 s)", "  304     1 Z        1 sh\\n", False)):
+                r = script(clean_ps + extra)
+                leaked = "N_LEAK=" in r.stderr and "GIVEN-ENGINE-RAN" not in r.stdout
+                self.expect(f"the in-container script {'ran the engine despite' if want_leak else 'refused'} "
+                            f"{label} left in the container (C-97)", leaked == want_leak,
+                            f"{r.stdout!r} {r.stderr!r}")
         finally:
             os.environ.pop("FAKE_ARGV", None)
         # An engine the oracle does not run (named through _oracle's table,
@@ -741,6 +844,54 @@ class Checker:
         _oracle._ORACLE = None
 
     # ------------------------------------ argv allow-list and container state
+    def container_init(self) -> None:
+        """C-97: the long-lived container reaps (--init) and is bounded
+        (--pids-limit). A container started without them (an older oracle's)
+        is replaced, never graded in; one that still lacks them after
+        creation is refused. Drives the real _ensure_container against the
+        fake docker, reading back its docker calls."""
+        calls, state = self.td / "calls", self.td / "cstate"
+        img = _oracle.IMAGE
+        lim = str(_oracle.PIDS_LIMIT)
+        cases = (("no --init", f"true {img} false {lim}", "true " + lim, True, True),
+                 ("no --pids-limit", f"true {img} true 0", "true " + lim, True, True),
+                 ("the oracle's own", f"true {img} true {lim}", "true " + lim, False, True),
+                 ("docker ignoring --init", f"true {img} false {lim}", "false " + lim,
+                  True, False))
+        saved = {k: os.environ.get(k) for k in
+                 ("FAKE_CALLS", "FAKE_STATE", "FAKE_INSPECT", "FAKE_HOSTCFG")}
+        try:
+            for label, inspect, hostcfg, want_replace, want_ok in cases:
+                calls.write_text("")
+                state.write_text("present")
+                os.environ.update(FAKE_CALLS=str(calls), FAKE_STATE=str(state),
+                                  FAKE_INSPECT=inspect, FAKE_HOSTCFG=hostcfg)
+                o = _oracle.ContainerOracle.__new__(_oracle.ContainerOracle)
+                _oracle._Base.__init__(o)
+                o.docker, o.workroot, o.name = str(self.fake), self.workroot, "lp-oracle-fake"
+                try:
+                    _silenced(o._ensure_container)
+                    ok = True
+                except _oracle.OracleError:
+                    ok = False
+                log = calls.read_text().splitlines()
+                runs = [c for c in log if c.startswith("run -d")]
+                replaced = any(c.startswith("rm -f") for c in log) and bool(runs)
+                flags_ok = all("--init" in r.split() and f"--pids-limit {lim}" in r
+                               for r in runs)
+                self.expect(f"_ensure_container on a container with {label}: "
+                            f"replaced={replaced} (want {want_replace}), accepted="
+                            f"{ok} (want {want_ok}), new container flags ok="
+                            f"{flags_ok} (C-97)",
+                            replaced == want_replace and ok == want_ok and flags_ok,
+                            "; ".join(log)[:300])
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
     def argv_and_state(self) -> None:
         """C-91 review round 5. (a) A graded run's ARGV is an allow-list, on
         every entry point: the round-5 review MEASURED `-cnf-line=openout_any=a`
@@ -897,7 +1048,11 @@ class Checker:
                               (clean + "f /usr/local/texlive/texmf-local/tex/latex/p.sty\n", False),
                               (clean + "f /tmp/.texlive2026/texmf-config/p.sty\n", False),
                               (clean + "f /tmp/x.txt\n", False),
-                              (clean + "f /usr/local/texlive/2026/texmf.cnf\n", False)):
+                              (clean + "f /usr/local/texlive/2026/texmf.cnf\n", False),
+                              # C-97: --init touches these two DIRECTORIES only
+                              (clean + "d /usr\nd /usr/sbin\n", True),
+                              (clean + "d /usr\nd /usr/sbin\nf /usr/sbin/x\n", False),
+                              (clean + "f /usr\n", False)):
             os.environ["FAKE_FIND"] = find
             _oracle._STATE_CHECKED = False
             o = self.oracle("ok")
@@ -1042,7 +1197,7 @@ def main() -> int:
         # section (the oracle refused a run the protocol makes), reported
         # with its message, never a crash that hides the other sections.
         for section in (c.python_graders, c.generator_client, c.grading_env,
-                        c.argv_and_state, c.shell_grader):
+                        c.argv_and_state, c.container_init, c.shell_grader):
             try:
                 section()
             except _oracle.OracleError as e:

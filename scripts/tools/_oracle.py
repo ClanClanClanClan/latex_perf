@@ -100,6 +100,28 @@ PROTOCOL = ("-interaction=nonstopmode -halt-on-error, restricted shell-escape "
             "recorded (compiles = rc 0 AND a PDF, STRICT_TIER_DESIGN.md B.4 E0)")
 MAX_PASSES = 3
 
+# THE LONG-LIVED CONTAINER REAPS AND IS BOUNDED (C-97). Its PID 1 was
+# `sleep infinity`, which reaps nothing: every run killed by the protocol's
+# timeout left its orphans as zombies (3 per killed EPS conversion: sh, perl,
+# gs; 106 in the shared container after two days), and the reviewer MEASURED
+# (with a stand-in --pids-limit 14) a compiling EPS document graded rc 1 with
+# no OracleError once they filled the limit: the fork inside restricted
+# \write18 failed silently. Now: `--init` (PID 1 = docker-init, which reaps),
+# a pids limit far above measured need so one runaway job cannot exhaust the
+# VM that every oracle container shares, and a per-run check, in the same
+# exec as the run, that no process was left behind: an orphan of PID 1 other
+# than the container's own `sleep infinity`, or a zombie, older than 2 s and still
+# there 1 s later. Refused (OracleError), never graded.
+PIDS_LIMIT = 4096
+LEAK_CHECK_SH = (
+    'lp_leak_list() { ps -eo pid=,ppid=,stat=,etimes=,args= | '
+    'awk \'($2 == 1 && !($5 == "sleep" && $6 == "infinity" && NF == 6) && $4 >= 2) '
+    '|| ($3 ~ /^Z/ && $4 >= 2) '
+    '{print $1 ":" $5 ":" $3}\' | head -5 | tr "\\n" " "; }; '
+    'lp_leak() { l=$(lp_leak_list); [ -z "$l" ] && return 0; sleep 1; '
+    'l=$(lp_leak_list); [ -z "$l" ] && return 0; '
+    'printf "\\n%s_LEAK=%s\\n" "$1" "$l" >&2; return 1; }; ')
+
 # The shim's exit code when the ORACLE failed (docker unreachable, container
 # gone, a refused environment), as opposed to pdflatex failing. It used to be 2,
 # which the shell graders could not tell from a pdflatex error exit, so an
@@ -899,7 +921,34 @@ class _Base:
         round 5). Returns (rc, combined output, timed_out)."""
         args = list(args)
         check_engine_argv(args, cwd, graded=True)
-        return self._exec(Path(cwd), ENGINE_PDFLATEX, args, graded_env(env), timeout)
+        env = graded_env(env)
+        self.clear_outputs(Path(cwd), args)
+        return self._exec(Path(cwd), ENGINE_PDFLATEX, args, env, timeout)
+
+    # EACH RUN'S EVIDENCE IS ITS OWN (C-95). pdfTeX creates its PDF at the
+    # first shipout, so a run with "No pages of output." leaves an EARLIER
+    # run's PDF in place, and every reader of "a PDF" (compiles = rc 0 AND a
+    # PDF), of the log (the first error; gen_contract's "no log = the oracle
+    # failed") or of the recorder's .fls read that stale file as this run's.
+    # MEASURED: an aux-oscillating document (a page on pass 1, none on the
+    # confirming pass) graded compiles through run_to_fixpoint, through
+    # false_ready_oracle.sh's two shim passes and gen_contract's fixpoint --
+    # three copies of the pass loop, one defect. So the deletion is not in any
+    # loop: it is in the ONE primitive every engine run takes (run_pdflatex,
+    # which run_once/run_to_fixpoint and the shim use, and run_engine;
+    # check_oracle_pin proves no tracked file starts an engine any other way).
+    # The job's outputs a caller reads are removed, through the oracle, before
+    # the engine starts; .aux/.toc/... stay (carrying them IS the protocol).
+    RUN_OUTPUTS = (".pdf", ".log", ".fls", ".fmt")
+
+    def clear_outputs(self, cwd: Path, args: list[str]) -> None:
+        job = jobname_of(args)
+        if job is None:  # INITEX's `\dump`-only argv names no file
+            return
+        stale = [cwd / (job + e) for e in self.RUN_OUTPUTS]
+        stale = [q for q in stale if q.exists() or q.is_symlink()]
+        if stale:
+            self.remove(stale)
 
     def _exec(self, cwd: Path, engine: str, args: list[str], env: dict | None,
               timeout: int) -> tuple[int, bytes, bool]:
@@ -929,6 +978,7 @@ class _Base:
         if bad:
             raise OracleError(f"run_engine: {bad} are not TeX-shaping variables "
                               f"the oracle forwards (_ENV_FORWARD)")
+        self.clear_outputs(Path(cwd), list(args))
         return self._exec(Path(cwd), engine, list(args), dict(tex_vars), timeout,
                           exact_env=True)
 
@@ -966,21 +1016,9 @@ class _Base:
         docstring for why each step exists."""
         work = Path(work)
         pdf_path = work / (Path(toplevel).stem + ".pdf")
-        log_path = work / (Path(toplevel).stem + ".log")
+        # Each pass's PDF/log is its own: run_pdflatex clears them (C-95).
 
-        # EACH PASS'S EVIDENCE IS ITS OWN (C-95). pdfTeX opens its PDF at the
-        # first shipout, so a pass with "No pages of output." leaves the
-        # PREVIOUS pass's PDF in place, and `compiles = rc 0 AND a PDF` was
-        # read off a stale file: an aux-oscillating document (pages on one
-        # pass, none on the confirming one) graded compiles. So the PDF and
-        # the log (which graders read for the first error) are deleted before
-        # every pass, through the oracle (ContainerOracle.remove keeps the
-        # guest's dentry cache coherent). The .aux/.toc/... stay: carrying
-        # them from pass to pass IS the protocol.
         def one_pass():
-            stale = [p for p in (pdf_path, log_path) if p.exists()]
-            if stale:
-                self.remove(stale)
             return self.run_once(work, toplevel, env, timeout)
 
         rc, passes = -1, 0
@@ -1156,16 +1194,24 @@ class ContainerOracle(_Base):
             raise OracleUnavailable(f"the pinned image is not present: run "
                                     f"`docker pull {IMAGE}`")
         ins = self._dk("inspect", "--format",
-                       "{{.State.Running}} {{.Config.Image}}", self.name)
+                       "{{.State.Running}} {{.Config.Image}} {{.HostConfig.Init}} "
+                       "{{.HostConfig.PidsLimit}}", self.name)
         if ins.returncode == 0:
-            running, img = ins.stdout.decode().split()
-            if img != IMAGE:
+            running, img, init, pids = (ins.stdout.decode().split() + ["", "", ""])[:4]
+            if img != IMAGE or init != "true" or pids != str(PIDS_LIMIT):
+                # A container of an older oracle (no reaping PID 1, no pids
+                # limit, C-97) or of another image: replaced, never graded in.
+                print(f"[oracle] replacing container {self.name} (image "
+                      f"{img == IMAGE}, init {init}, pids-limit {pids}): the "
+                      f"oracle needs --init --pids-limit {PIDS_LIMIT} (C-97)",
+                      file=sys.stderr)
                 self._dk("rm", "-f", self.name)
             elif running != "true":
                 self._dk("start", self.name, check=True)
         if self._dk("inspect", self.name).returncode != 0:
             p = self._dk("run", "-d", "--name", self.name,
-                         "--label", "lp-oracle=1",
+                         "--label", "lp-oracle=1", "--init",
+                         "--pids-limit", str(PIDS_LIMIT),
                          "-v", f"{self.workroot}:{self.workroot}",
                          "-e", "HOME=/tmp", "--entrypoint", "sleep",
                          IMAGE, "infinity", timeout=300)
@@ -1177,6 +1223,14 @@ class ContainerOracle(_Base):
                 if ins.stdout.strip() == b"true":
                     break
                 time.sleep(0.2)
+        ins = self._dk("inspect", "--format", "{{.HostConfig.Init}} "
+                       "{{.HostConfig.PidsLimit}}", self.name)
+        if ins.stdout.decode().split() != ["true", str(PIDS_LIMIT)]:
+            raise OracleError(
+                f"container {self.name} runs without --init/--pids-limit "
+                f"{PIDS_LIMIT} ({ins.stdout.decode().strip()!r}): its PID 1 would "
+                f"reap nothing, and leaked processes can make a \\write18 fork "
+                f"fail silently, i.e. change a grade (C-97). `_oracle.py stop`.")
         # Positive proof the work root is the SAME directory inside: a nonce
         # written on the host must be read back through the container.
         nonce = uuid.uuid4().hex
@@ -1234,6 +1288,12 @@ class ContainerOracle(_Base):
         "/etc/resolv.conf", "/etc/hostname", "/etc/hosts", "/etc/mtab"))
     # fontconfig's caches (pdfTeX does not read them; written once, 682 files
     # at 06:53:53 on 2026-09-27, 14 min after this container was created).
+    # `docker run --init` bind-mounts docker-init at /sbin/docker-init (=
+    # /usr/sbin on this merged-/usr image) about 0.35 s after Created, which
+    # touches these two DIRECTORIES' ctime. MEASURED 2026-09-29 in a fresh
+    # --init container: nothing else changes; the file itself is another
+    # filesystem (-xdev). Their contents are NOT allowed.
+    STATE_ALLOWED_DIRS = frozenset(("/usr", "/usr/sbin"))
     _STATE_ALLOWED_RX = re.compile(
         r"^/var/cache/fontconfig/([0-9a-f]{32}-le64\.cache-\d+|CACHEDIR\.TAG)$")
     _TEXMF_TREES_SH = (
@@ -1282,6 +1342,8 @@ class ContainerOracle(_Base):
         for line in p.stdout.decode(errors="replace").splitlines():
             typ, _, path = line.partition(" ")
             if path in allowed or self._STATE_ALLOWED_RX.match(path):
+                continue
+            if typ == "d" and path in self.STATE_ALLOWED_DIRS:
                 continue
             if typ == "d" and path.startswith("/tmp/.texlive2026/"):
                 continue  # an empty tree's directories; files: check_texmf_trees
@@ -1391,8 +1453,10 @@ class ContainerOracle(_Base):
         # per-run nonce; that line, not the docker CLI's exit code, is the rc
         # (see PDFTEX_BANNER above for why).
         nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
-        script = ('n=$1; t=$2; e=$3; shift 3; timeout -k 10 "$t" "$e" "$@"; '
-                  'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
+        script = LEAK_CHECK_SH + (
+            'n=$1; t=$2; e=$3; shift 3; lp_leak "$n" || exit 0; '
+            'timeout -k 10 "$t" "$e" "$@"; '
+            'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
         cmd += [self.name, "sh", "-c", script, "sh", nonce, str(int(timeout)), engine,
                 *args]
         try:
@@ -1402,6 +1466,14 @@ class ContainerOracle(_Base):
             # The docker client hung past the inner timeout's own kill: the
             # oracle did not answer. Unmeasured, not a pdflatex timeout.
             raise OracleError(f"docker exec did not return within {timeout + 90}s")
+        leak = re.search(rb"^" + nonce.encode() + rb"_LEAK=(.*)$", p.stderr, re.M)
+        if leak is not None:
+            raise OracleError(
+                f"container {self.name}: processes left by earlier runs "
+                f"({leak.group(1).decode(errors='replace')[:300]}); a leak can "
+                f"make a \\write18 fork fail silently and change a grade, so "
+                f"no run starts (C-97). Inspect (`docker exec {self.name} ps "
+                f"-ef`), then `_oracle.py stop`.")
         m = re.search(rb"^" + nonce.encode() + rb"=(\d+)$", p.stderr, re.M)
         if m is None:
             raise OracleError(

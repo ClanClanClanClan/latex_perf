@@ -674,6 +674,63 @@ def _first_arg(d: dict, runs_text: bool = False) -> str:
     raise AssertionError("argument-signature file drifted; update registry")
 
 
+def strict_capacity_pair_unprobed(text: str) -> str:
+    """C-94: the first frame-kind pair's at-bound document disagrees."""
+    d = json.loads(text)
+    assert d["pairs"] and d["pairs"][0]["at"]["agree"], "capacity drifted; update registry"
+    d["pairs"][0]["at"]["agree"] = False
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_capacity_overflow_early(text: str) -> str:
+    """C-94: pdfTeX overflows long before the account's window: the model
+    under-counts a kind (the reviewer's defect, measured)."""
+    d = json.loads(text)
+    d["pairs"][0]["overflow"]["first_fail"] = 128
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_capacity_kind_dropped(text: str) -> str:
+    """C-94: every pair holding a formula is dropped (the probes never
+    stacked the frame kind the defect was in)."""
+    d = json.loads(text)
+    keep = [r for r in d["pairs"]
+            if not any(str(r.get(k, "")).startswith(("inline.", "display."))
+                       for k in ("below", "above"))]
+    assert len(keep) < len(d["pairs"]), "capacity drifted; update registry"
+    d["pairs"] = keep
+    d["frame_pairs"]["n"] = len(keep)
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_arg_groups_dropped(text: str) -> str:
+    """C-94: an admitted command's text run behaviour without its groups."""
+    d = json.loads(text)
+    n = _first_arg(d, runs_text=True)
+    d["arg_signatures"][n]["text"] = d["arg_signatures"][n]["text"][:3]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_reuse_local(text: str) -> str:
+    """LOW-2: a reuse source that is a local path, not a committed file."""
+    d = json.loads(text)
+    d["reuse"] = {"grades_reused": 1, "sources": [
+        {"file": "/private/tmp/lp/rule_probes.json", "sha256": "0" * 64, "records": 1}]}
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_inert_expl3(text: str) -> str:
+    """C-96: an admitted name whose code is expl3 reaching \\immediate. The
+    reading of version 4 (`\\\\([A-Za-z@]+)`) took `\\lpq_t:n` as `\\lpq`,
+    whose meaning here is harmless: the walk stopped there silently."""
+    d = json.loads(text)
+    n = _first_admitted(d)
+    d["meanings"][n] = "macro:->\\lpq_t:n {x}"
+    d["meanings"]["lpq_t:n"] = "\\immediate"
+    d["meanings"]["lpq"] = "\\relax"
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_arg_not_inert(text: str) -> str:
     """R-INERT on an admitted one-argument command's recorded meaning."""
     d = json.loads(text)
@@ -965,8 +1022,48 @@ REGISTRY = [
             Mutation("membership no longer requires the capacity bounds",
                      "proofs/Strict/Decide.v",
                      r"FAIL Decide\.v: in_strict_doc no longer requires `bounded`",
-                     old="  in_strict_toks C (flatten_doc d) /\\ bounded (flatten_doc d) = true.",
+                     old="  in_strict_toks C (flatten_doc d) /\\ bounded C (flatten_doc d) = true.",
                      new="  in_strict_toks C (flatten_doc d)."),
+            # C-94: the capacity account through a proxy again (a formula
+            # counted as no group, the reviewer's \mbox{$ ... $} shape).
+            Mutation("the group account stops counting formulas (C-94)",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: frame_groups is not the pinned account",
+                     old="  | FArg _ _ g _ _ => g\n  | _ => 1\n",
+                     new="  | FArg _ _ g _ _ => g\n  | FShift _ _ _ => 0\n  | _ => 1\n"),
+            Mutation("the group bound is taken on the initial state only (C-94)",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: bounded is not the pinned account",
+                     old="Nat.leb (peak C init ts) max_groups.",
+                     new="Nat.leb (groups (s_frames init)) max_groups."),
+            # C-94: a frame-kind pair of the model not probed at the bound.
+            Mutation("a frame-kind pair is not probed at the bound (C-94)",
+                     "corpora/strict_s0/capacity.json",
+                     r"FAIL corpora/strict_s0/capacity\.json: pair \S+ not probed at the bound",
+                     transform=strict_capacity_pair_unprobed),
+            Mutation("pdfTeX overflows where the account does not predict (C-94)",
+                     "corpora/strict_s0/capacity.json",
+                     r"FAIL corpora/strict_s0/capacity\.json: pair \S+ pdfTeX overflows at",
+                     transform=strict_capacity_overflow_early),
+            Mutation("a frame kind of the model is in no probed pair (C-94)",
+                     "corpora/strict_s0/capacity.json",
+                     r"FAIL corpora/strict_s0/capacity\.json: no probed pair has a frame of kind",
+                     transform=strict_capacity_kind_dropped),
+            # C-94: an argument command without its measured TeX groups.
+            Mutation("an argument command's groups are not measured (C-94)",
+                     "corpora/contracts/strict/article-s1-arg-signatures.json",
+                     r"FAIL arg signatures: '.*' runs in text without its measured TeX groups",
+                     transform=strict_arg_groups_dropped),
+            # LOW-2 of the C-94 review: grades reused from a local file.
+            Mutation("grades are reused from a file nobody else can read (LOW-2)",
+                     "corpora/strict_s0/rule_probes.json",
+                     r"FAIL rule_probes: grades reused from /private/tmp/\S+ which is not a committed",
+                     transform=strict_reuse_local),
+            # C-96: R-INERT must read an expl3 name whole (\lpq_t:n is not \lpq).
+            Mutation("R-INERT reads an expl3 name as its letters (C-96)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: admitted '.*' is not inert: expansion reaches \\immediate",
+                     transform=strict_inert_expl3),
             Mutation("the signature candidates are not the selection rule's",
                      "corpora/contracts/strict/article-s0-signatures.json",
                      r"FAIL signatures: candidate set differs",

@@ -31,10 +31,13 @@ longer belong together:
      outside comments, and Decide.v only one-character literals (the fixed
      catcode classes); a control-word name can reach the kernel only through
      the contract parameter.
-  6. EVERY ADMITTED NAME IS INERT (RULE R-INERT above, C-85): the signature
-     file records the meaning at body start of every candidate and of every
-     name their expansion texts reach; the closure must be complete, and
-     `inertness_violation` must be None for every admitted name.
+  6. EVERY ADMITTED NAME IS INERT (RULE R-INERT above, C-85, C-92, C-96):
+     the signature file records the meaning at body start of every candidate
+     and of every name and active character their expansion texts may hold
+     (every reading of the printed text, against the closed world); the
+     closure must be complete, every meaning in it of a kind the rule
+     classifies, and `inertness_violation` must be None for every admitted
+     name.
   7. EVERY BRANCH OF EVERY LOOK-AHEAD AND DISJUNCTIVE PREMISE IS EXERCISED
      (C-85). The rule probes' BRANCH MATRIX must cover every cell
      head|token|follower|tail that the grammar allows: every innermost frame
@@ -56,10 +59,16 @@ longer belong together:
      repetition and bound grades compile in every mode its signature does
      not make fatal; and the last interleaving round of the generator graded
      documents in text and math with 0 disagreements.
-  9. CAPACITY BOUNDS (C-86). Decide.v defines max_brace_depth and max_tokens
-     and pins them (Examples) at the values this gate and the generators use,
-     the rule probes' BOUND family (the structure at the bounds) agrees with
-     the oracle, and its BOUND-OUT documents are outside the tier.
+  9. CAPACITY BOUNDS (C-86, C-94). Decide.v defines max_groups, max_tokens
+     and max_name and pins them (Examples) at the values this gate and the
+     generators use; the ACCOUNT is pinned token for token (CAPACITY_ACCOUNT:
+     a frame is one TeX group, an argument frame its command's g; the bound
+     holds over every state of the run, Decide.peak; `bounded` is the token,
+     name and group bounds together); the rule probes' BOUND family (the
+     structure at the bounds) agrees with the oracle and its BOUND-OUT
+     documents are outside the tier; every admitted argument signature's run
+     behaviour carries its TeX groups, equal to the generator's stage-G
+     measure.
  10. FAITHFUL'S BODY IS PINNED (OPEN-121 final review, MEDIUM-1).
      Bridge.v's `Definition Faithful` must be, token for token (comments stripped, whitespace normalised),
      FAITHFUL_BODY: oracle_ok (render d) <-> Runs ... Compiles. The pinned
@@ -80,6 +89,23 @@ longer belong together:
      Bridge.v is pinned sentence by sentence (BRIDGE_SENTENCES, an
      allow-list: a sentence no keyword names still fails).
      check_print_assumptions.py pins the ELABORATED body too (coqc `Print`).
+ 11. THE CAPACITY ACCOUNT IS PROBED (C-94). corpora/strict_s0/capacity.json
+     (measure_strict_capacity.py, fresh against the committed extraction and
+     signature files) holds, for EVERY ordered pair of frame kinds the
+     extracted model can stack (strict_decide.exe --frame-pairs: a search
+     through the extracted step over every token of the grammar), a stream
+     at exactly max_groups groups that agrees with pdfTeX with the pair on
+     the peak's stack, one at max_groups + 1 outside the tier, and pdfTeX's
+     own first overflow inside the window the account predicts. The frame
+     kinds and the search alphabet are checked against the extracted
+     `frame` and `tok` types (derived from the model, not listed here), every
+     admitted command's argument frame is in some pair, the measured margin
+     is positive, and every other capacity pdfTeX reports is at most half
+     used at the bounds.
+ 12. REUSE PROVENANCE (LOW-2 of the C-94 review). A grade reused by any
+     evidence file comes from a file committed to this repository, recorded
+     by path, commit and sha256 (verified when the commit is present): never
+     a /tmp path or a local grade store.
 
 Run: python3 scripts/tools/check_strict_kernel.py [--repo .]
 """

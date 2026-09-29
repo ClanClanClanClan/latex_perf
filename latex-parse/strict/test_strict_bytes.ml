@@ -189,11 +189,12 @@ let () =
   check "first line %&latex" ("%&latex\n" ^ h ^ "x\n" ^ e) "not_strict";
   check "first line  %&latex" (" %&latex\n" ^ h ^ "x\n" ^ e) "ready";
   check "line at the bound" (h ^ String.make 10000 'x' ^ "\n" ^ e) "ready";
-  (* C-94: a formula inside a box argument is a second TeX group per level
-     (the reviewer's file: 128 levels overflow TeX's 255 grouping levels) *)
+  (* C-94: a formula inside a box argument is a second TeX group per level (the
+     reviewer's file: 128 levels overflow TeX's 255 grouping levels) *)
   let boxes k =
     String.concat "" (List.init k (fun _ -> "\\mbox{$"))
-    ^ "x" ^ String.concat "" (List.init k (fun _ -> "$}"))
+    ^ "x"
+    ^ String.concat "" (List.init k (fun _ -> "$}"))
   in
   check "box and formula, 100 levels" (h ^ boxes 100 ^ "\n" ^ e) "ready";
   check "box and formula, 101 levels" (h ^ boxes 101 ^ "\n" ^ e) "not_strict";

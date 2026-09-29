@@ -205,12 +205,12 @@ let () =
   check "argument command before a stray brace"
     (doc [ cmd "textbf"; K.NStrayClose ])
     "not_strict";
-  (* the capacity bounds (Decide.v [bounded], C-86, C-94): a run holding 200
-     TeX groups is inside the tier, 201 are not (MEASURED: the body holds 254
-     groups, a 255th overflows TeX's grouping levels); every frame is a group,
-     a formula included, and an argument frame is its command's [g] groups;
-     20,000 tokens are inside, 20,001 are not (MEASURED: 100,000 attested
-     math names overflow main memory); a name has at most 100 letters *)
+  (* the capacity bounds (Decide.v [bounded], C-86, C-94): a run holding 200 TeX
+     groups is inside the tier, 201 are not (MEASURED: the body holds 254
+     groups, a 255th overflows TeX's grouping levels); every frame is a group, a
+     formula included, and an argument frame is its command's [g] groups; 20,000
+     tokens are inside, 20,001 are not (MEASURED: 100,000 attested math names
+     overflow main memory); a name has at most 100 letters *)
   let rec nest k inner =
     if k = 0 then inner else [ K.NGroup (nest (k - 1) inner) ]
   in
@@ -219,7 +219,8 @@ let () =
   check "nesting past the bound, fatal inside"
     (doc (nest 201 [ K.NStrayClose ]))
     "not_strict";
-  check "a formula is a group: $ and 199 braces" (doc [ dollar (nest 199 [ t "x" ]) ])
+  check "a formula is a group: $ and 199 braces"
+    (doc [ dollar (nest 199 [ t "x" ]) ])
     "ready";
   check "a formula is a group: $ and 200 braces"
     (doc [ dollar (nest 200 [ t "x" ]) ])
@@ -229,8 +230,12 @@ let () =
     if k = 0 then [ t "x" ] else [ cmd "mbox"; g [ dollar (boxes (k - 1)) ] ]
   in
   check "box and formula, 100 levels (200 groups)" (doc (boxes 100)) "ready";
-  check "box and formula, 101 levels (202 groups)" (doc (boxes 101)) "not_strict";
-  check "box and formula, 128 levels (256 groups)" (doc (boxes 128)) "not_strict";
+  check "box and formula, 101 levels (202 groups)"
+    (doc (boxes 101))
+    "not_strict";
+  check "box and formula, 128 levels (256 groups)"
+    (doc (boxes 128))
+    "not_strict";
   check "box and formula, 128 levels, undefined inside"
     (doc
        (let rec b k =

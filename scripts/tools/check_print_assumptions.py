@@ -186,6 +186,20 @@ CAPSTONES = [
         "the tree decider never answers NotStrict inside the tier (with the "
         "argument well-formedness condition wfa in the membership).",
     ),
+    # C-94: the capacity account. The group bound is a bound over every state
+    # the run reaches, not a proxy over the token stream.
+    (
+        "LaTeXPerfectionist.Strict.Decide.peak_spec",
+        "LaTeXPerfectionist.Strict.Decide",
+        "C-94: the peak the membership bounds is the most TeX groups any state "
+        "the run reaches holds (Reaches, a declarative relation over step).",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.strict_groups_bounded",
+        "LaTeXPerfectionist.Strict.Decide",
+        "C-94: every state the run of a strict document reaches holds at most "
+        "max_groups TeX groups (a formula and an argument's groups included).",
+    ),
     (
         "LaTeXPerfectionist.Strict.Decide.in_strict_dec",
         "LaTeXPerfectionist.Strict.Decide",

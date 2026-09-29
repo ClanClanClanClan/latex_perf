@@ -706,11 +706,11 @@ let event_fields c toks l =
 
 (* ---- capacity (C-94): the frame stack at the run's peak ----------------- *)
 
-(* FOR THE CAPACITY PROBES' COVERAGE ONLY (check_strict_kernel.py, item 9):
-   the label of the frame a step just pushed, by the frame's constructor and
-   the token that opened it -- the grammar has two openers for each kind of
-   formula, and an argument frame is labelled by its command's name. The
-   GROUP COUNTS reported next to these labels are the extracted Coq functions'
+(* FOR THE CAPACITY PROBES' COVERAGE ONLY (check_strict_kernel.py, item 11): the
+   label of the frame a step just pushed, by the frame's constructor and the
+   token that opened it -- the grammar has two openers for each kind of formula,
+   and an argument frame is labelled by its command's name. The GROUP COUNTS
+   reported next to these labels are the extracted Coq functions'
    ([Decide.groups], [Decide.peak]); only the labels are this file's. *)
 let pushed_label (t : K.tok) (fs : K.frame list) =
   match fs with
@@ -719,9 +719,7 @@ let pushed_label (t : K.tok) (fs : K.frame list) =
       match f with
       | K.FSimple -> if K.restricted fs then "simple.r" else "simple"
       | K.FShift (false, _, _) -> (
-          match t with
-          | K.TMOpenInline -> "inline.paren"
-          | _ -> "inline.dollar")
+          match t with K.TMOpenInline -> "inline.paren" | _ -> "inline.dollar")
       | K.FShift (true, _, _) -> (
           match t with
           | K.TMOpenDisplay -> "display.bracket"
@@ -730,13 +728,15 @@ let pushed_label (t : K.tok) (fs : K.frame list) =
       | K.FMGroup (false, _, _) -> "mgroup"
       | K.FArg (_, p, _, _, _) ->
           (* the mode it was pushed from: a command's groups are per mode *)
-          "arg." ^ string_of_pay p ^ ":"
+          "arg."
+          ^ string_of_pay p
+          ^ ":"
           ^ (match t with K.TCs n -> string_of_chars n | _ -> "?")
           ^ if K.in_math (List.tl fs) then "/m" else "/t")
 
-(* One step of [run] (Go1/Go2) with the label stack kept beside the frames:
-   the new state, the rest of the stream, the new labels; None when the run
-   stops (a stop halts pdfTeX; a deferred error only scans). *)
+(* One step of [run] (Go1/Go2) with the label stack kept beside the frames: the
+   new state, the rest of the stream, the new labels; None when the run stops (a
+   stop halts pdfTeX; a deferred error only scans). *)
 let label_step c (s : K.state) labels t rest =
   let nx = match rest with x :: _ -> Some x | [] -> None in
   let adv (s' : K.state) rest' =
@@ -753,8 +753,8 @@ let label_step c (s : K.state) labels t rest =
   | K.Go2 s' -> ( match rest with _ :: r -> adv s' r | [] -> None)
   | K.Stop _ | K.Stuck | K.Defer _ | K.Defer2 _ -> None
 
-(* The most groups a state of the run holds ([K.peak], the extracted
-   function) and the labels of that state's frames, innermost first. *)
+(* The most groups a state of the run holds ([K.peak], the extracted function)
+   and the labels of that state's frames, innermost first. *)
 let peak_frames c toks =
   let rec go s labels best = function
     | [] -> best
@@ -768,7 +768,8 @@ let peak_frames c toks =
   in
   let g, labels = go K.init [] (0, []) toks in
   let p = K.peak c K.init toks in
-  if p <> g then failwith "peak_frames: the label walk disagrees with Decide.peak";
+  if p <> g then
+    failwith "peak_frames: the label walk disagrees with Decide.peak";
   (p, labels)
 
 let peak_fields c toks =
@@ -790,10 +791,10 @@ let json_of_tok = function
    constructor of [tok]: a character, a space, both paragraph breaks, the
    braces, $, the four delimiters, both scripts, \end{document}, an undefined
    control word, every admitted name of each signature class and every
-   one-argument command of the contract), each with every possible next
-   token, through the extracted [K.step]. Every step that pushes a frame gives
-   a pair (the label below, the label pushed) with the token path from [init]
-   that reaches it. Frame stacks are explored to [depth] labels. *)
+   one-argument command of the contract), each with every possible next token,
+   through the extracted [K.step]. Every step that pushes a frame gives a pair
+   (the label below, the label pushed) with the token path from [init] that
+   reaches it. Frame stacks are explored to [depth] labels. *)
 let frame_pairs c ~names ~depth =
   let letters n = K.TCs (chars_of_string n) in
   let alphabet =
@@ -815,8 +816,8 @@ let frame_pairs c ~names ~depth =
     ]
     @ List.map letters names
   in
-  (* exhaustive over [tok]: a constructor added to the grammar and missing
-     from the alphabet fails to compile here *)
+  (* exhaustive over [tok]: a constructor added to the grammar and missing from
+     the alphabet fails to compile here *)
   List.iter
     (function
       | K.TChar _ | K.TSpace | K.TPar _ | K.TOpen | K.TClose | K.TDollar
@@ -841,7 +842,8 @@ let frame_pairs c ~names ~depth =
               | Some (s', rest', labels')
                 when List.length s'.K.s_frames > List.length s.K.s_frames ->
                   let consumed =
-                    if List.length rest' < List.length rest then [ t; List.hd rest ]
+                    if List.length rest' < List.length rest then
+                      [ t; List.hd rest ]
                     else [ t ]
                   in
                   let below = match labels with l :: _ -> l | [] -> "top" in
@@ -939,8 +941,8 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
   in
   if pairs then (
     (* --frame-pairs: every one-argument command, one admitted name of each
-       signature class (a name without an argument never pushes a frame, but
-       it is a token of the grammar), and an undefined name *)
+       signature class (a name without an argument never pushes a frame, but it
+       is a token of the grammar), and an undefined name *)
     let c = contract_for `Null `Null in
     let reps = Hashtbl.create 16 in
     Hashtbl.iter
@@ -960,88 +962,88 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
       failwith "frame pairs: lpqundefa is defined";
     print_endline (Yojson.Safe.to_string (frame_pairs c ~names ~depth:4)))
   else
-  try
-    while true do
-      let line = input_line stdin in
-      if String.trim line <> "" then
-        let j = Yojson.Safe.from_string line in
-        let id = member "id" j in
-        let out =
-          try
-            let c =
-              contract_for (member "signatures" j) (member "arg_signatures" j)
-            in
-            (* A document goes through [decide] (membership, then the run); a
-               raw token stream through [run] from [init] directly: by
-               run_sound/run_complete that IS the relation [Runs]. *)
-            let toks, tex, strict, verdict =
-              match member "toks" j with
-              | `List ts ->
-                  let toks = List.map tok_of ts in
-                  let toks =
-                    match member "close" j with
-                    | `Bool true -> close_toks c toks
-                    | _ -> toks
+    try
+      while true do
+        let line = input_line stdin in
+        if String.trim line <> "" then
+          let j = Yojson.Safe.from_string line in
+          let id = member "id" j in
+          let out =
+            try
+              let c =
+                contract_for (member "signatures" j) (member "arg_signatures" j)
+              in
+              (* A document goes through [decide] (membership, then the run); a
+                 raw token stream through [run] from [init] directly: by
+                 run_sound/run_complete that IS the relation [Runs]. *)
+              let toks, tex, strict, verdict =
+                match member "toks" j with
+                | `List ts ->
+                    let toks = List.map tok_of ts in
+                    let toks =
+                      match member "close" j with
+                      | `Bool true -> close_toks c toks
+                      | _ -> toks
+                    in
+                    (* Token-level requests pass the same membership as
+                       documents: [in_strict_toks] (every token admitted, every
+                       script with its argument, every argument well formed) and
+                       the capacity bounds ([bounded], Decide.v). The extracted
+                       [tok_ok], [scripts_ok], [wfa] and [bounded] are the
+                       functions [in_strict_b] is made of. *)
+                    let strict =
+                      List.for_all (fun t -> K.tok_ok c t) toks
+                      && K.scripts_ok toks
+                      && K.wfa c 0 toks
+                      && K.bounded c toks
+                    in
+                    ( toks,
+                      string_of_chars (K.header @ K.render_toks toks),
+                      strict,
+                      if strict then K.verdict_of (K.run c K.init toks)
+                      else K.NotStrict )
+                | _ ->
+                    let d = doc_of (member "doc" j) in
+                    ( K.flatten_doc d,
+                      string_of_chars (K.render d),
+                      K.in_strict_b c d,
+                      K.decide c d )
+              in
+              let ntoks = List.length toks in
+              let rules, branches = rules_used c toks in
+              let base =
+                [
+                  ("id", id);
+                  ("tex", `String tex);
+                  ("ntoks", `Int ntoks);
+                  ("in_strict", `Bool strict);
+                  ("rules", `List (List.map (fun r -> `String r) rules));
+                  ("branches", `List (List.map (fun b -> `String b) branches));
+                ]
+                @ peak_fields c toks
+              in
+              match verdict with
+              | K.ProvenReady -> `Assoc (base @ [ ("verdict", `String "ready") ])
+              | K.ProvenNotReady (r, l) ->
+                  let line =
+                    if l >= ntoks then `Null else `Int (line_of_token toks l)
                   in
-                  (* Token-level requests pass the same membership as documents:
-                     [in_strict_toks] (every token admitted, every script with
-                     its argument, every argument well formed) and the capacity
-                     bounds ([bounded], Decide.v). The extracted [tok_ok],
-                     [scripts_ok], [wfa] and [bounded] are the functions
-                     [in_strict_b] is made of. *)
-                  let strict =
-                    List.for_all (fun t -> K.tok_ok c t) toks
-                    && K.scripts_ok toks
-                    && K.wfa c 0 toks
-                    && K.bounded c toks
-                  in
-                  ( toks,
-                    string_of_chars (K.header @ K.render_toks toks),
-                    strict,
-                    if strict then K.verdict_of (K.run c K.init toks)
-                    else K.NotStrict )
-              | _ ->
-                  let d = doc_of (member "doc" j) in
-                  ( K.flatten_doc d,
-                    string_of_chars (K.render d),
-                    K.in_strict_b c d,
-                    K.decide c d )
-            in
-            let ntoks = List.length toks in
-            let rules, branches = rules_used c toks in
-            let base =
-              [
-                ("id", id);
-                ("tex", `String tex);
-                ("ntoks", `Int ntoks);
-                ("in_strict", `Bool strict);
-                ("rules", `List (List.map (fun r -> `String r) rules));
-                ("branches", `List (List.map (fun b -> `String b) branches));
-              ]
-              @ peak_fields c toks
-            in
-            match verdict with
-            | K.ProvenReady -> `Assoc (base @ [ ("verdict", `String "ready") ])
-            | K.ProvenNotReady (r, l) ->
-                let line =
-                  if l >= ntoks then `Null else `Int (line_of_token toks l)
-                in
-                `Assoc
-                  (base
-                  @ [
-                      ("verdict", `String "not_ready");
-                      ("reason", `String (string_of_reason r));
-                      ("loc", `Int l);
-                      ("loc_line", line);
-                    ]
-                  @ event_fields c toks l)
-            | K.NotStrict ->
-                `Assoc (base @ [ ("verdict", `String "not_strict") ])
-          with Failure m -> `Assoc [ ("id", id); ("error", `String m) ]
-        in
-        print_endline (Yojson.Safe.to_string out)
-    done
-  with End_of_file -> ()
+                  `Assoc
+                    (base
+                    @ [
+                        ("verdict", `String "not_ready");
+                        ("reason", `String (string_of_reason r));
+                        ("loc", `Int l);
+                        ("loc_line", line);
+                      ]
+                    @ event_fields c toks l)
+              | K.NotStrict ->
+                  `Assoc (base @ [ ("verdict", `String "not_strict") ])
+            with Failure m -> `Assoc [ ("id", id); ("error", `String m) ]
+          in
+          print_endline (Yojson.Safe.to_string out)
+      done
+    with End_of_file -> ()
 
 (* ======================================================================== *)
 (* M2 phase 2: the decision on BYTES                                         *)

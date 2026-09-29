@@ -318,9 +318,24 @@ def inertness_violation(name: str, meanings: dict[str, str],
 #     \c_sys_year_int and friends).
 # Only the four primitives are listed by hand; everything that reaches them is
 # derived from the recorded meanings, as R-INERT's closure is. The same screen
-# limit applies: a name of non-letter characters is not followed (§I.4).
+# limit applies: a name of non-letter characters is not followed (§I.4), and a
+# name BUILT at run time (\csname year\endcsname) is not followed either — a
+# known limit, closed only by ADR-013's token-exact closure (instrument I1).
 # ---------------------------------------------------------------------------
-CLOCK_PRIMITIVES = frozenset(("year", "month", "day", "time"))
+# Review of the clock branch (MEASURED 2026-09-29, protocol environment, the
+# same document five times): the four date primitives are not pdfTeX's only
+# per-run inputs. \pdfrandomseed is seeded from the real time on EVERY run
+# (246203157, 1742160, 176765163 on three runs) even with FORCE_SOURCE_DATE=1,
+# so \pdfuniformdeviate/\pdfnormaldeviate differ per run; \pdfelapsedtime is
+# a timer (44510, 61401, 60100); \pdffilemoddate returns a file's real
+# modification time and FORCE_SOURCE_DATE does not pin it. \pdfcreationdate
+# is pinned by SOURCE_DATE_EPOCH=0 and is left out. The rule therefore covers
+# every primitive whose value is not a function of the input bytes.
+CLOCK_PRIMITIVES = frozenset((
+    "year", "month", "day", "time",
+    "pdfrandomseed", "pdfsetrandomseed", "pdfuniformdeviate",
+    "pdfnormaldeviate", "pdfelapsedtime", "pdfresettimer", "pdffilemoddate",
+))
 
 
 def clock_violation(name: str, meanings: dict[str, str], primitives: set[str],
@@ -329,7 +344,7 @@ def clock_violation(name: str, meanings: dict[str, str], primitives: set[str],
     Raises KeyError when the recorded closure of meanings is incomplete."""
     p = primitive_of(meanings[name], primitives)
     if p in CLOCK_PRIMITIVES:
-        return f"it is the clock primitive \\{p}"
+        return f"it is the run-dependent primitive \\{p}"
     if name in date_names:
         return "it is a date-dependent name of the kernel file"
     reached, missing = closure(name, meanings)
@@ -341,7 +356,7 @@ def clock_violation(name: str, meanings: dict[str, str], primitives: set[str],
         for t in body_tokens(meanings[x]) or ():
             q = primitive_of(meanings.get(t), primitives)
             if q in CLOCK_PRIMITIVES:
-                return f"expansion reaches the clock primitive \\{q}{via}"
+                return f"expansion reaches the run-dependent primitive \\{q}{via}"
         m = _MACRO.match(meanings[x])
         for d, rx in zip(date_names, dated):
             if m and rx.search(m.group(3)):

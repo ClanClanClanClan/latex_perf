@@ -48,7 +48,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _oracle import (  # noqa: E402
-    IMAGE as ORACLE_IMAGE, OracleError, get_oracle, job_output)
+    IMAGE as ORACLE_IMAGE, OracleError, first_error_block, get_oracle, job_output)
 
 PIN = "pdfTeX 3.141592653-2.6-1.40.29"
 ORACLE = {
@@ -83,13 +83,28 @@ def same_oracle(recorded: dict | None) -> bool:
     return (recorded.get("image") == ORACLE_IMAGE
             and PIN in str(recorded.get("version", "")))
 
-# A missing converted-EPS or graphics file is a property of how the paper was
-# BUILT (arXiv ran epstopdf via shell-escape), not of the document's validity.
-# Scoring it FAILS would invent false-READYs out of infrastructure.
-INFRA = re.compile(
-    r"-eps-converted-to\.pdf' not found"
-    r"|Package pdftex\.def Error: File .* not found"
-    r"|epstopdf")
+# NO CELL IS DECIDED FROM ERROR TEXT (C-99, OPEN-118 review round 3 (c)).
+# Until 2026-09-30 a failing row whose first `!` line matched an "infra"
+# pattern (a missing -eps-converted-to.pdf, a pdftex.def "File ... not found",
+# "epstopdf") was scored `ungraded-infra` and left the metric. That text is
+# the DOCUMENT's to write: MEASURED in the pinned image, a document that
+# `\message`s a line "! Package pdftex.def Error: File `x' not found." and
+# then fails genuinely has that line as its log's first `!` line, so a
+# FALSE-READY could hide itself as ungraded; and a document can raise the same
+# message for real with \PackageError, so no reader of the text can tell
+# infrastructure from the document. The class was written for the HOST
+# oracle (no shell-escape, so arXiv's epstopdf conversions were missing); the
+# pinned-image oracle runs them (restricted \write18, C-93), and no row
+# of the three recorded samples (600 rows) was `ungraded-infra` when it went. A cell is
+# now a function of (pdflatex rc, PDF verdict, CLI rc) alone: cell_of. The
+# first-error text is a DIAGNOSTIC (recorded, printed, never decides).
+
+
+def cell_of(compiles: bool, ready: bool) -> str:
+    """The four graded cells, from the oracle predicate and the CLI verdict."""
+    return ("true-READY" if (ready and compiles) else
+            "FALSE-READY" if (ready and not compiles) else
+            "false-NOT-READY" if compiles else "true-NOT-READY")
 
 
 REASON_TOKEN = re.compile(r"\b(T\d|[A-Z]{2,8}-\d{3})\b")
@@ -323,42 +338,19 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
         out["pdflatex_passes"] = run.passes
         out["pdflatex_pdf"] = run.pdf
 
-        log = job_output(work, rec["toplevel"], ".log")  # pdfTeX's job name
-        first_full = ""
-        if log.is_file():
-            loglines = log.read_text(errors="replace").split("\n")
-            for i, line in enumerate(loglines):
-                if line.startswith("!"):
-                    # TeX WRAPS log lines at ~79 columns, so an error message is
-                    # routinely split across several. Classifying on one line
-                    # mis-scored 2507.08096v1 as FALSE-READY: its message is
-                    # "! Package pdftex.def Error: File `...-eps-converted-to.pdf'
-                    # not found" and the "not found" the infra pattern needs sits
-                    # on the FOLLOWING line. Take the wrapped block.
-                    # Join with NO separator: TeX's wrap is a hard column break,
-                    # not a word break, so this message arrives as
-                    #   "...-eps-converted-to.pdf' n"  +  "ot found: using draft"
-                    # and a space-join yields "n ot found", which still does not
-                    # match. Concatenation is the exact inverse of the wrap.
-                    first_full = "".join(loglines[i:i + 4])
-                    break
-        # Classify on the FULL line, store a truncated copy. Matching the
-        # truncated string mis-scored 2507.08096v1 as FALSE-READY: its error is
-        # "! Package pdftex.def Error: File `...-eps-converted-to.pdf' not
-        # found", and the "not found" the pattern needs falls past 160 chars.
+        # The first `!` line joined with its wrapped continuation
+        # (_oracle.first_error_block): a DIAGNOSTIC, document-influenceable
+        # (see cell_of). The join is TeX's 79-column hard wrap inverted:
+        # 2507.08096v1's "...-eps-converted-to.pdf' n" + "ot found" (C-45).
+        first_full = first_error_block(job_output(work, rec["toplevel"], ".log"))
         out["first_error"] = first_full[:160]
 
     if out["pdflatex_rc"] == -1 or out["cli_rc"] == -1:
         out["cell"] = "ungraded-timeout"
-    elif out["pdflatex_rc"] != 0 and INFRA.search(first_full):
-        out["cell"] = "ungraded-infra"
     else:
         compiles = row_compiles(out)
-        ready = out["cli_rc"] == 0
         out["pdflatex_verdict"] = "COMPILES" if compiles else "FAILS"
-        out["cell"] = ("true-READY" if (ready and compiles) else
-                       "FALSE-READY" if (ready and not compiles) else
-                       "false-NOT-READY" if compiles else "true-NOT-READY")
+        out["cell"] = cell_of(compiles, out["cli_rc"] == 0)
     return out
 
 
@@ -429,8 +421,8 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
         d["cli_rc"], d["cli_verdict"] = rc, ("READY" if rc == 0 else "NOT-READY")
         d["cli_reasons"] = reasons
         # The ungraded classes are STICKY, but only while they still apply.
-        # `ungraded-infra` is assigned iff pdflatex_rc != 0 AND the first error
-        # matches INFRA; `ungraded-timeout` iff an rc is -1. A re-grade that
+        # `ungraded-timeout` is assigned iff an rc is -1 (`ungraded-infra`,
+        # retired by C-99, was assigned iff pdflatex_rc != 0). A re-grade that
         # makes the document COMPILE (rc 0) therefore invalidates the label,
         # and an unconditional `pass` here made it permanent: OPEN-053 flipped
         # 2507.08096v1 from rc 1 to rc 0 and the row kept `ungraded-infra`,
@@ -439,11 +431,7 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
         if d["cell"].startswith("ungraded") and d.get("pdflatex_rc", -1) != 0:
             pass                                   # still genuinely ungraded
         else:
-            compiles = row_compiles(d)
-            ready = rc == 0
-            d["cell"] = ("true-READY" if (ready and compiles) else
-                         "FALSE-READY" if (ready and not compiles) else
-                         "false-NOT-READY" if compiles else "true-NOT-READY")
+            d["cell"] = cell_of(row_compiles(d), rc == 0)
         if d["cell"] != before:
             changed.append((d["arxiv_id"], before, d["cell"]))
         print(f"  [{i}/{len(res['docs'])}] {d['arxiv_id']:16s} {d['cell']}",
@@ -608,14 +596,8 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
             shutil.copytree(root / d["arxiv_id"], work)
             run = run_to_fixpoint_full(work, d["toplevel"], oracle.tex_env(td),
                                        timeout)
-            first = ""
-            log = job_output(work, d["toplevel"], ".log")  # pdfTeX's job name
-            if log.is_file():
-                ll = log.read_text(errors="replace").split("\n")
-                for i, line in enumerate(ll):
-                    if line.startswith("!"):
-                        first = "".join(ll[i:i + 4])
-                        break
+            # a DIAGNOSTIC (see cell_of): the oracle's one first-error reader
+            first = first_error_block(job_output(work, d["toplevel"], ".log"))
         return run, first
 
     with ThreadPoolExecutor(max_workers=max(1, jobs)) as ex:
@@ -640,15 +622,11 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
         cell_before = d["cell"]
         if rc == -1:
             d["cell"] = "ungraded-timeout"
-        elif rc != 0 and INFRA.search(first_full):
-            d["cell"] = "ungraded-infra"
         else:
-            compiles, ready = row_compiles(d), d["cli_rc"] == 0
+            compiles = row_compiles(d)
             v = "COMPILES" if compiles else "FAILS"
             d["pdflatex_verdict"] = v.lower() if lower else v
-            d["cell"] = ("true-READY" if (ready and compiles) else
-                         "FALSE-READY" if (ready and not compiles) else
-                         "false-NOT-READY" if compiles else "true-NOT-READY")
+            d["cell"] = cell_of(compiles, d["cli_rc"] == 0)
         after = {"cell": d["cell"], "pdflatex_rc": rc,
                  "pdflatex_verdict": d.get("pdflatex_verdict"),
                  "pdflatex_pdf": run.pdf, "first_error": d["first_error"]}

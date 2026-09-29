@@ -436,23 +436,13 @@ let mode_at c toks =
   in
   if K.in_math (walk K.init toks).K.s_frames then "math" else "text"
 
-let () =
-  let kernel = ref "" and contract = ref "" and sigs = ref None in
-  Arg.parse
-    [
-      ("--kernel", Arg.Set_string kernel, "kernel names file");
-      ("--contract", Arg.Set_string contract, "configuration contract");
-      ("--signatures", Arg.String (fun s -> sigs := Some s), "signatures file");
-    ]
-    (fun _ -> ())
-    "strict_decide.exe --kernel K --contract C [--signatures S]";
-  if !kernel = "" || !contract = "" then
-    die "strict_decide: need --kernel and --contract";
-  let members = load_members !kernel !contract in
+(* The tree mode of phase 1: JSON lines of trees or token streams. *)
+let tree_mode ~kernel ~contract ~sigs =
+  let members = load_members kernel contract in
   let sg =
-    load_signatures !sigs members
-      ~kernel_key:(content_key !kernel "meanings_sha256")
-      ~contract_key:(content_key !contract "config_key")
+    load_signatures sigs members
+      ~kernel_key:(content_key kernel "meanings_sha256")
+      ~contract_key:(content_key contract "config_key")
   in
   (* A request may carry "signatures": {name: {text, math}}, a HYPOTHESIS for
      this request only (gen_strict_signatures.py asks what the kernel predicts
@@ -566,3 +556,603 @@ let () =
         print_endline (Yojson.Safe.to_string out)
     done
   with End_of_file -> ()
+
+(* ======================================================================== *)
+(* M2 phase 2: the decision on BYTES                                         *)
+(* ======================================================================== *)
+
+(* [Strict_bytes_extracted.decide_bytes] is the extracted Coq decider on bytes
+   (proofs/Strict/DecideBytes.v, decide_bytes_exact); [lex] and [parse] its
+   reader and parser (Lexer.v lex_exact, Front.v parse_exact). What follows is
+   trusted harness code (design §G.2 T5 and T9): the loader of the lexical
+   contract, the conversion of the extracted module's types to the phase-1
+   module's (the same Coq inductives, extracted twice) for COVERAGE REPORTING,
+   and the labelling of the reader's rules, also for coverage reporting only. *)
+
+module B = Strict_bytes_extracted
+
+let b_reason = function
+  | K.E0 -> B.E0
+  | K.E1 -> B.E1
+  | K.E3 -> B.E3
+  | K.E4 -> B.E4
+  | K.E5 -> B.E5
+  | K.E6 -> B.E6
+
+let k_reason = function
+  | B.E0 -> K.E0
+  | B.E1 -> K.E1
+  | B.E3 -> K.E3
+  | B.E4 -> K.E4
+  | B.E5 -> K.E5
+  | B.E6 -> K.E6
+
+let b_sig (s : K.signature) : B.signature =
+  {
+    B.sig_text =
+      (match s.K.sig_text with
+      | K.TxMaterial -> B.TxMaterial
+      | K.TxNoop -> B.TxNoop
+      | K.TxFatal r -> B.TxFatal (b_reason r));
+    B.sig_math =
+      (match s.K.sig_math with
+      | K.MxNoad -> B.MxNoad
+      | K.MxNoop -> B.MxNoop
+      | K.MxFatal r -> B.MxFatal (b_reason r));
+  }
+
+let k_tok = function
+  | B.TChar c -> K.TChar c
+  | B.TSpace -> K.TSpace
+  | B.TPar e -> K.TPar e
+  | B.TOpen -> K.TOpen
+  | B.TClose -> K.TClose
+  | B.TDollar -> K.TDollar
+  | B.TMOpenInline -> K.TMOpenInline
+  | B.TMCloseInline -> K.TMCloseInline
+  | B.TMOpenDisplay -> K.TMOpenDisplay
+  | B.TMCloseDisplay -> K.TMCloseDisplay
+  | B.TScript u -> K.TScript u
+  | B.TCs n -> K.TCs n
+  | B.TEnd -> K.TEnd
+
+let cat_of_int = function
+  | 0 -> B.CEscape
+  | 1 -> B.CBgroup
+  | 2 -> B.CEgroup
+  | 3 -> B.CMath
+  | 4 -> B.CAlign
+  | 5 -> B.CEol
+  | 6 -> B.CParam
+  | 7 -> B.CSup
+  | 8 -> B.CSub
+  | 9 -> B.CIgnored
+  | 10 -> B.CSpacer
+  | 11 -> B.CLetter
+  | 12 -> B.COther
+  | 13 -> B.CActive
+  | 14 -> B.CComment
+  | 15 -> B.CInvalid
+  | n -> die "strict_decide: catcode %d out of range" n
+
+let cat_name = function
+  | B.CEscape -> "escape"
+  | B.CBgroup -> "bgroup"
+  | B.CEgroup -> "egroup"
+  | B.CMath -> "math"
+  | B.CAlign -> "align"
+  | B.CEol -> "eol"
+  | B.CParam -> "param"
+  | B.CSup -> "sup"
+  | B.CSub -> "sub"
+  | B.CIgnored -> "ignored"
+  | B.CSpacer -> "spacer"
+  | B.CLetter -> "letter"
+  | B.COther -> "other"
+  | B.CActive -> "active"
+  | B.CComment -> "comment"
+  | B.CInvalid -> "invalid"
+
+(* The lexical contract (corpora/contracts/strict/article-s0-lexical.json,
+   written by scripts/tools/gen_strict_lexical.py from the pinned image). *)
+let load_lexcon path ~kernel_key ~contract_key =
+  let j = load_json path in
+  let src = member "source" j in
+  (match
+     (member "kernel_meanings_sha256" src, member "contract_config_key" src)
+   with
+  | `String k, `String c when k = kernel_key && c = contract_key -> ()
+  | _ ->
+      die
+        "strict_decide: %s was generated from other kernel/contract files than \
+         the ones given"
+        path);
+  let cats =
+    match member "catcodes" j with
+    | `List l when List.length l = 256 ->
+        Array.of_list
+          (List.map
+             (function
+               | `Int n -> cat_of_int n
+               | _ -> die "strict_decide: bad catcode in %s" path)
+             l)
+    | _ -> die "strict_decide: %s has no 256 catcodes" path
+  in
+  let endline =
+    match member "endlinechar" j with
+    | `Int n when n >= 0 && n <= 255 -> Some (Char.chr n)
+    | `Int _ -> None
+    | _ -> die "strict_decide: %s has no endlinechar" path
+  in
+  let st = member "structural" j in
+  let str k =
+    match member k st with
+    | `String s when s <> "" -> s
+    | _ -> die "strict_decide: %s: structural.%s missing" path k
+  in
+  let delim k =
+    match member k (member "math_delimiters" st) with
+    | `String s when String.length s = 1 -> s.[0]
+    | _ -> die "strict_decide: %s: math_delimiters.%s missing" path k
+  in
+  {
+    B.lx_cat = (fun c -> cats.(Char.code c));
+    B.lx_endline = endline;
+    B.lx_par = chars_of_string (str "par");
+    B.lx_end = chars_of_string (str "end");
+    B.lx_begin = chars_of_string (str "begin");
+    B.lx_docclass = chars_of_string (str "documentclass");
+    B.lx_class = chars_of_string (str "class");
+    B.lx_docenv = chars_of_string (str "document_env");
+    B.lx_mopen_inline = delim "open_inline";
+    B.lx_mclose_inline = delim "close_inline";
+    B.lx_mopen_display = delim "open_display";
+    B.lx_mclose_display = delim "close_display";
+  }
+
+let why_name = function
+  | B.WTooBig -> "file too large"
+  | B.WLexBad B.BadCat -> "character of a category outside the fragment"
+  | B.WLexBad B.BadHatHat -> "^^ notation"
+  | B.WLexBad B.BadNullCs -> "escape character at the end of a line"
+  | B.WLexBad B.BadLongLine -> "line too long"
+  | B.WLexBad B.BadFirstLine ->
+      "first line starts with %& (TeX Live loads the format it names)"
+  | B.WPrologue ->
+      "front matter is not \\documentclass{article} .. \\begin{document}"
+  | B.WToken -> "token outside the fragment"
+  | B.WNotAdmitted -> "character or name not admitted"
+  | B.WScriptArg -> "script without a character or { argument"
+  | B.WBound -> "capacity bound"
+  | B.WEndsDollar -> "file ends with $"
+
+let why_code = function
+  | B.WTooBig -> "too_big"
+  | B.WLexBad B.BadCat -> "bad_cat"
+  | B.WLexBad B.BadHatHat -> "hathat"
+  | B.WLexBad B.BadNullCs -> "null_cs"
+  | B.WLexBad B.BadLongLine -> "long_line"
+  | B.WLexBad B.BadFirstLine -> "first_line"
+  | B.WPrologue -> "prologue"
+  | B.WToken -> "token"
+  | B.WNotAdmitted -> "not_admitted"
+  | B.WScriptArg -> "script_arg"
+  | B.WBound -> "bound"
+  | B.WEndsDollar -> "ends_dollar"
+
+(* ---- coverage labels of the reader (REPORTING ONLY) ---------------------- *)
+
+(* The constructors of Lexer.LineLex / LinesLex / Lines each byte went through,
+   and the BRANCH cells "<state>|<class>" of the line reader (class: the
+   category of the byte, with the escape character refined by what follows it
+   and ^ by ^^). This mirrors [B.lexl]; a mislabel can only misstate coverage,
+   never a verdict. Nothing at an offset beyond [cut] (the closing brace of
+   \end{document}, where TeX stops reading) is labelled. *)
+let reader_labels (lx : B.lexcon) (b : char list) (cut : int) =
+  let rules = ref [] and brs = ref [] in
+  let add r = if not (List.mem r !rules) then rules := r :: !rules in
+  let addb x = if not (List.mem x !brs) then brs := x :: !brs in
+  let st_name = function B.SN -> "N" | B.SM -> "M" | B.SS -> "S" in
+  let bytes = Array.of_list b in
+  let n = Array.length bytes in
+  let lines = B.split_lines b in
+  let rec go st buf =
+    match buf with
+    | [] -> add "LL_end"
+    | (_, o) :: _ when o > cut -> ()
+    | (c, _) :: rest -> (
+        let cell cls = addb (st_name st ^ "|" ^ cls) in
+        match lx.B.lx_cat c with
+        | B.CEol ->
+            cell "eol";
+            add
+              (match st with
+              | B.SN -> "LL_eol_new"
+              | B.SM -> "LL_eol_mid"
+              | B.SS -> "LL_eol_skip")
+        | B.CSpacer ->
+            cell "spacer";
+            if st = B.SM then (
+              add "LL_space_emit";
+              go B.SS rest)
+            else (
+              add "LL_space_skip";
+              go st rest)
+        | B.CComment ->
+            cell "comment";
+            add "LL_comment"
+        | (B.CLetter | B.COther) as k ->
+            cell (cat_name k);
+            add "LL_char";
+            go B.SM rest
+        | (B.CBgroup | B.CEgroup | B.CMath | B.CSub) as k ->
+            cell (cat_name k);
+            add
+              (match k with
+              | B.CBgroup -> "LL_bgroup"
+              | B.CEgroup -> "LL_egroup"
+              | B.CMath -> "LL_math"
+              | _ -> "LL_sub");
+            go B.SM rest
+        | B.CSup ->
+            if B.hathat lx c rest then (
+              cell "sup.hathat";
+              add "LL_hathat")
+            else (
+              cell "sup";
+              add "LL_sup";
+              go B.SM rest)
+        | B.CEscape -> (
+            match rest with
+            | [] ->
+                cell "esc.null";
+                add "LL_nullcs"
+            | (d, _) :: rest' ->
+                if lx.B.lx_cat d = B.CLetter then (
+                  let _, after = B.split_letters lx rest in
+                  match after with
+                  | (x, _) :: after' when B.hathat lx x after' ->
+                      cell "esc.word.hathat";
+                      add "LL_word_hathat"
+                  | _ ->
+                      cell "esc.word";
+                      add "LL_word";
+                      go B.SS after)
+                else if B.hathat lx d rest' then (
+                  cell "esc.sym.hathat";
+                  add "LL_sym_hathat")
+                else (
+                  cell "esc.sym";
+                  add "LL_sym";
+                  go (B.sym_state lx d) rest'))
+        | k ->
+            cell (cat_name k);
+            add "LL_bad")
+  in
+  let rec walk = function
+    | [] -> ()
+    | (l, eo) :: r ->
+        let start = match l with (_, o) :: _ -> o | [] -> eo in
+        if start <= cut then (
+          if eo >= n then add "Lines_last"
+          else if bytes.(eo) = '\n' then add "Lines_lf"
+          else if eo + 1 < n && bytes.(eo + 1) = '\n' then add "Lines_crlf"
+          else add "Lines_cr";
+          if List.length l > B.max_line_bytes then add "LX_long"
+          else (
+            add "LX_line";
+            go B.SN (B.buffer lx l eo));
+          walk r)
+  in
+  add (if B.first_directive b then "FL_directive" else "FL_none");
+  walk lines;
+  (* [Lines] ends with [Lines_nil] iff the file is empty or ends with a line
+     terminator, and [LinesLex] with [LX_nil]; both only when every line was
+     read. *)
+  if cut >= n then (
+    add "LX_nil";
+    if n = 0 || bytes.(n - 1) = '\n' || bytes.(n - 1) = '\r' then
+      add "Lines_nil");
+  (List.rev !rules, List.rev !brs)
+
+(* Front.Prologue / Front.Body labels, and the offset of the closing brace of
+   \end{document} (where TeX stops reading), or max_int. *)
+let front_labels (lx : B.lexcon) (ts : B.lt list) =
+  let rules = ref [] and brs = ref [] in
+  let add r = if not (List.mem r !rules) then rules := r :: !rules in
+  let addb x = if not (List.mem x !brs) then brs := x :: !brs in
+  let filler_label (t : B.lt) =
+    match t.B.lt_tok with
+    | B.RSpace -> "space"
+    | B.RPar -> "par_line"
+    | B.RWord _ -> "par_word"
+    | _ -> "?"
+  in
+  let rec fill_labels where = function
+    | t :: r when B.fillerb lx t ->
+        addb ("P|" ^ where ^ "|" ^ filler_label t);
+        fill_labels where r
+    | _ -> ()
+  in
+  let cut = ref max_int in
+  (match B.prologue lx ts with
+  | None -> ()
+  | Some rest ->
+      add "P_prologue";
+      fill_labels "pre" ts;
+      (match B.braced lx.B.lx_docclass lx.B.lx_class (B.skip_fill lx ts) with
+      | Some (_, r) -> fill_labels "mid" r
+      | None -> ());
+      let rec body s = function
+        | [] -> add "B_eof"
+        | (t : B.lt) :: r -> (
+            match t.B.lt_tok with
+            | B.RWord nm ->
+                if nm = lx.B.lx_par then (
+                  add "B_par_word";
+                  body false r)
+                else if nm = lx.B.lx_end then
+                  match B.braced lx.B.lx_end lx.B.lx_docenv (t :: r) with
+                  | Some (cb, _) ->
+                      add "B_end";
+                      addb
+                        (if cb.B.lt_line <> t.B.lt_line then "B_end|split"
+                         else "B_end|one_line");
+                      cut := cb.B.lt_off
+                  | None -> ()
+                else (
+                  add "B_word";
+                  body false r)
+            | B.RSpace ->
+                add (if s then "B_space_script" else "B_space");
+                body s r
+            | B.RPar ->
+                add "B_par_line";
+                body false r
+            | B.RSym _ ->
+                add "B_sym";
+                body false r
+            | B.RChar _ ->
+                add "B_char";
+                body false r
+            | B.RBgroup ->
+                add "B_open";
+                body false r
+            | B.REgroup ->
+                add "B_close";
+                body false r
+            | B.RMath ->
+                add "B_math";
+                body false r
+            | B.RSup | B.RSub ->
+                add "B_script";
+                body true r
+            | B.RBad _ -> ())
+      in
+      body false rest);
+  (List.rev !rules, List.rev !brs, !cut)
+
+let hex_decode s =
+  let n = String.length s / 2 in
+  List.init n (fun i ->
+      Char.chr (int_of_string ("0x" ^ String.sub s (2 * i) 2)))
+
+let read_file path =
+  let ic = open_in_bin path in
+  let n = in_channel_length ic in
+  let s = really_input_string ic n in
+  close_in ic;
+  s
+
+(* The contracts of the bytes decision, from the committed files. *)
+let bytes_contract ~kernel ~contract ~sigs ~lexical =
+  let members = load_members kernel contract in
+  let kernel_key = content_key kernel "meanings_sha256" in
+  let contract_key = content_key contract "config_key" in
+  let sg = load_signatures sigs members ~kernel_key ~contract_key in
+  let lx = load_lexcon lexical ~kernel_key ~contract_key in
+  let kc =
+    {
+      K.c_defined = (fun n -> Hashtbl.mem members (string_of_chars n));
+      K.c_sig = (fun n -> Hashtbl.find_opt sg (string_of_chars n));
+    }
+  in
+  let bc =
+    {
+      B.bc_kernel =
+        {
+          B.c_defined = (fun n -> Hashtbl.mem members (string_of_chars n));
+          B.c_sig =
+            (fun n ->
+              Option.map b_sig (Hashtbl.find_opt sg (string_of_chars n)));
+        };
+      B.bc_lex = lx;
+    }
+  in
+  (kc, bc)
+
+(* One file through the extracted decider; the JSON record of the evidence. *)
+let decide_bytes_json kc (bc : B.bcontract) (b : char list) =
+  let lx = bc.B.bc_lex in
+  let verdict = B.decide_bytes bc b in
+  let explain = B.explain bc b in
+  let raw = B.lex lx b in
+  let frules, fbranches, cut = front_labels lx raw in
+  let cut =
+    match (verdict, explain) with
+    | B.NotStrict, Some (off, _) when cut = max_int -> off
+    | _ -> cut
+  in
+  let lrules, lbranches = reader_labels lx b cut in
+  let parsed = B.parse lx b in
+  let toks = match parsed with Some ks -> B.toks_of ks | None -> [] in
+  let ktoks = List.map k_tok toks in
+  let rules, branches =
+    match parsed with Some _ -> rules_used kc ktoks | None -> ([], [])
+  in
+  let strs l = `List (List.map (fun r -> `String r) l) in
+  let base =
+    [
+      ("ntoks", `Int (List.length toks));
+      ("nbytes", `Int (List.length b));
+      ("in_strict", `Bool (B.in_strict_bytes_b bc b));
+      ("rules", strs rules);
+      ("branches", strs branches);
+      ("lex_rules", strs (lrules @ frules));
+      ("lex_branches", strs (lbranches @ fbranches));
+      ( "explain",
+        match explain with
+        | Some (off, w) -> `List [ `Int off; `String (why_code w) ]
+        | None -> `Null );
+    ]
+  in
+  match verdict with
+  | B.ProvenReady -> `Assoc (base @ [ ("verdict", `String "ready") ])
+  | B.ProvenNotReady (r, line) ->
+      let l =
+        match B.run bc.B.bc_kernel B.init toks with
+        | Some (B.Fatal (_, l)) -> l
+        | _ -> -1
+      in
+      let tok =
+        match List.nth_opt ktoks l with
+        | Some t -> `String (tok_name t)
+        | None -> `String "eof"
+      in
+      `Assoc
+        (base
+        @ [
+            ("verdict", `String "not_ready");
+            ("reason", `String (string_of_reason (k_reason r)));
+            ("loc", `Int l);
+            ("loc_tok", tok);
+            (* E0 (no pages of output) is not an error pdfTeX reports: it prints
+               no l.N, so neither does this record (OPEN-121 review, LOW-1); the
+               proved ReportedLine is still [line]. *)
+            ("loc_line", if line = 0 || r = B.E0 then `Null else `Int line);
+            ("loc_mode", `String (mode_at kc ktoks));
+          ])
+  | B.NotStrict -> `Assoc (base @ [ ("verdict", `String "not_strict") ])
+
+let bytes_mode ~kernel ~contract ~sigs ~lexical =
+  let kc, bc = bytes_contract ~kernel ~contract ~sigs ~lexical in
+  try
+    while true do
+      let line = input_line stdin in
+      if String.trim line <> "" then
+        let j = Yojson.Safe.from_string line in
+        let id = member "id" j in
+        let out =
+          try
+            match member "hex" j with
+            | `String h -> (
+                match decide_bytes_json kc bc (hex_decode h) with
+                | `Assoc l -> `Assoc (("id", id) :: l)
+                | x -> x)
+            | _ -> failwith "request without hex"
+          with Failure m -> `Assoc [ ("id", id); ("error", `String m) ]
+        in
+        print_endline (Yojson.Safe.to_string out)
+    done
+  with End_of_file -> ()
+
+(* strict_decide.exe FILE.tex: the verdict of the extracted decider on the
+   file's bytes, on one line. Exit 0 on a verdict (either way), 3 outside the
+   fragment, 2 on a usage or contract error. The verdict word is a fixed token
+   of this printer; the file name follows it, quoted. *)
+let file_mode ~kernel ~contract ~sigs ~lexical path =
+  let _, bc = bytes_contract ~kernel ~contract ~sigs ~lexical in
+  let s = try read_file path with Sys_error m -> die "strict_decide: %s" m in
+  let b = List.init (String.length s) (String.get s) in
+  match B.decide_bytes bc b with
+  | B.ProvenReady ->
+      Printf.printf "PROVEN-READY %S\n" path;
+      exit 0
+  | B.ProvenNotReady (B.E0, _) ->
+      (* pdfTeX reports no l.N for E0 (rc 0, "No pages of output."): printing
+         the proved ReportedLine here would state a line pdfTeX never gives
+         (OPEN-121 review, LOW-1). *)
+      Printf.printf "PROVEN-NOT-READY %S E0 (no pages of output; no l.N)\n" path;
+      exit 0
+  | B.ProvenNotReady (r, line) ->
+      let r = string_of_reason (k_reason r) in
+      if line = 0 then
+        Printf.printf "PROVEN-NOT-READY %S %s at the end of the file (no l.N)\n"
+          path r
+      else Printf.printf "PROVEN-NOT-READY %S %s l.%d\n" path r line;
+      exit 0
+  | B.NotStrict ->
+      (match B.explain bc b with
+      | Some (off, w) ->
+          Printf.printf "NOT-IN-FRAGMENT %S byte %d: %s\n" path off (why_name w)
+      | None -> Printf.printf "NOT-IN-FRAGMENT %S\n" path);
+      exit 3
+
+(* The committed contract files, found from the current directory upwards (file
+   mode's defaults). *)
+let find_repo () =
+  let rec up d =
+    if Sys.file_exists (Filename.concat d "corpora/contracts/article.json") then
+      Some d
+    else
+      let p = Filename.dirname d in
+      if p = d then None else up p
+  in
+  up (Sys.getcwd ())
+
+let () =
+  let kernel = ref "" and contract = ref "" and sigs = ref None in
+  let lexical = ref "" and bytes = ref false and file = ref None in
+  Arg.parse
+    [
+      ("--kernel", Arg.Set_string kernel, "kernel names file");
+      ("--contract", Arg.Set_string contract, "configuration contract");
+      ("--signatures", Arg.String (fun s -> sigs := Some s), "signatures file");
+      ("--lexical", Arg.Set_string lexical, "lexical contract (bytes)");
+      ("--bytes", Arg.Set bytes, "JSON lines of files as hex (bytes mode)");
+    ]
+    (fun f -> file := Some f)
+    "strict_decide.exe --kernel K --contract C [--signatures S]   (trees)\n\
+     strict_decide.exe --bytes --kernel K --contract C --signatures S \
+     --lexical X\n\
+     strict_decide.exe FILE.tex   (contracts from the repository)";
+  match !file with
+  | Some path ->
+      let repo =
+        match find_repo () with
+        | Some r -> r
+        | None ->
+            die
+              "strict_decide: run it inside the repository (contracts not \
+               found)"
+      in
+      let p r = Filename.concat repo r in
+      let contract_path =
+        if !contract = "" then p "corpora/contracts/article.json" else !contract
+      in
+      let kernel_path =
+        if !kernel <> "" then !kernel
+        else
+          match member "file" (member "kernel" (load_json contract_path)) with
+          | `String f -> p f
+          | _ -> die "strict_decide: the contract names no kernel file"
+      in
+      let sigs =
+        match !sigs with
+        | Some s -> Some s
+        | None -> Some (p "corpora/contracts/strict/article-s0-signatures.json")
+      in
+      let lexical =
+        if !lexical = "" then
+          p "corpora/contracts/strict/article-s0-lexical.json"
+        else !lexical
+      in
+      file_mode ~kernel:kernel_path ~contract:contract_path ~sigs ~lexical path
+  | None ->
+      if !kernel = "" || !contract = "" then
+        die "strict_decide: need --kernel and --contract";
+      if !bytes then (
+        if !lexical = "" then die "strict_decide: --bytes needs --lexical";
+        bytes_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs
+          ~lexical:!lexical)
+      else tree_mode ~kernel:!kernel ~contract:!contract ~sigs:!sigs

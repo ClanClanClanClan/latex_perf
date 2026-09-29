@@ -259,6 +259,12 @@ case "${plan[$i]}" in
           echo "!pdfTeX error: pdflatex (file t.pdf): fwrite() failed"; exit 1 ;;
   openout) echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"
           echo "! I can't write on file \`../x.tex'."; exit 1 ;;
+  batchforge)    # C-99: a forged terminal report, pdfTeX's real one silenced
+    echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"
+    j="${!#}"; j="${j%.*}"; echo x > "$j.pdf"
+    echo "Output written on $j.pdf (1 page, 9 bytes)."; echo "Transcript written on $j.log."
+    printf 'This is pdfTeX\nNo pages of output.\nPDF statistics:\n 3 objects\n' > "$j.log"
+    exit 0 ;;
   okpdf|forge)   # okpdf: pdfTeX ships a page; forge: the document wrote t.pdf
     echo "This is pdfTeX, Version 3.141592653-2.6-1.40.29"
     j="${!#}"; j="${j%.*}"; echo x > "$j.pdf"
@@ -459,7 +465,9 @@ class Checker:
         self.workroot = (td / "work").resolve()
         self.workroot.mkdir()
         # The file arguments the fakes run must exist (check_file_argument, M1).
-        for f in ("t.tex", "t.ltx", "a.b.tex", "x.tex"):
+        # (t.TEX and t.Tex too: CI's file system is case-SENSITIVE, a Mac's
+        # is not, so on a Mac they are t.tex itself.)
+        for f in ("t.tex", "t.ltx", "a.b.tex", "x.tex", "t.TEX", "t.Tex"):
             (self.workroot / f).write_text("\\relax\n")
         os.environ["DEAD_MSG"] = DEAD_MSG
         os.environ["FAKE_COUNT"] = str(self.count)
@@ -798,9 +806,19 @@ class Checker:
                 self.expect("-", True)
             except _oracle.OracleError as e:
                 self.expect(f"check_file_argument refused {arg!r}", False, str(e))
+        # ... and on the RUN path (check_engine_argv), not only as a callable
+        for arg in ("a%b.tex", "u.ltx", "missing.tex", "lnk.tex"):
+            o = self.oracle("okpdf")
+            try:
+                r = o.run_pdflatex(wr, ["-interaction=nonstopmode", arg], self.tv(), 60)
+                self.expect(f"run_pdflatex accepted file argument {arg!r} (M1)", False,
+                            repr(r)[:100])
+            except _oracle.OracleError:
+                self.expect("-", True)
         for f in ("u.ltx", "u.ltx.tex", "real.tex", "lnk.tex"):
             (wr / f).unlink(missing_ok=True)
         (wr / "dir.tex").rmdir()
+        self.supervisor_checks()
         # (5) no engine run inherits the grader's stdin: the container's docker
         # client and the native supervisor both get /dev/null
         rfd, wfd = os.pipe()
@@ -838,6 +856,66 @@ class Checker:
             os.dup2(saved0, 0)
             os.close(saved0)
             _oracle._ORACLE = None
+
+    def supervisor_checks(self) -> None:
+        """THE REAL SUPERVISOR (_SUPERVISOR_SRC), not the fake python3 the
+        other checks use: on Linux (CI; the pinned image) it must count the
+        evidence files' close-writes -- one is pdfTeX's, a second (directly
+        or through a symlink) is the document's -- and give its child
+        /dev/null; where inotify is missing (macOS) it must report that, and
+        check_evidence must refuse the run (fail closed)."""
+        d = self.td / "sup"
+        d.mkdir(exist_ok=True)
+        args = ["-interaction=nonstopmode", "t.tex"]
+
+        def run(script: str):
+            for f in d.iterdir():
+                f.unlink()
+            eng = d / "eng.sh"
+            eng.write_text("#!/bin/sh\n" + script)
+            eng.chmod(0o755)
+            p = subprocess.run([sys.executable, "-I", "-c", _oracle._SUPERVISOR_SRC,
+                                "NONCE", _oracle.evidence_names(args), str(eng)],
+                               cwd=d, capture_output=True, input=b"SECRET-STDIN\n",
+                               timeout=60)
+            try:
+                _oracle.check_evidence(p.stderr, "NONCE", args, "supervisor test")
+                return "graded"
+            except _oracle.OracleError as e:
+                return f"refused: {str(e)[:120]}"
+        if sys.platform.startswith("linux"):
+            for label, script, want in (
+                    ("pdfTeX writes its log once", "echo x > t.log\n", "graded"),
+                    ("the document writes the log a second time",
+                     "echo x > t.log\necho y >> t.log\n", "refused"),
+                    ("the document writes the PDF pdfTeX also writes",
+                     "echo x > t.pdf\necho y > t.pdf\necho z > t.log\n", "refused"),
+                    ("the document writes the log through a symlink",
+                     "echo x > t.log\nln -s t.log evil.txt\necho y > evil.txt\n",
+                     "refused"),
+                    # pdfTeX holds its log open (fd 3) while the document
+                    # opens it twice writing nothing: the kernel MERGES the
+                    # document's two adjacent close-writes, but pdfTeX's own
+                    # (after its final report, an IN_MODIFY) stays apart.
+                    ("the document opens the held-open log twice, writing nothing",
+                     "exec 3>t.log\necho x >&3\n: >> t.log\n: >> t.log\n"
+                     "echo z >&3\nexec 3>&-\n", "refused"),
+                    ("pdfTeX alone, holding its log open", "exec 3>t.log\n"
+                     "echo x >&3\necho z >&3\nexec 3>&-\n", "graded"),
+                    ("the document writes other files freely",
+                     "echo x > t.log\necho a > t.aux\necho b > t.aux\n", "graded")):
+                got = run(script)
+                self.expect(f"the real supervisor: {label}: got {got!r}, want {want!r} "
+                            f"(C-99)", got.startswith(want))
+            run("cat > stdin.got\necho x > t.log\n")
+            got = (d / "stdin.got").read_bytes() if (d / "stdin.got").exists() else None
+            self.expect("the real supervisor gave the engine the grader's stdin, not "
+                        "/dev/null", got == b"", repr(got))
+        else:
+            got = run("echo x > t.log\n")
+            self.expect(f"the real supervisor without inotify ({sys.platform}) was "
+                        f"not refused: {got!r} (fail closed, C-99)",
+                        got.startswith("refused"))
 
     # ------------------------------------------------ the contract generator
     def generator_client(self) -> None:
@@ -1575,6 +1653,11 @@ class Checker:
             self.expect(f"false_ready_oracle.sh run_pdflatex graded plan '{plan}' "
                         f"as '{got}', expected '{want}' (C-97: a .pdf pdfTeX did not "
                         f"report writing is not a PDF)", got == want)
+        got = (wd / "t.pdf").unlink(missing_ok=True) or run("batchforge")
+        self.expect(f"false_ready_oracle.sh run_pdflatex graded plan 'batchforge' "
+                    f"as '{got}' (a forged terminal report against the log's "
+                    f"'No pages of output.' is not a grade, C-99)",
+                    got.startswith("ENVFAIL"))
         for f in ("t.pdf", "t.log"):
             (wd / f).unlink(missing_ok=True)
         got = run("ok", LP_ORACLE_MIN_FREE_MB=str(10 ** 12))

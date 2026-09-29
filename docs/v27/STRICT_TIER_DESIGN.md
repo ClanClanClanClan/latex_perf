@@ -901,7 +901,12 @@ groups; a formula of 1,000,000 characters, and 100,000 occurrences of
 READY on such documents. The margins are attested per name (families R-NEST-*
 and R-BIG-* below) and for the structure (rule-probe family BOUND); that
 different names' memory costs ADD UP in one document is INFERRED, not
-measured.
+measured. **Superseded by C-94 (§I.6):** the brace bound was a PROXY for
+TeX's grouping level, exact only while every frame was a brace; slice A let a
+formula open inside an argument and the proxy broke. The bound is now on
+`Decide.groups` (every frame one TeX group, an argument frame its command's
+measured `g`) over every state of the run (`Decide.peak <= max_groups` =
+200), plus names of at most 100 letters.
 
 **Why the semantics runs on tokens, not on the tree.** TeX executes a token
 stream, and the tree nesting is not TeX's nesting. The byte-level lesson of

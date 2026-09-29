@@ -794,6 +794,13 @@ class EngineRun(tuple):
 # under the target's name (MEASURED) -- makes a second close-write, and the
 # run is REFUSED (OracleError: such a document is ungradable, never graded).
 # An inotify failure or a queue overflow is refused too (fail closed).
+# The watch includes IN_MODIFY although only close-writes are counted: the
+# kernel MERGES an event identical to the unread event at the queue's tail,
+# and MEASURED in the pinned image, `echo x > t.log; echo y >> t.log` under
+# an IN_CLOSE_WRITE-only watch counted ONE close-write. With IN_MODIFY
+# watched, a document's close-write of the log cannot sit next to pdfTeX's
+# own: pdfTeX writes its final report to the log (an IN_MODIFY) after
+# closing the document's \write streams and before closing the log.
 _SUPERVISOR_SRC = r"""
 import ctypes, json, os, select, struct, subprocess, sys
 nonce, names, cmd = sys.argv[1], sys.argv[2].split("/"), sys.argv[3:]
@@ -802,7 +809,7 @@ fd = -1
 try:
     libc = ctypes.CDLL(None, use_errno=True)
     fd = libc.inotify_init1(0o4000)
-    if fd < 0 or libc.inotify_add_watch(fd, b".", 0x8) < 0:
+    if fd < 0 or libc.inotify_add_watch(fd, b".", 0x8 | 0x2) < 0:
         raise OSError(ctypes.get_errno(), "inotify")
 except Exception as e:
     ev["err"] = repr(e)[:200]

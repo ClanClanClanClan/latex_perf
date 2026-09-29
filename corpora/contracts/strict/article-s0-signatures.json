@@ -34,10 +34,10 @@
  },
  "reuse": {
   "file": "corpora/contracts/strict/article-s0-signatures.json",
-  "commit": "ed0b8fee461b698ab45175249d69fc8aff8d6048",
-  "sha256": "0337e2113fa798ee4c595916d9bda7731b3de83ed022ca05c9bdc0e56387034f",
+  "commit": "9b2757377b4aa914e1e6bd874c71acc275c12ea1",
+  "sha256": "847709ef154104ec9a16fbffa1fa5525a50d9bcd77f17c33928706f8c8b3914b",
   "generator_version": "5",
-  "grades_reused": 9784
+  "grades_reused": 9655
  },
  "probes": {
   "T-ALONE": {
@@ -191069,8 +191069,8 @@
    "stage 3c": 0,
    "stage 4": 0
   },
-  "documents_graded_now": 431,
-  "grades_reused": 9784,
+  "documents_graded_now": 432,
+  "grades_reused": 9655,
   "oracle_timeouts": 1,
   "admitted_by_class": {
    "fatal E3/noad": 50,
@@ -205203,19 +205203,19 @@
    },
    "ddots": {
     "R-CAP-MATH": {
-     "sha256": "ca33c078d412fc46b15b37878c309b188980a7920f8dc930604286ef22063b9e",
-     "ntoks": 13160,
+     "sha256": "9f86dca02cb3077c1ba4d0f2cd6402cd673b9a7c400ce5f6fe296c6a92661a0c",
+     "ntoks": 12823,
      "held": 0,
-     "mem": 1999918,
+     "mem": 1999974,
      "verdict": "ready",
-     "count": 13157,
+     "count": 12820,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2463478,
+     "used": 2411456,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -205227,7 +205227,7 @@
        5408265
       ],
       "main_memory": [
-       2463478,
+       2411456,
        5000000
       ],
       "hash": [
@@ -205265,12 +205265,12 @@
      }
     },
     "R-CAP-MATH-PAST": {
-     "sha256": "c291e0eab200401acb6fb7665fce6d8e0809fdc965571aac14ce00d4d0f900aa",
-     "ntoks": 13161,
+     "sha256": "7bce6250e77b0989b2d00622c3e3d1eb3663597690e6ba71f23b888340ea435b",
+     "ntoks": 12824,
      "held": 0,
-     "mem": 2000070,
+     "mem": 2000130,
      "verdict": "not_strict",
-     "count": 13158
+     "count": 12821
     }
    },
    "fmtversion": {
@@ -208498,7 +208498,7 @@
     "E3"
    ],
    "math": "noad",
-   "cost": 152
+   "cost": 156
   },
   "fmtversion": {
    "text": "material",

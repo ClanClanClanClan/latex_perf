@@ -358,6 +358,8 @@ def copy_and_cost(recs: dict, m0: int, tcost: int) -> dict:
                 flat.append((r["used"] - m0 - tcost * (r["ntoks"] - r["count"])) / r["count"])
     if not slope:
         return {"copy": None, "cost": None}
-    return {"copy": math.ceil(max(slope)), "cost": math.ceil(max(flat + levels)) + 1,
+    # a cost below one word (the braces of an empty argument are already
+    # charged a token's cost each) is one word
+    return {"copy": math.ceil(max(slope)), "cost": max(1, math.ceil(max(flat + levels)) + 1),
             "slope": round(max(slope), 4), "per_level": round(max(levels), 1),
             "flat": round(max(flat), 1) if flat else None}

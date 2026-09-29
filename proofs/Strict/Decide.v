@@ -346,12 +346,23 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       body start), the strings and the hash at most [max_tokens] entries
       (467,099 and 585,149 free), and a rendered line (Syntax.v [render])
       at most [max_tokens + max_name + 2] bytes (the buffer is 200,000).
-    - MAIN MEMORY, SAVE STACK, INPUT STACK, PARAMETER STACK, SEMANTIC NEST,
-      EXPANSION DEPTH, FONTS.  Bounded through [max_tokens] and
-      [max_groups]: the capacity probes measure the use of each at the
-      bounds (main memory 15%, the semantic nest 20%, the others under 5%;
-      the string pool, bounded above, 36%; §I.6), so none needs a bound of
-      its own.
+    - MAIN MEMORY (correction C-98: the first account said "bounded through
+      [max_tokens]", measured on flat documents; an argument nested in an
+      argument is COPIED, so memory grows with depth x tokens, and 197
+      [\mbox] levels around 6,427 [\frame{}] overflowed inside every other
+      bound).  Bounded by its own account, [mem] <= [max_mem] (below): every
+      token its measured cost, every argument's tokens its command's
+      measured copy factor.  With the 435,796 words pdfTeX reports at body
+      start, the account stays under half of main memory, and the worst case
+      at the bound, built for every admitted name and command, is measured
+      under it (§I.6).
+    - SAVE STACK, INPUT STACK, PARAMETER STACK, SEMANTIC NEST, EXPANSION
+      DEPTH, FONTS.  Each grows at most by a constant per running frame or
+      group (bounded by [max_groups]) or per token read (bounded by
+      [max_tokens]), never by their product: the design's table gives the
+      account of each and pdfTeX's own report of it, maximised over every
+      graded document, the memory worst cases included (every one under a
+      fifth of its capacity).
     A document beyond a bound is outside the tier: never a verdict.  Every
     attested name is probed at the bounds (families R-NEST-*, R-BIG-* of
     gen_strict_signatures.py; A-R-*, A-CAP-* of gen_strict_arg_signatures.py),

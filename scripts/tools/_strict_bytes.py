@@ -410,6 +410,11 @@ def near_miss_docs(rng: random.Random) -> list[tuple[str, bytes]]:
                 HEADER + b"$" + b"{" * 200 + b"x" + b"}" * 200 + b"$\n" + END))
     out.append(("box and formula past the group bound",
                 HEADER + b"\\mbox{$" * 101 + b"x" + b"$}" * 101 + b"\n" + END))
+    # C-98: the round-2 reviewer's file: 197 box levels around 6,427 empty
+    # frames (19,983 tokens, 200 groups) overflow main memory: argument copies
+    frames = b"\n".join(b"\\frame{}" * 60 for _ in range(6427 // 60)) + b"\\frame{}" * (6427 % 60)
+    out.append(("argument copies past the memory account",
+                HEADER + b"\\mbox{" * 197 + b"\n" + frames + b"\n" + b"}" * 197 + b"\n" + END + b"\n"))
     out.append(("tokens past the bound", HEADER + (b"x" * 5_000 + b"%\n") * 4 + b"xx\n" + END))
     return out
 

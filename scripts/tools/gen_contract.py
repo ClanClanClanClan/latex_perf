@@ -1534,12 +1534,13 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
     report["engine_primitives"] = prim["multiletter"] + len(prim["single"])
 
     jd = tex.job("kernel_initex")
-    kargs = ["-ini", "-etex", "-interaction=nonstopmode",
-             "-jobname=lpkernel", "-progname=pdflatex",
-             "-translate-file=cp227.tcx",
-             INITEX_PREFIX + "\\input pdflatex.ini"]
-    rc, secs = tex.run_engine(jd, _oracle.ENGINE_PDFTEX, kargs, LONG_TIMEOUT)
-    log = _oracle.job_output(jd, kargs, ".log").read_bytes()  # pdfTeX's job name
+    rc, secs = tex.run_engine(jd, _oracle.ENGINE_PDFTEX,
+                       ["-ini", "-etex", "-interaction=nonstopmode",
+                        "-jobname=lpkernel", "-progname=pdflatex",
+                        "-translate-file=cp227.tcx",
+                        INITEX_PREFIX + "\\input pdflatex.ini"], LONG_TIMEOUT)
+    # pdfTeX's job name (C-95): -jobname wins, as pdftex_jobname measures
+    log = _oracle.job_output(jd, ["-jobname=lpkernel"], ".log").read_bytes()
     tr = parse_trace(log)
     if rc != 0 or tr["first_error"] is not None:
         raise SystemExit("gen_contract: INITEX of pdflatex.ini failed: rc=%d %s" %

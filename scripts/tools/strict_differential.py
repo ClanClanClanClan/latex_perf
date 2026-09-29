@@ -668,7 +668,10 @@ class Gen:
     def seq(self, depth: int, mode: str, clean: bool, lo=0, hi=5) -> list:
         out = []
         for _ in range(self.r.randint(lo, hi)):
-            if mode == "text" and depth == 0 and self.r.random() < 0.03:
+            if mode == "text" and depth == 0 and self.r.random() < 0.03 \
+                    and out[-1:] != [S.math("dollar")]:
+                # (after an empty formula, which prints as `$$`, the walk's
+                # first `$` would be read as display math: not drawn there)
                 out += self.inest(clean)
             elif self.r.random() < 0.06:
                 out += self.run(mode, clean)

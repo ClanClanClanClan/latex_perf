@@ -328,8 +328,11 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       holds 254 groups and a 255th overflows, in every frame kind and every
       combination of kinds the capacity probes build; on top of the frames a
       construct adds at most 8 groups while it runs (the output routine, at
-      a page break or at \end{document}; \[ adds 4, a paragraph start 1).
-      [max_groups] = 200 leaves 54.  [peak] is the most groups any state of
+      a page break or at \end{document}; \[ adds 3, a paragraph start 1).
+      [max_groups] = 200 leaves 54, and 46 above the largest transient.  In
+      all 321 frame-kind pairs the model can stack, pdfTeX's first overflow
+      is at exactly the account's 255 groups (254 with a paragraph start):
+      the account is exact, not just an upper bound.  [peak] is the most groups any state of
       the run holds, the run being [step] iterated as [run] iterates it, up
       to where it stops: a stop halts pdfTeX (-halt-on-error), and the
       argument scanner that locates a deferred error opens no group (pdfTeX
@@ -346,8 +349,9 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
     - MAIN MEMORY, SAVE STACK, INPUT STACK, PARAMETER STACK, SEMANTIC NEST,
       EXPANSION DEPTH, FONTS.  Bounded through [max_tokens] and
       [max_groups]: the capacity probes measure the use of each at the
-      bounds (every one below a fifth of its capacity; §I.6), so none needs
-      a bound of its own.
+      bounds (main memory 15%, the semantic nest 20%, the others under 5%;
+      the string pool, bounded above, 36%; §I.6), so none needs a bound of
+      its own.
     A document beyond a bound is outside the tier: never a verdict.  Every
     attested name is probed at the bounds (families R-NEST-*, R-BIG-* of
     gen_strict_signatures.py; A-R-*, A-CAP-* of gen_strict_arg_signatures.py),

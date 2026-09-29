@@ -1134,6 +1134,16 @@ def main() -> int:
         "SC_par_short": runs_in(lambda h: run_any(h) and h["long"] == "short_inner"),
         "SC_par_long": runs_in(lambda h: run_any(h) and h["long"] == "long"),
     }
+    # the phase-1 control-word rules likewise (C-96 left no admitted name
+    # that is fatal in math): live iff some admitted signature has the class
+    for where, cls, rule in (("text", "material", "R_cs_text_material"),
+                             ("text", "noop", "R_cs_text_noop"),
+                             ("text", None, "R_cs_text_fatal"),
+                             ("math", "noad", "R_cs_math_noad"),
+                             ("math", "noop", "R_cs_math_noop"),
+                             ("math", None, "R_cs_math_fatal")):
+        live[rule] = any((h[where] == cls) if cls else isinstance(h[where], list)
+                         for h in sig.get("signatures", {}).values())
     deferring = runs_in(lambda h: run_any(h) or "after" in (h["text"][0], h["math"][0]))
     for c in ("SC_close_last", "SC_close", "SC_open", "SC_skip", "Stop_defer"):
         live[c] = deferring

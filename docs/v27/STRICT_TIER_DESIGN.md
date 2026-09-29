@@ -1403,3 +1403,149 @@ command (reach `\afterassignment` through `\@defaultunits`, the size code of
   and `\overline` through TeX's math scanner, INCREMENTALLY (an error inside
   is reported at its own line, like a script group). Each is a mechanism of
   its own, not a signature of this one; `\sqrt` also looks ahead for `[`.
+
+**C-94: the capacity bound was a proxy, and the grammar outgrew it (BLOCKING,
+found by an adversarial review of this step, 2026-09-29).** C-86 bounded the
+fragment by BRACE depth (200), because 254 nested braces overflow TeX's
+grouping levels. That was exact only while every frame of the state was a
+brace. Slice A let a formula open inside an argument, and a formula is a TeX
+group with no brace: `\mbox{$\mbox{$ ... x ... $}$}` holds two groups per
+brace. MEASURED: 127 levels compile, 128 give "! TeX capacity exceeded,
+sorry [grouping levels=255]" — at 128 braces, inside the old bound, where
+the extracted decider said PROVEN-READY (and, with `\zzundef` innermost,
+PROVEN-NOT-READY E1 for a document pdfTeX stops for another reason); the
+reviewer proved it in Coq (the document is in the fragment, `decide` =
+`ProvenReady`, `Runs ... Compiles`), so `Faithful` was false under the
+committed signatures. `\llap{\(` and `{\mbox{$` (three groups per two
+braces) are the same class. HOW THE PROBES MISSED IT: every nesting family
+(R-NEST-*, A-R-NEST-*, the rule probes' BOUND, the generator's `nest`)
+nested ONE frame kind; none interleaved kinds, and the proxy is exact on
+every single-kind stack.
+
+THE CLASS, AND THE FIX BY METHOD: a TeX capacity bounded through a proxy the
+grammar can outgrow. Every capacity is now either bounded by an exact
+account in the model's own terms or shown unreachable with a measured
+margin:
+
+- `Decide.groups fs` sums `frame_groups` over the frame stack: 1 for a text
+  brace group, a formula (any of `$`, `\(`, `$$`, `\[`) and a math or script
+  group; an argument frame is the `g` its command holds open (a new field of
+  `Contract.v` `TRun`/`MRun` and of the frame `FArg`). `Decide.peak` is the
+  largest `groups` over every state the run reaches (the run being `step`
+  iterated as `run` iterates it; a stop halts pdfTeX, and the scanner that
+  locates a deferred error opens no group). `bounded C ts` requires
+  `peak C init ts <= max_groups` (200), `length ts <= max_tokens` (20,000)
+  and every name at most `max_name` (100) letters. `peak_spec` proves peak
+  is the maximum over `Reaches` (a declarative relation over `step`) and
+  `strict_groups_bounded` that every reached state of a strict document
+  holds at most 200 groups (both Closed, registered capstones: 27).
+  `check_strict_kernel.py` pins the four definitions token for token.
+- `g` is MEASURED per command and mode by the argument generator's stage G
+  (version 2): the deepest brace nesting pdfTeX survives inside the
+  argument, against the body's capacity measured the same way. Result:
+  1 for the seven hbox commands; 3 for `\frame` (both modes) and for
+  `\underline` in text (formula + math group + hbox), 1 for `\underline` in
+  math. Both were rejected in version 1 BECAUSE the brace proxy was wrong
+  for them (nested 200 deep they overflow); with the exact account they
+  pass every stage, including the new stage 3b, and are admitted.
+- The frame kinds and which kind can be pushed on which are read from the
+  EXTRACTED model: `strict_decide.exe --frame-pairs` searches, through the
+  extracted `step`, every token of the grammar (an exhaustive match over
+  `tok` in the driver fails to compile if a constructor is added) from
+  `init` to depth 4. Each pair (below, above) is probed by a stream that
+  repeats it (a cycle through the pair) to EXACTLY 200 groups, which the
+  model must decide and pdfTeX agree with, and to 201, which the model must
+  put outside; and pdfTeX's own first overflow is searched, which must lie
+  in [K + 1 - T, K + 1] (K the measured capacity, T the largest measured
+  transient): an account that under-counts any kind fails that window, as
+  the reviewer's document would (it overflows at 128 of its own model's
+  "braces"). `measure_strict_capacity.py` writes `capacity.json`; the
+  argument generator's stage 3b runs the same family for every candidate
+  (A-CAP-*) as an admission condition; `check_strict_kernel.py` check 11
+  requires every recorded pair probed, every constructor of the extracted
+  `frame` type and every admitted command's argument frame (per mode) in
+  some pair, and the search alphabet to cover every constructor of `tok`.
+
+THE CAPACITY TABLE (the pinned image; `capacity.json`, `texmf`, `measured`,
+`transients`, `table`, `usage`): see the rows below, filled from the
+artefact.
+
+| capacity (pdfTeX) | value in the image | the fragment's account | bound | measured at the bounds | margin | status |
+|---|---|---|---|---|---|---|
+| grouping levels | 255 (the body holds K = 254; `capacity.json` `measured`) | `groups` = 1 per frame, `g` per argument frame, over every reached state (`peak`) | `max_groups` = 200 | every one of the 321 model pairs, repeated to 200 groups, compiles/agrees; pdfTeX's first overflow is at 255 groups for 320 pairs and 254 for 1 (a paragraph start in vertical mode, transient +1): the account is EXACT | 254 - 200 - 8 (largest transient: the output routine at a page break or at `\end{document}`; `\[` 3, a paragraph start 1, none in math) = 46 | PROVED bound (Coq) + MEASURED exactness |
+| main memory | 5,000,000 words | through `max_tokens` = 20,000 and `max_groups` | none of its own | 758,796 (20,000 characters in one paragraph); 1,000,000 characters overflow (C-86) | 6.6x | MEASURED |
+| string pool | 5,408,265 free at body start | every name pdfTeX reads enters it, defined or not; <= `max_tokens` names of <= `max_name` = 100 letters | `max_name` (Coq, `short_names`) | 1,939,424 (19,994 distinct 100-letter undefined names read whole as one `\mbox` argument; E1 agrees) | 2.8x | PROVED bound + MEASURED |
+| strings | 467,099 free | <= `max_tokens` new names | via `max_tokens` | 19,741 | 23x | MEASURED |
+| hash (multi-letter control sequences) | 15,000 + 600,000 | <= `max_tokens` new names | via `max_tokens` | 49,161 | 12x | MEASURED |
+| buffer | 200,000 bytes | a rendered line holds at most `max_tokens` spaces/`$` and one token of <= `max_name` + 2 bytes; the bytes layer's lines are <= 10,000 bytes (`Lexer.max_line_bytes`) | `max_name`, `max_tokens`, `max_line_bytes` | 20,110 (19,998 spaces then a 100-letter name on one line; E1 agrees) | 9.9x | PROVED bound + MEASURED |
+| input stack | 10,000 | one level per argument frame running, plus a constant | via `max_groups` | 401 | 25x | MEASURED |
+| parameter stack | 20,000 | one per argument frame running | via `max_groups` | 200 | 100x | MEASURED |
+| semantic nest | 1,000 | at most one per group (hbox, formula, math group) plus the paragraph | via `max_groups` | 200 | 5x | MEASURED |
+| save stack | 200,000 | a few entries per group | via `max_groups` | 1,411 | 141x | MEASURED |
+| font memory / fonts | 8,000,000 / 9,000 | the fonts the admitted commands and characters load: a fixed set | none | 627,721 / 40 | 12x / 225x | MEASURED |
+| expansion depth | 10,000 (web2c default; not set in texmf.cnf) | recursion of `expand` within ONE command's expansion; nesting of frames and arguments goes through `main_control`, not through `expand` | none | not reported by pdfTeX; every admitted name is probed at the bounds (R-NEST-*, R-BIG-*, A-R-*, A-CAP-*) | not measured | ARGUED + probed |
+| text input levels (`\input`), exception dictionary, hyphenation patterns, alignments, inserts | 15 / 8,191 / ... | the fragment has no `\input`, `\hyphenation`, `&`, `\insert` or float | n/a | n/a | n/a | unreachable by the grammar |
+| pdfTeX's own (object table, PDF memory, destinations) | grown dynamically | pages bounded by `max_tokens` | none | the page-heavy probes (6,666 forced pages, C-86 review) compile | not measured | MEASURED (C-86) |
+
+**C-96: RULE R-INERT's closure never entered expl3 code (D-2 of the ADR-013
+design review), and `\meaning` text was parsed as if it were unambiguous
+(D-3).** `body_tokens` took `\\([A-Za-z@]+)` of a printed expansion text as
+its control words: `\hook_use:nnw` was read as `\hook` (recorded meaning
+"undefined") and the walk stopped there, silently; and a meaning printed
+`\protected\long macro:` (no space between the prefixes) did not match the
+macro pattern, so `\par`'s own code — expl3, with paragraph hooks and a
+conditional — was never read at all. Six admitted names reached `\par`. The
+same shape as C-92: the published rule said "the expansion closure" and the
+code computed a smaller set. FIX (`check_strict_kernel.body_readings`,
+`meaning_kind`; generators' `dump_meanings` by the hex of each name, so any
+name is dumped exactly): an expansion text is read by TeX's printing rules
+(`print_cs`: a name of two or more characters is followed by one space, a
+one-character name only when it is a letter), and because a printed text
+can have several readings (names may hold spaces and backslashes;
+category codes are not printed), EVERY reading is taken: every name of the
+closed world the rules allow at a backslash, and the longest printed name
+even outside it; a backslash with no reading is a character token; every
+printed character that may be active at body start (the lexical
+contract's catcode 13: `~`, `^^` notation, each byte of a non-ASCII
+character) is followed to that active character's meaning. A reached
+meaning of a kind the rule cannot classify REJECTS the name
+(unresolvable), never ends the walk. Over-reading only adds names, so it
+can only reject more. MEASURED (phase-1 generator version 5, the pinned
+image): 212 of the 400 candidates are not inert (127 before); 34 of the 121
+admitted names drop — `\IJ`, `\SS`, `\dots`, `\j`, `\textcompwordmark`,
+`\textgreater`, `\textquoteleft`, `\textvisiblespace` reach `\immediate`
+through `\GenericError`; `\bigskip`, `\ddag`, `\dospecials`, `\mathstrut`,
+`\obeyedline`, `\sloppypar`, `\subitem` and 19 `\text...` symbols reach
+`\afterassignment` through `\@defaultunits` (the font loader and `\par`'s
+error path, e.g. `\bigskip` → `\vspace` → `\@restorepar` → `\par` →
+`\msg_error:nnnn` → ... ; the walk also over-reads, e.g. the token `\[` of
+``\catcode`\[`` in `\nfss@catcodes`, which is how a screen should err). 87
+admitted, no new name. The one-argument candidates (the same fix makes
+`\protected\long` macros with parameter text `#1` candidates): 184, 123 not
+inert, 9 admitted (above). No probe or differential document had shown a
+wrong verdict for a dropped name.
+
+**LOW-1 of the review, recorded as a precondition.** An argument that runs
+as a FORMULA inside an hbox (`\lefteqn` → `\rlap{$\displaystyle #1$}`) is
+not a math group: a `$` in it closes the formula ("Extra }, or forgotten $"),
+where a math-group payload (`PMath`, `R_dollar_group`) gives "Missing }
+inserted". `Contract.v`'s `pay` does not distinguish the two. It is not live:
+the one admitted math-payload command, `\underline` in math, runs its
+argument as a math GROUP (TeX's `\underline` reads a math field), and its
+A-M-DOLLAR probe agrees. A formula-payload command would fail that probe's
+message class and be rejected at stage 1 (INFERRED from `_strict_s0.agrees`:
+its E5 row for a `$` in math accepts "Display math should end with $$" and
+"Missing } inserted", not "Extra }, or forgotten $"; no such candidate
+reached stage 1 under the current selection). PRECONDITION
+for admitting any command whose argument runs as a formula: split `PMath`
+into a math-group and a formula payload, with the `$`, `\)` and `}` rules of
+each.
+
+**LOW-2 of the review: reuse provenance.** The evidence files named
+`/private/tmp` files as the sources of reused grades, which nobody can
+re-read. A reuse source is now a file COMMITTED to the repository
+(`_strict_s0.committed_source`: `REV:path`, recorded with path, commit and
+sha256); the local grade store is gone (a grade nobody else can read is
+not evidence); `check_strict_kernel.py` / `check_strict_bytes.py` check 12
+refuse any other source and verify the sha256 when the commit is present.
+Every evidence file of this step was regenerated under the rule.

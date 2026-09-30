@@ -204,7 +204,17 @@ CAPSTONES = [
         "LaTeXPerfectionist.Strict.Decide.strict_mem_bounded",
         "LaTeXPerfectionist.Strict.Decide",
         "C-98: a strict document stays within the main-memory account (token "
-        "costs plus argument copies, which grow with depth x tokens).",
+        "costs plus argument copies, which grow with depth x tokens). "
+        "DEFINITIONAL (C-100, round-1 review LOW): the membership includes the "
+        "bound; that the account bounds pdfTeX's memory is part of the attested "
+        "premise Faithful, not of this theorem.",
+    ),
+    (
+        "LaTeXPerfectionist.Strict.Decide.strict_dim_bounded",
+        "LaTeXPerfectionist.Strict.Decide",
+        "C-100: every paragraph segment of a strict document stays within the "
+        "dimension account. DEFINITIONAL, like strict_mem_bounded: that the "
+        "account bounds pdfTeX's dimensions is part of Faithful.",
     ),
     (
         "LaTeXPerfectionist.Strict.Decide.in_strict_dec",

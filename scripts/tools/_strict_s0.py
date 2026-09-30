@@ -149,7 +149,7 @@ class Kernel:
 
     def __init__(self, signatures: Path | None = SIGNATURES,
                  arg_signatures: Path | None | str = "default",
-                 token_cost: int | None = None):
+                 token_cost: int | None = None, dims: Path | None = None):
         self.exe = build_exe()
         self.args = [str(self.exe), "--kernel", str(kernel_path()),
                      "--contract", str(CONTRACT)]
@@ -157,6 +157,10 @@ class Kernel:
         # signature file, or given by a generator that has no file yet
         if token_cost is not None:
             self.args += ["--token-cost", str(int(token_cost))]
+        # the structural dimension table (C-100): from the phase-1 signature
+        # file, or a JSON file {"dims": table} of a generator that has none yet
+        if dims is not None:
+            self.args += ["--dims", str(dims)]
         if signatures is not None:
             _check_source(signatures)
             self.args += ["--signatures", str(signatures)]

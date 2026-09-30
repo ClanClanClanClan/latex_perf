@@ -73,6 +73,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
+import _strict_dims as DM  # noqa: E402
 import check_strict_kernel as CK  # noqa: E402
 from _strict_s0 import cmd, doc, group, par, script, space, stray, text  # noqa: E402
 
@@ -149,6 +150,10 @@ class Names:
                     self.arg_run[where][CK.run_pay(b, where)].append(n)
                 else:
                     self.arg_fatal[where].append(n)
+        # C-100: the dimension account, for building documents within it
+        sfull = json.loads(Path(sig_path).read_text())
+        self.dims = (DM.Dims(sfull["dims"], {n: v["dim"] for n, v in sig.items()}, self.args)
+                     if "dims" in sfull else None)
         self.text_ok = [n for n in self.all if _cls(sig[n]["text"]) != "fatal"]
         self.math_ok = [n for n in self.all if _cls(sig[n]["math"]) != "fatal"]
         self.by = defaultdict(list)
@@ -473,6 +478,15 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
     the rule probes' sample of it."""
     B, L = MAX_GROUPS, MAX_TOKENS
     x = text("x")
+    # C-100: the token bound in paragraphs of 399 characters (and formulas of
+    # 397), each within the dimension bound: 49 blocks of 400 tokens and the
+    # rest; one character more is past the token bound
+    def paras(extra):
+        return [m for _ in range(49) for m in (text("x" * 399), par())] + [text("x" * extra)]
+
+    def formulas(extra):
+        return [m for _ in range(49) for m in (paren(text("x" * 397)), par())] + \
+            [paren(text("x" * extra))]
     out = [
         ("BOUND", doc(*_nest(B, [x]))),
         ("BOUND", doc(x, *_nest(B, [x]))),
@@ -480,16 +494,41 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
         ("BOUND", doc(display(*_nest(B - 1, [x])))),
         ("BOUND", doc(dollar(*_script_nest(B - 1)))),
         ("BOUND", doc(*_nest(B - 1, [dollar(x), par(), x]))),
-        ("BOUND", doc(text("x" * (L - 1)))),
-        ("BOUND", doc(paren(text("x" * (L - 3))))),
+        ("BOUND", doc(*paras(L - 1 - 49 * 400))),
+        ("BOUND", doc(*formulas(L - 3 - 49 * 400))),
         ("BOUND", doc(*[m for _ in range(L // 3) for m in (dollar(x),)][: L // 3 - 1])),
         ("BOUND", doc(cmd("q" * S.MAX_NAME))),
         ("BOUND-OUT", doc(*_nest(B + 1, [x]))),
         ("BOUND-OUT", doc(dollar(*_script_nest(B)))),
         ("BOUND-OUT", doc(dollar(*_nest(B, [x])))),
-        ("BOUND-OUT", doc(text("x" * L))),
+        ("BOUND-OUT", doc(*paras(L - 49 * 400))),
         ("BOUND-OUT", doc(cmd("q" * (S.MAX_NAME + 1)))),
     ]
+    # C-100: the DIMENSION bound (Decide.dim <= max_dim): one paragraph, one
+    # formula and one display of characters, and a display of the widest
+    # admitted text-and-math glue name (the round-1 review's document: 3,277
+    # \quad), each with as many as the account allows, and one more
+    if nm is not None and nm.dims is not None:
+        dz = nm.dims
+        def most(mk):
+            lo, hi = 0, L
+            while lo < hi:
+                mid = (lo + hi + 1) // 2
+                if dz.tok("par", False) + dz.nodes(mk(mid)["body"], False) <= DM.DIM_BOUND:
+                    lo = mid
+                else:
+                    hi = mid - 1
+            return lo
+        mks = [lambda k: doc(text("x" * k)), lambda k: doc(paren(text("x" * k))),
+               lambda k: doc(bracket(text("x" * k)))]
+        q = "quad" if "quad" in nm.sigs else None
+        if q:
+            mks.append(lambda k: doc(bracket(*[cmd(q)] * k)))
+        for mk in mks:
+            k = most(mk)
+            out += [("BOUND", mk(k)), ("BOUND-OUT", mk(k + 1))]
+        if q:
+            out.append(("BOUND-OUT", doc(bracket(*[cmd(q)] * 3277))))
     # the reviewer's class (C-94): a formula inside a box argument, two
     # groups a level; at the bound and one level past it
     runs = sorted(n for n in (nm.arg_run["text"].get("text_restricted", []) if nm else [])

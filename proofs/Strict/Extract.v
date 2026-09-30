@@ -21,8 +21,11 @@
     change is a successor, so every value is a non-negative int bounded by
     the length of the token list) and TeX group counts ([Decide.groups],
     [peak]: sums and maxima of the frames' counts, each 1 or a signature's
-    [g], which the loader reads as a small non-negative int).  No
-    [Nat.pow], subtraction or division is reached.  [ascii] is extracted to OCaml [char] (ExtrOcamlChar), whose
+    [g], which the loader reads as a small non-negative int), and the
+    memory and dimension accounts ([Decide.mem], [Decide.dim]: sums and
+    maxima of the contract's costs, non-negative ints the loader reads, over
+    at most [max_tokens] tokens, so under 2^40).  No [Nat.pow], subtraction
+    or division is reached.  [ascii] is extracted to OCaml [char] (ExtrOcamlChar), whose
     [Ascii.compare] realisation is the byte order the proofs use. *)
 
 From Coq Require Import Extraction.

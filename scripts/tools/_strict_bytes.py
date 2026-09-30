@@ -570,21 +570,27 @@ def lexer_families(names: dict, rng: random.Random) -> list[tuple[str, bytes]]:
     add("B_math", d(b"$x$\n"))
     add("B_script", d(b"$x^2_3$\n"))
     # the bounds of Lexer.v / DecideBytes.v, at the bound (graded)
-    add("L0-bounds", d(b"x" * MAX_LINE_BYTES + b"\n"))
+    # (C-100: a line of 10,000 characters is one paragraph past the
+    # dimension bound; the lines at the bound hold braces, which make no
+    # nodes, and spaces inside a formula, which TeX drops)
+    add("L0-bounds", d(b"{}" * (MAX_LINE_BYTES // 2) + b"\n"))
     add("L0-bounds", d(b"%" + b"c" * (MAX_LINE_BYTES - 1) + b"\nx\n"))
-    add("L0-bounds", d(b" " * (MAX_LINE_BYTES - 1) + b"x\n"))
-    add("L0-bounds", d(b"$" + b"x" * (MAX_LINE_BYTES - 2) + b"$\n"))
+    add("L0-bounds", d(b"$" + b" " * (MAX_LINE_BYTES - 3) + b"x$\n"))
+    add("L0-bounds", d(b"x{}" + b"{}" * (MAX_LINE_BYTES // 2 - 2) + b"x\n"))
     add("L0-bounds", file_at_bound())
     # the kernel's bounds (Decide.v) at the byte level: exactly 20,000 kernel
-    # tokens (19,999 characters and \end{document}; comment-joined lines give
-    # no space tokens), in text and in one formula; 200 TeX groups (C-94: a
-    # formula is one of them) of braces, of a formula and braces, and of
-    # box-and-formula levels (the header's line ends in a comment: its
-    # end-of-line space would be a 20,001st token)
+    # tokens (\end{document} one of them; comment-joined lines give no space
+    # tokens), in paragraphs of 399 characters and in formulas of 397, each
+    # within the dimension bound (C-100: 19,999 characters in one paragraph
+    # are past it); 200 TeX groups (C-94: a formula is one of them) of
+    # braces, of a formula and braces, and of box-and-formula levels (the
+    # header's line ends in a comment: its end-of-line space would be a
+    # 20,001st token)
     H0 = b"\\documentclass{article}\n\\begin{document}%\n"
-    chars = (b"x" * 5000 + b"%\n") * 3 + b"x" * 4999 + b"%\n"
+    chars = (b"x" * 399 + b"\\par%\n") * 49 + b"x" * 399 + b"%\n"
     add("L0-bounds", H0 + chars + END + b"\n")
-    add("L0-bounds", H0 + b"$" + (b"x" * 5000 + b"%\n") * 3 + b"x" * 4997 + b"$%\n" + END + b"\n")
+    add("L0-bounds", H0 + (b"$" + b"x" * 397 + b"$\\par%\n") * 49 + b"$" + b"x" * 396 + b"$x%\n"
+        + END + b"\n")
     add("L0-bounds", d(b"{" * 200 + b"x" + b"}" * 200 + b"\n"))
     add("L0-bounds", d(b"$" + b"{" * 199 + b"x" + b"}" * 199 + b"$\n"))
     add("L0-bounds", d(b"\\mbox{$" * 100 + b"x" + b"$}" * 100 + b"\n"))

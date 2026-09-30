@@ -30,6 +30,7 @@ let contract =
       ("alpha", { K.sig_text = K.TxFatal K.E3; K.sig_math = K.MxNoad });
       ("LaTeX", { K.sig_text = K.TxMaterial; K.sig_math = K.MxFatal K.E3 });
       ("relax", { K.sig_text = K.TxNoop; K.sig_math = K.MxNoop });
+      ("quad", { K.sig_text = K.TxMaterial; K.sig_math = K.MxNoad });
     ]
   in
   (* Step 2, slice A: three one-argument commands, with the behaviours the cases
@@ -78,6 +79,16 @@ let contract =
        name (\\ddots, 155 words) *)
     K.c_cost =
       (fun t -> match t with K.TCs n when str n = "alpha" -> 160 | _ -> 17);
+    (* C-100: the dimension account, in points; [\quad] 10 (its measured 1em is
+       10.00002pt), a character 12, a paragraph break 16, [\alpha] 20 *)
+    K.c_dim =
+      (fun _ t ->
+        match t with
+        | K.TCs n when str n = "quad" -> 10
+        | K.TCs n when str n = "alpha" -> 20
+        | K.TChar _ -> 12
+        | K.TPar _ -> 16
+        | _ -> 0);
   }
 
 let t w = K.NText (chars w)
@@ -262,22 +273,59 @@ let () =
   let rec boxed k inner =
     if k = 0 then inner else [ cmd "mbox"; g (boxed (k - 1) inner) ]
   in
+  let relaxes k = List.init k (fun _ -> cmd "relax") in
   check "argument copies within the bound"
-    (doc (boxed 20 [ t (String.make 2000 'x') ]))
+    (doc (boxed 20 (relaxes 2000)))
     "ready";
   check "argument copies past the bound"
-    (doc (boxed 190 [ t (String.make 5000 'x') ]))
+    (doc (boxed 190 (relaxes 5000)))
     "not_strict";
-  (* C-98: a costly name: 12,000 of them in one formula stay within the memory
-     account, 13,000 do not (160 words each) *)
-  check "costly name within the memory account"
-    (doc [ dollar (List.init 12000 (fun _ -> cmd "alpha")) ])
-    "ready";
+  (* C-98: a costly name: 12,000 of them in formulas of 300 (within the
+     dimension bound) stay within the memory account, 13,000 do not (160 words
+     each) *)
+  let formulas k =
+    List.concat
+      (List.init (k / 300) (fun _ ->
+           [ dollar (List.init 300 (fun _ -> cmd "alpha")); K.NPar false ]))
+  in
+  check "costly name within the memory account" (doc (formulas 12000)) "ready";
   check "costly name past the memory account"
-    (doc [ dollar (List.init 13000 (fun _ -> cmd "alpha")) ])
+    (doc (formulas 13200))
     "not_strict";
-  check "tokens at the bound" (doc [ t (String.make 19999 'x') ]) "ready";
-  check "tokens past the bound" (doc [ t (String.make 20000 'x') ]) "not_strict";
+  (* the token bound, in paragraphs of 400 characters (within the dimension
+     bound): 49 of them and 350 characters are 19,999 tokens *)
+  let paras extra =
+    List.concat
+      (List.init 49 (fun _ -> [ t (String.make 400 'x'); K.NPar false ]))
+    @ [ t (String.make extra 'x') ]
+  in
+  check "tokens at the bound" (doc (paras 350)) "ready";
+  check "tokens past the bound" (doc (paras 351)) "not_strict";
+  (* C-100: the dimension account. The round-1 review's document: a display of
+     3,277 [\quad] (32,770pt, past 2^31 sp) was PROVEN-READY and stops with "!
+     Dimension too large"; 798 [\quad] are 16 + 7,980 = 7,996 points, 799 are
+     past 8,000 *)
+  let quads k = List.init k (fun _ -> cmd "quad") in
+  check "display of 3,277 quads" (doc [ display (quads 3277) ]) "not_strict";
+  check "display at the dimension bound" (doc [ display (quads 798) ]) "ready";
+  check "display past the dimension bound"
+    (doc [ display (quads 799) ])
+    "not_strict";
+  check "a paragraph break at the top level starts a segment"
+    (doc [ display (quads 798); K.NPar false; display (quads 798) ])
+    "ready";
+  check "a paragraph break inside a group does not"
+    (doc [ g (quads 500 @ [ K.NPar false ] @ quads 500) ])
+    "not_strict";
+  check "a paragraph break inside an argument does not"
+    (doc [ cmd "mbox"; g (quads 500 @ [ K.NPar true ] @ quads 500) ])
+    "not_strict";
+  check "a display does not end the paragraph"
+    (doc [ display (quads 500); display (quads 500) ])
+    "not_strict";
+  check "nothing is typeset after a stop"
+    (doc (K.NStrayClose :: quads 5000))
+    "E5@0";
   (* the renderer: exact bytes *)
   let bytes = str (K.render (doc [ dollar [ t "x" ] ])) in
   let want =

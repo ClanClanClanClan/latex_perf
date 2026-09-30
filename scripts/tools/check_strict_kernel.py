@@ -183,6 +183,8 @@ MAX_GROUPS = 200
 MAX_TOKENS = 200 * 100
 MAX_NAME = 100
 MAX_MEM = 20000 * 100
+# C-100: the dimension account's bound, in whole points (Decide.v max_dim)
+MAX_DIM = 80 * 100
 CAPACITY = "corpora/strict_s0/capacity.json"
 
 # ---------------------------------------------------------------------------
@@ -1017,7 +1019,19 @@ CAPACITY_ACCOUNT = [
      "peak"),
     ("Definition bounded (C : contract) (ts : list tok) : bool := Nat.leb (length ts) "
      "max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups && Nat.leb "
-     "(mem C ts) max_mem.", "bounded"),
+     "(mem C ts) max_mem && Nat.leb (dim C ts) max_dim.", "bounded"),
+    # C-100: the dimension account
+    ("Definition seg_start (s : state) (t : tok) : bool := match t, s_frames s with | "
+     "TPar _, [] => true | _, _ => false end.", "seg_start"),
+    ("Fixpoint dim_run (C : contract) (s : state) (acc : nat) (ts : list tok) : nat := "
+     "match ts with | [] => acc | t :: rest => let m := in_math (s_frames s) in let a := "
+     "if seg_start s t then c_dim C m t else acc + c_dim C m t in maxl a (match step "
+     "C s t (hd_error rest) with | Go1 s' => dim_run C s' a rest | Go2 s' => match rest "
+     "with | [] => a | t2 :: rest' => dim_run C s' (a + c_dim C m t2) rest' end | _ => a "
+     "end) end.", "dim_run"),
+    ("Definition dim (C : contract) (ts : list tok) : nat := dim_run C init (c_dim C false "
+     "(TPar false)) ts.", "dim"),
+    ("Definition maxl (a b : nat) : nat := if Nat.leb a b then b else a.", "maxl"),
     # C-98: the main-memory account
     ("Definition copy_of (C : contract) (n : name) : nat := match c_arg C n with "
      "Some a => as_copy a | None => 0 end.", "copy_of"),
@@ -1068,7 +1082,7 @@ def capacity_findings(repo: Path, ext_sha: str, sig_sha: str, asig_sha: str | No
     if d.get("signatures_sha256") != sig_sha or d.get("arg_signatures_sha256") != asig_sha:
         out.append(f"{CAPACITY}: ran other signature files; re-run it")
     if d.get("bounds") != {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
-                           "max_name": MAX_NAME, "max_mem": MAX_MEM}:
+                           "max_name": MAX_NAME, "max_mem": MAX_MEM, "max_dim": MAX_DIM}:
         out.append(f"{CAPACITY}: bounds {d.get('bounds')} are not Decide.v's")
     ml = extract.read_text()
     toks = _ocaml_ctors(ml, "tok")
@@ -1156,6 +1170,10 @@ def capacity_findings(repo: Path, ext_sha: str, sig_sha: str, asig_sha: str | No
         out.append(f"{CAPACITY}: {bad} pairs fail in all")
     for fam, v in sorted(d.get("usage", {}).items()):
         o = v.get("oracle") or [1, False]
+        if v.get("verdict") == "not_strict":
+            if fam != "longest_line":
+                out.append(f"{CAPACITY}: usage document {fam} is outside the fragment")
+            continue  # the buffer's instrument (C-100)
         if not ((v.get("verdict") == "ready") == (o[0] == 0 and o[1])):
             out.append(f"{CAPACITY}: usage document {fam} disagrees")
     return out
@@ -1214,54 +1232,139 @@ def _ok(r: dict) -> bool:
     return bool(o) and o[0] == 0 and o[1] and r.get("used") is not None
 
 
+def _records(tree):
+    """Every per-document record of a tree (a dict with the bytes' sha256)."""
+    if isinstance(tree, dict):
+        if "sha256" in tree:
+            yield tree
+        for v in tree.values():
+            yield from _records(v)
+    elif isinstance(tree, list):
+        for v in tree:
+            yield from _records(v)
+
+
 def memory_findings(sig: dict, asig: dict) -> list[str]:
-    """Check 13 (C-98): every cost of the memory account re-derived from the
-    generators' PRIMARY records (each graded document's model counts and
-    pdfTeX's reported memory), with the same functions the generators use
-    (_strict_capacity); the account's margin (the base plus max_mem at most
-    half of main memory); every admitted name at the memory bound compiling
-    and one past it outside; every argument command's worst case at the
-    bound compiling within half of main memory and one character past it
-    outside."""
+    """Check 13 (C-98, C-100): every cost of the memory account re-derived
+    from the generators' PRIMARY records (each graded document's model counts
+    and pdfTeX's reported memory), with the functions the generators use
+    (_strict_capacity): the token cost and the boundary constants (slopes
+    over the structural levels and the class pairs), every name's cost
+    (slopes over its contexts, plus its letters and atoms re-derived from the
+    dimension evidence), every command's copy factor and cost. EVERY memory
+    record must carry pdfTeX's report (C-100: 83 of the C-98 bound records
+    had none, and this check skipped them), and pdfTeX's report must be
+    within the account on EVERY record (base + Decide.mem): the instruments,
+    the bound documents, the worst cases and the round-1 review's documents.
+    Every admitted name has a document at its bound (memory, tokens) and one
+    past it outside; every argument command's worst cases (a filler of no
+    dimensions, and the costliest) compile within half of main memory and one
+    character past each is outside."""
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import _strict_capacity as C
     out = []
     mem1 = sig.get("memory", {})
     st = mem1.get("structural", {})
-    if "BASE" not in st:
+    if "BASE" not in st or not st["BASE"].get("used"):
         return ["signatures: no memory records (C-98; regenerate)"]
     m0, cap = st["BASE"]["used"], st["BASE"]["of"]
-    T = C.token_cost(st)
-    if sig.get("token_cost") != T:
+    try:
+        T = C.token_cost(st)
+        B = C.boundary_constants(st, mem1.get("class_pairs", {}))
+    except (ValueError, KeyError) as e:
+        return [f"signatures: the memory records do not give the token cost / boundary "
+                f"constants ({e}; C-100)"]
+    if sig.get("token_cost") != T or mem1.get("token_cost") != T:
         out.append(f"signatures: token_cost {sig.get('token_cost')} is not what the "
                    f"structural records give ({T})")
+    if mem1.get("boundary") != B:
+        out.append(f"signatures: the boundary constants {mem1.get('boundary')} are not "
+                   f"what the records give ({B}; C-100)")
     if (m0 + MAX_MEM) * 2 > cap:
         out.append(f"memory account: base {m0} + max_mem {MAX_MEM} is more than half of "
                    f"main memory {cap} (C-98 margin)")
+    # every record carries pdfTeX's report, and the report is within the
+    # account wherever the model counted it
+    # (stage G's documents are counted under a RAW contract, copy factor 1:
+    # the held count its slope is taken over; their account under the
+    # committed contract is check_strict_capacity.py's, which re-runs them)
+    trees = [("signatures", mem1, True), ("signatures dim bound", sig.get("dim_bound", {}), True),
+             ("arg signatures stage G", asig.get("capacity", {}).get("memory", {}), False),
+             ("arg signatures", asig.get("capacity", {}).get("memory_bound", {}), True)]
+    nrec = over = 0
+    for label, tree, account in trees:
+        for r in _records(tree):
+            if "oracle" not in r:
+                continue  # a document never graded (one past a bound)
+            nrec += 1
+            if r.get("used") is None:
+                out.append(f"{label}: a graded memory record carries no pdfTeX report "
+                           f"(sha256 {r.get('sha256', '')[:12]}; C-100)")
+                continue
+            if account and r.get("mem") is not None and _ok(r) and r["used"] > m0 + r["mem"]:
+                over += 1
+                if over <= 10:
+                    out.append(f"{label}: pdfTeX reports {r['used']} words, more than the "
+                               f"account {m0 + r['mem']} (sha256 {r['sha256'][:12]}; C-100)")
+    if nrec == 0:
+        out.append("signatures: no graded memory record")
+    dd = None
+    try:
+        dd = _dims_derived(Path(__file__).resolve().parents[2], sig.get("dims_derivation", {}))
+    except Exception as e:  # noqa: BLE001
+        out.append(f"signatures: the dimension evidence does not load ({e})")
+    dt = sig.get("dims_derivation", {})
     for n, h in sorted(sig.get("signatures", {}).items()):
-        c = C.name_cost(list(mem1.get("names", {}).get(n, {}).values()) + [
-            r for f, r in mem1.get("cap", {}).get(n, {}).items() if not f.endswith("-PAST")],
-            m0, T)
-        want = T if c is None else max(c, T)
-        if h.get("cost") != want:
+        letters = (dd["letters"].get(n, 0) if dd and n in dt.get("text_names", []) else 0)
+        atoms = (dd["atoms"].get(n, 0) if dd and n in dt.get("math_names", []) else 0)
+        try:
+            want = C.name_cost(mem1.get("names", {}).get(n, {}), m0, T, letters, atoms, B)
+        except ValueError as e:
+            out.append(f"signatures: {n!r}'s memory records: {e}")
+            continue
+        if want is None or h.get("cost") != want:
             out.append(f"signatures: {n!r}'s cost {h.get('cost')} is not what its memory "
-                       f"documents give ({want}; C-98)")
-        for f, r in mem1.get("cap", {}).get(n, {}).items():
+                       f"documents give ({want}; C-98, C-100)")
+        ctxs = {f.split("@")[0] for f in mem1.get("names", {}).get(n, {})}
+        need = set()
+        if not isinstance(h["text"], list):
+            need.add("R-MEM-TEXT")
+        if not isinstance(h["math"], list):
+            need |= {"R-MEM-MATH", "R-MEM-DISPLAY"}
+            if h["math"] == "noad":
+                need |= {"R-MEM-MSCRIPT", "R-MEM-DSCRIPT"}
+        if need - ctxs:
+            out.append(f"signatures: {n!r} has no memory documents in {sorted(need - ctxs)}")
+        for ctx in need & ctxs:
+            lv = [f for f in mem1["names"][n] if f.startswith(ctx + "@")]
+            if len(lv) < 3:
+                out.append(f"signatures: {n!r} {ctx} has {len(lv)} counts, not 3 (the slope "
+                           f"past the high-water mark; C-100)")
+        capn = mem1.get("cap", {}).get(n, {})
+        for f, r in capn.items():
             if f.endswith("-PAST"):
                 if r.get("verdict") != "not_strict":
                     out.append(f"signatures: {n!r} {f} is {r.get('verdict')}, not outside")
             elif not (r.get("verdict") in ("ready", "not_ready") and r.get("oracle")
                       and (r["oracle"][0] == 0) == (r["verdict"] == "ready")):
-                out.append(f"signatures: {n!r} at the memory bound ({f}) does not agree")
-            elif _ok(r) and r["used"] > m0 + r.get("mem", 0):
-                out.append(f"signatures: {n!r} at the memory bound ({f}) uses {r['used']} "
-                           f"words, more than the account {m0 + r.get('mem', 0)} (C-98)")
-        if not any(not f.endswith("-PAST") for f in mem1.get("cap", {}).get(n, {})):
-            out.append(f"signatures: {n!r} has no document at the memory bound (C-98)")
+                out.append(f"signatures: {n!r} at the bound ({f}) does not agree")
+        for where, beh in (("TEXT", h["text"]), ("MATH", h["math"])):
+            if isinstance(beh, list):
+                continue
+            if f"R-CAP-{where}" not in capn or f"R-CAP-{where}-PAST" not in capn:
+                out.append(f"signatures: {n!r} has no document at the bound in {where} "
+                           f"and one past it (C-98)")
+    if len(mem1.get("review", {})) < 3:
+        out.append("signatures: the round-1 review's memory documents are not recorded "
+                   "(C-100)")
     cap_a = asig.get("capacity", {})
     am = cap_a.get("memory", {})
     for n, h in sorted(asig.get("arg_signatures", {}).items()):
-        d = C.copy_and_cost(am.get("records", {}).get(n, {}), m0, T)
+        try:
+            d = C.copy_and_cost(am.get("records", {}).get(n, {}), m0, T)
+        except ValueError as e:
+            out.append(f"arg signatures: {n!r}'s memory records: {e}")
+            continue
         if d.get("copy") is None or h.get("copy") != d["copy"] or \
                 not isinstance(h.get("cost"), int) or h["cost"] < d["cost"]:
             out.append(f"arg signatures: {n!r}'s copy/cost {h.get('copy')}/{h.get('cost')} "
@@ -1271,22 +1374,135 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
         for w in ("text", "math"):
             if h[w][0] != "run":
                 continue
-            r = mb.get(w)
-            if not r:
-                out.append(f"arg signatures: {n!r} has no memory worst case in {w} (C-98)")
+            for key in (w, f"{w}:costly"):
+                r = mb.get(key)
+                if not r:
+                    out.append(f"arg signatures: {n!r} has no memory worst case {key} "
+                               f"(C-98, C-100)")
+                    continue
+                at, past = r["at"], r["past"]
+                if not (at.get("verdict") == "ready" and _ok(at) and at["used"] * 2 <= at["of"]
+                        and at.get("mem", MAX_MEM + 1) <= MAX_MEM):
+                    out.append(f"arg signatures: {n!r}'s memory worst case {key} does not "
+                               f"compile within half of main memory ({at.get('used')} of "
+                               f"{at.get('of')})")
+                if not (past.get("verdict") == "not_strict" and r.get("past_over")):
+                    out.append(f"arg signatures: {n!r}'s memory worst case {key} plus one "
+                               f"is not outside the fragment")
+    return out
+
+
+def _dims_derived(repo: Path, block: dict) -> dict:
+    """The derivation (_strict_dims.derive) of a dimension evidence file named
+    by a signature file's dims block, after checking its sha256."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import _strict_dims as DM
+    ev = block["evidence"]
+    p = repo / ev["file"]
+    if sha(p) != ev["sha256"]:
+        raise ValueError(f"{ev['file']}: sha256 is not the one recorded")
+    return DM.derive(json.loads(p.read_text())["measurement"])
+
+
+def dims_findings(repo: Path, sig: dict, asig: dict) -> list[str]:
+    """Check 14 (C-100): the dimension account re-derived from its PRIMARY
+    records (TeX's box dumps, the characters' dimensions, the layout
+    parameters, the noads; corpora/strict_s0/dims_s{0,1}.json, by sha256)
+    with the generators' own function (_strict_dims.derive): the structural
+    table the loader reads, every admitted name's and command's [text, math]
+    dims, and each command's boundaries and scripts within the phase-1
+    constants; every admitted name measured in every mode it runs in; every
+    name with dimensions in a mode at the dimension bound (graded, agreeing,
+    pdfTeX's own box within the account) and one past it outside."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import _strict_dims as DM
+    out = []
+    blk = sig.get("dims_derivation")
+    if not blk or "dims" not in sig:
+        return ["signatures: no dimension account (C-100; regenerate)"]
+    try:
+        dd = _dims_derived(repo, blk)
+    except Exception as e:  # noqa: BLE001
+        return [f"signatures: dimension evidence: {e}"]
+    if DM.table(dd) != sig["dims"]:
+        out.append("signatures: the structural dimension table is not what the evidence "
+                   "gives (C-100)")
+    for k in ("B_text", "B_math", "script", "open", "space", "par", "display", "inline"):
+        if abs(blk.get(k, -1) - dd[k]) > 1e-9:
+            out.append(f"signatures: dims_derivation.{k} {blk.get(k)} is not the evidence's "
+                       f"{dd[k]}")
+    tn, mn = set(blk.get("text_names", [])), set(blk.get("math_names", []))
+    for n, h in sorted(sig.get("signatures", {}).items()):
+        runs_t, runs_m = not isinstance(h["text"], list), not isinstance(h["math"], list)
+        if (runs_t and n not in tn) or (runs_m and n not in mn):
+            out.append(f"signatures: {n!r} is not measured in every mode it runs in")
+            continue
+        want = [DM.up(dd["items"][n][0]) if n in tn else 0,
+                DM.up(dd["items"][n][1]) if n in mn else 0]
+        if not runs_t:
+            want[0] = 0
+        if not runs_m:
+            want[1] = 0
+        if h.get("dim") != want:
+            out.append(f"signatures: {n!r}'s dim {h.get('dim')} is not what the evidence "
+                       f"gives ({want}; C-100)")
+        db = sig.get("dim_bound", {}).get(n, {})
+        for i, where in ((0, "TEXT"), (1, "MATH"), (1, "DISPLAY")):
+            if not h.get("dim") or h["dim"][i] == 0:
                 continue
-            at, past = r["at"], r["past"]
-            if _ok(at) and at["used"] > m0 + at.get("mem", 0):
-                out.append(f"arg signatures: {n!r}'s memory worst case in {w} uses "
-                           f"{at['used']} words, more than the account "
-                           f"{m0 + at.get('mem', 0)} (C-98)")
-            if not (at.get("verdict") == "ready" and _ok(at) and at["used"] * 2 <= at["of"]
-                    and at.get("mem", MAX_MEM + 1) <= MAX_MEM):
-                out.append(f"arg signatures: {n!r}'s memory worst case in {w} does not compile "
-                           f"within half of main memory ({at.get('used')} of {at.get('of')})")
-            if not (past.get("verdict") == "not_strict" and past.get("mem", 0) > MAX_MEM):
-                out.append(f"arg signatures: {n!r}'s memory worst case plus one in {w} is "
-                           f"not outside the fragment")
+            at, past = db.get(f"R-DIM-{where}"), db.get(f"R-DIM-{where}-PAST")
+            if not at or not past:
+                out.append(f"signatures: {n!r} has no document at the dimension bound in "
+                           f"{where} and one past it (C-100)")
+                continue
+            o = at.get("oracle") or [1, False]
+            if not (at.get("verdict") in ("ready", "not_ready")
+                    and (o[0] == 0) == (at["verdict"] == "ready")):
+                out.append(f"signatures: {n!r} at the dimension bound ({where}) does not agree")
+            box = at.get("box")
+            if box is None or sum(abs(v) for v in box) > at.get("dim", -1):
+                out.append(f"signatures: {n!r} at the dimension bound ({where}): pdfTeX's box "
+                           f"{box} is not within the account {at.get('dim')} (C-100)")
+            if past.get("verdict") != "not_strict":
+                out.append(f"signatures: {n!r} one past the dimension bound ({where}) is "
+                           f"{past.get('verdict')}, not outside")
+    ab = asig.get("dims_derivation")
+    asigs = asig.get("arg_signatures", {})
+    if asigs and not ab:
+        return out + ["arg signatures: no dimension account (C-100; regenerate)"]
+    if asigs:
+        try:
+            ev = ab["evidence"]
+            p = repo / ev["file"]
+            if sha(p) != ev["sha256"]:
+                raise ValueError(f"{ev['file']}: sha256 is not the one recorded")
+            m = json.loads(p.read_text())["measurement"]
+            da, exc = DM.derive(m), DM.excesses(m)
+        except Exception as e:  # noqa: BLE001
+            return out + [f"arg signatures: dimension evidence: {e}"]
+        tc, mc = set(ab.get("text_cmds", [])), set(ab.get("math_cmds", []))
+        for n, h in sorted(asigs.items()):
+            if (h["text"][0] == "run" and n not in tc) or (h["math"][0] == "run" and n not in mc):
+                out.append(f"arg signatures: {n!r} is not measured in every mode it runs in")
+                continue
+            it = da["items"][n]
+            tv = None
+            if n in tc and h["text"][0] == "run":
+                tv = it[0] - (da["B_text"] if it[0] > 0 else 0) + \
+                    (blk["B_text"] if it[0] > 0 else 0)
+            mv = None
+            if n in mc and h["math"][0] == "run":
+                mv = it[1] - da["atoms"][n] * da["B_math"] + da["atoms"][n] * blk["B_math"]
+            want = [DM.up(tv), DM.up(mv)]
+            if h.get("dim") != want:
+                out.append(f"arg signatures: {n!r}'s dim {h.get('dim')} is not what the "
+                           f"evidence gives ({want}; C-100)")
+            wt = max([e for k, e in exc["text"].items() if n in k.split("|")] + [0.0])
+            wm = max([e for k, e in exc["math"].items() if n in k.split("|")[1:]] + [0.0])
+            ws = max([e for k, e in exc["script"].items() if k.split("|")[1] == n] + [0.0])
+            if wt > blk["B_text"] or wm > blk["B_math"] or ws > blk["script"]:
+                out.append(f"arg signatures: {n!r} makes a boundary past the phase-1 "
+                           f"constants (text {wt:.3f}, math {wm:.3f}, script {ws:.3f}; C-100)")
     return out
 
 
@@ -1639,11 +1855,18 @@ def main() -> int:
     for pin in ("Example max_groups_is_200 : max_groups = 200.",
                 "Example max_tokens_is_20000 : max_tokens = Nat.mul 200 100.",
                 "Example max_name_is_100 : max_name = 100.",
-                "Example max_mem_is_100_tokens : max_mem = Nat.mul max_tokens 100."):
+                "Example max_mem_is_100_tokens : max_mem = Nat.mul max_tokens 100.",
+                "Example max_dim_is_8000 : max_dim = Nat.mul 80 100."):
         if pin not in decide_v:
             fails.append(f"Decide.v: missing the pin `{pin}`")
-    if (MAX_GROUPS, MAX_TOKENS, MAX_NAME, MAX_MEM) != (200, 200 * 100, 100, 200 * 100 * 100):
+    if (MAX_GROUPS, MAX_TOKENS, MAX_NAME, MAX_MEM, MAX_DIM) != (200, 200 * 100, 100,
+                                                                200 * 100 * 100, 80 * 100):
         fails.append("check_strict_kernel: MAX_GROUPS/MAX_TOKENS/MAX_NAME differ from Decide.v")
+    import _strict_capacity as _C
+    import _strict_dims as _DM
+    if not (_C.DIM_BOUND == _DM.DIM_BOUND == MAX_DIM):
+        fails.append("the harness's dimension bound (_strict_capacity/_strict_dims "
+                     "DIM_BOUND) is not Decide.v's max_dim (C-100)")
     for want, what in CAPACITY_ACCOUNT:
         if want not in code_d:
             fails.append(f"Decide.v: {what} is not the pinned account `{want}` (C-94)")
@@ -1677,6 +1900,8 @@ def main() -> int:
                                  f"depths give ({gm}; M-2)")
     # 13. THE MEMORY ACCOUNT IS RECOMPUTED FROM PRIMARY RECORDS (C-98)
     fails += memory_findings(sig, asig)
+    # 14. THE DIMENSION ACCOUNT IS RE-DERIVED FROM PRIMARY RECORDS (C-100)
+    fails += dims_findings(repo, sig, asig)
     # 11. THE CAPACITY ACCOUNT IS PROBED (C-94)
     fails += capacity_findings(repo, ext_sha, sha(sig_path),
                                sha(asig_path) if asig else None, asigs, extract)

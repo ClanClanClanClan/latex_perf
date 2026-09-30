@@ -211,6 +211,30 @@ Fixpoint first_heavy (K : contract) (b : nat) (opens : list (nat * nat)) (acc : 
       end
   end.
 
+(** The first token at which a segment of the dimension account
+    ([Decide.dim], C-100), counted as [dim_run] counts it, passes
+    [max_dim]. *)
+Fixpoint first_wide (K : contract) (s : state) (acc : nat) (ks : list ktok) : option ktok :=
+  match ks with
+  | [] => None
+  | k :: r =>
+      let t := k_tok k in
+      let m := in_math (s_frames s) in
+      let a := if seg_start s t then c_dim K m t else acc + c_dim K m t in
+      if Nat.ltb max_dim a then Some k else
+      match step K s t (option_map k_tok (hd_error r)) with
+      | Go1 s' => first_wide K s' a r
+      | Go2 s' =>
+          match r with
+          | [] => None
+          | k2 :: r' =>
+              let a2 := a + c_dim K m (k_tok k2) in
+              if Nat.ltb max_dim a2 then Some k2 else first_wide K s' a2 r'
+          end
+      | _ => None
+      end
+  end.
+
 Definition off_or (o : option ktok) (dflt : nat) : nat :=
   match o with Some k => k_off k | None => dflt end.
 
@@ -250,9 +274,13 @@ Definition explain (C : bcontract) (b : list ascii) : option (nat * why_out) :=
                           match first_heavy K 0 [] 0 ks with
                           | Some k => Some (k_off k, WBound)
                           | None =>
+                          match first_wide K init (c_dim K false (TPar false)) ks with
+                          | Some k => Some (k_off k, WBound)
+                          | None =>
                               if ends_dollar (toks_of ks)
                               then Some (off_or (last (map Some ks) None) (length b), WEndsDollar)
                               else None
+                          end
                           end
                           end
                           end

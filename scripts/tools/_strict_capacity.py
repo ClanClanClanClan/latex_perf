@@ -140,91 +140,34 @@ def adjacent(frames_innermost_first: list[str], below: str, above: str) -> bool:
 
 
 # ---------------------------------------------------------------- memory ---
-# C-98. pdfTeX's main memory holds (i) what the format and the class leave
-# at body start, (ii) the nodes the typeset material makes, a cost per token
-# that depends on the construct, and (iii) a COPY of every argument a command
-# is running, which an argument command nested inside another argument reads
-# out of the outer copy: tokens times depth. The account over the model is
-#     used(doc) <= M0 + A * ntoks + W * held
-# (Decide.held; ntoks the model's tokens), with A the most node memory per
-# token any construct of the fragment makes, anywhere, and W the most memory
-# per held token any argument command costs, each MEASURED by a maximiser
-# over every admitted name and command and every structural shape. The
-# families below are the maximiser's documents; measure_strict_capacity.py
-# grades them, and check_strict_kernel.py recomputes A, W and the account
-# from the per-document records.
-
-def _flat(unit: list, per: int, total: int) -> list:
-    return unit * max(1, (total - 1) // per)
-
-
-def memory_survey(S, sigs: dict, asigs: dict, total: int) -> list[tuple[str, dict]]:
-    """(family, document): each construct repeated to the token bound, in
-    text, in math, and inside one box argument (nodes kept until the box
-    closes); structural shapes likewise."""
-    t, g, c = S.text, S.group, S.cmd
-    x = t("x")
-    dollar = lambda *b: S.math("dollar", *b)  # noqa: E731
-    paren = lambda *b: S.math("paren", *b)  # noqa: E731
-    box = sorted(n for n, h in asigs.items() if h["text"][0] == "run"
-                 and h["text"][2] == "text_restricted" and h["text"][3] == 1)
-    out = []
-    shapes = {
-        "chars": ([x], 1), "char-space": ([x, S.space()], 2),
-        "char-par": ([x, S.par()], 2), "group": ([g(x)], 3),
-        "inline": ([dollar(x)], 3), "paren": ([paren(x)], 3),
-        "display": ([S.math("display", x)], 5), "bracket": ([S.math("bracket", x)], 3),
-    }
-    for name, (unit, per) in shapes.items():
-        out.append((f"MEM-S:{name}", S.doc(*_flat(unit, per, total))))
-        if box and name not in ("char-par", "display", "bracket"):
-            out.append((f"MEM-SB:{name}", S.doc(c(box[0]), g(*_flat(unit, per, total - 3)))))
-    math_shapes = {
-        "formula": ([x], 1), "sup": ([x, S.script(True, x)], 3),
-        "supgroup": ([x, S.script(True, g(x))], 5), "mgroup": ([g(x)], 3),
-    }
-    for name, (unit, per) in math_shapes.items():
-        out.append((f"MEM-SM:{name}", S.doc(paren(*_flat(unit, per, total - 2)))))
-    for n, h in sorted(sigs.items()):
-        if not isinstance(h["text"], list):
-            out.append((f"MEM-T:{n}", S.doc(*_flat([c(n)], 1, total - 1), x)))
-            if box:
-                out.append((f"MEM-TB:{n}", S.doc(c(box[0]), g(*_flat([c(n)], 1, total - 4)))))
-        if not isinstance(h["math"], list):
-            out.append((f"MEM-M:{n}", S.doc(paren(*_flat([c(n)], 1, total - 2)))))
-    for n, h in sorted(asigs.items()):
-        if h["text"][0] == "run":
-            out.append((f"MEM-A:{n}", S.doc(*_flat([c(n), g()], 3, total))))
-            out.append((f"MEM-AX:{n}", S.doc(*_flat([c(n), g(x)], 4, total))))
-        if h["math"][0] == "run":
-            out.append((f"MEM-AM:{n}", S.doc(paren(*_flat([c(n), g()], 3, total - 2)))))
-    return out
-
+# C-98, C-100. pdfTeX's main memory holds (i) what the format and the class
+# leave at body start, (ii) the nodes the typeset material makes, a cost per
+# token that depends on the construct, and (iii) a COPY of every argument a
+# command is running, which an argument command nested inside another
+# argument reads out of the outer copy: tokens times depth. The account over
+# the model is Decide.mem: every token its c_cost, every argument's tokens its
+# command's as_copy (Decide.held); it is checked, never proved, to bound
+#     used(doc) <= M0 + mem(doc)
+# with M0 what pdfTeX reports for a one-character document.
+#
+# HOW A COST IS MEASURED (C-100). pdfTeX reports a HIGH-WATER MARK, and the
+# base document's already holds some 31,000 words that \begin{document}
+# allocates and frees again: a document's report is max(M0, B + c * n) with
+# B < M0, so the first ~31,000 words of its material are hidden under M0. C-98
+# divided the report by the count (used - M0) / n, which is (B - M0)/n + c < c:
+# an UNDER-count, up to 1.25x at 4,000 repetitions (the round-1 review). The
+# cost is now the SLOPE of the report over the count between documents whose
+# material is well past that mark (300,000 words and twice that), which is c
+# exactly once both are past it, and never more than c before; the largest
+# per-occurrence figure is kept as well (both are lower bounds of c).
+# Every record carries pdfTeX's own report ("used"); a grade without it (a
+# grade reused from a file that did not keep the statistics) is refused.
 
 def nested(S, x: str, depth: int, inner: list) -> list:
     node = inner
     for _ in range(depth):
         node = [S.cmd(x), S.group(*node)]
     return node
-
-
-def held_slopes(S, asigs: dict, max_groups: int) -> list[tuple[str, dict]]:
-    """For each argument command and mode, the same 5,000 characters inside
-    few and many levels of the command: the memory per held token is the
-    slope (the documents differ only in the copies)."""
-    out = []
-    inner = [S.text("x" * 5000)]
-    for n, h in sorted(asigs.items()):
-        for w, mk in (("text", lambda b: S.doc(*b)),
-                      ("math", lambda b: S.doc(S.math("paren", *b)))):
-            if h[w][0] != "run":
-                continue
-            g = h[w][3] if w == "text" else h[w][2]
-            gi = max(h["text"][3] if h["text"][0] == "run" else 1, g, 1)
-            deep = max(2, (max_groups - 2) // gi)
-            for d in (2, deep):
-                out.append((f"MEM-H:{n}/{w}@{d}", mk(nested(S, n, d, inner))))
-    return out
 
 
 def mem_build(S, x: str, where: str, unit: list, D: int, k: int, r: int, p: int) -> dict:
@@ -236,21 +179,21 @@ def mem_build(S, x: str, where: str, unit: list, D: int, k: int, r: int, p: int)
 
 
 def mem_maximiser(S, model, x: str, where: str, unit: list, max_groups: int,
-                  max_tokens: int, max_mem: int) -> dict:
+                  max_tokens: int, max_mem: int, pchar: list | None = None) -> dict:
     """The worst case of the memory account for the argument command x run
     from `where` (text or math): as many levels of x as the group bound
-    allows, the costliest filler innermost (every innermost token is held by
-    every level) and at the outermost level, then characters, as many as the
-    account (Decide.mem <= max_mem) and the token bound allow. Returns the
-    document AT the bound and the one with ONE more character (past it).
-    `model` runs the extracted decider under the contract being attested."""
+    allows, the filler innermost (every innermost token is held by every
+    level) and at the outermost level, then characters, as many as the
+    FRAGMENT allows (the model's verdict: every bound of Decide.bounded, the
+    dimension account of C-100 included). Returns the document AT the bound
+    and the one with ONE more character (past it). `model` runs the extracted
+    decider under the contract being attested."""
     def build(D, k, r, p):
         return mem_build(S, x, where, unit, D, k, r, p)
 
     def fits(d):
         m = model(d)
-        return m["mem"] <= max_mem and m["ntoks"] <= max_tokens - 2 and \
-            m["peak_groups"] <= max_groups, m
+        return m["verdict"] != "not_strict", m
 
     def largest(f, hi):
         lo = 0
@@ -269,45 +212,131 @@ def mem_maximiser(S, model, x: str, where: str, unit: list, max_groups: int,
     p = largest(lambda p: fits(build(D, k, r, p))[0], max_tokens)
     at, past = build(D, k, r, p), build(D, k, r, p + 1)
     ma, mp = model(at), model(past)
+    which = [b for b, over in (("mem", mp["mem"] > max_mem), ("tokens", mp["ntoks"] > max_tokens),
+                               ("dim", mp.get("dim", 0) > DIM_BOUND)) if over]
     return {"at": at, "past": past, "depth": D, "inner_units": k, "outer_units": r,
             "chars": p, "mem_at": ma["mem"], "mem_past": mp["mem"],
+            "dim_at": ma.get("dim"), "dim_past": mp.get("dim"), "past_over": which,
             "past_outside": mp["verdict"] == "not_strict"}
 
 
-# ---------------------------------------------- measured costs (C-98) -------
-# Every cost of Contract.v c_cost / as_copy is derived here, from primary
-# records (the graded document's sha256, its model counts, pdfTeX's reported
-# memory), by the generators AND again by check_strict_kernel.py.
+DIM_BOUND = 8000  # Decide.v max_dim (check_strict_kernel.py pins it)
+
 
 def memory_record(m: dict, g: dict | None, **extra) -> dict:
+    """The primary record of one memory document: its bytes' sha256, the
+    model's counts and verdict, and (graded) the oracle tuple and pdfTeX's
+    own report. A grade without pdfTeX's statistics is refused (C-100: 83 of
+    the C-98 bound records had none, and the gate's check skipped them)."""
     import hashlib
     r = {"sha256": hashlib.sha256(m["tex"].encode()).hexdigest(), "ntoks": m["ntoks"],
-         "held": m.get("held"), "mem": m.get("mem"), "verdict": m["verdict"], **extra}
+         "held": m.get("held"), "mem": m.get("mem"), "dim": m.get("dim"),
+         "verdict": m["verdict"], **extra}
     if g is not None:
         st = (g.get("stats") or {}).get("main_memory")
+        if not st:
+            raise ValueError(f"memory record {extra}: the grade carries no pdfTeX "
+                             f"statistics (a reused grade?); regrade it with stats")
         r.update({"oracle": [g["rc"], g["pdf"], g["error"], g["line"]],
-                  "used": st[0] if st else None, "of": st[1] if st else None,
-                  "stats": g.get("stats") or {}})
+                  "used": st[0], "of": st[1], "stats": g.get("stats") or {}})
     return r
 
 
-def structural_docs(S, total: int) -> list[tuple[str, dict]]:
+def raw_record(tex: str, g: dict, **extra) -> dict:
+    """The record of a memory INSTRUMENT written in TeX directly (no model
+    tokens): its bytes' sha256, the oracle tuple and pdfTeX's report."""
+    import hashlib
+    st = (g.get("stats") or {}).get("main_memory")
+    if not st:
+        raise ValueError(f"instrument {extra}: no pdfTeX statistics")
+    return {"sha256": hashlib.sha256(tex.encode()).hexdigest(), **extra,
+            "oracle": [g["rc"], g["pdf"], g["error"], g["line"]],
+            "used": st[0], "of": st[1]}
+
+
+# The structural shapes: a unit of model tokens, its length; text shapes are
+# the document body, math shapes one inline formula. "hyph" is a 63-letter
+# word TeX hyphenates in its second line-breaking pass (discretionaries and
+# passive nodes per letter); "classes" and "dclasses" put every class of
+# atom the safe characters make side by side (inter-atom glue).
+HYPH_WORD = "incomprehensibilities" * 3
+LEVELS = (20000, 40000, 80000)
+
+
+def structural_units(S) -> dict:
     t, g = S.text, S.group
     x = t("x")
-    shapes = {
-        "chars": ([x], 1), "char-space": ([x, S.space()], 2),
-        "char-par": ([x, S.par()], 2), "group": ([g(x)], 3),
-        "inline": ([S.math("dollar", x)], 3), "paren": ([S.math("paren", x)], 3),
-        "display": ([S.math("display", x)], 5), "bracket": ([S.math("bracket", x)], 3),
+    return {
+        "chars": ("text", [x]), "char-space": ("text", [x, S.space()]),
+        "char-par": ("text", [x, S.par()]), "group": ("text", [g(x)]),
+        "inline": ("text", [S.math("dollar", x)]), "paren": ("text", [S.math("paren", x)]),
+        "display": ("text", [S.math("display", x)]), "bracket": ("text", [S.math("bracket", x)]),
+        "formula": ("paren", [x]), "sup": ("paren", [x, S.script(True, x)]),
+        "supgroup": ("paren", [x, S.script(True, g(x))]), "mgroup": ("paren", [g(x)]),
+        "classes": ("paren", [t("x=(x)+x,")]),
+        "dclasses": ("bracket", [t("x=(x)+x,")]),
     }
-    out = [("BASE", S.doc(x))]
-    for name, (unit, per) in shapes.items():
-        out.append((f"S:{name}", S.doc(*(unit * ((total - 1) // per)))))
-    maths = {"formula": ([x], 1), "sup": ([x, S.script(True, x)], 3),
-             "supgroup": ([x, S.script(True, g(x))], 5), "mgroup": ([g(x)], 3)}
-    for name, (unit, per) in maths.items():
-        out.append((f"SM:{name}", S.doc(S.math("paren", *(unit * ((total - 3) // per))))))
+
+
+def _ulen(unit: list) -> int:
+    n = 0
+    for u in unit:
+        if u[0] == "text":
+            n += len(u[1])
+        elif u[0] == "group":
+            n += 2 + _ulen(u[1])
+        elif u[0] == "math":
+            n += {"dollar": 2, "paren": 2, "display": 4, "bracket": 2}[u[1]] + _ulen(u[2])
+        elif u[0] == "script":
+            n += 1 + _ulen([u[2]])
+        else:
+            n += 1
+    return n
+
+
+def hyph_bytes(units: int) -> bytes:
+    """The hyphenation instrument, as BYTES (the renderer puts a line end,
+    a space, after every character, so a rendered document never holds a
+    word; a file does): `units` times a 63-letter word TeX hyphenates in its
+    second line-breaking pass and a space, 16 words a line."""
+    words = [HYPH_WORD.encode() + b" "] * units
+    lines = [b"".join(words[i:i + 16]) for i in range(0, units, 16)]
+    return (b"\\documentclass{article}\n\\begin{document}\n" + b"\n".join(lines)
+            + b"\n\\end{document}\n")
+
+
+def structural_doc(S, name: str, units: int) -> dict:
+    where, unit = structural_units(S)[name]
+    body = unit * units
+    return S.doc(*body) if where == "text" else S.doc(S.math(where, *body))
+
+
+def structural_docs(S, level: int = LEVELS[0]) -> list[tuple[str, dict, dict]]:
+    """(family, document, extra): the base, and each shape at `level` tokens
+    (an instrument: graded for pdfTeX's report only)."""
+    out = [("BASE", S.doc(S.text("x")), {})]
+    for name, (where, unit) in structural_units(S).items():
+        k = max(1, level // _ulen(unit))
+        out.append((f"S:{name}@{k}", structural_doc(S, name, k), {"units": k}))
+    k = level // 64
+    out.append((f"S:hyph@{k}", None, {"units": k, "bytes": True}))
     return out
+
+
+def more_levels(r: dict, m0: int, count: int, k1: int, cap: int) -> list[int]:
+    """The two larger counts of a memory instrument, from its first level's
+    report: the second with at least MEM_PAST_HW words of material past the
+    base, the third twice that, both at most MEM_MAX_WORDS words (under half
+    of main memory with the base: an instrument never counts against the
+    capacity table's margin) and `cap` repetitions."""
+    est = max(1.0, (r["used"] - m0) / count)
+    k2 = int(min(cap, max(2 * k1, -(-MEM_PAST_HW // est))))
+    k3 = int(min(2 * k2, cap, MEM_MAX_WORDS // est))
+    return [k for k in (k2, k3) if k > k1]
+
+
+MEM_PAST_HW = 300000
+MEM_MAX_WORDS = 1800000
 
 
 def _ok(r: dict) -> bool:
@@ -315,47 +344,148 @@ def _ok(r: dict) -> bool:
     return bool(o) and o[0] == 0 and o[1] and r.get("used") is not None
 
 
+def _levels(recs: dict, prefix: str) -> dict[str, list[dict]]:
+    """{context: [records by increasing count]} of the families
+    `{prefix}{context}@{level}`."""
+    by: dict[str, list[dict]] = {}
+    for f, r in recs.items():
+        if f.startswith(prefix) and "@" in f:
+            by.setdefault(f[len(prefix):].split("@")[0], []).append(r)
+    return {k: sorted(v, key=lambda r: r.get("count") or r.get("units") or r["ntoks"])
+            for k, v in by.items()}
+
+
 def token_cost(structural: dict) -> int:
-    """The most memory per token any structural shape takes over the base,
-    rounded up, plus one."""
+    """The most memory per token any structural shape takes: over every
+    shape, the slope of pdfTeX's report over the tokens between consecutive
+    levels and the per-token report over the base at every level, rounded
+    up, plus one. Every level must have compiled with its report (a shape
+    that does not is a finding, never skipped)."""
     import math
     m0 = structural["BASE"]["used"]
-    worst = max((r["used"] - m0) / r["ntoks"] for f, r in structural.items()
-                if f != "BASE" and _ok(r))
-    return math.ceil(worst) + 1
+    vals = []
+    for ctx, rs in _levels(structural, "S:").items():
+        for r in rs:
+            if not _ok(r):
+                raise ValueError(f"structural shape {ctx}: a level did not compile")
+            vals.append((r["used"] - m0) / r["ntoks"])
+        for a, b in zip(rs, rs[1:]):
+            vals.append((b["used"] - a["used"]) / (b["ntoks"] - a["ntoks"]))
+    return math.ceil(max(vals)) + 1
 
 
-def name_cost(records: list[dict], m0: int, tcost: int) -> int | None:
-    """A name's cost from its repetition documents: the most memory per
-    occurrence over the base and the other tokens' cost, rounded up, plus one
-    (None when no document of it compiled)."""
+def _per(r: dict, m0: int, tcost: int) -> float:
+    return (r["used"] - m0 - tcost * (r["ntoks"] - r["count"])) / r["count"]
+
+
+def _slope(a: dict, b: dict, tcost: int) -> float:
+    return (((b["used"] - a["used"]) - tcost * ((b["ntoks"] - b["count"])
+                                                 - (a["ntoks"] - a["count"])))
+            / (b["count"] - a["count"]))
+
+
+def name_base_cost(recs: dict, m0: int, tcost: int) -> int | None:
+    """A name's measured memory per occurrence from its repetition documents
+    `R-MEM-{context}@{level}` (the other tokens charged the token cost): the
+    largest slope between consecutive levels of a context, and the largest
+    per-occurrence figure, rounded up, plus one. None when it has none; a
+    level that did not compile is refused."""
     import math
-    xs = [(r["used"] - m0 - tcost * (r["ntoks"] - r["count"])) / r["count"]
-          for r in records if _ok(r) and r.get("count")]
-    return math.ceil(max(xs)) + 1 if xs else None
+    vals = []
+    for ctx, rs in _levels(recs, "R-MEM-").items():
+        for r in rs:
+            if not _ok(r):
+                raise ValueError(f"memory context {ctx}: a level did not compile")
+            vals.append(_per(r, m0, tcost))
+        for a, b in zip(rs, rs[1:]):
+            vals.append(_slope(a, b, tcost))
+    return math.ceil(max(vals)) + 1 if vals else None
+
+
+def name_cost(recs: dict, m0: int, tcost: int, letters: int, atoms: int,
+              boundary: dict) -> int | None:
+    """The name's cost (Contract.v c_cost): its base cost, plus the memory
+    of the boundaries it can make with ANY neighbour, which no repetition of
+    the name alone shows: per letter it prints in text, a letter's memory in
+    a word TeX hyphenates (H_text); per atom it makes in math, the largest
+    inter-atom excess over the eight classes (B_math). At least the token
+    cost."""
+    b = name_base_cost(recs, m0, tcost)
+    if b is None:
+        return None
+    return max(tcost, b + letters * boundary["H_text"] + atoms * boundary["B_math"])
+
+
+def boundary_constants(structural: dict, pairs: dict) -> dict:
+    """H_text: the per-token slope of the hyphenated-word shape, rounded up;
+    B_math: over the class-pair instruments `CP:{a}.{b}@{level}` (units of
+    two atoms), the largest excess of a pair's slope per unit over the mean of
+    its two classes' own, rounded up (0 if none exceeds)."""
+    import math
+    rs = _levels(structural, "S:")["hyph"]
+    h = max((b["used"] - a["used"]) / (b["ntoks"] - a["ntoks"]) for a, b in zip(rs, rs[1:]))
+    sl = {}
+    for ctx, rr in _levels(pairs, "CP:").items():
+        for r in rr:
+            if not _ok(r):
+                raise ValueError(f"class pair {ctx}: a level did not compile")
+        sl[ctx] = max((b["used"] - a["used"]) / (b["units"] - a["units"])
+                      for a, b in zip(rr, rr[1:]))
+    ex = [0.0]
+    for ctx, s in sl.items():
+        a, b = ctx.split(".")
+        ex.append(s - (sl[f"{a}.{a}"] + sl[f"{b}.{b}"]) / 2)
+    return {"H_text": math.ceil(h), "B_math": math.ceil(max(ex))}
+
+
+def class_pair_docs(levels=(8000, 16000)) -> list[tuple[str, str, dict]]:
+    """(family, TeX, extra): two atoms of the given classes, repeated, in a
+    display-style formula (instruments; the spacing of the display and text
+    styles is the largest)."""
+    from itertools import product
+    classes = ("mathord", "mathop", "mathbin", "mathrel", "mathopen", "mathclose",
+               "mathpunct", "mathinner")
+    out = []
+    for a, b in product(classes, classes):
+        for L in levels:
+            unit = f"\\{a}{{x}}\\{b}{{x}}"
+            lines = "\n".join(unit * 20 for _ in range(L // 20))
+            tex = ("\\documentclass{article}\n\\begin{document}\n$\\displaystyle\n"
+                   + lines + "\n$\n\\end{document}\n")
+            out.append((f"CP:{a}.{b}@{L}", tex, {"units": L}))
+    return out
 
 
 def copy_and_cost(recs: dict, m0: int, tcost: int) -> dict:
     """An argument command's copy factor and cost from stage G's memory
-    documents, per mode: FLAT (the command with an empty / one-character
-    argument, repeated: cost per occurrence), SHALLOW / DEEP / DEEP-HALF (the
-    same characters inside 2 and D levels, and half of them inside D): the
-    copy factor is the slope over the tokens held (raw held, factor 1), the
-    per-level memory the rest; the cost is the larger of the flat cost per
-    occurrence and the per-level memory, rounded up, plus one."""
+    documents, per mode: FLAT@k / FLATX@k (the command with an empty /
+    one-character argument, repeated, at two or more counts: the SLOPE per
+    occurrence, C-100), SHALLOW / DEEP / DEEP-HALF (the same characters inside
+    2 and D levels, and half of them inside D): the copy factor is the slope
+    over the tokens held (raw held, factor 1), the per-level memory the rest;
+    the cost is the larger of the flat cost per occurrence and the per-level
+    memory, rounded up, plus one."""
     import math
     slope, levels, flat = [], [], []
     for w in ("text", "math"):
         sh, dp, hf = (recs.get(f"G-MEM-{k}:{w}") for k in ("SHALLOW", "DEEP", "DEEP-HALF"))
-        if sh and dp and hf and _ok(sh) and _ok(dp) and _ok(hf):
+        for r in (sh, dp, hf):
+            if r is not None and not _ok(r):
+                raise ValueError(f"stage G memory document {w} did not compile")
+        if sh and dp and hf:
             W = (dp["used"] - hf["used"]) / (dp["held"] - hf["held"])
             slope.append(W)
             levels.append((dp["used"] - sh["used"] - W * (dp["held"] - sh["held"]))
                           / (dp["depth"] - sh["depth"]))
         for k in ("FLAT", "FLATX"):
-            r = recs.get(f"G-MEM-{k}:{w}")
-            if r and _ok(r):
-                flat.append((r["used"] - m0 - tcost * (r["ntoks"] - r["count"])) / r["count"])
+            rs = sorted((r for f, r in recs.items() if f.startswith(f"G-MEM-{k}:{w}@")),
+                        key=lambda r: r["count"])
+            for r in rs:
+                if not _ok(r):
+                    raise ValueError(f"stage G {k} {w}: a level did not compile")
+                flat.append(_per(r, m0, tcost))
+            for a, b in zip(rs, rs[1:]):
+                flat.append(_slope(a, b, tcost))
     if not slope:
         return {"copy": None, "cost": None}
     # a cost below one word (the braces of an empty argument are already
@@ -363,3 +493,84 @@ def copy_and_cost(recs: dict, m0: int, tcost: int) -> dict:
     return {"copy": math.ceil(max(slope)), "cost": max(1, math.ceil(max(flat + levels)) + 1),
             "slope": round(max(slope), 4), "per_level": round(max(levels), 1),
             "flat": round(max(flat), 1) if flat else None}
+
+
+# ----------------------------------------- the phase-1 memory documents ------
+# Written once here: the generator builds them, the binary gate
+# (check_strict_capacity.py) rebuilds them from the recorded family and count
+# and requires the recorded bytes and model counts to be the extracted model's.
+
+MEM_CONTEXTS = ("TEXT", "MATH", "DISPLAY", "MSCRIPT", "DSCRIPT")
+
+
+# A display's material is ONE box: past 2^31 sp its width wraps and the run
+# may stop ("Dimension too large", C-100), so a display instrument holds at
+# most DISPLAY_WIDTH points of the name (by the account) and reaches past the
+# base's high-water mark with a BALLAST of empty math groups before it (Ord
+# atoms with no width), the same at every level: the slope over the levels is
+# the name's alone. (A display inside the fragment holds at most 8,000 points
+# of material anyway.)
+BALLAST = 15000
+DISPLAY_WIDTH = 12000
+
+
+def display_levels(unit_dim: int, cap: int) -> list[int]:
+    """Three counts of a display instrument whose unit has `unit_dim` points
+    in math."""
+    k3 = min(cap, DISPLAY_WIDTH // unit_dim) if unit_dim > 0 else min(cap, 20000)
+    return sorted({max(1, k3 // 4), max(2, k3 // 2), max(3, k3)})
+
+
+def name_mem_doc(S, x: str, ctx: str, k: int) -> dict:
+    """`R-MEM-{ctx}@{k}`: the name k times in text (then a character), in a
+    formula, in a display (after the ballast), and with a super- and a
+    subscript each time in a formula and in a display (after the ballast)."""
+    c = S.cmd(x)
+    unit = [c, S.script(True, S.text("x")), S.script(False, S.text("x"))]
+    ballast = [S.group()] * BALLAST
+    if ctx == "TEXT":
+        return S.doc(*([c] * k), S.text("x"))
+    if ctx == "MATH":
+        return S.doc(S.math("paren", *([c] * k)))
+    if ctx == "DISPLAY":
+        return S.doc(S.math("bracket", *ballast, *([c] * k)))
+    if ctx == "MSCRIPT":
+        return S.doc(S.math("paren", *(unit * k)))
+    if ctx == "DSCRIPT":
+        return S.doc(S.math("bracket", *ballast, *(unit * k)))
+    raise ValueError(ctx)
+
+
+def cap_doc(S, dims, x: str, where: str, k: int) -> dict:
+    """`R-CAP-{where}` with count k: the name k times, cut within the
+    dimension bound (paragraphs; in math, formulas) by `dims.segment`."""
+    c = S.cmd(x)
+    if where == "TEXT":
+        return dims.segment(S, S.doc(*([c] * k), S.text("x")))
+    return dims.segment(S, S.doc(S.math("paren", *([c] * k))))
+
+
+def dim_doc(S, x: str, where: str, k: int) -> dict:
+    """`R-DIM-{where}` with count k: one paragraph, formula or display of the
+    name k times (the dimension bound's document)."""
+    c = S.cmd(x)
+    if where == "TEXT":
+        return S.doc(*([c] * k))
+    if where == "MATH":
+        return S.doc(S.math("paren", *([c] * k)))
+    return S.doc(S.math("bracket", *([c] * k)))
+
+
+def review_docs(S) -> list[tuple[str, str, dict]]:
+    """The round-1 review's memory documents (C-100): (family, name, doc)."""
+    c, x = S.cmd, S.text("x")
+    return [
+        ("R-REVIEW-ttdefault-math", "ttdefault", S.doc(S.math("paren", *[c("ttdefault")] * 19000))),
+        ("R-REVIEW-indexname-math", "indexname", S.doc(S.math("paren", *[c("indexname")] * 6000))),
+        ("R-REVIEW-sum-limits", "sum", S.doc(S.math("bracket", *[
+            n for _ in range(3999) for n in (c("sum"), S.script(True, x), S.script(False, x))]))),
+        ("R-REVIEW-lim-sub", "lim", S.doc(S.math("bracket", *[
+            n for _ in range(6665) for n in (c("lim"), S.script(False, x))]))),
+        ("R-REVIEW-sum-sub", "sum", S.doc(S.math("bracket", *[
+            n for _ in range(6665) for n in (c("sum"), S.script(False, x))]))),
+    ]

@@ -48,13 +48,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
 import _strict_capacity as C  # noqa: E402
 import _strict_s0 as S  # noqa: E402
+import _strict_dims as DM  # noqa: E402
 
 # Version 2 (C-98): the memory account (a maximiser over every construct,
 # the per-held-token slope of every argument command, the worst case at the
 # bound and one token past it for every command), and every graded document
 # recorded with its bytes' sha256, grade and pdfTeX's capacity report, so the
 # gates recompute every derived number from these PRIMARY records.
-GENERATOR_VERSION = "2"
+# Version 3 (C-100): the dimension bound is one of the bounds; the usage
+# documents at the token bound are cut into paragraphs and formulas within
+# it (a document of one 19,999-character paragraph is outside the fragment
+# now); the longest line (19,998 spaces) is recorded as an instrument of the
+# buffer, outside the fragment.
+GENERATOR_VERSION = "3"
 OUT = S.REPO / "corpora/strict_s0/capacity.json"
 MAX_GROUPS, MAX_TOKENS, MAX_NAME = S.MAX_GROUPS, S.MAX_TOKENS, S.MAX_NAME
 # The search range of pdfTeX's own overflow, in model groups.
@@ -263,9 +269,25 @@ def main() -> int:
     names = undef_names(MAX_TOKENS - 10, S.members())
     runner = sorted(n for n, h in asig.items() if h["text"][0] == "run")[0]
     mathname = sorted(n for n, h in sig.items() if h["math"] == "noad")[0]
+    s1d = json.loads(S.SIGNATURES.read_text())
+    dz = DM.Dims(s1d["dims"], {n: v["dim"] for n, v in sig.items()}, asig)
+
+    def to_bound(mk):
+        """mk(k) cut within the dimension bound, with k as large as the token
+        bound allows."""
+        lo, hi = 0, MAX_TOKENS
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if kern.run([{"doc": dz.segment(S, mk(mid))}])[0]["verdict"] != "not_strict":
+                lo = mid
+            else:
+                hi = mid - 1
+        return dz.segment(S, mk(lo))
     usage_docs = {
-        "tokens_text": S.doc(S.text("x" * (MAX_TOKENS - 1))),
-        "tokens_math": S.doc(S.math("paren", *[S.cmd(mathname)] * (MAX_TOKENS - 3))),
+        "tokens_text": to_bound(lambda k: S.doc(S.text("x" * k))),
+        "tokens_math": to_bound(lambda k: S.doc(S.math("paren", *[S.cmd(mathname)] * k))),
+        # an INSTRUMENT of the buffer (outside the fragment since C-100: the
+        # account charges a space its dimensions even where TeX drops it)
         "longest_line": S.doc(*[S.space()] * (MAX_TOKENS - 2), S.cmd("q" * MAX_NAME)),
         "most_names": S.doc(S.cmd(runner), S.group(*[S.cmd(n) for n in names])),
     }
@@ -296,14 +318,14 @@ def main() -> int:
         "schema": "lp-strict-capacity/2",
         "generator": "scripts/tools/measure_strict_capacity.py",
         "generator_version": GENERATOR_VERSION,
-        "correction": "C-94, C-98",
+        "correction": "C-94, C-98, C-100",
         "oracle": oracle.provenance(),
         "source": S.source_block(),
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
         "signatures_sha256": S.sha256_file(S.SIGNATURES),
         "arg_signatures_sha256": S.sha256_file(S.ARG_SIGNATURES),
         "bounds": {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
-                   "max_name": MAX_NAME, "max_mem": S.MAX_MEM},
+                   "max_name": MAX_NAME, "max_mem": S.MAX_MEM, "max_dim": DM.DIM_BOUND},
         "texmf": texmf(oracle),
         "frame_pairs": {"depth": pairs["depth"], "alphabet": pairs["alphabet"],
                         "n": len(pairs["pairs"])},

@@ -104,6 +104,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
 import _strict_capacity as C_  # noqa: E402
+import _strict_dims as DM  # noqa: E402
 import check_strict_kernel as CK  # noqa: E402
 
 # Version 4 (C-92): stage 0's meaning closure follows robust commands
@@ -114,7 +115,19 @@ import check_strict_kernel as CK  # noqa: E402
 # 0 reads expansion texts by TeX's printing rules, every reading, and follows
 # expl3 names and active characters (check_strict_kernel.body_readings); a
 # reuse source is a committed file (REV:path), recorded with its commit.
-GENERATOR_VERSION = "5"
+# Version 7 (C-100): the DIMENSION account (stage D: every surviving name's
+# dimensions measured from TeX's own box dumps, the boundary constants over
+# every pair, the structural table; the repetition families are stage 2b,
+# cut into paragraphs and formulas within the dimension bound; stage 3c adds
+# every name at the dimension bound); memory costs are SLOPES over three
+# counts past the base's high-water mark, in five contexts, plus the
+# boundary constants (a letter's hyphenation, the inter-atom excess); every
+# memory record carries pdfTeX's report; the round-1 review's documents are
+# recorded (memory.review).
+GENERATOR_VERSION = "7"
+DIMS_EVIDENCE = S.REPO / "corpora/strict_s0/dims_s0.json"
+MEMN = 4000
+MEM_MAX_COUNT = 100000   # occurrences in one memory document at most
 STRUCTURAL = CK.STRUCTURAL
 # Two control words outside the closed world (checked in main()).
 UNDEF_A, UNDEF_B = "lpqundefa", "lpqundefb"
@@ -350,13 +363,18 @@ class Grader:
         self.cache: dict[str, dict] = {}
         self.reused = 0
         self.graded = 0
+        self.dev_cache: Path | None = None
 
     @staticmethod
     def key(tex: str) -> str:
         return hashlib.sha256(tex.encode()).hexdigest()
 
-    def grade_all(self, texs: list[str], label: str) -> list[dict]:
-        todo = sorted({self.key(t): t for t in texs if self.key(t) not in self.cache}.items())
+    def grade_all(self, texs: list[str], label: str, stats: bool = False) -> list[dict]:
+        """Every document's grade; with `stats`, a cached grade without
+        pdfTeX's statistics (a reused one) is graded again (C-100: a memory
+        record never lacks pdfTeX's report)."""
+        todo = sorted({self.key(t): t for t in texs if self.key(t) not in self.cache
+                       or (stats and "stats" not in self.cache[self.key(t)])}.items())
         t0, done = time.time(), [0]
 
         def g(kt):
@@ -372,6 +390,8 @@ class Grader:
             for k, r in ex.map(g, todo):
                 self.cache[k] = r
         self.graded += len(todo)
+        if self.dev_cache is not None and todo:
+            self.dev_cache.write_text(json.dumps(self.cache))
         return [self.cache[self.key(t)] for t in texs]
 
 
@@ -400,9 +420,35 @@ def seed_from(grader: Grader, kern, spec: str, oracle) -> dict:
         grader.cache[Grader.key(o["tex"])] = {
             "rc": rc, "pdf": pdf, "passes": None, "timed_out": rc == -1,
             "error": err, "line": line}
-    grader.reused = len(outs)
+    # the memory records keep pdfTeX's statistics: their grades are reused
+    # WITH them (C-100)
+    n_mem = seed_records(grader, old.get("memory", {}))
+    grader.reused = len(outs) + n_mem
     return {**src, "generator_version": old.get("generator_version"),
-            "grades_reused": len(outs)}
+            "grades_reused": len(outs) + n_mem}
+
+
+def seed_records(grader: Grader, tree) -> int:
+    """Seed the grades of every record of `tree` that carries its bytes'
+    sha256, the oracle tuple and pdfTeX's statistics."""
+    n = 0
+
+    def walk(x):
+        nonlocal n
+        if isinstance(x, dict):
+            if "sha256" in x and "oracle" in x and x.get("stats"):
+                rc, pdf, err, line = x["oracle"]
+                grader.cache[x["sha256"]] = {"rc": rc, "pdf": pdf, "passes": None,
+                                             "timed_out": rc == -1, "error": err,
+                                             "line": line, "stats": x["stats"]}
+                n += 1
+            for v in x.values():
+                walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+    walk(tree)
+    return n
 
 
 def fit(kern, x: str, reqs: dict[str, dict], grades: dict[str, dict],
@@ -501,40 +547,226 @@ def ddmin(items: list, test) -> list:
     return items
 
 
+def sig_kernel(tmpdir: Path, sigs: dict, token_cost: int, dtable: dict):
+    """The extracted decider under a provisional signature set (every name
+    with its cost and dim) and the structural dimension table."""
+    p = tmpdir / f"sig-{len(sigs)}-{hashlib.sha256(json.dumps(sigs, sort_keys=True).encode()).hexdigest()[:12]}.json"
+    p.write_text(json.dumps({"source": S.source_block(), "signatures": sigs,
+                             "token_cost": token_cost, "dims": dtable}))
+    return S.Kernel(signatures=p, arg_signatures=None)
+
+
+def largest_all(kern, builds: list, hi: int) -> list[int]:
+    """For each build(k), the largest k in [0, hi] whose document the model
+    places inside the fragment (a binary search over all of them at once:
+    one decider run a round)."""
+    lo = [0] * len(builds)
+    top = [hi] * len(builds)
+    while True:
+        todo = [i for i in range(len(builds)) if lo[i] < top[i]]
+        if not todo:
+            return lo
+        mids = {i: (lo[i] + top[i] + 1) // 2 for i in todo}
+        ms = kern.run([{"doc": builds[i](mids[i])} for i in todo])
+        for i, m in zip(todo, ms):
+            if m["verdict"] != "not_strict":
+                lo[i] = mids[i]
+            else:
+                top[i] = mids[i] - 1
+
+
+def _write_json(path: Path, obj) -> Path:
+    path.write_text(json.dumps(obj))
+    return path
+
+
+def measure_dims(oracle, workers: int, text_names, math_names, text_cmds=(), math_cmds=(),
+                 log=print):
+    """Stage D (C-100): the dimension measurement of the names (each in the
+    modes it does not stop in), with the fragment's characters and the
+    text font's codes; a name whose items stop an instrument run is found by
+    measuring each name alone and returned in `bad`."""
+    run = lambda tex: DM.run_log(oracle, tex)  # noqa: E731
+    bad: dict[str, str] = {}
+    tn, mn = list(text_names), list(math_names)
+    try:
+        m = DM.measure(run, DM.plan_for(tn, mn, list(text_cmds), list(math_cmds)),
+                       workers=workers)
+        return m, bad
+    except DM.DumpError as e:
+        log(f"[signatures] stage D: {e}; measuring each name alone", flush=True)
+
+    def alone(n):
+        try:
+            DM.measure(run, DM.Plan(
+                {n: DM.snippet("name", n)} if n in tn else {},
+                {n: DM.snippet("name", n)} if n in mn else {}, [], [], []))
+            return n, None
+        except DM.DumpError as e:
+            return n, str(e)
+    with ThreadPoolExecutor(workers) as ex:
+        for n, why in ex.map(alone, sorted(set(tn) | set(mn))):
+            if why:
+                bad[n] = why
+    tn = [n for n in tn if n not in bad]
+    mn = [n for n in mn if n not in bad]
+    m = DM.measure(run, DM.plan_for(tn, mn, list(text_cmds), list(math_cmds)),
+                   workers=workers)
+    return m, bad
+
+
+def rep_depth(dims: DM.Dims, build, hi: int) -> int:
+    """The largest k <= hi whose document build(k) is within the dimension
+    bound by the account (nested families: the depth the bound allows)."""
+    start = dims.tok("par", False)
+    lo = 0
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if start + dims.nodes(build(mid)["body"], False) <= DM.DIM_BOUND:
+            lo = mid
+        else:
+            hi = mid - 1
+    return lo
+
+
+def rep_probes(x: str, dims: DM.Dims) -> dict[str, dict]:
+    """Stage 2b (C-100): the REPETITION families of stage2_probes, inside the
+    fragment: a family whose document holds more than the dimension bound in
+    one segment is cut into paragraphs (a formula into formulas, between
+    noads) by `Dims.segment`, and the nesting families go as deep as the group
+    bound AND the dimension bound allow. A family within the bound is the
+    same document as before (its grade is reused)."""
+    c, t = S.cmd(x), S.text
+    p = stage2_probes(x)
+    out = {}
+    for f, d in p.items():
+        if f in ("R-NEST-TEXT", "R-NEST-EACH-TEXT"):
+            mk = (lambda k: S.doc(*_nest(k, [c, t("x")]))) if f == "R-NEST-TEXT" else \
+                (lambda k: S.doc(*_nest_each(k, c)))
+            out[f] = mk(rep_depth(dims, mk, MAX_GROUPS))
+        elif f in ("R-NEST-MATH", "R-NEST-EACH-MATH"):
+            mk = (lambda k: S.doc(_dollar(*_nest(k, [c, t("x")])))) if f == "R-NEST-MATH" \
+                else (lambda k: S.doc(_dollar(*_nest_each(k, c))))
+            out[f] = mk(rep_depth(dims, mk, MAX_GROUPS - 1))
+        elif f in ("R-BIG-TEXT", "R-BIG-MATH"):
+            # to the token bound AFTER the cut (its paragraph breaks and
+            # formula delimiters are tokens too)
+            mk = (lambda k: dims.segment(S, S.doc(*([c] * k), t("x")))) if f == "R-BIG-TEXT" \
+                else (lambda k: dims.segment(S, S.doc(_paren(*([c] * k)))))
+            lo, hi = 0, MAX_TOKENS
+            while lo < hi:
+                mid = (lo + hi + 1) // 2
+                if C_._ulen(mk(mid)["body"]) + 1 <= MAX_TOKENS:
+                    lo = mid
+                else:
+                    hi = mid - 1
+            out[f] = mk(lo)
+        elif "body" in d:
+            out[f] = dims.segment(S, d)
+        else:
+            out[f] = d  # a token-level request: a few tokens, never near the bound
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=400)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", default=str(S.SIGNATURES))
+    ap.add_argument("--dims-out", default=str(DIMS_EVIDENCE))
     ap.add_argument("--reuse", help="a previous signature file of the same oracle, "
                     "COMMITTED (REV:path, or a tracked unmodified path)")
     ap.add_argument("--interleave-seeds", type=int, default=3)
+    ap.add_argument("--dev-cache", help="DEBUGGING ONLY: a local grade store read and "
+                    "written across runs; refused with the committed --out (a local "
+                    "store is never a reuse source of the evidence, LOW-2)")
     args = ap.parse_args()
+    if args.dev_cache and Path(args.out).resolve() == S.SIGNATURES.resolve():
+        raise SystemExit("--dev-cache is refused with the committed output")
 
+    import tempfile
+    tmpdir = Path(tempfile.mkdtemp(prefix="lp-strict-sig-"))
     oracle = _oracle.get_oracle()
-    # phase-1 names only: the one-argument commands (slice A) are attested by
-    # gen_strict_arg_signatures.py, against this file's final set
-    # S. the memory costs of the structural tokens (C-98): each structural
-    # shape repeated to the token bound, and the base document; a token's
-    # cost is the most memory per token any shape takes over the base,
-    # rounded up, plus one (the base's preallocated slack). Rendering needs
-    # no cost: a provisional kernel renders them.
-    kern0 = S.Kernel(signatures=None, arg_signatures=None, token_cost=0)
-    struct = C_.structural_docs(S, MAX_TOKENS)
+    zero = _write_json(tmpdir / "zero-dims.json", {"dims": DM.zero_table()})
+    # S. the memory costs of the structural tokens (C-98, C-100): each
+    # structural shape at three token counts past the base's high-water mark,
+    # and the base document; a token's cost is the largest slope of pdfTeX's
+    # report per token (or report per token), rounded up, plus one. The
+    # boundary constants: a letter's memory in a hyphenated word, and the
+    # largest inter-atom excess over the eight classes of atom.
+    kern0 = S.Kernel(signatures=None, arg_signatures=None, token_cost=0, dims=zero)
+    struct = C_.structural_docs(S)
     grader0 = Grader(oracle, args.workers)
-    sm = kern0.run([{"doc": d} for _, d in struct])
-    sg = grader0.grade_all([m["tex"] for m in sm], "structural")
-    memory = {"structural": {f: C_.memory_record(m, g) for (f, _), m, g in zip(struct, sm, sg)}}
+    if args.dev_cache:
+        dc = Path(args.dev_cache)
+        if dc.is_file():
+            grader0.cache.update(json.loads(dc.read_text()))
+        grader0.dev_cache = dc
+    grader = grader0
+    reuse0 = None
+    if args.reuse:
+        text0, _src0 = S.committed_source(args.reuse)
+        seed_records(grader0, json.loads(text0).get("memory", {}))
+    empty_sig = _write_json(tmpdir / "empty-sig.json",
+                            {"source": S.source_block(), "signatures": {}, "token_cost": 0,
+                             "dims": DM.zero_table()})
+
+    def struct_models(kern_tree, sigfile):
+        """(model, tex) of each structural document: a tree through the tree
+        decider, the hyphenation instrument's bytes through the bytes decider
+        (the account over the same tokens a file gives)."""
+        trees = [{"doc": d} for _, d, ex in struct if not ex.get("bytes")]
+        tm = iter(kern_tree.run(trees))
+        bs = [C_.hyph_bytes(ex["units"]) for _, _, ex in struct if ex.get("bytes")]
+        bm = iter(S.BytesKernel(signatures=sigfile, arg_signatures=None).run(bs))
+        bb = iter(bs)
+        out = []
+        for _, _, ex in struct:
+            if ex.get("bytes"):
+                m = dict(next(bm))
+                m["tex"] = next(bb).decode("ascii")
+            else:
+                m = next(tm)
+            out.append(m)
+        return out
+    sm = struct_models(kern0, empty_sig)
+    sg = grader0.grade_all([m["tex"] for m in sm], "structural", stats=True)
+    memory = {"structural": {f: C_.memory_record(m, g, **ex)
+                             for (f, _, ex), m, g in zip(struct, sm, sg)}}
+    m0_ = memory["structural"]["BASE"]["used"]
+    for f, _, ex in list(struct[1:]):
+        name, k1 = f[2:].split("@")[0], ex["units"]
+        r = memory["structural"][f]
+        if not C_._ok(r):
+            continue
+        for k in C_.more_levels(r, m0_, k1, k1, 10 ** 6):
+            d = None if ex.get("bytes") else C_.structural_doc(S, name, k)
+            struct.append((f"S:{name}@{k}", d, {**ex, "units": k}))
+    sm = struct_models(kern0, empty_sig)
+    sg = grader0.grade_all([m["tex"] for m in sm], "structural2", stats=True)
+    memory = {"structural": {f: C_.memory_record(m, g, **ex)
+                             for (f, _, ex), m, g in zip(struct, sm, sg)}}
+    # every model record is re-counted under the FINAL signatures at the end
+    # (the costs are measured after the documents are): (record, request)
+    remodel = [(memory["structural"][f], {"doc": d}) for f, d, _ in struct if d is not None]
+    remodel_bytes = [(memory["structural"][f], C_.hyph_bytes(ex["units"]))
+                     for f, d, ex in struct if d is None]
     M0 = memory["structural"]["BASE"]["used"]
     token_cost = C_.token_cost(memory["structural"])
     memory["token_cost"] = token_cost
-    print(f"[signatures] stage S: base {M0} words, token cost {token_cost}", flush=True)
-    kern = S.Kernel(signatures=None, arg_signatures=None, token_cost=token_cost)
+    cp = C_.class_pair_docs()
+    cpg = grader0.grade_all([tex for _, tex, _ in cp], "class-pairs", stats=True)
+    memory["class_pairs"] = {f: C_.raw_record(tex, g, **ex)
+                             for (f, tex, ex), g in zip(cp, cpg)}
+    boundary = C_.boundary_constants(memory["structural"], memory["class_pairs"])
+    memory["boundary"] = boundary
+    print(f"[signatures] stage S: base {M0} words, token cost {token_cost}, "
+          f"boundary {boundary}", flush=True)
+    kern = S.Kernel(signatures=None, arg_signatures=None, token_cost=token_cost, dims=zero)
     names = candidates(args.n)
     if {UNDEF_A, UNDEF_B} & S.members():
         raise SystemExit("the look-ahead probes' undefined names are defined")
-    grader = Grader(oracle, args.workers)
-    reuse = seed_from(grader, kern, args.reuse, oracle) if args.reuse else None
+    reuse = seed_from(grader, kern, args.reuse, oracle) if args.reuse else reuse0
     if reuse:
         print(f"[signatures] reused {reuse['grades_reused']} grades from {reuse['file']}",
               flush=True)
@@ -571,123 +803,236 @@ def main() -> int:
             rejected[x] = f"stage 1 (base probes): no hypothesis fits; e.g. {ex_[0]} fails {ex_[1]}"
     print(f"[signatures] stage 1: {len(alive)} names still fit", flush=True)
 
-    # 2. follower, display-follower and repetition families
+    # 2a. follower and display-follower families (the repetition families,
+    # whose documents reach the bounds, are stage 2b's: they need the
+    # dimensions)
     fam2 = list(stage2_probes("X"))
-    r2 = [stage2_probes(x)[f] for x in alive for f in fam2]
-    g2 = grader.grade_all(render_all(kern, r2), "stage2")
-    signatures: dict[str, dict] = {}
+    fam2a = [f for f in fam2 if not f.startswith("R-")]
+    r2 = [stage2_probes(x)[f] for x in alive for f in fam2a]
+    g2 = grader.grade_all(render_all(kern, r2), "stage2a")
+    fits2 = {}
     for i, x in enumerate(alive):
-        grades_of[x].update(zip(fam2, g2[i * len(fam2):(i + 1) * len(fam2)]))
-        allp = {**base_probes(x), **stage2_probes(x)}
+        grades_of[x].update(zip(fam2a, g2[i * len(fam2a):(i + 1) * len(fam2a)]))
+        allp = {**base_probes(x), **{f: stage2_probes(x)[f] for f in fam2a}}
         f, miss = fit(kern, x, allp, grades_of[x], fits1[x][0])
+        if f:
+            fits2[x] = f
+        else:
+            ex_ = sorted(miss.items())[0]
+            rejected[x] = f"stage 2 (follower/display/repetition probes): no hypothesis fits; e.g. {ex_[0]} fails {ex_[1]}"
+    alive2 = [x for x in alive if x in fits2]
+    print(f"[signatures] stage 2a: {len(alive2)} names still fit", flush=True)
+
+    # D. the dimension account (C-100): each surviving name measured in the
+    # modes its grades show it does not stop in (T-ALONE / M-ALONE compile),
+    # with the characters and the text font's codes; the boundary constants
+    # over every pair; the structural table.
+    tn = [x for x in alive2 if grades_of[x]["T-ALONE"]["rc"] == 0]
+    mn = [x for x in alive2 if grades_of[x]["M-ALONE"]["rc"] == 0]
+    dmeas, dbad = measure_dims(oracle, args.workers, tn, mn)
+    for x, why in dbad.items():
+        rejected[x] = f"stage D (dimensions): its instrument does not run: {why}"
+    alive2 = [x for x in alive2 if x not in dbad]
+    dd = DM.derive(dmeas)
+    dtable = DM.table(dd)
+    dim_of = {x: [DM.up(dd["items"][x][0]) if x in tn else 0,
+                  DM.up(dd["items"][x][1]) if x in mn else 0] for x in alive2}
+    dfile = _write_json(tmpdir / "dims.json", {"dims": dtable})
+    kern = S.Kernel(signatures=None, arg_signatures=None, token_cost=token_cost, dims=dfile)
+    print(f"[signatures] stage D: {len(tn)} text / {len(mn)} math names measured; "
+          f"B_text {dd['B_text']:.3f}pt, B_math {dd['B_math']:.3f}pt, script "
+          f"{dd['script']:.3f}pt", flush=True)
+
+    # 2b. the repetition families inside the fragment (rep_probes), then
+    # admission over every family of stages 1 and 2
+    def hyp_dim(x, hs):
+        return [{**h, "dim": dim_of[x]} for h in hs]
+    # (every stage-2 family: a follower document can pass the dimension
+    # bound too, e.g. FM-CHARS of a wide name; within the bound it is the
+    # same document and its grade is reused)
+    rp_of = {x: rep_probes(x, DM.Dims(dtable, {x: dim_of[x]})) for x in alive2}
+    r2b = [rp_of[x][f] for x in alive2 for f in fam2]
+    g2b = grader.grade_all(render_all(kern, r2b), "stage2b")
+    signatures: dict[str, dict] = {}
+    for i, x in enumerate(alive2):
+        grades_of[x].update(zip(fam2, g2b[i * len(fam2):(i + 1) * len(fam2)]))
+        allp = {**base_probes(x), **rp_of[x]}
+        f, miss = fit(kern, x, allp, grades_of[x], hyp_dim(x, fits2[x]))
         if len(f) == 1:
-            signatures[x] = f[0]
+            signatures[x] = {k: v for k, v in f[0].items() if k != "dim"}
         elif not f:
             ex_ = sorted(miss.items())[0]
             rejected[x] = f"stage 2 (follower/display/repetition probes): no hypothesis fits; e.g. {ex_[0]} fails {ex_[1]}"
         else:
             rejected[x] = f"ambiguous: {len(f)} hypotheses fit"
     print(f"[signatures] stage 3 (admission): {len(signatures)} admitted", flush=True)
+    for x in alive2:
+        if x in rejected:
+            print(f"[signatures]   rejected {x}: {rejected[x][:300]}", flush=True)
+    if not signatures:
+        raise SystemExit("no name admitted")
 
-    # C. the memory cost of every admitted name (C-98): the name repeated
-    # 4,000 times in text, in a formula and in a display (the modes it does
-    # not stop in); its cost is the most memory per occurrence over the base
-    # and the other tokens' cost, rounded up, plus one.
-    MEMN = 4000
-    cdocs = []
+    # C. the memory cost of every admitted name (C-98, C-100): the name
+    # repeated in text, in a formula and in a display, and with a sub- and a
+    # superscript in both (a noad), each at three counts, the second and third
+    # past the base's high-water mark; its cost is name_cost: the largest
+    # slope (or report per occurrence) over the other tokens' cost, rounded up,
+    # plus one, plus its boundaries (letters x H_text, atoms x B_math).
+    def ctx_doc(x, ctx, k):
+        return C_.name_mem_doc(S, x, ctx, k)
+
+    def contexts(x):
+        h = signatures[x]
+        out = []
+        if not isinstance(h["text"], list):
+            out.append("TEXT")
+        if not isinstance(h["math"], list):
+            out += ["MATH", "DISPLAY"]
+            if h["math"] == "noad":
+                out += ["MSCRIPT", "DSCRIPT"]
+        return out
+
+    memory["names"] = {}
+
+    def grade_mem(jobs, label):
+        ms = kern.run([{"doc": ctx_doc(x, ctx, k), "signatures": {x: signatures[x]}}
+                       for x, ctx, k in jobs])
+        gs = grader.grade_all([m["tex"] for m in ms], label, stats=True)
+        for (x, ctx, k), m, g in zip(jobs, ms, gs):
+            r = C_.memory_record(m, g, count=k)
+            memory["names"].setdefault(x, {})[f"R-MEM-{ctx}@{k}"] = r
+            remodel.append((r, {"doc": ctx_doc(x, ctx, k)}))
+    def unit_dim(x, ctx):
+        return dim_of[x][1] + (2 * (dtable["script"][1] + dtable["char"]["x"][1])
+                               if ctx == "DSCRIPT" else 0)
+    grade_mem([(x, ctx, MEMN) for x in sorted(signatures) for ctx in contexts(x)
+               if ctx not in ("DISPLAY", "DSCRIPT")]
+              + [(x, ctx, k) for x in sorted(signatures) for ctx in contexts(x)
+                 if ctx in ("DISPLAY", "DSCRIPT")
+                 for k in C_.display_levels(unit_dim(x, ctx), MEM_MAX_COUNT)], "costs1")
+    jobs = []
+    for x in sorted(signatures):
+        for ctx in contexts(x):
+            if ctx in ("DISPLAY", "DSCRIPT"):
+                continue
+            r = memory["names"][x][f"R-MEM-{ctx}@{MEMN}"]
+            if not C_._ok(r):
+                continue
+            jobs += [(x, ctx, k) for k in C_.more_levels(r, M0, MEMN, MEMN, MEM_MAX_COUNT)]
+    grade_mem(jobs, "costs2")
+    dmath = {x: dd["atoms"].get(x, 0) for x in signatures}
+    for x in sorted(signatures):
+        try:
+            c = C_.name_cost(memory["names"].get(x, {}), M0, token_cost,
+                             dd["letters"].get(x, 0) if x in tn else 0,
+                             dmath[x] if x in mn else 0, boundary)
+        except ValueError as e:
+            rejected[x] = f"stage C (memory): {e}"
+            signatures.pop(x)
+            continue
+        signatures[x] = {**signatures[x], "cost": token_cost if c is None else c,
+                         "dim": dim_of[x], "atoms": dmath[x] if x in mn else 0,
+                         "letters": dd["letters"].get(x, 0) if x in tn else 0}
+
+    # the round-1 review's memory documents (C-100): graded here, so the
+    # gate checks pdfTeX's report against the account on them for good
+    review = {}
+    rv = [(f, n, (lambda d=d: d)) for f, n, d in C_.review_docs(S) if n in signatures]
+    ktmp0 = sig_kernel(tmpdir, signatures, token_cost, dtable)
+    ms = ktmp0.run([{"doc": mk()} for _, _, mk in rv])
+    gs = grader.grade_all([m["tex"] for m in ms], "review", stats=True)
+    for (f, _, mk), m, g in zip(rv, ms, gs):
+        review[f] = C_.memory_record(m, g)
+        remodel.append((review[f], {"doc": mk()}))
+    memory["review"] = review
+
+    # 3c. every admitted name at the MEMORY bound and at the DIMENSION bound,
+    # inside the fragment (C-98, C-100): at the memory bound, the name
+    # repeated as often as the fragment allows (paragraphs or formulas of as
+    # many as the dimension bound allows), graded, and once more, outside;
+    # at the dimension bound, one paragraph / formula / display of as many
+    # as the dimension bound allows, graded, with pdfTeX's own measure of
+    # the box, and once more, outside.
+    ktmp0 = sig_kernel(tmpdir, signatures, token_cost, dtable)
+    dims_all = DM.Dims(dtable, {x: signatures[x]["dim"] for x in signatures})
+
+    capdocs = []
+    searches = []  # (x, family, build): the largest k inside the fragment
     for x in sorted(signatures):
         h = signatures[x]
-        c_ = S.cmd(x)
-        if not isinstance(h["text"], list):
-            cdocs.append((x, "R-MEM-TEXT", S.doc(*([c_] * MEMN), S.text("x"))))
-        if not isinstance(h["math"], list):
-            cdocs.append((x, "R-MEM-MATH", S.doc(S.math("paren", *([c_] * MEMN)))))
-            cdocs.append((x, "R-MEM-DISPLAY", S.doc(S.math("bracket", *([c_] * MEMN)))))
-    cm = kern.run([{"doc": d} for _, _, d in cdocs])
-    cg = grader.grade_all([m["tex"] for m in cm], "costs")
-    memory["names"] = {}
-    for (x, f, _), m, g in zip(cdocs, cm, cg):
-        memory["names"].setdefault(x, {})[f] = C_.memory_record(m, g, count=MEMN)
-    # 3c. every admitted name at the MEMORY bound (C-98): repeated as often as
-    # the token and memory bounds allow (the model with its measured cost must
-    # decide it and pdfTeX agree), and once more, which the model must place
-    # outside the fragment when the memory bound is the one reached. The cost
-    # is taken over the 4,000-repetition documents AND the bound documents,
-    # and the bound documents are rebuilt until pdfTeX's reported memory is
-    # within the account (base + Decide.mem): a cost measured on fewer
-    # repetitions can be low (\ddots: 152 words at 4,000, more at 13,000).
-    memory["cap"] = {}
-    for rnd in range(5):
-        for x in sorted(signatures):
-            recs = list(memory["names"].get(x, {}).values()) + [
-                r for f, r in memory["cap"].get(x, {}).items() if not f.endswith("-PAST")]
-            c = C_.name_cost(recs, M0, token_cost)
-            signatures[x] = {**signatures[x],
-                             "cost": token_cost if c is None else max(c, token_cost)}
-        capdocs = []
-        for x in sorted(signatures):
-            h, c_ = signatures[x], S.cmd(x)
-            cost = h["cost"]
-            for where, mk in (("TEXT", lambda k: S.doc(*([c_] * k), S.text("x"))),
-                              ("MATH", lambda k: S.doc(S.math("paren", *([c_] * k))))):
-                if isinstance(h["text" if where == "TEXT" else "math"], list):
-                    continue
-                k = min(MAX_TOKENS - 3, (CK.MAX_MEM - 4 * token_cost) // cost)
-                capdocs.append((x, f"R-CAP-{where}", mk(k), True, k))
-                if (k + 1) * cost + 4 * token_cost > CK.MAX_MEM and k + 1 <= MAX_TOKENS - 3:
-                    capdocs.append((x, f"R-CAP-{where}-PAST", mk(k + 1), False, k + 1))
-        reqs = [{"doc": d, "signatures": {x: signatures[x]}} for x, _, d, _, _ in capdocs]
-        capm = kern.run(reqs)
-        atm = [(i, m) for i, (m, q) in enumerate(zip(capm, capdocs)) if q[3]]
-        capg = dict(zip([i for i, _ in atm],
-                        grader.grade_all([m["tex"] for _, m in atm], "memcap")))
-        memory["cap"] = {}
-        over = 0
-        for i, ((x, f, _, at, cnt), m) in enumerate(zip(capdocs, capm)):
-            r = C_.memory_record(m, capg.get(i), count=cnt)
-            memory["cap"].setdefault(x, {})[f] = r
-            if at and C_._ok(r) and r["used"] > M0 + r["mem"]:
-                over += 1
-        stable = all(
-            signatures[x]["cost"] == max(C_.name_cost(
-                list(memory["names"].get(x, {}).values()) + [
-                    r for f, r in memory["cap"].get(x, {}).items()
-                    if not f.endswith("-PAST")], M0, token_cost) or token_cost, token_cost)
-            for x in signatures)
-        print(f"[signatures] stage 3c round {rnd + 1}: {over} bound documents above "
-              f"the account; costs {'stable' if stable else 'moved'}", flush=True)
-        if not over and stable:
-            break
+        for where in ("TEXT", "MATH"):
+            if isinstance(h["text" if where == "TEXT" else "math"], list):
+                continue
+            searches.append((x, f"R-CAP-{where}",
+                             lambda k, x=x, where=where: C_.cap_doc(S, dims_all, x, where, k)))
+        for where in ("TEXT", "MATH", "DISPLAY"):
+            if isinstance(h["text" if where == "TEXT" else "math"], list):
+                continue
+            if h["dim"][0 if where == "TEXT" else 1] == 0:
+                continue  # no dimensions: no dimension bound to reach
+            searches.append((x, f"R-DIM-{where}",
+                             lambda k, x=x, where=where: C_.dim_doc(S, x, where, k)))
+    for (x, f, build), k in zip(searches, largest_all(ktmp0, [b for _, _, b in searches],
+                                                      MAX_TOKENS)):
+        capdocs.append((x, f, build(k), True, k))
+        capdocs.append((x, f"{f}-PAST", build(k + 1), False, k + 1))
+    capm = ktmp0.run([{"doc": d} for _, _, d, _, _ in capdocs])
+    atm = [(i, m) for i, (m, q) in enumerate(zip(capm, capdocs)) if q[3]]
+    capg = dict(zip([i for i, _ in atm],
+                    grader.grade_all([m["tex"] for _, m in atm], "bounds", stats=True)))
+    # pdfTeX's own measure of each dimension-bound document's material (an
+    # instrument: the same material in one box, its width, height and depth)
+    inst = {}
+    for i, (x, f, d, at, cnt) in enumerate(capdocs):
+        if at and f.startswith("R-DIM-"):
+            snip = DM.snippet("name", x) * cnt
+            ds = "\\displaystyle " if f == "R-DIM-DISPLAY" else ""
+            box = snip if f == "R-DIM-TEXT" else "$" + ds + snip + "$"
+            inst[i] = (DM.HEAD + "\\setbox0\\hbox{" + box + "}\\typeout{BOXDIM:\\the\\wd0:"
+                       "\\the\\ht0:\\the\\dp0}\n\\end{document}\n")
+    ilogs = {}
+    with ThreadPoolExecutor(args.workers) as ex:
+        for i, lg in zip(inst, ex.map(lambda t: DM.run_log(oracle, t), inst.values())):
+            ilogs[i] = lg
+    memory["cap"], dimcap = {}, {}
     for i, ((x, f, _, at, cnt), m) in enumerate(zip(capdocs, capm)):
-        if x not in signatures:
-            continue
-        g = capg.get(i)
-        if at:
-            ok, why = S.agrees(m, g)
-            r = memory["cap"][x][f]
-            if not ok or (C_._ok(r) and r["used"] > M0 + r["mem"]):
-                rejected[x] = (f"stage 3c (memory bound, {f}): {why}; "
-                               f"{r.get('used')} words against the account {M0 + r['mem']}")
+        r = C_.memory_record(m, capg.get(i), count=cnt)
+        if i in ilogs:
+            mm = re.search(r"BOXDIM:(-?[\d.]+)pt:(-?[\d.]+)pt:(-?[\d.]+)pt", ilogs[i])
+            r["box"] = [float(v) for v in mm.groups()] if mm else None
+            import hashlib as _h
+            r["box_tex_sha256"] = _h.sha256(inst[i].encode()).hexdigest()
+        (dimcap if f.startswith("R-DIM-") else memory["cap"]).setdefault(x, {})[f] = r
+        remodel.append((r, {"doc": capdocs[i][2]}))
+    for x in list(signatures):
+        for f, r in {**memory["cap"].get(x, {}), **dimcap.get(x, {})}.items():
+            if f.endswith("-PAST"):
+                if r["verdict"] != "not_strict":
+                    rejected[x] = f"stage 3c ({f}): one past the bound is {r['verdict']}"
+                    signatures.pop(x, None)
+                    break
+                continue
+            m_ = next(m for (xx, ff, _, _, _), m in zip(capdocs, capm) if xx == x and ff == f)
+            ok, why = S.agrees(m_, capg[[i for i, q in enumerate(capdocs)
+                                        if q[0] == x and q[1] == f][0]])
+            over = C_._ok(r) and r["used"] > M0 + r["mem"]
+            box = r.get("box")
+            wide = f.startswith("R-DIM-") and (box is None or sum(abs(v) for v in box) > r["dim"])
+            if not ok or over or wide:
+                rejected[x] = (f"stage 3c ({f}): {why}; {r.get('used')} words against "
+                               f"{M0 + r['mem']}; box {box} against the account {r['dim']}")
                 signatures.pop(x, None)
-        elif m["verdict"] != "not_strict":
-            rejected[x] = f"stage 3c (memory bound, {f}): one past the bound is {m['verdict']}"
-            signatures.pop(x, None)
+                break
     print(f"[signatures] stage C/3c: costs of {len(signatures)} names, max "
           f"{max(h['cost'] for h in signatures.values())}; {len(signatures)} admitted",
           flush=True)
 
-    # 4. interleaving, to a fixpoint
-    import tempfile
-    fd, tmpname = tempfile.mkstemp(prefix="lp-strict-sig-", suffix=".json")
-    import os
-    os.close(fd)
-    sig_tmp = Path(tmpname)
+    # 4. interleaving, to a fixpoint (each document cut within the dimension
+    # bound, C-100)
     rounds = []
 
     def ktmp(sigs):
-        body = {"source": S.source_block(), "signatures": sigs, "token_cost": token_cost}
-        sig_tmp.write_text(json.dumps(body))
-        return S.Kernel(signatures=sig_tmp, arg_signatures=None)
+        return sig_kernel(tmpdir, sigs, token_cost, dtable)
 
     def usable(sigs):
         nt = sorted(n for n, h in sigs.items() if not isinstance(h["text"], list))
@@ -696,7 +1041,8 @@ def main() -> int:
 
     def run_docs(sigs, docs):
         k = ktmp(sigs)
-        models = k.run([{"doc": d} for _, d in docs])
+        dz = DM.Dims(dtable, {n: sigs[n]["dim"] for n in sigs})
+        models = k.run([{"doc": dz.segment(S, d)} for _, d in docs])
         grades = grader.grade_all([m["tex"] for m in models], "interleave")
         return [(f, m, g, S.agrees(m, g)) for (f, _), m, g in zip(docs, models, grades)]
 
@@ -737,9 +1083,43 @@ def main() -> int:
                                f"set is {sorted(cur)}; first disagreement: {why}")
                 signatures.pop(x, None)
             rounds[-1]["rejected"] = sorted(cur)
-    finally:
-        if sig_tmp.exists():
-            sig_tmp.unlink()
+    except BaseException:
+        import shutil
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        raise
+
+    # the records of rejected names go; every other model record is counted
+    # again under the final signatures (its bytes are the same: the renderer
+    # does not read the contract)
+    for part in (memory["names"], memory["cap"], dimcap):
+        for x in list(part):
+            if x not in signatures:
+                del part[x]
+    keep = {id(r) for part in (memory["names"], memory["cap"], dimcap)
+            for rs in part.values() for r in rs.values()}
+    keep |= {id(r) for r in memory["structural"].values()}
+    keep |= {id(r) for f, r in memory["review"].items()}
+    memory["review"] = {f: r for f, r in memory["review"].items()
+                        if f.split("-")[2] in signatures}
+    remodel = [(r, q) for r, q in remodel if id(r) in keep]
+    kfin = sig_kernel(tmpdir, signatures, token_cost, dtable)
+    sfin = tmpdir / "final-sig.json"
+    sfin.write_text(json.dumps({"source": S.source_block(), "signatures": signatures,
+                                "token_cost": token_cost, "dims": dtable}))
+    for (r, b), m in zip(remodel_bytes, S.BytesKernel(signatures=sfin, arg_signatures=None)
+                         .run([b for _, b in remodel_bytes])):
+        m = dict(m, tex=b.decode("ascii"))
+        remodel.append((r, None))
+        r.update({"ntoks": m["ntoks"], "held": m.get("held"), "mem": m.get("mem"),
+                  "dim": m.get("dim"), "verdict": m["verdict"]})
+    remodel = [(r, q) for r, q in remodel if q is not None]
+    for (r, _), m in zip(remodel, kfin.run([q for _, q in remodel])):
+        if hashlib.sha256(m["tex"].encode()).hexdigest() != r["sha256"]:
+            raise SystemExit("remodel: a record's bytes changed under the final signatures")
+        r.update({"ntoks": m["ntoks"], "held": m.get("held"), "mem": m.get("mem"),
+                  "dim": m.get("dim"), "verdict": m["verdict"]})
+    import shutil
+    shutil.rmtree(tmpdir, ignore_errors=True)
 
     for x in names:
         evidence[x] = {f: [g["rc"], g["pdf"], g["error"], g["line"]]
@@ -748,7 +1128,7 @@ def main() -> int:
                "rejected": len(rejected),
                "rejected_by_stage": {k: sum(1 for v in rejected.values() if v.startswith(k))
                                      for k in ("stage 0", "stage 1", "stage 2", "ambiguous",
-                                               "stage 3c", "stage 4")},
+                                               "stage D", "stage C", "stage 3c", "stage 4")},
                "documents_graded_now": grader.graded,
                "grades_reused": grader.reused,
                "oracle_timeouts": sum(1 for g in grader.cache.values() if g["timed_out"])}
@@ -758,6 +1138,14 @@ def main() -> int:
               f"{h['math'] if isinstance(h['math'], str) else 'fatal ' + h['math'][1]}"
         by[key] = by.get(key, 0) + 1
     summary["admitted_by_class"] = dict(sorted(by.items()))
+    dpath = Path(args.dims_out)
+    dpath.parent.mkdir(parents=True, exist_ok=True)
+    dpath.write_text(json.dumps({"schema": "lp-strict-dims/1",
+                                 "generator": "scripts/tools/gen_strict_signatures.py",
+                                 "generator_version": GENERATOR_VERSION,
+                                 "oracle": oracle.provenance(),
+                                 "measurement": dmeas}, indent=0) + "\n")
+    dsha = S.sha256_file(dpath)
     out = {
         "schema": "lp-strict-signatures/2",
         "generator": "scripts/tools/gen_strict_signatures.py",
@@ -783,6 +1171,23 @@ def main() -> int:
         "interleaving": {"seeds": args.interleave_seeds, "rounds": rounds},
         "token_cost": token_cost,
         "memory": memory,
+        # C-100: the dimension account. The structural table the loader reads
+        # (strict_decide.ml set_sdims), the constants, and the measurement's
+        # primary record in its own file (TeX's box dumps, the characters'
+        # dimensions, the layout parameters, the noads), by sha256; the gate
+        # re-derives every number from it (_strict_dims.derive).
+        "dims": dtable,
+        "dims_derivation": {"B_text": dd["B_text"], "B_math": dd["B_math"],
+                            "script": dd["script"], "open": dd["open"],
+                            "space": dd["space"], "par": dd["par"],
+                            "display": dd["display"], "inline": dd["inline"],
+                            "max_dim": DM.DIM_BOUND,
+                            "evidence": {"file": (str(dpath.resolve().relative_to(S.REPO))
+                                                  if dpath.resolve().is_relative_to(S.REPO)
+                                                  else str(dpath)),
+                                         "sha256": dsha},
+                            "text_names": tn, "math_names": mn},
+        "dim_bound": dimcap,
         "signatures": dict(sorted(signatures.items())),
         "rejected": dict(sorted(rejected.items())),
         "meanings": dict(sorted(meanings.items())),

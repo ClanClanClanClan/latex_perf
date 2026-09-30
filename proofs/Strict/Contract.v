@@ -122,12 +122,24 @@ Record asig := mkASig { as_long : longness; as_text : arg_text; as_math : arg_ma
     memory its running holds besides its argument's copy), MEASURED per
     admitted name by its generator (the name repeated in text, in math, in a
     display) and per structural token by the phase-1 generator, rounded up;
-    never read from a definition. *)
+    never read from a definition.  It is an upper bound on every graded
+    document (the account is not proved to be one: correction C-100). *)
+(** [c_dim] (correction C-100): the DIMENSIONS, in whole points, a token can
+    contribute to any dimension pdfTeX computes when it runs in math
+    ([c_dim C true t]) or in text ([c_dim C false t]): the absolute widths,
+    heights, depths, shifts, stretch and shrink of every node it makes, in
+    the worst of the contexts of that mode (in math, each of the four
+    styles), plus one inter-atom spacing per math atom it makes, or one kern
+    at its left in text.  MEASURED per admitted name and command
+    (TeX's own box dump of the name alone, the font's character dimensions)
+    and per structural token by the phase-1 generator; never read from a
+    definition. *)
 Record contract := mkContract {
   c_defined : name -> bool;
   c_sig : name -> option signature;
   c_arg : name -> option asig;   (* slice A: the one-argument commands *)
-  c_cost : tok -> nat
+  c_cost : tok -> nat;
+  c_dim : bool -> tok -> nat
 }.
 
 (** Well-formedness the loader checks (a signature only for a defined name,

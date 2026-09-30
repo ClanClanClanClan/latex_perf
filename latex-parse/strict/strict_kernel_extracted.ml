@@ -338,6 +338,7 @@ type contract = {
   c_sig : name -> signature option;
   c_arg : name -> asig option;
   c_cost : tok -> int;
+  c_dim : bool -> tok -> int;
 }
 
 type frame =
@@ -1407,6 +1408,16 @@ let max_tokens = Nat.mul max_groups (Nat.mul ten ten)
 let max_name = Nat.mul ten ten
 let max_mem = Nat.mul max_tokens (Nat.mul ten ten)
 
+let max_dim =
+  Nat.mul
+    (Stdlib.Int.succ
+       (Stdlib.Int.succ
+          (Stdlib.Int.succ
+             (Stdlib.Int.succ
+                (Stdlib.Int.succ
+                   (Stdlib.Int.succ (Stdlib.Int.succ (Stdlib.Int.succ 0))))))))
+    (Nat.mul ten (Nat.mul ten ten))
+
 let frame_groups = function
   | FSimple -> Stdlib.Int.succ 0
   | FShift (_, _, _) -> Stdlib.Int.succ 0
@@ -1507,9 +1518,46 @@ let rec node_cost c = function
 
 let mem c ts = add (node_cost c ts) (held c ts)
 
+let seg_start s = function
+  | TChar _ -> false
+  | TSpace -> false
+  | TPar _ -> ( match s.s_frames with [] -> true | _ :: _ -> false)
+  | TOpen -> false
+  | TClose -> false
+  | TDollar -> false
+  | TMOpenInline -> false
+  | TMCloseInline -> false
+  | TMOpenDisplay -> false
+  | TMCloseDisplay -> false
+  | TScript _ -> false
+  | TCs _ -> false
+  | TEnd -> false
+
+let maxl a b = if a <= b then b else a
+
+let rec dim_run c s acc = function
+  | [] -> acc
+  | t :: rest ->
+      let m = in_math s.s_frames in
+      let a = if seg_start s t then c.c_dim m t else add acc (c.c_dim m t) in
+      maxl a
+        (match step c s t (hd_error rest) with
+        | Go1 s' -> dim_run c s' a rest
+        | Go2 s' -> (
+            match rest with
+            | [] -> a
+            | t2 :: rest' -> dim_run c s' (add a (c.c_dim m t2)) rest')
+        | Stop _ -> a
+        | Stuck -> a
+        | Defer _ -> a
+        | Defer2 _ -> a)
+
+let dim c ts = dim_run c init (c.c_dim false (TPar false)) ts
+
 let bounded c ts =
-  ((length ts <= max_tokens && short_names ts) && peak c init ts <= max_groups)
-  && mem c ts <= max_mem
+  (((length ts <= max_tokens && short_names ts) && peak c init ts <= max_groups)
+  && mem c ts <= max_mem)
+  && dim c ts <= max_dim
 
 let in_strict_b c d =
   ((forallb (tok_ok c) (flatten_doc d) && scripts_ok (flatten_doc d))

@@ -833,7 +833,7 @@ def strict_memory_bound_forged(text: str) -> str:
     """M-2: a memory worst case whose recorded account is not the model's."""
     d = json.loads(text)
     mb = d["capacity"]["memory_bound"]
-    n = sorted(k for k in mb if k != "filler")[0]
+    n = sorted(k for k in mb if k not in ("filler", "filler_costly"))[0]
     w = sorted(mb[n])[0]
     mb[n][w]["at"]["mem"] -= 1
     return json.dumps(d, indent=1) + "\n"
@@ -855,6 +855,55 @@ def strict_name_cost_forged(text: str) -> str:
     d = json.loads(text)
     n = sorted(d["signatures"])[0]
     d["signatures"][n]["cost"] = 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_cap_record_no_usage(text: str) -> str:
+    """C-100 (round-1 review f3): a graded memory-bound record without
+    pdfTeX's report (83 of the C-98 records had none, and the check skipped
+    them)."""
+    d = json.loads(text)
+    cap = d["memory"]["cap"]
+    n = sorted(cap)[0]
+    f = sorted(k for k in cap[n] if not k.endswith("-PAST"))[0]
+    cap[n][f]["used"] = None
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_dim_forged(text: str) -> str:
+    """C-100: an admitted name's dimensions forged low."""
+    d = json.loads(text)
+    n = next(k for k, v in sorted(d["signatures"].items()) if v["dim"][1] > 0)
+    d["signatures"][n]["dim"][1] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_dim_table_forged(text: str) -> str:
+    """C-100: the structural dimension table forged low (a character)."""
+    d = json.loads(text)
+    d["dims"]["char"]["x"][0] -= 1
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_past_mem_forged(text: str) -> str:
+    """C-100 (round-1 review, past_verdict_forge): a record one past the
+    bound whose recorded account is forged inside the bound."""
+    d = json.loads(text)
+    cap = d["memory"]["cap"]
+    n = next(k for k in sorted(cap) if any(f.endswith("-PAST") for f in cap[k]))
+    f = sorted(k for k in cap[n] if k.endswith("-PAST"))[0]
+    cap[n][f]["mem"] = 5
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_structural_forged(text: str) -> str:
+    """C-100 (round-1 review LOW): a structural memory record's bytes and
+    token count forged."""
+    d = json.loads(text)
+    st = d["memory"]["structural"]
+    f = sorted(k for k in st if k != "BASE")[0]
+    st[f]["sha256"] = "0" * 64
+    st[f]["ntoks"] += 1
     return json.dumps(d, indent=1) + "\n"
 
 
@@ -1238,8 +1287,31 @@ REGISTRY = [
             Mutation("the memory bound is dropped from membership (C-98)",
                      "proofs/Strict/Decide.v",
                      r"FAIL Decide\.v: bounded is not the pinned account",
-                     old="\n  && Nat.leb (mem C ts) max_mem.",
+                     old="\n  && Nat.leb (mem C ts) max_mem && Nat.leb (dim C ts) max_dim.",
+                     new="\n  && Nat.leb (dim C ts) max_dim."),
+            # C-100: the dimension account.
+            Mutation("the dimension bound is dropped from membership (C-100)",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: bounded is not the pinned account",
+                     old=" && Nat.leb (dim C ts) max_dim.",
                      new="."),
+            Mutation("the dimension account stops resetting at paragraphs only (C-100)",
+                     "proofs/Strict/Decide.v",
+                     r"FAIL Decide\.v: seg_start is not the pinned account",
+                     old="  | TPar _, [] => true\n",
+                     new="  | TPar _, _ => true\n"),
+            Mutation("a name's dimensions are forged low (C-100)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: '.*'s dim \[\d+, \d+\] is not what the evidence gives",
+                     transform=strict_dim_forged),
+            Mutation("the structural dimension table is forged (C-100)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: the structural dimension table is not what the evidence",
+                     transform=strict_dim_table_forged),
+            Mutation("a bound record without pdfTeX's report (C-100, f3)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: a graded memory record carries no pdfTeX report",
+                     transform=strict_cap_record_no_usage),
             # LOW-2 of the C-94 review: grades reused from a local file.
             Mutation("grades are reused from a file nobody else can read (LOW-2)",
                      "corpora/strict_s0/rule_probes.json",
@@ -2681,8 +2753,16 @@ REGISTRY = [
                      transform=strict_capacity_peak_forged),
             Mutation("a memory worst case's recorded account is not the model's (M-2)",
                      "corpora/contracts/strict/article-s1-arg-signatures.json",
-                     r"FAIL arg signatures: memory worst case \S+ at: the model gives",
+                     r"FAIL memory document arg \S+ at: the model gives",
                      transform=strict_memory_bound_forged),
+            Mutation("one past the bound forged inside it (C-100)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL memory document \S+ R-CAP-\S+-PAST: the model gives",
+                     transform=strict_past_mem_forged),
+            Mutation("a structural memory record's bytes forged (C-100)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL memory document structural \S+: other bytes",
+                     transform=strict_structural_forged),
         ]),
     GateTest(
         "check_project_state (binary arm)",

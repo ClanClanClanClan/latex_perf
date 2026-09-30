@@ -125,6 +125,126 @@ let int_field what v k =
   | `Int i when i >= 0 -> i
   | _ -> die "strict_decide: %s has no %s (C-98)" what k
 
+(* The dimension account's costs (Contract.v [c_dim], C-100), in whole points,
+   each a pair [text, math] (the token run in text, in math): per admitted name
+   and command, from its signature file ("dim", MEASURED by its generator); per
+   structural token, from the phase-1 file's "dims" table (or --dims FILE, a
+   JSON file with that table, for a generator that has no signature file yet).
+   Keys of the table: "char:C" for each character of the fragment, "space",
+   "par", "open", "close", "dollar", "open_inline", "close_inline",
+   "open_display", "close_display", "script", "end", and "undefined" (a control
+   word undefined in the configuration stops pdfTeX before it typesets
+   anything). A committed name without a dim, or a table without a key, is
+   refused, never defaulted. *)
+let dims : (string, int * int) Hashtbl.t = Hashtbl.create 512
+let sdims : (string * (int * int)) list option ref = ref None
+
+let dim_pair what = function
+  | `List [ `Int t; `Int m ] when t >= 0 && m >= 0 -> (t, m)
+  | _ -> die "strict_decide: %s: a dim is [text, math], two ints (C-100)" what
+
+let dim_field what v =
+  match member "dim" v with
+  | `Null -> die "strict_decide: %s has no dim (C-100)" what
+  | d -> dim_pair what d
+
+let dim_keys =
+  [
+    "space";
+    "par";
+    "open";
+    "close";
+    "dollar";
+    "open_inline";
+    "close_inline";
+    "open_display";
+    "close_display";
+    "script";
+    "end";
+    "undefined";
+  ]
+
+let set_sdims what j =
+  let tbl =
+    match member "dims" j with
+    | `Assoc l ->
+        let chars =
+          match List.assoc_opt "char" l with
+          | Some (`Assoc cs) ->
+              List.map
+                (fun (c, v) ->
+                  if String.length c <> 1 then
+                    die "strict_decide: %s: bad dims.char entry %S" what c;
+                  ("char:" ^ c, dim_pair (what ^ ": dims.char") v))
+                cs
+          | _ -> die "strict_decide: %s has no dims.char (C-100)" what
+        in
+        List.sort compare
+          (chars
+          @ List.map
+              (fun k ->
+                match List.assoc_opt k l with
+                | Some v -> (k, dim_pair (what ^ ": dims." ^ k) v)
+                | None -> die "strict_decide: %s has no dims.%s (C-100)" what k)
+              dim_keys)
+    | _ -> die "strict_decide: %s has no dims table (C-100)" what
+  in
+  match !sdims with
+  | None -> sdims := Some tbl
+  | Some t when t = tbl -> ()
+  | Some _ -> die "strict_decide: %s's dims differ from --dims (C-100)" what
+
+let pick m (t, mm) = if m then mm else t
+
+let sdim m key =
+  match !sdims with
+  | None -> die "strict_decide: no dimension table (--dims or a signature file)"
+  | Some t -> (
+      match List.assoc_opt key t with
+      | Some v -> pick m v
+      | None -> die "strict_decide: no dimension for %s (C-100)" key)
+
+(* A character outside the fragment's set is outside the tier (tok_ok); its dim,
+   only ever reported, is the largest character's. *)
+let char_dim m c =
+  match !sdims with
+  | Some t -> (
+      match List.assoc_opt ("char:" ^ String.make 1 c) t with
+      | Some v -> pick m v
+      | None ->
+          List.fold_left
+            (fun a (k, v) ->
+              if String.length k > 5 && String.sub k 0 5 = "char:" then
+                max a (pick m v)
+              else a)
+            0 t)
+  | None -> sdim m "char"
+
+let struct_dim m = function
+  | K.TChar c -> char_dim m c
+  | K.TSpace -> sdim m "space"
+  | K.TPar _ -> sdim m "par"
+  | K.TOpen -> sdim m "open"
+  | K.TClose -> sdim m "close"
+  | K.TDollar -> sdim m "dollar"
+  | K.TMOpenInline -> sdim m "open_inline"
+  | K.TMCloseInline -> sdim m "close_inline"
+  | K.TMOpenDisplay -> sdim m "open_display"
+  | K.TMCloseDisplay -> sdim m "close_display"
+  | K.TScript _ -> sdim m "script"
+  | K.TEnd -> sdim m "end"
+  | K.TCs _ -> sdim m "undefined"
+
+(* The dim of a token under the committed files: an admitted name's own, an
+   undefined name's the table's "undefined". *)
+let file_dim m t =
+  match t with
+  | K.TCs n -> (
+      match Hashtbl.find_opt dims (string_of_chars n) with
+      | Some d -> pick m d
+      | None -> struct_dim m t)
+  | _ -> struct_dim m t
+
 let load_signatures path members ~kernel_key ~contract_key =
   let tbl = Hashtbl.create 512 in
   (match path with
@@ -146,6 +266,7 @@ let load_signatures path members ~kernel_key ~contract_key =
         die "strict_decide: --token-cost %d differs from %s's %d" !token_cost p
           tc;
       token_cost := tc;
+      set_sdims p j;
       match member "signatures" j with
       | `Assoc l ->
           List.iter
@@ -154,6 +275,7 @@ let load_signatures path members ~kernel_key ~contract_key =
               if not (Hashtbl.mem members n) then
                 die "strict_decide: signature for undefined name %S" n;
               Hashtbl.replace costs n (int_field (p ^ ": " ^ n) v "cost");
+              Hashtbl.replace dims n (dim_field (p ^ ": " ^ n) v);
               Hashtbl.replace tbl n
                 {
                   K.sig_text = text_beh_of (member "text" v);
@@ -243,7 +365,8 @@ let load_arg_signatures path members sigs ~kernel_key ~contract_key =
               Hashtbl.replace tbl n
                 (try asig_of v
                  with Failure m -> die "strict_decide: %s: %s: %s" p n m);
-              Hashtbl.replace costs n (int_field (p ^ ": " ^ n) v "cost"))
+              Hashtbl.replace costs n (int_field (p ^ ": " ^ n) v "cost");
+              Hashtbl.replace dims n (dim_field (p ^ ": " ^ n) v))
             l
       | _ -> die "strict_decide: %s has no arg_signatures" p));
   tbl
@@ -801,6 +924,7 @@ let peak_fields c toks =
   [
     ("held", `Int (K.held c toks));
     ("mem", `Int (K.mem c toks));
+    ("dim", `Int (K.dim c toks));
     ("peak_groups", `Int p);
     ("peak_frames", `List (List.map (fun l -> `String l) labels));
   ]
@@ -925,11 +1049,17 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
   let contract_for extra extra_arg =
     let local = Hashtbl.create 8 and local_arg = Hashtbl.create 8 in
     let local_cost = Hashtbl.create 8 in
-    (* a hypothesis may carry its cost; without one it costs a token *)
+    let local_dim = Hashtbl.create 8 in
+    (* a hypothesis may carry its cost and its dim; without one it costs a
+       token, and without a dim it counts 0 (the generators give the measured
+       dim of every hypothesis whose documents can reach the bound, C-100) *)
     let note_cost n v =
-      match member "cost" v with
+      (match member "cost" v with
       | `Int c when c >= 0 -> Hashtbl.replace local_cost n c
-      | _ -> ()
+      | _ -> ());
+      match member "dim" v with
+      | `Null -> ()
+      | d -> Hashtbl.replace local_dim n (dim_pair ("hypothesis " ^ n) d)
     in
     (match extra with
     | `Assoc l ->
@@ -989,6 +1119,17 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
                     | Some c -> c
                     | None -> tc))
           | _ -> tc);
+      K.c_dim =
+        (fun m t ->
+          match t with
+          | K.TCs n -> (
+              let s = string_of_chars n in
+              match Hashtbl.find_opt local_dim s with
+              | Some d -> pick m d
+              | None ->
+                  if Hashtbl.mem local s || Hashtbl.mem local_arg s then 0
+                  else file_dim m t)
+          | _ -> struct_dim m t);
     }
   in
   if pairs then (
@@ -1534,6 +1675,7 @@ let bytes_contract ~kernel ~contract ~sigs ~asigs ~lexical =
       K.c_sig = (fun n -> Hashtbl.find_opt sg (string_of_chars n));
       K.c_arg = (fun n -> Hashtbl.find_opt ag (string_of_chars n));
       K.c_cost = kcost;
+      K.c_dim = file_dim;
     }
   in
   let bc =
@@ -1548,6 +1690,7 @@ let bytes_contract ~kernel ~contract ~sigs ~asigs ~lexical =
             (fun n ->
               Option.map b_asig (Hashtbl.find_opt ag (string_of_chars n)));
           B.c_cost = (fun t -> kcost (k_tok t));
+          B.c_dim = (fun m t -> file_dim m (k_tok t));
         };
       B.bc_lex = lx;
     }
@@ -1583,6 +1726,7 @@ let decide_bytes_json kc (bc : B.bcontract) (b : char list) =
       ("peak_groups", `Int (fst (peak_frames kc ktoks)));
       ("held", `Int (K.held kc ktoks));
       ("mem", `Int (K.mem kc ktoks));
+      ("dim", `Int (K.dim kc ktoks));
       ("branches", strs branches);
       ("lex_rules", strs (lrules @ frules));
       ("lex_branches", strs (lbranches @ fbranches));
@@ -1686,6 +1830,7 @@ let () =
   let lexical = ref "" and bytes = ref false and file = ref None in
   let pairs = ref false in
   let tcost = ref (-1) in
+  let dimf = ref "" in
   Arg.parse
     [
       ("--kernel", Arg.Set_string kernel, "kernel names file");
@@ -1699,6 +1844,10 @@ let () =
       ( "--token-cost",
         Arg.Set_int tcost,
         "the cost of a token without a signature (a generator's, C-98)" );
+      ( "--dims",
+        Arg.Set_string dimf,
+        "a JSON file whose \"dims\" is the structural dimension table (a \
+         generator's, C-100)" );
       ( "--frame-pairs",
         Arg.Set pairs,
         "print the frame-kind combinations of the model (C-94) and exit" );
@@ -1710,6 +1859,7 @@ let () =
      [--arg-signatures A] --lexical X\n\
      strict_decide.exe FILE.tex   (contracts from the repository)";
   if !tcost >= 0 then token_cost := !tcost;
+  if !dimf <> "" then set_sdims !dimf (load_json !dimf);
   match !file with
   | Some path ->
       let repo =

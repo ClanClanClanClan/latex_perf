@@ -309,9 +309,12 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
 
     pdfTeX has fixed capacities that no rule of [Runs] models: a document
     that exceeds one stops with "! TeX capacity exceeded" whatever [Runs]
-    says.  The fragment is therefore BOUNDED, and each bound is an EXACT
-    account, in the model's own terms, of what the capacity counts, never a
-    proxy for it.  Correction C-94: the first version (C-86) bounded the
+    says.  The fragment is therefore BOUNDED, each bound an account, in the
+    model's own terms, of what the capacity counts, never a proxy that the
+    grammar can outgrow.  The group account is EXACT (below); the memory and
+    dimension accounts are UPPER BOUNDS built from measured per-token costs,
+    attested on every graded document, not proved (corrections C-98,
+    C-100).  Correction C-94: the first version (C-86) bounded the
     BRACE depth by 200, because 254 nested braces overflow TeX's 255
     grouping levels; but a formula is a TeX group too, and slice A let a
     formula open inside an argument, so [\mbox{$\mbox{$ ... $}$}] held two
@@ -353,9 +356,31 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       bound).  Bounded by its own account, [mem] <= [max_mem] (below): every
       token its measured cost, every argument's tokens its command's
       measured copy factor.  With the 435,796 words pdfTeX reports at body
-      start, the account stays under half of main memory, and the worst case
-      at the bound, built for every admitted name and command, is measured
-      under it (§I.6).
+      start, the account stays under half of main memory.  The costs are
+      MEASURED, as slopes of pdfTeX's reported memory over the count (C-100:
+      the first version divided by the count, which a high-water mark at
+      body start hides up to 31,000 words of, and so under-counted up to
+      1.25x), and pdfTeX's report is under the account on every graded
+      document; the account is not proved to bound pdfTeX's memory, the
+      bound leaves more than 2x for that (§I.6).
+    - DIMENSIONS (correction C-100).  TeX stores a dimension as a signed
+      32-bit count of sp and adds widths without an overflow check: a
+      display of 3,277 [\quad] (32,770pt, just past 2^31 sp) wraps to a
+      negative width, skips the squeeze of tex.web §1199, and LaTeX's
+      shipout stops with "! Dimension too large" (the round-1 review's
+      document, PROVEN-READY before this bound).  Every dimension pdfTeX
+      computes while it typesets a paragraph (a box's width, height and
+      depth, a glue's setting, a shift, a line's active width) is a sum of
+      the dimensions of the nodes the paragraph's tokens make, each with a
+      coefficient of at most one, plus constants of the layout; a page
+      holds at most one item past its goal.  [dim] (below) is the largest
+      sum, over the SEGMENTS of the run (the tokens between two paragraph
+      breaks at the top level, where TeX ends the paragraph), of the
+      tokens' measured [c_dim]; [bounded] requires [dim] <= [max_dim] =
+      8,000pt, under half of TeX's largest dimension (16,383.99998pt).  The
+      account is argued and attested (every name repeated to the bound in
+      every mode compiles, one more is outside; every pair of tokens'
+      dimensions is under the sum of their costs), not proved.
     - SAVE STACK, INPUT STACK, PARAMETER STACK, SEMANTIC NEST, EXPANSION
       DEPTH, FONTS.  Each grows at most by a constant per running frame or
       group (bounded by [max_groups]) or per token read (bounded by
@@ -377,6 +402,7 @@ Definition max_groups : nat := Nat.mul 2 (Nat.mul ten ten).
 Definition max_tokens : nat := Nat.mul max_groups (Nat.mul ten ten).
 Definition max_name : nat := Nat.mul ten ten.
 Definition max_mem : nat := Nat.mul max_tokens (Nat.mul ten ten).
+Definition max_dim : nat := Nat.mul 8 (Nat.mul ten (Nat.mul ten ten)).
 
 Example max_groups_is_200 : max_groups = 200.
 Proof. reflexivity. Qed.
@@ -390,6 +416,10 @@ Proof. reflexivity. Qed.
 (* 2,000,000 words: with the 435,796 words pdfTeX reports at body start,
    under half of main memory (5,000,000) *)
 Example max_mem_is_100_tokens : max_mem = Nat.mul max_tokens 100.
+Proof. reflexivity. Qed.
+
+(* 8,000pt: under half of TeX's largest dimension, 16,383.99998pt *)
+Example max_dim_is_8000 : max_dim = Nat.mul 80 100.
 Proof. reflexivity. Qed.
 
 (** The TeX groups a frame holds. *)
@@ -534,9 +564,51 @@ Fixpoint node_cost (C : contract) (ts : list tok) : nat :=
 
 Definition mem (C : contract) (ts : list tok) : nat := node_cost C ts + held C ts.
 
+(** DIMENSIONS (correction C-100).  [dim_run C s acc ts]: the run from [s]
+    ([run]'s steps, up to where it stops: a stop halts pdfTeX, and the
+    argument scanner that locates a deferred error typesets nothing), with
+    [acc] the dimensions of the current segment so far (each token costs its
+    [c_dim] in the mode it runs in: math iff the innermost frame is a
+    formula, a math group or an argument run in math); a paragraph break
+    read at the top level (no frame open: text, outside every group,
+    formula and argument) ends the paragraph in TeX, and the next segment
+    starts with that break's own cost (a paragraph's indent and fill).  The
+    result is the largest segment. *)
+Definition seg_start (s : state) (t : tok) : bool :=
+  match t, s_frames s with
+  | TPar _, [] => true
+  | _, _ => false
+  end.
+
+(* The larger of two, by [Nat.leb] (extracted to OCaml's comparison):
+   [Nat.max] is extracted as a recursion on its arguments (unary), which at
+   a dimension account's values (thousands) makes the run quadratic. *)
+Definition maxl (a b : nat) : nat := if Nat.leb a b then b else a.
+
+Fixpoint dim_run (C : contract) (s : state) (acc : nat) (ts : list tok) : nat :=
+  match ts with
+  | [] => acc
+  | t :: rest =>
+      let m := in_math (s_frames s) in
+      let a := if seg_start s t then c_dim C m t else acc + c_dim C m t in
+      maxl a
+        (match step C s t (hd_error rest) with
+         | Go1 s' => dim_run C s' a rest
+         | Go2 s' =>
+             match rest with
+             | [] => a
+             | t2 :: rest' => dim_run C s' (a + c_dim C m t2) rest'
+             end
+         | _ => a
+         end)
+  end.
+
+Definition dim (C : contract) (ts : list tok) : nat :=
+  dim_run C init (c_dim C false (TPar false)) ts.
+
 Definition bounded (C : contract) (ts : list tok) : bool :=
   Nat.leb (length ts) max_tokens && short_names ts && Nat.leb (peak C init ts) max_groups
-  && Nat.leb (mem C ts) max_mem.
+  && Nat.leb (mem C ts) max_mem && Nat.leb (dim C ts) max_dim.
 
 Definition in_strict_doc (C : contract) (d : doc) : Prop :=
   in_strict_toks C (flatten_doc d) /\ bounded C (flatten_doc d) = true.
@@ -564,16 +636,29 @@ Corollary strict_groups_bounded : forall C d s,
   in_strict_doc C d -> Reaches C init (flatten_doc d) s -> groups (s_frames s) <= max_groups.
 Proof.
   intros C d s [_ Hb] R. unfold bounded in Hb. rewrite !andb_true_iff in Hb.
-  destruct Hb as [[_ Hp] _]. apply Nat.leb_le in Hp.
+  destruct Hb as [[[_ Hp] _] _]. apply Nat.leb_le in Hp.
   exact (proj1 (peak_spec C _ init max_groups) Hp s R).
 Qed.
 
-(** C-98: a document of the tier stays within the main-memory account. *)
+(** C-98: a document of the tier stays within the main-memory account.
+    DEFINITIONAL: the membership includes the bound.  That the account bounds
+    pdfTeX's main memory is part of the attested premise [Faithful]
+    (Bridge.v), not of this statement. *)
 Corollary strict_mem_bounded : forall C d,
   in_strict_doc C d -> mem C (flatten_doc d) <= max_mem.
 Proof.
   intros C d [_ Hb]. unfold bounded in Hb. rewrite !andb_true_iff in Hb.
-  destruct Hb as [_ Hh]. apply Nat.leb_le in Hh. exact Hh.
+  destruct Hb as [[_ Hh] _]. apply Nat.leb_le in Hh. exact Hh.
+Qed.
+
+(** C-100: every segment of a document of the tier stays within the
+    dimension account.  DEFINITIONAL, like [strict_mem_bounded]: that the
+    account bounds pdfTeX's dimensions is part of [Faithful]. *)
+Corollary strict_dim_bounded : forall C d,
+  in_strict_doc C d -> dim C (flatten_doc d) <= max_dim.
+Proof.
+  intros C d [_ Hb]. unfold bounded in Hb. rewrite !andb_true_iff in Hb.
+  destruct Hb as [_ Hd]. apply Nat.leb_le in Hd. exact Hd.
 Qed.
 
 Inductive verdict :=

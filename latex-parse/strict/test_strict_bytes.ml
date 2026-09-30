@@ -67,6 +67,7 @@ let kernel =
       ("alpha", { B.sig_text = B.TxFatal B.E3; B.sig_math = B.MxNoad });
       ("LaTeX", { B.sig_text = B.TxMaterial; B.sig_math = B.MxFatal B.E3 });
       ("relax", { B.sig_text = B.TxNoop; B.sig_math = B.MxNoop });
+      ("quad", { B.sig_text = B.TxMaterial; B.sig_math = B.MxNoad });
     ]
   in
   (* step 2, slice A: the test contract's one-argument commands (as in
@@ -115,6 +116,15 @@ let kernel =
        name (\\ddots, 155 words) *)
     B.c_cost =
       (fun t -> match t with B.TCs n when str n = "alpha" -> 160 | _ -> 17);
+    (* C-100: the dimension account, as in test_strict_kernel.ml *)
+    B.c_dim =
+      (fun _ t ->
+        match t with
+        | B.TCs n when str n = "quad" -> 10
+        | B.TCs n when str n = "alpha" -> 20
+        | B.TChar _ -> 12
+        | B.TPar _ -> 16
+        | _ -> 0);
   }
 
 let contract = { B.bc_kernel = kernel; B.bc_lex = lexcon }
@@ -191,12 +201,40 @@ let () =
   check "end without document" (h ^ "\\end x\n" ^ e) "not_strict";
   check "control space" (h ^ "x\\ y\n" ^ e) "not_strict";
   check "utf-8" (h ^ "caf\xc3\xa9\n" ^ e) "not_strict";
-  check "long line" (h ^ String.make 10001 'x' ^ "\n" ^ e) "not_strict";
+  (* a line of 10,000 bytes: 1,666 [\relax] (no dimensions) and 4 characters *)
+  let line k =
+    String.make k 'x' ^ String.concat "" (List.init 1666 (fun _ -> "\\relax"))
+  in
+  check "long line" (h ^ line 5 ^ "\n" ^ e) "not_strict";
   (* TeX Live's first-line directive (C-89): %&latex loads the DVI format, rc 0
      and no PDF; a space before it disables it *)
   check "first line %&latex" ("%&latex\n" ^ h ^ "x\n" ^ e) "not_strict";
   check "first line  %&latex" (" %&latex\n" ^ h ^ "x\n" ^ e) "ready";
-  check "line at the bound" (h ^ String.make 10000 'x' ^ "\n" ^ e) "ready";
+  check "line at the bound" (h ^ line 4 ^ "\n" ^ e) "ready";
+  (* C-100: the round-1 review's file, a display of 3,277 [\quad] (50 a line);
+     798 are within the dimension bound, 799 are not *)
+  let quads k =
+    String.concat "\n"
+      (List.init
+         ((k + 49) / 50)
+         (fun i ->
+           String.concat ""
+             (List.init (min 50 (k - (50 * i))) (fun _ -> "\\quad"))))
+  in
+  check "display of 3,277 quads"
+    (h ^ "\\[" ^ quads 3277 ^ "\\]\n" ^ e)
+    "not_strict";
+  check "display at the dimension bound"
+    (h ^ "\\[" ^ quads 798 ^ "\\]\n" ^ e)
+    "ready";
+  check "display past the dimension bound"
+    (h ^ "\\[" ^ quads 799 ^ "\\]\n" ^ e)
+    "not_strict";
+  (match B.explain contract (chars (h ^ "\\[" ^ quads 799 ^ "\\]\n" ^ e)) with
+  | Some (_, B.WBound) -> ()
+  | _ ->
+      incr failures;
+      print_endline "FAIL explain: past the dimension bound is not WBound");
   (* C-94: a formula inside a box argument is a second TeX group per level (the
      reviewer's file: 128 levels overflow TeX's 255 grouping levels) *)
   let boxes k =

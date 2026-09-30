@@ -150,10 +150,12 @@ is unfused, which is x86_64's code; aarch64's fused sites (H.1 §5.1) are a para
    refuses to run if that table and `Boundary.v` name different externals); an unmodelled
    external is Stuck anyway, so it has no effect on runs that are not Stuck. Of 45,742 unsequenced
    pairs checked, **29 of them** (in 18 procedures) may depend on the order; each is emitted as `EUnseq`/`SUnseq`,
-   which is Stuck when reached. Several are real: `objtab[k].int4 := pdfcreateobj(...)` evaluates
-   the target through the global `objtab`, which the call may reallocate, so the binary's result
-   depends on which side gcc evaluated first (a potential use after free in pdfTeX itself; not
-   checked in the disassembly yet).
+   which is Stuck when reached. The analysis is path-insensitive, so a flagged site is not shown
+   to be order-dependent: e.g. `objtab[b].int4 := pdfgetmem(5)` (`appendbead`) is flagged because
+   `pdfgetmem`'s summary includes everything its overflow and error paths may write, `objtab`
+   among them, although those paths end the run. Which of the 29 are truly order-dependent, and
+   which order gcc chose at each, is open (checkpoint 2 first stated one as a real use after free;
+   that was not checked and is withdrawn).
 
 ### The C boundary modelled so far (coq/Boundary.v)
 

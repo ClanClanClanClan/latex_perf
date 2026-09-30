@@ -104,7 +104,7 @@ def main() -> int:
                 work = Path(td) / "w"
                 shutil.copytree(src, work)
                 run = be.run_to_fixpoint(work, r["toplevel"], be.tex_env(td), ns.timeout)
-                log = work / (Path(r["toplevel"]).stem + ".log")
+                log = _oracle.job_output(work, r["toplevel"], ".log")  # C-95
                 grades[label] = {"pdflatex_rc": run.rc, "pdflatex_pdf": run.pdf,
                                  "first_error": _oracle.first_error_block(log)[:300],
                                  "_files": loaded_files(log)}

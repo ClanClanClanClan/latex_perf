@@ -15,7 +15,7 @@ CLI = "/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/_
 MAX_PASSES, TIMEOUT = 3, 300
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from _oracle import get_oracle  # noqa: E402
+from _oracle import get_oracle, job_output  # noqa: E402
 
 
 def run_to_fixpoint(work, toplevel, env):
@@ -25,11 +25,11 @@ def run_to_fixpoint(work, toplevel, env):
     --sample-offset 200`, which records per-row provenance."""
     r = get_oracle().run_to_fixpoint(pathlib.Path(work), toplevel, env, TIMEOUT,
                                      MAX_PASSES)
-    return r.rc, r.passes
+    return r.rc, r.passes, r.pdf  # r.pdf: _oracle.pdf_written (C-99)
 
 
 def first_error(work, toplevel):
-    log = pathlib.Path(work) / (pathlib.Path(toplevel).stem + ".log")
+    log = job_output(work, toplevel, ".log")  # pdfTeX's job name (C-95)
     if not log.exists():
         return ""
     for line in log.read_text(errors="replace").splitlines():
@@ -54,11 +54,10 @@ def grade(aid, top):
     with get_oracle().tempdir() as td:
         work = pathlib.Path(td) / "w"
         shutil.copytree(pkg, work)
-        rc, passes = run_to_fixpoint(str(work), top, get_oracle().tex_env(td))
-        pdf = (work / (pathlib.Path(top).stem + ".pdf")).exists()
+        rc, passes, pdf = run_to_fixpoint(str(work), top, get_oracle().tex_env(td))
         err = first_error(str(work), top)
     if rc == -1:
-        return dict(arxiv_id=aid, toplevel=top, cell="ungraded-infra",
+        return dict(arxiv_id=aid, toplevel=top, cell="ungraded-timeout",
                     pdflatex_verdict="timeout", passes=passes)
     compiles = (rc == 0 and pdf)
     c = subprocess.run([CLI, "--compile-check", str(pkg / top)],

@@ -17,8 +17,9 @@ Evidence tags as elsewhere: **[M]** measured, **[R]** read from a source, **[I]*
   probes under the oracle, then admitted by its signature) failed adversarial review four rounds
   running, each time on a composition hole the previous round had missed. This is the track the
   owner was asked about ("The command-signature track (the running dynamic workflow) has failed
-  review 4 rounds running on composition holes. Stop it?", 2026-09-29 06:12:50Z). The rounds, as
-  the assistant listed them to the owner at 06:12:44Z:
+  review 4 rounds running on composition holes. Stop it?", 2026-09-29 06:12:50Z). The holes, as
+  the assistant summarised them to the owner at 06:12:44Z (the summary names findings from rounds
+  1–3 only):
   - round 1: commands that swallow the next token;
   - round 2: the mode a command leaves behind, and fragile commands inside moving arguments;
   - round 3: `x \section{a}\par\unskip x`, where whether `\unskip` is allowed depends on what is

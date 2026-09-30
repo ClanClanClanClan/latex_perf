@@ -24,7 +24,12 @@ latex-parse/strict/strict_decide.exe (the extraction) and:
      bytes, token count, memory account (Decide.mem), dimension account
      (Decide.dim) and verdict to be the model's, every document one past a
      bound to be outside, and pdfTeX's report on every graded one to be within
-     the committed account (C-98, C-104).
+     the committed account (C-98, C-104). C-105: every memory INSTRUMENT (the
+     structural shapes, the names' contexts, stage G's documents) is
+     required to be the model's rendering in the retention regime
+     (_strict_capacity.retain), byte for byte: an instrument graded on a page
+     that ships frees what it should measure; the retention worst cases
+     (R-KEEP, text:keep) and the round-2 review's documents are rebuilt too.
 
 So every oracle grade the pure gate reasons about is a grade of the bytes the
 model actually decides. No TeX is run.
@@ -93,15 +98,19 @@ def main() -> int:
     m0 = sig["memory"]["structural"]["BASE"]["used"]
     mb = asig.get("capacity", {}).get("memory_bound", {})
     jobs = []
+    ret = set()  # indexes of the jobs graded in the retention regime (C-105)
     for n, d in sorted(mb.items()):
         if n in ("filler", "filler_costly") or not isinstance(d, dict):
             continue
         for key, r in sorted(d.items()):
             w = key.split(":")[0]
-            unit = mb["filler_costly" if key.endswith(":costly") else "filler"]["unit"]
             for which, extra in (("at", 0), ("past", 1)):
-                doc = C.mem_build(S, n, w, unit, r["depth"], r["inner_units"],
-                                  r["outer_units"], r["chars"] + extra)
+                if key.endswith(":keep"):
+                    doc = C.keep_doc(S, n, r["units"] + extra, [S.cmd(n), S.group()])
+                else:
+                    unit = mb["filler_costly" if key.endswith(":costly") else "filler"]["unit"]
+                    doc = C.mem_build(S, n, w, unit, r["depth"], r["inner_units"],
+                                      r["outer_units"], r["chars"] + extra)
                 jobs.append((f"arg {n}/{key} {which}", {"doc": doc}, r[which]))
     t = S.text("x")
     for n, recs in sorted(asig.get("capacity", {}).get("memory", {}).get("records", {}).items()):
@@ -111,12 +120,16 @@ def main() -> int:
             fam, w = f.split(":")[0], f.split(":")[1].split("@")[0]
             root = (lambda b: S.doc(*b)) if w == "text" else \
                 (lambda b: S.doc(S.math("paren", *b)))
-            if fam in ("G-MEM-FLAT", "G-MEM-FLATX"):
-                unit = [S.cmd(n), S.group()] if fam == "G-MEM-FLAT" else [S.cmd(n), S.group(t)]
+            if fam in ("G-MEM-FLAT", "G-MEM-FLATX", "G-MEM-PAR", "G-MEM-XN"):
+                unit = {"G-MEM-FLAT": [S.cmd(n), S.group()],
+                        "G-MEM-FLATX": [S.cmd(n), S.group(t)],
+                        "G-MEM-PAR": [S.cmd(n), S.group(), S.par()],
+                        "G-MEM-XN": [t, S.cmd(n), S.group()]}[fam]
                 doc = root([q for _ in range(r["count"]) for q in unit])
             else:
                 inner = [S.text("x" * (2500 if fam == "G-MEM-DEEP-HALF" else 5000))]
                 doc = root(C.nested(S, n, r["depth"], inner))
+            ret.add(len(jobs))
             jobs.append((f"arg {n} {f}", {"doc": doc}, dict(r, _raw=True)))
     dz = DM.Dims(sig["dims"], {n: v["dim"] for n, v in sig["signatures"].items()})
     mem1 = sig.get("memory", {})
@@ -126,13 +139,19 @@ def main() -> int:
             bjobs.append((f"structural {f}", C.hyph_bytes(r["units"]), r))
             continue
         doc = S.doc(t) if f == "BASE" else C.structural_doc(S, f[2:].split("@")[0], r["units"])
+        if f != "BASE":
+            ret.add(len(jobs))
         jobs.append((f"structural {f}", {"doc": doc}, r))
     for n, fams in sorted(mem1.get("names", {}).items()):
         for f, r in sorted(fams.items()):
             ctx = f[len("R-MEM-"):].split("@")[0]
+            ret.add(len(jobs))
             jobs.append((f"{n} {f}", {"doc": C.name_mem_doc(S, n, ctx, r["count"])}, r))
     for n, fams in sorted(mem1.get("cap", {}).items()):
         for f, r in sorted(fams.items()):
+            if f.startswith("R-KEEP-"):
+                jobs.append((f"{n} {f}", {"doc": C.keep_doc(S, n, r["count"])}, r))
+                continue
             where = f.split("-")[2]
             jobs.append((f"{n} {f}", {"doc": C.cap_doc(S, dz, n, where, r["count"])}, r))
     for n, fams in sorted(sig.get("dim_bound", {}).items()):
@@ -148,7 +167,7 @@ def main() -> int:
                 if hashlib.sha256(inst.encode()).hexdigest() != r["box_tex_sha256"]:
                     fails.append(f"signatures: {n} {f}: the box instrument's bytes are not "
                                  f"the ones its measure is recorded for (C-104)")
-    rv = {f: d for f, _, d in C.review_docs(S)}
+    rv = {f: d for f, _, d in C.review_docs(S) + C.review2_docs(S)}
     for f, r in sorted(mem1.get("review", {}).items()):
         if f not in rv:
             fails.append(f"signatures: review document {f} is not one of the round-1 review's")
@@ -170,10 +189,12 @@ def main() -> int:
             jobs.append((tag, None, r))
             ms.append(dict(m, tex=b.decode("ascii")))
     bad = 0
-    for (tag, _, want), m in zip(jobs, ms):
+    for i, ((tag, _, want), m) in enumerate(zip(jobs, ms)):
         why = None
-        if sha(m) != want.get("sha256"):
-            why = "other bytes than the ones graded"
+        got = sha(dict(m, tex=C.retain(m["tex"]))) if i in ret else sha(m)
+        if got != want.get("sha256"):
+            why = ("other bytes than the ones graded" if i not in ret else
+                   "other bytes than the model's in the retention regime (C-105)")
         elif not want.get("_raw") and (m["ntoks"], m.get("mem"), m.get("dim"), m["verdict"]) != (
                 want.get("ntoks"), want.get("mem"), want.get("dim", m.get("dim")),
                 want.get("verdict")):

@@ -124,7 +124,7 @@ import check_strict_kernel as CK  # noqa: E402
 # boundary constants (a letter's hyphenation, the inter-atom excess); every
 # memory record carries pdfTeX's report; the round-1 review's documents are
 # recorded (memory.review).
-GENERATOR_VERSION = "7"
+GENERATOR_VERSION = "8"
 DIMS_EVIDENCE = S.REPO / "corpora/strict_s0/dims_s0.json"
 MEMN = 4000
 # the first count of a context with scripts (five tokens a unit; its material
@@ -725,12 +725,15 @@ def main() -> int:
         bm = iter(S.BytesKernel(signatures=sigfile, arg_signatures=None).run(bs))
         bb = iter(bs)
         out = []
-        for _, _, ex in struct:
+        for f, _, ex in struct:
             if ex.get("bytes"):
                 m = dict(next(bm))
-                m["tex"] = next(bb).decode("ascii")
+                m["tex"] = next(bb).decode("ascii")  # (hyph_bytes: already retained)
             else:
                 m = next(tm)
+                if f != "BASE":
+                    # C-105: every instrument in the retention regime
+                    m = dict(m, tex=C_.retain(m["tex"]))
             out.append(m)
         return out
     sm = struct_models(kern0, empty_sig)
@@ -753,6 +756,9 @@ def main() -> int:
     # every model record is re-counted under the FINAL signatures at the end
     # (the costs are measured after the documents are): (record, request)
     remodel = [(memory["structural"][f], {"doc": d}) for f, d, _ in struct if d is not None]
+    # (the records of instruments graded in the retention regime, C-105: their
+    # bytes are the model's rendering with C_.RETAIN inserted)
+    retained = {id(memory["structural"][f]) for f, d, _ in struct if d is not None and f != "BASE"}
     remodel_bytes = [(memory["structural"][f], C_.hyph_bytes(ex["units"]))
                      for f, d, ex in struct if d is None]
     M0 = memory["structural"]["BASE"]["used"]
@@ -889,7 +895,7 @@ def main() -> int:
         h = signatures[x]
         out = []
         if not isinstance(h["text"], list):
-            out.append("TEXT")
+            out += ["TEXT", "PAR", "XN"]  # C-105: a paragraph of its own; after a character
         if not isinstance(h["math"], list):
             out += ["MATH", "DISPLAY"]
             if h["math"] == "noad":
@@ -901,11 +907,13 @@ def main() -> int:
     def grade_mem(jobs, label):
         ms = kern.run([{"doc": ctx_doc(x, ctx, k), "signatures": {x: signatures[x]}}
                        for x, ctx, k in jobs])
+        ms = [dict(m, tex=C_.retain(m["tex"])) for m in ms]  # C-105
         gs = grader.grade_all([m["tex"] for m in ms], label, stats=True)
         for (x, ctx, k), m, g in zip(jobs, ms, gs):
             r = C_.memory_record(m, g, count=k)
             memory["names"].setdefault(x, {})[f"R-MEM-{ctx}@{k}"] = r
             remodel.append((r, {"doc": ctx_doc(x, ctx, k)}))
+            retained.add(id(r))
     def unit_dim(x, ctx):
         return dim_of[x][1] + (2 * (dtable["script"][1] + dtable["char"]["x"][1])
                                if ctx == "DSCRIPT" else 0)
@@ -945,6 +953,8 @@ def main() -> int:
     # gate checks pdfTeX's report against the account on them for good
     review = {}
     rv = [(f, n, (lambda d=d: d)) for f, n, d in C_.review_docs(S) if n in signatures]
+    rv += [(f, ns, (lambda d=d: d)) for f, ns, d in C_.review2_docs(S)
+           if all(n in signatures for n in ns)]
     ktmp0 = sig_kernel(tmpdir, signatures, token_cost, dtable)
     ms = ktmp0.run([{"doc": mk()} for _, _, mk in rv])
     gs = grader.grade_all([m["tex"] for m in ms], "review", stats=True)
@@ -972,6 +982,10 @@ def main() -> int:
                 continue
             searches.append((x, f"R-CAP-{where}",
                              lambda k, x=x, where=where: C_.cap_doc(S, dims_all, x, where, k)))
+        if not isinstance(h["text"], list) and "offinterlineskip" in signatures:
+            # C-105: the name's paragraphs on a page that never ships, to the
+            # bound (the round-2 review's shape)
+            searches.append((x, "R-KEEP-TEXT", lambda k, x=x: C_.keep_doc(S, x, k)))
         for where in ("TEXT", "MATH", "DISPLAY"):
             if isinstance(h["text" if where == "TEXT" else "math"], list):
                 continue
@@ -1106,8 +1120,9 @@ def main() -> int:
             for rs in part.values() for r in rs.values()}
     keep |= {id(r) for r in memory["structural"].values()}
     keep |= {id(r) for f, r in memory["review"].items()}
+    need_of = {f: ns for f, ns, _ in C_.review2_docs(S)}
     memory["review"] = {f: r for f, r in memory["review"].items()
-                        if f.split("-")[2] in signatures}
+                        if all(n in signatures for n in need_of.get(f, (f.split("-")[2],)))}
     remodel = [(r, q) for r, q in remodel if id(r) in keep]
     kfin = sig_kernel(tmpdir, signatures, token_cost, dtable)
     sfin = tmpdir / "final-sig.json"
@@ -1121,7 +1136,8 @@ def main() -> int:
                   "dim": m.get("dim"), "verdict": m["verdict"]})
     remodel = [(r, q) for r, q in remodel if q is not None]
     for (r, _), m in zip(remodel, kfin.run([q for _, q in remodel])):
-        if hashlib.sha256(m["tex"].encode()).hexdigest() != r["sha256"]:
+        tex = C_.retain(m["tex"]) if id(r) in retained else m["tex"]
+        if hashlib.sha256(tex.encode()).hexdigest() != r["sha256"]:
             raise SystemExit("remodel: a record's bytes changed under the final signatures")
         r.update({"ntoks": m["ntoks"], "held": m.get("held"), "mem": m.get("mem"),
                   "dim": m.get("dim"), "verdict": m["verdict"]})

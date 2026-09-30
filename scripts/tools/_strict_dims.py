@@ -18,14 +18,18 @@ make (widths, heights, depths and shifts of boxes, rules and characters;
 natural width, stretch and shrink of glue; kerns), plus constants of the
 layout (\\hsize for a line or \\centerline box, a display's centring): an
 hbox's width is the sum of its items' widths, its height the largest item's;
-a vbox's height the sum; a glue's setting at most the box's target plus its
-natural width; a script's shift at most its nucleus's height plus a font
+a vbox's height the sum; a script's shift at most its nucleus's height plus a font
 constant; a limit's width the largest of the operator's and the limits'. So
 if each token is charged at least the absolute sum of the dimensions of the
 nodes IT makes (its own glyphs, glue, kerns, rules, and the constant parts of
 the boxes it builds), plus what TeX inserts at its boundary with the previous
 token (a kern or ligature in text; one inter-atom spacing per atom in math),
 then every such dimension is at most the segment's sum plus the constants.
+A glue's SETTING is not one of them and is not bounded by this account
+(C-105: negative stretch cancels, and a forced line is set past a ratio of
+20,000); tex.web keeps it as a ratio and computes a set width only at
+shipout, clamped by vet_glue and never stored or scanned (design §I.6
+C-105; rule probe family GLUESET).
 
 MEASURED, per token and per mode:
 - INV(t): TeX's own dump (\\showbox, depth and breadth unlimited) of

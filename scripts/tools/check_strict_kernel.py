@@ -1337,7 +1337,7 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
         ctxs = {f.split("@")[0] for f in mem1.get("names", {}).get(n, {})}
         need = set()
         if not isinstance(h["text"], list):
-            need.add("R-MEM-TEXT")
+            need |= {"R-MEM-TEXT", "R-MEM-PAR", "R-MEM-XN"}  # C-105
         if not isinstance(h["math"], list):
             need |= {"R-MEM-MATH", "R-MEM-DISPLAY"}
             if h["math"] == "noad":
@@ -1363,9 +1363,39 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
             if f"R-CAP-{where}" not in capn or f"R-CAP-{where}-PAST" not in capn:
                 out.append(f"signatures: {n!r} has no document at the bound in {where} "
                            f"and one past it (C-98)")
-    if len(mem1.get("review", {})) < 3:
-        out.append("signatures: the round-1 review's memory documents are not recorded "
-                   "(C-104)")
+        if not isinstance(h["text"], list) and "offinterlineskip" in sig.get("signatures", {}) \
+                and ("R-KEEP-TEXT" not in capn or "R-KEEP-TEXT-PAST" not in capn):
+            out.append(f"signatures: {n!r} has no retention worst case (R-KEEP-TEXT: its "
+                       f"paragraphs on a page that never ships) at the bound and one past "
+                       f"it (C-105)")
+    # C-105 (LOW-1 of the round-2 review): EVERY review document whose names
+    # are admitted is recorded, and graded with pdfTeX's report; "at least 3
+    # of 5" and "skip a record without a grade" let two be dropped and one be
+    # stripped of its grade with every gate green
+    import _strict_s0 as S0
+    adm = set(sig.get("signatures", {}))
+    want_rv = {f for f, n, _ in C.review_docs(S0) if n in adm}
+    want_rv |= {f for f, ns, _ in C.review2_docs(S0) if all(n in adm for n in ns)}
+    got_rv = mem1.get("review", {})
+    if set(got_rv) != want_rv:
+        out.append(f"signatures: the review documents recorded are not the review's: "
+                   f"missing {sorted(want_rv - set(got_rv))}, extra "
+                   f"{sorted(set(got_rv) - want_rv)} (C-105)")
+    for f, r in sorted(got_rv.items()):
+        if not (r.get("oracle") and r.get("used") is not None and r.get("mem") is not None):
+            out.append(f"signatures: review document {f} carries no grade with pdfTeX's "
+                       f"report (C-105)")
+    # C-105 (LOW-2): the class-pair instruments (B_math's source) are exactly
+    # the ones _strict_capacity builds, byte for byte, with their units
+    import hashlib as _hl
+    want_cp = {f: (_hl.sha256(tex.encode()).hexdigest(), ex["units"])
+               for f, tex, ex in C.class_pair_docs()}
+    got_cp = {f: (r.get("sha256"), r.get("units"))
+              for f, r in mem1.get("class_pairs", {}).items()}
+    if got_cp != want_cp:
+        bad_cp = sorted(f for f in set(want_cp) | set(got_cp) if want_cp.get(f) != got_cp.get(f))
+        out.append(f"signatures: the class-pair instruments are not _strict_capacity's "
+                   f"(bytes or units differ, or missing/extra: {bad_cp[:4]}; C-105)")
     cap_a = asig.get("capacity", {})
     am = cap_a.get("memory", {})
     for n, h in sorted(asig.get("arg_signatures", {}).items()):
@@ -1386,7 +1416,10 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
         for w in ("text", "math"):
             if h[w][0] != "run":
                 continue
-            for key in (w, f"{w}:costly"):
+            keys = [w, f"{w}:costly"]
+            if w == "text" and "offinterlineskip" in sig.get("signatures", {}):
+                keys.append("text:keep")  # C-105
+            for key in keys:
                 r = mb.get(key)
                 if not r:
                     out.append(f"arg signatures: {n!r} has no memory worst case {key} "
@@ -1416,6 +1449,42 @@ def _dims_derived(repo: Path, block: dict) -> dict:
     return DM.derive(json.loads(p.read_text())["measurement"])
 
 
+def dims_plan_findings(DM, m: dict, tn, mn, tc, mc, chunk: int = 6000) -> list[str]:
+    """C-105 (LOW-2 of the round-2 review): a dimension measurement is the
+    plan _strict_dims.plan_for gives for its recorded names and commands,
+    COMPLETE: its items, nuclei and pairs are the plan's, its chunks hold the
+    plan's boxes in order (the measure's partition), and each chunk's two
+    instruments are the bytes box_doc builds from its items (the dump; the
+    characters' dimensions of the fonts and codes its dump lines use). A
+    dropped pair, item or chunk is a finding, whatever it does to a
+    derived number."""
+    import hashlib as _hl
+    out = []
+    plan = DM.plan_for(list(tn), list(mn), list(tc), list(mc))
+    if m.get("text") != plan.text or m.get("math") != plan.math \
+            or m.get("nuclei") != plan.nuclei:
+        out.append("the dimension measurement's items are not its plan's (C-105)")
+    if [tuple(x) for x in m.get("text_pairs", [])] != list(plan.text_pairs) or \
+            [tuple(x) for x in m.get("math_pairs", [])] != list(plan.math_pairs):
+        out.append("the dimension measurement's pairs are not its plan's (C-105)")
+    boxes = plan.boxes()
+    chunks = m.get("chunks", [])
+    if [c.get("items") for c in chunks] != [boxes[i:i + chunk]
+                                             for i in range(0, len(boxes), chunk)]:
+        out.append("the dimension measurement's chunks do not hold its plan's boxes "
+                   "(C-105)")
+        return out
+    for i, c in enumerate(chunks):
+        t1 = DM.box_doc(c["items"])
+        pairs = sorted(DM.fonts_chars(DM.record_items(c)))
+        t2 = DM.box_doc(c["items"], post=DM.chardims_post(pairs))
+        if c.get("tex_sha256") != [_hl.sha256(t1.encode()).hexdigest(),
+                                   _hl.sha256(t2.encode()).hexdigest()]:
+            out.append(f"the dimension measurement's chunk {i}: its instruments are not the "
+                       f"bytes its items give (C-105)")
+    return out
+
+
 def dims_findings(repo: Path, sig: dict, asig: dict) -> list[str]:
     """Check 14 (C-104): the dimension account re-derived from its PRIMARY
     records (TeX's box dumps, the characters' dimensions, the layout
@@ -1439,6 +1508,12 @@ def dims_findings(repo: Path, sig: dict, asig: dict) -> list[str]:
     if DM.table(dd) != sig["dims"]:
         out.append("signatures: the structural dimension table is not what the evidence "
                    "gives (C-104)")
+    try:
+        m1 = json.loads((repo / blk["evidence"]["file"]).read_text())["measurement"]
+        out += [f"signatures: {q}" for q in dims_plan_findings(
+            DM, m1, blk.get("text_names", []), blk.get("math_names", []), [], [])]
+    except (OSError, KeyError, ValueError, TypeError) as e:
+        out.append(f"signatures: dimension evidence plan: {e}")
     for k in ("B_text", "B_math", "script", "open", "space", "par", "display", "inline"):
         if abs(blk.get(k, -1) - dd[k]) > 1e-9:
             out.append(f"signatures: dims_derivation.{k} {blk.get(k)} is not the evidence's "
@@ -1490,6 +1565,9 @@ def dims_findings(repo: Path, sig: dict, asig: dict) -> list[str]:
                 raise ValueError(f"{ev['file']}: sha256 is not the one recorded")
             m = json.loads(p.read_text())["measurement"]
             da, exc = DM.derive(m), DM.excesses(m)
+            out += [f"arg signatures: {q}" for q in dims_plan_findings(
+                DM, m, ab.get("phase1_text_names", []), ab.get("phase1_math_names", []),
+                ab.get("text_cmds", []), ab.get("math_cmds", []))]
         except (OSError, KeyError, ValueError, TypeError) as e:
             return out + [f"arg signatures: dimension evidence: {e}"]
         tc, mc = set(ab.get("text_cmds", [])), set(ab.get("math_cmds", []))

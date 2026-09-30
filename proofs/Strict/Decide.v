@@ -369,11 +369,16 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       negative width, skips the squeeze of tex.web §1199, and LaTeX's
       shipout stops with "! Dimension too large" (the round-1 review's
       document, PROVEN-READY before this bound).  Every dimension pdfTeX
-      computes while it typesets a paragraph (a box's width, height and
-      depth, a glue's setting, a shift, a line's active width) is a sum of
-      the dimensions of the nodes the paragraph's tokens make, each with a
-      coefficient of at most one, plus constants of the layout; a page
-      holds at most one item past its goal.  [dim] (below) is the largest
+      stores or scans while it typesets a paragraph (a box's width, height
+      and depth, a shift, a line's active width) is a sum of the dimensions
+      of the nodes the paragraph's tokens make, each with a coefficient of
+      at most one, plus constants of the layout; a page holds at most one
+      item past its goal.  A glue's SETTING is not bounded by the account
+      (C-105: stretch of opposite signs cancels, and a line forced by
+      [\break] is set past a ratio of 20,000): tex.web keeps it as a ratio
+      and computes a set width only at shipout, clamped (vet_glue) and never
+      stored or scanned; that rests on this reading and on the rule probes'
+      family GLUESET, not on [dim].  [dim] (below) is the largest
       sum, over the SEGMENTS of the run (the tokens between two paragraph
       breaks at the top level, where TeX ends the paragraph), of the
       tokens' measured [c_dim]; [bounded] requires [dim] <= [max_dim] =

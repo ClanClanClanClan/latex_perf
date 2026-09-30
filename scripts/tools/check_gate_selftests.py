@@ -912,6 +912,63 @@ def strict_structural_forged(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def strict_review_dropped(text: str) -> str:
+    """C-105 (LOW-1 of the round-2 review): two review documents deleted (the
+    gate required only 3 of 5)."""
+    d = json.loads(text)
+    rv = d["memory"]["review"]
+    for f in sorted(rv)[:2]:
+        del rv[f]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_review_ungraded(text: str) -> str:
+    """C-105 (LOW-1): a review document stripped of its grade (the gate
+    skipped a record without one)."""
+    d = json.loads(text)
+    r = d["memory"]["review"][sorted(d["memory"]["review"])[0]]
+    for k in ("oracle", "used", "of", "stats"):
+        r.pop(k, None)
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_class_pair_units(text: str) -> str:
+    """C-105 (LOW-2): a class-pair instrument's units forged (its slope, and
+    so B_math, changes; nothing rebuilt the instruments)."""
+    d = json.loads(text)
+    cp = d["memory"]["class_pairs"]
+    f = sorted(cp)[-1]
+    cp[f]["units"] += 100
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_dims_plan_forged(text: str) -> str:
+    """C-105 (LOW-2): the dimension measurement's recorded name list no
+    longer matches the measurement (a name's items dropped from the plan)."""
+    d = json.loads(text)
+    d["dims_derivation"]["math_names"] = d["dims_derivation"]["math_names"][1:]
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_instrument_shipped(text: str) -> str:
+    """C-105: a memory instrument that shipped a page before its end (its
+    nodes freed): its level must be refused, never used."""
+    d = json.loads(text)
+    st = d["memory"]["structural"]
+    f = sorted(k for k in st if k.startswith("S:char-par@"))[0]
+    st[f]["stats"]["pages"] = 2
+    return json.dumps(d, indent=1) + "\n"
+
+
+def strict_keep_dropped(text: str) -> str:
+    """C-105: a name's retention worst case (R-KEEP-TEXT) deleted."""
+    d = json.loads(text)
+    cap = d["memory"]["cap"]
+    n = next(k for k in sorted(cap) if "R-KEEP-TEXT" in cap[k])
+    del cap[n]["R-KEEP-TEXT"]
+    return json.dumps(d, indent=1) + "\n"
+
+
 def strict_inert_definition(text: str) -> str:
     """LOW-4 of the round-2 review: an admitted name whose code redefines
     another name (\\gdef\\mbox{x}) must not be inert."""
@@ -1317,6 +1374,31 @@ REGISTRY = [
                      "corpora/contracts/strict/article-s0-signatures.json",
                      r"FAIL signatures: a graded memory record carries no pdfTeX report",
                      transform=strict_cap_record_no_usage),
+            # C-105: the retention regime and the round-2 review's LOWs.
+            Mutation("two review documents dropped (C-105, LOW-1)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: the review documents recorded are not the review's",
+                     transform=strict_review_dropped),
+            Mutation("a review document stripped of its grade (C-105, LOW-1)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: review document \S+ carries no grade",
+                     transform=strict_review_ungraded),
+            Mutation("a class-pair instrument's units forged (C-105, LOW-2)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: the class-pair instruments are not _strict_capacity's",
+                     transform=strict_class_pair_units),
+            Mutation("the dimension measurement is not its plan (C-105, LOW-2)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: the dimension measurement's items are not its plan's",
+                     transform=strict_dims_plan_forged),
+            Mutation("a memory instrument shipped a page before its end (C-105)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: .*shipped 2 pages, not one",
+                     transform=strict_instrument_shipped),
+            Mutation("a name's retention worst case dropped (C-105)",
+                     "corpora/contracts/strict/article-s0-signatures.json",
+                     r"FAIL signatures: '.*' has no retention worst case",
+                     transform=strict_keep_dropped),
             # LOW-2 of the C-94 review: grades reused from a local file.
             Mutation("grades are reused from a file nobody else can read (LOW-2)",
                      "corpora/strict_s0/rule_probes.json",
@@ -3044,6 +3126,14 @@ REGISTRY = [
                      "corpora/contracts/strict/article-s0-signatures.json",
                      r"FAIL memory document structural \S+: other bytes",
                      transform=strict_structural_forged),
+            # C-105: an instrument graded outside the retention regime (its
+            # pages may ship and free what it measures) is refused
+            Mutation("the memory instruments leave the retention regime (C-105)",
+                     "scripts/tools/_strict_capacity.py",
+                     r"FAIL memory document \S+ \S+: other bytes than the model's in the "
+                     r"retention regime",
+                     old="    return tex.replace(_BODY, _BODY + RETAIN)\n",
+                     new="    return tex\n"),
         ]),
     GateTest(
         "check_project_state (binary arm)",

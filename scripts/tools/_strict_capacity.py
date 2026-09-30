@@ -194,6 +194,46 @@ def adjacent(frames_innermost_first: list[str], below: str, above: str) -> bool:
 # Every record carries pdfTeX's own report ("used"); a grade without it (a
 # grade reused from a file that did not keep the statistics) is refused.
 
+# THE RETENTION REGIME (C-105). pdfTeX releases a page's nodes only when the
+# page ships out, and a page ships only when its material passes the page
+# goal. A document in the fragment can keep every page open to its end:
+# \offinterlineskip makes the interline glue \lineskip = 0pt, and a
+# paragraph of material without height then adds nothing to the page (the
+# round-2 review: 9,998 empty paragraphs, 89 words each, against an account
+# of 38, while every instrument let its pages ship and freed them). So EVERY
+# memory instrument is graded with nothing ever shipped before its end: the
+# page goal is \maxdimen, the interline glue is ALWAYS a new baselineskip
+# glue (a glue node and its own glue specification, the most memory TeX
+# spends between two lines, where \offinterlineskip's \lineskip shares one)
+# of zero net height, and the display skips are zero (param glue: the same
+# nodes). MEASURED on the review's shapes: an empty paragraph costs 93 words
+# in this regime against 89 under \offinterlineskip and 47 inside a \vbox
+# (a box is NOT an upper bound: the main vertical list's allocation pattern
+# costs more for the same nodes). The instrument must report ONE page (the
+# gate requires it): a page shipped earlier would have freed its nodes.
+RETAIN = ("\\global\\vsize\\maxdimen \\baselineskip0pt \\lineskiplimit-\\maxdimen "
+          "\\abovedisplayskip0pt \\belowdisplayskip0pt \\abovedisplayshortskip0pt "
+          "\\belowdisplayshortskip0pt\n")
+_BODY = "\\begin{document}\n"
+
+
+def retain(tex: str) -> str:
+    """The instrument `tex` in the retention regime: RETAIN right after
+    \\begin{document}."""
+    if tex.count(_BODY) != 1:
+        raise ValueError("retain: not a document with one \\begin{document}")
+    return tex.replace(_BODY, _BODY + RETAIN)
+
+
+def retain_bytes(b: bytes) -> bytes:
+    return retain(b.decode("ascii")).encode("ascii")
+
+
+def one_page(r: dict) -> bool:
+    """A graded instrument shipped exactly one page (at its end)."""
+    return (r.get("stats") or {}).get("pages") == 1
+
+
 def nested(S, x: str, depth: int, inner: list) -> list:
     node = inner
     for _ in range(depth):
@@ -251,6 +291,28 @@ def mem_maximiser(S, model, x: str, where: str, unit: list, max_groups: int,
             "past_outside": mp["verdict"] == "not_strict"}
 
 
+def keep_maximiser(S, model, x: str, unit: list, max_tokens: int, max_mem: int) -> dict:
+    """C-105: the argument command x's retention worst case: keep_doc with
+    x's `unit` (the command and an empty argument) as many times as the
+    FRAGMENT allows (the model's verdict), and once more (past it)."""
+    def fits(k):
+        return model(keep_doc(S, x, k, unit))["verdict"] != "not_strict"
+    lo, hi = 0, max_tokens
+    while hi - lo > 1:
+        mid = (lo + hi) // 2
+        if fits(mid):
+            lo = mid
+        else:
+            hi = mid
+    at, past = keep_doc(S, x, lo, unit), keep_doc(S, x, lo + 1, unit)
+    ma, mp = model(at), model(past)
+    which = [b for b, over in (("mem", mp["mem"] > max_mem), ("tokens", mp["ntoks"] > max_tokens),
+                               ("dim", mp.get("dim", 0) > DIM_BOUND)) if over]
+    return {"at": at, "past": past, "units": lo, "depth": 1, "mem_at": ma["mem"],
+            "mem_past": mp["mem"], "dim_at": ma.get("dim"), "dim_past": mp.get("dim"),
+            "past_over": which, "past_outside": mp["verdict"] == "not_strict"}
+
+
 DIM_BOUND = 8000  # Decide.v max_dim (check_strict_kernel.py pins it)
 # the stream builder's dimension budget: the bound less a margin for the
 # innermost character and the closers (C-104)
@@ -292,7 +354,12 @@ def raw_record(tex: str, g: dict, **extra) -> dict:
 # the document body, math shapes one inline formula. "hyph" is a 63-letter
 # word TeX hyphenates in its second line-breaking pass (discretionaries and
 # passive nodes per letter); "classes" and "dclasses" put every class of
-# atom the safe characters make side by side (inter-atom glue).
+# atom the safe characters make side by side (inter-atom glue). C-105: the
+# SHORTEST units that make what a page keeps: a paragraph ended by a
+# paragraph break after each kind of token that can start one (a
+# character, a group, each kind of formula), an empty display (two tokens:
+# its box, skips and penalties), a display after a character (the line
+# before it), an empty formula.
 HYPH_WORD = "incomprehensibilities" * 3
 LEVELS = (20000, 40000, 80000)
 
@@ -309,6 +376,16 @@ def structural_units(S) -> dict:
         "supgroup": ("paren", [x, S.script(True, g(x))]), "mgroup": ("paren", [g(x)]),
         "classes": ("paren", [t("x=(x)+x,")]),
         "dclasses": ("bracket", [t("x=(x)+x,")]),
+        "group-par": ("text", [g(x), S.par()]),
+        "inline-par": ("text", [S.math("dollar", x), S.par()]),
+        "paren-par": ("text", [S.math("paren", x), S.par()]),
+        "display-par": ("text", [S.math("display", x), S.par()]),
+        "bracket-par": ("text", [S.math("bracket", x), S.par()]),
+        "bracket-empty": ("text", [S.math("bracket")]),
+        "display-empty": ("text", [S.math("display")]),
+        "paren-empty": ("text", [S.math("paren")]),
+        "char-bracket": ("text", [x, S.math("bracket")]),
+        "char-display": ("text", [x, S.math("display")]),
     }
 
 
@@ -332,11 +409,12 @@ def hyph_bytes(units: int) -> bytes:
     """The hyphenation instrument, as BYTES (the renderer puts a line end,
     a space, after every character, so a rendered document never holds a
     word; a file does): `units` times a 63-letter word TeX hyphenates in its
-    second line-breaking pass and a space, 16 words a line."""
+    second line-breaking pass and a space, 16 words a line; in the
+    retention regime (C-105)."""
     words = [HYPH_WORD.encode() + b" "] * units
     lines = [b"".join(words[i:i + 16]) for i in range(0, units, 16)]
-    return (b"\\documentclass{article}\n\\begin{document}\n" + b"\n".join(lines)
-            + b"\n\\end{document}\n")
+    return retain_bytes(b"\\documentclass{article}\n\\begin{document}\n" + b"\n".join(lines)
+                        + b"\n\\end{document}\n")
 
 
 def structural_doc(S, name: str, units: int) -> dict:
@@ -427,6 +505,17 @@ def _ok(r: dict) -> bool:
     return bool(o) and o[0] == 0 and o[1] and r.get("used") is not None
 
 
+def _instrument(r: dict, what: str) -> None:
+    """A memory instrument's level is usable only if it compiled with
+    pdfTeX's report AND shipped one page (C-105: an earlier page freed what
+    it held); otherwise the measurement is refused, never skipped."""
+    if not _ok(r):
+        raise ValueError(f"{what}: a level did not compile")
+    if not one_page(r):
+        raise ValueError(f"{what}: a level shipped {(r.get('stats') or {}).get('pages')} "
+                         f"pages, not one (a page released its nodes; C-105)")
+
+
 def _levels(recs: dict, prefix: str) -> dict[str, list[dict]]:
     """{context: [records by increasing count]} of the families
     `{prefix}{context}@{level}`."""
@@ -449,8 +538,7 @@ def token_cost(structural: dict) -> int:
     vals = []
     for ctx, rs in _levels(structural, "S:").items():
         for r in rs:
-            if not _ok(r):
-                raise ValueError(f"structural shape {ctx}: a level did not compile")
+            _instrument(r, f"structural shape {ctx}")
             vals.append((r["used"] - m0) / r["ntoks"])
         for a, b in zip(rs, rs[1:]):
             vals.append((b["used"] - a["used"] + GRAIN) / (b["ntoks"] - a["ntoks"]))
@@ -467,21 +555,33 @@ def _slope(a: dict, b: dict, tcost: int) -> float:
             / (b["count"] - a["count"]))
 
 
+# C-105: the contexts in which a name's occurrence is a paragraph of its
+# own (PAR: the name, then a paragraph break) or ends the paragraph a
+# character started (XN: a character, then the name). What a page keeps of a
+# paragraph is a PAIR effect of the token that starts it and the token that
+# ends it, and the token cost (the largest over the structural shapes) can
+# exceed a character's or a paragraph break's own share: subtracting it would
+# under-charge a paragraph started by one name and ended by another. So in
+# these contexts the name is charged the WHOLE unit (the other tokens at 0).
+FULL_UNIT = ("PAR", "XN")
+
+
 def name_base_cost(recs: dict, m0: int, tcost: int) -> int | None:
     """A name's measured memory per occurrence from its repetition documents
-    `R-MEM-{context}@{level}` (the other tokens charged the token cost): the
-    largest slope between consecutive levels of a context, and the largest
-    per-occurrence figure, rounded up, plus one. None when it has none; a
-    level that did not compile is refused."""
+    `R-MEM-{context}@{level}` (the other tokens charged the token cost; in
+    FULL_UNIT contexts at 0): the largest slope between consecutive levels of
+    a context, and the largest per-occurrence figure, rounded up, plus one.
+    None when it has none; a level that did not compile, or that shipped a
+    page before its end, is refused."""
     import math
     vals = []
     for ctx, rs in _levels(recs, "R-MEM-").items():
+        tc = 0 if ctx in FULL_UNIT else tcost
         for r in rs:
-            if not _ok(r):
-                raise ValueError(f"memory context {ctx}: a level did not compile")
-            vals.append(_per(r, m0, tcost))
+            _instrument(r, f"memory context {ctx}")
+            vals.append(_per(r, m0, tc))
         for a, b in zip(rs, rs[1:]):
-            vals.append(_slope(a, b, tcost))
+            vals.append(_slope(a, b, tc))
     return math.ceil(max(vals)) + 1 if vals else None
 
 
@@ -506,13 +606,14 @@ def boundary_constants(structural: dict, pairs: dict) -> dict:
     its two classes' own, rounded up (0 if none exceeds)."""
     import math
     rs = _levels(structural, "S:")["hyph"]
+    for r in rs:
+        _instrument(r, "structural shape hyph")
     h = max((b["used"] - a["used"] + GRAIN) / (b["ntoks"] - a["ntoks"])
             for a, b in zip(rs, rs[1:]))
     sl = {}
     for ctx, rr in _levels(pairs, "CP:").items():
         for r in rr:
-            if not _ok(r):
-                raise ValueError(f"class pair {ctx}: a level did not compile")
+            _instrument(r, f"class pair {ctx}")
         # (an upper and a lower slope: the excess is taken at its largest)
         sl[ctx] = (max((b["used"] - a["used"] + GRAIN) / (b["units"] - a["units"])
                        for a, b in zip(rr, rr[1:])),
@@ -537,8 +638,8 @@ def class_pair_docs(levels=(8000, 16000)) -> list[tuple[str, str, dict]]:
         for L in levels:
             unit = f"\\{a}{{x}}\\{b}{{x}}"
             lines = "\n".join(unit * 20 for _ in range(L // 20))
-            tex = ("\\documentclass{article}\n\\begin{document}\n$\\displaystyle\n"
-                   + lines + "\n$\n\\end{document}\n")
+            tex = retain("\\documentclass{article}\n\\begin{document}\n$\\displaystyle\n"
+                         + lines + "\n$\n\\end{document}\n")
             out.append((f"CP:{a}.{b}@{L}", tex, {"units": L}))
     return out
 
@@ -557,22 +658,24 @@ def copy_and_cost(recs: dict, m0: int, tcost: int) -> dict:
     for w in ("text", "math"):
         sh, dp, hf = (recs.get(f"G-MEM-{k}:{w}") for k in ("SHALLOW", "DEEP", "DEEP-HALF"))
         for r in (sh, dp, hf):
-            if r is not None and not _ok(r):
-                raise ValueError(f"stage G memory document {w} did not compile")
+            if r is not None:
+                _instrument(r, f"stage G memory document {w}")
         if sh and dp and hf:
             W = (dp["used"] - hf["used"] + GRAIN) / (dp["held"] - hf["held"])
             slope.append(W)
             levels.append((dp["used"] - sh["used"] + GRAIN - W * (dp["held"] - sh["held"]))
                           / (dp["depth"] - sh["depth"]))
-        for k in ("FLAT", "FLATX"):
+        # C-105: PAR / XN (the command with an empty argument as a paragraph
+        # of its own, and after a character), charged the WHOLE unit
+        for k in ("FLAT", "FLATX", "PAR", "XN"):
+            tc = 0 if k in FULL_UNIT else tcost
             rs = sorted((r for f, r in recs.items() if f.startswith(f"G-MEM-{k}:{w}@")),
                         key=lambda r: r["count"])
             for r in rs:
-                if not _ok(r):
-                    raise ValueError(f"stage G {k} {w}: a level did not compile")
-                flat.append(_per(r, m0, tcost))
+                _instrument(r, f"stage G {k} {w}")
+                flat.append(_per(r, m0, tc))
             for a, b in zip(rs, rs[1:]):
-                flat.append(_slope(a, b, tcost))
+                flat.append(_slope(a, b, tc))
     if not slope:
         return {"copy": None, "cost": None}
     # a cost below one word (the braces of an empty argument are already
@@ -587,7 +690,7 @@ def copy_and_cost(recs: dict, m0: int, tcost: int) -> dict:
 # (check_strict_capacity.py) rebuilds them from the recorded family and count
 # and requires the recorded bytes and model counts to be the extracted model's.
 
-MEM_CONTEXTS = ("TEXT", "MATH", "DISPLAY", "MSCRIPT", "DSCRIPT")
+MEM_CONTEXTS = ("TEXT", "MATH", "DISPLAY", "MSCRIPT", "DSCRIPT", "PAR", "XN")
 
 
 # A display's material is ONE box: past 2^31 sp its width wraps and the run
@@ -611,8 +714,15 @@ def display_levels(unit_dim: int, cap: int) -> list[int]:
 def name_mem_doc(S, x: str, ctx: str, k: int) -> dict:
     """`R-MEM-{ctx}@{k}`: the name k times in text (then a character), in a
     formula, in a display (after the ballast), and with a super- and a
-    subscript each time in a formula and in a display (after the ballast)."""
+    subscript each time in a formula and in a display (after the ballast);
+    C-105: k times as a paragraph of its own (PAR) and k times after a
+    character (XN). The model document; it is graded in the retention
+    regime (`retain`)."""
     c = S.cmd(x)
+    if ctx == "PAR":
+        return S.doc(*[q for _ in range(k) for q in (c, S.par())])
+    if ctx == "XN":
+        return S.doc(*[q for _ in range(k) for q in (S.text("x"), c)])
     unit = [c, S.script(True, S.text("x")), S.script(False, S.text("x"))]
     ballast = [S.group()] * BALLAST
     if ctx == "TEXT":
@@ -626,6 +736,16 @@ def name_mem_doc(S, x: str, ctx: str, k: int) -> dict:
     if ctx == "DSCRIPT":
         return S.doc(S.math("bracket", *ballast, *(unit * k)))
     raise ValueError(ctx)
+
+
+def keep_doc(S, x: str, k: int, unit: list | None = None) -> dict:
+    """`R-KEEP-TEXT` with count k (C-105): a document IN the fragment that keeps
+    its page open: \\offinterlineskip, then the name (or `unit`) k times,
+    each a paragraph of its own (the round-2 review's shape; material
+    without height adds nothing to the page, which never ships before the
+    end)."""
+    u = unit if unit is not None else [S.cmd(x)]
+    return S.doc(S.cmd("offinterlineskip"), *[q for _ in range(k) for q in (*u, S.par())])
 
 
 def cap_doc(S, dims, x: str, where: str, k: int) -> dict:
@@ -660,4 +780,28 @@ def review_docs(S) -> list[tuple[str, str, dict]]:
             n for _ in range(6665) for n in (c("lim"), S.script(False, x))]))),
         ("R-REVIEW-sum-sub", "sum", S.doc(S.math("bracket", *[
             n for _ in range(6665) for n in (c("sum"), S.script(False, x))]))),
+    ]
+
+
+def review2_docs(S) -> list[tuple[str, tuple, dict]]:
+    """The round-2 review's retention documents (C-105): (family, the names
+    they use, doc). \\offinterlineskip and paragraphs of material without
+    height: no page ships before the end (pdfTeX 89 words a paragraph where
+    the C-104 account charged 38)."""
+    c, oil, par = S.cmd, S.cmd("offinterlineskip"), S.par()
+
+    def paras(u, k):
+        return [q for _ in range(k) for q in (*u, par)]
+    return [
+        ("R-REVIEW2-oil-leavevmode", ("offinterlineskip", "leavevmode"),
+         S.doc(oil, *paras([c("leavevmode")], 9998))),
+        ("R-REVIEW2-oil-thickspace", ("offinterlineskip", "thickspace"),
+         S.doc(oil, *paras([c("thickspace")], 9998))),
+        ("R-REVIEW2-oil-quad", ("offinterlineskip", "quad"),
+         S.doc(oil, *paras([c("quad")], 9998))),
+        ("R-REVIEW2-oil-paren", ("offinterlineskip",),
+         S.doc(oil, *paras([S.math("paren")], 6666))),
+        ("R-REVIEW2-oil-mixed", ("offinterlineskip", "leavevmode", "ddots"),
+         S.doc(oil, *paras([c("leavevmode")], 9976),
+               S.math("dollar", *[c("ddots")] * 40), par)),
     ]

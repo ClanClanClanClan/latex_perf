@@ -564,6 +564,28 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
             out += [("BOUND", mk(k)), ("BOUND-OUT", mk(k + 1))]
         if q:
             out.append(("BOUND-OUT", doc(bracket(*[cmd(q)] * 3277))))
+    # C-105: GLUE SETTINGS the dimension account does not bound (the round-2
+    # review): \negthickspace's NEGATIVE stretch cancels the interword
+    # spaces' to a few sp, and a line forced by \break is set with a ratio
+    # past 20,000 (each interword glue millions of points at shipout, clamped
+    # by tex.web's vet_glue, never stored or scanned); in the text style and
+    # against scriptscript \negthickspace, and a display after such lines
+    # (§1146's pre-display size). Inside the fragment: they must compile.
+    need = ("negthickspace", "thickspace", "scriptscriptstyle", "break")
+    if nm is not None and all(n in nm.sigs for n in need):
+        # (the renderer ends a line after every character: each character
+        # is followed by an interword space, 109,226 sp of stretch; three
+        # text-style \negthickspace are -546,120 sp, so five characters leave
+        # +10 sp; two characters, a text-style \thickspace and three
+        # scriptscript \negthickspace leave -1,523 sp)
+        def line(n, *m):
+            return [*[text("x")] * n, dollar(*m), cmd("break")]
+        neg = [cmd("negthickspace")] * 3
+        a = [q for _ in range(4) for q in line(5, *neg)]
+        b = [q for _ in range(4) for q in line(2, cmd("thickspace"), cmd("scriptscriptstyle"),
+                                              *neg)]
+        out += [("GLUESET", doc(*a, x)), ("GLUESET", doc(*b, x)),
+                ("GLUESET", doc(*a, x, bracket(x), x))]
     # the reviewer's class (C-94): a formula inside a box argument, two
     # groups a level; at the bound and one level past it
     # (C-104: the command with the fewest dimensions: 100 levels of a
@@ -1546,7 +1568,8 @@ def main() -> int:
         "infrastructure_failures": infra,
     }
     if families is not None:
-        out["by_family"] = {f: by_family[f] for f in RULES + ["BOUND", "MATRIX", "SCAN"]
+        out["by_family"] = {f: by_family[f] for f in RULES + ["BOUND", "GLUESET", "MATRIX",
+                                                               "SCAN"]
                             if f in by_family}
         out["probes"] = records
         out["outside_tier"] = outside

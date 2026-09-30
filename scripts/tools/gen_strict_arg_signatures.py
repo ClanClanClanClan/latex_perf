@@ -98,7 +98,7 @@ import gen_strict_signatures as G  # noqa: E402
 # (the cost is a slope, C-104); stage 3c's worst cases with a filler of no
 # dimensions (the memory bound) and with the costliest filler (whichever
 # bound it reaches first); every memory record carries pdfTeX's report.
-GENERATOR_VERSION = "4"
+GENERATOR_VERSION = "5"
 DIMS_EVIDENCE = S.REPO / "corpora/strict_s0/dims_s1.json"
 OUT = S.ARG_SIGNATURES
 UNDEF = "lpqundefa"
@@ -536,7 +536,13 @@ def measure_memory(grader, kern, names: list[str], cap: dict, tcost: int,
                 (x, f"G-MEM-DEEP-HALF:{w}", root(C.nested(S, x, D, [t("x" * 2500)])),
                  {"depth": D}),
             ]
+            if w == "text":
+                # C-105: a paragraph of its own, and after a character
+                docs += [(x, f"G-MEM-{fam}:{w}@4000",
+                          root([n for _ in range(4000) for n in unit]), {"count": 4000})
+                         for fam, unit in (("PAR", A(x) + [S.par()]), ("XN", [t("x")] + A(x)))]
     ms = kern.run([dict(_req(d), arg_signatures={x: raw}) for x, _, d, _ in docs])
+    ms = [dict(m, tex=C.retain(m["tex"])) for m in ms]  # C-105: the retention regime
     gs = grader.grade_all([m["tex"] for m in ms], "memory", stats=True)
     out: dict = {}
     for (x, f, _, extra), m, g in zip(docs, ms, gs):
@@ -549,7 +555,10 @@ def measure_memory(grader, kern, names: list[str], cap: dict, tcost: int,
             if cap["groups"][x][w] is None:
                 continue
             root = (lambda b: S.doc(*b)) if w == "text" else (lambda b: S.doc(_paren(*b)))
-            for fam, k1, unit in (("FLAT", 4000, A(x)), ("FLATX", 3000, A(x, t("x")))):
+            fams = [("FLAT", 4000, A(x)), ("FLATX", 3000, A(x, t("x")))]
+            if w == "text":
+                fams += [("PAR", 4000, A(x) + [S.par()]), ("XN", 4000, [t("x")] + A(x))]
+            for fam, k1, unit in fams:
                 r = out[x].get(f"G-MEM-{fam}:{w}@{k1}")
                 if not r or not C._ok(r):
                     continue
@@ -557,6 +566,7 @@ def measure_memory(grader, kern, names: list[str], cap: dict, tcost: int,
                     more.append((x, f"G-MEM-{fam}:{w}@{k}",
                                  root([n for _ in range(k) for n in unit]), {"count": k}))
     ms = kern.run([dict(_req(d), arg_signatures={x: raw}) for x, _, d, _ in more])
+    ms = [dict(m, tex=C.retain(m["tex"])) for m in ms]
     gs = grader.grade_all([m["tex"] for m in ms], "memory2", stats=True)
     for (x, f, _, extra), m, g in zip(more, ms, gs):
         out.setdefault(x, {})[f] = C.memory_record(m, g, **extra)
@@ -985,6 +995,10 @@ def main() -> int:
                             r = C.mem_maximiser(S, model, n, w, u, MAX_GROUPS, MAX_TOKENS,
                                                 CK.MAX_MEM)
                             jobs.append((n, key, r))
+                        if w == "text" and "offinterlineskip" in sig1s:
+                            # C-105: its paragraphs on a page that never ships
+                            jobs.append((n, "text:keep", C.keep_maximiser(
+                                S, model, n, A(n), MAX_TOKENS, CK.MAX_MEM)))
             ats = k.run([_req(r["at"]) for _, _, r in jobs])
             pasts = k.run([_req(r["past"]) for _, _, r in jobs])
             gs = grader.grade_all([m["tex"] for m in ats], "memory-maximiser", stats=True)

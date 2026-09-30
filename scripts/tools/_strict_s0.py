@@ -275,6 +275,9 @@ GRADE_TIMEOUT_S = 300
 
 _STACKS = re.compile(r" (\d+)i,(\d+)n,(\d+)p,(\d+)b,(\d+)s stack positions out of "
                      r"(\d+)i,(\d+)n,(\d+)p,(\d+)b,(\d+)s")
+# (TeX breaks a log line at 79 characters without a space: the tail is read
+# with its line ends removed)
+_PAGES = re.compile(r"Output written on .*?\((\d+) pages?, \d+ bytes\)\.")
 _USAGE = (
     ("strings", r" (\d+) strings out of (\d+)"),
     ("pool_size", r" (\d+) string characters out of (\d+)"),
@@ -302,6 +305,15 @@ def log_stats(log_text: str) -> dict:
         for i, k in enumerate(("input_stack", "semantic_nest", "param_stack",
                                "buffer", "save_stack")):
             out[k] = [g[i], g[i + 5]]
+    # C-105: the pages pdfTeX shipped (its own "Output written on ... (N
+    # pages"). A memory instrument must ship ONE page, at its end: a page
+    # shipped earlier releases its nodes, and what an instrument frees it
+    # does not measure. (An int, not a [used, of] pair.)
+    m = _PAGES.search(log_text[-4000:].replace("\n", ""))
+    if m:
+        out["pages"] = int(m.group(1))
+    elif "No pages of output." in log_text:
+        out["pages"] = 0
     return out
 
 

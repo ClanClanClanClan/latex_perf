@@ -1715,19 +1715,39 @@ C-98: a capacity with no account. The fix, by method:
   attested premise `Faithful`). `Explain.first_wide` reports the first token
   past it ("capacity bound").
 - **Why a segment's sum bounds every dimension (the argument; not proved).**
-  Every dimension pdfTeX computes while it typesets a paragraph is a sum,
-  each term with a coefficient of at most one, of the dimensions of the
+  Every dimension pdfTeX STORES or SCANS while it typesets a paragraph is a
+  sum, each term with a coefficient of at most one, of the dimensions of the
   nodes the paragraph's tokens make, plus constants of the layout: an
   hbox's width is its items' sum and its height the largest; a vbox's height
-  the sum; a glue's setting at most the box's target plus its natural
-  width; a script's shift at most its nucleus's height plus a font
+  the sum; a script's shift at most its nucleus's height plus a font
   constant; a limit's width the largest of the operator's and the limits';
   a display's centring shift at most `\hsize` plus its width; a hyphen at a
   line break, one a line. A page holds at most one item past its goal. So
   if each token is charged at least the absolute sum of the dimensions of
   the nodes IT makes, plus what TeX inserts at its boundary with the token
   before, every dimension is at most the segment's sum plus constants under
-  1,000pt, i.e. under 9,000pt < 16,383.99998pt.
+  1,000pt, i.e. under 9,000pt < 16,383.99998pt. A glue's SETTING is not
+  such a dimension, and it is NOT bounded by the account (C-105; the C-104
+  text said "a glue's setting at most the box's target plus its natural
+  width", which is false: the admitted `\negthickspace` has NEGATIVE
+  stretch, three of it against five interword spaces leave +10 sp of
+  stretch on a line, and a line forced by `\break` is set with a ratio past
+  20,000, each interword glue millions of points wide, on an account of
+  914pt; the round-2 review, reproduced). tex.web stores a setting as a
+  RATIO (`glue_set`, a real; hpack §649-§667, vpack §668-§679); a set width is
+  computed only when a box is shipped out (`hlist_out`/`vlist_out` and
+  pdfTeX's `pdf_hlist_out`/`pdf_vlist_out`), clamped to plus or minus 10^9 sp
+  by `vet_glue` (§625, §634), added to the output position and never stored
+  in a node or scanned; pdfTeX's only size check at shipout ("Huge page
+  cannot be shipped out", §641) reads the page box's STORED dimensions;
+  §1146-§1148 replace the pre-display size by `max_dimen` whenever a line's glue
+  is set; and the one place that folds a setting into a stored width, an
+  alignment's spanned columns (§808-§810), is unreachable in the fragment (no
+  admitted name or command makes an alignment). So a setting cannot make a
+  dimension error; that rests on this reading of tex.web and on the rule
+  probes' family GLUESET (lines with cancelling stretch forced by `\break`,
+  set past a ratio of 20,000, and a display after such lines (§1146), all
+  graded: they compile), not on the account.
 - **The costs, MEASURED (`_strict_dims.py`; evidence
   `corpora/strict_s0/dims_s0.json`, `dims_s1.json`, by sha256).** TeX's own
   dump (`\showbox`, depth and breadth unlimited) of `\hbox{t}` in text and

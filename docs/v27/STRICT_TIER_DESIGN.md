@@ -1476,7 +1476,7 @@ artefact.
 |---|---|---|---|---|---|---|
 | grouping levels | 255 (the body holds K = 254; `capacity.json` `measured`) | `groups` = 1 per frame, `g` per argument frame, over every reached state (`peak`) | `max_groups` = 200 | every one of the 321 model pairs, repeated to 200 groups, compiles/agrees; pdfTeX's first overflow is at 255 groups for 320 pairs and 254 for 1 (a paragraph start in vertical mode, transient +1): the account is EXACT | 254 - 200 - 8 (largest transient: the output routine at a page break or at `\end{document}`; `\[` 3, a paragraph start 1, none in math) = 46 | PROVED bound (Coq) + MEASURED exactness |
 | main memory | 5,000,000 words | ~~through `max_tokens` and `max_groups`~~ — WRONG: argument copies make it depth x tokens; superseded by C-98 (below) | — | the 758,796 was a flat document, not the worst case | — | refuted (C-98) |
-| main memory (C-98, C-100) | 5,000,000 words | `Decide.mem` <= `max_mem` = 2,000,000 over the base 435,796: every token its `c_cost` (a SLOPE over three counts past the base's high-water mark, five contexts, plus letters x H_text and atoms x B_math), every argument's tokens its command's `as_copy` 3 | `max_mem` (Coq, `bounded`) | 1,721 graded records, pdfTeX within the account on every one (worst 0.969, the review's `\[(\sum^x_x)`x3,999`\]`); 1,291,796 at most inside the fragment | 2.05x over the account's ceiling | MEASURED upper bound, not proved |
+| main memory (C-98, C-100) | 5,000,000 words | `Decide.mem` <= `max_mem` = 2,000,000 over the base 435,796: every token its `c_cost` (a SLOPE over three counts past the base's high-water mark, five contexts, plus letters x H_text and atoms x B_math), every argument's tokens its command's `as_copy` 3 | `max_mem` (Coq, `bounded`) | 1,413 account-checked records, pdfTeX within the account on every one (worst 0.933); 1,112,259 at most inside the fragment | 2.05x over the account's ceiling | MEASURED upper bound, not proved |
 | dimensions (C-100) | a dimension is a signed 32-bit count of sp; max_dimen 16,383.99998pt on every scan | `Decide.dim`: per segment (paragraph at the top level), the tokens' `c_dim`, measured from TeX's box dumps with the boundary constants | `max_dim` = 8,000pt (Coq, `bounded`) | 164 dimension-bound documents compile, pdfTeX's box at most 0.996 of the account (`\hidewidth`); one more is outside | 2.05x to max_dimen | argued + MEASURED |
 | string pool | 5,408,265 free at body start | every name pdfTeX reads enters it, defined or not; <= `max_tokens` names of <= `max_name` = 100 letters | `max_name` (Coq, `short_names`) | 1,939,424 (19,994 distinct 100-letter undefined names read whole as one `\mbox` argument; E1 agrees) | 2.8x | PROVED bound + MEASURED |
 | strings | 467,099 free | <= `max_tokens` new names | via `max_tokens` | 19,741 | 23x | MEASURED |
@@ -1790,10 +1790,20 @@ checked only the bytes and token count of the phase-1 memory documents,
 never their account or verdict; a PAST record's account forged inside the
 bound, a forged at-bound cost, deleted bound records and a forged
 structural record all passed. FIX, by method: every cost is the SLOPE of
-pdfTeX's report over the count between documents whose material is past
-the mark (≥300,000 words, and twice that, each model-token instrument under
-1.8M words of material; the raw class-pair instruments reach 2,590,536 words,
-under main memory), in five contexts per name (text, formula,
+pdfTeX's report over the count, at three counts (k1, 2 k1, 4 k1; k1 = 4,000,
+or 1,000 units with scripts; lower when that would pass 1.8M words of
+material), each difference of two reports widened by 1,000 words (pdfTeX
+grows its variable-size memory 1,000 words at a time, so a report is up to
+that much above the words in use: MEASURED, every report is a multiple of
+1,000 there). A context whose second-largest level still reports only the
+base proves only c <= slack / count, and the gate requires that bound under
+the cost charged, with the slack MEASURED (the largest M0 minus the linear
+intercept over every context past the mark: 34,260 words). Display contexts
+are one box, whose width wraps past 2^31 sp and may stop the run, so they
+hold at most 12,000pt of the name and reach past the mark with a ballast of
+4,000 empty math groups (Ord atoms of no width) before it; the raw
+class-pair instruments reach 2,590,536 words, under main memory. Five
+contexts per name (text, formula,
 display, and with a super- and a subscript in a formula and a display), plus
 per letter it prints the memory of a letter in a hyphenated word
 (H_text 3 words, a byte-level instrument) and per atom the largest
@@ -1808,9 +1818,14 @@ bytes, token count, memory and dimension accounts and verdict to be the
 model's, one past a bound outside, and the report within the committed
 account. The claims "EXACT account ... never a proxy" (Decide.v) and
 "iterated until pdfTeX is within the account" (C-98) are withdrawn: the
-memory account is an upper bound on every one of 1,721 graded records,
-not proved; the membership bound leaves more than 2x (1,291,796 words inside the fragment (2,320,536 in an instrument outside it, whose model account is larger) of 5,000,000
-at most, measured).
+memory account is an upper bound on every one of the 1,413 graded records
+it is checked on (1,721 carry pdfTeX's report; stage G's are counted under a
+raw contract and checked by the binary gate under the committed one; worst
+0.933, the review's documents at most 0.693), not proved; the membership
+bound leaves more than 2x (at most 1,112,259 words measured inside the
+fragment, of 5,000,000). The binary gate now re-runs ~20M tokens of
+documents (90-250 s of CPU); its kill-tests have their own 1,200 s bound in
+check_gate_selftests.py.
 
 KNOWN LIMITS (C-100): the dimension account's argument that every
 dimension is a coefficient-one sum is an argument about tex.web, not a
@@ -1831,7 +1846,7 @@ box instruments, the review's five memory documents within the account;
 argument signatures (version 4) 9 admitted (`\numberline` still rejected at
 stage 2), dims 0-353pt in text, 36 memory worst cases (a filler of no
 dimensions, `\break`, reaches the memory bound; the costliest, `\fmtversion`,
-the dimension bound first) all within the account, at most 1,112,265 words;
+the dimension bound first) all within the account, at most 1,112,259 words;
 `capacity.json` (version 3) 321 of 321 frame pairs at 200 groups and 201
 outside, with streams kept within the dimension bound; rule probes 741 of
 741 graded agree (the BOUND family with the dimension bound and the review's

@@ -1476,7 +1476,7 @@ artefact.
 |---|---|---|---|---|---|---|
 | grouping levels | 255 (the body holds K = 254; `capacity.json` `measured`) | `groups` = 1 per frame, `g` per argument frame, over every reached state (`peak`) | `max_groups` = 200 | every one of the 321 model pairs, repeated to 200 groups, compiles/agrees; pdfTeX's first overflow is at 255 groups for 320 pairs and 254 for 1 (a paragraph start in vertical mode, transient +1): the account is EXACT | 254 - 200 - 8 (largest transient: the output routine at a page break or at `\end{document}`; `\[` 3, a paragraph start 1, none in math) = 46 | PROVED bound (Coq) + MEASURED exactness |
 | main memory | 5,000,000 words | ~~through `max_tokens` and `max_groups`~~ — WRONG: argument copies make it depth x tokens; superseded by C-98 (below) | — | the 758,796 was a flat document, not the worst case | — | refuted (C-98) |
-| main memory (C-98, C-104) | 5,000,000 words | `Decide.mem` <= `max_mem` = 2,000,000 over the base 435,796: every token its `c_cost` (a SLOPE over three counts past the base's high-water mark, five contexts, plus letters x H_text and atoms x B_math), every argument's tokens its command's `as_copy` 3 | `max_mem` (Coq, `bounded`) | 1,413 account-checked records, pdfTeX within the account on every one (worst 0.933); 1,112,259 at most inside the fragment | 2.05x over the account's ceiling | MEASURED upper bound, not proved |
+| main memory (C-98, C-104, C-105) | 5,000,000 words | `Decide.mem` <= `max_mem` = 2,000,000 over the base 435,796: every token its `c_cost` (a SLOPE over three counts past the base's high-water mark, seven contexts, every instrument on a page that never ships (C-105), plus letters x H_text and atoms x B_math), every argument's tokens its command's `as_copy` 3 | `max_mem` (Coq, `bounded`) | 1,695 account-checked records, pdfTeX within the account on every one (worst 0.972, `S:char-par`, the shape the token cost is taken from); the round-2 review's never-shipping documents 0.62-0.77 (2.34 under the C-104 account); 1,632,796 at most inside the fragment | 2.05x over the account's ceiling; C-104's "upper bound on every graded record" was true only of records whose pages shipped | MEASURED upper bound, not proved |
 | dimensions (C-104) | a dimension is a signed 32-bit count of sp; max_dimen 16,383.99998pt on every scan | `Decide.dim`: per segment (paragraph at the top level), the tokens' `c_dim`, measured from TeX's box dumps with the boundary constants | `max_dim` = 8,000pt (Coq, `bounded`) | 164 dimension-bound documents compile, pdfTeX's box at most 0.996 of the account (`\hidewidth`); one more is outside | 2.05x to max_dimen | argued + MEASURED |
 | string pool | 5,408,265 free at body start | every name pdfTeX reads enters it, defined or not; <= `max_tokens` names of <= `max_name` = 100 letters | `max_name` (Coq, `short_names`) | 1,939,424 (19,994 distinct 100-letter undefined names read whole as one `\mbox` argument; E1 agrees) | 2.8x | PROVED bound + MEASURED |
 | strings | 467,099 free | <= `max_tokens` new names | via `max_tokens` | 19,741 | 23x | MEASURED |
@@ -1855,6 +1855,113 @@ style with pairwise boundaries, so an interaction of three tokens is bounded
 only through the per-atom charge; the memory account is attested (every
 graded record within it), not proved, and a context no instrument builds is
 covered by the 2x headroom only.
+
+**C-105: the memory account was still not an upper bound where a page never
+ships, and the dimension argument's glue-setting clause was false (round-2
+review of the C-104 fix, two MEDIUM, three LOW, all REPRODUCED).**
+
+*Retention (MEDIUM).* pdfTeX frees a page's nodes only when the page ships,
+and a page ships only when its material passes the goal. `\offinterlineskip`
+(admitted) makes the interline glue `\lineskip` = 0pt, and paragraphs of
+material without height then add nothing to the page: every paragraph's
+nodes stay in main memory to the end. The review's document (`\offinterlineskip`
+and 9,998 `\leavevmode` paragraphs) was READY with an account of 380,000
+words and pdfTeX used 891,000 over the base (2.34x; `\thickspace` 1.91x,
+`\frame{}` 1.19x). EVERY memory instrument had let its pages ship (the
+structural shape `char-par` measured 0.2 words a token: its pages shipped
+and freed it). The class: an instrument that frees what it should measure.
+FIX, by method: (1) THE RETENTION REGIME (`_strict_capacity.RETAIN`,
+`retain`): every memory instrument (structural shapes, class pairs, the
+names' contexts, stage G's documents, the hyphenation bytes) is graded with
+`\global\vsize\maxdimen`, `\baselineskip` 0pt and `\lineskiplimit`
+-`\maxdimen` (so the interline glue is ALWAYS a new baselineskip glue with
+its own specification, the most memory TeX spends between two lines, of
+zero net height) and zero display skips (param glue: the same nodes).
+MEASURED on the review's shape: 93 words an empty paragraph in the regime,
+89 under `\offinterlineskip`, 47 inside a `\vbox` (a box is NOT an upper
+bound: the main vertical list's allocation pattern costs more for the same
+nodes, so the regime is the page itself). Every instrument must report ONE
+page (`log_stats` "pages"; a level that shipped more is refused, never
+used), and the binary gate requires every instrument's bytes to be the
+model's rendering with `RETAIN` inserted. (2) The SHORTEST units that make
+what a page keeps are structural shapes: a paragraph ended after each kind
+of token that starts one (`char-par`, `group-par`, `inline-par`,
+`paren-par`, `display-par`, `bracket-par`), an empty display
+(`bracket-empty`, `display-empty`), a display after a character, an empty
+formula; the token cost rises from 19 to 48 words (`char-par`, 0.972 of it).
+(3) Two new contexts per name that runs in text, PAR (the name, then a
+paragraph break) and XN (a character, then the name: it ends the paragraph
+or the line the character started), and G-MEM-PAR / G-MEM-XN for the
+argument commands; in them the name is charged the WHOLE unit (the other
+tokens at 0), because what a page keeps of a paragraph is a pair effect of
+the token that starts it and the token that ends it, and subtracting the
+token cost (the largest over the shapes) would under-charge a paragraph
+started by one name and ended by another. Costs: `\leavevmode` 19 -> 95,
+`\quad` 37 -> 95, `\thickspace` 33 -> 105, `\break` 29 -> 56, `\mbox` 1 ->
+121, `\frame` 122 -> 246; H_text 3 -> 5, B_math 17 -> 27 (the regime and
+the class pairs now at 5,000/10,000 units: at 16,000 the largest had used
+2,590,536 words, past half of main memory, which the capacity table never
+saw because the class-pair records kept no statistics). (4) The worst cases
+at the bound: R-KEEP-TEXT for every name that runs in text
+(`\offinterlineskip`, then the name as a paragraph of its own, as often as
+the fragment allows, and once more outside: 34 names, pdfTeX at most 0.648
+of the account, 1,427,796 words) and `text:keep` for every argument command
+(9, at most 0.609, 1,632,796 words: `\frame{}`, the most any graded
+document in the fragment uses, of 5,000,000); the review's five documents
+are recorded (R-REVIEW2-*) and within the account (0.62-0.77). WITHDRAWN:
+C-104's "pdfTeX within the account on every one (worst 0.933)" and
+"MEASURED upper bound" as stated there held only for records whose pages
+shipped.
+
+*Glue settings (MEDIUM).* The argument's clause "a glue's setting at most
+the box's target plus its natural width" is withdrawn (above, "Why a
+segment's sum bounds every dimension"): stretch of opposite signs cancels,
+and the review's document (`x x x x x x$\negthickspace` x3`$\break`, four
+times) is READY at 914pt and sets its lines with a ratio past 20,000. The
+account bounds the dimensions TeX stores and scans; a setting is a ratio
+computed into a width only at shipout, clamped, never stored or scanned
+(the reading of tex.web above), attested by the rule probes' family GLUESET
+(three documents at a ratio past 20,000, graded; model rendering puts a
+space after every character, so the lines hold five and two characters).
+
+*LOW.* (a) The review documents: the pure gate now requires EVERY one whose
+names are admitted to be recorded, with a grade and pdfTeX's report (it
+required 3 of 5 and skipped an ungraded one). (b) The class-pair
+instruments are rebuilt by the pure gate (bytes and units, the complete
+set), and every dimension measurement must be its plan
+(`_strict_dims.plan_for` of its recorded names and commands): items,
+nuclei, pairs, the chunks' boxes in order and each chunk's two instruments'
+bytes (`check_strict_kernel.dims_plan_findings`). (c) The branch's C-100 is
+C-104 (the spike holds C-100, C-102, C-103; main C-101); origin/main merged.
+Kill-tests: two review documents dropped, one stripped of its grade, a
+class-pair's units forged, the measurement's plan forged, an instrument
+that shipped two pages, a name's R-KEEP dropped (pure), and `retain` made
+the identity (binary: every instrument "other bytes than the model's in the
+retention regime").
+
+**Re-attested after C-105** (supersedes "Re-attested after C-104" below;
+the pinned image, a private container; origin/main merged first):
+phase-1 signatures (generator version 8) 84 admitted, token cost 48, H_text
+5, B_math 27, costs up to 455 words (`\fmtversion`); 1,695 account-checked
+records, pdfTeX within the account on every one (worst 0.972,
+`S:char-par`); argument signatures (version 5) 9 admitted, 45 memory worst
+cases (9 of them `text:keep`) within the account, at most 1,632,796 words;
+`capacity.json` 321 of 321 frame pairs; rule probes 744 of 744 (GLUESET 3
+of 3); differential v4 (seed 4) 3,000 of 3,000 (158 draws outside the tier
+replaced); byte-level probes 3,076 of 3,076; byte-level differential (seed
+6) 3,500 of 3,500. The review's documents under the C-104 account and this
+one (pdfTeX's report over the base / the account): `\leavevmode` 2.345 ->
+0.623, `\thickspace` 1.908 -> 0.648, `\quad` 1.591 -> 0.623, `\(\)`
+1.939 -> 0.768, the mixed document 2.299 -> 0.624.
+
+KNOWN LIMITS (C-105): the regime is argued to be the worst allocation of
+what a page keeps (no page ships, a new glue specification between every
+two lines) and MEASURED to be at least `\offinterlineskip`'s on the review's
+shapes; pdfTeX's report is the extent of its memory (tex.web §639's
+lo_mem_max and hi_mem_min), which depends on the ORDER of allocations and
+frees, so an account of per-token costs is attested on the graded records,
+not proved; units longer than the ones measured (three tokens and more
+interacting) are covered by the per-token maxima and the 2x headroom only.
 
 **Re-attested after C-104** (supersedes the counts of "Re-attested after
 C-98"; the pinned image, a private container; every reused grade from a

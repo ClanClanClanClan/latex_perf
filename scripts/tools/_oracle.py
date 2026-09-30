@@ -111,8 +111,16 @@ MAX_PASSES = 3
 # VM that every oracle container shares, and a per-run check, in the same
 # exec as the run, that no process was left behind: an orphan of PID 1 other
 # than the container's own `sleep infinity`, or a zombie, older than 2 s and
-# the SAME process (pid:command:state) still there after LEAK_CONFIRM_S
+# the SAME process (the same pid) still there after LEAK_CONFIRM_S
 # seconds. Refused (OracleError), never graded.
+# WHY THE PID ALONE IS THE IDENTITY (review round 4, second reviewer,
+# REPRODUCED with a fake ps): keying on pid:command:state lost a persistent
+# orphan whose state letter alternates R/S between samples (the intersection
+# emptied), and a process's args change when it becomes a zombie
+# (`gs -q` -> `[gs]`). A pid names one process until it is reaped; reuse
+# within LEAK_CONFIRM_S would need the namespace's pid counter to wrap
+# pid_max, which is not a case this check claims to handle. The printed
+# token keeps command and state for the diagnostic.
 # WHY THE SAME PROCESS, FOR THAT LONG (review round 4 re-measure): runs share
 # the container (gen_contract's threads, a grader's --jobs), and a CONCURRENT
 # run's pdflatex is a zombie from its exit until its supervisor reaps it.
@@ -131,7 +139,7 @@ LEAK_CHECK_SH = (
     '{print $1 ":" $5 ":" $3}\' | tr "\\n" " "; }; '
     'lp_leak() { set -f; l=$(lp_leak_list); i=0; '
     f'while [ -n "$l" ] && [ $i -lt {LEAK_CONFIRM_S} ]; do sleep 1; '
-    'm=" $(lp_leak_list) "; k=""; for x in $l; do case "$m" in *" $x "*) '
+    'm=" $(lp_leak_list) "; k=""; for x in $l; do case "$m" in *" ${x%%:*}:"*) '
     'k="$k$x ";; esac; done; l=$k; i=$((i+1)); done; '
     'set +f; [ -z "$l" ] && return 0; '
     'printf "\\n%s_LEAK=%s\\n" "$1" "$(set -f; echo $l | cut -d" " -f1-5)" >&2; return 1; }; ')

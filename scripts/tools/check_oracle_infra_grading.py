@@ -1006,7 +1006,7 @@ class Checker:
     def leak_check_checks(self) -> None:
         """THE IN-CONTAINER LEAK CHECK (C-97) runs as shell, here with a fake
         `ps` (one scripted listing per call) and an instant `sleep`: a leak
-        is the SAME process (pid:command:state) still listed after
+        is the SAME process (the same pid) still listed after
         LEAK_CONFIRM_S re-samples. A concurrent run's zombie that its
         supervisor reaps late is not a leak (review round 4 re-measure: it
         refused check_contracts_reproducible); a persistent zombie or orphan
@@ -1028,6 +1028,10 @@ class Checker:
                                                     " 2 7 Z 5 [pdflatex]", ""], False),
                 ("a persistent zombie", [z] * k, True),
                 ("a persistent orphan", [o] * k, True),
+                ("a persistent orphan whose state letter alternates",
+                 [" 777 1 R 9 gs -dBATCH", " 777 1 S 9 gs -dBATCH"] * k, True),
+                ("an orphan that becomes a zombie of the same pid",
+                 [" 55 1 S 9 gs -q"] + [" 55 1 Z 9 [gs]"] * k, True),
                 ("nothing", [""], False)):
             (d / "plan").write_text("\n".join(plan) + "\n")
             (d / "cnt").unlink(missing_ok=True)

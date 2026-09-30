@@ -12,22 +12,34 @@
   "contract_sha256": "6de6d4c0d7f98c979c83ebd3c46792d4b96cbf42d4470f96a43e18f274e4f932",
   "contract_config_key": "80abd84bd7677c84ab1478ba239e32daad1374056a5328722dcec5a70e9ced12"
  },
- "signatures_sha256": "95661924ceb8ae4ea344a74f2b62856e5c2f4bc7d6ee55537b3bc940220737b8",
- "arg_signatures_sha256": "c3a471c72e914aa70da69c88113c75cc69d59cf623068be43692d759615d436e",
+ "signatures_sha256": "d89f033a85b3ec87efb98f2d581602694890de78b5606fe34d12fe525dc81986",
+ "arg_signatures_sha256": "c6d89629fb57bcee1ade0694a7ad09af26ea02358bb0f4faa475b2e37dbbec40",
  "reuse": {
-  "grades_reused": 2876,
+  "grades_reused": 3000,
   "sources": [
    {
     "file": "corpora/strict_s0/rule_probes.json",
-    "commit": "85ab94423db7e10976f8401398db0883efa2cdb6",
-    "sha256": "82b9cfbfab68040cc7534a61c5c74b3ea36cd6ae446aeefed418463a7c1e1a97",
-    "records": 737
+    "commit": "f6c8e2abe324d3251b76119e4613d75519af88ff",
+    "sha256": "1155310677623d8e21e25b867a800b979905ca19fe6f7cf75596f0dcf84b6132",
+    "records": 741
    },
    {
     "file": "corpora/strict_s0/differential_v4.json",
-    "commit": "85ab94423db7e10976f8401398db0883efa2cdb6",
-    "sha256": "c12e5cd5add08937f0f3aa4091e894683e45eff26ba0b57c4cfe0f9b078aae9c",
+    "commit": "f6c8e2abe324d3251b76119e4613d75519af88ff",
+    "sha256": "9a84ab7ee85e916c2bcbae85e7f61d55d69d164ef529b9c2be73abb8520902e3",
     "records": 3000
+   },
+   {
+    "file": "corpora/strict_s0/bytes_probes.json",
+    "commit": "f6c8e2abe324d3251b76119e4613d75519af88ff",
+    "sha256": "ee097981ffe0bd9002de3b41de7f66e275d664c2df7c55f82d32bb1b0fccb636",
+    "records": 3064
+   },
+   {
+    "file": "corpora/strict_s0/bytes_differential.json",
+    "commit": "f6c8e2abe324d3251b76119e4613d75519af88ff",
+    "sha256": "97f47ef0564f3721ed58f6e153062b00bdb410a8a35f83fad009796a5524942f",
+    "records": 3500
    }
   ]
  },

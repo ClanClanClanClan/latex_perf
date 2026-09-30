@@ -388,7 +388,7 @@ def slack(records: dict, m0: int, prefix: str) -> float:
             continue
         xa, xb = (a.get("count") or a.get("units") or a["ntoks"]), \
             (b.get("count") or b.get("units") or b["ntoks"])
-        c = (b["used"] - a["used"]) / (xb - xa)
+        c = (b["used"] - a["used"] + GRAIN) / (xb - xa)
         out = max(out, m0 - (a["used"] - c * xa))
     return out
 
@@ -413,6 +413,11 @@ def absorbed_findings(records: dict, m0: int, prefix: str, sl: float, cost: int,
     return out
 
 
+# pdfTeX grows its variable-size memory 1,000 words at a time (tex.web
+# "Grow more variable-size memory"), so a report is up to that much above
+# the words in use: every slope is taken with the difference of two reports
+# widened by it (an upper bound; the lower one where a slope is subtracted).
+GRAIN = 1000
 MEM_PAST_HW = 300000
 MEM_MAX_WORDS = 1800000
 
@@ -448,7 +453,7 @@ def token_cost(structural: dict) -> int:
                 raise ValueError(f"structural shape {ctx}: a level did not compile")
             vals.append((r["used"] - m0) / r["ntoks"])
         for a, b in zip(rs, rs[1:]):
-            vals.append((b["used"] - a["used"]) / (b["ntoks"] - a["ntoks"]))
+            vals.append((b["used"] - a["used"] + GRAIN) / (b["ntoks"] - a["ntoks"]))
     return math.ceil(max(vals)) + 1
 
 
@@ -457,7 +462,7 @@ def _per(r: dict, m0: int, tcost: int) -> float:
 
 
 def _slope(a: dict, b: dict, tcost: int) -> float:
-    return (((b["used"] - a["used"]) - tcost * ((b["ntoks"] - b["count"])
+    return (((b["used"] - a["used"] + GRAIN) - tcost * ((b["ntoks"] - b["count"])
                                                  - (a["ntoks"] - a["count"])))
             / (b["count"] - a["count"]))
 
@@ -501,18 +506,22 @@ def boundary_constants(structural: dict, pairs: dict) -> dict:
     its two classes' own, rounded up (0 if none exceeds)."""
     import math
     rs = _levels(structural, "S:")["hyph"]
-    h = max((b["used"] - a["used"]) / (b["ntoks"] - a["ntoks"]) for a, b in zip(rs, rs[1:]))
+    h = max((b["used"] - a["used"] + GRAIN) / (b["ntoks"] - a["ntoks"])
+            for a, b in zip(rs, rs[1:]))
     sl = {}
     for ctx, rr in _levels(pairs, "CP:").items():
         for r in rr:
             if not _ok(r):
                 raise ValueError(f"class pair {ctx}: a level did not compile")
-        sl[ctx] = max((b["used"] - a["used"]) / (b["units"] - a["units"])
-                      for a, b in zip(rr, rr[1:]))
+        # (an upper and a lower slope: the excess is taken at its largest)
+        sl[ctx] = (max((b["used"] - a["used"] + GRAIN) / (b["units"] - a["units"])
+                       for a, b in zip(rr, rr[1:])),
+                   min((b["used"] - a["used"] - GRAIN) / (b["units"] - a["units"])
+                       for a, b in zip(rr, rr[1:])))
     ex = [0.0]
     for ctx, s in sl.items():
         a, b = ctx.split(".")
-        ex.append(s - (sl[f"{a}.{a}"] + sl[f"{b}.{b}"]) / 2)
+        ex.append(s[0] - (sl[f"{a}.{a}"][1] + sl[f"{b}.{b}"][1]) / 2)
     return {"H_text": math.ceil(h), "B_math": math.ceil(max(ex))}
 
 
@@ -551,9 +560,9 @@ def copy_and_cost(recs: dict, m0: int, tcost: int) -> dict:
             if r is not None and not _ok(r):
                 raise ValueError(f"stage G memory document {w} did not compile")
         if sh and dp and hf:
-            W = (dp["used"] - hf["used"]) / (dp["held"] - hf["held"])
+            W = (dp["used"] - hf["used"] + GRAIN) / (dp["held"] - hf["held"])
             slope.append(W)
-            levels.append((dp["used"] - sh["used"] - W * (dp["held"] - sh["held"]))
+            levels.append((dp["used"] - sh["used"] + GRAIN - W * (dp["held"] - sh["held"]))
                           / (dp["depth"] - sh["depth"]))
         for k in ("FLAT", "FLATX"):
             rs = sorted((r for f, r in recs.items() if f.startswith(f"G-MEM-{k}:{w}@")),
@@ -588,7 +597,7 @@ MEM_CONTEXTS = ("TEXT", "MATH", "DISPLAY", "MSCRIPT", "DSCRIPT")
 # atoms with no width), the same at every level: the slope over the levels is
 # the name's alone. (A display inside the fragment holds at most 8,000 points
 # of material anyway.)
-BALLAST = 15000
+BALLAST = 4000
 DISPLAY_WIDTH = 12000
 
 

@@ -1,0 +1,8 @@
+\catcode`\{=1 \catcode`\}=2 \pdfoutput=1
+\skip0=16383.99998pt \advance\skip0 by \skip0 \message{[s0=\the\skip0]}
+\skip1=-\skip0 \message{[s1=\the\skip1]}
+\setbox1\vbox{\vskip\maxdimen\vskip 8000pt}\message{[lh=\the\ht1]}
+\setbox2\vbox{\cleaders\copy1\vskip\skip0 \vskip\skip1}\message{[h2=\the\ht2]}
+\shipout\box2
+\message{[survived]}
+\end

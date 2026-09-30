@@ -14,9 +14,11 @@ program**: wherever C leaves a result undefined or implementation-defined, the t
 compilers answer differently, and adversarial documents turn that into different **exit codes**,
 logs, TeX state and PDFs (§5.3, §5.4). `\pdfsnapy 0pt`, a pdfTeX primitive with no external file,
 exits 0 on aarch64 and dies with SIGFPE on x86_64. The H.1 pass criterion held only with the clock
-fixed (§4.2). Revised after review round 1 (§5, §4.1, [`h1/`](h1/README.md)) and review round 2
+fixed (§4.2). Revised after review round 1 (§5, §4.1, [`h1/`](h1/README.md)), review round 2
 (§5.4, [`h1/archsem/`](h1/archsem/README.md); round 1's "the architectures differ in the PDF only"
-was wrong, C-103).
+was wrong, C-103) and review round 3 (§5.4: round 2's hand-argued "safe" verdicts are no longer
+verdicts, one of them was false and plain `\xleaders` diverges; the signed-overflow rule reaches
+only the translated program; C-106).
 
 Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 
@@ -29,7 +31,7 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 | Does our rebuild reproduce it? | **yes, byte for byte, on both architectures**: aarch64 natively (sha256 `cee621bf…`), amd64 under emulation (`1c5ff711…`, §2.3) | M |
 | Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100). The x86_64 INITEX run was emulated (qemu-user), not native | M |
 | Same binary, same inputs: same outputs? | yes: 3,907 of 3,907 evidence documents, and 200 of 200 real papers once the real clock is fixed | M |
-| Do amd64 and arm64 differ? | **on the corpus, no; in general, yes, in the compile verdict itself** (review round 2, C-103). Five classes of architecture-defined C semantics were enumerated from the two binaries (§5.4): integer division (x86_64 traps), float-to-int conversion out of range (x86_64 gives INT_MIN, aarch64 saturates), signed overflow (the two compilers exploit it differently), fused multiply-add, and `char` signedness. Adversarial documents reproduce the first three as different rc, log or TeX state: `\pdfsnapy 0pt` exits 0 / 136 (SIGFPE); a valid 40000×8 px JPEG with no resolution is "Huge page", rc 1, on aarch64 and `\wd` = −32768pt, rc 0, on x86_64; `\divide` of INT_MIN by INT_MIN gives −1 / 1. Of the 316 division and conversion sites, 14 diverge (reproduced), 98 are settled safe or unreached, 8 are output-only and 196 are open (152 of them in libpng and xpdf). Round 1's FMA answer, kept below: **on the corpus, no; in general, yes, in the PDF.** 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5.2). But the aarch64 binary fuses multiply-adds that the x86_64 one does not, and at the `\pdfsetmatrix` sites the products are inexact: an adversarial document of 160 `\rotatebox`es holding 400,000 links gives PDFs that differ in **1 byte** (a link `/Rect` coordinate), with rc, `.log` and `.aux` identical (§5.3). Every fused site outside xpdf is classified in §5.1; the ones that reach TeX state are exact on their whole input range or under a stated bound, except xpdf's real-number parser, which is open. All amd64 runs were emulated (qemu-user), not native | M + R + I |
+| Do amd64 and arm64 differ? | **on the corpus, no; in general, yes, in the compile verdict itself** (review round 2, C-103). Five classes of architecture-defined C semantics were enumerated from the two binaries (§5.4): integer division (x86_64 traps), float-to-int conversion out of range (x86_64 gives INT_MIN, aarch64 saturates), signed overflow (the two compilers exploit it differently), fused multiply-add, and `char` signedness. Adversarial documents reproduce the first three as different rc, log or TeX state: `\pdfsnapy 0pt` exits 0 / 136 (SIGFPE); a valid 40000×8 px JPEG with no resolution is "Huge page", rc 1, on aarch64 and `\wd` = −32768pt, rc 0, on x86_64; `\divide` of INT_MIN by INT_MIN gives −1 / 1; a plain `\xleaders` over a glue of 2³¹−2 sp exits 0 / 136 (review round 3). Of the 316 division and conversion sites, **18 diverge** (reproduced), **4 are unreachable** (machine-checked), **76** are in the translated program with no divergence reproduced, and **218** are C-boundary sites with no evidence either way (152 in libpng and xpdf). Round 2's count "98 settled safe" rested on hand-argued bounds, one of them false (C-106); an argument is now a note, not a verdict. The proposed H.2 rule (Stuck on every undefined operation, pending the owner) covers the translated program's 85 sites without per-site bounds; the 227 boundary sites that are not unreachable, and the C-boundary functions whose code changes under `-fwrapv` (463) or `-fsigned-char` (314), are H.2's C-boundary work list. Round 1's FMA answer, kept below: **on the corpus, no; in general, yes, in the PDF.** 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5.2). But the aarch64 binary fuses multiply-adds that the x86_64 one does not, and at the `\pdfsetmatrix` sites the products are inexact: an adversarial document of 160 `\rotatebox`es holding 400,000 links gives PDFs that differ in **1 byte** (a link `/Rect` coordinate), with rc, `.log` and `.aux` identical (§5.3). Every fused site outside xpdf is classified in §5.1; the ones that reach TeX state are exact on their whole input range or under a stated bound, except xpdf's real-number parser, which is open. All amd64 runs were emulated (qemu-user), not native | M + R + I |
 
 ## 1. The pinned engine
 
@@ -461,31 +463,61 @@ bounds check).
 from [`census.py`](h1/archsem/census.py); every instruction in `census_insns.tsv.gz`). 620 DIV
 and 474 F2I instructions over both binaries, at **316 sites** (source lines; xpdf, C++ without a
 line table, by function). Each site has one verdict in
-[`classification.tsv`](h1/archsem/classification.tsv), with its reason:
+[`classification.tsv`](h1/archsem/classification.tsv), computed by
+[`classify.py`](h1/archsem/classify.py) from evidence only, and a scope:
+*translated* (`pdftex0.c`, `pdftexini.c`: web2c's C for the tangled Pascal that H.2 translates;
+85 sites) or *boundary* (every other file: C that H.2 does not translate; 231 sites).
 
-| verdict | sites | meaning |
+**Review round 3 changed the method (C-106).** Round 2 gave 93 sites a SAFE verdict and 13 a
+NOT-REACHED or OUTPUT-ONLY verdict from hand-stated arguments, none of them probed or
+machine-checked. One was false: the 12 leaders divisions of `hlist_out`, `vlist_out`,
+`pdf_hlist_out` and `pdf_vlist_out` were "SAFE-GUARD" because "rule_wd ≤ 2³⁰ + 10⁹ (`vet_glue`
+clamps the glue)". `vet_glue` clamps the glue *set*, not the width, and `\advance` on a skip is
+not range-checked: a glue width of 2³¹−2 sp is reachable, `rule_wd + 10` then wraps (C signed
+overflow), `lq` = −1, and `\xleaders` divides by `lq + 1` = 0. An argument is therefore no longer a
+verdict; the table keeps it in its `argued` column as an [I] note. The verdicts are:
+
+| verdict | sites | evidence |
 |---|---|---|
-| SAFE-CONST / SAFE-GUARD / SAFE-SIGN / SAFE-CALLERS / SAFE-RANGE | 20 / 36 / 7 / 9 / 21 | cannot trap or leave int range, by a constant, a guard in the code, sign normalisation, every caller, or a bound |
-| NOT-REACHED | 5 | statistics output; zlib's `gzfread`/`gzfwrite`, which pdfTeX never calls |
-| OUTPUT-ONLY | 8 | the result reaches PDF bytes only |
-| **DIVERGES** | **14** | reproduced by a document below |
-| **OPEN** | **196** | 44 in pdfTeX's own C and kpathsea (SyncTeX's unit 24, Type 1 number parsing 8, TrueType `unitsPerEm` 4, mktex's base resolution 4, `try_break`'s expansion ratio 3, `ExtendFont` 1), 46 in libpng, 106 in xpdf; each names the channel it could reach |
+| **DIVERGES** | **18** (9 translated, 9 boundary) | a committed probe whose recorded outcomes differ between the architectures (`verify_h1.py` re-reads them) |
+| NOT-REACHED | 4 | every function holding the site's instructions is unreferenced in both builds: no instruction outside it names it, no aarch64 `adrp`+`add` pair computes its address, its address is no 8-byte word of the stripped binary ([`reach.py`](h1/archsem/reach.py), [`reach.out`](h1/archsem/reach.out)): zlib's `gzfread` and `gzfwrite`. Round 2's fifth, kpathsea's `hash_print`, is called by `kpathsea_init_db` (under a debug flag) and is OPEN |
+| PS-STUCK | 76 | translated, no divergence reproduced. Needs no per-site bound **if** the owner adopts the proposed `PS` rule (below): the operation is Stuck whenever C would be undefined. H.2 must then show mechanically that its translator emits the checked operation at every `div`, `mod`, `+`, `−`, `*` |
+| **OPEN** | **218** | boundary, none of the above: 66 in pdfTeX's own C, web2c's C runtime, kpathsea and zlib (SyncTeX's unit 24, Type 1 number parsing 8, TrueType `unitsPerEm` 4, mktex's base resolution 4, `ExtendFont` 1, and 25 with a round-2 argument that is now only a note), 46 in libpng, 106 in xpdf |
 
-**Signed overflow.** The `-fwrapv` rebuild changes **876 of 4,280 functions** (396 of them in
-`pdftex0.c`, i.e. most of TeX: gcc uses "signed overflow cannot happen" for index arithmetic
-everywhere) ([`wrapv_changed.txt`](h1/archsem/wrapv_changed.txt)). Site-by-site classification
-is not possible at that scale, and it is not needed: see "What H.2 must do". One site is
-reproduced: `x_over_n` (`\divide`). For `x = n = INT_MIN`, aarch64 gcc 10 compiles `(-x) div n`
+The 12 leaders sites, reproduced ([`probes/lead/`](h1/archsem/probes/lead/), outputs
+`probes/out/lead-*.out`): for each of the four procedures (`\pdfoutput` 0 and 1, horizontal and
+vertical), `\xleaders\copy1\hskip\skip0` with `\skip0` = 2³¹−2 sp and a leader box of
+1,598,029,823 sp gives **rc 0 on aarch64 and rc 136 (SIGFPE) on x86_64**; the controls (`\skip0`
+= `\maxdimen`; `\leaders`; `\cleaders`) give rc 0 and identical output on both. So the four
+`lx = lr div (lq + 1)` sites DIVERGE; the other eight cannot trap (their divisor is the leader box
+size, positive by the guard) but take the wrapped dividend, with equal results measured. The
+outer box has width 0, so this is not a "Huge page". The review's first run of the `\pdfoutput=0`
+horizontal case recorded rc 139 on x86_64; the rerun here records 136.
+
+**Signed overflow.** The `-fwrapv` rebuild changes **876 of 4,280 functions**
+([`wrapv_changed.txt`](h1/archsem/wrapv_changed.txt); every function with its source file, from
+the DWARF line table, in [`functions.tsv`](h1/archsem/functions.tsv), by
+[`fnmap.py`](h1/archsem/fnmap.py)): **413 translated** (396 in `pdftex0.c`, 17 in `pdftexini.c`:
+gcc uses "signed overflow cannot happen" for index arithmetic everywhere) and **463 boundary**
+(338 in C++ without a line table, i.e. xpdf and pdfTeX's `pdftoepdf.cc`; 125 in C, among them
+`input_line`, which fills TeX's buffer from every input line, `getmd5sum`, `getfiledump`,
+`gettexstring`, `makepdftime`, `open_in_or_pipe`, `read_jpg_info`, `readimage`, `fm_scan_line`,
+`pdfsetmatrix` and `do_matrixtransform`). Round 2 said classification site by site "is not
+needed" because `PS` makes overflow Stuck. **That was wrong for the 463** (review round 3):
+`PS` is the semantics of the translated Pascal only, and ADR-015 keeps the C boundary
+hand-modelled, so the rule does not reach them. They join the C-boundary work list below. One
+site is reproduced: `x_over_n` (`\divide`). For `x = n = INT_MIN`, aarch64 gcc 10 compiles `(-x) div n`
 as an unsigned divide and gets −1; x86_64 gcc 11 compiles it as `x div n` and gets 1. INT_MIN is
 reachable from plain TeX, because `\advance` does not check integer overflow.
 
 **`char` signedness.** The `-fsigned-char` rebuild changes **317 functions**
 ([`signedchar_changed.txt`](h1/archsem/signedchar_changed.txt)): 163 in xpdf; the rest in
 kpathsea (file names and `texmf.cnf`), the font loaders (Type 1, TrueType, Type 3, encodings, map
-files), libpng's text chunks, SyncTeX, and pdfTeX's string utilities. Of TeX's tangled
-procedures only four change, all in C string handling they call or inline (file names, the
-command line, the string pool): `open_log_file`, `prompt_file_name`, `main_body` and the pool
-loader. None of TeX's arithmetic,
+files), libpng's text chunks, SyncTeX, and pdfTeX's string utilities. Of the translated program
+only three functions change, `open_log_file`, `prompt_file_name` and `main_body` (file names and
+the command line); the pool loader `loadpoolstrings`, which round 2 counted with them, is in
+`pdftex-pool.c`, C generated from the pool file, so boundary (`functions.tsv`: 3 translated, 314
+boundary). None of TeX's arithmetic,
 token, box or paragraph procedures changes. The TeX-visible string primitives among the changed
 functions were swept over all 255 non-null bytes (`\pdfescapestring`, `\pdfescapename`,
 `\pdfescapehex`, `\pdfstrcmp` against `A`, `^^80` and `^^ff`, `\pdfmdfivesum`): the log is
@@ -500,6 +532,8 @@ in fresh containers of the pinned image, native aarch64 and emulated x86_64,
 |---|---|---|---|
 | `snapy0.tex`: `\pdfsnapy 0pt` (the primitive only refuses a *negative* snap glue) | division, `gap_amount` (`pdftex0.c:23709`: the only division by the snap unit [I]; the rc and the `snapy1` control are [M]) | rc 0 | **rc 136 (SIGFPE)** |
 | `snapy1.tex`: `\pdfsnapy 1pt` (control) | | rc 0 | rc 0 |
+| `lead/lead-{hdvi,vdvi,hpdf,vpdf}-x.tex` (review round 3): `\xleaders` over a glue of 2³¹−2 sp, a leader box of 1,598,029,823 sp, in `hlist_out`, `vlist_out`, `pdf_hlist_out`, `pdf_vlist_out` | signed overflow (`rule_wd + 10`) then division by `lq + 1` = 0 (`pdftex0.c:18140`, `18511`, `24311`, `24739`) | rc 0 | **rc 136 (SIGFPE)** |
+| `lead/lead-*-xctl.tex`, `lead-*-a.tex`, `lead-*-c.tex` (controls: `\maxdimen` glue; `\leaders`; `\cleaders`) | | rc 0 | rc 0, output identical |
 | `imgwide.tex`: a valid 40000×8 px JPEG, no resolution | conversion, `ext_xn_over_d` (`utils.c:405`), which only warns "number too big" | `\wd` = 32767.99998pt, **rc 1** ("Huge page cannot be shipped out") | `\wd` = −32768pt, **rc 0** |
 | `jpgconv.tex`: Exif XResolution 2·10⁹ per cm | conversion, `read_APP1_Exif` (`writejpg.c:236`) | rc 0 (resolution ignored) | **rc 1** ("invalid image dimensions") |
 | `jpgdiv.tex`: Exif XResolution INT_MIN / −1 | division, `writejpg.c:218` | rc 1 | **rc 136 (SIGFPE)** |
@@ -514,7 +548,9 @@ in fresh containers of the pinned image, native aarch64 and emulated x86_64,
 
 All x86_64 runs are qemu-user emulation. qemu implements `cvttsd2si`'s INT_MIN and the `#DE`
 trap as the x86 specification defines them, so a native amd64 host is expected to agree [I]; that
-confirmation is still open.
+confirmation is **still open** after review round 3 (OPEN-123). It needs a native amd64 host,
+e.g. a run of these probes on `tex-oracle.yml`'s runner; no native host was available to the
+spike.
 
 **What this means.**
 - **The architectures differ in the compile verdict.** Round 1's "in the PDF only" was wrong.
@@ -522,19 +558,25 @@ confirmation is still open.
 - **`FaithfulEngine` is per architecture in substance**: a proven verdict is a verdict for one
   architecture. The project grades locally on aarch64 and in CI (`tex-oracle.yml`) on amd64, from
   the *same* image digest: the same document can get different grades from "the" oracle (§6.4).
-- **What H.2 must do, by member** (a rule per class, not per site):
-  - *UB members* (division by zero or INT_MIN/−1, out-of-range conversion, signed overflow): `PS`
-    must make every such operation **Stuck**, i.e. outside the tier. That is Pascal's own reading
+- **Proposed for H.2, by member (a rule per class, not per site). PENDING THE OWNER'S DECISION**
+  (review round 3: round 2 stated it as settled; it is a proposal, with the TeX-level consequence
+  below):
+  - *UB members* (division by zero or INT_MIN/−1, out-of-range conversion, signed overflow), **in
+    the translated program**: `PS` makes every such operation **Stuck**, i.e. outside the tier. That is Pascal's own reading
     of `div` by 0 and of overflow, it needs no per-architecture model, and on every run that does
     not get Stuck both binaries compute the defined C result [I: assumes the compilers are correct
     on UB-free runs]. TeX-level consequence: a document that reaches `\pdfsnapy 0pt`, overflows
-    `\advance`, or includes an image whose size overflows is outside the tier on *both*
-    architectures.
+    `\advance`, ships out leaders over a glue whose width plus 10 sp overflows (`\advance` of a
+    skip is not range-checked either), or includes an image whose size overflows is outside the
+    tier on *both* architectures.
   - *Implementation-defined and contraction members* (`char` signedness, FMA): these are defined
     behaviour that differs, so `PS` must take them from the architecture (a parameter of
     `FaithfulEngine`), or the affected output is not claimed.
-  - The 196 OPEN sites and the unenumerated members are H.2's C-boundary work list: each is either
-    shown unreachable from the translated program's inputs or made Stuck.
+  - The rule does **not** reach the C boundary. H.2's C-boundary work list is: the 227 boundary
+    division and conversion sites that are not machine-checked unreachable (218 OPEN, 9 DIVERGES),
+    the 463 boundary functions whose code changes under `-fwrapv` and the 314 under
+    `-fsigned-char` (649 distinct, `functions.tsv`), and the unenumerated members. Each is either
+    shown unreachable from the translated program's inputs or made Stuck in the boundary model.
 
 ## 6. Findings for other tracks
 
@@ -627,3 +669,19 @@ python3 harness/h1diff.py SET --cross amd64:pinned arm64:pinned  # across archit
 The session's transcripts that produced §§1–2.1 are
 `6724887f-375f-4639-96cf-722343631c21/subagents/agent-a06ca7da635c68236.jsonl` (the first H.1
 session) and this session's.
+
+## 8. Pending owner decisions (review round 3)
+
+H.1 raises three questions that only the owner can answer. Until he does, none of them is a
+decision, and the ADR, the ledger and this report state them as proposals:
+
+1. **The `PS` rule for C's undefined operations** (§5.4, "Proposed for H.2"): Stuck in the
+   translated program; implementation-defined behaviour a parameter of `FaithfulEngine`. The price:
+   `\pdfsnapy 0pt`, an overflowing `\advance`, leaders over an overflowing glue and an image whose
+   size overflows are outside the tier on both architectures. The rule does not reach the C
+   boundary, whose work list §5.4 states.
+2. **The architecture in the oracle's identity** (§6.4): grade on one architecture and scope
+   verdicts to it, or grade on both and treat disagreement as outside the tier.
+3. **A native amd64 confirmation** (§5.4): every x86_64 result here is qemu-user emulation. A run
+   of the committed probes on a native amd64 host (for example `tex-oracle.yml`'s runner) would
+   close it; it needs a CI change or a host, which the spike does not have.

@@ -16,7 +16,13 @@ stored in the report itself:
      binaries (archsem/census_insns.tsv.gz) has exactly one verdict in
      archsem/classification.tsv, the verdict counts and the probes' recorded
      outcomes are the ones the report quotes, and diffs/r2 (every comparison
-     re-run by the round-2 comparator) has r1's counts.
+     re-run by the round-2 comparator) has r1's counts;
+  4. (review round 3) a site's verdict follows from evidence: every DIVERGES
+     row names a committed probe whose recorded outcomes DIFFER between the
+     architectures (any line: rc, messages, /Rect, output hashes), every
+     NOT-REACHED row's functions are UNREFERENCED in both builds (reach.out),
+     scopes follow from the file; and every -fwrapv/-fsigned-char total is
+     recomputed from functions.tsv.
 Exit 0 when all hold, 1 otherwise, listing each failure."""
 import json
 import re
@@ -169,26 +175,97 @@ if nins != Counter({"DIV": 620, "F2I": 474}) or "620 DIV\nand 474 F2I" not in R:
     fails.append(f"census instruction counts {dict(nins)}, report quotes 620 DIV and 474 F2I")
 if len(sites) != 316 or "**316 sites**" not in R:
     fails.append(f"census sites {len(sites)}, report quotes 316")
+# review round 3 (C-106): a verdict is computed from evidence, never argued
 v = Counter(r["verdict"] for r in cls)
-want = {"SAFE-CONST": 20, "SAFE-GUARD": 36, "SAFE-SIGN": 7, "SAFE-CALLERS": 9, "SAFE-RANGE": 21,
-        "NOT-REACHED": 5, "OUTPUT-ONLY": 8, "DIVERGES": 14, "OPEN": 196}
+want = {"DIVERGES": 18, "NOT-REACHED": 4, "PS-STUCK": 76, "OPEN": 218}
 if dict(v) != want:
     fails.append(f"classification verdicts {dict(v)}, report quotes {want}")
-for q in ("| 20 / 36 / 7 / 9 / 21 |", "| NOT-REACHED | 5 |", "| OUTPUT-ONLY | 8 |", "| **DIVERGES** | **14** |",
-          "| **OPEN** | **196** |"):
+for r in cls:
+    tr = r["site"].split(":")[0] in ("pdftex0.c", "pdftexini.c")
+    if r["scope"] != ("TRANSLATED" if tr else "BOUNDARY"):
+        fails.append(f"{r['site']}: scope {r['scope']} does not follow from its file")
+    if r["verdict"] == "PS-STUCK" and r["scope"] != "TRANSLATED":
+        fails.append(f"{r['site']}: PS-STUCK outside the translated program")
+    if r["verdict"] == "OPEN" and r["scope"] != "BOUNDARY":
+        fails.append(f"{r['site']}: OPEN in the translated program")
+    if (r["verdict"] == "DIVERGES") != bool(r["probe"]):
+        fails.append(f"{r['site']}: a DIVERGES row must name a probe, and only a DIVERGES row")
+sc = Counter(r["scope"] for r in cls)
+if sc != Counter({"TRANSLATED": 85, "BOUNDARY": 231}):
+    fails.append(f"scopes {dict(sc)}, report quotes 85 translated, 231 boundary")
+for q in ("| **DIVERGES** | **18** (9 translated, 9 boundary) |", "| NOT-REACHED | 4 |", "| PS-STUCK | 76 |",
+          "| **OPEN** | **218** |", "the 227 boundary\n    division and conversion sites"):
     if q not in R:
         fails.append(f"§5.4 does not quote {q!r}")
 op = Counter(r["group"] for r in cls if r["verdict"] == "OPEN")
-if op != Counter({"xpdf": 106, "libpng": 46, "web2c": 40, "kpathsea": 4}):
-    fails.append(f"OPEN by group {dict(op)}, report quotes 44 pdfTeX/kpathsea, 46 libpng, 106 xpdf")
-# every DIVERGES row names a probe whose recorded outcomes differ between the architectures
-for fn, pat in [("wrapv_changed.txt", 876), ("signedchar_changed.txt", 317)]:
-    n = sum(1 for ln in (A / fn).read_text().splitlines() if ln.startswith("changed\t"))
-    if n != pat:
-        fails.append(f"archsem/{fn}: {n} changed functions, report quotes {pat}")
-for q in ("**876 of 4,280 functions**", "**317 functions**"):
+if (op["xpdf"], op["libpng"], sum(op.values()) - op["xpdf"] - op["libpng"]) != (106, 46, 66):
+    fails.append(f"OPEN by group {dict(op)}, report quotes 66 other, 46 libpng, 106 xpdf")
+# NOT-REACHED: every function of the site UNREFERENCED in both builds (reach.out)
+unref = {}
+for ln in (A / "reach.out").read_text().splitlines():
+    f = ln.split()
+    unref.setdefault(f[2], set())
+    if f[3] == "UNREFERENCED":
+        unref[f[2]].add(f[1])
+sites_fn = {(r["class"], r["site"]): r["functions"].split(",") for r in csv.DictReader(open(A / "census_sites.tsv"), delimiter="\t")}
+for r in cls:
+    if r["verdict"] == "NOT-REACHED":
+        for fn in sites_fn[(r["class"], r["site"])]:
+            if unref.get(fn) != {"arm64", "amd64"}:
+                fails.append(f"{r['site']}: NOT-REACHED but {fn} is not UNREFERENCED in both builds (reach.out)")
+# every DIVERGES row names a probe that exists and whose recorded outcomes differ
+def blocks(arch):
+    out, cur = {}, None
+    for fn in sorted((A / "probes" / "out").glob(f"*-{arch}.out")):
+        for ln in fn.read_text().splitlines():
+            m = re.match(r"^(\S+) rc=(\d+)$", ln)
+            if m:
+                cur = m.group(1); out[cur] = [ln]
+            elif re.match(r"^(\w+ )?RC=\d+$", ln) or ln in ("aarch64", "x86_64") or re.match(r"^[0-9a-f]{16}$", ln):
+                cur = None
+            elif cur:
+                out[cur].append(ln)
+    return {k: "\n".join(v).strip() for k, v in out.items()}
+ba, bx = blocks("arm64"), blocks("amd64")
+for r in cls:
+    if r["verdict"] != "DIVERGES":
+        continue
+    pr = r["probe"]
+    if not list((A / "probes").rglob(f"{pr}.tex")):
+        fails.append(f"{r['site']}: probe {pr}.tex is not committed")
+    if pr not in ba or pr not in bx:
+        fails.append(f"{r['site']}: probe {pr} has no recorded outcome on both architectures")
+    elif ba[pr] == bx[pr]:
+        fails.append(f"{r['site']}: probe {pr}'s recorded outcomes are EQUAL on both architectures")
+# the leaders set (review round 3): x diverges rc 0/136; every control equal
+for d in ("hdvi", "vdvi", "hpdf", "vpdf"):
+    if not (ba.get(f"lead-{d}-x", "").startswith(f"lead-{d}-x rc=0") and bx.get(f"lead-{d}-x", "").startswith(f"lead-{d}-x rc=136")):
+        fails.append(f"probe lead-{d}-x: not rc 0 on aarch64 and 136 on x86_64")
+    for c in ("xctl", "a", "c"):
+        k = f"lead-{d}-{c}"
+        if k not in ba or ba[k] != bx.get(k) or not ba[k].startswith(f"{k} rc=0"):
+            fails.append(f"control {k}: not rc 0 with identical recorded output on both")
+# functions.tsv: the -fwrapv / -fsigned-char totals, and their split by scope
+fnr = list(csv.DictReader(open(A / "functions.tsv"), delimiter="\t"))
+for col, lst, tot, ch, tr, bd in (("wrapv", "wrapv_changed.txt", 4280, 876, 413, 463),
+                                   ("signedchar", "signedchar_changed.txt", 4280, 317, 3, 314)):
+    listed = {ln.split("\t")[1] for ln in (A / lst).read_text().splitlines() if ln.startswith("changed\t")}
+    rows_ch = [x for x in fnr if x[col] == "changed"]
+    if {x["function"] for x in rows_ch} != listed:
+        fails.append(f"functions.tsv {col}: changed set differs from {lst}")
+    union = sum(1 for x in fnr if x["file"] != "NOT-IN-BASE" or x[col] != "same")
+    got = (union, len(rows_ch), sum(x["scope"] == "TRANSLATED" for x in rows_ch), sum(x["scope"] == "BOUNDARY" for x in rows_ch))
+    if got != (tot, ch, tr, bd):
+        fails.append(f"functions.tsv {col}: (functions, changed, translated, boundary) = {got}, report quotes {(tot, ch, tr, bd)}")
+wv_pdftex0 = sum(1 for x in fnr if x["wrapv"] == "changed" and x["file"].endswith("/pdftex0.c"))
+wv_noline = sum(1 for x in fnr if x["wrapv"] == "changed" and x["file"] == "NOLINE")
+bnd_union = sum(1 for x in fnr if x["scope"] == "BOUNDARY" and "changed" in (x["wrapv"], x["signedchar"]))
+if (wv_pdftex0, wv_noline, bnd_union) != (396, 338, 649):
+    fails.append(f"functions.tsv: wrapv pdftex0.c {wv_pdftex0}, NOLINE {wv_noline}, boundary union {bnd_union}; report quotes 396, 338, 649")
+for q in ("**876 of 4,280 functions**", "**317 functions**", "**413 translated**", "**463 boundary**",
+          "(338 in C++ without a line table", "(649 distinct, `functions.tsv`)", "3 translated, 314\nboundary"):
     if q not in R:
-        fails.append(f"§5.4 does not quote {q}")
+        fails.append(f"§5.4 does not quote {q!r}")
 # (c) probe outcomes, from the recorded outputs of both architectures
 def rcs(name):
     out = {}

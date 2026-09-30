@@ -1,6 +1,27 @@
 #!/usr/bin/env python3
 """Write classification.tsv: one verdict per site of census_sites.tsv.
-Verdicts:
+
+Review round 3 changed the METHOD (C-106). Round 2 gave most sites a SAFE-*
+verdict from a hand-stated bound, none of which was probed or machine-checked;
+one of them (the leaders division, "rule_wd <= 2^30 + 10^9") was false, and
+plain \\xleaders then diverges (rc 0 / SIGFPE). A hand argument is therefore no
+longer a verdict. The table below still records it, as the ARGUED column; the
+VERDICT is computed from evidence only:
+  DIVERGES     a committed probe's recorded outcomes differ between the two
+               architectures (verify_h1.py re-checks the recorded outputs)
+  NOT-REACHED  every function holding the site's instructions is unreferenced
+               in both builds (reach.py, a machine check; output reach.out)
+  PS-STUCK     scope TRANSLATED (pdftex0.c/pdftexini.c: web2c's C for the
+               tangled Pascal that H.2 translates) and not DIVERGES: PROPOSED
+               rule (owner decision pending) that PS makes every div/mod by 0,
+               INT_MIN div -1 and every overflowing integer operation Stuck. The
+               site then needs no bound; H.2 must show mechanically that the
+               translator emits the checked operation at every div/mod/+/-/*
+  OPEN         scope BOUNDARY (C that H.2 does not translate: kpathsea, zlib,
+               libpng, xpdf, pdfTeX's own C, web2c's C runtime) and neither of the
+               above. This is H.2's C-boundary work list: each must be proven
+               unreachable with a bad operand, or made Stuck in the boundary model
+The ARGUED column keeps round 2's hand verdict and reason as an [I] note:
   SAFE-CONST      divisor is a nonzero constant (or a table of them)
   SAFE-GUARD      a test before the division excludes 0, and INT_MIN / -1
   SAFE-SIGN       cannot trap: the divisor is made positive first (negation); the
@@ -17,11 +38,15 @@ Verdicts:
   NOT-REACHED     not reached by a pdfTeX run of a document (statistics, API unused)
   OPEN            not settled; the channel it could reach is stated
 Every census site must have exactly one row (verify_h1.py checks it)."""
-import csv
-V = {}
-def s(site, cls, verdict, why):
+import csv, collections
+V, PROBES = {}, {}
+def s(site, cls, verdict, why, probe=None):
     assert (cls, site) not in V, site
     V[(cls, site)] = (verdict, why)
+    if verdict == 'DIVERGES':
+        m = probe or __import__('re').findall(r'\(probes? ([a-z0-9-]+)', why)
+        assert m, f'{site}: a DIVERGES row must name its probe'
+        PROBES[(cls, site)] = probe or m[0]
 D, F = 'DIV', 'F2I'
 # ---------------- kpathsea / zlib
 s('hash.c:44', D, 'SAFE-CONST', 'modulo table.size, fixed positive per hash table')
@@ -48,7 +73,7 @@ for l in ('1333', '1334'):
 for l in ('1363', '1365', '1370', '1371'):
     s(f'pdftex0.c:{l}', D, 'DIVERGES', 'x_over_n: the division itself cannot trap (n = 0 is an error first, n is negated), but negating x = INT_MIN is C signed overflow (UB) and the two compilers exploit it differently: aarch64 gcc 10 emits udiv for (-x) div n, x86_64 gcc 11 emits idiv of x by n. \\divide of INT_MIN by INT_MIN gives -1 on aarch64 and 1 on x86_64 (probe nh-intmin, divself)')
 for l in ('1393', '1395', '1396', '1400'):
-    s(f'pdftex0.c:{l}', D, 'SAFE-CALLERS', 'xn_over_d: every call site passes d = 65536, 1000, a unit-table denominator, or \\mag after prepare_mag (1..32768)')
+    s(f'pdftex0.c:{l}', D, 'SAFE-CALLERS', 'xn_over_d: the call sites, enumerated by grep of xnoverd( in pdftex0.c and pdftexini.c (review round 3: round 2 omitted 33140): d = 65536 (12662, 27643, 27647, 27652, 27673), \\mag after prepare_mag, 1..32768 (12697), a unit-table denominator (12775), 1000 (16177, 33138, 36773), and space_factor (33140: app_space; \\spacefactor refuses <= 0 and > 32767, an \\sfcode of 0 leaves it unchanged)')
 for l in ('1421', '1423'):
     s(f'pdftex0.c:{l}', D, 'SAFE-GUARD', 'badness: s <= 0 returns inf_bad first; s div 297 >= 5601 in the branch that divides by it')
 s('pdftex0.c:1456', D, 'SAFE-CALLERS', 'make_frac: its only caller (norm_rand) loops until u <> 0 before make_frac(x, u); a zero q would reach p div 0 (the q = 0 test is TEXMF_DEBUG only)')
@@ -60,8 +85,23 @@ for l in ('16279', '16293', '16389', '16482', '16590', '16613'):
     s(f'pdftex0.c:{l}', D, 'SAFE-GUARD', 'store_scaled: alpha = 16 doubled while z >= 2^23, and z < 2^27 (an at-size >= 2048pt is refused), so alpha <= 256 and beta = 256 div alpha >= 1')
 for l in ('1675', '1676'):
     s(f'pdftex0.c:{l}', D, 'SAFE-GUARD', "ab_vs_cd (METAFONT's): zero and negative b, d are handled before the loop; in the loop all four are positive")
-for l in ('18127', '18134', '18140', '18498', '18505', '18511', '24298', '24305', '24311', '24726', '24733', '24739'):
-    s(f'pdftex0.c:{l}', D, 'SAFE-GUARD', 'leaders in (pdf_)hlist_out/vlist_out: guarded by leader_wd > 0 (leader_ht > 0); lq + 1 >= 1 because rule_wd <= 2^30 + 10^9 (vet_glue clamps the glue) < INT_MAX')
+# review round 3 (M1): round 2 said SAFE-GUARD for all 12, "lq + 1 >= 1 because rule_wd <=
+# 2^30 + 10^9 (vet_glue clamps the glue)". False: vet_glue clamps the glue SET (stretch or
+# shrink), not the width; \\advance on a skip is not range-checked, so a glue width of
+# 2^31 - 2 sp is reachable, rule_wd + 10 then wraps (C signed overflow, UB) to a negative
+# value, lq = -1 and x_leaders divides by lq + 1 = 0.
+LEAD = {'18127': ('hlist_out', 'a'), '18134': ('hlist_out', 'q'), '18140': ('hlist_out', 'x'),
+        '18498': ('vlist_out', 'a'), '18505': ('vlist_out', 'q'), '18511': ('vlist_out', 'x'),
+        '24298': ('pdf_hlist_out', 'a'), '24305': ('pdf_hlist_out', 'q'), '24311': ('pdf_hlist_out', 'x'),
+        '24726': ('pdf_vlist_out', 'a'), '24733': ('pdf_vlist_out', 'q'), '24739': ('pdf_vlist_out', 'x')}
+PROBE = {'hlist_out': 'hdvi', 'vlist_out': 'vdvi', 'pdf_hlist_out': 'hpdf', 'pdf_vlist_out': 'vpdf'}
+for l, (fn, k) in LEAD.items():
+    pr = PROBE[fn]
+    if k == 'x':
+        s(f'pdftex0.c:{l}', D, 'DIVERGES', f'{fn}, x_leaders: lx = lr div (lq + 1). A glue width of 2^31 - 2 sp (\\advance of a skip is not range-checked) makes rule_wd + 10 wrap to negative (C signed overflow), lq = -1, and the divisor 0: x86_64 SIGFPE (rc 136), aarch64 rc 0. Controls: the same document with a \\maxdimen skip, and with \\leaders and \\cleaders, equal on both (probe lead-{pr}-x; controls lead-{pr}-xctl, lead-{pr}-a, lead-{pr}-c)', probe=f'lead-{pr}-x')
+    else:
+        what = 'aligned leaders: (cur - edge) div leader_size' if k == 'a' else 'lq = rule_size div leader_size, lr = rule_size mod leader_size'
+        s(f'pdftex0.c:{l}', D, 'SAFE-GUARD', f'{fn}, {what}: the divisor is the leader box size, > 0 by the guard, so the division cannot trap. Its dividend is NOT bounded (round 2\'s bound was false): it is the rule size after rule_size + 10, which can wrap (C signed overflow). Probes lead-{pr}-a / lead-{pr}-c (the wrapped dividend reaches this site): equal on both architectures')
 for l in ('19565', '19566'):
     s(f'pdftex0.c:{l}', D, 'SAFE-CONST', 'pdf_print_real: ten_pow[d] for a digit count d in 0..9')
 s('pdftex0.c:21230', D, 'SAFE-GUARD', 'fix_expand_value: e = 0 returns first; step = pdf_font_step[f] >= 1, set only by read_expand_font after fix_int(.,0,100) and a zero test that is a pdf_error')
@@ -107,7 +147,7 @@ for l in ('1496', '1497'):
     s(f'utils.c:{l}', F, 'DIVERGES', 'do_matrixtransform: DO_ROUND of a NaN or out-of-range coordinate from \\pdfsetmatrix; link /Rect [0 0 0 0] on aarch64, [32645.579 ...] on x86_64 (probe matnan; review round 2). OUTPUT-ONLY: the rectangle is written to the PDF and read by nothing in TeX')
 for l in ('405', '406'):
     s(f'utils.c:{l}', F, 'DIVERGES', 'ext_xn_over_d only WARNS "number too big" and converts anyway: a 40000x8 px JPEG with no resolution gets width INT_MAX on aarch64 ("Huge page cannot be shipped out", rc 1) and INT_MIN on x86_64 (\\wd = -32768pt, rc 0) (probe imgwide)')
-s('mapfile.c:487', F, 'DIVERGES', 'SlantFont * 1000 from a map line (\\pdfmapline or a .map file) converted to integer, then abs(slant) > 1000 rejects it; INT_MIN passes that test (abs(INT_MIN) = INT_MIN). See probes slanthuge, slantnan')
+s('mapfile.c:487', F, 'DIVERGES', 'SlantFont * 1000 from a map line (\\pdfmapline or a .map file) converted to integer, then abs(slant) > 1000 rejects it; INT_MIN passes that test (abs(INT_MIN) = INT_MIN). See probes slanthuge, slantnan', probe='slanthuge')
 s('mapfile.c:491', F, 'OPEN', 'ExtendFont * 1000, as SlantFont (mapfile.c:487): same conversion, not probed separately')
 s('writefont.c:114', F, 'OUTPUT-ONLY', 'the font descriptor ItalicAngle, from the slant')
 s('writeimg.c:322', F, 'SAFE-RANGE', 'epdf_rotate (xpdf page rotation, an int multiple of 90 read from /Rotate; the conversion is xpdf-side)')
@@ -125,9 +165,15 @@ s('writettf.c:484', F, 'OUTPUT-ONLY', 'TrueType ItalicAngle into the font descri
 # ---------------- libraries, grouped
 LIBPNG = ('OPEN', 'libpng: pixel, gamma and text-chunk arithmetic. pdfTeX reads the header with png_read_info (dimensions and resolution are computed by pdfTeX itself, writepng.c) and the pixels at shipout; these sites are on the pixel/gamma path (PDF bytes) or error paths (rc if one traps). Not traced one by one')
 XPDF = ('OPEN', 'xpdf (C++, no line table): pdfTeX uses it to parse and copy included PDFs. A trap in parsing reaches rc; values reach TeX state only through the page box, rotation and page count (bp2int clamps the box, see zround.c). Not traced one by one')
+# NOT-REACHED needs reach.py's machine check (reach.out): UNREFERENCED in both builds
+UNREF = collections.defaultdict(set)
+for ln in open('reach.out'):
+    f = ln.split()
+    if f[3] == 'UNREFERENCED':
+        UNREF[f[2]].add(f[1])
 rows = list(csv.DictReader(open('census_sites.tsv'), delimiter='\t'))
 with open('classification.tsv', 'w') as o:
-    o.write('class\tgroup\tsite\tverdict\treason\n')
+    o.write('class\tgroup\tsite\tscope\tverdict\tprobe\targued\treason\n')
     missing = []
     for r in rows:
         k = (r['class'], r['site'])
@@ -139,11 +185,21 @@ with open('classification.tsv', 'w') as o:
             v = V.pop(k, None)
         if v is None:
             missing.append(k); continue
-        o.write(f"{r['class']}\t{r['group']}\t{r['site']}\t{v[0]}\t{v[1]}\n")
+        scope = 'TRANSLATED' if r['site'].split(':')[0] in ('pdftex0.c', 'pdftexini.c') else 'BOUNDARY'
+        probe = PROBES.get(k, '')
+        fns = r['functions'].split(',')
+        if v[0] == 'DIVERGES':
+            verdict = 'DIVERGES'
+        elif v[0] == 'NOT-REACHED' and all(UNREF[fn] == {'arm64', 'amd64'} for fn in fns):
+            verdict = 'NOT-REACHED'
+        elif scope == 'TRANSLATED':
+            verdict = 'PS-STUCK'
+        else:
+            verdict = 'OPEN'
+        o.write(f"{r['class']}\t{r['group']}\t{r['site']}\t{scope}\t{verdict}\t{probe}\t{v[0]}\t{v[1]}\n")
 assert not missing, missing
 assert not V, sorted(V)
-import collections
 c = collections.Counter()
 for r in csv.DictReader(open('classification.tsv'), delimiter='\t'):
-    c[(r['group'] in ('libpng', 'xpdf') and r['group'] or 'pdfTeX+kpathsea+zlib', r['verdict'])] += 1
+    c[(r['scope'], r['group'] in ('libpng', 'xpdf') and r['group'] or 'other', r['verdict'])] += 1
 for k in sorted(c): print(*k, c[k])

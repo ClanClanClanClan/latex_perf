@@ -509,3 +509,35 @@ for a in arm64 amd64; do docker run --rm --platform linux/$a -v $PWD/r-$a:/w tex
 # run2.sh likewise for the slant*.tex documents (t-$a.out); the variant builds:
 docker run --rm --platform linux/arm64 -e SNAP=20260223T160000Z -v $W/b-arm64-sc:/work -v $W/archsem/buildpdftex-signedchar.sh:/b.sh:ro arm64v8/debian:bullseye sh -l /b.sh aarch64-linux debian
 ```
+
+## archsem/lead/run.sh (in ~/.cache/lp-spike-h1/, review round 3)
+
+sha256 `7bc156c36bc40551bb5bc73ea8c3b05edd2e6fe2344c4f1e7e79158f31124f63`. The documents are `archsem/probes/lead/*.tex`; the outputs
+`archsem/probes/out/lead-{arm64,amd64}.out`.
+
+```sh
+cd /w
+uname -m; sha256sum $(readlink -f $(which pdftex)) | cut -c1-16
+for t in lead-*.tex; do f=${t%.tex}
+  rm -rf o-$f; mkdir o-$f; cp $t o-$f/
+  (cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex -halt-on-error -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")
+  grep -ohE '^!.*|\[[a-zA-Z0-9=-]+=[^]]*\]' o-$f/term.txt | tr '\n' ' ' | cut -c1-300 | sed 's/^/   /'; echo
+  for x in pdf dvi; do [ -s o-$f/$f.$x ] && sha256sum o-$f/$f.$x | cut -c1-16 | sed "s/^/   $x sha256 /"; done
+  rm -f o-$f/core o-$f/*.core
+done
+```
+
+Invocation (`r-$a` holds the 16 documents and run.sh):
+
+```sh
+for a in arm64 amd64; do docker run --rm --platform linux/$a -v $PWD/r-$a:/w texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b sh -c 'sh /w/run.sh' > r-$a.out 2>&1; done
+```
+
+## archsem/reach.out and archsem/functions.tsv (review round 3)
+
+```sh
+cd ~/.cache/lp-spike-h1/archsem
+python3 reach.py arm64.dis ../rel/aarch64-linux/pdftex gzfread gzfwrite hash_print  # likewise amd64.dis ../rel/x86_64-linux/pdftex
+python3 fnmap.py arm64.dis wrapv_changed.txt signedchar_changed.txt functions.tsv
+```
+(`reach.out` has the first field rewritten from the disassembly's path to `build <arch>`.)

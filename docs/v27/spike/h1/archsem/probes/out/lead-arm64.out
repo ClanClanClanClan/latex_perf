@@ -1,0 +1,67 @@
+aarch64
+cee621bf5fc41d15
+lead-hdvi-a rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   dvi sha256 074997e55b43a69b
+lead-hdvi-c rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   dvi sha256 074997e55b43a69b
+lead-hdvi-x rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   dvi sha256 074997e55b43a69b
+lead-hdvi-xctl rc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   dvi sha256 0a8ce401819bad4c
+lead-hpdf-a rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   pdf sha256 fcc399be13cd2041
+lead-hpdf-c rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   pdf sha256 cebbece2fa402b79
+lead-hpdf-x rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   pdf sha256 d37d53e00d3e88d5
+lead-hpdf-xctl rc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lw=24383.99998pt] [w2=0.0pt] 
+
+   pdf sha256 00a58a17483d3d43
+lead-vdvi-a rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   dvi sha256 074997e55b43a69b
+lead-vdvi-c rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   dvi sha256 074997e55b43a69b
+lead-vdvi-x rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   dvi sha256 074997e55b43a69b
+lead-vdvi-xctl rc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   dvi sha256 59904e6c456e1c33
+lead-vpdf-a rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   pdf sha256 044fc2e87156a5ab
+lead-vpdf-c rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   pdf sha256 e8ed55d5fa090db0
+lead-vpdf-x rc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   pdf sha256 7c93e4c8fdf6aeaf
+lead-vpdf-xctl rc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lh=24383.99998pt] [h2=0.0pt] 
+
+   pdf sha256 351a1ba675c9090a
+arm64 RC=0

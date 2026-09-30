@@ -161,21 +161,32 @@ What this decides, and what it does not:
     and 0; a map line's huge `SlantFont` changes the log and the PDF, a NaN one the PDF;
   - *signed overflow exploited differently by the two compilers* (aarch64 gcc 10, x86_64
     gcc 11): `\divide` of INT_MIN by INT_MIN, reachable in plain TeX because `\advance` does not
-    check integer overflow, gives −1 on aarch64 and 1 on x86_64;
+    check integer overflow, gives −1 on aarch64 and 1 on x86_64; and (review round 3) a plain
+    `\xleaders` over a glue of 2³¹−2 sp wraps `rule_wd + 10` and then divides by 0: rc 0 on
+    aarch64, SIGFPE on x86_64;
   - *fused multiply-add* (round 1): one `/Rect` byte in a 400,000-link document;
-  - *plain `char` signedness*: 317 functions change under `-fsigned-char` (of TeX's tangled
-    procedures only four, all in C string handling: file names, the command line, the pool); every TeX-visible
+  - *plain `char` signedness*: 317 functions change under `-fsigned-char` (of the translated
+    program only three, in file-name and command-line handling; 314 are boundary); every TeX-visible
     string primitive among them, swept over all 255 bytes, agrees.
   - On the corpus (200 real papers, 489 evidence documents, 40 traced documents) no difference was
     observed.
   So `FaithfulEngine` is per architecture in substance, not as a formality: the proven tier's
-  verdict for a document is a verdict *for one architecture*. What H.2 must do follows per class,
-  not per site (report §5.4): the undefined-behaviour members (division by zero or INT_MIN/−1,
-  out-of-range conversion, signed overflow) are **Stuck** in `PS`, which is Pascal's own reading
-  and needs no per-architecture model; the implementation-defined ones (`char` signedness,
-  contraction) are parameters of `FaithfulEngine` taken from that architecture's binary, or the
-  affected output is not claimed. Of the 316 division and conversion sites, 196 are open (152 in
-  libpng and xpdf); they are H.2's C-boundary work list. All x86_64 runs were emulated.
+  verdict for a document is a verdict *for one architecture*. **Proposed for H.2, pending the
+  owner's decision** (report §5.4; review round 3 found round 2 had written it here as settled):
+  the undefined-behaviour members (division by zero or INT_MIN/−1, out-of-range conversion,
+  signed overflow) are **Stuck** in `PS`, which is Pascal's own reading and needs no
+  per-architecture model; the implementation-defined ones (`char` signedness, contraction) are
+  parameters of `FaithfulEngine` taken from that architecture's binary, or the affected output is
+  not claimed. TeX-level consequence: `\pdfsnapy 0pt`, an overflowing `\advance`, leaders over a
+  glue whose width plus 10 sp overflows, and an image whose size overflows are outside the tier on
+  both architectures. The rule covers **only the translated program**: `PS` is the semantics of
+  the tangled Pascal, and the C boundary stays hand-modelled. Of the 316 division and conversion
+  sites, 18 diverge (reproduced; review round 3 added plain `\xleaders`, rc 0 / SIGFPE, at four
+  sites round 2 had called safe by a false bound, C-106), 4 are machine-checked unreachable, 76
+  are translated sites the rule would cover, and 218 are boundary sites with no evidence either
+  way. H.2's C-boundary work list: the 227 boundary sites not shown unreachable, and the 649
+  boundary functions whose code changes under `-fwrapv` (463) or `-fsigned-char` (314),
+  including `input_line`, `read_jpg_info` and `fm_scan_line`. All x86_64 runs were emulated.
 - **All amd64 evidence is emulated** (qemu-user on an arm64 host): the rebuild, the behaviour runs
   and the format run. A confirmation on a native amd64 host, the CI runner of `tex-oracle.yml`, is
   open (OPEN-123).

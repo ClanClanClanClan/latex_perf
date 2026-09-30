@@ -416,6 +416,11 @@ def near_miss_docs(rng: random.Random) -> list[tuple[str, bytes]]:
     out.append(("argument copies past the memory account",
                 HEADER + b"\\mbox{" * 197 + b"\n" + frames + b"\n" + b"}" * 197 + b"\n" + END + b"\n"))
     out.append(("tokens past the bound", HEADER + (b"x" * 5_000 + b"%\n") * 4 + b"xx\n" + END))
+    # C-100: the round-1 reviewer's file: a display of 3,277 \quad (50 a
+    # line), 32,770pt, past 2^31 sp: "! Dimension too large" at shipout
+    quads = b"\n".join(b"\\quad" * min(50, 3277 - i) for i in range(0, 3277, 50))
+    out.append(("a display past the dimension bound (the round-1 review's file)",
+                HEADER + b"\\[" + quads + b"\\]\n" + END + b"\n"))
     return out
 
 
@@ -593,5 +598,7 @@ def lexer_families(names: dict, rng: random.Random) -> list[tuple[str, bytes]]:
         + END + b"\n")
     add("L0-bounds", d(b"{" * 200 + b"x" + b"}" * 200 + b"\n"))
     add("L0-bounds", d(b"$" + b"{" * 199 + b"x" + b"}" * 199 + b"$\n"))
-    add("L0-bounds", d(b"\\mbox{$" * 100 + b"x" + b"$}" * 100 + b"\n"))
+    # (C-100: with `\(` ... `\)`: a `$` is charged a display's skips, since
+    # `$$` opens one, and 100 levels of `\mbox{$` are past the dimension bound)
+    add("L0-bounds", d(b"\\mbox{\\(" * 100 + b"x" + b"\\)}" * 100 + b"\n"))
     return f

@@ -105,6 +105,8 @@ def main() -> int:
                 jobs.append((f"arg {n}/{key} {which}", {"doc": doc}, r[which]))
     t = S.text("x")
     for n, recs in sorted(asig.get("capacity", {}).get("memory", {}).get("records", {}).items()):
+        if n not in asig.get("arg_signatures", {}):
+            continue  # a command the generator rejected: not in the contract
         for f, r in sorted(recs.items()):
             fam, w = f.split(":")[0], f.split(":")[1].split("@")[0]
             root = (lambda b: S.doc(*b)) if w == "text" else \
@@ -152,7 +154,16 @@ def main() -> int:
             fails.append(f"signatures: review document {f} is not one of the round-1 review's")
             continue
         jobs.append((f"review {f}", {"doc": rv[f]}, r))
-    ms = kern.run([q for _, q, _ in jobs]) if jobs else []
+    # (the memory instruments are large: the extracted decider runs on four
+    # slices at once)
+    from concurrent.futures import ThreadPoolExecutor
+    qs = [q for _, q, _ in jobs]
+    parts = [qs[i::4] for i in range(4)]
+    with ThreadPoolExecutor(4) as ex:
+        outs = list(ex.map(lambda part: kern.run(part) if part else [], parts))
+    ms = [None] * len(qs)
+    for i, out in enumerate(outs):
+        ms[i::4] = out
     if bjobs:
         bm = S.BytesKernel().run([b for _, b, _ in bjobs])
         for (tag, b, r), m in zip(bjobs, bm):

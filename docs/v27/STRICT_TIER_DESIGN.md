@@ -1476,6 +1476,8 @@ artefact.
 |---|---|---|---|---|---|---|
 | grouping levels | 255 (the body holds K = 254; `capacity.json` `measured`) | `groups` = 1 per frame, `g` per argument frame, over every reached state (`peak`) | `max_groups` = 200 | every one of the 321 model pairs, repeated to 200 groups, compiles/agrees; pdfTeX's first overflow is at 255 groups for 320 pairs and 254 for 1 (a paragraph start in vertical mode, transient +1): the account is EXACT | 254 - 200 - 8 (largest transient: the output routine at a page break or at `\end{document}`; `\[` 3, a paragraph start 1, none in math) = 46 | PROVED bound (Coq) + MEASURED exactness |
 | main memory | 5,000,000 words | ~~through `max_tokens` and `max_groups`~~ — WRONG: argument copies make it depth x tokens; superseded by C-98 (below) | — | the 758,796 was a flat document, not the worst case | — | refuted (C-98) |
+| main memory (C-98, C-100) | 5,000,000 words | `Decide.mem` <= `max_mem` = 2,000,000 over the base 435,796: every token its `c_cost` (a SLOPE over three counts past the base's high-water mark, five contexts, plus letters x H_text and atoms x B_math), every argument's tokens its command's `as_copy` 3 | `max_mem` (Coq, `bounded`) | 1,721 graded records, pdfTeX within the account on every one (worst 0.969, the review's `\[(\sum^x_x)`x3,999`\]`); 1,291,796 at most inside the fragment | 2.05x over the account's ceiling | MEASURED upper bound, not proved |
+| dimensions (C-100) | a dimension is a signed 32-bit count of sp; max_dimen 16,383.99998pt on every scan | `Decide.dim`: per segment (paragraph at the top level), the tokens' `c_dim`, measured from TeX's box dumps with the boundary constants | `max_dim` = 8,000pt (Coq, `bounded`) | 164 dimension-bound documents compile, pdfTeX's box at most 0.996 of the account (`\hidewidth`); one more is outside | 2.05x to max_dimen | argued + MEASURED |
 | string pool | 5,408,265 free at body start | every name pdfTeX reads enters it, defined or not; <= `max_tokens` names of <= `max_name` = 100 letters | `max_name` (Coq, `short_names`) | 1,939,424 (19,994 distinct 100-letter undefined names read whole as one `\mbox` argument; E1 agrees) | 2.8x | PROVED bound + MEASURED |
 | strings | 467,099 free | <= `max_tokens` new names | via `max_tokens` | 19,741 | 23x | MEASURED |
 | hash (multi-letter control sequences) | 15,000 + 600,000 | <= `max_tokens` new names | via `max_tokens` | 49,161 | 12x | MEASURED |
@@ -1591,7 +1593,11 @@ changed, not the instance:
   `Contract.v`: the words its nodes and its running take. It is MEASURED
   per admitted name by the phase-1 generator's stage C (the name repeated
   4,000 times in text, in a formula and in a display, and again at the
-  memory bound, until pdfTeX's report is within the account); every other
+  memory bound, until pdfTeX's report is within the account) [SUPERSEDED by
+  C-100 below: per-occurrence figures under a high-water mark under-count,
+  83 of the 84 math bound records had no report, and the account was 1.242x
+  short on a reviewer's document; costs are now slopes, and the dimension
+  bound was missing altogether]; every other
   token costs the structural stage's most per token, 18 words. Every token
   inside an argument also costs its command's `as_copy`, a new field of
   `asig`, MEASURED by the argument generator's stage G as the slope of
@@ -1677,3 +1683,160 @@ graded agree; differential v4 (seed 4) 3,000 of 3,000 (one generated draw
 outside the tier, after an empty `$$` opened display math, replaced and
 counted); byte-level probes 3,064 of 3,064 (the reviewer's memory file among
 the near-misses, outside); byte-level differential (seed 6) 3,500 of 3,500.
+
+**C-100: an UNMODELLED CAPACITY, dimensions (BLOCKING, round-1 review of
+the C-98 fix, 2026-09-30), and the memory account was not the upper bound
+C-98 said it was.** TeX stores a dimension as a signed 32-bit count of sp
+(2^31 sp = 32,768pt) and adds widths without an overflow check (tex.web
+`hpack`). REPRODUCED under the pinned oracle: `\[` and 3,277 `\quad` (50 a
+line) `\]` was PROVEN-READY (3,282 tokens, 1 group, mem 59,076) and stops
+with "! Dimension too large." at `\end{document}` (`<argument>
+\box_wd:N \l_shipout_box`), rc 1, no PDF; 3,276 compile. The natural width
+wraps negative, the squeeze of §1199 is skipped, the display's shift is
+huge and LaTeX's shipout scans the page box's width. The failure depends
+on the wrapped arithmetic (a display of 6,500 `x`, past 2^31 sp too,
+compiles; `\mbox{` 3,300 `\quad` `}` in a paragraph compiles), so the
+fragment EXCLUDES every document in which any dimension could get near the
+limit, rather than modelling which overflows fail. Same class as C-94 and
+C-98: a capacity with no account. The fix, by method:
+
+- **The account (Coq, `Decide.v`).** `Contract.v` `c_dim : bool -> tok ->
+  nat`, the dimensions in whole points a token contributes when it runs in
+  math (`true`) or text; `Decide.dim` = the largest sum of `c_dim` over a
+  SEGMENT of the run (`dim_run`: the tokens between two paragraph breaks
+  read with no frame open, where TeX ends the paragraph; each token in the
+  mode it runs in, the innermost frame's; up to where the run stops: a stop
+  halts pdfTeX, and the scanner of a deferred error typesets nothing; a
+  segment starts with a paragraph break's cost, a paragraph's indent and
+  fill). `bounded` requires `dim <= max_dim` = 8,000pt, under half of TeX's
+  largest dimension (16,383.99998pt, max_dimen, which every scan of a
+  dimension checks). `strict_dim_bounded` (Closed, definitional, like
+  `strict_mem_bounded`: that the account bounds pdfTeX is part of the
+  attested premise `Faithful`). `Explain.first_wide` reports the first token
+  past it ("capacity bound").
+- **Why a segment's sum bounds every dimension (the argument; not proved).**
+  Every dimension pdfTeX computes while it typesets a paragraph is a sum,
+  each term with a coefficient of at most one, of the dimensions of the
+  nodes the paragraph's tokens make, plus constants of the layout: an
+  hbox's width is its items' sum and its height the largest; a vbox's height
+  the sum; a glue's setting at most the box's target plus its natural
+  width; a script's shift at most its nucleus's height plus a font
+  constant; a limit's width the largest of the operator's and the limits';
+  a display's centring shift at most `\hsize` plus its width; a hyphen at a
+  line break, one a line. A page holds at most one item past its goal. So
+  if each token is charged at least the absolute sum of the dimensions of
+  the nodes IT makes, plus what TeX inserts at its boundary with the token
+  before, every dimension is at most the segment's sum plus constants under
+  1,000pt, i.e. under 9,000pt < 16,383.99998pt.
+- **The costs, MEASURED (`_strict_dims.py`; evidence
+  `corpora/strict_s0/dims_s0.json`, `dims_s1.json`, by sha256).** TeX's own
+  dump (`\showbox`, depth and breadth unlimited) of `\hbox{t}` in text and
+  of `\hbox{$\<style> t$}` in each of the four math styles; per item the
+  sum over EVERY node of the dump, nested boxes included, of |w|+|h|+|d|+
+  |shift| (boxes, rules), |w|+|stretch|+|shrink| (glue, every order at its
+  raw value), |kern|, the math nodes' surround, and a character's
+  width+height+depth (`\fontcharwd/ht/dp` of its font, a second run), less
+  the empty context. The BOUNDARY constants over every pair measured:
+  B_text 3.194pt (the largest INV(ab)-INV(a)-INV(b) over every two of the
+  text font's 128 codes and every name and command with every safe
+  character, both ways: kerns and ligatures); B_math 5.555pt (every two math
+  items, the eight atom classes among them, in the display and text
+  styles: the largest inter-atom glue). `c_dim` in text = INV + B_text (0
+  extra for a token that makes no node); in math = the largest INV over
+  the four styles + atoms x B_math (atoms: TeX's `\showlists` of the
+  noads). Structural tokens: a character its own (per character, text and
+  math), a space the worst interword glue after any safe character (the
+  space factor), a script the largest construction over every nucleus and
+  style (34.667pt), a math group its box and one atom, `$`/`\[`/`\]` the
+  display skips, a paragraph break `\parindent`+`\parfillskip`. A token
+  that stops pdfTeX in a mode costs 0 there. The argument generator
+  measures its commands with an empty argument (their contents are charged
+  to their own tokens) and REJECTS a command any of whose boundaries or
+  scripts exceeds the phase-1 constants (none did).
+- **Attested at the bound.** Every admitted name with dimensions in a mode:
+  one paragraph / formula / display of it with as many as the account
+  allows, graded (agrees), with pdfTeX's own measure of the same material
+  in one box (|wd|+ht+dp) within the account; and one more, outside
+  (`dim_bound` of the signature file). The repetition families of both
+  generators are cut into paragraphs and formulas within the bound
+  (`Dims.segment`), the nesting families go as deep as both bounds allow,
+  and `A-R-BIG-ARG` is an argument of empty groups (no nodes) at the token
+  bound, `A-R-DIM-ARG` one of characters at the dimension bound. The rule
+  probes' BOUND family adds a paragraph, a formula, a display of characters
+  and a display of `\quad` at the bound and one past it, and the review's
+  3,277-`\quad` display; the byte probes' L0-bounds hold the token bound in
+  paragraphs of 399 characters and the line bound in braces and in spaces
+  inside a formula (a 10,000-character line is one paragraph past the
+  bound). The review's two files are NOT-IN-FRAGMENT ("capacity bound").
+- **Coverage cost (measured, the fragment NARROWS):** a paragraph or formula
+  now holds at most 614 `x` (text) / 498 (math); no admitted name or command was lost (84 names, 9 commands, as before); what narrows is the document: a paragraph of more than ~600 characters, a display of more than 719 `\quad` (a formula of more than 725), more than 7 `\hidewidth` or 22 `\centerline` in one paragraph, 100 levels of `\mbox{$`...`$}` (a `$` is charged a display's skips, since `$$` opens one), 199 nested scripts. The fragment's documents that were at the token bound in ONE paragraph or formula (R-BIG, the BOUND family, the byte bounds, the capacity usage documents) are now cut into paragraphs or formulas.
+
+**The memory account was not an upper bound (MEDIUM x3 of the same review,
+all REPRODUCED), and its gates did not check what they said.** (1) 19,000
+adjacent `\ttdefault` in one formula: pdfTeX 860,536 words, 424,740 over
+the base, against the account's 342,090 (1.242x), compiling; 12 of the 83
+names' own bound documents and three display-limits shapes
+(`\[(\sum^x_x)`x3,999`\]` 1.232x) likewise. CAUSE, measured: pdfTeX's report
+is a HIGH-WATER MARK and the base document's already holds ~31,000 words
+`\begin{document}` allocates and frees, so a document's report is
+max(M0, B + c n) with B < M0; C-98 took (used - M0)/n, which is (B - M0)/n
++ c < c (`\ttdefault` in text: 8.17 at 4,000, 14.44 at 19,997), and missed
+the memory a neighbour of another class adds (inter-atom glue) and that
+TeX's hyphenation adds inside words (a rendered document never holds a
+word; a file does). (2) 83 of the 84 math bound records had no pdfTeX report
+(their grades were reused from a file that kept no statistics) and the
+gate's within-account check skipped every such record. (3) The binary gate
+checked only the bytes and token count of the phase-1 memory documents,
+never their account or verdict; a PAST record's account forged inside the
+bound, a forged at-bound cost, deleted bound records and a forged
+structural record all passed. FIX, by method: every cost is the SLOPE of
+pdfTeX's report over the count between documents whose material is past
+the mark (≥300,000 words, and twice that, each model-token instrument under
+1.8M words of material; the raw class-pair instruments reach 2,590,536 words,
+under main memory), in five contexts per name (text, formula,
+display, and with a super- and a subscript in a formula and a display), plus
+per letter it prints the memory of a letter in a hyphenated word
+(H_text 3 words, a byte-level instrument) and per atom the largest
+inter-atom excess over the 64 class pairs (B_math 17 words); the token
+cost likewise over the structural shapes at three levels (19 words). Every
+graded memory record must carry pdfTeX's report; pdfTeX's report must be
+within the account on EVERY record (instruments, bound documents, worst
+cases, and the review's five documents, now recorded); the binary gate
+rebuilds every record (structural levels, contexts, bound and dimension
+documents with their box instruments, review, stage G) and requires its
+bytes, token count, memory and dimension accounts and verdict to be the
+model's, one past a bound outside, and the report within the committed
+account. The claims "EXACT account ... never a proxy" (Decide.v) and
+"iterated until pdfTeX is within the account" (C-98) are withdrawn: the
+memory account is an upper bound on every one of 1,721 graded records,
+not proved; the membership bound leaves more than 2x (1,291,796 words inside the fragment (2,320,536 in an instrument outside it, whose model account is larger) of 5,000,000
+at most, measured).
+
+KNOWN LIMITS (C-100): the dimension account's argument that every
+dimension is a coefficient-one sum is an argument about tex.web, not a
+proof, and its constants of the layout are covered by the headroom, not by
+a measurement of each; per-token dimensions are measured in isolation per
+style with pairwise boundaries, so an interaction of three tokens is bounded
+only through the per-atom charge; the memory account is attested (every
+graded record within it), not proved, and a context no instrument builds is
+covered by the 2x headroom only.
+
+**Re-attested after C-100** (supersedes the counts of "Re-attested after
+C-98"; the pinned image, a private container; every reused grade from a
+committed file of this branch): phase-1 signatures (generator version 7)
+84 admitted, every one with its memory cost (slopes over three counts in up
+to five contexts; token cost 19, H_text 3, B_math 17 words) and dims
+(`\hidewidth` 1,005pt the widest), 164 dimension-bound documents and their
+box instruments, the review's five memory documents within the account;
+argument signatures (version 4) 9 admitted (`\numberline` still rejected at
+stage 2), dims 0-353pt in text, 36 memory worst cases (a filler of no
+dimensions, `\break`, reaches the memory bound; the costliest, `\fmtversion`,
+the dimension bound first) all within the account, at most 1,112,265 words;
+`capacity.json` (version 3) 321 of 321 frame pairs at 200 groups and 201
+outside, with streams kept within the dimension bound; rule probes 741 of
+741 graded agree (the BOUND family with the dimension bound and the review's
+3,277-`\quad` display outside); differential v4 (seed 4) 3,000 of 3,000
+(158 generated draws outside the tier, now mostly by the dimension bound,
+replaced and counted); byte-level probes 3,064 of 3,064 (the review's file,
+byte for byte, among the near-misses, outside); byte-level differential
+(seed 6) 3,500 of 3,500.

@@ -468,6 +468,37 @@ def _boxes(k: int, x: str, inner: list, opener) -> list:
     return node
 
 
+def _deepest(nm, mk, hi: int) -> int:
+    """The largest k <= hi whose document mk(k) is within the dimension bound
+    by the account (C-100); hi without the account."""
+    if nm is None or nm.dims is None:
+        return hi
+    dz, lo = nm.dims, 0
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if dz.tok("par", False) + dz.nodes(mk(mid)["body"], False) <= DM.DIM_BOUND:
+            lo = mid
+        else:
+            hi = mid - 1
+    return lo
+
+
+def _cut_tokens(nm, mk, hi: int) -> dict:
+    """mk(k) cut within the dimension bound (C-100), with k as large as the
+    token bound allows after the cut (its paragraph breaks are tokens)."""
+    if nm is None or nm.dims is None:
+        return mk(hi)
+    import _strict_capacity as C
+    lo = 0
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if C._ulen(nm.dims.segment(S, mk(mid))["body"]) + 1 <= MAX_TOKENS:
+            lo = mid
+        else:
+            hi = mid - 1
+    return nm.dims.segment(S, mk(lo))
+
+
 def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
     """The structure AT the capacity bounds of Decide.v (inside the tier,
     graded) and one past them (outside the tier, recorded as such; C-86,
@@ -492,11 +523,15 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
         ("BOUND", doc(x, *_nest(B, [x]))),
         ("BOUND", doc(dollar(*_nest(B - 1, [x])))),
         ("BOUND", doc(display(*_nest(B - 1, [x])))),
-        ("BOUND", doc(dollar(*_script_nest(B - 1)))),
+        # (C-100: 199 nested scripts are past the dimension bound; the script
+        # frames at the group bound are the capacity probes', whose streams
+        # stay within it; here the deepest nest the account allows)
+        ("BOUND", doc(dollar(*_script_nest(_deepest(nm, lambda k: doc(dollar(*_script_nest(k))),
+                                                     B - 1))))),
         ("BOUND", doc(*_nest(B - 1, [dollar(x), par(), x]))),
         ("BOUND", doc(*paras(L - 1 - 49 * 400))),
         ("BOUND", doc(*formulas(L - 3 - 49 * 400))),
-        ("BOUND", doc(*[m for _ in range(L // 3) for m in (dollar(x),)][: L // 3 - 1])),
+        ("BOUND", _cut_tokens(nm, lambda k: doc(*[dollar(x)] * k), L // 3 - 1)),
         ("BOUND", doc(cmd("q" * S.MAX_NAME))),
         ("BOUND-OUT", doc(*_nest(B + 1, [x]))),
         ("BOUND-OUT", doc(dollar(*_script_nest(B)))),
@@ -531,14 +566,20 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
             out.append(("BOUND-OUT", doc(bracket(*[cmd(q)] * 3277))))
     # the reviewer's class (C-94): a formula inside a box argument, two
     # groups a level; at the bound and one level past it
-    runs = sorted(n for n in (nm.arg_run["text"].get("text_restricted", []) if nm else [])
-                  if n in nm.arg_run["math"].get("text_restricted", []))
+    # (C-100: the command with the fewest dimensions: 100 levels of a
+    # \centerline are past the dimension bound)
+    runs = sorted((n for n in (nm.arg_run["text"].get("text_restricted", []) if nm else [])
+                   if n in nm.arg_run["math"].get("text_restricted", [])),
+                  key=lambda n: (sum(nm.args[n].get("dim", [0, 0])), n))
     if runs:
         a = runs[0]
         g = nm.args[a]["text"][3]
         k = B // (g + 1)
+        # (C-100: a `$` is charged a display's skips, since `$$` opens one:
+        # the dollar levels go as deep as the dimension bound allows)
+        kd = _deepest(nm, lambda j: doc(*_boxes(j, a, [x], dollar)), k)
         out += [
-            ("BOUND", doc(*_boxes(k, a, [x], dollar))),
+            ("BOUND", doc(*_boxes(kd, a, [x], dollar))),
             ("BOUND", doc(*_boxes(k, a, [x], paren))),
             ("BOUND-OUT", doc(*_boxes(k + 1, a, [x], dollar))),
             ("BOUND-OUT", doc(*_boxes(k + 1, a, [x], paren))),
@@ -1118,7 +1159,12 @@ def bytes_random_docs(nm: "Names", n: int, rng: random.Random, sig_path: Path):
     not graded and is replaced (the direct generator may draw a script without
     its argument or a ^^ on purpose); their number is reported."""
     gen, direct = Gen(rng, nm), SB.Direct(rng, byte_names(nm))
-    tree_kern = S.Kernel(signatures=None, token_cost=0)  # the renderer only
+    # the renderer only (it reads no cost or dimension; a table of zeros
+    # satisfies the loader, C-100)
+    import tempfile
+    zf = Path(tempfile.mkdtemp(prefix="lp-strict-zero-")) / "zero-dims.json"
+    zf.write_text(json.dumps({"dims": DM.zero_table()}))
+    tree_kern = S.Kernel(signatures=None, token_cost=0, dims=zf)
     bk = S.BytesKernel(signatures=sig_path)
     out, discarded = [], {"TREE": 0, "DIRECT": 0}
     while len(out) < n:

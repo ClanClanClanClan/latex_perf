@@ -572,7 +572,9 @@ class Dims:
     argument runs in)."""
 
     def __init__(self, table: dict, names: dict, asigs: dict | None = None):
-        self.t, self.n, self.a = table, names, asigs or {}
+        self.t, self.a = table, asigs or {}
+        # an argument command's own dims come with its signature
+        self.n = {**{n: h["dim"] for n, h in self.a.items() if "dim" in h}, **names}
 
     def tok(self, key: str, m: bool) -> int:
         return self.t[key][1 if m else 0]

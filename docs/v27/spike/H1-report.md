@@ -7,8 +7,8 @@ step H.1 of the ADR-014 draft §9.
 **Kill criterion (H.1):** the revision cannot be identified **and** no revision reproduces the logs.
 
 **Verdict: the kill criterion did not fire.** The revision is identified by three independent
-sources. The aarch64 rebuild is byte-identical to the pinned binary. The shipped format is
-reproducible byte for byte. On every document run, the two architectures' pinned binaries gave
+sources. Our rebuilds from that source are byte-identical to the pinned binary on **both**
+architectures. The shipped format is reproducible byte for byte. On every document run, the two architectures' pinned binaries gave
 the same results.
 
 Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
@@ -19,7 +19,7 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 |---|---|---|
 | Which source built the pinned `pdftex`? | TeX Live svn **r78081**, i.e. TeX-Live/texlive-source commit `dc8efcd41054ec4bf7f96c022cd2d91fe346f6e1` (tag `svn78081`, 2026-02-23T16:24:02Z) | M |
 | Is the image's binary the upstream build of that source? | yes, for both architectures: byte-identical to the `svn78081` GitHub release assets | M |
-| Does our rebuild reproduce it? | **aarch64: yes, byte for byte** (sha256 `cee621bf…`). amd64: not rebuilt, see §2.3 | M |
+| Does our rebuild reproduce it? | **yes, byte for byte, on both architectures**: aarch64 natively (sha256 `cee621bf…`), amd64 under emulation (`1c5ff711…`, §2.3) | M |
 | Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100) | M |
 | Same binary, same inputs: same outputs? | yes: 3,907 of 3,907 evidence documents, and 200 of 200 real papers once the real clock is fixed | M |
 | Do amd64 and arm64 differ (floating point)? | no difference observed: 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5). The code has one channel that could differ in principle, bounded in §5.1 | M + R + I |
@@ -98,36 +98,54 @@ So its symbol table describes the pinned binary exactly, and §5.1 uses it.
 - There is no `-ffp-contract` flag. GCC's default for GNU C is `fast`, so the compiler may fuse
   `a*b+c` into one FMA instruction. It does on aarch64 (§5.1).
 
-### 2.3 amd64: not rebuilt, and why that is deferred [M]
+### 2.3 The amd64 rebuild: byte-identical, after emulator crashes [M]
 
 Upstream builds x86_64 on `almalinux:8` with `gcc-toolset-11`, on a native amd64 GitHub runner.
 This host is arm64. Colima here runs amd64 containers through qemu-user binfmt emulation
 (`vmType: vz`, `rosetta: false`), and the VM is shared with other work, so its configuration was
 not changed.
 
-Two attempts were made:
-- **First attempt (2026-09-29):** it failed in `texk/kpathsea` with `Segmentation fault (core
-  dumped)` from `gcc` compiling `rm-suffix.c`, a trivial file.
-- **Second attempt (2026-09-30):** same flags, with automatic resumes. It crashed at seven more
-  unrelated points:
-  - `cc1` segfaults on `lj_api.c`, `cairo-device.c`, gmp's `toom32_mul.c` and mpfr's `set.c`;
-  - `configure: error: cannot run C compiled programs` in freetype2 and in harfbuzz;
-  - one crash left gmp half-built, which deadlocked a plain `make` resume, so the resume order
-    had to be forced.
+Four attempts were made, all in `almalinux:8` under emulation with the recipe's flags:
+- **Attempt 1 (2026-09-29):** failed in `texk/kpathsea` with `Segmentation fault (core dumped)`
+  from `gcc` compiling `rm-suffix.c`, a trivial file.
+- **Attempt 2 (from 2026-09-29 22:40 UTC):** a fresh build with automatic `make` resumes. It
+  crashed at four unrelated points: `gcc` on LuaJIT's `lj_api.c`; `configure: error: cannot run C
+  compiled programs` in freetype2; `cc1` on cairo's `cairo-device.c`; `cc1` on gmp's
+  `toom32_mul.c`. The gmp crash left gmp half-built, and every further plain resume then stopped
+  at mpfr's `configure: error: gmp.h not found` (five times).
+- **Attempt 3 (2026-09-30 00:01–03:50 UTC):** resumed in place, making each library first, in
+  dependency order. It crashed at 11 more points over 10 resumes:
+  - `cc1` three times, once on mpfr's `set.c`;
+  - `cc1plus` three times;
+  - `cannot run C compiled programs` in harfbuzz's `configure`;
+  - `cannot compute suffix of executables` in seetexk's `configure`;
+  - `make` itself segfaulting three times: ICU's `icuexportdata.o`, web2c's own `tangle.p`, and
+    fontforge's `libff_a-memory.o`.
 
-**Diagnosis: emulator instability, not a source or toolchain defect.** The crash sites are
-unrelated and do not repeat. The upstream build of the same commit succeeds. The first attempt's
-toolchain matched the binary's `.comment` (gcc-toolset-11 11.2.1-9).
+- **Attempt 4 (2026-09-30 03:56 UTC):** the full `make world` was stopped, since every other
+  engine it builds is one more chance of a crash. Instead, only web2c's `pdftex` target was built
+  in the configured tree (`make -j 2 pdftex` in `Work/texk/web2c`, 26 compiler invocations). It
+  succeeded on the first try. The link output (6,517,040 bytes) was stripped as TeX Live's
+  `install-strip` does, with the toolset's `strip` (binutils 2.36.1) and with the system's.
+  **Both give 2,405,736 bytes with sha256
+  `1c5ff71156ee990c3a18402cf06d3671ecf748bd84fb3983dbd5d62b600bc40b`, the pinned x86_64
+  binary** (`cmp`: identical).
 
-**Status at the time of writing:** a third, resumed attempt was still building (five resumes so far, each after an emulator crash). Its outcome is recorded in §2.4 if it finishes.
+**Diagnosis: emulator instability, not a source or toolchain defect.**
+- The crash sites are unrelated, and no site crashed twice.
+- The upstream build of the same commit succeeds.
+- The toolchain matches the binary's `.comment` (gcc-toolset-11 11.2.1-9).
+- The rest of the package set is today's AlmaLinux 8, not the 2026-02-23 one: glibc
+  2.28-251.el8_10.40, and the toolset's linker, binutils 2.36.1-4.el8_6.alma.1.
 
-**Decision (recorded; the owner may override):**
-- Do not pursue a byte rebuild of amd64 under emulation.
-- The amd64 binary's identity already rests on the release-asset digest (§2.1).
-- A byte rebuild belongs on a native amd64 host: a CI runner, `almalinux:8`, with the package set
-  pinned to the build date, which the vault supports.
-- The spike's next steps (H.2–H.6) are specified for one architecture at a time, and aarch64 is
-  the one whose binary is now reproduced.
+The emulator crashes could have left a half-written target that a later `make` took as up to
+date. The byte identity rules that out for this binary. The package set was not pinned to
+2026-02-23, and the result is identical anyway, so the difference in versions did not reach this
+binary.
+
+**Consequence:** no deferral is needed; both pinned binaries are reproduced from source. Future
+engine pins should rebuild amd64 on a native amd64 host (a CI runner, as upstream does), not
+under emulation.
 
 The behavioural cross-architecture question does not need the rebuild; §5 answers it with the
 pinned amd64 binary itself.
@@ -361,7 +379,9 @@ The native backend's inherited stdin (ADR-014 draft, oracle branch C-99).
 
 Everything is under `~/.cache/lp-spike-h1/` on the machine that ran it:
 - `src-dc8efcd4.tar` (sha256 above) and `buildpdftex.sh` (the recipe of §2.2);
-- `b-arm64/`, the build tree, with `build-arm64.log`;
+- `b-arm64/` and `b-amd64/`, the build trees, with `build-arm64.log` and the amd64 logs
+  (`build-amd64.fail1.log`, `.attempt2.log`, `.attempt3.log`, and `build-amd64.log` for the
+  pdftex-only build: `build-amd64-retry.sh`, `build-amd64-resume2.sh`, `build-amd64-pdftex.sh`);
 - `rel/`, the upstream release tarballs;
 - `f7r/` and `f7amd/`, the format experiments of §3 (`f7r.sh`, `f7amd.sh`);
 - `harness/`: `h1cmp.py` runs a set, `h1diff.py` compares two runs, and `drive_amd64*.sh` is the

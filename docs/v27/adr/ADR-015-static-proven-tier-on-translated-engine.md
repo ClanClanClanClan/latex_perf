@@ -95,7 +95,7 @@ What this decides, and what it does not:
   the random seed, or change the oracle to a forced date — the clock measurement of #625 moved no
   grade on the fragment, but the run-dependent primitives exist); O-9 (restricted `\write18`);
   O-7's exact wording of the trusted base. O-8 (accept a reference build as the oracle if the
-  revision cannot be identified) is moot for aarch64 after H.1: see below.
+  revision cannot be identified) is moot after H.1: see below.
 
 ## Consequences
 
@@ -109,11 +109,12 @@ What this decides, and what it does not:
 
 ## H.1 result (2026-09-30, full numbers in `docs/v27/spike/H1-report.md`)
 
-- **The revision is identified, and the binary is reproduced byte for byte on aarch64 [M].**
+- **The revision is identified, and the binary is reproduced byte for byte on both architectures [M].**
   The image's `pdftex` for both architectures is byte-identical to the assets of TeX Live's
   GitHub release `svn78081` (TeX-Live/texlive-source commit `dc8efcd4…`, svn r78081, 2026-02-23).
-  A rebuild of that commit with TeX Live's own CI recipe gives an aarch64 binary with the same
-  sha256 as the pinned one (`cee621bf…`). The kill criterion of H.1 did not fire.
+  Rebuilds of that commit with TeX Live's own CI recipe give the pinned sha256 on aarch64
+  (`cee621bf…`, native) and on x86_64 (`1c5ff711…`, under emulation). The kill criterion of H.1
+  did not fire.
 - **The shipped `pdflatex.fmt` is reproducible byte for byte [M]**, contrary to the ADR-014
   draft's F7. The only run-dependent content is the INITEX run's clock (`\time`, `\day`,
   `\month`, `\year` are dumped with the format, and the format identifier carries the date). A
@@ -122,4 +123,6 @@ What this decides, and what it does not:
 - The draft's source citations were read from TeX Live **trunk**. Ten of the eleven files it
   cites are identical to r78081; `tex.ch` is not (trunk has since changed `scan_file_name`'s
   handling of `\relax`). The spike uses r78081.
-- The amd64 build and the cross-architecture question: see the report.
+- No difference between the architectures was observed. The aarch64 binary fuses some floating-point
+  operations (FMA) that the x86_64 one does not; H.2's Pascal semantics must model or exclude them.
+  See the report.

@@ -23,7 +23,7 @@
   "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes: run to the first rc 0, then ONE confirming pass whose rc is authoritative; PDF recorded (compiles = rc 0 AND a PDF, STRICT_TIER_DESIGN.md B.4 E0)"
  },
  "kernel_extract_sha256": "e4bac835e742e1b0584c6b23b2acb66186a02313c3cc688307a5db3cd58d06d3",
- "signatures_sha256": "90eb5bd38fcd38929b8f7dd27c12b5e1d223102b01af9e6c16ae8f9a971ce60d",
+ "signatures_sha256": "0a80481dfbea47f2de1d0c76ea8e035222e20255baa5ff306325003918978a18",
  "selection": {
   "rule": "check_strict_kernel.arg_candidates: control words (ASCII letters) of the closed world minus par/begin/end, minus the names of the phase-1 signature file, whose meaning at body start (through one robust wrapper, to the meaning of the inner name) is a macro with parameter text exactly #1",
   "only": null,
@@ -18953,8 +18953,8 @@
  },
  "reuse": {
   "file": "corpora/contracts/strict/article-s1-arg-signatures.json",
-  "commit": "a2ff60c260f3396939788e1774eb9d880b9a9243",
-  "sha256": "c6d89629fb57bcee1ade0694a7ad09af26ea02358bb0f4faa475b2e37dbbec40",
+  "commit": "8112311c310bf30f9931635778d4cd0b1516ce56",
+  "sha256": "c424e2367a379f011ad4c143dd0436eeee85b2c3b651e42ec423c4b94062fd4b",
   "generator_version": "4",
   "grades_reused": 2384
  },
@@ -232876,7 +232876,7 @@
    "stage 4": 0,
    "stage 5": 0
   },
-  "documents_graded_now": 925,
+  "documents_graded_now": 923,
   "grades_reused": 2384,
   "oracle_timeouts": 0,
   "admitted_by_class": {

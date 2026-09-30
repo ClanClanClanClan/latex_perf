@@ -1,0 +1,1 @@
+{"kpse_make_tex_discard_errors": {"type": "int (kpse_def->make_tex_discard_errors)", "code": 8, "size": 4, "nonzero": false, "measured": "p kpse_def->make_tex_discard_errors = 0 at mainbody"}}

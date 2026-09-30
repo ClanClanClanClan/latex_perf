@@ -1,0 +1,32 @@
+{
+ "dump_name": {
+  "type": "const_string",
+  "code": 1,
+  "size": 8,
+  "nonzero": true,
+  "hex": "80f16b3d2ec30000",
+  "ptr": 214603366396288,
+  "cstring": "pdftex"
+ },
+ "zzzaa": {
+  "type": "quarterword [916]",
+  "code": 2,
+  "size": 916,
+  "nonzero": false
+ },
+ "zzzab": {
+  "type": "integer [70223]",
+  "code": 2,
+  "size": 280892,
+  "nonzero": false
+ },
+ "kpse_make_tex_discard_errors": {
+  "error": "No symbol \"kpse_make_tex_discard_errors\" in current context."
+ },
+ "translate_filename": {
+  "type": "string",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ }
+}

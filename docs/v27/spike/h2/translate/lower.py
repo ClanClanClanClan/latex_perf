@@ -119,8 +119,13 @@ WORD_BYTES = {"mw": 8, "th": 8, "fq": 4, "fmw": 4}
 
 
 class Lowerer:
-    def __init__(self, P, ext_consts=None):
+    def __init__(self, P, regmem=None):
         self.P = P
+        # web2c's coerce header (pdftexcoerce.h): `#define <proc>_regmem register memoryword
+        # *mem=zmem, *eqtb=zeqtb;` -- in C, mem and eqtb are LOCAL copies of the globals zmem
+        # and zeqtb, taken when the procedure is entered (web2c emits the macro first in the
+        # body). A procedure that reassigns zmem does not change its callers' mem.
+        self.regmem = regmem or {}
         self.defines = {n: (k, a) for k, n, a in P["defines"]}
         self.consts = {}      # name -> (z, ty) | ('str', text)
         self.types = {}
@@ -253,9 +258,7 @@ class Lowerer:
         # initialised by the C main program before mainbody runs
         I32 = T("scalar", ct="i32", lo=INT_MIN, hi=INT_MAX, isbool=False)
         CSTR = self.types["cstring"]
-        EXTG = [("mem", T("ptr", target=self.types["memoryword"])),
-                ("eqtb", T("ptr", target=self.types["memoryword"])),
-                ("tfmtemp", I32), ("texinputtype", I32),        # texmfmp.h: extern int
+        EXTG = [("tfmtemp", I32), ("texinputtype", I32),        # texmfmp.h: extern int
                 ("kpsemaketexdiscarderrors", I32),               # kpathsea: boolean (int)
                 ("translatefilename", CSTR),                     # texmfmp.h: extern string
                 ("versionstring", CSTR)]                         # const_string
@@ -336,7 +339,15 @@ class Lowerer:
             r = self.fix(self.rtype(t))
             self.locals[n] = (off, r, "loc")
             off += r.size
+        prologue = []
+        for n, src in (("mem", "zmem"), ("eqtb", "zeqtb")):
+            if n in self.regmem.get(name, ()):
+                self.locals[n] = (off, T("ptr", target=self.types["memoryword"]), "loc")
+                prologue.append(("asg", ("loc", off), "ptr", ("load", "ptr", ("glob", self.globals[src][0]))))
+                off += 1
         body = self.stmt(p["body"])
+        if prologue:
+            body = ("seq", prologue + [body])
         layout = [(n, o, self.ct_of(r) or r.kind, r.size, kind) for n, (o, r, kind) in self.locals.items()]
         return {"name": name, "id": info["id"], "nparams": len(info["params"]),
                 "params": [(n, "ref" if br else ("val" if r.size == 1 and self.ct_of(r) else "copy"), r.size)
@@ -512,6 +523,10 @@ class Lowerer:
             else:
                 x, t = self.rexpr(a)
                 ct = self.ct_of(r)
+                if ct in ("ptr", "file") and x == ("int", "i32", 0):
+                    x, t = ("null",), "ptr"
+                if (ct in ("ptr", "file")) != (t in ("ptr", "file")) or (ct in ("w8", "w4")) != (t in ("w8", "w4")):
+                    raise TranslateError(f"{self.where}: argument of type {t} for a {ct} parameter")
                 out.append(("val", ct, self.conv(x, t, PROMOTE[ct]) if t in ("i32", "i64", "f64") and PROMOTE[ct] in ("i32", "i64", "f64") else x))
         return out
 
@@ -656,6 +671,10 @@ class Lowerer:
                     raise TranslateError(f"{self.where}: aggregate copy of different sizes")
                 return ("copy", l, src, r.size)
             x, t = self.rexpr(s[2])
+            if ct in ("ptr", "file") and x == ("int", "i32", 0):
+                x, t = ("null",), "ptr"      # C: the integer constant 0 is a null pointer constant
+            if (ct in ("ptr", "file")) != (t in ("ptr", "file")) or (ct in ("w8", "w4")) != (t in ("w8", "w4")):
+                raise TranslateError(f"{self.where}: assignment of a {t} to a {ct}")
             return ("asg", l, ct, x)
         if k == "pcall":
             n, actuals = s[1], s[2]
@@ -700,10 +719,20 @@ class Lowerer:
         return ("write", fe, items, n == "writeln")
 
 
+def read_regmem(path):
+    import re
+    out = {}
+    for line in open(path):
+        m = re.match(r"#define (\w+)_regmem ?(.*)$", line.strip())
+        if m:
+            out[m.group(1)] = set(re.findall(r"\*(mem|eqtb)=", m.group(2)))
+    return out
+
+
 def main():
     import pickle
     P = pickle.load(open(sys.argv[1], "rb"))
-    L = Lowerer(P)
+    L = Lowerer(P, read_regmem(sys.argv[2]) if len(sys.argv) > 2 else None)
     procs, failed = L.lower_all(keep_going=True)
     print(len(procs), "procedures lowered,", len(failed), "failed;", L.stats, "; externals:", len(L.exts))
     import collections

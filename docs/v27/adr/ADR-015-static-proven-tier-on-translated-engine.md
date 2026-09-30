@@ -190,3 +190,16 @@ What this decides, and what it does not:
 - **All amd64 evidence is emulated** (qemu-user on an arm64 host): the rebuild, the behaviour runs
   and the format run. A confirmation on a native amd64 host, the CI runner of `tex-oracle.yml`, is
   open (OPEN-123).
+
+## H.2 result (2026-09-30, full numbers in `docs/v27/spike/H2-report.md`)
+
+- **Pass criterion met; the kill criterion did not fire [M].** 603 of 603 procedures of the tangled
+  `pdftex.p` are translated into a Coq deep embedding; Coq accepts the program with its semantics
+  `PS` (a fuelled interpreter) in 257 s at 586 MB peak; extraction and OCaml compilation stay under
+  0.6 GB per module; the extracted program runs INITEX through the `*` prompt, and on that run its
+  terminal output, log file and exit status are byte-identical to the pinned binary's on both
+  architectures.
+- `PS` implements the proposed Stuck rule (still the owner's decision, H.1 report §8).
+- The C boundary is the open part, as this ADR expected: 23 of the program's 189 externals are
+  modelled; the others are Stuck. The model is about 200 times slower than pdfTeX on this run,
+  which H.5 measures against its > 200× kill line.

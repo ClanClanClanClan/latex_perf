@@ -28,6 +28,13 @@ SLK = {"s": "SkS", "u": "SkU", "f": "SkF", "w": "SkW"}
 
 
 def Z(z):
+    """an AST number: a primitive 63-bit int read as signed (Syntax.zi)"""
+    assert -2 ** 62 <= z < 2 ** 62, z
+    return f"({z}%sint63)"
+
+
+def ZZ(z):
+    """a Coq Z (name tables, double bit patterns)"""
     return f"({z})" if z < 0 else str(z)
 
 
@@ -37,6 +44,8 @@ class Emitter:
         self.strings = {}
         self.types = {}
         self.nodes = 0
+        self.unseq = set()        # id() of IR nodes whose parts C evaluates in unspecified order
+        self.unseq_emitted = 0
 
     def sid(self, s):
         if s not in self.strings:
@@ -51,34 +60,42 @@ class Emitter:
 
     def lexp(self, l):
         self.nodes += 1
+        if id(l) in self.unseq:
+            raise ValueError("an unsequenced lvalue must be marked at its expression or statement")
         k = l[0]
         if k == "glob":
-            return f"(LGlob {l[1]})"
+            return f"(LGlob {Z(l[1])})"
         if k == "loc":
-            return f"(LLoc {l[1]})"
+            return f"(LLoc {Z(l[1])})"
         if k == "ref":
-            return f"(LRef {l[1]})"
+            return f"(LRef {Z(l[1])})"
         if k == "idx":
-            return f"(LIdx {self.lexp(l[1])} {self.expr(l[2])} {Z(l[3])} {Z(l[4])} {l[5]})"
+            return f"(LIdx {self.lexp(l[1])} {self.expr(l[2])} {Z(l[3])} {Z(l[4])} {Z(l[5])})"
         if k == "pidx":
-            return f"(LPIdx {self.expr(l[1])} {self.expr(l[2])} {l[3]})"
+            return f"(LPIdx {self.expr(l[1])} {self.expr(l[2])} {Z(l[3])})"
         if k == "fld":
-            return f"(LFld {self.lexp(l[1])} {l[2]})"
+            return f"(LFld {self.lexp(l[1])} {Z(l[2])})"
         if k == "sl":
             b, n, sk = l[2]
-            return f"(LSl {self.lexp(l[1])} {b} {n} {SLK[sk]})"
+            return f"(LSl {self.lexp(l[1])} {Z(b)} {Z(n)} {SLK[sk]})"
         raise ValueError(l)
 
     def expr(self, e):
         self.nodes += 1
+        if id(e) in self.unseq:
+            self.unseq_emitted += 1
+            return f"(EUnseq {self.expr_raw(e)})"
+        return self.expr_raw(e)
+
+    def expr_raw(self, e):
         k = e[0]
         if k == "int":
             return f"(EInt {TY[e[1]]} {Z(e[2])})"
         if k == "dbl":
             bits = struct.unpack("<Q", struct.pack("<d", float(e[1])))[0]
-            return f"(EDbl {bits})"
+            return f"(EDbl {ZZ(bits)})"
         if k == "str":
-            return f"(EStr {self.sid(e[1])})"
+            return f"(EStr {Z(self.sid(e[1]))})"
         if k == "null":
             return "ENull"
         if k == "load":
@@ -100,21 +117,21 @@ class Emitter:
         if k == "conv":
             return f"(EConv {TY[e[1]]} {self.expr(e[2])})"
         if k == "call":
-            return f"(ECall {e[1]} {self.lst([self.parg(a) for a in e[2]])})"
+            return f"(ECall {Z(e[1])} {self.lst([self.parg(a) for a in e[2]])})"
         if k == "ext":
-            return f"(EExt {self.L.exts[e[1]]} {self.lst([self.xarg(a) for a in e[2]])})"
+            return f"(EExt {Z(self.L.exts[e[1]])} {self.lst([self.xarg(a) for a in e[2]])})"
         if k == "addr":
             return f"(EAddr {self.lexp(e[1])})"
         if k == "padd":
-            return f"(EPAdd {self.expr(e[1])} {e[2]} {'true' if e[3] == '-' else 'false'} {self.expr(e[4])})"
+            return f"(EPAdd {self.expr(e[1])} {Z(e[2])} {'true' if e[3] == '-' else 'false'} {self.expr(e[4])})"
         if k == "abs":
             return f"(EAbs {self.expr(e[1])})"
         if k == "odd":
             return f"(EOdd {TY[e[1]]} {self.expr(e[2])})"
         if k == "alloc":
-            return f"(EAlloc {e[1]} {CT[e[2]]} {self.expr(e[3])})"
+            return f"(EAlloc {Z(e[1])} {CT[e[2]]} {self.expr(e[3])})"
         if k == "realloc":
-            return f"(ERealloc {e[1]} {CT[e[2]]} {self.expr(e[3])} {self.expr(e[4])})"
+            return f"(ERealloc {Z(e[1])} {CT[e[2]]} {self.expr(e[3])} {self.expr(e[4])})"
         raise ValueError(k)
 
     def parg(self, a):
@@ -124,39 +141,45 @@ class Emitter:
         if k == "ref":
             return f"(ARef {self.lexp(a[1])})"
         if k == "copy":
-            return f"(ACopy {self.lexp(a[1])} {a[2]})"
+            return f"(ACopy {self.lexp(a[1])} {Z(a[2])})"
         raise ValueError(a)
 
     def xarg(self, a):
         k = a[0]
         if k == "lv":
-            return f"(ALv {self.lexp(a[1])} {CT[a[2]]} {a[3]})"
+            return f"(ALv {self.lexp(a[1])} {CT[a[2]]} {Z(a[3])})"
         if k == "val":
             ty = a[1]
             return f"(AExp {TY.get(ty, 'TI32')} {self.expr(a[2])})"
         if k == "type":
             if a[1] not in self.types:
                 self.types[a[1]] = len(self.types)
-            return f"(AType {self.types[a[1]]})"
+            return f"(AType {Z(self.types[a[1]])})"
         raise ValueError(a)
 
     def stmt(self, s):
         self.nodes += 1
+        if id(s) in self.unseq:
+            self.unseq_emitted += 1
+            return f"(SUnseq {self.stmt_raw(s)})"
+        return self.stmt_raw(s)
+
+    def stmt_raw(self, s):
         k = s[0]
         if k == "skip":
             return "SSkip"
         if k == "asg":
             return f"(SAsg {self.lexp(s[1])} {CT[s[2]]} {self.expr(s[3])})"
         if k == "copy":
-            return f"(SCopy {self.lexp(s[1])} {self.lexp(s[2])} {s[3]})"
+            return f"(SCopy {self.lexp(s[1])} {self.lexp(s[2])} {Z(s[3])})"
         if k == "pcall":
-            return f"(SPCall {s[1]} {self.lst([self.parg(a) for a in s[2]])})"
+            return f"(SPCall {Z(s[1])} {self.lst([self.parg(a) for a in s[2]])})"
         if k == "ext":
-            return f"(SExt {self.L.exts[s[1]]} {self.lst([self.xarg(a) for a in s[2]])})"
+            return f"(SExt {Z(self.L.exts[s[1]])} {self.lst([self.xarg(a) for a in s[2]])})"
         if k == "seq":
             return f"(SSeq {self.lst([self.stmt(x) for x in s[1]])})"
         if k == "label":
-            return f"(SLabel {s[1]})"
+            return f"(SLabel {Z(s[1])})"
         if k == "if":
             return f"(SIf {self.expr(s[1])} {self.stmt(s[2])} {self.stmt(s[3])})"
         if k == "while":
@@ -171,7 +194,7 @@ class Emitter:
             d = f"(Some {self.stmt(s[3])})" if s[3] is not None else "None"
             return f"(SCase {self.expr(s[1])} {self.lst(arms)} {d})"
         if k == "goto":
-            return f"(SGoto {s[1]})"
+            return f"(SGoto {Z(s[1])})"
         if k == "return":
             return "SReturn"
         if k == "incr":
@@ -217,21 +240,36 @@ def main():
     a = sys.argv[1:]
     out = a[a.index("--out") + 1]
     chunk = int(a[a.index("--chunk") + 1]) if "--chunk" in a else 40
-    files = [x for x in a if not x.startswith("--") and x not in (out, str(chunk))]
+    coerce = a[a.index("--coerce") + 1]
+    pool = a[a.index("--pool") + 1]
+    files = [x for x in a if not x.startswith("--") and x not in (out, str(chunk), coerce, pool)]
     pfile, defines = files[0], files[1:]
     text = "".join(open(d).read() for d in defines) + open(pfile).read()
     P = parse(text)
-    L = Lowerer(P)
+    from lower import read_regmem
+    L = Lowerer(P, read_regmem(coerce))
     procs, failed = L.lower_all(keep_going=True)
     import gotos
     bad, into, gcounts = gotos.check(procs)
     if bad:
         raise SystemExit(f"unresolvable gotos: {bad}")
     import cprec
+    import evalorder
+    bpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "coq", "Boundary.v")
+    if set(evalorder.EXT_EFFECTS) != evalorder.modelled(open(bpath).read()):
+        raise SystemExit("evalorder.EXT_EFFECTS and Boundary.v model different externals: "
+                         f"{sorted(set(evalorder.EXT_EFFECTS) ^ evalorder.modelled(open(bpath).read()))}")
+    conflicts, npairs = evalorder.check(L, procs)
     E = Emitter(L)
+    for c in conflicts:
+        node = c[2]
+        if node is None:
+            raise SystemExit(f"unsequenced conflict without a node: {c[:2]}")
+        # an lvalue conflict (index) is marked on the statement or expression holding it
+        E.unseq.add(id(node))
     os.makedirs(out, exist_ok=True)
     hdr = "(* GENERATED by docs/v27/spike/h2/translate/emit_coq.py; do not edit. *)\n" \
-          "From Coq Require Import ZArith List String.\nFrom PS Require Import Syntax.\nOpen Scope Z_scope.\n\n"
+          "From Coq Require Import ZArith List String Uint63 Sint63.\nFrom PS Require Import Syntax.\nOpen Scope Z_scope.\n\n"
     names = []
     procs = sorted(procs, key=lambda p: p["id"])
     for ci in range(0, len(procs), chunk):
@@ -245,25 +283,27 @@ def main():
                     if kind == "ref":
                         pk.append("PRef")
                     elif kind == "copy":
-                        pk.append(f"(PCopy {size})")
+                        pk.append(f"(PCopy {Z(size)})")
                     else:
                         c = [x for x in p["layout"] if x[0] == n][0][2]
                         pk.append(f"(PVal {CT[c]})")
-                res = "None" if p["result"] is None else f"(Some (pair {p['result'][0]} {CT[p['result'][1]]}))"
+                res = "None" if p["result"] is None else f"(Some (pair {Z(p['result'][0])} {CT[p['result'][1]]}))"
                 body = E.stmt(p["body"])
-                f.write(f"(* {p['name']} *)\nDefinition p_{p['id']} : proc := mkproc {E.lst(pk)} {p['frame']} {res}\n  {body}.\n\n")
+                f.write(f"(* {p['name']} *)\nDefinition p_{p['id']} : proc := mkproc {E.lst(pk)} {Z(p['frame'])} {res}\n  {body}.\n\n")
                 names.append((p["id"], p["name"], k))
+    if E.unseq_emitted != len(E.unseq):
+        raise SystemExit(f"{len(E.unseq)} unsequenced nodes marked, {E.unseq_emitted} emitted")
     with open(os.path.join(out, "ProgGlobals.v"), "w") as f:
         f.write(hdr)
         gl = sorted(L.globals.items(), key=lambda kv: kv[1][0])
         shapes = []
         for n, (gid, r) in gl:
             runs = compress(shape(L, r))
-            shapes.append(E.lst([f"(pair {c} {CT[t]})" for c, t in runs]))
+            shapes.append(E.lst([f"(pair {Z(c)} {CT[t]})" for c, t in runs]))
         f.write(f"Definition globals : list gshape := {E.lst(shapes)}.\n\n")
         strs = sorted(E.strings.items(), key=lambda kv: kv[1])
-        f.write("Definition strings : list (list Z) := " +
-                E.lst([E.lst([str(b) for b in s.encode('latin-1')]) for s, _ in strs]) + ".\n\n")
+        f.write("Definition strings : list (list int) := " +
+                E.lst([E.lst([Z(b) for b in s.encode('latin-1')]) for s, _ in strs]) + ".\n\n")
         # name tables: the boundary model (Boundary.v) names externals, globals and
         # procedures through these, so it does not depend on numbering
         exts = sorted(L.exts, key=L.exts.get)
@@ -277,19 +317,36 @@ def main():
             f.write(f"Definition P_{n} : Z := {pid}.\n")
         for n, i in sorted(E.types.items(), key=lambda kv: kv[1]):
             f.write(f"Definition T_{n} : Z := {i}.\n")
+    # web2c/makecpool.c: pdftex.pool -> the C array loadpoolstrings copies: every line up to
+    # one starting with '*', minus its two leading digits (if both are digits)
+    pool_strings = []
+    for line in open(pool, "rb").read().split(b"\n"):
+        if line[:1] == b"*":
+            break
+        if line == b"":
+            continue
+        o = 2 if len(line) >= 2 and line[:1].isdigit() and line[1:2].isdigit() else 0
+        pool_strings.append(line[o:])
+    with open(os.path.join(out, "PoolData.v"), "w") as f:
+        f.write(hdr)
+        f.write("Definition pool_strings : list (list int) := " +
+                E.lst([E.lst([Z(b) for b in s]) for s in pool_strings]) + ".\n")
     with open(os.path.join(out, "Prog.v"), "w") as f:
         f.write(hdr)
         f.write("".join(f"From PS Require Prog_{k}.\n" for k in sorted(set(k for _, _, k in names))))
         f.write("\nDefinition procs : list proc := " +
                 E.lst([f"Prog_{k}.p_{i}" for i, _, k in names]) + ".\n")
     man = {
-        "inputs": {os.path.basename(x): hashlib.sha256(open(x, "rb").read()).hexdigest() for x in [pfile] + defines},
+        "inputs": {os.path.basename(x): hashlib.sha256(open(x, "rb").read()).hexdigest() for x in [pfile, coerce, pool] + defines},
+        "pool_strings": len(pool_strings),
         "procedures": len(procs), "failed": failed, "externals": sorted(L.exts, key=L.exts.get),
         "globals": [n for n, _ in sorted(L.globals.items(), key=lambda kv: kv[1][0])],
         "ext_globals": L.ext_globals,
         "strings": len(E.strings), "types_as_args": sorted(E.types, key=E.types.get),
         "ir_nodes": E.nodes, "proc_names": [n for _, n, _ in names], "stats": L.stats,
-        "gotos": gcounts, "gotos_into_structured": into, "c_vs_pascal_grouping": cprec.check(P),
+        "gotos": gcounts,
+        "unsequenced_pairs_checked": npairs,
+        "unsequenced_conflicts": [[c[0], c[1]] for c in conflicts], "gotos_into_structured": into, "c_vs_pascal_grouping": cprec.check(P),
     }
     json.dump(man, open(os.path.join(out, "manifest.json"), "w"), indent=1)
     print(f"{len(procs)} procedures emitted ({len(failed)} failed), {E.nodes} IR nodes, "

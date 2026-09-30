@@ -1,0 +1,4177 @@
+{
+ "bad": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "xord": {
+  "type": "ASCIIcode [256]",
+  "code": 2,
+  "size": 256,
+  "nonzero": false
+ },
+ "xchr": {
+  "type": "ASCIIcode [256]",
+  "code": 2,
+  "size": 256,
+  "nonzero": false
+ },
+ "xprn": {
+  "type": "ASCIIcode [256]",
+  "code": 2,
+  "size": 256,
+  "nonzero": false
+ },
+ "mubyteread": {
+  "type": "halfword [256]",
+  "code": 2,
+  "size": 1024,
+  "nonzero": false
+ },
+ "mubytewrite": {
+  "type": "strnumber [256]",
+  "code": 2,
+  "size": 1024,
+  "nonzero": false
+ },
+ "mubytecswrite": {
+  "type": "halfword [128]",
+  "code": 2,
+  "size": 512,
+  "nonzero": false
+ },
+ "mubyteskip": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytekeep": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubyteskeep": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubyteprefix": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytetablein": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytetableout": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubyterelax": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytestart": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytesstart": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytetoken": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytestoken": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubytesout": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mubyteslog": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "specsout": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "noconvert": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "activenoconvert": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "writenoexpanding": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "csconverting": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "specialprinting": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "messageprinting": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "nameoffile": {
+  "type": "ASCIIcode *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "namelength": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "buffer": {
+  "type": "ASCIIcode *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "first": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "last": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxbufstack": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "iniversion": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": true,
+  "hex": "01000000"
+ },
+ "dumpoption": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dumpline": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dumpname": {
+  "error": "No symbol \"dumpname\" in current context."
+ },
+ "bounddefault": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "boundname": {
+  "type": "const_string",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "membot": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mainmemory": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "extramembot": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "memmin": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "memtop": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "extramemtop": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "memmax": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "errorline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "halferrorline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxprintline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxstrings": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "stringsfree": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "stringvacancies": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "poolsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "poolfree": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fontmemsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fontmax": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fontk": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hyphsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "triesize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bufsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "stacksize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxinopen": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "paramsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "nestsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "savesize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvibufsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "expanddepth": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "parsefirstlinep": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": true,
+  "hex": "01000000"
+ },
+ "filelineerrorstylep": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "eightbitp": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "haltonerrorp": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "haltingonerrorp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "quotedfilename": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "srcspecialsp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialauto": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialeverypar": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialeveryparend": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialeverycr": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialeverymath": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialeveryhbox": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialeveryvbox": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertsrcspecialeverydisplay": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "strpool": {
+  "type": "packedASCIIcode *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "strstart": {
+  "type": "poolpointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "poolptr": {
+  "type": "poolpointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "strptr": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "initpoolptr": {
+  "type": "poolpointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "initstrptr": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "poolfile": {
+  "type": "alphafile",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "logfile": {
+  "type": "alphafile",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "selector": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "dig": {
+  "type": "unsigned char [23]",
+  "code": 2,
+  "size": 23,
+  "nonzero": false
+ },
+ "tally": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "termoffset": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fileoffset": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "trickbuf": {
+  "type": "ASCIIcode [256]",
+  "code": 2,
+  "size": 256,
+  "nonzero": false
+ },
+ "trickcount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "firstcount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "interaction": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "interactionoption": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": true,
+  "hex": "04"
+ },
+ "deletionsallowed": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "setboxallowed": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "history": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "errorcount": {
+  "type": "schar",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "helpline": {
+  "type": "strnumber [6]",
+  "code": 2,
+  "size": 24,
+  "nonzero": false
+ },
+ "helpptr": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "useerrhelp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "interrupt": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "OKtointerrupt": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "savearitherror": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "aritherror": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "texremainder": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "randoms": {
+  "type": "integer [55]",
+  "code": 2,
+  "size": 220,
+  "nonzero": false
+ },
+ "jrandom": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "randomseed": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "twotothe": {
+  "type": "integer [31]",
+  "code": 2,
+  "size": 124,
+  "nonzero": false
+ },
+ "speclog": {
+  "type": "integer [29]",
+  "code": 2,
+  "size": 116,
+  "nonzero": false
+ },
+ "tempptr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "yzmem": {
+  "type": "memoryword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "zmem": {
+  "type": "memoryword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "lomemmax": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "himemmin": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "varused": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dynused": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "avail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "memend": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "rover": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fontinshortdisplay": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "depththreshold": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "breadthmax": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "nest": {
+  "type": "liststaterecord *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "nestptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxneststack": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curlist": {
+  "type": "liststaterecord",
+  "code": 3,
+  "size": 32,
+  "nonzero": false
+ },
+ "shownmode": {
+  "type": "short",
+  "code": 8,
+  "size": 2,
+  "nonzero": false
+ },
+ "savetail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prevtail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "oldsetting": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "oldselectorignorederr": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "systime": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "sysday": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "sysmonth": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "sysyear": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "zeqtb": {
+  "type": "memoryword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "xeqlevel": {
+  "error": "No symbol \"xeqlevel\" in current context."
+ },
+ "hash": {
+  "type": "twohalves *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "yhash": {
+  "type": "twohalves *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "hashused": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hashextra": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hashtop": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "eqtbtop": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hashhigh": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "nonewcontrolsequence": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "cscount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prim": {
+  "type": "twohalves [2101]",
+  "code": 2,
+  "size": 16808,
+  "nonzero": false
+ },
+ "primused": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "savestack": {
+  "type": "memoryword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "saveptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxsavestack": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curlevel": {
+  "type": "quarterword",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curgroup": {
+  "type": "groupcode",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curboundary": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "magset": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curcmd": {
+  "type": "eightbits",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curchr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curcs": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curtok": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "inputstack": {
+  "type": "instaterecord *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "inputptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxinstack": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curinput": {
+  "type": "instaterecord",
+  "code": 3,
+  "size": 24,
+  "nonzero": false
+ },
+ "inopen": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "openparens": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "inputfile": {
+  "type": "alphafile *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "line": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "linestack": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "sourcefilenamestack": {
+  "type": "strnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fullsourcefilenamestack": {
+  "type": "strnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "scannerstatus": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "warningindex": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "defref": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "paramstack": {
+  "type": "halfword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "paramptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxparamstack": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "alignstate": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "baseptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "parloc": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "partoken": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "forceeof": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "isincsname": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curmark": {
+  "type": "halfword [5]",
+  "code": 2,
+  "size": 20,
+  "nonzero": false
+ },
+ "longstate": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "pstack": {
+  "type": "halfword [9]",
+  "code": 2,
+  "size": 36,
+  "nonzero": false
+ },
+ "curval": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curvallevel": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "radix": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curorder": {
+  "type": "glueord",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "readfile": {
+  "type": "alphafile [16]",
+  "code": 2,
+  "size": 128,
+  "nonzero": false
+ },
+ "readopen": {
+  "type": "unsigned char [17]",
+  "code": 2,
+  "size": 17,
+  "nonzero": false
+ },
+ "condptr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "iflimit": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curif": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "ifline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "skipline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curname": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curarea": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curext": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "areadelimiter": {
+  "type": "poolpointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "extdelimiter": {
+  "type": "poolpointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "formatdefaultlength": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": true,
+  "hex": "0a000000"
+ },
+ "TEXformatdefault": {
+  "type": "string",
+  "code": 1,
+  "size": 8,
+  "nonzero": true,
+  "hex": "e0f9fc9b10b20000",
+  "ptr": 195784406268384,
+  "cstring": " pdftex.fmt"
+ },
+ "nameinprogress": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "jobname": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "logopened": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvifile": {
+  "type": "bytefile",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "outputfilename": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "texmflogname": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "tfmfile": {
+  "type": "bytefile",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontinfo": {
+  "type": "fmemoryword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fmemptr": {
+  "type": "fontindex",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fontptr": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fontcheck": {
+  "type": "fourquarters *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontsize": {
+  "type": "scaled *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontdsize": {
+  "type": "scaled *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontparams": {
+  "type": "fontindex *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontname": {
+  "type": "strnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontarea": {
+  "type": "strnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontbc": {
+  "type": "eightbits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontec": {
+  "type": "eightbits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontglue": {
+  "type": "halfword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontused": {
+  "type": "boolean *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "hyphenchar": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "skewchar": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "bcharlabel": {
+  "type": "fontindex *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontbchar": {
+  "type": "ninebits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontfalsebchar": {
+  "type": "ninebits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "charbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "widthbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "heightbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "depthbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "italicbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "ligkernbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "kernbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "extenbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "parambase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "nullcharacter": {
+  "type": "fourquarters",
+  "code": 3,
+  "size": 4,
+  "nonzero": false
+ },
+ "totalpages": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxv": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxh": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxpush": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastbop": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "deadcycles": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "doingleaders": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "c": {
+  "type": "quarterword",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "f": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "ruleht": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "ruledp": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "rulewd": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "g": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lq": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvibuf": {
+  "type": "eightbits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "halfbuf": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvilimit": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dviptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvioffset": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvigone": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "downptr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "rightptr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvih": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dviv": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curh": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curv": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dvif": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curs": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfmemsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfmem": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfmemptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdffile": {
+  "type": "bytefile",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfbuf": {
+  "type": "eightbits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfbufsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfopbuf": {
+  "type": "eightbits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfosbuf": {
+  "type": "eightbits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfosbufsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfosobjnum": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfosobjoff": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfosobjidx": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfoscntr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfopptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfosptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfosmode": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfosenable": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfoscurobjnum": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfgone": {
+  "type": "longinteger",
+  "code": 8,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfsaveoffset": {
+  "type": "longinteger",
+  "code": 8,
+  "size": 8,
+  "nonzero": false
+ },
+ "zipwritestate": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpdfmajorversion": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpdfminorversion": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpdfobjcompresslevel": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfversionwritten": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpdfoutput": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpdfoutputset": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedgamma": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedimagegamma": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedimagehicolor": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedimageapplygamma": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "epochseconds": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "microseconds": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpdfdraftmode": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpdfdraftmodeset": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfpagegroupval": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "onebp": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "onehundredbp": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "onehundredinch": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "oneinch": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "tenpow": {
+  "type": "integer [10]",
+  "code": 2,
+  "size": 40,
+  "nonzero": false
+ },
+ "scaledout": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "initpdfoutput": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "advcharwidths": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "advcharwidthsout": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdff": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfh": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfv": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdftjstarth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curdeltah": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdeltah": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdforiginh": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdforiginv": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdoingstring": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdoingtext": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "minbpval": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "minfontval": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedpkresolution": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixeddecimaldigits": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedgentounicode": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fixedinclusioncopyfont": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pkscalefactor": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfoutputoption": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfoutputvalue": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdraftmodeoption": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdraftmodevalue": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfcurTma": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastf": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastfs": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdummyfont": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "objtabsize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "objtab": {
+  "type": "objentry *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "headtab": {
+  "type": "integer [11]",
+  "code": 2,
+  "size": 44,
+  "nonzero": false
+ },
+ "pagestail": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "objptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "sysobjptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastpages": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastpage": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflaststream": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfstreamlength": {
+  "type": "longinteger",
+  "code": 8,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfstreamlengthoffset": {
+  "type": "longinteger",
+  "code": 8,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfseekwritelength": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastbyte": {
+  "type": "eightbits",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "pdfappendlistarg": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "ff": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfboxspecmedia": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfboxspeccrop": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfboxspecbleed": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfboxspectrim": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfboxspecart": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfimageprocset": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdftextprocset": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdffonttype": {
+  "type": "eightbits *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontattr": {
+  "type": "strnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontnobuiltintounicode": {
+  "type": "boolean *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdfcharused": {
+  "type": "charusedarray *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontsize": {
+  "type": "scaled *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontnum": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontmap": {
+  "type": "fmentryptr *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfresnameprefix": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lasttokensstring": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "vfpacketbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "vfdefaultfont": {
+  "type": "internalfontnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "vflocalfontnum": {
+  "type": "internalfontnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "vfpacketlength": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "vffile": {
+  "type": "bytefile",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "vfnf": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "vfefnts": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "vfifnts": {
+  "type": "internalfontnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "tmpw": {
+  "type": "memoryword",
+  "code": 4,
+  "size": 8,
+  "nonzero": false
+ },
+ "vfcurs": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "vfstack": {
+  "type": "vfstackrecord [101]",
+  "code": 2,
+  "size": 2424,
+  "nonzero": false
+ },
+ "vfstackptr": {
+  "type": "vfstackindex",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "savedpdfcurform": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdftexbanner": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "totalstretch": {
+  "type": "scaled [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "totalshrink": {
+  "type": "scaled [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "lastbadness": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "adjusttail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdffontblink": {
+  "type": "internalfontnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontelink": {
+  "type": "internalfontnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffonthasspacechar": {
+  "type": "boolean *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontstretch": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontshrink": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontstep": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontexpandratio": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontautoexpand": {
+  "type": "boolean *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontlpbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontrpbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontefbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontknbsbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontstbsbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontshbsbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontknbcbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pdffontknacbase": {
+  "type": "integer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "fontexpandratio": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastleftmostchar": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastrightmostchar": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hliststack": {
+  "type": "halfword [513]",
+  "code": 2,
+  "size": 2052,
+  "nonzero": false
+ },
+ "hliststacklevel": {
+  "type": "short",
+  "code": 8,
+  "size": 2,
+  "nonzero": false
+ },
+ "preadjusttail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "packbeginline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "emptyfield": {
+  "type": "twohalves",
+  "code": 4,
+  "size": 8,
+  "nonzero": false
+ },
+ "nulldelimiter": {
+  "type": "fourquarters",
+  "code": 3,
+  "size": 4,
+  "nonzero": false
+ },
+ "curmlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curstyle": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "cursize": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curmu": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mlistpenalties": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curf": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curc": {
+  "type": "quarterword",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curi": {
+  "type": "fourquarters",
+  "code": 3,
+  "size": 4,
+  "nonzero": false
+ },
+ "magicoffset": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curalign": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curspan": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curloop": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "alignptr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curhead": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curtail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curprehead": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curpretail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "justbox": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "passive": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "printednode": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "passnumber": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "activewidth": {
+  "type": "scaled [9]",
+  "code": 2,
+  "size": 36,
+  "nonzero": false
+ },
+ "curactivewidth": {
+  "type": "scaled [9]",
+  "code": 2,
+  "size": 36,
+  "nonzero": false
+ },
+ "background": {
+  "type": "scaled [9]",
+  "code": 2,
+  "size": 36,
+  "nonzero": false
+ },
+ "breakwidth": {
+  "type": "scaled [9]",
+  "code": 2,
+  "size": 36,
+  "nonzero": false
+ },
+ "autobreaking": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prevp": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "firstp": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prevcharp": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "nextcharp": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "tryprevbreak": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prevlegal": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prevprevlegal": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prevautobreaking": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "prevactivewidth": {
+  "type": "scaled [9]",
+  "code": 2,
+  "size": 36,
+  "nonzero": false
+ },
+ "rejectedcurp": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "beforerejectedcurp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxstretchratio": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxshrinkratio": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curfontstep": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "noshrinkerroryet": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curp": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "secondpass": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "finalpass": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "threshold": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "minimaldemerits": {
+  "type": "integer [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "minimumdemerits": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bestplace": {
+  "type": "halfword [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "bestplline": {
+  "type": "halfword [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "discwidth": {
+  "type": "scaled [9]",
+  "code": 2,
+  "size": 36,
+  "nonzero": false
+ },
+ "easyline": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastspecialline": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "firstwidth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "secondwidth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "firstindent": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "secondindent": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bestbet": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fewestdemerits": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bestline": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "actuallooseness": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "linediff": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hc": {
+  "type": "short [66]",
+  "code": 2,
+  "size": 132,
+  "nonzero": false
+ },
+ "hn": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "ha": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hb": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hf": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hu": {
+  "type": "short [64]",
+  "code": 2,
+  "size": 128,
+  "nonzero": false
+ },
+ "hyfchar": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curlang": {
+  "type": "ASCIIcode",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "initcurlang": {
+  "type": "ASCIIcode",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "lhyf": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "rhyf": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "initlhyf": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "initrhyf": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hyfbchar": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hyf": {
+  "type": "unsigned char [65]",
+  "code": 2,
+  "size": 65,
+  "nonzero": false
+ },
+ "initlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "initlig": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "initlft": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hyphenpassed": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "curl": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curq": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "ligstack": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "ligaturepresent": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lfthit": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "rthit": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "trietrl": {
+  "type": "triepointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "trietro": {
+  "type": "triepointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "trietrc": {
+  "type": "quarterword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "hyfdistance": {
+  "type": "smallnumber [35112]",
+  "code": 2,
+  "size": 35112,
+  "nonzero": false
+ },
+ "hyfnum": {
+  "type": "smallnumber [35112]",
+  "code": 2,
+  "size": 35112,
+  "nonzero": false
+ },
+ "hyfnext": {
+  "type": "trieopcode [35112]",
+  "code": 2,
+  "size": 70224,
+  "nonzero": false
+ },
+ "opstart": {
+  "type": "integer [256]",
+  "code": 2,
+  "size": 1024,
+  "nonzero": false
+ },
+ "hyphword": {
+  "type": "strnumber *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "hyphlist": {
+  "type": "halfword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "hyphlink": {
+  "type": "hyphpointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "hyphcount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hyphnext": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "trieophash": {
+  "error": "No symbol \"trieophash\" in current context."
+ },
+ "trieused": {
+  "type": "trieopcode [256]",
+  "code": 2,
+  "size": 512,
+  "nonzero": false
+ },
+ "trieoplang": {
+  "type": "ASCIIcode [35112]",
+  "code": 2,
+  "size": 35112,
+  "nonzero": false
+ },
+ "trieopval": {
+  "type": "trieopcode [35112]",
+  "code": 2,
+  "size": 70224,
+  "nonzero": false
+ },
+ "trieopptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxopused": {
+  "type": "trieopcode",
+  "code": 8,
+  "size": 2,
+  "nonzero": false
+ },
+ "smallop": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "triec": {
+  "type": "packedASCIIcode *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "trieo": {
+  "type": "trieopcode *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "triel": {
+  "type": "triepointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "trier": {
+  "type": "triepointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "trieptr": {
+  "type": "triepointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "triehash": {
+  "type": "triepointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "trietaken": {
+  "type": "boolean *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "triemin": {
+  "type": "triepointer [256]",
+  "code": 2,
+  "size": 1024,
+  "nonzero": false
+ },
+ "triemax": {
+  "type": "triepointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "trienotready": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bestheightplusdepth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pagetail": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pagecontents": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "pagemaxdepth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bestpagebreak": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "leastpagecost": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bestsize": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pagesofar": {
+  "type": "scaled [8]",
+  "code": 2,
+  "size": 32,
+  "nonzero": false
+ },
+ "lastglue": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastpenalty": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastkern": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastnodetype": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insertpenalties": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "outputactive": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "outputcanend": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mainf": {
+  "type": "internalfontnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maini": {
+  "type": "fourquarters",
+  "code": 3,
+  "size": 4,
+  "nonzero": false
+ },
+ "mainj": {
+  "type": "fourquarters",
+  "code": 3,
+  "size": 4,
+  "nonzero": false
+ },
+ "maink": {
+  "type": "fontindex",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mainp": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mains": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "bchar": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "falsebchar": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "cancelboundary": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "insdisc": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curbox": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "aftertoken": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "longhelpseen": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "formatident": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "fmtfile": {
+  "type": "wordfile",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "readyalready": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "writefile": {
+  "type": "alphafile [16]",
+  "code": 2,
+  "size": 128,
+  "nonzero": false
+ },
+ "writeopen": {
+  "type": "boolean [18]",
+  "code": 2,
+  "size": 72,
+  "nonzero": false
+ },
+ "writeloc": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastobj": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastxform": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastximage": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastximagepages": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastximagecolordepth": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "altrule": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "warnpdfpagebox": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastannot": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastlink": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastxpos": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastypos": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfsnapxrefpos": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfsnapyrefpos": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "countdosnapy": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfretval": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curpagewidth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curpageheight": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curhoffset": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curvoffset": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfobjlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfxformlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfximagelist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "lastthread": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfthreadht": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfthreaddp": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfthreadwd": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastthreadid": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastthreadnamedid": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfthreadlevel": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfannotlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflinklist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdestlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfbeadlist": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfobjcount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfxformcount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfximagecount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfcurform": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdffirstoutline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflastoutline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfparentoutline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfxformwidth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfxformheight": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfxformdepth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfinfotoks": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfcatalogtoks": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfcatalogopenaction": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfnamestoks": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfdestnamesptr": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "destnamessize": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "destnames": {
+  "type": "destnameentry *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "pkdpi": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "imageorigx": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "imageorigy": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdftrailertoks": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdftraileridtoks": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "genfakedinterwordspace": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "genrunninglink": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdfspacefontname": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "pdflinkstack": {
+  "type": "pdflinkstackrecord [11]",
+  "code": 2,
+  "size": 132,
+  "nonzero": false
+ },
+ "pdflinkstackptr": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "isshippingpage": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "eTeXmode": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "etexp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "eofseen": {
+  "type": "boolean *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "LRptr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "LRproblems": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "curdir": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "pseudofiles": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "grpstack": {
+  "type": "savepointer *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "ifstack": {
+  "type": "halfword *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "maxregnum": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "maxreghelpline": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "saroot": {
+  "type": "halfword [7]",
+  "code": 2,
+  "size": 28,
+  "nonzero": false
+ },
+ "curptr": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "sanull": {
+  "type": "memoryword",
+  "code": 4,
+  "size": 8,
+  "nonzero": false
+ },
+ "sachain": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "salevel": {
+  "type": "quarterword",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "lastlinefill": {
+  "type": "halfword",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "dolastlinefit": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "activenodesize": {
+  "type": "smallnumber",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "fillwidth": {
+  "type": "scaled [3]",
+  "code": 2,
+  "size": 12,
+  "nonzero": false
+ },
+ "bestplshort": {
+  "type": "scaled [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "bestplglue": {
+  "type": "scaled [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "hyphstart": {
+  "type": "triepointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "hyphindex": {
+  "type": "triepointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "discptr": {
+  "type": "halfword [4]",
+  "code": 2,
+  "size": 16,
+  "nonzero": false
+ },
+ "editnamestart": {
+  "type": "poolpointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "editnamelength": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "editline": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "ipcon": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "stopatspace": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "savestrptr": {
+  "type": "strnumber",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "savepoolptr": {
+  "type": "poolpointer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "shellenabledp": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": true,
+  "hex": "01000000"
+ },
+ "restrictedshell": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": true,
+  "hex": "01000000"
+ },
+ "outputcomment": {
+  "type": "char *",
+  "code": 1,
+  "size": 8,
+  "nonzero": false
+ },
+ "k": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "l": {
+  "type": "unsigned char",
+  "code": 8,
+  "size": 1,
+  "nonzero": false
+ },
+ "debugformatfile": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "expanddepthcount": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mltexp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mltexenabledp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "accentc": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "basec": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "replacec": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "iac": {
+  "type": "fourquarters",
+  "code": 3,
+  "size": 4,
+  "nonzero": false
+ },
+ "ibc": {
+  "type": "fourquarters",
+  "code": 3,
+  "size": 4,
+  "nonzero": false
+ },
+ "baseslant": {
+  "type": "real",
+  "code": 9,
+  "size": 8,
+  "nonzero": false
+ },
+ "accentslant": {
+  "type": "real",
+  "code": 9,
+  "size": 8,
+  "nonzero": false
+ },
+ "basexheight": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "basewidth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "baseheight": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "accentwidth": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "accentheight": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "delta": {
+  "type": "scaled",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "enctexp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "enctexenabledp": {
+  "type": "boolean",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "synctexoption": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": true,
+  "hex": "ffffff7f"
+ },
+ "synctexoffset": {
+  "type": "integer",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "mem": {
+  "error": "No symbol \"mem\" in current context."
+ },
+ "eqtb": {
+  "error": "read: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'",
+  "type": "memoryword *"
+ },
+ "tfmtemp": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "texinputtype": {
+  "type": "int",
+  "code": 8,
+  "size": 4,
+  "nonzero": false
+ },
+ "kpsemaketexdiscarderrors": {
+  "error": "No symbol \"kpsemaketexdiscarderrors\" in current context."
+ },
+ "translatefilename": {
+  "error": "No symbol \"translatefilename\" in current context."
+ },
+ "versionstring": {
+  "type": "const char *",
+  "code": 1,
+  "size": 8,
+  "nonzero": true,
+  "hex": "8868ec8b10b20000",
+  "ptr": 195784136747144,
+  "cstring": " (TeX Live 2026)"
+ }
+}

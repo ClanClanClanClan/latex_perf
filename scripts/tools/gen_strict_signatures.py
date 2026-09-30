@@ -127,6 +127,10 @@ import check_strict_kernel as CK  # noqa: E402
 GENERATOR_VERSION = "7"
 DIMS_EVIDENCE = S.REPO / "corpora/strict_s0/dims_s0.json"
 MEMN = 4000
+# the first count of a context with scripts (five tokens a unit; its material
+# is past the base's high-water mark at 1,000 units already, which the gate
+# checks, and the binary gate re-runs every document)
+MEMN_SCRIPT = 1000
 MEM_MAX_COUNT = 100000   # occurrences in one memory document at most
 STRUCTURAL = CK.STRUCTURAL
 # Two control words outside the closed world (checked in main()).
@@ -905,7 +909,9 @@ def main() -> int:
     def unit_dim(x, ctx):
         return dim_of[x][1] + (2 * (dtable["script"][1] + dtable["char"]["x"][1])
                                if ctx == "DSCRIPT" else 0)
-    grade_mem([(x, ctx, MEMN) for x in sorted(signatures) for ctx in contexts(x)
+    def k1_of(ctx):
+        return MEMN_SCRIPT if ctx == "MSCRIPT" else MEMN
+    grade_mem([(x, ctx, k1_of(ctx)) for x in sorted(signatures) for ctx in contexts(x)
                if ctx not in ("DISPLAY", "DSCRIPT")]
               + [(x, ctx, k) for x in sorted(signatures) for ctx in contexts(x)
                  if ctx in ("DISPLAY", "DSCRIPT")
@@ -915,10 +921,11 @@ def main() -> int:
         for ctx in contexts(x):
             if ctx in ("DISPLAY", "DSCRIPT"):
                 continue
-            r = memory["names"][x][f"R-MEM-{ctx}@{MEMN}"]
+            r = memory["names"][x][f"R-MEM-{ctx}@{k1_of(ctx)}"]
             if not C_._ok(r):
                 continue
-            jobs += [(x, ctx, k) for k in C_.more_levels(r, M0, MEMN, MEMN, MEM_MAX_COUNT)]
+            jobs += [(x, ctx, k) for k in C_.more_levels(r, M0, k1_of(ctx), k1_of(ctx),
+                                                          MEM_MAX_COUNT)]
     grade_mem(jobs, "costs2")
     dmath = {x: dd["atoms"].get(x, 0) for x in signatures}
     for x in sorted(signatures):

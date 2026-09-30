@@ -1,0 +1,5 @@
+# Host build output must never enter the image: the builder stage runs
+# its own dune build, and a host _build (e.g. macOS objects) would only
+# bloat the context.
+_build/
+.claude/

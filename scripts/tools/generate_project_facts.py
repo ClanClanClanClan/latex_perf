@@ -184,21 +184,33 @@ def generate(repo: Path) -> dict:
             for cls in ("A", "B", "C", "D")
         }
 
-    # PR #241 (p1.3): release_state reflects git state, not a hard-coded
-    # literal. A working tree that is checked out at an annotated git tag
-    # matching the current version is "GA"; anything else is "rc". The old
-    # hard-coded "GA" meant every mid-cycle regeneration falsely advertised
-    # the project as released.
+    # release_state is the state of the release NAMED BY `version`.
+    #
+    # PR #241 (p1.3) made this "GA iff HEAD is exactly at tag v<version>", to
+    # stop the old hard-coded "GA" advertising unreleased work. But that rule
+    # can never produce "GA" in a COMMITTED file: release.sh authors the
+    # release commit BEFORE the tag exists, and nothing regenerates after the
+    # tag, so every release shipped `release_state: rc` — v27.1.63 was the
+    # GitHub "Latest" release while this file called it a release candidate.
+    #
+    # Now: "GA" iff the tag v<version> exists (the version IS released; later
+    # commits are unreleased work ON TOP of it and do not change the version
+    # field), or the release ceremony says so via LP_RELEASE_STATE (the same
+    # device as LP_RELEASE_DATE: it stamps the state of a tag about to exist;
+    # once the tag lands, the tag lookup reproduces the same value). Anything
+    # else is "rc". Unreleased-commit debt is a separate fact (ADR-011's gate),
+    # not a release state.
     import subprocess
-    try:
-        tag = subprocess.run(
-            ["git", "describe", "--tags", "--exact-match", "HEAD"],
-            capture_output=True, text=True, check=True, cwd=str(repo),
-        ).stdout.strip()
-        expected = f"v{version}" if not version.startswith("v") else version
-        release_state = "GA" if tag == expected else "rc"
-    except subprocess.CalledProcessError:
-        release_state = "rc"
+    expected = f"v{version}" if not version.startswith("v") else version
+    release_state = os.environ.get("LP_RELEASE_STATE") or None
+    if release_state not in (None, "GA", "rc"):
+        raise SystemExit(f"LP_RELEASE_STATE must be GA or rc, got {release_state!r}")
+    if release_state is None:
+        tag_exists = subprocess.run(
+            ["git", "rev-parse", "-q", "--verify", f"refs/tags/{expected}"],
+            capture_output=True, text=True, cwd=str(repo),
+        ).returncode == 0
+        release_state = "GA" if tag_exists else "rc"
 
     # OPEN-082 / C-47. This was `datetime.date.today()`, which made the file
     # non-reproducible BY CONSTRUCTION: a regenerate-and-diff gate could never

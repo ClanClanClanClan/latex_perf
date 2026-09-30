@@ -91,7 +91,7 @@ Transcript written on texput.log.
 ```
 
 exit status 1. The extracted model, given the same terminal input and texmf.cnf values, writes
-**the same terminal bytes, the same `texput.log` bytes, and exits 1** (`h2/evidence/initex/`,
+**the same terminal bytes, the same `texput.log` bytes, and exits 1** (`h2/evidence/inirun/`,
 re-checked by `python3 docs/v27/spike/h2/verify_h2.py`; the two architectures' binaries agree with
 each other too). On the way it runs `mainbody`, `initialize`, `initprim` (every primitive
 installed through the translated `primitive`), `loadpoolstrings` (1,849 pool strings through the

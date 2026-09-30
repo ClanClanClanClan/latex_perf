@@ -26,7 +26,7 @@ extraction is intractable (> 2 h compile or > 16 GB)".
 | `coq/Main.v`, `coq/Extract.v`, `coq/driver.ml` | initial state (C static storage + C main's writes), extraction to OCaml, the command-line driver |
 | `pipeline.sh`, `relink.sh` | translate, compile every Coq file under `/usr/bin/time -l`, extract, compile OCaml incrementally, link `ps.exe` |
 | `coq/build.sh` | checkpoint 1's syntax-only build |
-| `evidence/` | `manifest.json` (the translation's counts), `cmain/` (the gdb measurement), `initex/` (the model's and the binary's INITEX outputs); `verify_h2.py` re-checks them |
+| `evidence/` | `manifest.json` (the translation's counts), `cmain/` (the gdb measurement), `inirun/` (the model's and the binary's INITEX outputs); `verify_h2.py` re-checks them |
 
 Inputs: `Work/texk/web2c/pdftex.p` (tangle's output, identical in the aarch64 and x86_64 build
 trees, sha256 `d1a7d257…`) and the four `.defines` files web2c's `convert` prepends
@@ -39,7 +39,7 @@ copies). Build and run (writes only under `~/.cache/lp-spike-h1/h2/`):
 ```sh
 ./pipeline.sh            # translate, Coq, extract, OCaml -> ~/.cache/lp-spike-h1/h2/run/build/ps.exe
 cd ~/.cache/lp-spike-h1/h2/run/build
-PS_DUMPDIR=dump PS_PROCNAMES=../procnames.txt ./ps.exe 4000000000 <path to evidence/initex/env.txt> '\relax'
+PS_DUMPDIR=dump PS_PROCNAMES=../procnames.txt ./ps.exe 4000000000 <path to evidence/inirun/env.txt> '\relax'
 ```
 
 The C main measurement (`evidence/cmain/`) was taken with `dump.py`/`dump2.py` under gdb, in a

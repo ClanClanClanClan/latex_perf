@@ -45,7 +45,7 @@ modelled = set(re.findall(r"x =\? X_(\w+)", (H / "coq" / "Boundary.v").read_text
 if len(modelled) != 23 or "23 of the 189 externals" not in R or "166 of 189 externals are Stuck" not in R:
     fails.append(f"Boundary.v models {len(modelled)} externals; the report must say 23 of 189 (166 Stuck)")
 
-I = E / "initex"
+I = E / "inirun"
 ms, ml = (I / "model.stdout").read_bytes(), (I / "model.texput.log").read_bytes()
 for arch in ("arm64", "amd64"):
     rs = (I / f"ref-{arch}.stdout").read_bytes()

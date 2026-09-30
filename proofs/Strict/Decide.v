@@ -362,7 +362,14 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       body start hides up to 31,000 words of, and so under-counted up to
       1.25x), and pdfTeX's report is under the account on every graded
       document; the account is not proved to bound pdfTeX's memory, the
-      bound leaves more than 2x for that (§I.6).
+      bound leaves more than 2x for that (§I.6).  C-105: pdfTeX frees a
+      page's nodes only when the page ships, and a document can keep every
+      page open to its end ([\offinterlineskip] and paragraphs without
+      height: 89 words a paragraph against 38 charged); every cost is now
+      measured on a page that never ships (the retention regime, a new
+      glue specification between every two lines), in the contexts where a
+      name is a paragraph of its own and ends one, with the shortest units
+      that end a paragraph or a display among the structural shapes.
     - DIMENSIONS (correction C-104).  TeX stores a dimension as a signed
       32-bit count of sp and adds widths without an overflow check: a
       display of 3,277 [\quad] (32,770pt, just past 2^31 sp) wraps to a

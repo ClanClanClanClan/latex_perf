@@ -347,7 +347,7 @@ def raw_record(tex: str, g: dict, **extra) -> dict:
         raise ValueError(f"instrument {extra}: no pdfTeX statistics")
     return {"sha256": hashlib.sha256(tex.encode()).hexdigest(), **extra,
             "oracle": [g["rc"], g["pdf"], g["error"], g["line"]],
-            "used": st[0], "of": st[1]}
+            "used": st[0], "of": st[1], "stats": g.get("stats") or {}}
 
 
 # The structural shapes: a unit of model tokens, its length; text shapes are

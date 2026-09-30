@@ -66,9 +66,14 @@ not yet record which side each failure falls on. Until it does, read
 ## Reading the result honestly
 
 - Over-rejection is a rate over **graded** documents, never over N.
-- `ungraded-infra` is a paper whose build needs `shell-escape` (arXiv ran
-  `epstopdf`). Scoring those as FAILS would invent false-READYs out of
-  infrastructure.
+- `ungraded-infra` WAS a paper whose build needed `shell-escape` (arXiv ran
+  `epstopdf`), recognised from the text of its first `!` line. RETIRED
+  2026-09-30 (C-99, OPEN-118 (o)): that text is the document's to write (a
+  `\message` of a lookalike line, or a real `\PackageError`), so a FALSE-READY
+  could hide as ungraded; the pinned-image oracle runs the conversions
+  itself (restricted `\write18`). A cell is now a function of the pdflatex rc,
+  the PDF verdict and the CLI verdict only (`diff_real_roots.cell_of`). No row
+  of the three recorded samples carried the label when it was retired.
 - **Any** timeout voids the whole run (exit 2). A timeout scores as FAILS
   against a READY verdict, which manufactures a false-READY out of thin air.
 - arXiv built these under **TeX Live 2023** while the oracle is pinned to

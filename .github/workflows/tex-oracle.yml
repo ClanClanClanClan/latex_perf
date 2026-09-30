@@ -245,6 +245,20 @@ jobs:
       # pre_release_check.py's BUILD_CHECKS list, which release.sh skips via
       # --skip-build. The script's own docstring claimed it "rides the
       # pinned-image tex-oracle workflow". It did not. Now it does.
+      # C-99 (OPEN-118 review rounds 3-4): real documents that forge the
+      # oracle's evidence (their own log/PDF, through a symlink, under a case
+      # variant, a forged terminal report) must be REFUSED by the real pdfTeX
+      # run through the real supervisor, and genuine shapes (incl. \synctex=1)
+      # must still grade. The pure gate's supervisor is a fake; this is not.
+      - name: Oracle forgery kill-tests (real pdfTeX, real supervisor)
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:$PWD" -w "$PWD" \
+            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
+            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
+            "$TEX_IMAGE" python3 scripts/tools/check_oracle_forgery.py
+
       - name: Preflight the image for property (b)
         run: |
           set -euo pipefail

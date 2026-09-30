@@ -127,7 +127,7 @@ def generate() -> dict:
             td, _oracle.ENGINE_PDFLATEX,
             ["-interaction=nonstopmode", "-halt-on-error", "main.tex"],
             G.tex_vars("grading", td), 300)
-        log = (td / "main.log").read_bytes()
+        log = _oracle.job_output(td, "main.tex", ".log").read_bytes()  # pdfTeX's job name
     if to or rc != 0:
         raise SystemExit(f"gen_strict_lexical: the dump did not compile (rc {rc}, "
                          f"timeout {to})")

@@ -43,7 +43,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from diff_real_roots import run_to_fixpoint, PIN  # noqa: E402
-from _oracle import OracleError, get_oracle, oracle_tex_env  # noqa: E402
+from _oracle import OracleError, get_oracle, job_output, oracle_tex_env  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
@@ -75,7 +75,7 @@ def tex_env(td):
 
 
 def first_error(work, toplevel):
-    log = work / (pathlib.Path(toplevel).stem + ".log")
+    log = job_output(work, toplevel, ".log")  # pdfTeX's job name (C-95)
     if not log.is_file():
         return ""
     for raw in log.read_bytes().split(b"\n"):

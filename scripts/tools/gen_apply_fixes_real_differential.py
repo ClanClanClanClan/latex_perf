@@ -50,7 +50,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from diff_real_roots import (  # noqa: E402
     PIN, build_frame, oracle_record, run_to_fixpoint_full,
 )
-from _oracle import OracleError, get_oracle  # noqa: E402
+from _oracle import OracleError, get_oracle, job_output  # noqa: E402
 from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
 
 DEFAULT_OFFSET = 2000
@@ -67,7 +67,7 @@ def sha256_file(p: pathlib.Path) -> str:
 
 def first_error(work: pathlib.Path, toplevel: str) -> str:
     """The first `! ...` line pdflatex logged, or "" if none."""
-    log = work / (pathlib.Path(toplevel).stem + ".log")
+    log = job_output(work, toplevel, ".log")  # pdfTeX's job name (C-95)
     if not log.is_file():
         return ""
     for raw in log.read_bytes().split(b"\n"):

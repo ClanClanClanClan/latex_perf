@@ -45,6 +45,19 @@
 # its own .log/.pdf and exits 1, which passed every proof-of-run check here.
 # The Python side is the single definition of both checks; the container shim
 # applies them too, this covers the native backend and is defence in depth.
+# oracle_job FILE            pdfTeX's job name for FILE (doc.TEX -> doc, a.b.tex
+#                            -> a.b): _oracle.pdftex_jobname, the ONE definition
+#                            (a `${base%.tex}` strips a lowercase .tex only).
+# oracle_pdf_written DIR FILE OUT  0 iff pdfTeX itself wrote DIR/<job>.pdf,
+#                            with pages, by its own final report in the run's
+#                            log AND in OUT (the file holding the shim's stdout
+#                            for that run), which must agree (_oracle.pdf_written,
+#                            C-99): a file named .pdf is not evidence, and
+#                            neither is a report the document could forge.
+#                            Exit 1 = no PDF; INFRA_RC (125) = not a grade.
+oracle_job() { python3 "$ROOT/scripts/tools/_oracle.py" job "$1"; }
+oracle_pdf_written() { python3 "$ROOT/scripts/tools/_oracle.py" pdf-written "$1" "$2" "$3"; }
+
 oracle_vet() {
   local d="$1"; shift
   if [ $# -eq 0 ]; then

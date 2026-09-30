@@ -211,7 +211,7 @@ def grade(oracle, tex: str, timeout: int = GRADE_TIMEOUT_S) -> dict:
         td = Path(td)
         (td / "main.tex").write_text(tex, encoding="ascii")
         r = oracle.run_to_fixpoint(td, "main.tex", oracle.tex_env(td), timeout)
-        log = td / "main.log"
+        log = _oracle.job_output(td, "main.tex", ".log")  # pdfTeX's job name
         text = log.read_text(errors="replace") if log.is_file() else ""
         msg, ln = _first_error(text)
         return {"rc": r.rc, "pdf": r.pdf, "passes": r.passes,
@@ -224,7 +224,7 @@ def grade_bytes(oracle, b: bytes, timeout: int = GRADE_TIMEOUT_S) -> dict:
         td = Path(td)
         (td / "main.tex").write_bytes(b)
         r = oracle.run_to_fixpoint(td, "main.tex", oracle.tex_env(td), timeout)
-        log = td / "main.log"
+        log = _oracle.job_output(td, "main.tex", ".log")  # pdfTeX's job name
         text = log.read_text(errors="replace") if log.is_file() else ""
         msg, ln = _first_error(text)
         return {"rc": r.rc, "pdf": r.pdf, "passes": r.passes,

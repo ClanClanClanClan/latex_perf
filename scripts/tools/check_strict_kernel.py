@@ -1311,7 +1311,7 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
     dd = None
     try:
         dd = _dims_derived(Path(__file__).resolve().parents[2], sig.get("dims_derivation", {}))
-    except Exception as e:  # noqa: BLE001
+    except (OSError, KeyError, ValueError, TypeError) as e:
         out.append(f"signatures: the dimension evidence does not load ({e})")
     dt = sig.get("dims_derivation", {})
     for n, h in sorted(sig.get("signatures", {}).items()):
@@ -1422,7 +1422,7 @@ def dims_findings(repo: Path, sig: dict, asig: dict) -> list[str]:
         return ["signatures: no dimension account (C-100; regenerate)"]
     try:
         dd = _dims_derived(repo, blk)
-    except Exception as e:  # noqa: BLE001
+    except (OSError, KeyError, ValueError, TypeError) as e:
         return [f"signatures: dimension evidence: {e}"]
     if DM.table(dd) != sig["dims"]:
         out.append("signatures: the structural dimension table is not what the evidence "
@@ -1478,7 +1478,7 @@ def dims_findings(repo: Path, sig: dict, asig: dict) -> list[str]:
                 raise ValueError(f"{ev['file']}: sha256 is not the one recorded")
             m = json.loads(p.read_text())["measurement"]
             da, exc = DM.derive(m), DM.excesses(m)
-        except Exception as e:  # noqa: BLE001
+        except (OSError, KeyError, ValueError, TypeError) as e:
             return out + [f"arg signatures: dimension evidence: {e}"]
         tc, mc = set(ab.get("text_cmds", [])), set(ab.get("math_cmds", []))
         for n, h in sorted(asigs.items()):

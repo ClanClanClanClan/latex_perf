@@ -626,10 +626,13 @@ def boundary_constants(structural: dict, pairs: dict) -> dict:
     return {"H_text": math.ceil(h), "B_math": math.ceil(max(ex))}
 
 
-def class_pair_docs(levels=(8000, 16000)) -> list[tuple[str, str, dict]]:
+def class_pair_docs(levels=(5000, 10000)) -> list[tuple[str, str, dict]]:
     """(family, TeX, extra): two atoms of the given classes, repeated, in a
     display-style formula (instruments; the spacing of the display and text
-    styles is the largest)."""
+    styles is the largest). C-105: 5,000 and 10,000 units (was 8,000 and
+    16,000, whose largest reached 2,590,536 words, more than half of main
+    memory: the capacity table never saw it, because these records kept no
+    statistics; they keep them now)."""
     from itertools import product
     classes = ("mathord", "mathop", "mathbin", "mathrel", "mathopen", "mathclose",
                "mathpunct", "mathinner")

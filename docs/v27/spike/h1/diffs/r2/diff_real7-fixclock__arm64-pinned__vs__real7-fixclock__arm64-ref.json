@@ -1,0 +1,19 @@
+{
+ "set": "real7-fixclock",
+ "a": "real7-fixclock/arm64:pinned",
+ "b": "real7-fixclock/arm64:ref",
+ "documents": 7,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 6,
+  "EQUAL_MASKED": 1
+ },
+ "masks_needed": {
+  "log:workdir-path": 1,
+  "__stdout:workdir-path": 1
+ },
+ "final_rc_of_a": {
+  "rc0": 7
+ },
+ "diffs": {}
+}

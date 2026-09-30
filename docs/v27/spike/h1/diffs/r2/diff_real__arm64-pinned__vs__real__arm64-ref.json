@@ -1,0 +1,51 @@
+{
+ "set": "real",
+ "a": "real/arm64:pinned",
+ "b": "real/arm64:ref",
+ "documents": 200,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 130,
+  "EQUAL_MASKED": 63,
+  "DIFF": 7
+ },
+ "masks_needed": {
+  "log:banner-date": 61,
+  "log:pdffilemoddate-line": 4,
+  "__stdout:workdir-path": 9,
+  "log:workdir-path": 7,
+  "log:output-size": 1,
+  "__stdout:output-size": 1,
+  "gz:gunzip": 1,
+  "gz:workdir-path": 1
+ },
+ "final_rc_of_a": {
+  "rc0": 189,
+  "rc1": 11
+ },
+ "diffs": {
+  "2506.19051v1": [
+   "p1 main.pdf: line 28814: b'      <xmpMM:InstanceID>uuid:a82bb67f-dc4c-4e41-be4c-efd75f75fd18</xmpMM:InstanceID>' | b'      <xmpMM:InstanceID>uuid:333e4182-675f-47f2-ac90-0a3ea3954ce4</xmpMM:InstanceID>'"
+  ],
+  "2507.07635v1": [
+   "p1 main.pdf: line 9: b'x\\xda\\xa5XI\\xb3\\xdb\\xc6\\x11\\xbe\\xbf_\\xc1#X\\xf5\\x88\\x00\\x18\\xac\\xce%\\x92\"%\\x96\\x97rb&>\\xc8>\\xe0\\x81#r\"\\x10\\xa0\\xb0\\xe8\\x89\\xf9\\xf5\\xf9z\\x01\\x08Rt\\xaa\\x12\\x95J\\x0f3\\xdd===\\xbd7_n\\x1f\\xfe\\xf0&\\x0eWa\\xe0\\x17A\\x11\\xae\\xb6\\xefW&\\xf1\\xe3$_eE\\xe1GQ\\xbe\\xda\\xeeV\\xef\\xbc\\x9f\\xedi\\xb0\\xc7u\\x94{O\\xeb\\r\\xfe\\xdan\\xbd1\\xc6x&x\\xa4E\\xecE' | b'x\\xda\\xa5XI\\xb3\\xdb\\xc6\\x11\\xbe\\xbf_\\xc1#X\\xf5\\x88\\x00\\x18\\xac\\xce%\\x92\"%\\x96\\x97rb&>\\xc8>\\xe0\\x81#r\"\\x10\\xa0\\xb0\\xe8\\x89\\xf9\\xf5\\xf9z\\x01\\x08Rt\\xaa\\x12\\x95J\\x0f3\\xdd===\\xbd7_n\\x1f\\xfe\\xf0&\\x0eWa\\xe0\\x17A\\x11\\xae\\xb6\\xefW&\\xf1\\xe3$_eE\\xe1GQ\\xbe\\xda\\xeeV\\xef\\xbc\\x9f\\xedi\\xb0\\xc7u\\x94{O\\xeb\\r\\xfe\\xdan\\xbd1\\xc6x&x\\xa4E\\xecE'"
+  ],
+  "2507.08137v1": [
+   "p1 main.pdf: at byte 31981968 (file line 643), window line 5: b'      <xmpMM:InstanceID>uuid:1d182b6c-4139-4590-85fd-7f200000ae4c</xmpMM:InstanceID>' | b'      <xmpMM:InstanceID>uuid:333e4182-675f-47f2-ac90-0a3ea3954ce4</xmpMM:InstanceID>'",
+   "p2 main.pdf: at byte 31992076 (file line 641), window line 5: b'      <xmpMM:InstanceID>uuid:a82bb67f-dc4c-4e41-be4c-efd75f75fd18</xmpMM:InstanceID>' | b'      <xmpMM:InstanceID>uuid:333e4182-675f-47f2-ac90-0a3ea3954ce4</xmpMM:InstanceID>'"
+  ],
+  "2507.08525v1": [
+   "p2 augmip.log: line 969: b' 909300 words of memory out of 5000000' | b' 909301 words of memory out of 5000000'"
+  ],
+  "2507.09410v1": [
+   "p1 pearc25.pdf: at byte 30567572 (file line 547), window line 5: b'      <xmpMM:InstanceID>uuid:b1395f75-fd1d-475f-ba39-59b182bb6c41</xmpMM:InstanceID>' | b'      <xmpMM:InstanceID>uuid:4c4cea88-8820-4000-a88d-c418262bbb1d</xmpMM:InstanceID>'",
+   "p2 pearc25.pdf: at byte 30563916 (file line 548), window line 5: b'      <xmpMM:InstanceID>uuid:b1395f75-fd1d-475f-ba39-59b182bb6c41</xmpMM:InstanceID>' | b'      <xmpMM:InstanceID>uuid:4c4cea88-8820-4000-a88d-c418262bbb1d</xmpMM:InstanceID>'"
+  ],
+  "2507.09928v1": [
+   "p2 main-neuirps25.log: line 1528: b' 1071431 words of memory out of 5000000' | b' 1071432 words of memory out of 5000000'"
+  ],
+  "2507.10072v1": [
+   "p2 main.pdf: line 27887: b'      <xmpMM:InstanceID>uuid:46c9541d-7aea-4826-8413-3ea8262b1390</xmpMM:InstanceID>' | b'      <xmpMM:InstanceID>uuid:d1dcef20-05fd-41d7-b267-595f759b626c</xmpMM:InstanceID>'"
+  ]
+ }
+}

@@ -1,0 +1,104 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdftex 2026.8.30)  30 AUG 2026 07:51
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**nh-intmin.tex
+(./nh-intmin.tex [c1=-2147483648] [div-1=-2147483648] [divself=1]
+[dmul=--32768.0pt] [ddiv=0.0pt]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.7 \message{[ne1=\the\numexpr\count1/-1\relax
+                                              ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[ne1=0]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.8 \message{[ne2=\the\numexpr\count1*-1/1\relax
+                                                ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[ne2=0]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.9 \message{[ne3=\the\numexpr\count1*3/7\relax
+                                               ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[ne3=0]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.10 \message{[ne4=\the\numexpr 7*3/\count1\relax
+                                                 ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[ne4=0]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.11 ...age{[de1=\the\dimexpr 1pt*\count1/-1\relax
+                                                  ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[de1=0.0pt]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.12 ...age{[de2=\the\dimexpr 1sp*-1/\count1\relax
+                                                  ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[de2=0.0pt] [rom=x] [num=-2147483648] [wrap=2147483647] [div2=-1073741824]
+[div7=-306783378] [dd2=0.0pt]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.19 ...age{[ne5=\the\numexpr\count1/\count1\relax
+                                                  ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[ne5=0]
+! Arithmetic overflow.
+<recently read> \relax 
+                       
+l.20 \message{[ne6=\the\numexpr\count1/2\relax
+                                              ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[ne6=0]
+! Arithmetic overflow.
+l.21 \message{[ne7=\the\numexpr(\count1)\relax
+                                              ]}
+I can't evaluate this expression,
+since the result is out of range.
+
+[ne7=0]
+! Arithmetic overflow.
+l.22 \count8=\count1 \multiply\count8 by -1 
+                                            \message{[mul-1=\the\count8]}
+I can't carry out that multiplication or division,
+since the result is out of range.
+
+[mul-1=-2147483648] [1.-2147483648.-2147483648.1.0.2147483647.-1073741824.-3067
+83378.-2147483648{/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdf
+tex.map}] )</usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/c
+mr10.pfb>
+Output written on nh-intmin.pdf (1 page, 8360 bytes).
+PDF statistics:
+ 12 PDF objects out of 1000 (max. 8388607)
+ 7 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

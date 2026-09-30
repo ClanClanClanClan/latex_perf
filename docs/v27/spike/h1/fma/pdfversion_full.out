@@ -1,0 +1,5 @@
+self-check block (major 1..20000, minor -1000..-1): 100 differing
+pairs 21474836470, differing 0; control (major=1, minor=-10) differs: yes
+RC=0
+python3 transcription (math.fma) over the same self-check block: 100 differing
+built: cc -O2 -ffp-contract=off (Apple clang, arm64 host), 2026-09-30

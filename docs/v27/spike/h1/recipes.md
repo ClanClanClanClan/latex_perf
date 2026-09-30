@@ -435,3 +435,77 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+## archsem/probes/run.sh (in ~/.cache/lp-spike-h1/, review round 2)
+
+sha256 `bbce7ca0b479de3b141e1f6cfa669c8b1c36c09b4949bbed207263619381114d`
+
+```sh
+cd /w
+for t in *.tex; do f=${t%.tex}
+  H=-halt-on-error; case $f in nh-*) H=;; esac; rm -rf o-$f; mkdir o-$f; cp $t *.jpg *.pdf o-$f/ 2>/dev/null
+  (cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex $H -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")
+  grep -ohE '^!.*|\[[a-zA-Z0-9=-]+=[^]]*\]|too (large|small)[^.]*|number too big|invalid[^.]*' o-$f/term.txt | tr '\n' ' ' | cut -c1-500 | sed 's/^/   /'; echo
+  [ -f o-$f/$f.pdf ] && grep -aoE '/Rect \[[^]]*\]' o-$f/$f.pdf | tr '\n' ' ' | sed 's/^/   /'; echo
+done
+```
+
+## archsem/probes/run2.sh (in ~/.cache/lp-spike-h1/, review round 2)
+
+sha256 `8f374495aaab30d70a80606b023abcd1a6ee0b1dd265a50b8eeca5246cd82b3d`
+
+```sh
+cd /w
+for t in slant*.tex; do f=${t%.tex}
+  rm -rf o-$f; mkdir o-$f; cp $t o-$f/
+  (cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex -halt-on-error -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")
+  grep -ohiE 'warning[^)]*|^!.*' o-$f/$f.log | tr '\n' ' ' | cut -c1-300 | sed 's/^/   /'; echo
+  [ -f o-$f/$f.pdf ] && sha256sum o-$f/$f.pdf | cut -c1-16 | sed 's/^/   pdf sha256 /'
+done
+```
+
+## archsem/dis.sh (in ~/.cache/lp-spike-h1/, review round 2)
+
+sha256 `dc78cffe2622c8f9d2a4289076a92b12a28f5c1fbd4f26ad36d3a4a34d0d3884`
+
+```sh
+set -e
+objdump -d -l --no-show-raw-insn /w/b-arm64/repo/Work/texk/web2c/pdftex > /o/arm64.dis
+objdump -d -l --no-show-raw-insn /w/b-amd64/repo/Work/texk/web2c/pdftex > /o/amd64.dis
+objdump -d --no-show-raw-insn -M intel /w/b-amd64/repo/Work/texk/web2c/pdftex > /o/amd64.intel.dis
+echo done
+```
+
+## archsem/dis_sc.sh (in ~/.cache/lp-spike-h1/, review round 2)
+
+sha256 `7256d858b9b8ac3f63d52e3b87c4b1ea4811348f3f7ee10bf049e300c1048253`
+
+```sh
+objdump -d --no-show-raw-insn /w/b-arm64-sc/repo/Work/texk/web2c/pdftex > /o/arm64-sc.dis
+objdump -d --no-show-raw-insn /w/b-arm64/repo/Work/texk/web2c/pdftex > /o/arm64-base.dis
+```
+
+## archsem/dis_wv.sh (in ~/.cache/lp-spike-h1/, review round 2)
+
+sha256 `288b967e066a80067cc8a6dac06cbac91ad21771ce3370b2184d78ff6a621496`
+
+```sh
+objdump -d --no-show-raw-insn /w/b-arm64-wrapv/repo/Work/texk/web2c/pdftex > /o/arm64-wrapv.dis
+```
+
+## archsem/Dockerfile (in ~/.cache/lp-spike-h1/, review round 2)
+
+sha256 `c712d2828cfbf74b5109709e1d471b1f33e15cb7348a269861b4bf6d5db6524c`
+
+```sh
+FROM arm64v8/debian:bullseye
+RUN apt-get update -qq && apt-get install -y -qq binutils-multiarch binutils >/dev/null && rm -rf /var/lib/apt/lists/*
+```
+
+## the probe invocation (review round 2)
+
+```sh
+for a in arm64 amd64; do docker run --rm --platform linux/$a -v $PWD/r-$a:/w texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b sh -c 'uname -m; sh /w/run.sh' > r-$a.out 2>&1; done
+# run2.sh likewise for the slant*.tex documents (t-$a.out); the variant builds:
+docker run --rm --platform linux/arm64 -e SNAP=20260223T160000Z -v $W/b-arm64-sc:/work -v $W/archsem/buildpdftex-signedchar.sh:/b.sh:ro arm64v8/debian:bullseye sh -l /b.sh aarch64-linux debian
+```

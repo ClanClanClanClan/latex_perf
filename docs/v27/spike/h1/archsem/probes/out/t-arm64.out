@@ -1,0 +1,12 @@
+aarch64
+slantctl rc=0
+
+   pdf sha256 75fc6b0220ce1ddc
+slanthuge rc=0
+   warning: pdftex: invalid entry for `cmr10': SlantFont value too big: 2.1 
+
+   pdf sha256 5d4f5d248c00a359
+slantnan rc=0
+
+   pdf sha256 a6c978eec5a898d1
+RC=0

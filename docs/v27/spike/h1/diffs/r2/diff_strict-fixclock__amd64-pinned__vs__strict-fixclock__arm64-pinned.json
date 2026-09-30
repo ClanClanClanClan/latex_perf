@@ -1,0 +1,16 @@
+{
+ "set": "strict-fixclock",
+ "a": "strict-fixclock/amd64:pinned",
+ "b": "strict-fixclock/arm64:pinned",
+ "documents": 53,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 53
+ },
+ "masks_needed": {},
+ "final_rc_of_a": {
+  "rc0": 16,
+  "rc1": 37
+ },
+ "diffs": {}
+}

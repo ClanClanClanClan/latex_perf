@@ -1,0 +1,40 @@
+{
+ "set": "real-fixclock",
+ "a": "real-fixclock/amd64.after-mutation:pinned",
+ "b": "real-fixclock/arm64:pinned",
+ "documents": 48,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 43,
+  "EQUAL_MASKED": 3,
+  "DIFF": 1,
+  "DIFF_STDOUT_ONLY": 1
+ },
+ "masks_needed": {
+  "__stdout:output-size": 1,
+  "pdf:pdf-canonical-subset-tag": 1,
+  "log:pdffilemoddate-line": 1,
+  "log:output-size": 1,
+  "log:workdir-path": 2,
+  "__stdout:workdir-path": 2
+ },
+ "final_rc_of_a": {
+  "rc0": 46,
+  "rc1": 1,
+  "timeout": 1
+ },
+ "diffs": {
+  "2507.04521v1": [
+   "passes 1 vs 2",
+   "p1 rc 124/True vs 0/False",
+   "p1 Shulga_arx_ver.aux: line 1: b'' | b'\\\\relax '",
+   "p1 Shulga_arx_ver.log: line 1114: b'File: tikz' | b'File: tikzlibraryfadings.code.tex 2026-08-01 v3.1.12 (3.1.12)'",
+   "p1 Shulga_arx_ver.out: line 1: b'' | b'\\\\BOOKMARK [1][-]{section.1}{\\\\376\\\\377\\\\000I\\\\000n\\\\000t\\\\000r\\\\000o\\\\000d\\\\000u\\\\000c\\\\000t\\\\000i\\\\000o\\\\000n}{}% 1'",
+   "p1 Shulga_arx_ver.pdf: length 201 vs 2219 lines",
+   "p1 __stdout: line 299: b'kpathsea: Running mktextfm larm2074' | b''"
+  ],
+  "2507.07609v1": [
+   "p1 __stdout: line 916: b'mf: /usr/local/texlive/2026/texmf-dist/fonts/source/lh/lh-t2a/lati0600.mf: successfully generated.' | b'mf: <WORKDIR>/tv/fonts/source/lh/lh-t2a/lati0600.mf: successfully generated.'"
+  ]
+ }
+}

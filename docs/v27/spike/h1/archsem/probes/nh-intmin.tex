@@ -1,0 +1,23 @@
+\catcode`\{=1 \catcode`\}=2 \pdfoutput=1
+\count1=-2147483647 \advance\count1 by -1 \message{[c1=\the\count1]}
+\count2=\count1 \divide\count2 by -1 \message{[div-1=\the\count2]}
+\count3=\count1 \divide\count3 by \count1 \message{[divself=\the\count3]}
+\dimen0=1sp \multiply\dimen0 by \count1 \message{[dmul=\the\dimen0]}
+\dimen1=1pt \divide\dimen1 by \count1 \message{[ddiv=\the\dimen1]}
+\message{[ne1=\the\numexpr\count1/-1\relax]}
+\message{[ne2=\the\numexpr\count1*-1/1\relax]}
+\message{[ne3=\the\numexpr\count1*3/7\relax]}
+\message{[ne4=\the\numexpr 7*3/\count1\relax]}
+\message{[de1=\the\dimexpr 1pt*\count1/-1\relax]}
+\message{[de2=\the\dimexpr 1sp*-1/\count1\relax]}
+\message{[rom=\romannumeral\count1 x]}
+\message{[num=\number\count1]}
+\count5=-2147483647 \advance\count5 by -2 \message{[wrap=\the\count5]}
+\count6=\count1 \divide\count6 by 2 \message{[div2=\the\count6]}
+\count7=\count1 \divide\count7 by 7 \message{[div7=\the\count7]}
+\dimen2=16383.99998pt \divide\dimen2 by \count1 \message{[dd2=\the\dimen2]}
+\message{[ne5=\the\numexpr\count1/\count1\relax]}
+\message{[ne6=\the\numexpr\count1/2\relax]}
+\message{[ne7=\the\numexpr(\count1)\relax]}
+\count8=\count1 \multiply\count8 by -1 \message{[mul-1=\the\count8]}
+\shipout\hbox{x}\end

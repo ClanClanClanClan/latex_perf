@@ -89,18 +89,19 @@ What this decides, and what it does not:
     document using only proven summaries.
   - *Boundary.* Anything the abstract interpreter cannot summarise soundly, and any combination
     it cannot cover, is **outside the tier**, never guessed.
-- **D3. The foundation spike is funded**: ADR-014 draft §9, the plan the owner approved with "Run
-  steps H.1–H.6 with their kill criteria". The pass criteria, kill criteria and fallbacks below
-  are the draft's, verbatim (work summarised):
+- **D3. The foundation spike is funded**: ADR-014 draft §9, "(H) Feasibility spike (≈ 2 weeks of
+  agent work)", the plan the owner approved with "Run steps H.1–H.6 with their kill criteria" (the
+  question put was "Fund the 2-week foundation spike", 07:40:16Z). The days, pass criteria, kill
+  criteria and fallbacks below are the draft's, verbatim; the work column is summarised:
 
-  | step | work | pass criterion | kills the approach if (fallback) |
-  |---|---|---|---|
-  | H.1 | identify the exact source revision of the pinned binary; build it; confirm `INTEGER_TYPE`, `GLUERATIO_TYPE`, `-ffp-contract` | the reference build's logs and `.aux` equal the pinned binary's on 200 corpus documents (PDF modulo `/ID`) | the revision cannot be identified, **and** no revision reproduces the logs. Fallback: pin the reference build as the new oracle (an ADR-012 decision-7 change) |
-  | H.2 | translator for the Pascal subset → Coq AST; `PS` as a fuelled interpreter; closure compiler; extraction | 100 % of procedures translated; Coq accepts the term; the extracted binary runs INITEX to the `*` prompt | the Coq term or its extraction is intractable (> 2 h compile or > 16 GB). Fallback: split the program into per-part modules, or emit a shallow embedding with a generated reflection lemma |
-  | H.3 | load the real `pdflatex.fmt` in the model; round-trip `store_fmt_file`; meanings of the kernel names; locate F7's byte difference | round trip byte-exact; meanings byte-identical to the contract generator's; F7 explained | the load cannot be made exact within the spike |
-  | H.4 | reproduce all L_S0 evidence, ADR-013's ≈ 50 measured documents and the owner's composition cases in the model | verdict, message and `l.N` agree with the recorded oracle grades on 100 %, or every disagreement is traced to a stubbed external | disagreements traced to the *translated* code keep appearing after 3 fixes |
-  | H.5 | speed: the one-line document, the 12-page synthetic paper, a 40-page corpus paper; cold and from a preamble snapshot | ≤ 60× pdfTeX per pass | > 200× with no profile-guided fix in sight. Fallback: a verified-refinement fast interpreter becomes its own project |
-  | H.6 | co-simulation: a digest change file in the reference build; step-by-step comparison on 20 documents | the first divergence (if any) is localised to a unit automatically | the digest cannot be made to match on a *correct* model (hidden C state not in the translated globals) |
+  | step | days | work | pass criterion | kills the approach if (fallback) |
+  |---|---|---|---|---|
+  | H.1 | 1–2 | identify the exact source revision of the pinned binary; build it; confirm `INTEGER_TYPE`, `GLUERATIO_TYPE`, `-ffp-contract` | the reference build's logs and `.aux` equal the pinned binary's on 200 corpus documents (PDF modulo `/ID`) | the revision cannot be identified, **and** no revision reproduces the logs. Fallback: pin the reference build as the new oracle (an ADR-012 decision-7 change) |
+  | H.2 | 3–6 | translator for the Pascal subset → Coq AST; `PS` as a fuelled interpreter; closure compiler; extraction | 100 % of procedures translated; Coq accepts the term; the extracted binary runs INITEX to the `*` prompt | the Coq term or its extraction is intractable (> 2 h compile or > 16 GB). Fallback: split the program into per-part modules, or emit a shallow embedding with a generated reflection lemma |
+  | H.3 | 7–8 | load the real `pdflatex.fmt` in the model; round-trip `store_fmt_file`; meanings of the kernel names; locate F7's byte difference | round trip byte-exact; meanings byte-identical to the contract generator's; F7 explained | the load cannot be made exact within the spike |
+  | H.4 | 9–11 | reproduce all L_S0 evidence, ADR-013's ≈ 50 measured documents and the owner's composition cases in the model | verdict, message and `l.N` agree with the recorded oracle grades on 100 %, or every disagreement is traced to a stubbed external | disagreements traced to the *translated* code keep appearing after 3 fixes: the translator or `PS` is wrong in a way that is not converging |
+  | H.5 | 12 | speed: the one-line document, the 12-page synthetic paper, a 40-page corpus paper; cold and from a preamble snapshot | ≤ 60× pdfTeX per pass | > 200× with no profile-guided fix in sight. Fallback: a verified-refinement fast interpreter becomes its own project |
+  | H.6 | 13–14 | co-simulation: a digest change file in the reference build; step-by-step comparison on 20 documents | the first divergence (if any) is localised to a unit automatically | the digest cannot be made to match on a *correct* model (hidden C state not in the translated globals) |
 
   The spike reports before any further architecture commitment.
 - **D4. The per-name signature track is stopped** (answer 1). As a consequence (derived, not a
@@ -144,18 +145,37 @@ What this decides, and what it does not:
   the 200 real papers differ between the two builds (2 logs, 5 PDFs beyond `/ID`). All 7 differ
   through the clock; the two binaries are the same bytes. With `FORCE_SOURCE_DATE` and one
   `SOURCE_DATE_EPOCH`, 200 of 200 agree. Treating the clock as an input is O-5, still open above.
-- **The architectures do differ, in the PDF [M].** The aarch64 binary fuses floating-point
-  multiply-adds (FMA) that the x86_64 one does not.
-  - At `\pdfsetmatrix`'s matrix arithmetic (every graphicx `\rotatebox`/`\scalebox`) the products
-    are inexact. A review-round-1 document with 400,000 rotated links gives PDFs that differ in
-    one `/Rect` byte, with rc, log and `.aux` identical.
-  - Every fused site outside xpdf that reaches TeX state is exact on its whole input range or
-    under a stated bound, or is unreachable in `pdflatex.fmt`. The exception is xpdf's
-    real-number parser for included PDFs, which is open.
-  - On the corpus (200 real papers, 489 evidence documents, 40 traced documents) no
-    difference was observed.
-  - So H.2's semantics must model fused multiply-add per architecture at the matrix sites (no
-    exactness lemma exists there), or not claim the PDF output there. Report §5.
+- **The architectures differ in the compile VERDICT, not only in the PDF [M]** (corrected after
+  spike review round 2; round 1's record said "in the PDF only", C-103). The same C source means
+  different things on the two architectures wherever C leaves the result undefined or
+  implementation-defined and the two ISAs or compilers answer differently. Five such classes were
+  enumerated from the binaries (report §5.4). Adversarial documents run in the pinned image on
+  both architectures show three of them changing rc, log or TeX state, one changing the PDF, and
+  one with no difference found:
+  - *integer division*: x86_64 traps (SIGFPE) where aarch64 returns 0. `\pdfsnapy 0pt`, a
+    pdfTeX primitive with no external file, exits 136 on x86_64 and 0 on aarch64; an Exif
+    resolution of INT_MIN/-1 in a JPEG exits 136 and 1;
+  - *float-to-int conversion out of range*: x86_64 gives INT_MIN where aarch64 saturates. A valid
+    40000×8-pixel JPEG without a resolution is `\wd` = −32768pt with rc 0 on x86_64 and
+    "Huge page cannot be shipped out", rc 1, on aarch64; an Exif resolution of 2·10⁹/cm exits 1
+    and 0; a map line's huge `SlantFont` changes the log and the PDF, a NaN one the PDF;
+  - *signed overflow exploited differently by the two compilers* (aarch64 gcc 10, x86_64
+    gcc 11): `\divide` of INT_MIN by INT_MIN, reachable in plain TeX because `\advance` does not
+    check integer overflow, gives −1 on aarch64 and 1 on x86_64;
+  - *fused multiply-add* (round 1): one `/Rect` byte in a 400,000-link document;
+  - *plain `char` signedness*: 317 functions change under `-fsigned-char` (of TeX's tangled
+    procedures only four, all in C string handling: file names, the command line, the pool); every TeX-visible
+    string primitive among them, swept over all 255 bytes, agrees.
+  - On the corpus (200 real papers, 489 evidence documents, 40 traced documents) no difference was
+    observed.
+  So `FaithfulEngine` is per architecture in substance, not as a formality: the proven tier's
+  verdict for a document is a verdict *for one architecture*. What H.2 must do follows per class,
+  not per site (report §5.4): the undefined-behaviour members (division by zero or INT_MIN/−1,
+  out-of-range conversion, signed overflow) are **Stuck** in `PS`, which is Pascal's own reading
+  and needs no per-architecture model; the implementation-defined ones (`char` signedness,
+  contraction) are parameters of `FaithfulEngine` taken from that architecture's binary, or the
+  affected output is not claimed. Of the 316 division and conversion sites, 196 are open (152 in
+  libpng and xpdf); they are H.2's C-boundary work list. All x86_64 runs were emulated.
 - **All amd64 evidence is emulated** (qemu-user on an arm64 host): the rebuild, the behaviour runs
   and the format run. A confirmation on a native amd64 host, the CI runner of `tex-oracle.yml`, is
   open (OPEN-123).

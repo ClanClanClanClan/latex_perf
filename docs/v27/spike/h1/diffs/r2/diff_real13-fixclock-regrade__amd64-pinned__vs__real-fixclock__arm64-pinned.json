@@ -1,0 +1,30 @@
+{
+ "set": "real13-fixclock-regrade",
+ "a": "real13-fixclock-regrade/amd64:pinned",
+ "b": "real-fixclock/arm64:pinned",
+ "documents": 13,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 11,
+  "DIFF": 2
+ },
+ "masks_needed": {},
+ "final_rc_of_a": {
+  "rc0": 12,
+  "rc1": 1
+ },
+ "diffs": {
+  "2507.10072v1": [
+   "p1 main.log: line 3298: b' <<WORKDIR>/tv/fon' | b' <<WORKDIR>/tv/fonts/'",
+   "p1 __stdout: line 943: b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm9.60' | b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm9.600pk'",
+   "p2 main.log: line 2764: b' <<WORKDIR>/tv/fon' | b' <<WORKDIR>/tv/fonts/'",
+   "p2 __stdout: line 412: b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm9.60' | b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm9.600pk'"
+  ],
+  "2507.10356v1": [
+   "p1 manuscript.log: line 924: b' <<WORKDIR>/tv/fonts' | b' <<WORKDIR>/tv/fonts/pk'",
+   "p1 __stdout: line 460: b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm10.6' | b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm10.600p'",
+   "p2 manuscript.log: line 619: b' <<WORKDIR>/tv/fonts' | b' <<WORKDIR>/tv/fonts/pk'",
+   "p2 __stdout: line 154: b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm10.6' | b'(see the transcript file for additional information) <<WORKDIR>/tv/fonts/pk/ljfour/public/bbm/bbm10.600p'"
+  ]
+ }
+}

@@ -67,8 +67,12 @@ SEGV = re.compile(rb"^Segmentation fault \(core dumped\)\n", re.M)
 #    6-letter tag that differs from run to run; the tag sits inside Flate
 #    streams, and pdfTeX copies the converted PDF into the document's PDF, so
 #    the document's compressed streams, their /Length and the xref differ.
-#    Mask "pdf-canonical-subset-tag": every Flate stream decompressed, /Length
-#    values, the xref stream's BODY, classic xref entries and startxref (byte
+#    Mask "pdf-canonical-subset-tag": every Flate stream decompressed (a
+#    stream with bytes after its zlib end, or a truncated one, keeps those
+#    facts in the canonical form, so they still compare), /Length values
+#    masked, the xref stream DECODED row by row with only the byte offset of a
+#    type-1 entry dropped (entry types, generations, object-stream numbers and
+#    indices are compared), classic xref entries' offsets and startxref (byte
 #    offsets, which follow the compressed lengths) dropped, and ONLY the
 #    /XXXXXX+ subset tags that occur in that side's own Ghostscript
 #    intermediates (files named *-eps-converted-to.pdf written in the same run)
@@ -76,7 +80,11 @@ SEGV = re.compile(rb"^Segmentation fault \(core dumped\)\n", re.M)
 #    compared (review round 1 of the spike: the first version replaced every
 #    tag and dropped /Size, /W and /Index, which would also have absorbed a
 #    pdfTeX tag or object-count difference). Used only when the raw and the
-#    id/date-masked bytes differ.
+#    id/date-masked bytes differ AND at least one side wrote a Ghostscript
+#    intermediate: the mask's justification is Ghostscript, so without one it
+#    is never engaged (review round 2: it had engaged on any PDF difference and
+#    absorbed a zlib-level change, an xref entry-type change and trailing bytes
+#    after a zlib end; kill-tests 6-11 of h1diff_selftest.py).
 # The PDF's byte size printed by pdfTeX ("Output written on X (N pages, M
 # bytes).") follows the compressed sizes; the PDF itself is compared on its
 # own, so the size is masked when needed (mask "output-size"); pages are kept.
@@ -97,6 +105,48 @@ def subset_tags(b: bytes) -> set:
     return {m.group(1) for m in TAG.finditer(pdf_canonical(b, frozenset()))}
 
 
+def xref_rows(head: bytes, data: bytes) -> bytes:
+    """Decode an XRef stream's rows (/W widths, optional PNG predictor with
+    /Columns), keeping every field except the byte offset of a type-1 entry.
+    Anything it cannot decode exactly is kept RAW, so it still compares."""
+    w = re.search(rb"/W\s*\[\s*(\d+)\s+(\d+)\s+(\d+)\s*\]", head)
+    if not w:
+        return b"<xref-undecoded>" + data
+    ws = [int(x) for x in w.groups()]
+    n = sum(ws)
+    pred = re.search(rb"/Predictor\s+(\d+)", head)
+    if pred and int(pred.group(1)) >= 10:
+        cols = re.search(rb"/Columns\s+(\d+)", head)
+        if not cols or int(cols.group(1)) != n or len(data) % (n + 1):
+            return b"<xref-undecoded>" + data
+        rows, prev = [], bytes(n)
+        for i in range(0, len(data), n + 1):
+            f, r = data[i], bytearray(data[i + 1:i + 1 + n])
+            if f == 2:
+                r = bytearray((r[k] + prev[k]) & 0xFF for k in range(n))
+            elif f != 0:
+                return b"<xref-undecoded>" + data
+            rows.append(bytes(r))
+            prev = bytes(r)
+    elif pred and int(pred.group(1)) != 1:
+        return b"<xref-undecoded>" + data
+    else:
+        if n == 0 or len(data) % n:
+            return b"<xref-undecoded>" + data
+        rows = [data[i:i + n] for i in range(0, len(data), n)]
+    out = []
+    for r in rows:
+        f = []
+        k = 0
+        for wd in ws:
+            f.append(int.from_bytes(r[k:k + wd], "big") if wd else None)
+            k += wd
+        t = 1 if ws[0] == 0 else f[0]
+        out.append(b"%d %s %d" % (t, b"<off>" if t == 1 else str(f[1]).encode(),
+                                  -1 if f[2] is None else f[2]))
+    return b"<xref-rows>" + b";".join(out)
+
+
 def pdf_canonical(b: bytes, gs_tags=frozenset()) -> bytes:
     import zlib
     out = []
@@ -110,11 +160,21 @@ def pdf_canonical(b: bytes, gs_tags=frozenset()) -> bytes:
         head = b[pos:m.start()]
         body = b[m.end():end]
         try:
-            body = zlib.decompressobj().decompress(body)
+            d = zlib.decompressobj()
+            plain = d.decompress(body)
+            tail = d.unused_data
+            if tail in (b"\n", b"\r\n", b"\r"):
+                tail = b""          # the EOL before `endstream`
+            body = plain
+            if not d.eof:
+                body += b"<zlib-truncated>"
+            if tail:
+                body += b"<zlib-tail>" + tail
         except Exception:
             pass
         if b"/Type/XRef" in head[-400:] or b"/Type /XRef" in head[-400:]:
-            body = b"<xref>"
+            dh = head[-400:]
+            body = xref_rows(dh, body) if b"<zlib-" not in body else body
         out.append(head)
         out.append(b"stream\n" + body + b"\nendstream")
         pos = end + len(b"endstream")
@@ -123,7 +183,7 @@ def pdf_canonical(b: bytes, gs_tags=frozenset()) -> bytes:
     c = re.sub(rb"/Length \d+", b"/Length <n>", c)
     c = re.sub(rb"startxref\s+\d+", b"startxref <n>", c)
     c = TAG.sub(lambda m: b"/<GS-SUBSET>+" if m.group(1) in gs_tags else m.group(0), c)
-    c = re.sub(rb"\n\d{10} \d{5} [nf] ?", b"\n<xref-entry>", c)
+    c = re.sub(rb"\n\d{10} (\d{5} [nf]) ?", rb"\n<off> \1", c)
     return c
 
 
@@ -167,7 +227,7 @@ def needed_masks(name, bx, by, rxa, rxb, ga=frozenset(), gb=frozenset()) -> tupl
     on = frozenset()
     mx, hx = mask(name, bx, rxa)
     my, hy = mask(name, by, rxb)
-    if mx != my and name.endswith(".pdf"):
+    if mx != my and name.endswith(".pdf") and (ga or gb):
         on = frozenset({"pdf-canonical-subset-tag"})
         mx, hx = mask(name, bx, rxa, on=on, gs_tags=ga)
         my, hy = mask(name, by, rxb, on=on, gs_tags=gb)

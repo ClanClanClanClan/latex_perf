@@ -1,0 +1,6 @@
+aarch64
+nh-intmin rc=1
+   [c1=-2147483648] [div-1=-2147483648] [divself=-1] [dmul=--32768.0pt] [ddiv=0.0pt] ! Arithmetic overflow. [ne1=0] ! Arithmetic overflow. [ne2=0] ! Arithmetic overflow. [ne3=0] ! Arithmetic overflow. [ne4=0] ! Arithmetic overflow. [de1=0.0pt] ! Arithmetic overflow. [de2=0.0pt] [rom=x] [num=-2147483648] [wrap=2147483647] [div2=-1073741824] [div7=-306783378] [dd2=0.0pt] ! Arithmetic overflow. [ne5=0] ! Arithmetic overflow. [ne6=0] ! Arithmetic overflow. [ne7=0] ! Arithmetic overflow. [mul-1=\the\cou
+
+
+RC=0

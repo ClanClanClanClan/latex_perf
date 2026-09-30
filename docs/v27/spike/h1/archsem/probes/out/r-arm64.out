@@ -1,0 +1,47 @@
+aarch64
+imgwide rc=1
+   number too big [WD=32767.99998pt] [HT=8.03pt] ! Huge page cannot be shipped out. [WD=\the\wd0] [HT=\the\ht0] !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+intmin rc=1
+   [c1=-2147483648] [div-1=-2147483648] [divself=-1] ! Arithmetic overflow. [mul-1=\the\count4] !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+jpgbig rc=0
+   too large image resolution ignored [WD=4.015pt] 
+
+
+jpgconv rc=0
+   too large image resolution ignored [WD=4.015pt] 
+
+
+jpgconvneg rc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+jpgctrl rc=0
+   [WD=0.9636pt] 
+
+
+jpgdiv rc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+matnan rc=0
+
+   /Rect [32645.579 768.894 32645.579 771.882] /Rect [0 0 0 0] 
+pdfboxinf rc=0
+   [WD=1.00375pt] [HT=100.375pt] 
+
+
+pdfboxnan rc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+snapy0 rc=0
+
+
+snapy1 rc=0
+
+
+RC=0

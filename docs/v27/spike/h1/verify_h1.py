@@ -11,7 +11,12 @@ stored in the report itself:
   2. every aarch64 FMA site outside xpdf (fma/fma_sites_aarch64.tsv, from the
      unstripped build's DWARF line table) is NAMED in the report's §5.1
      classification. A site the report does not classify fails (review round 1:
-     round 0 classified two functions and generalised to the rest).
+     round 0 classified two functions and generalised to the rest);
+  3. (review round 2) every integer-division and float-to-int site of BOTH
+     binaries (archsem/census_insns.tsv.gz) has exactly one verdict in
+     archsem/classification.tsv, the verdict counts and the probes' recorded
+     outcomes are the ones the report quotes, and diffs/r2 (every comparison
+     re-run by the round-2 comparator) has r1's counts.
 Exit 0 when all hold, 1 otherwise, listing each failure."""
 import json
 import re
@@ -122,6 +127,106 @@ for fn, pat in [("jbig2_exhaustive.out", r"differ: 0 \[\]"), ("pdfversion_exhaus
 for q in ("29 of 300,000", "1,705,191", "109,092,170"):
     if q not in sec:
         fails.append(f"§5.1 does not quote {q}")
+
+# ---- review round 2 ----------------------------------------------------------
+# (a) the round-2 comparator (h1diff.py, canonical PDF form engaged only with a
+#     Ghostscript intermediate) re-ran every comparison: same counts as r1
+for f in sorted((H / "diffs" / "r1").glob("diff_*.json")):
+    g = H / "diffs" / "r2" / f.name
+    if not g.is_file():
+        fails.append(f"diffs/r2/{f.name} missing")
+        continue
+    a, b = json.loads(f.read_text()), json.loads(g.read_text())
+    for k in ("documents", "missing_on_b", "verdicts", "masks_needed", "final_rc_of_a"):
+        if a[k] != b[k]:
+            fails.append(f"{f.name}: r2 {k} {b[k]} != r1 {a[k]}")
+    if sorted(a["diffs"]) != sorted(b["diffs"]):
+        fails.append(f"{f.name}: r2 DIFF documents differ from r1")
+# (b) the architecture-semantics census: every DIV/F2I site of both binaries
+#     (recomputed from the instruction list) has exactly one verdict, and the
+#     report's verdict counts are the classification's
+import csv
+import gzip
+A = H / "archsem"
+ins = list(csv.DictReader(gzip.open(A / "census_insns.tsv.gz", "rt"), delimiter="\t"))
+nins = Counter((r["class"]) for r in ins if r["class"] in ("DIV", "F2I"))
+sites = set()
+for r in ins:
+    if r["class"] not in ("DIV", "F2I"):
+        continue
+    f = r["file"]
+    sites.add((r["class"], r["function"] if f == "-" else f"{f.split('/')[-1]}:{r['line']}"))
+cls = list(csv.DictReader(open(A / "classification.tsv"), delimiter="\t"))
+ck = Counter((r["class"], r["site"]) for r in cls)
+for k in sorted(sites - set(ck)):
+    fails.append(f"census site {k} has no verdict in archsem/classification.tsv")
+for k in sorted(set(ck) - sites):
+    fails.append(f"classification row {k} is not a census site")
+for k, n in ck.items():
+    if n != 1:
+        fails.append(f"census site {k} has {n} verdicts")
+if nins != Counter({"DIV": 620, "F2I": 474}) or "620 DIV\nand 474 F2I" not in R:
+    fails.append(f"census instruction counts {dict(nins)}, report quotes 620 DIV and 474 F2I")
+if len(sites) != 316 or "**316 sites**" not in R:
+    fails.append(f"census sites {len(sites)}, report quotes 316")
+v = Counter(r["verdict"] for r in cls)
+want = {"SAFE-CONST": 20, "SAFE-GUARD": 36, "SAFE-SIGN": 7, "SAFE-CALLERS": 9, "SAFE-RANGE": 21,
+        "NOT-REACHED": 5, "OUTPUT-ONLY": 8, "DIVERGES": 14, "OPEN": 196}
+if dict(v) != want:
+    fails.append(f"classification verdicts {dict(v)}, report quotes {want}")
+for q in ("| 20 / 36 / 7 / 9 / 21 |", "| NOT-REACHED | 5 |", "| OUTPUT-ONLY | 8 |", "| **DIVERGES** | **14** |",
+          "| **OPEN** | **196** |"):
+    if q not in R:
+        fails.append(f"§5.4 does not quote {q!r}")
+op = Counter(r["group"] for r in cls if r["verdict"] == "OPEN")
+if op != Counter({"xpdf": 106, "libpng": 46, "web2c": 40, "kpathsea": 4}):
+    fails.append(f"OPEN by group {dict(op)}, report quotes 44 pdfTeX/kpathsea, 46 libpng, 106 xpdf")
+# every DIVERGES row names a probe whose recorded outcomes differ between the architectures
+for fn, pat in [("wrapv_changed.txt", 876), ("signedchar_changed.txt", 317)]:
+    n = sum(1 for ln in (A / fn).read_text().splitlines() if ln.startswith("changed\t"))
+    if n != pat:
+        fails.append(f"archsem/{fn}: {n} changed functions, report quotes {pat}")
+for q in ("**876 of 4,280 functions**", "**317 functions**"):
+    if q not in R:
+        fails.append(f"§5.4 does not quote {q}")
+# (c) probe outcomes, from the recorded outputs of both architectures
+def rcs(name):
+    out = {}
+    for ln in (A / "probes" / "out" / name).read_text().splitlines():
+        m = re.match(r"^(\S+) rc=(\d+)$", ln)
+        if m:
+            out[m.group(1)] = int(m.group(2))
+    return out
+ra, rx = rcs("r-arm64.out"), rcs("r-amd64.out")
+for doc, a, x in [("snapy0", 0, 136), ("snapy1", 0, 0), ("imgwide", 1, 0), ("jpgconv", 0, 1), ("jpgdiv", 1, 136),
+                  ("jpgctrl", 0, 0), ("jpgbig", 0, 0), ("jpgconvneg", 1, 1), ("pdfboxnan", 1, 1), ("matnan", 0, 0)]:
+    if (ra.get(doc), rx.get(doc)) != (a, x):
+        fails.append(f"probe {doc}: recorded rc {ra.get(doc)}/{rx.get(doc)}, report says {a}/{x}")
+qa = (A / "probes" / "out" / "q-arm64.out").read_text()
+qx = (A / "probes" / "out" / "q-amd64.out").read_text()
+if "[divself=-1]" not in qa or "[divself=1]" not in qx:
+    fails.append("probe nh-intmin: divself is not -1 on aarch64 and 1 on x86_64")
+# the full logs: identical once the one differing value (\\count3, printed by the
+# \\message and again in the page's \\count0..9 list at shipout) is masked
+def intmin_norm(arch, v):
+    t = (A / "probes" / "out" / f"nh-intmin.{arch}.log").read_text().replace("\n", "")
+    n0 = t.count(f"[divself={v}]") + t.count(f".-2147483648.{v}.0.2147483647.")
+    t = t.replace(f"[divself={v}]", "[divself=V]").replace(f".-2147483648.{v}.0.2147483647.", ".-2147483648.V.0.2147483647.")
+    return n0, t
+na, la = intmin_norm("arm64", "-1")
+nx, lx = intmin_norm("amd64", "1")
+if (na, nx) != (2, 2) or la.split("(./nh-intmin.tex", 1)[1] != lx.split("(./nh-intmin.tex", 1)[1]:
+    fails.append(f"probe nh-intmin: logs differ beyond \\count3 (masked {na}/{nx} occurrences)")
+ta = (A / "probes" / "out" / "t-arm64.out").read_text()
+tx = (A / "probes" / "out" / "t-amd64.out").read_text()
+if "SlantFont value too big" not in ta or "SlantFont value too big" in tx:
+    fails.append("probe slanthuge: the warning is not aarch64-only")
+# (d) the full-range PDF-version check (review round 2 LOW)
+pv = (H / "fma" / "pdfversion_full.out").read_text()
+if "pairs 21474836470, differing 0; control (major=1, minor=-10) differs: yes" not in pv \
+        or "self-check block (major 1..20000, minor -1000..-1): 100 differing" not in pv \
+        or "21,474,836,470 pairs, 0 differ" not in R:
+    fails.append("fma/pdfversion_full.out does not show 0 of 21,474,836,470 with a passing self-check, or the report does not quote it")
 
 for f in fails:
     print("FAIL", f)

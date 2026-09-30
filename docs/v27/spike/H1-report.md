@@ -9,9 +9,14 @@ step H.1 of the ADR-014 draft §9.
 **Verdict: the kill criterion did not fire.** The revision is identified by three independent
 sources. Our rebuilds from that source are byte-identical to the pinned binary on **both**
 architectures. The shipped format is reproducible byte for byte. On every corpus document run, the two
-architectures' pinned binaries gave the same results; an adversarial document makes their PDFs
-differ in one byte (§5.3), with rc, log and `.aux` equal. The H.1 pass criterion held only with
-the clock fixed (§4.2). Revised after review round 1 (§5, §4.1, [`h1/`](h1/README.md)).
+architectures' pinned binaries gave the same results. **But the architectures do not run the same
+program**: wherever C leaves a result undefined or implementation-defined, the two ISAs and the two
+compilers answer differently, and adversarial documents turn that into different **exit codes**,
+logs, TeX state and PDFs (§5.3, §5.4). `\pdfsnapy 0pt`, a pdfTeX primitive with no external file,
+exits 0 on aarch64 and dies with SIGFPE on x86_64. The H.1 pass criterion held only with the clock
+fixed (§4.2). Revised after review round 1 (§5, §4.1, [`h1/`](h1/README.md)) and review round 2
+(§5.4, [`h1/archsem/`](h1/archsem/README.md); round 1's "the architectures differ in the PDF only"
+was wrong, C-103).
 
 Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 
@@ -24,7 +29,7 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 | Does our rebuild reproduce it? | **yes, byte for byte, on both architectures**: aarch64 natively (sha256 `cee621bf…`), amd64 under emulation (`1c5ff711…`, §2.3) | M |
 | Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100). The x86_64 INITEX run was emulated (qemu-user), not native | M |
 | Same binary, same inputs: same outputs? | yes: 3,907 of 3,907 evidence documents, and 200 of 200 real papers once the real clock is fixed | M |
-| Do amd64 and arm64 differ (floating point)? | **on the corpus, no; in general, yes, in the PDF.** 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5.2). But the aarch64 binary fuses multiply-adds that the x86_64 one does not, and at the `\pdfsetmatrix` sites the products are inexact: an adversarial document of 160 `\rotatebox`es holding 400,000 links gives PDFs that differ in **1 byte** (a link `/Rect` coordinate), with rc, `.log` and `.aux` identical (§5.3). Every fused site outside xpdf is classified in §5.1; the ones that reach TeX state are exact on their whole input range or under a stated bound, except xpdf's real-number parser, which is open. All amd64 runs were emulated (qemu-user), not native | M + R + I |
+| Do amd64 and arm64 differ? | **on the corpus, no; in general, yes, in the compile verdict itself** (review round 2, C-103). Five classes of architecture-defined C semantics were enumerated from the two binaries (§5.4): integer division (x86_64 traps), float-to-int conversion out of range (x86_64 gives INT_MIN, aarch64 saturates), signed overflow (the two compilers exploit it differently), fused multiply-add, and `char` signedness. Adversarial documents reproduce the first three as different rc, log or TeX state: `\pdfsnapy 0pt` exits 0 / 136 (SIGFPE); a valid 40000×8 px JPEG with no resolution is "Huge page", rc 1, on aarch64 and `\wd` = −32768pt, rc 0, on x86_64; `\divide` of INT_MIN by INT_MIN gives −1 / 1. Of the 316 division and conversion sites, 14 diverge (reproduced), 98 are settled safe or unreached, 8 are output-only and 196 are open (152 of them in libpng and xpdf). Round 1's FMA answer, kept below: **on the corpus, no; in general, yes, in the PDF.** 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5.2). But the aarch64 binary fuses multiply-adds that the x86_64 one does not, and at the `\pdfsetmatrix` sites the products are inexact: an adversarial document of 160 `\rotatebox`es holding 400,000 links gives PDFs that differ in **1 byte** (a link `/Rect` coordinate), with rc, `.log` and `.aux` identical (§5.3). Every fused site outside xpdf is classified in §5.1; the ones that reach TeX state are exact on their whole input range or under a stated bound, except xpdf's real-number parser, which is open. All amd64 runs were emulated (qemu-user), not native | M + R + I |
 
 ## 1. The pinned engine
 
@@ -214,15 +219,20 @@ a time and only when needed; each document records which masks it needed. The ma
 - two lines that `epstopdf` logs (a converted file's modification time and size);
 - the byte size in "Output written on … (N pages, M bytes)";
 - a SyncTeX file compared after gunzip;
-- a canonical PDF form, used only where Ghostscript's random font-subset tags differ: streams
-  decompressed; `/Length` values, the cross-reference stream's body, classic xref entries and
-  `startxref` (all byte offsets) dropped; and only those `/XXXXXX+` tags replaced that occur in
-  the same side's Ghostscript intermediates (`*-eps-converted-to.pdf` of the same run). pdfTeX's
-  own subset tags, `/Size`, `/W` and `/Index` are compared. (Review round 1: the first version
-  replaced every tag and dropped `/Size`, `/W` and `/Index`, so it would also have absorbed a
-  pdfTeX tag or object-count difference. Every comparison was re-run with the narrowed mask
-  (`h1/diffs/r1/`); no verdict and no count changed. `h1/tools/h1diff_selftest.py`: 2 of 5 cases
-  pass on the first version, 5 of 5 on the narrowed one);
+- a canonical PDF form, engaged only when the PDFs still differ **and** at least one side wrote a
+  Ghostscript intermediate (`*-eps-converted-to.pdf` of the same run): streams decompressed (bytes
+  after a stream's zlib end, or a truncated stream, are kept and compared); `/Length` values
+  masked; the cross-reference stream decoded row by row with only the byte offset of a type-1
+  entry dropped (entry types, generations, object-stream numbers and indices are compared);
+  classic xref entries' offsets and `startxref` dropped; and only those `/XXXXXX+` tags replaced
+  that occur in the same side's Ghostscript intermediates. pdfTeX's own subset tags, `/Size`, `/W`
+  and `/Index` are compared. (Review round 1: the first version replaced every tag and dropped
+  `/Size`, `/W` and `/Index`. Review round 2: the second still engaged on any PDF difference, even
+  with no Ghostscript intermediate, and dropped the whole xref stream and any bytes after a zlib
+  end, so it absorbed a zlib-level change, an object moved into an object stream, and trailing
+  bytes. Every comparison was re-run with each fix (`h1/diffs/r1/`, `h1/diffs/r2/`); no verdict
+  and no count changed. `h1/tools/h1diff_selftest.py`: 2 of the first 5 cases pass on the first
+  version; 6 of 12 on the second; 12 of 12 now);
 - a "Segmentation fault" line printed on the terminal by a crashed helper under emulation.
 
 The work-directory mask assumes both sides' work roots have the same length (line wrapping of
@@ -272,7 +282,7 @@ draft §5.2 / O-5.
 extracted OCaml renderer to regenerate them. Given byte identity of the binaries, they would
 exercise the harness again, not the engine.
 
-## 5. Floating point: amd64 against arm64
+## 5. amd64 against arm64: floating point (§5.1–5.3) and every other architecture-defined C semantics (§5.4)
 
 ### 5.1 Where the program uses floating point, and what each architecture's compiler did [R + M]
 
@@ -396,24 +406,135 @@ the `do_matrixtransform`/`pdfsetmatrix` channel of §5.1: a link rectangle's cor
 other side of a half-sp. (`sscanf`'s parse of the matrix is correctly rounded on both
 architectures, so the matrix entries agree [I].)
 
-**Conclusion.**
+**Conclusion** (of the FMA question; the conclusion about the architectures as a whole is §5.4,
+which refutes round 1's "in the PDF only").
 - **On the corpus, no difference between the architectures was observed** (200 real papers, 489
   evidence documents, 40 traced documents).
-- **In general they differ, in the PDF**: the fused multiply-adds of `\pdfsetmatrix`'s matrix
+- **FMA makes them differ in the PDF**: the fused multiply-adds of `\pdfsetmatrix`'s matrix
   arithmetic change link, destination and thread rectangles (reproduced; output-only: no TeX
-  state, rc or log depends on them).
+  state, rc or log depends on them). Other classes make them differ in rc and TeX state (§5.4).
 - **Every fused site outside xpdf that reaches TeX state is exact** over its whole input range
   (`read_jbig2_info`, `read_pdf_info`), under a stated bound (`make_accent`: |slant| < 128), or
   unreachable in the pinned configuration (MLTeX). The exception is xpdf's real-number parser
   (included PDFs' page boxes), which is **open**.
 - All amd64 evidence, the behaviour runs and the format run, is **emulated** (qemu-user TCG). A
   confirmation on a native amd64 host (the CI runner of `tex-oracle.yml`) has not been done.
-- `FaithfulEngine` stays per architecture, as ADR-015 states. For H.2 this settles what "model or
-  exclude the fused sites" must mean: `PS` must model fused multiply-add per architecture **at the
-  matrix sites** (or the model's PDF output is not claimed there); no exactness lemma is available
-  at those sites. `make_accent` needs an exactness lemma with the slant bound, and Stuck beyond it.
-  The exhaustive results above suffice for JBIG2 and the PDF version. An included PDF's
-  dimensions stay at the C boundary, modelled per architecture or Stuck.
+- For the FMA sites: `PS` must model fused multiply-add per architecture **at the matrix sites**
+  (or the model's PDF output is not claimed there); no exactness lemma is available at those
+  sites. `make_accent` needs an exactness lemma with the slant bound, and Stuck beyond it. The
+  exhaustive results above suffice for JBIG2 and the PDF version (the PDF-version check now covers
+  pdfTeX's whole input range, every major 1..2^31−1 with every minor 0..9:
+  [`fma/pdfversion_full.c`](h1/fma/pdfversion_full.c), 21,474,836,470 pairs, 0 differ; review
+  round 2 found that the round-1 script, called exhaustive, covered majors 0..9 only). An included
+  PDF's dimensions stay at the C boundary, modelled per architecture or Stuck. This is **not
+  sufficient** on its own: §5.4.
+
+### 5.4 The class: C semantics the architecture defines [M + R]
+
+Review round 2 found that §5.1–5.3 answered "do the architectures differ?" by a census of **one**
+member of a class, the fused multiply-add, and reproduced a JPEG that gives rc 0 on aarch64 and
+rc 1 (or SIGFPE) on x86_64 through two other members. C-102's rule ("enumerate the sites from the
+binary") had been applied to the instance, not to the class (C-103). This section enumerates the
+class.
+
+**The class.** The same C source compiles to programs that answer differently wherever C leaves
+the result undefined (UB) or implementation-defined, and the two targets (or their two compilers:
+aarch64 gcc 10.2.1, x86_64 gcc-toolset-11) choose differently. From the two ISAs and ABIs [R]:
+
+| member | C status | aarch64 | x86_64 | how the sites were enumerated |
+|---|---|---|---|---|
+| integer division by 0, and INT_MIN / −1 | UB | `sdiv`/`udiv` return 0 and INT_MIN; remainders via `msub` | `idiv`/`div` trap: SIGFPE, the process dies with rc 136 | every `sdiv`/`udiv` and `idiv`/`div` instruction of both unstripped builds, mapped to source lines by DWARF |
+| float → int conversion of NaN or an out-of-range value | UB | `fcvtz*` saturate; NaN → 0 | `cvtt*2si` give INT_MIN ("integer indefinite") | every `fcvtz*`/`fcvta*`/… and `cvt(t)*2si` instruction, likewise |
+| signed integer overflow | UB | whatever gcc 10 compiled | whatever gcc 11 compiled | functions whose code changes when the aarch64 build is repeated with `-fwrapv` |
+| plain `char` signedness | implementation-defined | unsigned | signed | functions whose code changes when the aarch64 build is repeated with `-fsigned-char` |
+| floating-point contraction | allowed by gcc's default `-ffp-contract=fast` | fused (`fmadd`) | none (baseline x86-64 has no FMA) | §5.1 |
+
+Checked and absent: `long double` (x87 instructions on x86_64, `__*tf*` soft-float calls on
+aarch64): **0** in both binaries. Not enumerated [I]: shift counts (both ISAs reduce a variable
+shift count modulo the operand width, so they agree; a constant UB shift is the compiler's, i.e.
+the signed-overflow member's kind), C stack depth (frame sizes differ, so a recursion that
+overflows the 8 MB stack does so at different depths), and uninitialised or out-of-bounds reads
+(heap layout; `read_APP1_Exif` reads an attacker-chosen offset `tiff_header + value` without a
+bounds check).
+
+**Division and conversion sites** ([`archsem/census_sites.tsv`](h1/archsem/census_sites.tsv),
+from [`census.py`](h1/archsem/census.py); every instruction in `census_insns.tsv.gz`). 620 DIV
+and 474 F2I instructions over both binaries, at **316 sites** (source lines; xpdf, C++ without a
+line table, by function). Each site has one verdict in
+[`classification.tsv`](h1/archsem/classification.tsv), with its reason:
+
+| verdict | sites | meaning |
+|---|---|---|
+| SAFE-CONST / SAFE-GUARD / SAFE-SIGN / SAFE-CALLERS / SAFE-RANGE | 20 / 36 / 7 / 9 / 21 | cannot trap or leave int range, by a constant, a guard in the code, sign normalisation, every caller, or a bound |
+| NOT-REACHED | 5 | statistics output; zlib's `gzfread`/`gzfwrite`, which pdfTeX never calls |
+| OUTPUT-ONLY | 8 | the result reaches PDF bytes only |
+| **DIVERGES** | **14** | reproduced by a document below |
+| **OPEN** | **196** | 44 in pdfTeX's own C and kpathsea (SyncTeX's unit 24, Type 1 number parsing 8, TrueType `unitsPerEm` 4, mktex's base resolution 4, `try_break`'s expansion ratio 3, `ExtendFont` 1), 46 in libpng, 106 in xpdf; each names the channel it could reach |
+
+**Signed overflow.** The `-fwrapv` rebuild changes **876 of 4,280 functions** (396 of them in
+`pdftex0.c`, i.e. most of TeX: gcc uses "signed overflow cannot happen" for index arithmetic
+everywhere) ([`wrapv_changed.txt`](h1/archsem/wrapv_changed.txt)). Site-by-site classification
+is not possible at that scale, and it is not needed: see "What H.2 must do". One site is
+reproduced: `x_over_n` (`\divide`). For `x = n = INT_MIN`, aarch64 gcc 10 compiles `(-x) div n`
+as an unsigned divide and gets −1; x86_64 gcc 11 compiles it as `x div n` and gets 1. INT_MIN is
+reachable from plain TeX, because `\advance` does not check integer overflow.
+
+**`char` signedness.** The `-fsigned-char` rebuild changes **317 functions**
+([`signedchar_changed.txt`](h1/archsem/signedchar_changed.txt)): 163 in xpdf; the rest in
+kpathsea (file names and `texmf.cnf`), the font loaders (Type 1, TrueType, Type 3, encodings, map
+files), libpng's text chunks, SyncTeX, and pdfTeX's string utilities. Of TeX's tangled
+procedures only four change, all in C string handling they call or inline (file names, the
+command line, the string pool): `open_log_file`, `prompt_file_name`, `main_body` and the pool
+loader. None of TeX's arithmetic,
+token, box or paragraph procedures changes. The TeX-visible string primitives among the changed
+functions were swept over all 255 non-null bytes (`\pdfescapestring`, `\pdfescapename`,
+`\pdfescapehex`, `\pdfstrcmp` against `A`, `^^80` and `^^ff`, `\pdfmdfivesum`): the log is
+byte-identical on both architectures (sha256 `b513a15e…`). The other changed functions are OPEN
+(file names with bytes ≥ 0x80, font and map files).
+
+**Reproduced** ([`archsem/probes/`](h1/archsem/probes/), documents and outputs; plain `pdftex`
+in fresh containers of the pinned image, native aarch64 and emulated x86_64,
+`SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1`):
+
+| document | member, site | aarch64 | x86_64 |
+|---|---|---|---|
+| `snapy0.tex`: `\pdfsnapy 0pt` (the primitive only refuses a *negative* snap glue) | division, `gap_amount` (`pdftex0.c:23709`) | rc 0 | **rc 136 (SIGFPE)** |
+| `snapy1.tex`: `\pdfsnapy 1pt` (control) | | rc 0 | rc 0 |
+| `imgwide.tex`: a valid 40000×8 px JPEG, no resolution | conversion, `ext_xn_over_d` (`utils.c:405`), which only warns "number too big" | `\wd` = 32767.99998pt, **rc 1** ("Huge page cannot be shipped out") | `\wd` = −32768pt, **rc 0** |
+| `jpgconv.tex`: Exif XResolution 2·10⁹ per cm | conversion, `read_APP1_Exif` (`writejpg.c:236`) | rc 0 (resolution ignored) | **rc 1** ("invalid image dimensions") |
+| `jpgdiv.tex`: Exif XResolution INT_MIN / −1 | division, `writejpg.c:218` | rc 1 | **rc 136 (SIGFPE)** |
+| `jpgctrl.tex`, `jpgbig.tex`, `jpgconvneg.tex` (controls) | | 0, 0, 1 | 0, 0, 1 |
+| `nh-intmin.tex`: `\count1` = INT_MIN via `\advance`, then `\divide\count3 by \count1` | signed overflow, `x_over_n` | **−1** | **1** |
+| (same document, 21 other operations on INT_MIN: `\divide` by −1, 2, 7, `\multiply`, `\numexpr`, `\dimexpr`, `\romannumeral`) | | equal | equal |
+| `slanthuge.tex`: map line `1e30 SlantFont` | conversion, `mapfile.c:487`; then `abs(slant) > 1000`, and abs(INT_MIN) = INT_MIN passes | log warns "SlantFont value too big" | **no warning**; PDFs differ |
+| `slantnan.tex`: `nan SlantFont` | same | slant 0 | slant INT_MIN; PDFs differ |
+| `matnan.tex` (review round 2): `\pdfsetmatrix{nan 0 0 1}`, a link | conversion, `do_matrixtransform` | `/Rect [0 0 0 0]` | `/Rect [32645.579 …]` |
+| `pdfboxnan.tex`: an included PDF whose MediaBox width is ∞ − ∞ | conversion of NaN in TeX's `round` | rc 1 | rc 1 (both refuse the image) |
+| `nh-strings.tex`: the string sweep above | `char` signedness | log `b513a15e…` | identical |
+
+All x86_64 runs are qemu-user emulation. qemu implements `cvttsd2si`'s INT_MIN and the `#DE`
+trap as the x86 specification defines them, so a native amd64 host is expected to agree [I]; that
+confirmation is still open.
+
+**What this means.**
+- **The architectures differ in the compile verdict.** Round 1's "in the PDF only" was wrong.
+  None of this showed on the corpus, but `\pdfsnapy 0pt` and a wide photograph are not exotic.
+- **`FaithfulEngine` is per architecture in substance**: a proven verdict is a verdict for one
+  architecture. The project grades locally on aarch64 and in CI (`tex-oracle.yml`) on amd64, from
+  the *same* image digest: the same document can get different grades from "the" oracle (§6.4).
+- **What H.2 must do, by member** (a rule per class, not per site):
+  - *UB members* (division by zero or INT_MIN/−1, out-of-range conversion, signed overflow): `PS`
+    must make every such operation **Stuck**, i.e. outside the tier. That is Pascal's own reading
+    of `div` by 0 and of overflow, it needs no per-architecture model, and on every run that does
+    not get Stuck both binaries compute the defined C result [I: assumes the compilers are correct
+    on UB-free runs]. TeX-level consequence: a document that reaches `\pdfsnapy 0pt`, overflows
+    `\advance`, or includes an image whose size overflows is outside the tier on *both*
+    architectures.
+  - *Implementation-defined and contraction members* (`char` signedness, FMA): these are defined
+    behaviour that differs, so `PS` must take them from the architecture (a parameter of
+    `FaithfulEngine`), or the affected output is not claimed.
+  - The 196 OPEN sites and the unenumerated members are H.2's C-boundary work list: each is either
+    shown unreachable from the translated program's inputs or made Stuck.
 
 ## 6. Findings for other tracks
 
@@ -452,13 +573,26 @@ holding `/tmp/mt*.tmp` in the same container. This is a false refusal, so it fai
 it is the C-93 class. It is worth recording because parallel graders share one container per
 work root.
 
+### 6.4 Oracle: one image digest, two architectures, two grades [M]
+
+`_oracle.py` records each artefact's architecture and checks it against that architecture's
+fingerprints, but the project treats the digest-pinned image as **one** oracle, graded locally on
+aarch64 and in CI (`tex-oracle.yml`, `ubuntu-latest`) on amd64. §5.4 shows documents whose grade
+depends on which: `snapy0.tex` compiles on one and dies on the other. None of the corpus documents
+graded so far is one of them, but nothing checks that. Suggested for the oracle track: make the
+architecture part of the oracle's identity in every comparison of grades (a grade made on aarch64
+is not evidence about amd64), or grade proven-tier evidence on both and treat disagreement as
+outside the tier.
+
 ### 6.3 Already recorded elsewhere
 
 The native backend's inherited stdin (ADR-014 draft, oracle branch C-99).
 
 ## 7. Reproducing this
 
-**Committed evidence** (review round 1: every number above can be re-checked from the repo):
+**Committed evidence** (review round 1: every number above can be re-checked from the repo; review
+round 2 added [`h1/archsem/`](h1/archsem/README.md), the census, classification and probes of §5.4,
+and `diffs/r2/`, every comparison re-run with the round-2 comparator):
 [`docs/v27/spike/h1/`](h1/README.md) holds every comparison summary (`diffs/r1/`, the narrowed
 mask; `diffs/r0/`, the round-0 files these numbers were first read from), the FMA site map and the
 exhaustive/search scripts with their outputs (`fma/`), the comparator and its kill-tests, the

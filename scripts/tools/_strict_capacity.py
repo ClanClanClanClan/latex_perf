@@ -65,13 +65,36 @@ def graph(pairs: dict) -> tuple[dict, dict]:
     return succ, opener
 
 
-def _path(succ: dict, src: str, dst: str) -> list[str] | None:
+def dim_weight(asigs: dict, table: dict):
+    """C-100: the dimensions a frame of each label costs the stream (its
+    opener and closer tokens, and for an argument frame its command), by the
+    account's table: the stream builder keeps the whole chain within the
+    dimension bound, preferring labels of no dimensions."""
+    def w(label: str) -> int:
+        if label.startswith("arg."):
+            name, mode = label[4:].split(":", 1)[1].rsplit("/", 1)
+            m = mode == "m"
+            return asigs[name]["dim"][1 if m else 0] + table["open"][1 if m else 0] \
+                + table["close"][1]
+        if label == "script":
+            return table["script"][1] + table["open"][1]
+        if label == "mgroup":
+            return table["open"][1]
+        if label.startswith("inline."):
+            return 2 * max(table["dollar"][0], table["open_inline"][0])
+        if label.startswith("display."):
+            return 4 * max(table["dollar"][0], table["open_display"][0])
+        return 0
+    return w
+
+
+def _path(succ: dict, src: str, dst: str, wt=None) -> list[str] | None:
     """A shortest label path of at least one pair from src to dst (both
-    included), or None."""
+    included; among the shortest, the lightest first), or None."""
     q, seen = deque([(src, [src])]), {src}
     while q:
         x, p = q.popleft()
-        for y in succ.get(x, []):
+        for y in sorted(succ.get(x, []), key=lambda y: (wt(y) if wt else 0, y)):
             if y == dst:
                 return p + [y]
             if y not in seen:
@@ -80,20 +103,26 @@ def _path(succ: dict, src: str, dst: str) -> list[str] | None:
     return None
 
 
-def stream(pairs: dict, below: str, above: str, target: int, groups: dict
-           ) -> tuple[list, list[str]] | None:
+def stream(pairs: dict, below: str, above: str, target: int, groups: dict,
+           wt=None, budget: int | None = None) -> tuple[list, list[str]] | None:
     """A token stream (strict_decide.exe JSON tokens, to be closed with
     "close": true) whose frame stack peaks at exactly `target` groups, made
     of the pair (below, above) repeated; and its label chain. None when the
-    pair cannot be reached or `target` cannot be met exactly."""
+    pair cannot be reached or `target` cannot be met exactly. With `wt`
+    (dim_weight) and `budget` (C-100), the pair is repeated only while the
+    chain stays within the dimension budget, and the rest is filled with the
+    lightest labels."""
+    wt = wt or (lambda _x: 0)
+    budget = budget if budget is not None else 10 ** 12
     succ, opener = graph(pairs)
-    pre = ["top"] if below == "top" else _path(succ, "top", below)
+    pre = ["top"] if below == "top" else _path(succ, "top", below, wt)
     if pre is None:
         return None
     # a cycle through the pair: above ... below
-    back = _path(succ, above, below) if below != "top" else None
+    back = _path(succ, above, below, wt) if below != "top" else None
     chain = pre[1:] + [above]
     cost = sum(cost_of(x, groups) for x in chain)
+    wsum = sum(wt(x) for x in chain)
     if cost > target:
         return None
     if back is not None:
@@ -101,10 +130,12 @@ def stream(pairs: dict, below: str, above: str, target: int, groups: dict
         while True:
             step = loop
             c = sum(cost_of(x, groups) for x in step)
-            if cost + c > target:
+            wc = sum(wt(x) for x in step)
+            if cost + c > target or wsum + wc > budget:
                 break
             chain += step
             cost += c
+            wsum += wc
     # fill to the target: a cheapest continuation from the top of the chain
     guard = 0
     while cost < target and guard < 10 * target:
@@ -114,7 +145,7 @@ def stream(pairs: dict, below: str, above: str, target: int, groups: dict
         if not nxt:
             return None
         # prefer a label that can continue (has successors), cheapest first
-        nxt.sort(key=lambda y: (cost_of(y, groups), 0 if succ.get(y) else 1, y))
+        nxt.sort(key=lambda y: (wt(y), cost_of(y, groups), 0 if succ.get(y) else 1, y))
         y = nxt[0]
         chain.append(y)
         cost += cost_of(y, groups)
@@ -221,6 +252,9 @@ def mem_maximiser(S, model, x: str, where: str, unit: list, max_groups: int,
 
 
 DIM_BOUND = 8000  # Decide.v max_dim (check_strict_kernel.py pins it)
+# the stream builder's dimension budget: the bound less a margin for the
+# innermost character and the closers (C-100)
+STREAM_BUDGET = DIM_BOUND - 500
 
 
 def memory_record(m: dict, g: dict | None, **extra) -> dict:

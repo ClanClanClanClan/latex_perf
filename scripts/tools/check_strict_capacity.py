@@ -66,11 +66,12 @@ def main() -> int:
 
     # 2. every pair's streams, as the model builds and decides them
     groups = C.arg_groups(asig["arg_signatures"])
+    wt = C.dim_weight(asig["arg_signatures"], sig["dims"])
     reqs, keys = [], []
     for r in cap.get("pairs", []):
         b, a = r.get("below"), r.get("above")
         for key, T in (("at", S.MAX_GROUPS), ("past", S.MAX_GROUPS + 1)):
-            st = C.stream(pairs, b, a, T, groups)
+            st = C.stream(pairs, b, a, T, groups, wt, C.STREAM_BUDGET)
             if st is None:
                 fails.append(f"capacity: pair {b}>{a} has no stream at {T} groups")
                 continue

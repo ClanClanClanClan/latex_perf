@@ -901,14 +901,17 @@ def main() -> int:
             k = ktmp(signatures)
             pairs = k.frame_pairs()
             groups = C.arg_groups(signatures)
+            wt = C.dim_weight(signatures, dtable)
             items = []
             for p_ in pairs["pairs"]:
                 who = sorted({lab[4:].split(":", 1)[1].rsplit("/", 1)[0]
                               for lab in (p_["below"], p_["above"]) if lab.startswith("arg.")})
                 if not who:
                     continue
-                at = C.stream(pairs, p_["below"], p_["above"], MAX_GROUPS, groups)
-                past = C.stream(pairs, p_["below"], p_["above"], MAX_GROUPS + 1, groups)
+                at = C.stream(pairs, p_["below"], p_["above"], MAX_GROUPS, groups,
+                              wt, C.STREAM_BUDGET)
+                past = C.stream(pairs, p_["below"], p_["above"], MAX_GROUPS + 1, groups,
+                                wt, C.STREAM_BUDGET)
                 items.append((p_["below"], p_["above"], who, at, past))
             bad: dict[str, str] = {}
             reqs = []

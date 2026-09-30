@@ -179,6 +179,7 @@ def main() -> int:
     sig = json.loads(S.SIGNATURES.read_text())["signatures"]
     asig = json.loads(S.ARG_SIGNATURES.read_text())["arg_signatures"]
     groups = C.arg_groups(asig)
+    wt = C.dim_weight(asig, json.loads(S.SIGNATURES.read_text())["dims"])
     pairs = kern.frame_pairs()
     G = Grades(oracle, args.reuse)
     t0 = time.time()
@@ -190,8 +191,8 @@ def main() -> int:
     # ---- 2. the pairs: at the bound, past it, pdfTeX's own overflow --------
     def one_pair(p):
         b, a = p["below"], p["above"]
-        at = C.stream(pairs, b, a, MAX_GROUPS, groups)
-        past = C.stream(pairs, b, a, MAX_GROUPS + 1, groups)
+        at = C.stream(pairs, b, a, MAX_GROUPS, groups, wt, C.STREAM_BUDGET)
+        past = C.stream(pairs, b, a, MAX_GROUPS + 1, groups, wt, C.STREAM_BUDGET)
         if at is None or past is None:
             return {"below": b, "above": a, "error": "no stream reaches the bound"}
         m, mp = kern.run([C.request(at[0]), C.request(past[0])])
@@ -205,7 +206,7 @@ def main() -> int:
         steps = []
 
         def probe(T):
-            sm = C.stream(pairs, b, a, T, groups)
+            sm = C.stream(pairs, b, a, T, groups, wt, C.STREAM_BUDGET)
             mm = kern.run([C.request(sm[0])])[0]
             gm = G.grade(mm["tex"])
             steps.append(record(mm, gm, target=T))

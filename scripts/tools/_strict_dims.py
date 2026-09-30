@@ -1,4 +1,4 @@
-"""The DIMENSION account of the strict fragment (correction C-100).
+"""The DIMENSION account of the strict fragment (correction C-104).
 
 Shared by gen_strict_signatures.py and gen_strict_arg_signatures.py (which
 MEASURE it) and check_strict_kernel.py (which RE-DERIVES it from the recorded

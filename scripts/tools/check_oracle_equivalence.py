@@ -55,7 +55,7 @@ work, top, td = Path(sys.argv[2]), sys.argv[3], sys.argv[4]
 r = o.run_to_fixpoint(work, top, o.tex_env(td), int(sys.argv[5]))
 print(json.dumps({"backend": o.backend, "rc": r.rc, "passes": r.passes,
                   "pdf": r.pdf, "first_error":
-                  _oracle.first_error_block(work / (Path(top).stem + ".log"), 1)}))
+                  _oracle.first_error_block(_oracle.job_output(work, top, ".log"), 1)}))
 '''
 
 
@@ -123,7 +123,7 @@ def main() -> int:
             stage(src, top, a / "w", whole)
             stage(src, top, b / "w", whole)
             ra = o.run_to_fixpoint(a / "w", top, o.tex_env(a), ns.timeout)
-            ea = _oracle.first_error_block(a / "w" / (Path(top).stem + ".log"), 1)
+            ea = _oracle.first_error_block(_oracle.job_output(a / "w", top, ".log"), 1)
             p = subprocess.run(
                 [o.docker, "exec", "-e", "HOME=/tmp", "-e",
                  f"LP_ORACLE_IN_IMAGE={_oracle.IMAGE}", o.name, "python3", "-c",

@@ -116,7 +116,7 @@ let kernel =
        name (\\ddots, 155 words) *)
     B.c_cost =
       (fun t -> match t with B.TCs n when str n = "alpha" -> 160 | _ -> 17);
-    (* C-100: the dimension account, as in test_strict_kernel.ml *)
+    (* C-104: the dimension account, as in test_strict_kernel.ml *)
     B.c_dim =
       (fun _ t ->
         match t with
@@ -211,7 +211,7 @@ let () =
   check "first line %&latex" ("%&latex\n" ^ h ^ "x\n" ^ e) "not_strict";
   check "first line  %&latex" (" %&latex\n" ^ h ^ "x\n" ^ e) "ready";
   check "line at the bound" (h ^ line 4 ^ "\n" ^ e) "ready";
-  (* C-100: the round-1 review's file, a display of 3,277 [\quad] (50 a line);
+  (* C-104: the round-1 review's file, a display of 3,277 [\quad] (50 a line);
      798 are within the dimension bound, 799 are not *)
   let quads k =
     String.concat "\n"

@@ -416,7 +416,7 @@ def near_miss_docs(rng: random.Random) -> list[tuple[str, bytes]]:
     out.append(("argument copies past the memory account",
                 HEADER + b"\\mbox{" * 197 + b"\n" + frames + b"\n" + b"}" * 197 + b"\n" + END + b"\n"))
     out.append(("tokens past the bound", HEADER + (b"x" * 5_000 + b"%\n") * 4 + b"xx\n" + END))
-    # C-100: the round-1 reviewer's file: a display of 3,277 \quad (50 a
+    # C-104: the round-1 reviewer's file: a display of 3,277 \quad (50 a
     # line), 32,770pt, past 2^31 sp: "! Dimension too large" at shipout
     quads = b"\n".join(b"\\quad" * min(50, 3277 - i) for i in range(0, 3277, 50))
     out.append(("a display past the dimension bound (the round-1 review's file)",
@@ -575,7 +575,7 @@ def lexer_families(names: dict, rng: random.Random) -> list[tuple[str, bytes]]:
     add("B_math", d(b"$x$\n"))
     add("B_script", d(b"$x^2_3$\n"))
     # the bounds of Lexer.v / DecideBytes.v, at the bound (graded)
-    # (C-100: a line of 10,000 characters is one paragraph past the
+    # (C-104: a line of 10,000 characters is one paragraph past the
     # dimension bound; the lines at the bound hold braces, which make no
     # nodes, and spaces inside a formula, which TeX drops)
     add("L0-bounds", d(b"{}" * (MAX_LINE_BYTES // 2) + b"\n"))
@@ -586,7 +586,7 @@ def lexer_families(names: dict, rng: random.Random) -> list[tuple[str, bytes]]:
     # the kernel's bounds (Decide.v) at the byte level: exactly 20,000 kernel
     # tokens (\end{document} one of them; comment-joined lines give no space
     # tokens), in paragraphs of 399 characters and in formulas of 397, each
-    # within the dimension bound (C-100: 19,999 characters in one paragraph
+    # within the dimension bound (C-104: 19,999 characters in one paragraph
     # are past it); 200 TeX groups (C-94: a formula is one of them) of
     # braces, of a formula and braces, and of box-and-formula levels (the
     # header's line ends in a comment: its end-of-line space would be a
@@ -598,7 +598,7 @@ def lexer_families(names: dict, rng: random.Random) -> list[tuple[str, bytes]]:
         + END + b"\n")
     add("L0-bounds", d(b"{" * 200 + b"x" + b"}" * 200 + b"\n"))
     add("L0-bounds", d(b"$" + b"{" * 199 + b"x" + b"}" * 199 + b"$\n"))
-    # (C-100: with `\(` ... `\)`: a `$` is charged a display's skips, since
+    # (C-104: with `\(` ... `\)`: a `$` is charged a display's skips, since
     # `$$` opens one, and 100 levels of `\mbox{$` are past the dimension bound)
     add("L0-bounds", d(b"\\mbox{\\(" * 100 + b"x" + b"\\)}" * 100 + b"\n"))
     return f

@@ -1128,14 +1128,23 @@ class Tex:
         the TeX variables of `env` (tex_vars). Returns (rc, seconds); rc
         TIMEOUT_RC = timed out. An oracle failure is never a TeX outcome: it
         stops the generator."""
+        rc, secs, _ = self._run(jobdir, engine, args, timeout, env)
+        return rc, secs
+
+    def _run(self, jobdir: Path, engine: str, args: list, timeout: int,
+             env: str) -> tuple:
+        """run_engine, plus the run's own terminal output (pdf_written reads
+        it, C-99). Returned, never kept on self: the generator runs jobs on
+        several threads that share this object."""
         t0 = time.monotonic()
         try:
-            rc, _, timed_out = self.oracle.run_engine(
+            r = self.oracle.run_engine(
                 jobdir, engine, args, tex_vars(env, self.texmf), timeout)
+            rc, _, timed_out = r
         except _oracle.OracleError as e:
             raise SystemExit("gen_contract: INFRASTRUCTURE - %s (job %s)"
                              % (e, jobdir.name))
-        return (TIMEOUT_RC if timed_out else rc), time.monotonic() - t0
+        return (TIMEOUT_RC if timed_out else rc), time.monotonic() - t0, r.stdout
 
     def pdflatex(self, jobdir: Path, tex: bytes, *, halt: bool = True,
                  recorder: bool = False, timeout: int = LONG_TIMEOUT,
@@ -1152,8 +1161,11 @@ class Tex:
         if jobname != JOBNAME:
             args.append("-jobname=" + jobname)
         args.append("job.tex")
-        rc, secs = self.run_engine(jobdir, _oracle.ENGINE_PDFLATEX, args, timeout, env)
-        logp, flsp = jobdir / (jobname + ".log"), jobdir / (jobname + ".fls")
+        rc, secs, stdout = self._run(jobdir, _oracle.ENGINE_PDFLATEX, args, timeout, env)
+        # pdfTeX's job name for these args, and its own report of the PDF
+        # (C-95/C-97): the one definition in _oracle.
+        logp, flsp = (_oracle.job_output(jobdir, args, ".log"),
+                      _oracle.job_output(jobdir, args, ".fls"))
         if not logp.exists() and rc != TIMEOUT_RC:
             # pdflatex always writes a log; no log means docker or the
             # container failed, which must never read as a TeX outcome.
@@ -1161,8 +1173,12 @@ class Tex:
                              "in %s (rc=%d)" % (jobdir.name, rc))
         log = logp.read_bytes() if logp.exists() else b""
         fls = flsp.read_bytes() if flsp.exists() else b""
-        return {"rc": rc, "secs": secs, "log": log, "fls": fls,
-                "pdf": (jobdir / (jobname + ".pdf")).exists(),
+        try:  # the terminal and the log must agree (C-99)
+            pdf = rc != TIMEOUT_RC and _oracle.pdf_written(jobdir, args, stdout)
+        except _oracle.OracleError as e:
+            raise SystemExit("gen_contract: INFRASTRUCTURE - %s (job %s)"
+                             % (e, jobdir.name))
+        return {"rc": rc, "secs": secs, "log": log, "fls": fls, "pdf": pdf,
                 "tex_sha256": sha256_bytes(tex)}
 
     def fixpoint(self, jobdir: Path, tex: bytes, *, env: str = "grading",
@@ -1324,8 +1340,10 @@ def engine_primitives(tex: Tex) -> dict:
     jd = tex.job("virgin")
     initex = _oracle.ENGINE_PDFTEX
     ini = ["-ini", "-etex", "-interaction=nonstopmode", "-translate-file=cp227.tcx"]
-    rc, _ = tex.run_engine(jd, initex, ini + ["-jobname=lpvirgin", "\\dump"], LONG_TIMEOUT)
-    log = (jd / "lpvirgin.log").read_bytes() if (jd / "lpvirgin.log").exists() else b""
+    vargs = ini + ["-jobname=lpvirgin", "\\dump"]
+    rc, _ = tex.run_engine(jd, initex, vargs, LONG_TIMEOUT)
+    vlog = _oracle.job_output(jd, vargs, ".log")  # pdfTeX's job name (C-95)
+    log = vlog.read_bytes() if vlog.exists() else b""
     if rc != 0 or not (jd / "lpvirgin.fmt").exists():
         raise SystemExit("gen_contract: virgin INITEX dump failed: rc=%d" % rc)
     count = cs_count(log)
@@ -1336,8 +1354,9 @@ def engine_primitives(tex: Tex) -> dict:
     # Virgin INITEX has no brace characters; the catcode line needs them.
     (jd / "prim.tex").write_bytes(b"\\catcode123=1 \\catcode125=2 \\relax\n" + block +
                                   b"\\end\n")
-    rc2, _ = tex.run_engine(jd, initex, ini + ["-jobname=lpprim", "prim.tex"], LONG_TIMEOUT)
-    d = parse_dump((jd / "lpprim.log").read_bytes())
+    pargs = ini + ["-jobname=lpprim", "prim.tex"]
+    rc2, _ = tex.run_engine(jd, initex, pargs, LONG_TIMEOUT)
+    d = parse_dump(_oracle.job_output(jd, pargs, ".log").read_bytes())
     shutil.rmtree(jd, ignore_errors=True)
     if rc2 != 0 or d["error"] is not None or unw:
         raise SystemExit("gen_contract: virgin INITEX primitive dump failed: rc=%d %s %s"
@@ -1520,7 +1539,8 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
                         "-jobname=lpkernel", "-progname=pdflatex",
                         "-translate-file=cp227.tcx",
                         INITEX_PREFIX + "\\input pdflatex.ini"], LONG_TIMEOUT)
-    log = (jd / "lpkernel.log").read_bytes()
+    # pdfTeX's job name (C-95): -jobname wins, as pdftex_jobname measures
+    log = _oracle.job_output(jd, ["-jobname=lpkernel"], ".log").read_bytes()
     tr = parse_trace(log)
     if rc != 0 or tr["first_error"] is not None:
         raise SystemExit("gen_contract: INITEX of pdflatex.ini failed: rc=%d %s" %

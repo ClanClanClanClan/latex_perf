@@ -79,7 +79,7 @@ let contract =
        name (\\ddots, 155 words) *)
     K.c_cost =
       (fun t -> match t with K.TCs n when str n = "alpha" -> 160 | _ -> 17);
-    (* C-100: the dimension account, in points; [\quad] 10 (its measured 1em is
+    (* C-104: the dimension account, in points; [\quad] 10 (its measured 1em is
        10.00002pt), a character 12, a paragraph break 16, [\alpha] 20 *)
     K.c_dim =
       (fun _ t ->
@@ -301,7 +301,7 @@ let () =
   in
   check "tokens at the bound" (doc (paras 350)) "ready";
   check "tokens past the bound" (doc (paras 351)) "not_strict";
-  (* C-100: the dimension account. The round-1 review's document: a display of
+  (* C-104: the dimension account. The round-1 review's document: a display of
      3,277 [\quad] (32,770pt, past 2^31 sp) was PROVEN-READY and stops with "!
      Dimension too large"; 798 [\quad] are 16 + 7,980 = 7,996 points, 799 are
      past 8,000 *)

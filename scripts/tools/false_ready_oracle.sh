@@ -228,8 +228,19 @@ run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
     # root is short of space.
     if ! oracle_vet "$wd" "$out" "${cmd[@]}" 2>/dev/null; then rc=ENVFAIL; break; fi
   done
+  # The PDF verdict is pdfTeX's own final report in this pass's log AND its
+  # terminal output ($out, the shim's stdout), which must agree -- not a
+  # file named .pdf, nor a report the document could forge (C-97, C-99):
+  # _oracle.pdf_written. Exit 1 = no PDF; anything else = not a grade.
+  pv=0
+  oracle_pdf_written "$wd" "$base" "$out" 2>/dev/null || pv=$?
   rm -f "$out"
-  [ -f "$wd/${base%.tex}.pdf" ] && pdf=yes || pdf=no
+  case "$pv" in
+    0) pdf=yes ;;
+    1) pdf=no ;;
+    *) pdf=no
+       case "$rc" in 12[4-7]|NOPROOF|ENVFAIL) ;; *) rc=ENVFAIL ;; esac ;;
+  esac
   echo "$rc $pdf"
 }
 
@@ -267,6 +278,8 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
     cp -R "$FRDIR/$sub" "$wd/" || die_infra "cannot stage fixture tree $id"
     base="$(basename "$path")"; rundir="$wd/$sub"
   fi
+  # pdfTeX's job name (doc.TEX -> doc), the one definition in _oracle.py.
+  job="$(oracle_job "$base")" || die_infra "cannot compute the job name of $base"
   if "$CLI" --compile-check "$FRDIR/$path" >/dev/null 2>&1; then cli=READY; else cli=NOT-READY; fi
 
   # ORDERING IS LOAD-BEARING: halt-on-error FIRST. fr_corrupt_aux's doc.aux is
@@ -281,18 +294,18 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
       printf '%-24s halt-protocol pdflatex could not be run (rc %s) — refusing to grade\n' "$id" "$hrc"
       rm -rf "$wd"; timeouts=$((timeouts+1)); continue ;;
   esac
-  if ! grep -q 'This is pdfTeX' "$rundir/${base%.tex}.log" 2>/dev/null; then
+  if ! grep -q 'This is pdfTeX' "$rundir/$job.log" 2>/dev/null; then
     printf '%-24s no pdfTeX log from the halt run — pdflatex did not really run; refusing to grade\n' "$id"
     rm -rf "$wd"; timeouts=$((timeouts+1)); continue
   fi
   # Clear artefacts between protocols: a PDF left by the halt run would be
   # attributed to the nonstop run and silently convert strong-fatal -> error-halt.
   # Through the oracle, not a host `rm`: see ORACLE_RM in _oracle.sh.
-  "${ORACLE_RM[@]}" "$rundir/${base%.tex}.pdf" "$rundir/${base%.tex}.log" \
+  "${ORACLE_RM[@]}" "$rundir/$job.pdf" "$rundir/$job.log" \
     || die_infra "cannot clear the halt run's artefacts for $id"
   read -r nrc npdf  <<<"$(run_pdflatex "$rundir" "$base" 0)"
   logfile="$(mktemp)"
-  cp "$rundir/${base%.tex}.log" "$logfile" 2>/dev/null || : > "$logfile"
+  cp "$rundir/$job.log" "$logfile" 2>/dev/null || : > "$logfile"
   rm -rf "$wd"
 
   # 124 = timeout kill; 125/126/127 = timeout itself failed / not executable /

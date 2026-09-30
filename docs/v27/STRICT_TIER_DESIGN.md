@@ -1476,8 +1476,8 @@ artefact.
 |---|---|---|---|---|---|---|
 | grouping levels | 255 (the body holds K = 254; `capacity.json` `measured`) | `groups` = 1 per frame, `g` per argument frame, over every reached state (`peak`) | `max_groups` = 200 | every one of the 321 model pairs, repeated to 200 groups, compiles/agrees; pdfTeX's first overflow is at 255 groups for 320 pairs and 254 for 1 (a paragraph start in vertical mode, transient +1): the account is EXACT | 254 - 200 - 8 (largest transient: the output routine at a page break or at `\end{document}`; `\[` 3, a paragraph start 1, none in math) = 46 | PROVED bound (Coq) + MEASURED exactness |
 | main memory | 5,000,000 words | ~~through `max_tokens` and `max_groups`~~ — WRONG: argument copies make it depth x tokens; superseded by C-98 (below) | — | the 758,796 was a flat document, not the worst case | — | refuted (C-98) |
-| main memory (C-98, C-100) | 5,000,000 words | `Decide.mem` <= `max_mem` = 2,000,000 over the base 435,796: every token its `c_cost` (a SLOPE over three counts past the base's high-water mark, five contexts, plus letters x H_text and atoms x B_math), every argument's tokens its command's `as_copy` 3 | `max_mem` (Coq, `bounded`) | 1,413 account-checked records, pdfTeX within the account on every one (worst 0.933); 1,112,259 at most inside the fragment | 2.05x over the account's ceiling | MEASURED upper bound, not proved |
-| dimensions (C-100) | a dimension is a signed 32-bit count of sp; max_dimen 16,383.99998pt on every scan | `Decide.dim`: per segment (paragraph at the top level), the tokens' `c_dim`, measured from TeX's box dumps with the boundary constants | `max_dim` = 8,000pt (Coq, `bounded`) | 164 dimension-bound documents compile, pdfTeX's box at most 0.996 of the account (`\hidewidth`); one more is outside | 2.05x to max_dimen | argued + MEASURED |
+| main memory (C-98, C-104) | 5,000,000 words | `Decide.mem` <= `max_mem` = 2,000,000 over the base 435,796: every token its `c_cost` (a SLOPE over three counts past the base's high-water mark, five contexts, plus letters x H_text and atoms x B_math), every argument's tokens its command's `as_copy` 3 | `max_mem` (Coq, `bounded`) | 1,413 account-checked records, pdfTeX within the account on every one (worst 0.933); 1,112,259 at most inside the fragment | 2.05x over the account's ceiling | MEASURED upper bound, not proved |
+| dimensions (C-104) | a dimension is a signed 32-bit count of sp; max_dimen 16,383.99998pt on every scan | `Decide.dim`: per segment (paragraph at the top level), the tokens' `c_dim`, measured from TeX's box dumps with the boundary constants | `max_dim` = 8,000pt (Coq, `bounded`) | 164 dimension-bound documents compile, pdfTeX's box at most 0.996 of the account (`\hidewidth`); one more is outside | 2.05x to max_dimen | argued + MEASURED |
 | string pool | 5,408,265 free at body start | every name pdfTeX reads enters it, defined or not; <= `max_tokens` names of <= `max_name` = 100 letters | `max_name` (Coq, `short_names`) | 1,939,424 (19,994 distinct 100-letter undefined names read whole as one `\mbox` argument; E1 agrees) | 2.8x | PROVED bound + MEASURED |
 | strings | 467,099 free | <= `max_tokens` new names | via `max_tokens` | 19,741 | 23x | MEASURED |
 | hash (multi-letter control sequences) | 15,000 + 600,000 | <= `max_tokens` new names | via `max_tokens` | 49,161 | 12x | MEASURED |
@@ -1594,7 +1594,7 @@ changed, not the instance:
   per admitted name by the phase-1 generator's stage C (the name repeated
   4,000 times in text, in a formula and in a display, and again at the
   memory bound, until pdfTeX's report is within the account) [SUPERSEDED by
-  C-100 below: per-occurrence figures under a high-water mark under-count,
+  C-104 below: per-occurrence figures under a high-water mark under-count,
   83 of the 84 math bound records had no report, and the account was 1.242x
   short on a reviewer's document; costs are now slopes, and the dimension
   bound was missing altogether]; every other
@@ -1684,7 +1684,7 @@ outside the tier, after an empty `$$` opened display math, replaced and
 counted); byte-level probes 3,064 of 3,064 (the reviewer's memory file among
 the near-misses, outside); byte-level differential (seed 6) 3,500 of 3,500.
 
-**C-100: an UNMODELLED CAPACITY, dimensions (BLOCKING, round-1 review of
+**C-104: an UNMODELLED CAPACITY, dimensions (BLOCKING, round-1 review of
 the C-98 fix, 2026-09-30), and the memory account was not the upper bound
 C-98 said it was.** TeX stores a dimension as a signed 32-bit count of sp
 (2^31 sp = 32,768pt) and adds widths without an overflow check (tex.web
@@ -1827,7 +1827,7 @@ fragment, of 5,000,000). The binary gate now re-runs ~20M tokens of
 documents (90-250 s of CPU); its kill-tests have their own 1,200 s bound in
 check_gate_selftests.py.
 
-KNOWN LIMITS (C-100): the dimension account's argument that every
+KNOWN LIMITS (C-104): the dimension account's argument that every
 dimension is a coefficient-one sum is an argument about tex.web, not a
 proof, and its constants of the layout are covered by the headroom, not by
 a measurement of each; per-token dimensions are measured in isolation per
@@ -1836,7 +1836,7 @@ only through the per-atom charge; the memory account is attested (every
 graded record within it), not proved, and a context no instrument builds is
 covered by the 2x headroom only.
 
-**Re-attested after C-100** (supersedes the counts of "Re-attested after
+**Re-attested after C-104** (supersedes the counts of "Re-attested after
 C-98"; the pinned image, a private container; every reused grade from a
 committed file of this branch): phase-1 signatures (generator version 7)
 84 admitted, every one with its memory cost (slopes over three counts in up

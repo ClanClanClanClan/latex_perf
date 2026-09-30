@@ -314,7 +314,7 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
     grammar can outgrow.  The group account is EXACT (below); the memory and
     dimension accounts are UPPER BOUNDS built from measured per-token costs,
     attested on every graded document, not proved (corrections C-98,
-    C-100).  Correction C-94: the first version (C-86) bounded the
+    C-104).  Correction C-94: the first version (C-86) bounded the
     BRACE depth by 200, because 254 nested braces overflow TeX's 255
     grouping levels; but a formula is a TeX group too, and slice A let a
     formula open inside an argument, so [\mbox{$\mbox{$ ... $}$}] held two
@@ -357,13 +357,13 @@ Fixpoint run (C : contract) (s : state) (ts : list tok) : option outcome :=
       token its measured cost, every argument's tokens its command's
       measured copy factor.  With the 435,796 words pdfTeX reports at body
       start, the account stays under half of main memory.  The costs are
-      MEASURED, as slopes of pdfTeX's reported memory over the count (C-100:
+      MEASURED, as slopes of pdfTeX's reported memory over the count (C-104:
       the first version divided by the count, which a high-water mark at
       body start hides up to 31,000 words of, and so under-counted up to
       1.25x), and pdfTeX's report is under the account on every graded
       document; the account is not proved to bound pdfTeX's memory, the
       bound leaves more than 2x for that (§I.6).
-    - DIMENSIONS (correction C-100).  TeX stores a dimension as a signed
+    - DIMENSIONS (correction C-104).  TeX stores a dimension as a signed
       32-bit count of sp and adds widths without an overflow check: a
       display of 3,277 [\quad] (32,770pt, just past 2^31 sp) wraps to a
       negative width, skips the squeeze of tex.web §1199, and LaTeX's
@@ -564,7 +564,7 @@ Fixpoint node_cost (C : contract) (ts : list tok) : nat :=
 
 Definition mem (C : contract) (ts : list tok) : nat := node_cost C ts + held C ts.
 
-(** DIMENSIONS (correction C-100).  [dim_run C s acc ts]: the run from [s]
+(** DIMENSIONS (correction C-104).  [dim_run C s acc ts]: the run from [s]
     ([run]'s steps, up to where it stops: a stop halts pdfTeX, and the
     argument scanner that locates a deferred error typesets nothing), with
     [acc] the dimensions of the current segment so far (each token costs its
@@ -651,7 +651,7 @@ Proof.
   destruct Hb as [[_ Hh] _]. apply Nat.leb_le in Hh. exact Hh.
 Qed.
 
-(** C-100: every segment of a document of the tier stays within the
+(** C-104: every segment of a document of the tier stays within the
     dimension account.  DEFINITIONAL, like [strict_mem_bounded]: that the
     account bounds pdfTeX's dimensions is part of [Faithful]. *)
 Corollary strict_dim_bounded : forall C d,

@@ -66,7 +66,7 @@ def graph(pairs: dict) -> tuple[dict, dict]:
 
 
 def dim_weight(asigs: dict, table: dict):
-    """C-100: the dimensions a frame of each label costs the stream (its
+    """C-104: the dimensions a frame of each label costs the stream (its
     opener and closer tokens, and for an argument frame its command), by the
     account's table: the stream builder keeps the whole chain within the
     dimension bound, preferring labels of no dimensions."""
@@ -109,7 +109,7 @@ def stream(pairs: dict, below: str, above: str, target: int, groups: dict,
     "close": true) whose frame stack peaks at exactly `target` groups, made
     of the pair (below, above) repeated; and its label chain. None when the
     pair cannot be reached or `target` cannot be met exactly. With `wt`
-    (dim_weight) and `budget` (C-100), the pair is repeated only while the
+    (dim_weight) and `budget` (C-104), the pair is repeated only while the
     chain stays within the dimension budget, and the rest is filled with the
     lightest labels."""
     wt = wt or (lambda _x: 0)
@@ -171,7 +171,7 @@ def adjacent(frames_innermost_first: list[str], below: str, above: str) -> bool:
 
 
 # ---------------------------------------------------------------- memory ---
-# C-98, C-100. pdfTeX's main memory holds (i) what the format and the class
+# C-98, C-104. pdfTeX's main memory holds (i) what the format and the class
 # leave at body start, (ii) the nodes the typeset material makes, a cost per
 # token that depends on the construct, and (iii) a COPY of every argument a
 # command is running, which an argument command nested inside another
@@ -181,7 +181,7 @@ def adjacent(frames_innermost_first: list[str], below: str, above: str) -> bool:
 #     used(doc) <= M0 + mem(doc)
 # with M0 what pdfTeX reports for a one-character document.
 #
-# HOW A COST IS MEASURED (C-100). pdfTeX reports a HIGH-WATER MARK, and the
+# HOW A COST IS MEASURED (C-104). pdfTeX reports a HIGH-WATER MARK, and the
 # base document's already holds some 31,000 words that \begin{document}
 # allocates and frees again: a document's report is max(M0, B + c * n) with
 # B < M0, so the first ~31,000 words of its material are hidden under M0. C-98
@@ -216,7 +216,7 @@ def mem_maximiser(S, model, x: str, where: str, unit: list, max_groups: int,
     allows, the filler innermost (every innermost token is held by every
     level) and at the outermost level, then characters, as many as the
     FRAGMENT allows (the model's verdict: every bound of Decide.bounded, the
-    dimension account of C-100 included). Returns the document AT the bound
+    dimension account of C-104 included). Returns the document AT the bound
     and the one with ONE more character (past it). `model` runs the extracted
     decider under the contract being attested."""
     def build(D, k, r, p):
@@ -253,14 +253,14 @@ def mem_maximiser(S, model, x: str, where: str, unit: list, max_groups: int,
 
 DIM_BOUND = 8000  # Decide.v max_dim (check_strict_kernel.py pins it)
 # the stream builder's dimension budget: the bound less a margin for the
-# innermost character and the closers (C-100)
+# innermost character and the closers (C-104)
 STREAM_BUDGET = DIM_BOUND - 500
 
 
 def memory_record(m: dict, g: dict | None, **extra) -> dict:
     """The primary record of one memory document: its bytes' sha256, the
     model's counts and verdict, and (graded) the oracle tuple and pdfTeX's
-    own report. A grade without pdfTeX's statistics is refused (C-100: 83 of
+    own report. A grade without pdfTeX's statistics is refused (C-104: 83 of
     the C-98 bound records had none, and the gate's check skipped them)."""
     import hashlib
     r = {"sha256": hashlib.sha256(m["tex"].encode()).hexdigest(), "ntoks": m["ntoks"],
@@ -395,7 +395,7 @@ def slack(records: dict, m0: int, prefix: str) -> float:
 
 def absorbed_findings(records: dict, m0: int, prefix: str, sl: float, cost: int,
                       per_token: bool = False) -> list[str]:
-    """C-100: a context whose second-largest level reports only the base (its
+    """C-104: a context whose second-largest level reports only the base (its
     material hidden under the high-water mark) proves only that its memory
     per occurrence (per token, for the structural shapes) is at most slack /
     count: the cost charged must be above that."""
@@ -547,7 +547,7 @@ def copy_and_cost(recs: dict, m0: int, tcost: int) -> dict:
     """An argument command's copy factor and cost from stage G's memory
     documents, per mode: FLAT@k / FLATX@k (the command with an empty /
     one-character argument, repeated, at two or more counts: the SLOPE per
-    occurrence, C-100), SHALLOW / DEEP / DEEP-HALF (the same characters inside
+    occurrence, C-104), SHALLOW / DEEP / DEEP-HALF (the same characters inside
     2 and D levels, and half of them inside D): the copy factor is the slope
     over the tokens held (raw held, factor 1), the per-level memory the rest;
     the cost is the larger of the flat cost per occurrence and the per-level
@@ -591,7 +591,7 @@ MEM_CONTEXTS = ("TEXT", "MATH", "DISPLAY", "MSCRIPT", "DSCRIPT")
 
 
 # A display's material is ONE box: past 2^31 sp its width wraps and the run
-# may stop ("Dimension too large", C-100), so a display instrument holds at
+# may stop ("Dimension too large", C-104), so a display instrument holds at
 # most DISPLAY_WIDTH points of the name (by the account) and reaches past the
 # base's high-water mark with a BALLAST of empty math groups before it (Ord
 # atoms with no width), the same at every level: the slope over the levels is
@@ -649,7 +649,7 @@ def dim_doc(S, x: str, where: str, k: int) -> dict:
 
 
 def review_docs(S) -> list[tuple[str, str, dict]]:
-    """The round-1 review's memory documents (C-100): (family, name, doc)."""
+    """The round-1 review's memory documents (C-104): (family, name, doc)."""
     c, x = S.cmd, S.text("x")
     return [
         ("R-REVIEW-ttdefault-math", "ttdefault", S.doc(S.math("paren", *[c("ttdefault")] * 19000))),

@@ -88,14 +88,14 @@ import gen_strict_signatures as G  # noqa: E402
 # 3b grades every frame-kind pair the model can stack with the command, at
 # the bound (A-CAP-*); stage 0 reads expansion texts by every reading
 # (check_strict_kernel.body_readings); reuse sources are committed files.
-# Version 4 (C-100): the DIMENSION account (stage D: each surviving command's
+# Version 4 (C-104): the DIMENSION account (stage D: each surviving command's
 # dimensions with an empty argument, measured from TeX's own box dumps, its
 # boundaries with every phase-1 item checked against the phase-1 constants);
 # the repetition families are cut within the dimension bound, the nesting
 # ones go as deep as both bounds allow, A-R-BIG-ARG is an argument of empty
 # groups (no dimensions) at the token bound and A-R-DIM-ARG one of characters
 # at the dimension bound; stage G's flat memory documents at three counts
-# (the cost is a slope, C-100); stage 3c's worst cases with a filler of no
+# (the cost is a slope, C-104); stage 3c's worst cases with a filler of no
 # dimensions (the memory bound) and with the costliest filler (whichever
 # bound it reaches first); every memory record carries pdfTeX's report.
 GENERATOR_VERSION = "4"
@@ -206,7 +206,7 @@ def stage2_probes(x: str, gt: int = 1, gm: int = 1, dims: DM.Dims | None = None
                   ) -> dict[str, dict]:
     """Stage 2's families; the nesting families depend on the command's
     measured groups in text (gt) and math (gm): they sit at the TeX-group
-    bound (C-94). With `dims` (C-100), every family is inside the dimension
+    bound (C-94). With `dims` (C-104), every family is inside the dimension
     bound: the repetition families cut into paragraphs and formulas
     (Dims.segment), the nesting families as deep as both bounds allow, the
     character argument as long as the bound allows. The recorded templates
@@ -258,7 +258,7 @@ def stage2_probes(x: str, gt: int = 1, gm: int = 1, dims: DM.Dims | None = None
     p["A-R-BIG-TEXT"] = S.doc(*(one * k))
     p["A-R-BIG-MATH"] = S.doc(_paren(*(one * k)))
     # an argument of the token bound's size: empty groups, which make no
-    # nodes (C-100: characters at that count are past the dimension bound)
+    # nodes (C-104: characters at that count are past the dimension bound)
     p["A-R-BIG-ARG"] = S.doc(*A(x, *[g()] * ((MAX_TOKENS - 4) // 2)))
     # an argument of characters, as many as the dimension bound allows
     mk_c = lambda k: S.doc(*A(x, t("y" * k)))  # noqa: E731
@@ -355,7 +355,7 @@ def with_g(h: dict, gt: int, gm: int, copy: int = 1, cost: int | None = None,
            dim: list | None = None) -> dict:
     """A hypothesis with the command's TeX groups in its run behaviours
     (the loader refuses a run behaviour without them, C-94), its copy factor
-    and, once measured, its memory cost (C-98) and dimensions (C-100)."""
+    and, once measured, its memory cost (C-98) and dimensions (C-104)."""
     h = json.loads(json.dumps(h))
     h["copy"] = copy
     if cost is not None:
@@ -423,7 +423,7 @@ def seed_from(grader, kern, spec: str, oracle) -> dict:
         grader.cache[G.Grader.key(o["tex"])] = {
             "rc": rc, "pdf": pdf, "passes": None, "timed_out": rc == -1,
             "error": err, "line": line}
-    # the memory records keep pdfTeX's statistics: reused WITH them (C-100)
+    # the memory records keep pdfTeX's statistics: reused WITH them (C-104)
     n_mem = G.seed_records(grader, old.get("capacity", {}))
     grader.reused = len(outs) + n_mem
     return {**src, "generator_version": old.get("generator_version"),
@@ -542,7 +542,7 @@ def measure_memory(grader, kern, names: list[str], cap: dict, tcost: int,
     for (x, f, _, extra), m, g in zip(docs, ms, gs):
         out.setdefault(x, {})[f] = C.memory_record(m, g, **extra)
     # the flat documents again at two larger counts, past the base's
-    # high-water mark (the cost is their SLOPE, C-100)
+    # high-water mark (the cost is their SLOPE, C-104)
     more = []
     for x in names:
         for w in ("text", "math"):
@@ -681,7 +681,7 @@ def main() -> int:
             rejected[x] = f"stage 1 (base probes): no hypothesis fits; e.g. {ex_[0]} fails {ex_[1]}"
     print(f"[arg-signatures] stage 1: {len(alive)} names still fit", flush=True)
 
-    # D. the dimension account (C-100): each surviving command with an empty
+    # D. the dimension account (C-104): each surviving command with an empty
     # argument, in the modes its stage-1 grades show it runs in, measured
     # with every phase-1 name and the characters; its dims are the phase-1
     # constants' (B_text, B_math), and every boundary it makes with a phase-1
@@ -787,7 +787,7 @@ def main() -> int:
 
     def run_docs(sigs, docs):
         k = ktmp(sigs)
-        # every document cut within the dimension bound (C-100)
+        # every document cut within the dimension bound (C-104)
         dz = DM.Dims(dtable, {**{n: v["dim"] for n, v in sig1["signatures"].items()},
                               **{n: v["dim"] for n, v in sigs.items()}}, sigs)
         models = k.run([_req(dz.segment(S, d)) for _, d in docs])
@@ -966,7 +966,7 @@ def main() -> int:
                       if signatures[n]["text"][0] == "run"]
             cands.append(([t("x")], T))
             unit, per_tok = max(cands, key=lambda c: c[1])
-            # C-100: a filler of no dimensions (valid in text and in math)
+            # C-104: a filler of no dimensions (valid in text and in math)
             # reaches the memory bound; the costliest filler may reach the
             # dimension bound first. Both worst cases are built and graded.
             zc = [([S.cmd(n)], sig1s[n]["cost"]) for n in sorted(sig1s)
@@ -1072,7 +1072,7 @@ def main() -> int:
         "bounds": {"max_groups": MAX_GROUPS, "max_tokens": MAX_TOKENS,
                    "repeat": REPEAT},
         "capacity": {**cap, "stage3b_rounds": capacity_rounds, "memory_bound": memcap},
-        # C-100: the commands' dimensions (their measurement's primary record
+        # C-104: the commands' dimensions (their measurement's primary record
         # in its own file, by sha256; the gate re-derives every number)
         "dims_derivation": {"evidence": {"file": str(DIMS_EVIDENCE.relative_to(S.REPO)),
                                          "sha256": S.sha256_file(DIMS_EVIDENCE)},

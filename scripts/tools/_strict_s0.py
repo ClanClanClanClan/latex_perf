@@ -157,7 +157,7 @@ class Kernel:
         # signature file, or given by a generator that has no file yet
         if token_cost is not None:
             self.args += ["--token-cost", str(int(token_cost))]
-        # the structural dimension table (C-100): from the phase-1 signature
+        # the structural dimension table (C-104): from the phase-1 signature
         # file, or a JSON file {"dims": table} of a generator that has none yet
         if dims is not None:
             self.args += ["--dims", str(dims)]
@@ -313,7 +313,7 @@ def grade(oracle, tex: str, timeout: int = GRADE_TIMEOUT_S, stats: bool = False)
         td = Path(td)
         (td / "main.tex").write_text(tex, encoding="ascii")
         r = oracle.run_to_fixpoint(td, "main.tex", oracle.tex_env(td), timeout)
-        log = td / "main.log"
+        log = _oracle.job_output(td, "main.tex", ".log")  # pdfTeX's job name
         text = log.read_text(errors="replace") if log.is_file() else ""
         msg, ln = _first_error(text)
         out = {"rc": r.rc, "pdf": r.pdf, "passes": r.passes,
@@ -329,7 +329,7 @@ def grade_bytes(oracle, b: bytes, timeout: int = GRADE_TIMEOUT_S) -> dict:
         td = Path(td)
         (td / "main.tex").write_bytes(b)
         r = oracle.run_to_fixpoint(td, "main.tex", oracle.tex_env(td), timeout)
-        log = td / "main.log"
+        log = _oracle.job_output(td, "main.tex", ".log")  # pdfTeX's job name
         text = log.read_text(errors="replace") if log.is_file() else ""
         msg, ln = _first_error(text)
         return {"rc": r.rc, "pdf": r.pdf, "passes": r.passes,

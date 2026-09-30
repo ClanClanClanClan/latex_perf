@@ -55,7 +55,7 @@ import _strict_dims as DM  # noqa: E402
 # bound and one token past it for every command), and every graded document
 # recorded with its bytes' sha256, grade and pdfTeX's capacity report, so the
 # gates recompute every derived number from these PRIMARY records.
-# Version 3 (C-100): the dimension bound is one of the bounds; the usage
+# Version 3 (C-104): the dimension bound is one of the bounds; the usage
 # documents at the token bound are cut into paragraphs and formulas within
 # it (a document of one 19,999-character paragraph is outside the fragment
 # now); the longest line (19,998 spaces) is recorded as an instrument of the
@@ -287,7 +287,7 @@ def main() -> int:
     usage_docs = {
         "tokens_text": to_bound(lambda k: S.doc(S.text("x" * k))),
         "tokens_math": to_bound(lambda k: S.doc(S.math("paren", *[S.cmd(mathname)] * k))),
-        # an INSTRUMENT of the buffer (outside the fragment since C-100: the
+        # an INSTRUMENT of the buffer (outside the fragment since C-104: the
         # account charges a space its dimensions even where TeX drops it)
         "longest_line": S.doc(*[S.space()] * (MAX_TOKENS - 2), S.cmd("q" * MAX_NAME)),
         "most_names": S.doc(S.cmd(runner), S.group(*[S.cmd(n) for n in names])),
@@ -319,7 +319,7 @@ def main() -> int:
         "schema": "lp-strict-capacity/2",
         "generator": "scripts/tools/measure_strict_capacity.py",
         "generator_version": GENERATOR_VERSION,
-        "correction": "C-94, C-98, C-100",
+        "correction": "C-94, C-98, C-104",
         "oracle": oracle.provenance(),
         "source": S.source_block(),
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),

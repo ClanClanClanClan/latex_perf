@@ -212,7 +212,7 @@ Fixpoint first_heavy (K : contract) (b : nat) (opens : list (nat * nat)) (acc : 
   end.
 
 (** The first token at which a segment of the dimension account
-    ([Decide.dim], C-100), counted as [dim_run] counts it, passes
+    ([Decide.dim], C-104), counted as [dim_run] counts it, passes
     [max_dim]. *)
 Fixpoint first_wide (K : contract) (s : state) (acc : nat) (ks : list ktok) : option ktok :=
   match ks with

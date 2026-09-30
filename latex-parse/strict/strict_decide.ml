@@ -125,7 +125,7 @@ let int_field what v k =
   | `Int i when i >= 0 -> i
   | _ -> die "strict_decide: %s has no %s (C-98)" what k
 
-(* The dimension account's costs (Contract.v [c_dim], C-100), in whole points,
+(* The dimension account's costs (Contract.v [c_dim], C-104), in whole points,
    each a pair [text, math] (the token run in text, in math): per admitted name
    and command, from its signature file ("dim", MEASURED by its generator); per
    structural token, from the phase-1 file's "dims" table (or --dims FILE, a
@@ -141,11 +141,11 @@ let sdims : (string * (int * int)) list option ref = ref None
 
 let dim_pair what = function
   | `List [ `Int t; `Int m ] when t >= 0 && m >= 0 -> (t, m)
-  | _ -> die "strict_decide: %s: a dim is [text, math], two ints (C-100)" what
+  | _ -> die "strict_decide: %s: a dim is [text, math], two ints (C-104)" what
 
 let dim_field what v =
   match member "dim" v with
-  | `Null -> die "strict_decide: %s has no dim (C-100)" what
+  | `Null -> die "strict_decide: %s has no dim (C-104)" what
   | d -> dim_pair what d
 
 let dim_keys =
@@ -177,7 +177,7 @@ let set_sdims what j =
                     die "strict_decide: %s: bad dims.char entry %S" what c;
                   ("char:" ^ c, dim_pair (what ^ ": dims.char") v))
                 cs
-          | _ -> die "strict_decide: %s has no dims.char (C-100)" what
+          | _ -> die "strict_decide: %s has no dims.char (C-104)" what
         in
         List.sort compare
           (chars
@@ -185,14 +185,14 @@ let set_sdims what j =
               (fun k ->
                 match List.assoc_opt k l with
                 | Some v -> (k, dim_pair (what ^ ": dims." ^ k) v)
-                | None -> die "strict_decide: %s has no dims.%s (C-100)" what k)
+                | None -> die "strict_decide: %s has no dims.%s (C-104)" what k)
               dim_keys)
-    | _ -> die "strict_decide: %s has no dims table (C-100)" what
+    | _ -> die "strict_decide: %s has no dims table (C-104)" what
   in
   match !sdims with
   | None -> sdims := Some tbl
   | Some t when t = tbl -> ()
-  | Some _ -> die "strict_decide: %s's dims differ from --dims (C-100)" what
+  | Some _ -> die "strict_decide: %s's dims differ from --dims (C-104)" what
 
 let pick m (t, mm) = if m then mm else t
 
@@ -202,7 +202,7 @@ let sdim m key =
   | Some t -> (
       match List.assoc_opt key t with
       | Some v -> pick m v
-      | None -> die "strict_decide: no dimension for %s (C-100)" key)
+      | None -> die "strict_decide: no dimension for %s (C-104)" key)
 
 (* A character outside the fragment's set is outside the tier (tok_ok); its dim,
    only ever reported, is the largest character's. *)
@@ -1052,7 +1052,7 @@ let tree_mode ?(pairs = false) ~kernel ~contract ~sigs ~asigs () =
     let local_dim = Hashtbl.create 8 in
     (* a hypothesis may carry its cost and its dim; without one it costs a
        token, and without a dim it counts 0 (the generators give the measured
-       dim of every hypothesis whose documents can reach the bound, C-100) *)
+       dim of every hypothesis whose documents can reach the bound, C-104) *)
     let note_cost n v =
       (match member "cost" v with
       | `Int c when c >= 0 -> Hashtbl.replace local_cost n c
@@ -1847,7 +1847,7 @@ let () =
       ( "--dims",
         Arg.Set_string dimf,
         "a JSON file whose \"dims\" is the structural dimension table (a \
-         generator's, C-100)" );
+         generator's, C-104)" );
       ( "--frame-pairs",
         Arg.Set pairs,
         "print the frame-kind combinations of the model (C-94) and exit" );

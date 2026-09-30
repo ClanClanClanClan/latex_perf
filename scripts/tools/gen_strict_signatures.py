@@ -115,7 +115,7 @@ import check_strict_kernel as CK  # noqa: E402
 # 0 reads expansion texts by TeX's printing rules, every reading, and follows
 # expl3 names and active characters (check_strict_kernel.body_readings); a
 # reuse source is a committed file (REV:path), recorded with its commit.
-# Version 7 (C-100): the DIMENSION account (stage D: every surviving name's
+# Version 7 (C-104): the DIMENSION account (stage D: every surviving name's
 # dimensions measured from TeX's own box dumps, the boundary constants over
 # every pair, the structural table; the repetition families are stage 2b,
 # cut into paragraphs and formulas within the dimension bound; stage 3c adds
@@ -375,7 +375,7 @@ class Grader:
 
     def grade_all(self, texs: list[str], label: str, stats: bool = False) -> list[dict]:
         """Every document's grade; with `stats`, a cached grade without
-        pdfTeX's statistics (a reused one) is graded again (C-100: a memory
+        pdfTeX's statistics (a reused one) is graded again (C-104: a memory
         record never lacks pdfTeX's report)."""
         todo = sorted({self.key(t): t for t in texs if self.key(t) not in self.cache
                        or (stats and "stats" not in self.cache[self.key(t)])}.items())
@@ -425,7 +425,7 @@ def seed_from(grader: Grader, kern, spec: str, oracle) -> dict:
             "rc": rc, "pdf": pdf, "passes": None, "timed_out": rc == -1,
             "error": err, "line": line}
     # the memory records keep pdfTeX's statistics: their grades are reused
-    # WITH them (C-100)
+    # WITH them (C-104)
     n_mem = seed_records(grader, old.get("memory", {}))
     grader.reused = len(outs) + n_mem
     return {**src, "generator_version": old.get("generator_version"),
@@ -586,7 +586,7 @@ def _write_json(path: Path, obj) -> Path:
 
 def measure_dims(oracle, workers: int, text_names, math_names, text_cmds=(), math_cmds=(),
                  log=print):
-    """Stage D (C-100): the dimension measurement of the names (each in the
+    """Stage D (C-104): the dimension measurement of the names (each in the
     modes it does not stop in), with the fragment's characters and the
     text font's codes; a name whose items stop an instrument run is found by
     measuring each name alone and returned in `bad`."""
@@ -634,7 +634,7 @@ def rep_depth(dims: DM.Dims, build, hi: int) -> int:
 
 
 def rep_probes(x: str, dims: DM.Dims) -> dict[str, dict]:
-    """Stage 2b (C-100): the REPETITION families of stage2_probes, inside the
+    """Stage 2b (C-104): the REPETITION families of stage2_probes, inside the
     fragment: a family whose document holds more than the dimension bound in
     one segment is cut into paragraphs (a formula into formulas, between
     noads) by `Dims.segment`, and the nesting families go as deep as the group
@@ -692,7 +692,7 @@ def main() -> int:
     tmpdir = Path(tempfile.mkdtemp(prefix="lp-strict-sig-"))
     oracle = _oracle.get_oracle()
     zero = _write_json(tmpdir / "zero-dims.json", {"dims": DM.zero_table()})
-    # S. the memory costs of the structural tokens (C-98, C-100): each
+    # S. the memory costs of the structural tokens (C-98, C-104): each
     # structural shape at three token counts past the base's high-water mark,
     # and the base document; a token's cost is the largest slope of pdfTeX's
     # report per token (or report per token), rounded up, plus one. The
@@ -827,7 +827,7 @@ def main() -> int:
     alive2 = [x for x in alive if x in fits2]
     print(f"[signatures] stage 2a: {len(alive2)} names still fit", flush=True)
 
-    # D. the dimension account (C-100): each surviving name measured in the
+    # D. the dimension account (C-104): each surviving name measured in the
     # modes its grades show it does not stop in (T-ALONE / M-ALONE compile),
     # with the characters and the text font's codes; the boundary constants
     # over every pair; the structural table.
@@ -876,7 +876,7 @@ def main() -> int:
     if not signatures:
         raise SystemExit("no name admitted")
 
-    # C. the memory cost of every admitted name (C-98, C-100): the name
+    # C. the memory cost of every admitted name (C-98, C-104): the name
     # repeated in text, in a formula and in a display, and with a sub- and a
     # superscript in both (a noad), each at three counts, the second and third
     # past the base's high-water mark; its cost is name_cost: the largest
@@ -941,7 +941,7 @@ def main() -> int:
                          "dim": dim_of[x], "atoms": dmath[x] if x in mn else 0,
                          "letters": dd["letters"].get(x, 0) if x in tn else 0}
 
-    # the round-1 review's memory documents (C-100): graded here, so the
+    # the round-1 review's memory documents (C-104): graded here, so the
     # gate checks pdfTeX's report against the account on them for good
     review = {}
     rv = [(f, n, (lambda d=d: d)) for f, n, d in C_.review_docs(S) if n in signatures]
@@ -954,7 +954,7 @@ def main() -> int:
     memory["review"] = review
 
     # 3c. every admitted name at the MEMORY bound and at the DIMENSION bound,
-    # inside the fragment (C-98, C-100): at the memory bound, the name
+    # inside the fragment (C-98, C-104): at the memory bound, the name
     # repeated as often as the fragment allows (paragraphs or formulas of as
     # many as the dimension bound allows), graded, and once more, outside;
     # at the dimension bound, one paragraph / formula / display of as many
@@ -1035,7 +1035,7 @@ def main() -> int:
           flush=True)
 
     # 4. interleaving, to a fixpoint (each document cut within the dimension
-    # bound, C-100)
+    # bound, C-104)
     rounds = []
 
     def ktmp(sigs):
@@ -1178,7 +1178,7 @@ def main() -> int:
         "interleaving": {"seeds": args.interleave_seeds, "rounds": rounds},
         "token_cost": token_cost,
         "memory": memory,
-        # C-100: the dimension account. The structural table the loader reads
+        # C-104: the dimension account. The structural table the loader reads
         # (strict_decide.ml set_sdims), the constants, and the measurement's
         # primary record in its own file (TeX's box dumps, the characters'
         # dimensions, the layout parameters, the noads), by sha256; the gate

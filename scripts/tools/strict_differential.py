@@ -150,7 +150,7 @@ class Names:
                     self.arg_run[where][CK.run_pay(b, where)].append(n)
                 else:
                     self.arg_fatal[where].append(n)
-        # C-100: the dimension account, for building documents within it
+        # C-104: the dimension account, for building documents within it
         sfull = json.loads(Path(sig_path).read_text())
         self.dims = (DM.Dims(sfull["dims"], {n: v["dim"] for n, v in sig.items()}, self.args)
                      if "dims" in sfull else None)
@@ -470,7 +470,7 @@ def _boxes(k: int, x: str, inner: list, opener) -> list:
 
 def _deepest(nm, mk, hi: int) -> int:
     """The largest k <= hi whose document mk(k) is within the dimension bound
-    by the account (C-100); hi without the account."""
+    by the account (C-104); hi without the account."""
     if nm is None or nm.dims is None:
         return hi
     dz, lo = nm.dims, 0
@@ -484,7 +484,7 @@ def _deepest(nm, mk, hi: int) -> int:
 
 
 def _cut_tokens(nm, mk, hi: int) -> dict:
-    """mk(k) cut within the dimension bound (C-100), with k as large as the
+    """mk(k) cut within the dimension bound (C-104), with k as large as the
     token bound allows after the cut (its paragraph breaks are tokens)."""
     if nm is None or nm.dims is None:
         return mk(hi)
@@ -509,7 +509,7 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
     the rule probes' sample of it."""
     B, L = MAX_GROUPS, MAX_TOKENS
     x = text("x")
-    # C-100: the token bound in paragraphs of 399 characters (and formulas of
+    # C-104: the token bound in paragraphs of 399 characters (and formulas of
     # 397), each within the dimension bound: 49 blocks of 400 tokens and the
     # rest; one character more is past the token bound
     def paras(extra):
@@ -523,7 +523,7 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
         ("BOUND", doc(x, *_nest(B, [x]))),
         ("BOUND", doc(dollar(*_nest(B - 1, [x])))),
         ("BOUND", doc(display(*_nest(B - 1, [x])))),
-        # (C-100: 199 nested scripts are past the dimension bound; the script
+        # (C-104: 199 nested scripts are past the dimension bound; the script
         # frames at the group bound are the capacity probes', whose streams
         # stay within it; here the deepest nest the account allows)
         ("BOUND", doc(dollar(*_script_nest(_deepest(nm, lambda k: doc(dollar(*_script_nest(k))),
@@ -539,7 +539,7 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
         ("BOUND-OUT", doc(*paras(L - 49 * 400))),
         ("BOUND-OUT", doc(cmd("q" * (S.MAX_NAME + 1)))),
     ]
-    # C-100: the DIMENSION bound (Decide.dim <= max_dim): one paragraph, one
+    # C-104: the DIMENSION bound (Decide.dim <= max_dim): one paragraph, one
     # formula and one display of characters, and a display of the widest
     # admitted text-and-math glue name (the round-1 review's document: 3,277
     # \quad), each with as many as the account allows, and one more
@@ -566,7 +566,7 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
             out.append(("BOUND-OUT", doc(bracket(*[cmd(q)] * 3277))))
     # the reviewer's class (C-94): a formula inside a box argument, two
     # groups a level; at the bound and one level past it
-    # (C-100: the command with the fewest dimensions: 100 levels of a
+    # (C-104: the command with the fewest dimensions: 100 levels of a
     # \centerline are past the dimension bound)
     runs = sorted((n for n in (nm.arg_run["text"].get("text_restricted", []) if nm else [])
                    if n in nm.arg_run["math"].get("text_restricted", [])),
@@ -575,7 +575,7 @@ def bound_docs(nm: "Names | None" = None) -> list[tuple[str, dict]]:
         a = runs[0]
         g = nm.args[a]["text"][3]
         k = B // (g + 1)
-        # (C-100: a `$` is charged a display's skips, since `$$` opens one:
+        # (C-104: a `$` is charged a display's skips, since `$$` opens one:
         # the dollar levels go as deep as the dimension bound allows)
         kd = _deepest(nm, lambda j: doc(*_boxes(j, a, [x], dollar)), k)
         out += [
@@ -1160,7 +1160,7 @@ def bytes_random_docs(nm: "Names", n: int, rng: random.Random, sig_path: Path):
     its argument or a ^^ on purpose); their number is reported."""
     gen, direct = Gen(rng, nm), SB.Direct(rng, byte_names(nm))
     # the renderer only (it reads no cost or dimension; a table of zeros
-    # satisfies the loader, C-100)
+    # satisfies the loader, C-104)
     import tempfile
     zf = Path(tempfile.mkdtemp(prefix="lp-strict-zero-")) / "zero-dims.json"
     zf.write_text(json.dumps({"dims": DM.zero_table()}))

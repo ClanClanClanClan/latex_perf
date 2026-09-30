@@ -123,8 +123,8 @@ Record asig := mkASig { as_long : longness; as_text : arg_text; as_math : arg_ma
     admitted name by its generator (the name repeated in text, in math, in a
     display) and per structural token by the phase-1 generator, rounded up;
     never read from a definition.  It is an upper bound on every graded
-    document (the account is not proved to be one: correction C-100). *)
-(** [c_dim] (correction C-100): the DIMENSIONS, in whole points, a token can
+    document (the account is not proved to be one: correction C-104). *)
+(** [c_dim] (correction C-104): the DIMENSIONS, in whole points, a token can
     contribute to any dimension pdfTeX computes when it runs in math
     ([c_dim C true t]) or in text ([c_dim C false t]): the absolute widths,
     heights, depths, shifts, stretch and shrink of every node it makes, in

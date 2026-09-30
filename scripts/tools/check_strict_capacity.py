@@ -24,7 +24,7 @@ latex-parse/strict/strict_decide.exe (the extraction) and:
      bytes, token count, memory account (Decide.mem), dimension account
      (Decide.dim) and verdict to be the model's, every document one past a
      bound to be outside, and pdfTeX's report on every graded one to be within
-     the committed account (C-98, C-100).
+     the committed account (C-98, C-104).
 
 So every oracle grade the pure gate reasons about is a grade of the bytes the
 model actually decides. No TeX is run.
@@ -87,7 +87,7 @@ def main() -> int:
     # 3. the memory worst cases and the phase-1 memory documents: every
     # record's bytes, model counts (tokens, account, dimensions) and verdict
     # are the extracted model's under the committed files, rebuilt from the
-    # recorded family and counts (C-98, C-100); and pdfTeX's report is within
+    # recorded family and counts (C-98, C-104); and pdfTeX's report is within
     # the account (base + Decide.mem) on every graded one, stage G's included
     import _strict_dims as DM
     m0 = sig["memory"]["structural"]["BASE"]["used"]
@@ -147,7 +147,7 @@ def main() -> int:
                         "\\the\\ht0:\\the\\dp0}\n\\end{document}\n")
                 if hashlib.sha256(inst.encode()).hexdigest() != r["box_tex_sha256"]:
                     fails.append(f"signatures: {n} {f}: the box instrument's bytes are not "
-                                 f"the ones its measure is recorded for (C-100)")
+                                 f"the ones its measure is recorded for (C-104)")
     rv = {f: d for f, _, d in C.review_docs(S)}
     for f, r in sorted(mem1.get("review", {}).items()):
         if f not in rv:
@@ -189,7 +189,7 @@ def main() -> int:
         if why:
             bad += 1
             if bad <= 12:
-                fails.append(f"memory document {tag}: {why} (M-2, C-100)")
+                fails.append(f"memory document {tag}: {why} (M-2, C-104)")
     if bad > 12:
         fails.append(f"{bad} memory documents fail in all")
     if fails:

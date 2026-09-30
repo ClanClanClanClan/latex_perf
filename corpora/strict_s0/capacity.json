@@ -2,7 +2,7 @@
  "schema": "lp-strict-capacity/2",
  "generator": "scripts/tools/measure_strict_capacity.py",
  "generator_version": "3",
- "correction": "C-94, C-98, C-100",
+ "correction": "C-94, C-98, C-104",
  "oracle": {
   "engine": "pdflatex",
   "distribution": "TeX Live 2026",
@@ -24,8 +24,8 @@
   "contract_config_key": "80abd84bd7677c84ab1478ba239e32daad1374056a5328722dcec5a70e9ced12"
  },
  "kernel_extract_sha256": "e4bac835e742e1b0584c6b23b2acb66186a02313c3cc688307a5db3cd58d06d3",
- "signatures_sha256": "0a80481dfbea47f2de1d0c76ea8e035222e20255baa5ff306325003918978a18",
- "arg_signatures_sha256": "3a0d4b1b1dcf58ed6914d7c7f5150d01619315379117c6d2dde5b9f01a043879",
+ "signatures_sha256": "49e93a902590d7ee16ec7a3684ae3197517765d8be6562f8493b0116fdda7d18",
+ "arg_signatures_sha256": "7e609a0751ccbc5bd81fd4a926ddb5a77ed86e4833e1fa1eedf6a1f470466131",
  "bounds": {
   "max_groups": 200,
   "max_tokens": 20000,
@@ -170,8 +170,8 @@
   "sources": [
    {
     "file": "corpora/strict_s0/capacity.json",
-    "commit": "f509528e9fe30e3f5f7c78b48b998e2f6a9a7bb0",
-    "sha256": "32e80fb72edddde96a56f92bc43bd9698c370c0c6c11980aea02eedbb35c68e9",
+    "commit": "24231d8a5291319322420b3b84873b832fb34ed8",
+    "sha256": "a62a5aa318fd753c68ad0f481c05c33f587a6ddf2ff819e1741497ef0f533c9a",
     "records": 3260
    }
   ]
@@ -3350,14 +3350,14 @@
   "M0": 435796,
   "capacity": 5000000,
   "max_mem": 2000000,
-  "token_cost": 19,
+  "token_cost": 48,
   "account": "used <= M0 + mem (Decide.mem <= max_mem)",
   "predicted_worst": 2435796,
   "margin": 2.053,
   "maximiser_worst_measured": [
-   "clap",
-   "text",
-   1112259
+   "frame",
+   "text:keep",
+   1632796
   ]
  },
  "pairs": [
@@ -325797,5 +325797,5 @@
    ]
   }
  ],
- "seconds": 436
+ "seconds": 334
 }

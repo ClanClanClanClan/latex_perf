@@ -23,7 +23,7 @@
   "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes: run to the first rc 0, then ONE confirming pass whose rc is authoritative; PDF recorded (compiles = rc 0 AND a PDF, STRICT_TIER_DESIGN.md B.4 E0)"
  },
  "kernel_extract_sha256": "e4bac835e742e1b0584c6b23b2acb66186a02313c3cc688307a5db3cd58d06d3",
- "signatures_sha256": "d89f033a85b3ec87efb98f2d581602694890de78b5606fe34d12fe525dc81986",
+ "signatures_sha256": "90eb5bd38fcd38929b8f7dd27c12b5e1d223102b01af9e6c16ae8f9a971ce60d",
  "selection": {
   "rule": "check_strict_kernel.arg_candidates: control words (ASCII letters) of the closed world minus par/begin/end, minus the names of the phase-1 signature file, whose meaning at body start (through one robust wrapper, to the meaning of the inner name) is a macro with parameter text exactly #1",
   "only": null,
@@ -15615,72 +15615,72 @@
    "derived": {
     "centerline": {
      "copy": 3,
-     "cost": 9,
-     "slope": 2.15,
-     "per_level": -863.8,
-     "flat": 8.0
+     "cost": 10,
+     "slope": 2.1567,
+     "per_level": -880.5,
+     "flat": 8.2
     },
     "clap": {
      "copy": 3,
-     "cost": 9,
-     "slope": 2.15,
-     "per_level": -863.8,
-     "flat": 8.0
+     "cost": 10,
+     "slope": 2.1567,
+     "per_level": -880.5,
+     "flat": 8.2
     },
     "frame": {
      "copy": 3,
      "cost": 122,
-     "slope": 2.15,
-     "per_level": -740.9,
+     "slope": 2.1567,
+     "per_level": -757.7,
      "flat": 121.0
     },
     "leftline": {
      "copy": 3,
      "cost": 2,
-     "slope": 2.15,
-     "per_level": -863.8,
-     "flat": 0.2
+     "slope": 2.1567,
+     "per_level": -880.5,
+     "flat": 0.5
     },
     "llap": {
      "copy": 3,
      "cost": 2,
-     "slope": 2.15,
-     "per_level": -863.8,
-     "flat": 0.2
+     "slope": 2.1567,
+     "per_level": -880.5,
+     "flat": 0.5
     },
     "mbox": {
      "copy": 3,
      "cost": 1,
-     "slope": 2.15,
-     "per_level": -881.0,
-     "flat": -7.9
+     "slope": 2.1567,
+     "per_level": -897.7,
+     "flat": -7.8
     },
     "numberline": {
      "copy": 3,
      "cost": 2,
-     "slope": 2.15,
-     "per_level": -863.8,
-     "flat": 0.2
+     "slope": 2.1567,
+     "per_level": -880.5,
+     "flat": 0.5
     },
     "rightline": {
      "copy": 3,
      "cost": 2,
-     "slope": 2.15,
-     "per_level": -863.8,
-     "flat": 0.2
+     "slope": 2.1567,
+     "per_level": -880.5,
+     "flat": 0.5
     },
     "rlap": {
      "copy": 3,
      "cost": 2,
-     "slope": 2.15,
-     "per_level": -863.8,
-     "flat": 0.2
+     "slope": 2.1567,
+     "per_level": -880.5,
+     "flat": 0.5
     },
     "underline": {
      "copy": 3,
      "cost": 41,
-     "slope": 2.15,
-     "per_level": -577.3,
+     "slope": 2.1567,
+     "per_level": -594.0,
      "flat": 39.5
     }
    },
@@ -15710,7 +15710,7 @@
       "fmtversion"
      ]
     ],
-    "cost_per_token": 269
+    "cost_per_token": 335
    },
    "centerline": {
     "text": {
@@ -15718,8 +15718,8 @@
      "inner_units": 19933,
      "outer_units": 0,
      "chars": 0,
-     "mem_at": 1896833,
-     "mem_past": 1896855,
+     "mem_at": 1896855,
+     "mem_past": 1896877,
      "dim_at": 7783,
      "dim_past": 7796,
      "past_over": [
@@ -15730,7 +15730,7 @@
       "sha256": "07fccd23796f8b69b1dee4cce87d8e1d5e965bb4b7ec58df93402c1e80cd99e0",
       "ntoks": 20000,
       "held": 1317723,
-      "mem": 1896833,
+      "mem": 1896855,
       "dim": 7783,
       "verdict": "ready",
       "oracle": [
@@ -15792,7 +15792,7 @@
       "sha256": "ebb7c9d56485200c3265d168c5116fc54bfe533d8d50a1255e57d9be71a0d9e4",
       "ntoks": 20001,
       "held": 1317726,
-      "mem": 1896855,
+      "mem": 1896877,
       "dim": 7796,
       "verdict": "not_strict"
      }
@@ -15802,8 +15802,8 @@
      "inner_units": 1,
      "outer_units": 0,
      "chars": 8,
-     "mem_at": 3709,
-     "mem_past": 3731,
+     "mem_at": 3797,
+     "mem_past": 3819,
      "dim_at": 7998,
      "dim_past": 8011,
      "past_over": [
@@ -15814,7 +15814,7 @@
       "sha256": "517ab4b640f55538238c2090ed78980e2378f720174a93e637d9e7139190d0bc",
       "ntoks": 76,
       "held": 2235,
-      "mem": 3709,
+      "mem": 3797,
       "dim": 7998,
       "verdict": "ready",
       "oracle": [
@@ -15876,7 +15876,7 @@
       "sha256": "45308ae926252c0585ca8e33bf72e825a18b766761a39bf2520f662beb3263e7",
       "ntoks": 77,
       "held": 2238,
-      "mem": 3731,
+      "mem": 3819,
       "dim": 8011,
       "verdict": "not_strict"
      }
@@ -15886,8 +15886,8 @@
      "inner_units": 19931,
      "outer_units": 0,
      "chars": 0,
-     "mem_at": 1896681,
-     "mem_past": 1896703,
+     "mem_at": 1896703,
+     "mem_past": 1896725,
      "dim_at": 7791,
      "dim_past": 7804,
      "past_over": [
@@ -15898,7 +15898,7 @@
       "sha256": "d8daa463771db54b64b30f9df3609e0a882a988301b793ebaeff26b0e7e78ce4",
       "ntoks": 20000,
       "held": 1317591,
-      "mem": 1896681,
+      "mem": 1896703,
       "dim": 7791,
       "verdict": "ready",
       "oracle": [
@@ -15960,7 +15960,7 @@
       "sha256": "f8a7107bc233584f6fc5fa4f0c271e54761ad27498232f415960f69edd0568ad",
       "ntoks": 20001,
       "held": 1317594,
-      "mem": 1896703,
+      "mem": 1896725,
       "dim": 7804,
       "verdict": "not_strict"
      }
@@ -15970,8 +15970,8 @@
      "inner_units": 1,
      "outer_units": 0,
      "chars": 7,
-     "mem_at": 3725,
-     "mem_past": 3747,
+     "mem_at": 3813,
+     "mem_past": 3835,
      "dim_at": 7993,
      "dim_past": 8006,
      "past_over": [
@@ -15982,7 +15982,7 @@
       "sha256": "6a9b2bdaea9ec0513b1d9d5cc10925443eeb2951db640196d4f33e05f22b5af8",
       "ntoks": 77,
       "held": 2232,
-      "mem": 3725,
+      "mem": 3813,
       "dim": 7993,
       "verdict": "ready",
       "oracle": [
@@ -16044,7 +16044,7 @@
       "sha256": "ed78a01d8e7da0a576e701b2df8c71954e20a9a2de4fbdd68fd63ece955755af",
       "ntoks": 78,
       "held": 2235,
-      "mem": 3747,
+      "mem": 3835,
       "dim": 8006,
       "verdict": "not_strict"
      }
@@ -16054,10 +16054,10 @@
     "text": {
      "depth": 200,
      "inner_units": 2878,
-     "outer_units": 19,
+     "outer_units": 13,
      "chars": 0,
-     "mem_at": 1999989,
-     "mem_past": 2000011,
+     "mem_at": 1999997,
+     "mem_past": 2000019,
      "dim_at": 1617,
      "dim_past": 1630,
      "past_over": [
@@ -16065,10 +16065,10 @@
      ],
      "past_outside": true,
      "at": {
-      "sha256": "b67ec4cd809f4c6bfd0da77b68a814a86541b1df1f79f8457d24a2f8b0f2e91c",
-      "ntoks": 3498,
-      "held": 1906557,
-      "mem": 1999989,
+      "sha256": "4d3768afb9045228441d55c4689999262460cd055c22ea5e85580a9ae65cefd2",
+      "ntoks": 3492,
+      "held": 1906539,
+      "mem": 1999997,
       "dim": 1617,
       "verdict": "ready",
       "oracle": [
@@ -16077,7 +16077,7 @@
        "",
        null
       ],
-      "used": 1112265,
+      "used": 1112259,
       "of": 5000000,
       "stats": {
        "strings": [
@@ -16089,7 +16089,7 @@
         5408265
        ],
        "main_memory": [
-        1112265,
+        1112259,
         5000000
        ],
        "hash": [
@@ -16127,10 +16127,10 @@
       }
      },
      "past": {
-      "sha256": "d80d7fc0922f0e241cc0be8dacb432264faa46a14581728d5cf832a68b0aed9e",
-      "ntoks": 3499,
-      "held": 1906560,
-      "mem": 2000011,
+      "sha256": "c29fcc0c4dcc16bf7220bc6fbb5f497addc57dbbfe5a68d45ba8a98d250c7102",
+      "ntoks": 3493,
+      "held": 1906542,
+      "mem": 2000019,
       "dim": 1630,
       "verdict": "not_strict"
      }
@@ -16140,8 +16140,8 @@
      "inner_units": 57,
      "outer_units": 0,
      "chars": 4,
-     "mem_at": 238740,
-     "mem_past": 238762,
+     "mem_at": 242702,
+     "mem_past": 242724,
      "dim_at": 7996,
      "dim_past": 8009,
      "past_over": [
@@ -16152,7 +16152,7 @@
       "sha256": "051a0a96bf682a0e0be6a64ae7b1873e10578ab6af06f42223c9364ba5af9d5b",
       "ntoks": 662,
       "held": 213912,
-      "mem": 238740,
+      "mem": 242702,
       "dim": 7996,
       "verdict": "ready",
       "oracle": [
@@ -16214,7 +16214,7 @@
       "sha256": "e5a80a4e4db6fb1748bc74951e67f1694ea815c9ac4da873662a8a0cd5304e51",
       "ntoks": 663,
       "held": 213915,
-      "mem": 238762,
+      "mem": 242724,
       "dim": 8009,
       "verdict": "not_strict"
      }
@@ -16222,10 +16222,10 @@
     "math": {
      "depth": 199,
      "inner_units": 2895,
-     "outer_units": 12,
+     "outer_units": 6,
      "chars": 1,
-     "mem_at": 1999992,
-     "mem_past": 2000014,
+     "mem_at": 1999999,
+     "mem_past": 2000021,
      "dim_at": 1630,
      "dim_past": 1643,
      "past_over": [
@@ -16233,10 +16233,10 @@
      ],
      "past_outside": true,
      "at": {
-      "sha256": "a7f17c16609be870c069deebeaee80b9697e1f2f3442634160b065f03d76185f",
-      "ntoks": 3508,
-      "held": 1906260,
-      "mem": 1999992,
+      "sha256": "525f0407f0702deeabf42e85c27cb3b99ebbbb7e5dedafe4ab170e7ab8650211",
+      "ntoks": 3502,
+      "held": 1906242,
+      "mem": 1999999,
       "dim": 1630,
       "verdict": "ready",
       "oracle": [
@@ -16245,7 +16245,7 @@
        "",
        null
       ],
-      "used": 1111785,
+      "used": 1111779,
       "of": 5000000,
       "stats": {
        "strings": [
@@ -16257,7 +16257,7 @@
         5408265
        ],
        "main_memory": [
-        1111785,
+        1111779,
         5000000
        ],
        "hash": [
@@ -16295,10 +16295,10 @@
       }
      },
      "past": {
-      "sha256": "20019724058dbc595b02d9b68a336740be615494c0996d799c6ff6220ea33ca1",
-      "ntoks": 3509,
-      "held": 1906263,
-      "mem": 2000014,
+      "sha256": "51f35203c916d813147b3bc5af460ae66e4f47f363fcdf35250462bcdfe8a4b2",
+      "ntoks": 3503,
+      "held": 1906245,
+      "mem": 2000021,
       "dim": 1643,
       "verdict": "not_strict"
      }
@@ -16308,8 +16308,8 @@
      "inner_units": 57,
      "outer_units": 0,
      "chars": 4,
-     "mem_at": 236766,
-     "mem_past": 236788,
+     "mem_at": 240727,
+     "mem_past": 240749,
      "dim_at": 7996,
      "dim_past": 8009,
      "past_over": [
@@ -16320,7 +16320,7 @@
       "sha256": "c360d3abde82a1e996aeaf4f2adb439c975c091f5b433b6a6ee07afb56059704",
       "ntoks": 661,
       "held": 211947,
-      "mem": 236766,
+      "mem": 240727,
       "dim": 7996,
       "verdict": "ready",
       "oracle": [
@@ -16382,7 +16382,7 @@
       "sha256": "dababbc120da445a1264ffb634288315f124ccff0227a2d77930b396b6c18d78",
       "ntoks": 662,
       "held": 211950,
-      "mem": 236788,
+      "mem": 240749,
       "dim": 8009,
       "verdict": "not_strict"
      }
@@ -16478,8 +16478,8 @@
      "inner_units": 67,
      "outer_units": 0,
      "chars": 1,
-     "mem_at": 61393,
-     "mem_past": 61415,
+     "mem_at": 65815,
+     "mem_past": 65837,
      "dim_at": 7995,
      "dim_past": 8008,
      "past_over": [
@@ -16490,7 +16490,7 @@
       "sha256": "6858f450f7960dfd3c8cc05abac6d0204b31dcf985ff1097e1a0cc2a3cb57973",
       "ntoks": 267,
       "held": 32772,
-      "mem": 61393,
+      "mem": 65815,
       "dim": 7995,
       "verdict": "ready",
       "oracle": [
@@ -16552,7 +16552,7 @@
       "sha256": "278bcd422fe388cc46a1e06c0f5b5b9f1c27a662382f916805cfeb22d1a3f4c9",
       "ntoks": 268,
       "held": 32775,
-      "mem": 61415,
+      "mem": 65837,
       "dim": 8008,
       "verdict": "not_strict"
      }
@@ -16646,8 +16646,8 @@
      "inner_units": 67,
      "outer_units": 0,
      "chars": 0,
-     "mem_at": 61409,
-     "mem_past": 61431,
+     "mem_at": 65831,
+     "mem_past": 65853,
      "dim_at": 7991,
      "dim_past": 8004,
      "past_over": [
@@ -16658,7 +16658,7 @@
       "sha256": "f835ce89cdb0882b5a17b9e0e838ee17e6a291e365afeddf857ff8c5c48559d0",
       "ntoks": 268,
       "held": 32769,
-      "mem": 61409,
+      "mem": 65831,
       "dim": 7991,
       "verdict": "ready",
       "oracle": [
@@ -16720,7 +16720,7 @@
       "sha256": "2991d1156d2b12572dd205467e21a5ed122dc358e8dc8e40acd96b6b0e3199ef",
       "ntoks": 269,
       "held": 32772,
-      "mem": 61431,
+      "mem": 65853,
       "dim": 8004,
       "verdict": "not_strict"
      }
@@ -16816,8 +16816,8 @@
      "inner_units": 2,
      "outer_units": 0,
      "chars": 3,
-     "mem_at": 3780,
-     "mem_past": 3802,
+     "mem_at": 3912,
+     "mem_past": 3934,
      "dim_at": 8000,
      "dim_past": 8013,
      "past_over": [
@@ -16828,7 +16828,7 @@
       "sha256": "8b758c545d0c652fd8a2b03e1c87c8d3c061971758f8742e78a858c039c80890",
       "ntoks": 72,
       "held": 2286,
-      "mem": 3780,
+      "mem": 3912,
       "dim": 8000,
       "verdict": "ready",
       "oracle": [
@@ -16890,7 +16890,7 @@
       "sha256": "2b57baeabd4d49b5945f35f083216f7c7192e075e8ce19db027b7e47f06a63d5",
       "ntoks": 73,
       "held": 2289,
-      "mem": 3802,
+      "mem": 3934,
       "dim": 8013,
       "verdict": "not_strict"
      }
@@ -16984,8 +16984,8 @@
      "inner_units": 2,
      "outer_units": 0,
      "chars": 2,
-     "mem_at": 3796,
-     "mem_past": 3818,
+     "mem_at": 3928,
+     "mem_past": 3950,
      "dim_at": 7995,
      "dim_past": 8008,
      "past_over": [
@@ -16996,7 +16996,7 @@
       "sha256": "79d307c57ea6254163be3d5d0c480b4192fbd952460a7941091d65945b4af1ed",
       "ntoks": 73,
       "held": 2283,
-      "mem": 3796,
+      "mem": 3928,
       "dim": 7995,
       "verdict": "ready",
       "oracle": [
@@ -17058,7 +17058,7 @@
       "sha256": "866c88f917454b28f8671e829e0dfe24fe9de71005a80a66089362598043f7ca",
       "ntoks": 74,
       "held": 2286,
-      "mem": 3818,
+      "mem": 3950,
       "dim": 8008,
       "verdict": "not_strict"
      }
@@ -17154,8 +17154,8 @@
      "inner_units": 61,
      "outer_units": 0,
      "chars": 0,
-     "mem_at": 240728,
-     "mem_past": 240750,
+     "mem_at": 244754,
+     "mem_past": 244776,
      "dim_at": 7988,
      "dim_past": 8001,
      "past_over": [
@@ -17166,7 +17166,7 @@
       "sha256": "169e3e304c4198f7cd5b7a1a234ea869f5f1728bdc96e4e363b2d1baaee6e146",
       "ntoks": 662,
       "held": 216300,
-      "mem": 240728,
+      "mem": 244754,
       "dim": 7988,
       "verdict": "ready",
       "oracle": [
@@ -17228,7 +17228,7 @@
       "sha256": "2ddc91e676f5b0af69703457e4aee3a55669cc86fa4467602c2aef64e739b85b",
       "ntoks": 663,
       "held": 216303,
-      "mem": 240750,
+      "mem": 244776,
       "dim": 8001,
       "verdict": "not_strict"
      }
@@ -17322,8 +17322,8 @@
      "inner_units": 61,
      "outer_units": 0,
      "chars": 0,
-     "mem_at": 238749,
-     "mem_past": 238771,
+     "mem_at": 242775,
+     "mem_past": 242797,
      "dim_at": 7990,
      "dim_past": 8003,
      "past_over": [
@@ -17334,7 +17334,7 @@
       "sha256": "34151fdaeba6d9cfcaaaa1321108c79385233266e2d8521c9222d3390185968b",
       "ntoks": 661,
       "held": 214323,
-      "mem": 238749,
+      "mem": 242775,
       "dim": 7990,
       "verdict": "ready",
       "oracle": [
@@ -17396,7 +17396,7 @@
       "sha256": "64b0a9ee550a5f7c0a1d80791ce233b23bcba40c9152c6b1e3618892c9884f81",
       "ntoks": 662,
       "held": 214326,
-      "mem": 238771,
+      "mem": 242797,
       "dim": 8003,
       "verdict": "not_strict"
      }
@@ -17492,8 +17492,8 @@
      "inner_units": 71,
      "outer_units": 0,
      "chars": 7,
-     "mem_at": 249372,
-     "mem_past": 249394,
+     "mem_at": 254058,
+     "mem_past": 254080,
      "dim_at": 7989,
      "dim_past": 8002,
      "past_over": [
@@ -17504,7 +17504,7 @@
       "sha256": "34dcb3eef027779f58598754c9c532233527a7a05609e29f637c155d98a46851",
       "ntoks": 679,
       "held": 222321,
-      "mem": 249372,
+      "mem": 254058,
       "dim": 7989,
       "verdict": "ready",
       "oracle": [
@@ -17566,7 +17566,7 @@
       "sha256": "528eb119f86d254b31eb988be59ffc54c3f064975481e2fa2eb4abfd12f3ce1f",
       "ntoks": 680,
       "held": 222324,
-      "mem": 249394,
+      "mem": 254080,
       "dim": 8002,
       "verdict": "not_strict"
      }
@@ -17660,8 +17660,8 @@
      "inner_units": 71,
      "outer_units": 0,
      "chars": 6,
-     "mem_at": 247342,
-     "mem_past": 247364,
+     "mem_at": 252028,
+     "mem_past": 252050,
      "dim_at": 7988,
      "dim_past": 8001,
      "past_over": [
@@ -17672,7 +17672,7 @@
       "sha256": "1114c5244fc5f980eede1883ab6830a88c48f9cf7885d57cdc57916e908b6466",
       "ntoks": 677,
       "held": 220311,
-      "mem": 247342,
+      "mem": 252028,
       "dim": 7988,
       "verdict": "ready",
       "oracle": [
@@ -17734,7 +17734,7 @@
       "sha256": "33129da588a95baf2149c20aea78b823cb2dd14f65f4eec939eec834ee9b0a71",
       "ntoks": 678,
       "held": 220314,
-      "mem": 247364,
+      "mem": 252050,
       "dim": 8001,
       "verdict": "not_strict"
      }
@@ -17830,8 +17830,8 @@
      "inner_units": 2,
      "outer_units": 0,
      "chars": 3,
-     "mem_at": 3780,
-     "mem_past": 3802,
+     "mem_at": 3912,
+     "mem_past": 3934,
      "dim_at": 8000,
      "dim_past": 8013,
      "past_over": [
@@ -17842,7 +17842,7 @@
       "sha256": "119078238249e8bd6cdd5eea4a240485c645b7b29b7120661f38a9bfb92ec90a",
       "ntoks": 72,
       "held": 2286,
-      "mem": 3780,
+      "mem": 3912,
       "dim": 8000,
       "verdict": "ready",
       "oracle": [
@@ -17904,7 +17904,7 @@
       "sha256": "fc6f6b27574eda82a83188caf2e4bd8791d4c4b5234327132a470b176b2dbe26",
       "ntoks": 73,
       "held": 2289,
-      "mem": 3802,
+      "mem": 3934,
       "dim": 8013,
       "verdict": "not_strict"
      }
@@ -17998,8 +17998,8 @@
      "inner_units": 2,
      "outer_units": 0,
      "chars": 2,
-     "mem_at": 3796,
-     "mem_past": 3818,
+     "mem_at": 3928,
+     "mem_past": 3950,
      "dim_at": 7995,
      "dim_past": 8008,
      "past_over": [
@@ -18010,7 +18010,7 @@
       "sha256": "114f627399980cb08d6bb4ab025f886b6a168fdfd619910f8a46e928cfd65795",
       "ntoks": 73,
       "held": 2283,
-      "mem": 3796,
+      "mem": 3928,
       "dim": 7995,
       "verdict": "ready",
       "oracle": [
@@ -18072,7 +18072,7 @@
       "sha256": "c8ec2c33ca8b51c5c63290b7a6162c50b1c26734caf72f6781173893d400a166",
       "ntoks": 74,
       "held": 2286,
-      "mem": 3818,
+      "mem": 3950,
       "dim": 8008,
       "verdict": "not_strict"
      }
@@ -18168,8 +18168,8 @@
      "inner_units": 61,
      "outer_units": 0,
      "chars": 0,
-     "mem_at": 240728,
-     "mem_past": 240750,
+     "mem_at": 244754,
+     "mem_past": 244776,
      "dim_at": 7988,
      "dim_past": 8001,
      "past_over": [
@@ -18180,7 +18180,7 @@
       "sha256": "9c8a049b26c3aa50a46681a5813a74e2f04b9b49a7c98a88f9a63f43778e88f2",
       "ntoks": 662,
       "held": 216300,
-      "mem": 240728,
+      "mem": 244754,
       "dim": 7988,
       "verdict": "ready",
       "oracle": [
@@ -18242,7 +18242,7 @@
       "sha256": "a26aec617939ea872767495d3577ac4c2eda57da8eb02d3f178bb81a2d211c5c",
       "ntoks": 663,
       "held": 216303,
-      "mem": 240750,
+      "mem": 244776,
       "dim": 8001,
       "verdict": "not_strict"
      }
@@ -18336,8 +18336,8 @@
      "inner_units": 61,
      "outer_units": 0,
      "chars": 0,
-     "mem_at": 238749,
-     "mem_past": 238771,
+     "mem_at": 242775,
+     "mem_past": 242797,
      "dim_at": 7990,
      "dim_past": 8003,
      "past_over": [
@@ -18348,7 +18348,7 @@
       "sha256": "c0809b0f2ad5d9eb65a273e83e14ffd29fa93e394dd22c41f77965cde696378c",
       "ntoks": 661,
       "held": 214323,
-      "mem": 238749,
+      "mem": 242775,
       "dim": 7990,
       "verdict": "ready",
       "oracle": [
@@ -18410,7 +18410,7 @@
       "sha256": "e7323c4072dfdc7f585559535a0144ac5b203330cf37c2921e006c234069a5b1",
       "ntoks": 662,
       "held": 214326,
-      "mem": 238771,
+      "mem": 242797,
       "dim": 8003,
       "verdict": "not_strict"
      }
@@ -18506,8 +18506,8 @@
      "inner_units": 67,
      "outer_units": 0,
      "chars": 6,
-     "mem_at": 56157,
-     "mem_past": 56179,
+     "mem_at": 60579,
+     "mem_past": 60601,
      "dim_at": 7994,
      "dim_past": 8007,
      "past_over": [
@@ -18518,7 +18518,7 @@
       "sha256": "40bf04b180210f65cb2b77367b9af7c3a12afee898b9c086de8ab6874e93b55f",
       "ntoks": 272,
       "held": 32787,
-      "mem": 56157,
+      "mem": 60579,
       "dim": 7994,
       "verdict": "ready",
       "oracle": [
@@ -18580,7 +18580,7 @@
       "sha256": "efdb713468a35a679aaa5314e8b60f15dd6b9a9762b205365722ac25f3849da6",
       "ntoks": 273,
       "held": 32790,
-      "mem": 56179,
+      "mem": 60601,
       "dim": 8007,
       "verdict": "not_strict"
      }
@@ -18674,8 +18674,8 @@
      "inner_units": 24,
      "outer_units": 0,
      "chars": 1,
-     "mem_at": 214490,
-     "mem_past": 214512,
+     "mem_at": 216074,
+     "mem_past": 216096,
      "dim_at": 7993,
      "dim_past": 8009,
      "past_over": [
@@ -18686,7 +18686,7 @@
       "sha256": "df17e6095a662b684a8d19e0ba1fa8a7992828ed3ae91ad533e66cf3d64646c6",
       "ntoks": 625,
       "held": 192237,
-      "mem": 214490,
+      "mem": 216074,
       "dim": 7993,
       "verdict": "ready",
       "oracle": [
@@ -18748,7 +18748,7 @@
       "sha256": "a282506b53f2b1396685098114a2331ce6524be291ba539feb125746b19571ec",
       "ntoks": 626,
       "held": 192240,
-      "mem": 214512,
+      "mem": 216096,
       "dim": 8009,
       "verdict": "not_strict"
      }
@@ -18953,8 +18953,8 @@
  },
  "reuse": {
   "file": "corpora/contracts/strict/article-s1-arg-signatures.json",
-  "commit": "63470941d60127b517c2e81e76eaeb181c800738",
-  "sha256": "c3a471c72e914aa70da69c88113c75cc69d59cf623068be43692d759615d436e",
+  "commit": "a2ff60c260f3396939788e1774eb9d880b9a9243",
+  "sha256": "c6d89629fb57bcee1ade0694a7ad09af26ea02358bb0f4faa475b2e37dbbec40",
   "generator_version": "4",
   "grades_reused": 2384
  },
@@ -232876,7 +232876,7 @@
    "stage 4": 0,
    "stage 5": 0
   },
-  "documents_graded_now": 975,
+  "documents_graded_now": 925,
   "grades_reused": 2384,
   "oracle_timeouts": 0,
   "admitted_by_class": {
@@ -235781,7 +235781,7 @@
     1
    ],
    "copy": 3,
-   "cost": 9,
+   "cost": 10,
    "dim": [
     353,
     355
@@ -235801,7 +235801,7 @@
     1
    ],
    "copy": 3,
-   "cost": 9,
+   "cost": 10,
    "dim": [
     8,
     10

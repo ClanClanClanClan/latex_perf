@@ -2,7 +2,7 @@
 
 These are verbatim copies of the scripts in `~/.cache/lp-spike-h1/` that produced the H.1 results. They are kept as documentation: several start TeX engines outside `scripts/tools/_oracle.py` (the reference build, INITEX), which `check_oracle_pin.py` forbids for tracked code, so they are not committed as executable files. Each block names its source file and sha256.
 
-## `buildpdftex.sh`
+## buildpdftex.sh (in ~/.cache/lp-spike-h1/)
 
 sha256 `9b2f8b236ba3a7e54099b2337e43d103813fa3985da04d0528b08295348ec8a6`
 
@@ -48,7 +48,7 @@ ls -la inst/bin/*/pdftex
 sha256sum inst/bin/*/pdftex
 ```
 
-## `build-amd64-pdftex.sh`
+## build-amd64-pdftex.sh (in ~/.cache/lp-spike-h1/)
 
 sha256 `583e43487b743b1c492c2ce4c9cb0cbc76fcdeaa118c79d309961e93ab1ebed2`
 
@@ -72,7 +72,7 @@ cd /work/repo/Work/texk/web2c && ls -la pdftex && sha256sum pdftex && strip -o /
 exit $rc
 ```
 
-## `f7r.sh`
+## f7r.sh (in ~/.cache/lp-spike-h1/)
 
 sha256 `e3c27a89852c1062b26d48e6fa330e82e3f533c710c2217f2ee2455e8a53b762`
 
@@ -94,7 +94,7 @@ echo "raw diffs shipped vs plus1min:"; cmp -l s.raw plus1min.raw
 echo "log diff (minus line 1):"; diff <(sed 1d $(dirname $F)/pdflatex.log) <(sed 1d start/pdflatex.log)
 ```
 
-## `f7amd.sh`
+## f7amd.sh (in ~/.cache/lp-spike-h1/)
 
 sha256 `af70f5eb536b658d96fac714ca50d1840546ba60e1b085ce72bae719c71a2e45`
 
@@ -114,7 +114,7 @@ done
 sha256sum shipped-$(uname -m).fmt own/pdflatex.fmt armclock/pdflatex.fmt
 ```
 
-## `fmar1/fmasrc.sh`
+## fmar1/fmasrc.sh (in ~/.cache/lp-spike-h1/)
 
 sha256 `bedbef25334331451b798415ed84116e2b5b19101f8121a605b882189b4a967a`
 
@@ -128,7 +128,7 @@ PY
 echo done
 ```
 
-## `harness/h1cmp.py`
+## harness/h1cmp.py (in ~/.cache/lp-spike-h1/)
 
 sha256 `4e5ac1cb8923d01681520421eac752b129364cb4b8573cd2d7cd1115d571577d`
 

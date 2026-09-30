@@ -1,7 +1,7 @@
 {
 "schema": "lp-strict-dims/1",
 "generator": "scripts/tools/gen_strict_signatures.py",
-"generator_version": "8",
+"generator_version": "7",
 "oracle": {
 "engine": "pdflatex",
 "distribution": "TeX Live 2026",

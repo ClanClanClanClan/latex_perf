@@ -720,7 +720,9 @@ def name_mem_doc(S, x: str, ctx: str, k: int) -> dict:
     regime (`retain`)."""
     c = S.cmd(x)
     if ctx == "PAR":
-        return S.doc(*[q for _ in range(k) for q in (c, S.par())])
+        # (then a character, as in TEXT: a name that typesets nothing leaves a
+        # document with no page, which is no grade)
+        return S.doc(*[q for _ in range(k) for q in (c, S.par())], S.text("x"))
     if ctx == "XN":
         return S.doc(*[q for _ in range(k) for q in (S.text("x"), c)])
     unit = [c, S.script(True, S.text("x")), S.script(False, S.text("x"))]
@@ -743,9 +745,11 @@ def keep_doc(S, x: str, k: int, unit: list | None = None) -> dict:
     its page open: \\offinterlineskip, then the name (or `unit`) k times,
     each a paragraph of its own (the round-2 review's shape; material
     without height adds nothing to the page, which never ships before the
-    end)."""
+    end), then a character (a document of names that typeset nothing has no
+    page)."""
     u = unit if unit is not None else [S.cmd(x)]
-    return S.doc(S.cmd("offinterlineskip"), *[q for _ in range(k) for q in (*u, S.par())])
+    return S.doc(S.cmd("offinterlineskip"), *[q for _ in range(k) for q in (*u, S.par())],
+                 S.text("x"))
 
 
 def cap_doc(S, dims, x: str, where: str, k: int) -> dict:

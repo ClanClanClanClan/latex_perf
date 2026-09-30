@@ -886,6 +886,7 @@ class Checker:
         (wr / "dir.tex").rmdir()
         self.supervisor_checks()
         self.host_diagnostic_checks()
+        self.leak_check_checks()
         # (5) no engine run inherits the grader's stdin: the container's docker
         # client and the native supervisor both get /dev/null
         rfd, wfd = os.pipe()
@@ -1001,6 +1002,41 @@ class Checker:
             self.expect(f"the real supervisor without inotify ({sys.platform}) was "
                         f"not refused: {got!r} (fail closed, C-99)",
                         got.startswith("refused"))
+
+    def leak_check_checks(self) -> None:
+        """THE IN-CONTAINER LEAK CHECK (C-97) runs as shell, here with a fake
+        `ps` (one scripted listing per call) and an instant `sleep`: a leak
+        is the SAME process (pid:command:state) still listed after
+        LEAK_CONFIRM_S re-samples. A concurrent run's zombie that its
+        supervisor reaps late is not a leak (review round 4 re-measure: it
+        refused check_contracts_reproducible); a persistent zombie or orphan
+        is, even when its command name is a glob pattern that matches a file
+        in the working directory."""
+        d = self.td / "leak"
+        d.mkdir(exist_ok=True)
+        (d / "ps").write_text('#!/bin/sh\nn=$(cat cnt 2>/dev/null || echo 0); '
+                              'echo $((n+1)) > cnt\nsed -n "$((n+1))p" plan | tr "|" "\\n"\n')
+        (d / "sleep").write_text("#!/bin/sh\nexit 0\n")
+        for f in ("ps", "sleep"):
+            (d / f).chmod(0o755)
+        (d / "3096:p:Z").write_text("")   # `[pdflatex]` would glob to this
+        z, o = " 3096 7 Z 5 [pdflatex]", " 55 1 S 9 gs -q"
+        k = _oracle.LEAK_CONFIRM_S + 2
+        for label, plan, leak in (
+                ("a sibling's zombie reaped after 2 samples", [z, z] + [""] * k, False),
+                ("a different zombie each sample", [" 1 7 Z 5 [pdflatex]",
+                                                    " 2 7 Z 5 [pdflatex]", ""], False),
+                ("a persistent zombie", [z] * k, True),
+                ("a persistent orphan", [o] * k, True),
+                ("nothing", [""], False)):
+            (d / "plan").write_text("\n".join(plan) + "\n")
+            (d / "cnt").unlink(missing_ok=True)
+            p = subprocess.run(["sh", "-c", _oracle.LEAK_CHECK_SH + ' lp_leak N; echo "rc=$?"'],
+                               cwd=d, capture_output=True, text=True, timeout=60,
+                               env={**os.environ, "PATH": f"{d}:{os.environ['PATH']}"})
+            got = "N_LEAK=" in p.stderr and "rc=1" in p.stdout
+            self.expect(f"the container leak check on {label}: leak={got}, want "
+                        f"{leak} (C-97)", got == leak, (p.stdout + p.stderr)[:200])
 
     def host_diagnostic_checks(self) -> None:
         """HostDiagnostic (oracle_baseline_classify's host arm, never a

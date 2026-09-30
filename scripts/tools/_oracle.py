@@ -110,18 +110,31 @@ MAX_PASSES = 3
 # a pids limit far above measured need so one runaway job cannot exhaust the
 # VM that every oracle container shares, and a per-run check, in the same
 # exec as the run, that no process was left behind: an orphan of PID 1 other
-# than the container's own `sleep infinity`, or a zombie, older than 2 s and still
-# there 1 s later. Refused (OracleError), never graded.
+# than the container's own `sleep infinity`, or a zombie, older than 2 s and
+# the SAME process (pid:command:state) still there after LEAK_CONFIRM_S
+# seconds. Refused (OracleError), never graded.
+# WHY THE SAME PROCESS, FOR THAT LONG (review round 4 re-measure): runs share
+# the container (gen_contract's threads, a grader's --jobs), and a CONCURRENT
+# run's pdflatex is a zombie from its exit until its supervisor reaps it.
+# Under load that took over a second: MEASURED at load average ~110 on the
+# 4-CPU VM, `check_contracts_reproducible --all` was refused on
+# "3096:[pdflatex]:Z", a sibling job's engine, because the check sampled
+# twice 1 s apart and compared no identities. A left-behind process is
+# still there after 10 s by definition; a sibling's zombie is not.
 PIDS_LIMIT = 4096
 CONTAINER_CONFIG_TAG = f"-init-p{PIDS_LIMIT}"
+LEAK_CONFIRM_S = 10
 LEAK_CHECK_SH = (
     'lp_leak_list() { ps -eo pid=,ppid=,stat=,etimes=,args= | '
     'awk \'($2 == 1 && !($5 == "sleep" && $6 == "infinity" && NF == 6) && $4 >= 2) '
     '|| ($3 ~ /^Z/ && $4 >= 2) '
-    '{print $1 ":" $5 ":" $3}\' | head -5 | tr "\\n" " "; }; '
-    'lp_leak() { l=$(lp_leak_list); [ -z "$l" ] && return 0; sleep 1; '
-    'l=$(lp_leak_list); [ -z "$l" ] && return 0; '
-    'printf "\\n%s_LEAK=%s\\n" "$1" "$l" >&2; return 1; }; ')
+    '{print $1 ":" $5 ":" $3}\' | tr "\\n" " "; }; '
+    'lp_leak() { set -f; l=$(lp_leak_list); i=0; '
+    f'while [ -n "$l" ] && [ $i -lt {LEAK_CONFIRM_S} ]; do sleep 1; '
+    'm=" $(lp_leak_list) "; k=""; for x in $l; do case "$m" in *" $x "*) '
+    'k="$k$x ";; esac; done; l=$k; i=$((i+1)); done; '
+    'set +f; [ -z "$l" ] && return 0; '
+    'printf "\\n%s_LEAK=%s\\n" "$1" "$(set -f; echo $l | cut -d" " -f1-5)" >&2; return 1; }; ')
 
 # The shim's exit code when the ORACLE failed (docker unreachable, container
 # gone, a refused environment), as opposed to pdflatex failing. It used to be 2,

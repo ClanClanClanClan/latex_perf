@@ -34,8 +34,8 @@
  },
  "reuse": {
   "file": "corpora/contracts/strict/article-s0-signatures.json",
-  "commit": "15ccac449e9a23745d87a56437fa0611c3283f41",
-  "sha256": "d89f033a85b3ec87efb98f2d581602694890de78b5606fe34d12fe525dc81986",
+  "commit": "dc3f5606a53b953845604b4c4bf20385c63ce048",
+  "sha256": "90eb5bd38fcd38929b8f7dd27c12b5e1d223102b01af9e6c16ae8f9a971ce60d",
   "generator_version": "7",
   "grades_reused": 10854
  },
@@ -191071,7 +191071,7 @@
    "stage 3c": 0,
    "stage 4": 0
   },
-  "documents_graded_now": 1343,
+  "documents_graded_now": 1001,
   "grades_reused": 10854,
   "oracle_timeouts": 1,
   "admitted_by_class": {
@@ -195613,21 +195613,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "0de810162f3775c869fed848f253fb727c26cd312d622b8e00ee925e2c570d9c",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "7d05484e38eab54ecdc8b2b881d9d511e46e0effc2f39cdd9fe3a58562127ee5",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -195639,7 +195639,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -196180,21 +196180,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "b763a7b12fb5e610eafbc29dd4da80b97ee203e238a05841dd2af690d86cf188",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "4b2639d476a82ef23622e8ca01464118cab549a6d3626d0139299e3d1d3b486b",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -196206,7 +196206,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -196243,21 +196243,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "c09e5a07c9a7cb12ed645c496c2728445dd3403a4324206945df543a9a19c880",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "0de810162f3775c869fed848f253fb727c26cd312d622b8e00ee925e2c570d9c",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -196269,7 +196269,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -196371,21 +196371,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "76262e431ecb71b8d96a3bd98082c2e542288db9a1fc5ae0918f43c3d9b64281",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "4716249c87f6dd86619d8029757ac9f5d252edbad29c8b4c44cbef0f7a1cf64e",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -196397,7 +196397,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -196938,21 +196938,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "dbfdced3e7d00d10c80a0f45359af5b710ec4165e3b2cb907c71c1080bd7f142",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "2454525c5bf82a8e47daefa83d517667162eb28d77e9949d478f0167a806a1d5",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -196964,7 +196964,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -197001,21 +197001,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "e101e9e6d6e0a5d42cda2957b8dfeeb16ecb264a74616f616c7c36c35a7f87ca",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "76262e431ecb71b8d96a3bd98082c2e542288db9a1fc5ae0918f43c3d9b64281",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -197027,7 +197027,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -197129,21 +197129,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "250f9a39e781c9728ff0f5f2b42eeae0e848ff567d753e42023bbed3cadcec4f",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "fd1273619dc3e7087ad412de99f75ad95a98448185794fd757eccf1931b5c8c8",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -197155,7 +197155,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -197696,21 +197696,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "c2b2681a1b0634a47b9f05f1e1d528fdd008b87f07cd648bc669574aa2e96570",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "5e7436ffaa02287ea2169e517ad7194e13d0e9b1c873857ec5ebb75b2c35f4de",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -197722,7 +197722,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -197759,21 +197759,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "652c7c8b9adf946d555c54d900289cd564f755a7cd8fd501fac11b82f93e3704",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "250f9a39e781c9728ff0f5f2b42eeae0e848ff567d753e42023bbed3cadcec4f",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -197785,7 +197785,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -197887,21 +197887,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "de6c5a0ef4e4ed8b87516515ca103226aabcc0e27b13d2a1eb27bf6bbe9d8e90",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "e8ad4f20e2faed7f2edc3547963f261ae20f3d2076aba0180f4fc0392f878cd8",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 840057,
-     "dim": 648017,
+     "mem": 210057,
+     "dim": 162017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 883536,
+     "used": 547796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -197913,7 +197913,7 @@
        5408265
       ],
       "main_memory": [
-       883536,
+       547796,
        5000000
       ],
       "hash": [
@@ -198454,21 +198454,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "3cb07b26ac147e606f03ef7e04e4b5f7a7141143d6c59ce77828365b1f910f84",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "46ed74ef5b4105d39c7e00a9544f281ab541e82c2d0fdcb65d8834778cef816b",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1680057,
-     "dim": 1296017,
+     "mem": 420057,
+     "dim": 324017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1362536,
+     "used": 658796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -198480,7 +198480,7 @@
        5408265
       ],
       "main_memory": [
-       1362536,
+       658796,
        5000000
       ],
       "hash": [
@@ -198517,21 +198517,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "632ca2d5c85c84a83547b2226848a1c744257c00cf91af36e3892016f488c0a7",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "de6c5a0ef4e4ed8b87516515ca103226aabcc0e27b13d2a1eb27bf6bbe9d8e90",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3360057,
-     "dim": 2592017,
+     "mem": 840057,
+     "dim": 648017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2320536,
+     "used": 883536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -198543,7 +198543,7 @@
        5408265
       ],
       "main_memory": [
-       2320536,
+       883536,
        5000000
       ],
       "hash": [
@@ -198645,21 +198645,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "448f006d02658f8fced496d45f4ea173caef237e77cb125cf72df7e4b6d7fe0d",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "8fdce928a19af883cafb0d4e5b1d4052f6ac9d6fd87f8febbc0291e557ea5e09",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 488017,
+     "mem": 138057,
+     "dim": 122017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -198671,7 +198671,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -199212,21 +199212,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "c3ec71ee98db40c19564c4ce5e425272a7c59eacd5aa1f4594f5e92a3d8d86da",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "522e5df256a8c8d526098af1552712b346600d4ee8dd2136d10bb9d060185e17",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 976017,
+     "mem": 276057,
+     "dim": 244017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -199238,7 +199238,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -199275,21 +199275,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "bd9d2f390908adaaad188b969d2d81e1d31c729a6faf6f2dadab6b0fe53eab91",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "448f006d02658f8fced496d45f4ea173caef237e77cb125cf72df7e4b6d7fe0d",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1952017,
+     "mem": 552057,
+     "dim": 488017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -199301,7 +199301,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -199403,21 +199403,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "db8a9a9e4a0bc678e8653d1498de76244cd9e21ee7d4bd4aacb481684fb3b260",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "027e94d594e34de5252cd21c98b039f81c5ef868c0ade35ded9026336c4b736c",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 964057,
-     "dim": 660017,
+     "mem": 241057,
+     "dim": 165017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 808536,
+     "used": 528796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -199429,7 +199429,7 @@
        5408265
       ],
       "main_memory": [
-       808536,
+       528796,
        5000000
       ],
       "hash": [
@@ -199970,21 +199970,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "4095269d0c5f780de2633508e8e87b07b6994a02ee2e0e05fccb88ede509051b",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "949ecf3d9a6bc25cac78f860a01c9a3a65dab00871379f3d55ef1aa9d5edaadf",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1928057,
-     "dim": 1320017,
+     "mem": 482057,
+     "dim": 330017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1213536,
+     "used": 621796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -199996,7 +199996,7 @@
        5408265
       ],
       "main_memory": [
-       1213536,
+       621796,
        5000000
       ],
       "hash": [
@@ -200033,21 +200033,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "a16aa9ed2e6d2e22bf39ea36d1d28ce328eb82aeca4532b0ec58be71e2f1d683",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "db8a9a9e4a0bc678e8653d1498de76244cd9e21ee7d4bd4aacb481684fb3b260",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3856057,
-     "dim": 2640017,
+     "mem": 964057,
+     "dim": 660017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2021536,
+     "used": 808536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -200059,7 +200059,7 @@
        5408265
       ],
       "main_memory": [
-       2021536,
+       808536,
        5000000
       ],
       "hash": [
@@ -200730,21 +200730,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "c1b036d1895ec734aa0bc3871ee2ce2c89dd2ce9f95679e34985c8f37a91523f",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "cd1727db9230f504e95539bbdbc997b621dd2648b718e900e3b22989747284e7",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 872057,
-     "dim": 776017,
+     "mem": 218057,
+     "dim": 194017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 846536,
+     "used": 530796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -200756,7 +200756,7 @@
        5408265
       ],
       "main_memory": [
-       846536,
+       530796,
        5000000
       ],
       "hash": [
@@ -201297,21 +201297,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "10344e6505db4b8b01b85ceedae545a797d303c57d14ce4c000d568452f9d4af",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "3a2cd6c2ead3f84fc3147c5a817c8812d755902b89c0ba12c5196aad05e4a134",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1744057,
-     "dim": 1552017,
+     "mem": 436057,
+     "dim": 388017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1288536,
+     "used": 625536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -201323,7 +201323,7 @@
        5408265
       ],
       "main_memory": [
-       1288536,
+       625536,
        5000000
       ],
       "hash": [
@@ -201360,21 +201360,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "d8f75ca251319091e7b1a166d805feb47b8b2c4d6094c1a5df771fd9355ff59e",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "c1b036d1895ec734aa0bc3871ee2ce2c89dd2ce9f95679e34985c8f37a91523f",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3488057,
-     "dim": 3104017,
+     "mem": 872057,
+     "dim": 776017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2172536,
+     "used": 846536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -201386,7 +201386,7 @@
        5408265
       ],
       "main_memory": [
-       2172536,
+       846536,
        5000000
       ],
       "hash": [
@@ -201551,21 +201551,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "9c4d1a18532da4d96eb00ecde23e9c190deadde4ac62b3029bb6257ef37fef62",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "4217b1c5af9f8f8c81b151d376b6450bbc669371ba654be235cf23c716af295b",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 564057,
-     "dim": 480017,
+     "mem": 141057,
+     "dim": 120017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -201577,7 +201577,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -202244,21 +202244,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "bce9c84fe867f9b4d812f28d32d1465b13a37b8ad41795ece566e85d795e5700",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "487f29d38017f5621e8b434a3a1560cd159ca04529a3debf86efabda808d80fe",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1128057,
-     "dim": 960017,
+     "mem": 282057,
+     "dim": 240017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -202270,7 +202270,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -202307,21 +202307,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "c826f6267eb54508a3486c63321ae6be4a88a0b0594b28d559189c9d706b71aa",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "9c4d1a18532da4d96eb00ecde23e9c190deadde4ac62b3029bb6257ef37fef62",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2256057,
-     "dim": 1920017,
+     "mem": 564057,
+     "dim": 480017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -202333,7 +202333,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -202435,21 +202435,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "ceb317e64f8992363008714d63fe297acd7053ed02d63a0824fefc779bc55ee5",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "95efb3179d0ba887e6f166810f5883ba98c88638eee1f2ad1a2df9906836c2b7",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 504017,
+     "mem": 143057,
+     "dim": 126017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 644796,
+     "used": 515796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -202461,7 +202461,7 @@
        5408265
       ],
       "main_memory": [
-       644796,
+       515796,
        5000000
       ],
       "hash": [
@@ -203002,21 +203002,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "67174e1cf24b6ad53a361482270922644f92beb5ef4c06f255af441bd273b83c",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "aec7e13f29e341d8c1836292c283c5e62b677e55b269c4e2ab300cd2603ab0fb",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 1008017,
+     "mem": 286057,
+     "dim": 252017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 811796,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -203028,7 +203028,7 @@
        5408265
       ],
       "main_memory": [
-       811796,
+       560796,
        5000000
       ],
       "hash": [
@@ -203065,21 +203065,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "3dd52a1826e6ab868e6dd98c8072413e0a39dfbcd0559cadffb1ab92bb0581ff",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "ceb317e64f8992363008714d63fe297acd7053ed02d63a0824fefc779bc55ee5",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 2016017,
+     "mem": 572057,
+     "dim": 504017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1181862,
+     "used": 644796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -203091,7 +203091,7 @@
        5408265
       ],
       "main_memory": [
-       1181862,
+       644796,
        5000000
       ],
       "hash": [
@@ -203193,21 +203193,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "b21e9ecc62d663edc91eeb4233e270f8d76fe5e4a987267f1688255b22dc4d5a",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "a1ffc0527c6fed34100fc6b5ce30dd0e1b9a6a971114dee63797890bd4bbb70b",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 996057,
-     "dim": 904017,
+     "mem": 249057,
+     "dim": 226017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 805796,
+     "used": 527796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -203219,7 +203219,7 @@
        5408265
       ],
       "main_memory": [
-       805796,
+       527796,
        5000000
       ],
       "hash": [
@@ -203760,21 +203760,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "c4a8597b122dc0f9bd0673e1d4318aed3cf910e129ca257af63ab4561c0beb72",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "85a9cfac33186ff873de3b5bb100f8e2b3c28a527de2f4d3b968fe9cfa23abb7",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1992057,
-     "dim": 1808017,
+     "mem": 498057,
+     "dim": 452017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1192536,
+     "used": 620796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -203786,7 +203786,7 @@
        5408265
       ],
       "main_memory": [
-       1192536,
+       620796,
        5000000
       ],
       "hash": [
@@ -203823,21 +203823,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "cd500875ff5a61ba5c7d814ac5c559bc4f39ce0de89d6ed9aa2fd21f8c02fbd4",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "b21e9ecc62d663edc91eeb4233e270f8d76fe5e4a987267f1688255b22dc4d5a",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3984057,
-     "dim": 3616017,
+     "mem": 996057,
+     "dim": 904017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1979536,
+     "used": 805796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -203849,7 +203849,7 @@
        5408265
       ],
       "main_memory": [
-       1979536,
+       805796,
        5000000
       ],
       "hash": [
@@ -203951,21 +203951,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "f88148d5c3f3cc3ad5a0dc752b41a8fd7ebe8ea18397da66dfa2bcaa91be3e79",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "92d1f14b7380f0df90aa3ada15ef40df9158306f364ffdf5ad1e8892857704bb",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 996057,
-     "dim": 904017,
+     "mem": 249057,
+     "dim": 226017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 805796,
+     "used": 527796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -203977,7 +203977,7 @@
        5408265
       ],
       "main_memory": [
-       805796,
+       527796,
        5000000
       ],
       "hash": [
@@ -204518,21 +204518,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "5e6138dc397602a331e23d35ff0596a4a3b7a6a7c1a084c83c5f595c86ef9d77",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "d0379bddcfaf7111cf7b686b6bc134e3c6bc882ab085c75cb08d0a48876d63b9",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1992057,
-     "dim": 1808017,
+     "mem": 498057,
+     "dim": 452017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1192536,
+     "used": 620796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -204544,7 +204544,7 @@
        5408265
       ],
       "main_memory": [
-       1192536,
+       620796,
        5000000
       ],
       "hash": [
@@ -204581,21 +204581,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "6a79d4feff943e50538fc633fe29de8659e6e9a5e8b378af925213d0842bcb3b",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "f88148d5c3f3cc3ad5a0dc752b41a8fd7ebe8ea18397da66dfa2bcaa91be3e79",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3984057,
-     "dim": 3616017,
+     "mem": 996057,
+     "dim": 904017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1979536,
+     "used": 805796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -204607,7 +204607,7 @@
        5408265
       ],
       "main_memory": [
-       1979536,
+       805796,
        5000000
       ],
       "hash": [
@@ -204709,21 +204709,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "8c3b31116729b31cfc325dd0f653180c7ecddfd7c5889532d0e4b327ad71771d",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "67a2bfdb8780c523cdb76142641b14ee78fb379c2b1f6350d02d33b35c3197f1",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 536057,
-     "dim": 456017,
+     "mem": 134057,
+     "dim": 114017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -204735,7 +204735,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -205276,21 +205276,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "e8a81cd945dc0c852c9e952e4e7388e008446230048ae8a67f0ecf2c5c8f0107",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "c6f4557f651d3249e86608d03db2ebe313a9b3bcebc39e811d3401cebbadc9c7",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1072057,
-     "dim": 912017,
+     "mem": 268057,
+     "dim": 228017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -205302,7 +205302,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -205339,21 +205339,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "4dda8ee023c026aa74666b8f07eac13f06aaae92a48410144d36c6127ec33294",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "8c3b31116729b31cfc325dd0f653180c7ecddfd7c5889532d0e4b327ad71771d",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2144057,
-     "dim": 1824017,
+     "mem": 536057,
+     "dim": 456017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -205365,7 +205365,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -205530,21 +205530,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "392f27e078980d8ae0995b6a641eee58a969be4e33ca76f28879fa3f19a031cf",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "ac21004f8e82eb5777f3dc67694fc7fa4ae0063194bb48436ea5c13d84d1574e",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 420057,
-     "dim": 408017,
+     "mem": 105057,
+     "dim": 102017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 678796,
+     "used": 498796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -205556,7 +205556,7 @@
        5408265
       ],
       "main_memory": [
-       678796,
+       498796,
        5000000
       ],
       "hash": [
@@ -206223,21 +206223,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "10f6a93428237e6a479e4a37d933ef817b67bbc851fe3ef00c7746cad86ad008",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "2a720769225d0941ecdf403519c1dadf54ab4ff9621200ead4a95497ca0d67a3",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 840057,
-     "dim": 816017,
+     "mem": 210057,
+     "dim": 204017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 918796,
+     "used": 558796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -206249,7 +206249,7 @@
        5408265
       ],
       "main_memory": [
-       918796,
+       558796,
        5000000
       ],
       "hash": [
@@ -206286,21 +206286,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "8fd79ca67494c098458bd8fa11e65847f3ae0a06a8d70e4e4409fafd8123a393",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "392f27e078980d8ae0995b6a641eee58a969be4e33ca76f28879fa3f19a031cf",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1680057,
-     "dim": 1632017,
+     "mem": 420057,
+     "dim": 408017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1401028,
+     "used": 678796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -206312,7 +206312,7 @@
        5408265
       ],
       "main_memory": [
-       1401028,
+       678796,
        5000000
       ],
       "hash": [
@@ -206983,21 +206983,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "68a270c16a080795265980527074e04efc718f83488cacbe2c04e531aceddcd3",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "10fdc8ad181fcacfc9bd4424fe8da374a474cf7b5640a6a1a444558d1ee6c3ed",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 468057,
-     "dim": 472017,
+     "mem": 117057,
+     "dim": 118017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 660796,
+     "used": 514796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -207009,7 +207009,7 @@
        5408265
       ],
       "main_memory": [
-       660796,
+       514796,
        5000000
       ],
       "hash": [
@@ -207550,21 +207550,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "4d83e1d658b30b23bbc38dff1e70e6118d7f8da71c535ac08d88ce869b5488cd",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "a32c19e36a006537978b93ba878b49917b98a85a23b8fc51ed5ec165019f3f02",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 936057,
-     "dim": 944017,
+     "mem": 234057,
+     "dim": 236017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 827796,
+     "used": 577796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -207576,7 +207576,7 @@
        5408265
       ],
       "main_memory": [
-       827796,
+       577796,
        5000000
       ],
       "hash": [
@@ -207613,21 +207613,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "190f3de7a9c4bc21ebe2760bf074f113c3e9861cc72286a510aa46f3edcb0c10",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "68a270c16a080795265980527074e04efc718f83488cacbe2c04e531aceddcd3",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1872057,
-     "dim": 1888017,
+     "mem": 468057,
+     "dim": 472017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1181260,
+     "used": 660796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -207639,7 +207639,7 @@
        5408265
       ],
       "main_memory": [
-       1181260,
+       660796,
        5000000
       ],
       "hash": [
@@ -207741,21 +207741,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "95f1a93af1e34e70dbcd27631cbe0d535423cc6123d6af57f94c8a2c0b0b7e5c",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "3a4e36b335acc6e54f80b5d5c21f8923ec36b10dfd7bc30f858682e86f139ae7",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 996057,
-     "dim": 932017,
+     "mem": 249057,
+     "dim": 233017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 805796,
+     "used": 527796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -207767,7 +207767,7 @@
        5408265
       ],
       "main_memory": [
-       805796,
+       527796,
        5000000
       ],
       "hash": [
@@ -208308,21 +208308,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "517115439659bfbec0b059f8aa69a42d01bb204131d87669e4a80d0d28eff693",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "ec1d7f4df63fb95bfef132f78c06812a96f313695282dace652eba58a30a2d2f",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1992057,
-     "dim": 1864017,
+     "mem": 498057,
+     "dim": 466017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1192536,
+     "used": 620796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -208334,7 +208334,7 @@
        5408265
       ],
       "main_memory": [
-       1192536,
+       620796,
        5000000
       ],
       "hash": [
@@ -208371,21 +208371,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "05e703e335b09c28fc7ee17fbdb9b3a3c7e5426dbf6ed8611af6586bc0eb7520",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "95f1a93af1e34e70dbcd27631cbe0d535423cc6123d6af57f94c8a2c0b0b7e5c",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3984057,
-     "dim": 3728017,
+     "mem": 996057,
+     "dim": 932017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1979536,
+     "used": 805796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -208397,7 +208397,7 @@
        5408265
       ],
       "main_memory": [
-       1979536,
+       805796,
        5000000
       ],
       "hash": [
@@ -208499,21 +208499,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "0c903f6a964a3a1d3744ece8c93f5a8e0ea255c7074c1d94825e40fa8577300c",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "2e95a603e01d1d9a8d15e431be1a54ff7205c1a6631b0831c46a07ebef65eeaf",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 704057,
-     "dim": 624017,
+     "mem": 176057,
+     "dim": 156017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 824536,
+     "used": 530796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -208525,7 +208525,7 @@
        5408265
       ],
       "main_memory": [
-       824536,
+       530796,
        5000000
       ],
       "hash": [
@@ -209066,21 +209066,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "4ebc72569f60f6a584cf0d645ffba29c20901204bf150dbb50b011ab75a5389d",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "01d919578f1a5f3d918b8878ea8c1017c0e2436a4c1b8722622b732f568054be",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1408057,
-     "dim": 1248017,
+     "mem": 352057,
+     "dim": 312017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1244536,
+     "used": 625796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -209092,7 +209092,7 @@
        5408265
       ],
       "main_memory": [
-       1244536,
+       625796,
        5000000
       ],
       "hash": [
@@ -209129,21 +209129,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "f53f1f72ef4a6df279f5280422d1b5350fd04cfbb39f97431e171df6e740ee01",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "0c903f6a964a3a1d3744ece8c93f5a8e0ea255c7074c1d94825e40fa8577300c",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2816057,
-     "dim": 2496017,
+     "mem": 704057,
+     "dim": 624017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2085536,
+     "used": 824536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -209155,7 +209155,7 @@
        5408265
       ],
       "main_memory": [
-       2085536,
+       824536,
        5000000
       ],
       "hash": [
@@ -209257,21 +209257,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "3a9bb7e9751ab4ddc2e0d21364d3ad10554a4a38db1bfb21e1662e63b0bf581d",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "34105ef13f3733e8571965b10b9b2fcecffcf2d715e56b9765d1813677cd3b6e",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 484017,
+     "mem": 138057,
+     "dim": 121017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 664796,
+     "used": 514796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -209283,7 +209283,7 @@
        5408265
       ],
       "main_memory": [
-       664796,
+       514796,
        5000000
       ],
       "hash": [
@@ -209824,21 +209824,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "0552047bf50b7a0471e24b2342ff7d8476086282b23c368d0536ea065a32140d",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "bada3c376acc25607b0cac20ef14eec6f6fda6f453cf6a680cf908fef4f88165",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 968017,
+     "mem": 276057,
+     "dim": 242017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 830796,
+     "used": 580796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -209850,7 +209850,7 @@
        5408265
       ],
       "main_memory": [
-       830796,
+       580796,
        5000000
       ],
       "hash": [
@@ -209887,21 +209887,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "bcac006a57d1a1fe2f6210550e1ea9d12bc7ff498f6090da2fd9784f4bbda1ae",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "3a9bb7e9751ab4ddc2e0d21364d3ad10554a4a38db1bfb21e1662e63b0bf581d",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1936017,
+     "mem": 552057,
+     "dim": 484017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1184536,
+     "used": 664796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -209913,7 +209913,7 @@
        5408265
       ],
       "main_memory": [
-       1184536,
+       664796,
        5000000
       ],
       "hash": [
@@ -210015,21 +210015,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "882fa99f8f31a7343014d77333420be457bcb40649f80370fb59eb75bb0ac8cc",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "2a4752bc14af4ac2d9212f14d964d74ca3fcc89b3175b5278beb8468f51e003c",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 1324057,
-     "dim": 764017,
+     "mem": 331057,
+     "dim": 191017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1293536,
+     "used": 648796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -210041,7 +210041,7 @@
        5408265
       ],
       "main_memory": [
-       1293536,
+       648796,
        5000000
       ],
       "hash": [
@@ -210645,21 +210645,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "965bbc13873bc1f2eece0f1aa9d5815c22d111b7e60ca64bc38baba0618867ae",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "882fa99f8f31a7343014d77333420be457bcb40649f80370fb59eb75bb0ac8cc",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2648057,
-     "dim": 1528017,
+     "mem": 1324057,
+     "dim": 764017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2180536,
+     "used": 1293536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -210671,7 +210671,7 @@
        5408265
       ],
       "main_memory": [
-       2180536,
+       1293536,
        5000000
       ],
       "hash": [
@@ -210836,21 +210836,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "580854a045f5684a5a57801dcd084a2b7985ae18694c87acd31b969047dd4a0e",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "a48ba85b45c05e48d553bbad2180954aeb263e6da863dd88e206af95512b8325",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 1644057,
-     "dim": 1204017,
+     "mem": 411057,
+     "dim": 301017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 769330,
+     "used": 524796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -210862,7 +210862,7 @@
        5408265
       ],
       "main_memory": [
-       769330,
+       524796,
        5000000
       ],
       "hash": [
@@ -211529,21 +211529,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "6262071746d6f711047c506944a75fbd0e0ca0bd38ac8a9d3be712a79a662337",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "6f081176ddaeb18dd49d8b74b44cd6de8731b92ee75da896718e641ab553dc15",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 3288057,
-     "dim": 2408017,
+     "mem": 822057,
+     "dim": 602017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1118330,
+     "used": 599796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -211555,7 +211555,7 @@
        5408265
       ],
       "main_memory": [
-       1118330,
+       599796,
        5000000
       ],
       "hash": [
@@ -211592,21 +211592,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "95ffc00c90332a80ca285ff73879cbdd9ea1940dd2265c5df38efbf9145b16c3",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "580854a045f5684a5a57801dcd084a2b7985ae18694c87acd31b969047dd4a0e",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 6576057,
-     "dim": 4816017,
+     "mem": 1644057,
+     "dim": 1204017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1822330,
+     "used": 769330,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -211618,7 +211618,7 @@
        5408265
       ],
       "main_memory": [
-       1822330,
+       769330,
        5000000
       ],
       "hash": [
@@ -212352,21 +212352,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "bd8df26a98989d98caf97437fdcb2eb696509d009a0bfdafb0cea0a53adbfa2f",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "1b8304d33fd6de81d1fff56f7764ca771ea147fe5bdd1778af969a530ed15524",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 1644057,
-     "dim": 4416017,
+     "mem": 411057,
+     "dim": 1104017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 732796,
+     "used": 509796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -212378,7 +212378,7 @@
        5408265
       ],
       "main_memory": [
-       732796,
+       509796,
        5000000
       ],
       "hash": [
@@ -213045,21 +213045,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "0186202067409159b43a44cf06270102301725f4647c178feadc2924e862ff60",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "b952b04d999addfc7b044f021d11734e0320b0d4b9039b807bb3c8d54a16a20a",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 3288057,
-     "dim": 8832017,
+     "mem": 822057,
+     "dim": 2208017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1031536,
+     "used": 584796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -213071,7 +213071,7 @@
        5408265
       ],
       "main_memory": [
-       1031536,
+       584796,
        5000000
       ],
       "hash": [
@@ -213108,21 +213108,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "1004a2d22b97a81005ba00b5be0b48fead1ccc16fd6ac1bf738f2f24e0d9df03",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "bd8df26a98989d98caf97437fdcb2eb696509d009a0bfdafb0cea0a53adbfa2f",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 6576057,
-     "dim": 17664017,
+     "mem": 1644057,
+     "dim": 4416017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1657536,
+     "used": 732796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -213134,7 +213134,7 @@
        5408265
       ],
       "main_memory": [
-       1657536,
+       732796,
        5000000
       ],
       "hash": [
@@ -213236,21 +213236,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "fe95e97a331eee2f025f71f0ebd870acc07a2e1aa9e714a83d1d27075c253fcb",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "96f99902484af63bc7b33538e1bc8761fe39a1ce34e4d65292118bd52fb07b75",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 696057,
-     "dim": 580017,
+     "mem": 174057,
+     "dim": 145017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 808536,
+     "used": 528796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -213262,7 +213262,7 @@
        5408265
       ],
       "main_memory": [
-       808536,
+       528796,
        5000000
       ],
       "hash": [
@@ -213803,21 +213803,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "c30b42e088fc7f359f4f83be26eea3d2d484fa1e484d20f245c1d8cabb7b13e6",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "af0e1902b263ffddafe1f7ffcbe1e974cbdddfc2903d4faba263b55c0f627943",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1392057,
-     "dim": 1160017,
+     "mem": 348057,
+     "dim": 290017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1212536,
+     "used": 621796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -213829,7 +213829,7 @@
        5408265
       ],
       "main_memory": [
-       1212536,
+       621796,
        5000000
       ],
       "hash": [
@@ -213866,21 +213866,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "039366e66ef92f1104ca571737d246c218f77a30f63b901e1484dee164421b70",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "fe95e97a331eee2f025f71f0ebd870acc07a2e1aa9e714a83d1d27075c253fcb",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2784057,
-     "dim": 2320017,
+     "mem": 696057,
+     "dim": 580017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2021536,
+     "used": 808536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -213892,7 +213892,7 @@
        5408265
       ],
       "main_memory": [
-       2021536,
+       808536,
        5000000
       ],
       "hash": [
@@ -214057,21 +214057,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "d64379f8e6d47acaeec9b36dc1d14d35a460db012190acce1e02af816a048480",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "a7d3e4f990595267df3a972917a3ab16096f932b51e11a8ade7e43c02a103074",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 904057,
-     "dim": 736017,
+     "mem": 226057,
+     "dim": 184017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 741536,
+     "used": 505796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -214083,7 +214083,7 @@
        5408265
       ],
       "main_memory": [
-       741536,
+       505796,
        5000000
       ],
       "hash": [
@@ -214750,21 +214750,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "1912ff138851b4d67a5b4ffd33990e7ebe8f7c24902dd68f9d15b43eea9c8219",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "171de5150e4f4e1971d81117d6f225ca5d175e63d62e02ad7373a53e20ba871e",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1808057,
-     "dim": 1472017,
+     "mem": 452057,
+     "dim": 368017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1078536,
+     "used": 576796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -214776,7 +214776,7 @@
        5408265
       ],
       "main_memory": [
-       1078536,
+       576796,
        5000000
       ],
       "hash": [
@@ -214813,21 +214813,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "39518d5974446b3137a6d867b7657319dadea9d040de98e646159f200ef881c6",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "d64379f8e6d47acaeec9b36dc1d14d35a460db012190acce1e02af816a048480",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3616057,
-     "dim": 2944017,
+     "mem": 904057,
+     "dim": 736017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1752536,
+     "used": 741536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -214839,7 +214839,7 @@
        5408265
       ],
       "main_memory": [
-       1752536,
+       741536,
        5000000
       ],
       "hash": [
@@ -215004,21 +215004,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "134be6f4d98ec51f2546eaf3aa9c486c09fb2685b3724b237797e809404a4bb6",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "dba6f02df6201a86263781b503a8e092e56ec72916cbe89e0cd2c8e953bf45eb",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 520057,
-     "dim": 532017,
+     "mem": 130057,
+     "dim": 133017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 686536,
+     "used": 498796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -215030,7 +215030,7 @@
        5408265
       ],
       "main_memory": [
-       686536,
+       498796,
        5000000
       ],
       "hash": [
@@ -215697,21 +215697,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "dc0e6debc9497e993d07fa9f841d1d94d6de3826425b8554019b8697c5ab185b",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "97149f82e843b1a7797ceabd1be25e109d368669e6765c6e851d2815f0f4c532",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1040057,
-     "dim": 1064017,
+     "mem": 260057,
+     "dim": 266017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 968536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -215723,7 +215723,7 @@
        5408265
       ],
       "main_memory": [
-       968536,
+       560796,
        5000000
       ],
       "hash": [
@@ -215760,21 +215760,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "5d06132feb0fa5df84b06a4d4bada3b697162f018570defcbd1df381537580c5",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "134be6f4d98ec51f2546eaf3aa9c486c09fb2685b3724b237797e809404a4bb6",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2080057,
-     "dim": 2128017,
+     "mem": 520057,
+     "dim": 532017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1531536,
+     "used": 686536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -215786,7 +215786,7 @@
        5408265
       ],
       "main_memory": [
-       1531536,
+       686536,
        5000000
       ],
       "hash": [
@@ -215888,21 +215888,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "1ecf6fc34514ff5448c1aadeb0754175e4f2c8191ab51acd4a4d2a42090e2a3b",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "e9c3fa3d2f5b85bd5dfdeeee05bf4796ba9b2900621911a47a37bde572eecc1f",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 472017,
+     "mem": 138057,
+     "dim": 118017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -215914,7 +215914,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -216455,21 +216455,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "9376dafec294f6e2794b9e1c1f4efc0facea2d5d7c8dd7aae7a1ee171542f723",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "e912d14f32c85ac2f2be149f855a6ec061c4332c429f3dc6899ceb94ee7a7689",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 944017,
+     "mem": 276057,
+     "dim": 236017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -216481,7 +216481,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -216518,21 +216518,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "ec52f5ad964331345054ed9e9fee22c35871c615a0dd70ae2402cdbb46c395be",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "1ecf6fc34514ff5448c1aadeb0754175e4f2c8191ab51acd4a4d2a42090e2a3b",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1888017,
+     "mem": 552057,
+     "dim": 472017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -216544,7 +216544,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -216646,21 +216646,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "308c7005f0b0d927c500b97b0b5147bdcb5cf08e5a266f46df7d1e1adcac0c84",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "00d0f4973a2defffcaeae977343b58d9b857cb0ed875e3e2a0dbc02b9e6df5d2",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 704057,
-     "dim": 632017,
+     "mem": 176057,
+     "dim": 158017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 853536,
+     "used": 538796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -216672,7 +216672,7 @@
        5408265
       ],
       "main_memory": [
-       853536,
+       538796,
        5000000
       ],
       "hash": [
@@ -217213,21 +217213,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "ef1d3e7e452b15975cc3619903ce1ead45b35ab79ad900381702af2a7e9d9faa",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "16732c892906e8eccf18a7fa9282f89ff53234c4543ed4ca02ec85f15f534aa6",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1408057,
-     "dim": 1264017,
+     "mem": 352057,
+     "dim": 316017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1303536,
+     "used": 640796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -217239,7 +217239,7 @@
        5408265
       ],
       "main_memory": [
-       1303536,
+       640796,
        5000000
       ],
       "hash": [
@@ -217276,21 +217276,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "72a518c3334bb8c1865f962b597e96183a8e6d3449efd3eb2a66c48af3cbc55f",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "308c7005f0b0d927c500b97b0b5147bdcb5cf08e5a266f46df7d1e1adcac0c84",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2816057,
-     "dim": 2528017,
+     "mem": 704057,
+     "dim": 632017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2201536,
+     "used": 853536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -217302,7 +217302,7 @@
        5408265
       ],
       "main_memory": [
-       2201536,
+       853536,
        5000000
       ],
       "hash": [
@@ -217467,21 +217467,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "5c07768f302f111f35102d8473c28503a15d2abbce618036ba3e07224905bbb1",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "d082502569d0bb477d56e61d5439d58fade8ab39f2cc626d8c8818583a5ad2a8",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 688057,
-     "dim": 516017,
+     "mem": 172057,
+     "dim": 129017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 686536,
+     "used": 498796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -217493,7 +217493,7 @@
        5408265
       ],
       "main_memory": [
-       686536,
+       498796,
        5000000
       ],
       "hash": [
@@ -218160,21 +218160,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "bfd22ca4ab33b2b0b71431773b68956f653b76682ee76246855c9590779fa3de",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "343d798a85743fc1f93fbcee46058e647bc3e8b80e8a63ff76af93a71189b8ca",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1376057,
-     "dim": 1032017,
+     "mem": 344057,
+     "dim": 258017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 968536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -218186,7 +218186,7 @@
        5408265
       ],
       "main_memory": [
-       968536,
+       560796,
        5000000
       ],
       "hash": [
@@ -218223,21 +218223,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "8f057c4f4fece240ccf589758dba73b34844fea999a3124ccaa2d6af39e2046b",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "5c07768f302f111f35102d8473c28503a15d2abbce618036ba3e07224905bbb1",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2752057,
-     "dim": 2064017,
+     "mem": 688057,
+     "dim": 516017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1531536,
+     "used": 686536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -218249,7 +218249,7 @@
        5408265
       ],
       "main_memory": [
-       1531536,
+       686536,
        5000000
       ],
       "hash": [
@@ -218351,21 +218351,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "e6fa5b1da3fd6730096145c58239a2fd3165eedb2f81662176581147323de61c",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "5d8d2de79bbfb038a6d606a7ea5cbc78bf630ec4e7e2d13480ec956c398e8e8f",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 488017,
+     "mem": 138057,
+     "dim": 122017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -218377,7 +218377,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -218918,21 +218918,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "f5f7d8077f3f344be414f173924a6558a1543642038d61b592292cb1d451509e",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "f6f6ec87c5664cfff97f724661fbb623656b20ae41392d07908a599de298f6c0",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 976017,
+     "mem": 276057,
+     "dim": 244017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -218944,7 +218944,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -218981,21 +218981,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "3a512c582c0af967e249eee8987933816fa44cb121fb12477b75e053d668bb16",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "e6fa5b1da3fd6730096145c58239a2fd3165eedb2f81662176581147323de61c",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1952017,
+     "mem": 552057,
+     "dim": 488017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -219007,7 +219007,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -219678,21 +219678,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "00ef979cd0c98b569d9ef296e5814d307e6c68c689f61586dab23c414c4130f1",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "a0d803a23b2d7e7b0ace9c5a35280218b078f02d6288df9ee00894fc6b64d546",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 644057,
-     "dim": 584017,
+     "mem": 161057,
+     "dim": 146017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 843536,
+     "used": 537796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -219704,7 +219704,7 @@
        5408265
       ],
       "main_memory": [
-       843536,
+       537796,
        5000000
       ],
       "hash": [
@@ -220245,21 +220245,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "d497139834c74b3ffe3afc4f792c22664295d61a1ec646521796b2b1207c2ad8",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "462569761fd608b2f8c0f5786d88429221f6c228b573826bee5ebdf39ca0e5c3",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1288057,
-     "dim": 1168017,
+     "mem": 322057,
+     "dim": 292017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1283536,
+     "used": 638796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -220271,7 +220271,7 @@
        5408265
       ],
       "main_memory": [
-       1283536,
+       638796,
        5000000
       ],
       "hash": [
@@ -220308,21 +220308,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "1f1db198ba2b6c4f3f53ab73ea71e670459078b1f0de4f3c268e3aa78f3e3bfb",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "00ef979cd0c98b569d9ef296e5814d307e6c68c689f61586dab23c414c4130f1",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2576057,
-     "dim": 2336017,
+     "mem": 644057,
+     "dim": 584017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2163536,
+     "used": 843536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -220334,7 +220334,7 @@
        5408265
       ],
       "main_memory": [
-       2163536,
+       843536,
        5000000
       ],
       "hash": [
@@ -220436,21 +220436,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "28b38ee7324f84477121e15c75d1c07ca953d67323872a303b1539f67d9d39cf",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "0e2d5bc11745373bf44bbfb1e84fa3036a63456895a7601e06795e6977b8e46b",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 504017,
+     "mem": 143057,
+     "dim": 126017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -220462,7 +220462,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -221003,21 +221003,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "4aad3a7d66da11a796f10f4a917e2955bf41837aa3b5bf80fd07604d6822bbb1",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "b28bb072119bcd3f70cea938497d5734aafd4fc3208b4e5a06d60054ef256d83",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 1008017,
+     "mem": 286057,
+     "dim": 252017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -221029,7 +221029,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -221066,21 +221066,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "d0c147dc8649743769b61be452c0f5fdc6362a6db8264c10d3959576204b559d",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "28b38ee7324f84477121e15c75d1c07ca953d67323872a303b1539f67d9d39cf",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 2016017,
+     "mem": 572057,
+     "dim": 504017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -221092,7 +221092,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -221194,21 +221194,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "6a04611b4fedf39b87f575f85c771fa0065e3a3f91cbb10ee54a879f3a559b9b",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "06d95b6c3defea32528b34d91005707f03af8a8d17689724f8c8f687391b0256",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 1072057,
-     "dim": 728017,
+     "mem": 268057,
+     "dim": 182017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 824536,
+     "used": 530796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -221220,7 +221220,7 @@
        5408265
       ],
       "main_memory": [
-       824536,
+       530796,
        5000000
       ],
       "hash": [
@@ -221761,21 +221761,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "359f48c9cf10e16fab9593d3246c722fff8958d98f668a5482fd0569905ba525",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "deac07a203359b048d427e9109efc5ad5fc972b456e274fa05b9794c8acbb9c0",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 2144057,
-     "dim": 1456017,
+     "mem": 536057,
+     "dim": 364017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1244536,
+     "used": 625796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -221787,7 +221787,7 @@
        5408265
       ],
       "main_memory": [
-       1244536,
+       625796,
        5000000
       ],
       "hash": [
@@ -221824,21 +221824,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "9e1af8486e6ab77d483b8eafb1d3b64c3f5380d514a4642212ab48e527bae195",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "6a04611b4fedf39b87f575f85c771fa0065e3a3f91cbb10ee54a879f3a559b9b",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 4288057,
-     "dim": 2912017,
+     "mem": 1072057,
+     "dim": 728017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2085536,
+     "used": 824536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -221850,7 +221850,7 @@
        5408265
       ],
       "main_memory": [
-       2085536,
+       824536,
        5000000
       ],
       "hash": [
@@ -221952,21 +221952,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "d08cd12885a5524fa1e44618e88522584fa9a9547e45864d8f0830e68dabc568",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "1b22d4a96d452103255fe9ed61b9ab7b771fd1faba06269f8de4fc4408dd56ac",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 472057,
-     "dim": 480017,
+     "mem": 118057,
+     "dim": 120017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 650796,
+     "used": 514796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -221978,7 +221978,7 @@
        5408265
       ],
       "main_memory": [
-       650796,
+       514796,
        5000000
       ],
       "hash": [
@@ -222519,21 +222519,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "baf40727454261bf8d6683c8aa91b77c366e8f2b9202a7adb6f10c286f17fb67",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "a2c8b04c6f034c5dfb076ae5f9e9839b1b8bea7140893609a565c73b85e9ba09",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 944057,
-     "dim": 960017,
+     "mem": 236057,
+     "dim": 240017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 817796,
+     "used": 567796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -222545,7 +222545,7 @@
        5408265
       ],
       "main_memory": [
-       817796,
+       567796,
        5000000
       ],
       "hash": [
@@ -222582,21 +222582,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "a4be4ee1b438b66b386749d4d9b334e9ee3206d7066224767bc8822c55e0ecee",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "d08cd12885a5524fa1e44618e88522584fa9a9547e45864d8f0830e68dabc568",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1888057,
-     "dim": 1920017,
+     "mem": 472057,
+     "dim": 480017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1209390,
+     "used": 650796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -222608,7 +222608,7 @@
        5408265
       ],
       "main_memory": [
-       1209390,
+       650796,
        5000000
       ],
       "hash": [
@@ -222710,21 +222710,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "5163a4fe25ddc32458b8a8dbc907ca407ceb74f8787c29f97ecf1706e1b25a0c",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "816a7c0cd4fdd55752df3e0d301994e7d91a479f1dec5125ab3ac7dd5757ead9",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 1072057,
-     "dim": 748017,
+     "mem": 268057,
+     "dim": 187017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 824536,
+     "used": 530796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -222736,7 +222736,7 @@
        5408265
       ],
       "main_memory": [
-       824536,
+       530796,
        5000000
       ],
       "hash": [
@@ -223277,21 +223277,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "b7453e459a296abff2a5cca9ed5e4c07b39f0b71315af24d2f69c236993f5d4e",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "3975701e38e34414bce2efc0073d9cb08c65e87263378978c9fc3be5f4a74ce0",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 2144057,
-     "dim": 1496017,
+     "mem": 536057,
+     "dim": 374017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1244536,
+     "used": 625796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -223303,7 +223303,7 @@
        5408265
       ],
       "main_memory": [
-       1244536,
+       625796,
        5000000
       ],
       "hash": [
@@ -223340,21 +223340,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "9e6430c88a3648d21c4673f8ae51718621d7cf33e47701eef9f02014b6a89d4a",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "5163a4fe25ddc32458b8a8dbc907ca407ceb74f8787c29f97ecf1706e1b25a0c",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 4288057,
-     "dim": 2992017,
+     "mem": 1072057,
+     "dim": 748017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2085536,
+     "used": 824536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -223366,7 +223366,7 @@
        5408265
       ],
       "main_memory": [
-       2085536,
+       824536,
        5000000
       ],
       "hash": [
@@ -223468,21 +223468,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "7e53d8252cf79f7127f298266b7f66bcbee3a1d7c07274ded6455437df106f60",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "66d5c6fb08e469d3feadfe83c49d5b1bc47cd9adae480c8dab6772cafd371981",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 480017,
+     "mem": 138057,
+     "dim": 120017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -223494,7 +223494,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -224035,21 +224035,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "5098bff469f813e85e121a19fb32f780689672efd7e26c77a029d7c676061e3f",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "b2112ab1a658ede7606d6443268e2689f81d359e76ac0dfcc02ee81379632e40",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 960017,
+     "mem": 276057,
+     "dim": 240017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -224061,7 +224061,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -224098,21 +224098,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "f1db371b93a2fa15dfc624935d0f8110d45ed123fc0d0b9ad56d51cec25c3c6e",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "7e53d8252cf79f7127f298266b7f66bcbee3a1d7c07274ded6455437df106f60",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1920017,
+     "mem": 552057,
+     "dim": 480017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -224124,7 +224124,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -224226,21 +224226,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "0a26a8e83c8958fbe5f3aef59e3e0df23e82105beb642e6e5d4e20db63e76288",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "dcbf332dfe1ef5b0ff4c4f7806927f7a1521f27ed9ada4a0a07658572cc2b8d9",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 484017,
+     "mem": 138057,
+     "dim": 121017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -224252,7 +224252,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -224793,21 +224793,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "14044014d36c6e7e821bebaa0696466ce684270feead74a22dc272960451c1ae",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "b8bd8b78035e5068746f8367de1f77636fa5e121f71852980443d52f62770f5f",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 968017,
+     "mem": 276057,
+     "dim": 242017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -224819,7 +224819,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -224856,21 +224856,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "004b4f82ad73ab6797f23ede9aeb8b7a685f38b0fddf65d74ee4cfa26ac198dc",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "0a26a8e83c8958fbe5f3aef59e3e0df23e82105beb642e6e5d4e20db63e76288",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1936017,
+     "mem": 552057,
+     "dim": 484017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -224882,7 +224882,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -225047,21 +225047,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "28f4dd4da93f73f907c1a388762f1118fcbb0ab79d1d1483a8ab5bedf0aba4cf",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "7e420406f50d9cfb8736fae34f8a8d57068db28be33f55a0978ed5e301288877",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 436057,
-     "dim": 432017,
+     "mem": 109057,
+     "dim": 108017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 772796,
+     "used": 519796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -225073,7 +225073,7 @@
        5408265
       ],
       "main_memory": [
-       772796,
+       519796,
        5000000
       ],
       "hash": [
@@ -225740,21 +225740,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "45bce5a3178c78adb58c07984e27ca0a0cfb1e5f85d14bf9431bfaebe40e7fa5",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "f091a785630db15606fb767702ec3a317505d235850217794b34368871acef69",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 872057,
-     "dim": 864017,
+     "mem": 218057,
+     "dim": 216017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1110536,
+     "used": 603796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -225766,7 +225766,7 @@
        5408265
       ],
       "main_memory": [
-       1110536,
+       603796,
        5000000
       ],
       "hash": [
@@ -225803,21 +225803,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "6fbcf9318670dd3d542acabe5347a41dd8d5b790dd58892fd12f472c2da15317",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "28f4dd4da93f73f907c1a388762f1118fcbb0ab79d1d1483a8ab5bedf0aba4cf",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1744057,
-     "dim": 1728017,
+     "mem": 436057,
+     "dim": 432017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1815536,
+     "used": 772796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -225829,7 +225829,7 @@
        5408265
       ],
       "main_memory": [
-       1815536,
+       772796,
        5000000
       ],
       "hash": [
@@ -225994,21 +225994,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "ad2c57118e525f509d21383ded045ac406e6e5ce5d4316acbc4753d0809567e3",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "5b4e0fe83cc81023c734c3c9a42e671add90ea6fdbed53d7ddd78a32294b9777",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 664057,
-     "dim": 500017,
+     "mem": 166057,
+     "dim": 125017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 732536,
+     "used": 509796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -226020,7 +226020,7 @@
        5408265
       ],
       "main_memory": [
-       732536,
+       509796,
        5000000
       ],
       "hash": [
@@ -226687,21 +226687,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "eed4e119238ec4919b1110b4aff3025a550b711317d188e74a30b2b4a3b3d81a",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "363d37676d710b6c4d2894f9885b99857ca8ec067709709f3c2792b464515799",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1328057,
-     "dim": 1000017,
+     "mem": 332057,
+     "dim": 250017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1061536,
+     "used": 583796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -226713,7 +226713,7 @@
        5408265
       ],
       "main_memory": [
-       1061536,
+       583796,
        5000000
       ],
       "hash": [
@@ -226750,21 +226750,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "84b446b41f0727be3fa56b7716e0c5cda2531a3e182b4f59f0bdafd3ea933fb4",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "ad2c57118e525f509d21383ded045ac406e6e5ce5d4316acbc4753d0809567e3",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2656057,
-     "dim": 2000017,
+     "mem": 664057,
+     "dim": 500017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1717536,
+     "used": 732536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -226776,7 +226776,7 @@
        5408265
       ],
       "main_memory": [
-       1717536,
+       732536,
        5000000
       ],
       "hash": [
@@ -228016,21 +228016,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "de3330e9cffd252f602d22059a54b9b9393a77b847581ac80a0ec81ca37aa4ef",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "5ac8d66c1cdb545efd21bfe89cecd8b837b4f55d488e6b99e5114bce64a42026",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 536057,
-     "dim": 468017,
+     "mem": 134057,
+     "dim": 117017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -228042,7 +228042,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -228583,21 +228583,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "2ff3dfa8755db80865881c6a1b932f0eefdf7453c68d5936fbd415ffe3ebe33e",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "71faa1ae74cfe2fd54edc6b12abcaba05df2ac4e9ec95fce51a6bc3332c95c35",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1072057,
-     "dim": 936017,
+     "mem": 268057,
+     "dim": 234017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -228609,7 +228609,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -228646,21 +228646,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "99b05439f81ad6652eb32a2cdb59eb9527a31bd51dc095693722815e0e71182f",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "de3330e9cffd252f602d22059a54b9b9393a77b847581ac80a0ec81ca37aa4ef",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2144057,
-     "dim": 1872017,
+     "mem": 536057,
+     "dim": 468017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -228672,7 +228672,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -229975,21 +229975,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "283115d605104ee7003ea2c658d14a3edd924e94a5a0d43dcca92b1466a18e7d",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "d764e28d43d8d2b5dda13069bf1be0d7cda766c591155d9212ee73b4393824da",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 452057,
-     "dim": 452017,
+     "mem": 113057,
+     "dim": 113017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 748796,
+     "used": 513796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -230001,7 +230001,7 @@
        5408265
       ],
       "main_memory": [
-       748796,
+       513796,
        5000000
       ],
       "hash": [
@@ -230668,21 +230668,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "531d8d2d20be5af68c01d258c0b2fcb8c543cc05e884a0eae4a39fc48fbd4d15",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "b489f65c2a8e51a8912437af8c6e2f71171134e1aedd625d00d1ce53f41556c7",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 904057,
-     "dim": 904017,
+     "mem": 226057,
+     "dim": 226017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1063536,
+     "used": 592796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -230694,7 +230694,7 @@
        5408265
       ],
       "main_memory": [
-       1063536,
+       592796,
        5000000
       ],
       "hash": [
@@ -230731,21 +230731,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "e001b255dfc6ea60b70dbf9302bed9ea5419b80ff06a3ec2c3107ae89ac16219",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "283115d605104ee7003ea2c658d14a3edd924e94a5a0d43dcca92b1466a18e7d",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1808057,
-     "dim": 1808017,
+     "mem": 452057,
+     "dim": 452017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1721536,
+     "used": 748796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -230757,7 +230757,7 @@
        5408265
       ],
       "main_memory": [
-       1721536,
+       748796,
        5000000
       ],
       "hash": [
@@ -230859,21 +230859,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "0390208400a4a5c8f859050a563cc0b4f25f5ee8b7e67fe3f41ee3052e7b7003",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "b71ab9c6cae3219c983942fec94a5c85ed45e40321fa658d1b3ccae275932d4c",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -230885,7 +230885,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -231426,21 +231426,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "3994c61ec07394c75c52752011e8ac4bbba40313265caed623a35e35ba37712f",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "7584b328381da0ec809a27509d03e884b5a7d112a830cc3d4034ac542005b74a",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -231452,7 +231452,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -231489,21 +231489,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "564d72b6ef4545bfc3907f340860a9bf0c344bfcf0229c230690e156eca4b25d",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "0390208400a4a5c8f859050a563cc0b4f25f5ee8b7e67fe3f41ee3052e7b7003",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -231515,7 +231515,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -231617,21 +231617,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "02994ebb91ed2e7a5fdc9198fd2f701f548106c8fdce7fcd54ff9246b0e0162f",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "65f7e9c7462a8785de2a25ae130ae59424df1f32c4b4aa4b88e960ef64caea9d",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -231643,7 +231643,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -232184,21 +232184,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "14c9eef7605607470f94f9c887fdfdbb124cb56bfed61a55b5c693b6681bb6f0",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "11f59d8fbeacb61b2e3e2d5ae778e41d03749d64dea5c7cbaaca5b59656dadf3",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -232210,7 +232210,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -232247,21 +232247,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "3aa15d51a1678924035ece24acb185288a12a57faf8491766840539c3047e9ab",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "02994ebb91ed2e7a5fdc9198fd2f701f548106c8fdce7fcd54ff9246b0e0162f",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -232273,7 +232273,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -232375,21 +232375,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "5b32335cb04bcc48c7b72e356e36e15ff90c7d96df1ff9ba477032262c6f7e4e",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "2a1c743c462a55fe61f818ebc083dacd77f38502d9e7129d8663ba0b4773e142",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 476017,
+     "mem": 138057,
+     "dim": 119017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -232401,7 +232401,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -232942,21 +232942,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "5181a5000432f7da68bb9b31375a8971dd2d2ee641bc803fa1ea75499e326a6f",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "14d43f876745f0a19bdb445391ae5a3ce289c711132cdb9603f58fab0e9020e9",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 952017,
+     "mem": 276057,
+     "dim": 238017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -232968,7 +232968,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -233005,21 +233005,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "66b240672a4b688836ddd1b00a29db0dd56d370026ac518a964ab5372b29a9f3",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "5b32335cb04bcc48c7b72e356e36e15ff90c7d96df1ff9ba477032262c6f7e4e",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1904017,
+     "mem": 552057,
+     "dim": 476017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -233031,7 +233031,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -233133,21 +233133,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "58fedf5fc75a9e893c6ed4b92a0afd69a23674227f14c2d3c90b9f9f19aa9091",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "3cf91efcaec8c283d30f291858b5fd8914c120c185e08f4d8ff4b0c43cea8c9d",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -233159,7 +233159,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -233700,21 +233700,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "f657ac1fb7479731879a55ba30bd29ac30e6ed4e97858160af75940afd50cf2e",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "6895541a1c6ae42bf6976e12318ca2559b8a387f45531e37b5a8d6c1eb63f26a",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -233726,7 +233726,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -233763,21 +233763,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "1468633d107d97a48836f5d68c1261a7c0bb2ee6e03d6aed7512b6c9cfcbd55c",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "58fedf5fc75a9e893c6ed4b92a0afd69a23674227f14c2d3c90b9f9f19aa9091",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -233789,7 +233789,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -233954,21 +233954,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "2f467256692d203f8e4b75c39d9fd553ecaaa1b1141b4d1585f37497192d4972",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "cb92eb085bf446b1b532b72c1dc4b3baed3879b46a72af346b4a962a5d3e4041",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 676057,
-     "dim": 600017,
+     "mem": 169057,
+     "dim": 150017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 694536,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -233980,7 +233980,7 @@
        5408265
       ],
       "main_memory": [
-       694536,
+       497796,
        5000000
       ],
       "hash": [
@@ -234647,21 +234647,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "12cdc370590b63c047c1af90adc82b6a9d371c6e241642a846fc65ba49fd1c84",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "6fa67b2e934baa8b38b659e8773137cb9d438ec2ebbf46f55e6d484ba2b5ee7d",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1352057,
-     "dim": 1200017,
+     "mem": 338057,
+     "dim": 300017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 983536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -234673,7 +234673,7 @@
        5408265
       ],
       "main_memory": [
-       983536,
+       560796,
        5000000
       ],
       "hash": [
@@ -234710,21 +234710,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "75bc06ea496b8e499c35dd2367efb07c5e96713943d2a78d31c0d586b216857b",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "2f467256692d203f8e4b75c39d9fd553ecaaa1b1141b4d1585f37497192d4972",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2704057,
-     "dim": 2400017,
+     "mem": 676057,
+     "dim": 600017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1562536,
+     "used": 694536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -234736,7 +234736,7 @@
        5408265
       ],
       "main_memory": [
-       1562536,
+       694536,
        5000000
       ],
       "hash": [
@@ -234901,21 +234901,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "74116894ab5f0d793efde7401a9f7a3f0572a6e831ecd1081d8e82e1cb9a3b2e",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "b4d427bdcfe5a8129d2c94b8ea51c6042dcf84202d5694f79d78afae975e0ed4",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 520057,
-     "dim": 524017,
+     "mem": 130057,
+     "dim": 131017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 686536,
+     "used": 498796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -234927,7 +234927,7 @@
        5408265
       ],
       "main_memory": [
-       686536,
+       498796,
        5000000
       ],
       "hash": [
@@ -235594,21 +235594,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "c738a95887bec3297ba12c247918d2875d216654ec60b51fc6abecafe186c8f8",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "ee96e169c907411f88ee9f18bdbaed2e859e32b33b891b41bcaa7d821609c0b9",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1040057,
-     "dim": 1048017,
+     "mem": 260057,
+     "dim": 262017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 968536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -235620,7 +235620,7 @@
        5408265
       ],
       "main_memory": [
-       968536,
+       560796,
        5000000
       ],
       "hash": [
@@ -235657,21 +235657,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "57969e2d2a5708d85bd996da031e8d469e6efa963aab2a8dbd3d82b4582bc21d",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "74116894ab5f0d793efde7401a9f7a3f0572a6e831ecd1081d8e82e1cb9a3b2e",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2080057,
-     "dim": 2096017,
+     "mem": 520057,
+     "dim": 524017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1531536,
+     "used": 686536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -235683,7 +235683,7 @@
        5408265
       ],
       "main_memory": [
-       1531536,
+       686536,
        5000000
       ],
       "hash": [
@@ -235785,21 +235785,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "e9ddf21fd78e0fb2310e5ac887fd3e289313841a1cde6d4f69d4a4e5350ddad4",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "d5a031efbcf882e034609268897f01f25e58ac4af6d8bce8578e862d57dfb195",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 420057,
-     "dim": 408017,
+     "mem": 105057,
+     "dim": 102017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -235811,7 +235811,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -236352,21 +236352,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "546c0dde1ae1ec43001244814143e34da1ec6d055cceb7517dd80c5519f409bc",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "3dcf87a57ac4ea5cdfe6e867a7f1466ff917a3427493a2d03dc6fc9229b968e7",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 840057,
-     "dim": 816017,
+     "mem": 210057,
+     "dim": 204017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 936536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -236378,7 +236378,7 @@
        5408265
       ],
       "main_memory": [
-       936536,
+       560796,
        5000000
       ],
       "hash": [
@@ -236415,21 +236415,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "7008d57068ac1f54db74fdda502b142bdab821e938589aa945a09368ca739c33",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "e9ddf21fd78e0fb2310e5ac887fd3e289313841a1cde6d4f69d4a4e5350ddad4",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1680057,
-     "dim": 1632017,
+     "mem": 420057,
+     "dim": 408017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1467536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -236441,7 +236441,7 @@
        5408265
       ],
       "main_memory": [
-       1467536,
+       685796,
        5000000
       ],
       "hash": [
@@ -236543,21 +236543,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "2a84a09d30689a3ac8fb7bb52a2df94e6bd62fa890dde47a7cbf3d3886736475",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "75c17727c631939eb47acfd517f6fed099782e221038578162f542ec2270992f",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 508017,
+     "mem": 143057,
+     "dim": 127017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -236569,7 +236569,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -237110,21 +237110,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "e35c5f24d0d14012f4e71f4221aee2e07128c8180b3467f4af0287950c48130f",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "5d770ab40beda14e05ca113188301df2639332f460dea6111b7194efec1456b6",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 1016017,
+     "mem": 286057,
+     "dim": 254017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -237136,7 +237136,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -237173,21 +237173,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "fcc7857e1c3a82cb77b3d134bffc209efabf7703b34c27cb1760453e12fac1d5",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "2a84a09d30689a3ac8fb7bb52a2df94e6bd62fa890dde47a7cbf3d3886736475",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 2032017,
+     "mem": 572057,
+     "dim": 508017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -237199,7 +237199,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -237364,21 +237364,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "6d7a7320ad72cdf1426ac0f172d8902062bd6792591ee9a387227bf6086d87c2",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "0acb372b7c109f14a56cfe2310a9c58e9f75a06646183ff58885811d4d1f6404",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 532017,
+     "mem": 138057,
+     "dim": 133017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 686536,
+     "used": 498796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -237390,7 +237390,7 @@
        5408265
       ],
       "main_memory": [
-       686536,
+       498796,
        5000000
       ],
       "hash": [
@@ -238057,21 +238057,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "813c083a9eeb937280a0f06c4d1a32cbafd95cee6a415ce37c0e567a6ae5c319",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "1f225a6620fd9a2f130d710b1c89f0c4b0a22ca05655b670e02fc94a315c2527",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 1064017,
+     "mem": 276057,
+     "dim": 266017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 968536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -238083,7 +238083,7 @@
        5408265
       ],
       "main_memory": [
-       968536,
+       560796,
        5000000
       ],
       "hash": [
@@ -238120,21 +238120,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "d8048f806b553bf9ad51b3d1a89fa4575d4a95e7333f5bbf2f489b86dbaf8a1b",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "6d7a7320ad72cdf1426ac0f172d8902062bd6792591ee9a387227bf6086d87c2",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 2128017,
+     "mem": 552057,
+     "dim": 532017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1531536,
+     "used": 686536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -238146,7 +238146,7 @@
        5408265
       ],
       "main_memory": [
-       1531536,
+       686536,
        5000000
       ],
       "hash": [
@@ -238817,21 +238817,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "cef53ca1a6cd2fdffec0fc7c92084d997295ef331fe2ac7f2eb63fe4eaeb38fc",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "368c230bf0fad150f92a3d416d0a1072855325f44dfe3f82e36eb206412ee4f2",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 496017,
+     "mem": 143057,
+     "dim": 124017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -238843,7 +238843,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -239384,21 +239384,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "de26b13a50de7f41c241bae56cbc36c8ce145d8205b3e08c6377aaffdbf07c63",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "abc661b8b13dbb375f84e8fd1f8d1908712e04d4adbab3854d87567483fcfd75",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 992017,
+     "mem": 286057,
+     "dim": 248017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -239410,7 +239410,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -239447,21 +239447,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "244b5e7fea8d2b29431dcd174308c2b63674753e118a20cd151e135b56b9c4b8",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "cef53ca1a6cd2fdffec0fc7c92084d997295ef331fe2ac7f2eb63fe4eaeb38fc",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1984017,
+     "mem": 572057,
+     "dim": 496017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -239473,7 +239473,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -240207,21 +240207,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "955c7de021f9dabcc2fde36f40772f1d8e11bf613aa3585060aba9e746d73ead",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "f86e63ba09a99cdb44da6be7706ba27f9947509aec0e540984203dec6663cfe3",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 564057,
-     "dim": 488017,
+     "mem": 141057,
+     "dim": 122017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -240233,7 +240233,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -240900,21 +240900,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "590f528395e60b1515a652cc99dae8933b968cca541e3fbe2bf9df4cce17d013",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "963e773185c09c7d2f6705ad92fab7743f722c21278d9ce15d7288bc7c3a8e5c",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1128057,
-     "dim": 976017,
+     "mem": 282057,
+     "dim": 244017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -240926,7 +240926,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -240963,21 +240963,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "e9039bdcad8cbb3ae586cc87ff88606e986e0f55dcb1a5a850b82a553813b309",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "955c7de021f9dabcc2fde36f40772f1d8e11bf613aa3585060aba9e746d73ead",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2256057,
-     "dim": 1952017,
+     "mem": 564057,
+     "dim": 488017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -240989,7 +240989,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -241091,21 +241091,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "3d3bbb1fdb2da8ebac467a6efc8286e066f16d5fc6adc0261014fa48aa10897e",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "9ee1cbb0bc5d84870fecef8209d6fd6b9ca0381efe7a0cc26ab4dae67e91f1b6",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 488017,
+     "mem": 138057,
+     "dim": 122017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -241117,7 +241117,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -241658,21 +241658,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "6ac87a0267507b4093a6d71466fe96fcf74661fd913a16f2b9ee95b809f18856",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "28bd741516ec412ff87d680459dc466df475c86a0b68cf333752484b318d716f",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 976017,
+     "mem": 276057,
+     "dim": 244017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -241684,7 +241684,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -241721,21 +241721,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "2addedc0e5684ee57467368c362344dc625b05f10102813482ab73cd0c9531c8",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "3d3bbb1fdb2da8ebac467a6efc8286e066f16d5fc6adc0261014fa48aa10897e",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1952017,
+     "mem": 552057,
+     "dim": 488017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -241747,7 +241747,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -241849,21 +241849,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "bcfac686a02d4e275e8fa078681299908d20dc6ccddd4a7a2eddb6b5207eb852",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "19387d61b001da9108a3f912c4e42b46f770d3b09c31beac9f546ce4ec79eb68",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 996057,
-     "dim": 956017,
+     "mem": 249057,
+     "dim": 239017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 805796,
+     "used": 527796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -241875,7 +241875,7 @@
        5408265
       ],
       "main_memory": [
-       805796,
+       527796,
        5000000
       ],
       "hash": [
@@ -242416,21 +242416,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "8170b81a644527575a6da6422af69f9c172500e3f491592c8446c02b043cb1c7",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "d7d888461cf48ce4f2f94522921a8a92694f59b9cceb74ce737f4999ca1c9eef",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1992057,
-     "dim": 1912017,
+     "mem": 498057,
+     "dim": 478017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1192536,
+     "used": 620796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -242442,7 +242442,7 @@
        5408265
       ],
       "main_memory": [
-       1192536,
+       620796,
        5000000
       ],
       "hash": [
@@ -242479,21 +242479,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "8ed75013a8e7f61d9517f2157bf9667f4bf29fbf7032627115da157160fafb69",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "bcfac686a02d4e275e8fa078681299908d20dc6ccddd4a7a2eddb6b5207eb852",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3984057,
-     "dim": 3824017,
+     "mem": 996057,
+     "dim": 956017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1979536,
+     "used": 805796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -242505,7 +242505,7 @@
        5408265
       ],
       "main_memory": [
-       1979536,
+       805796,
        5000000
       ],
       "hash": [
@@ -242607,21 +242607,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "ad672a001b42ed8ef29438c38f98880a25fbeda7e98e21299fa187dac35f818e",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "a86f8d805abc4360782f5222f77872ecdaa88fe31814dd3f5662f7139f3a84fa",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 508017,
+     "mem": 143057,
+     "dim": 127017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -242633,7 +242633,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -243174,21 +243174,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "0e0afd937401eb4227ce88303123b11dda9ea7328cecb36b23a0bc65c7f7e5c0",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "1b5bf721fdb6927d8e4999a5235c22204ee6604200a3398ed575ec08ca835dfa",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 1016017,
+     "mem": 286057,
+     "dim": 254017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -243200,7 +243200,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -243237,21 +243237,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "b01860c7892d38e34ca7396de218beb6a2cf18ebce22cc9143e83363c191a3da",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "ad672a001b42ed8ef29438c38f98880a25fbeda7e98e21299fa187dac35f818e",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 2032017,
+     "mem": 572057,
+     "dim": 508017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -243263,7 +243263,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -243428,21 +243428,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "f1bbd5096f02ab0274402ae35a250a3560b0ac2d99183b4a931ef0e810e1f717",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "ba2c68c617a473ed24862f8ca005f9add250374cad7f3f45bcf80fb24ea3ba8c",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 556057,
-     "dim": 536017,
+     "mem": 139057,
+     "dim": 134017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 686536,
+     "used": 498796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -243454,7 +243454,7 @@
        5408265
       ],
       "main_memory": [
-       686536,
+       498796,
        5000000
       ],
       "hash": [
@@ -244121,21 +244121,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "38418fdd1273a9a1c709b67170d1bb1e8be03b65354ba298206a637336e77976",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "3ad0d6356743ba72bb7820f1e39390ebacee830430af939a8688ad74807d30c8",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1112057,
-     "dim": 1072017,
+     "mem": 278057,
+     "dim": 268017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 968536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -244147,7 +244147,7 @@
        5408265
       ],
       "main_memory": [
-       968536,
+       560796,
        5000000
       ],
       "hash": [
@@ -244184,21 +244184,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "fd013c7aadbcf01960ba9f178835b17c6514ba65843075c009c9375a3a0e95e7",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "f1bbd5096f02ab0274402ae35a250a3560b0ac2d99183b4a931ef0e810e1f717",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2224057,
-     "dim": 2144017,
+     "mem": 556057,
+     "dim": 536017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1531536,
+     "used": 686536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -244210,7 +244210,7 @@
        5408265
       ],
       "main_memory": [
-       1531536,
+       686536,
        5000000
       ],
       "hash": [
@@ -244312,21 +244312,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "921d07ff81c87da5ddfefe2fb8ee272f31667618d4d344f27165c649299d0b35",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "e30e4544d6f43013a72aae563745e5c30c7019d3b241154b3a7a3171ec27dca5",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 704057,
-     "dim": 632017,
+     "mem": 176057,
+     "dim": 158017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 824536,
+     "used": 530796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -244338,7 +244338,7 @@
        5408265
       ],
       "main_memory": [
-       824536,
+       530796,
        5000000
       ],
       "hash": [
@@ -244879,21 +244879,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "b33f4601ad4f51d4837959efa4630f8c09d92cb98cd14131506aaf4fc2425ac9",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "0a87ba43112edf42e38da0706c68c26854f67c132e1517bf4464af015fb88ee3",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1408057,
-     "dim": 1264017,
+     "mem": 352057,
+     "dim": 316017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1244536,
+     "used": 625796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -244905,7 +244905,7 @@
        5408265
       ],
       "main_memory": [
-       1244536,
+       625796,
        5000000
       ],
       "hash": [
@@ -244942,21 +244942,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "3b242bf052d2323307605ddd6b270cd06c439b3355e5ca9d64633ced7bc94672",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "921d07ff81c87da5ddfefe2fb8ee272f31667618d4d344f27165c649299d0b35",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2816057,
-     "dim": 2528017,
+     "mem": 704057,
+     "dim": 632017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2085536,
+     "used": 824536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -244968,7 +244968,7 @@
        5408265
       ],
       "main_memory": [
-       2085536,
+       824536,
        5000000
       ],
       "hash": [
@@ -245070,21 +245070,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "6b980704930c8b7c63adebebf44a57772e821423d1705b9d250d3268e982c27c",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "84d0611c83a412b19ad0336c866650e583f7497dbf254cda5668e7aafa369aae",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 472017,
+     "mem": 138057,
+     "dim": 118017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -245096,7 +245096,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -245637,21 +245637,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "50a8fe6fe247a7e6cce1fd2a66572fdd9e60da0f1290b33aa9cdc02111345b91",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "26947ca7b4cb49dafa02f5ca213f1b49ff6967402dcb6ccb017f638119df1b30",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 944017,
+     "mem": 276057,
+     "dim": 236017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -245663,7 +245663,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -245700,21 +245700,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "9ca7adb19b7365b748e556bcde61383a3be6a55ad5302d4f24856c1089c9393a",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "6b980704930c8b7c63adebebf44a57772e821423d1705b9d250d3268e982c27c",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1888017,
+     "mem": 552057,
+     "dim": 472017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -245726,7 +245726,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -245891,21 +245891,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "d6dd900d4ccda60a359d67efdb639d9608433d1b9851984da0484288edb3f9d7",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "9491c3f730796a37cd1a083cdfd6e3c98e6830ea475abb33ea2dcc0e18aae449",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 676057,
-     "dim": 600017,
+     "mem": 169057,
+     "dim": 150017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 694536,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -245917,7 +245917,7 @@
        5408265
       ],
       "main_memory": [
-       694536,
+       497796,
        5000000
       ],
       "hash": [
@@ -246584,21 +246584,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "e84184769dacd68225a36e09e4e34fa5108e78286f5bbcde7605c80616526140",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "44309c6994bff57d5c86ae04f77d57dab6adcf131fbdabd4ba397cb758b61f74",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1352057,
-     "dim": 1200017,
+     "mem": 338057,
+     "dim": 300017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 983536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -246610,7 +246610,7 @@
        5408265
       ],
       "main_memory": [
-       983536,
+       560796,
        5000000
       ],
       "hash": [
@@ -246647,21 +246647,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "43836d29109bd81db7e25bde6c7d20ee5fcd3a70070106e124d57f3696720e26",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "d6dd900d4ccda60a359d67efdb639d9608433d1b9851984da0484288edb3f9d7",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2704057,
-     "dim": 2400017,
+     "mem": 676057,
+     "dim": 600017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1562536,
+     "used": 694536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -246673,7 +246673,7 @@
        5408265
       ],
       "main_memory": [
-       1562536,
+       694536,
        5000000
       ],
       "hash": [
@@ -246838,21 +246838,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "103a7b867a9b5c0ca8aca59e15b6c7df2085620998e11a1f9a36ca7f505d4ee4",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "6e3184192b743b0f36e6d17e3b85bfc62642f9fdd7fd8d489caccc8a393b914d",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 564057,
-     "dim": 480017,
+     "mem": 141057,
+     "dim": 120017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -246864,7 +246864,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -247531,21 +247531,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "bb14d7df417ff7585aa82a7b2be4815fd4e2f460c0cd25b6209a50238639dc9d",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "3b2ff60f3f83468ea575aac0506a812bd9a6e14523298f032908d5e7f8157b43",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1128057,
-     "dim": 960017,
+     "mem": 282057,
+     "dim": 240017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -247557,7 +247557,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -247594,21 +247594,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "cf84a8d471f3b87c886a5748c975b9ff9ad0e5e6f8e799042bdc5f889c6b993e",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "103a7b867a9b5c0ca8aca59e15b6c7df2085620998e11a1f9a36ca7f505d4ee4",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2256057,
-     "dim": 1920017,
+     "mem": 564057,
+     "dim": 480017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -247620,7 +247620,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -247785,21 +247785,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "4380137000b00fe65dd77edce6e52fd1e92dacf2a89e8b2141fb39865fcb80e4",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "cac249c03c69f1cdb96bb9fe4dc9c9d1dcbd8d5f51fad334ceb6e66a7ffa9d19",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 564057,
-     "dim": 480017,
+     "mem": 141057,
+     "dim": 120017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -247811,7 +247811,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -248478,21 +248478,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "de3fa870801b459faacbfc1bd2463ac9bd2d04cfcfbb5bdd7020d354b5fd8990",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "7bf98b5c4c222c77b1b4722e1724f1968aa913bb7a7d5a0adadd29b6a8a07d3e",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1128057,
-     "dim": 960017,
+     "mem": 282057,
+     "dim": 240017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -248504,7 +248504,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -248541,21 +248541,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "2bbfb9dc318d3e9cbe262375efecc3c6aaa68bd466b808b73b8aaf3143a986d0",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "4380137000b00fe65dd77edce6e52fd1e92dacf2a89e8b2141fb39865fcb80e4",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2256057,
-     "dim": 1920017,
+     "mem": 564057,
+     "dim": 480017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -248567,7 +248567,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -248732,21 +248732,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "fa77000de922fda7e49945b4459f2dd45e25d22aa7973139eb2cd281a65e8c04",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "6457be78e4d71ee58d7a41819b4e5e07e4c2fd443ffb1d253e84582a5bd931b1",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 636057,
-     "dim": 584017,
+     "mem": 159057,
+     "dim": 146017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 694536,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -248758,7 +248758,7 @@
        5408265
       ],
       "main_memory": [
-       694536,
+       497796,
        5000000
       ],
       "hash": [
@@ -249425,21 +249425,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "07df5238a85566c343e49ba74bf1faa19c38fa859a3ccd84abdbb2f6d921613d",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "766bbfe74bcf3910f100094036e7822615db6062f139063cdca210e771c2f8f4",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1272057,
-     "dim": 1168017,
+     "mem": 318057,
+     "dim": 292017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 983536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -249451,7 +249451,7 @@
        5408265
       ],
       "main_memory": [
-       983536,
+       560796,
        5000000
       ],
       "hash": [
@@ -249488,21 +249488,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "60f0c035ec12a0e9a3d728ed5072f989a5d11872c6983ef0272006fc5872337d",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "fa77000de922fda7e49945b4459f2dd45e25d22aa7973139eb2cd281a65e8c04",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2544057,
-     "dim": 2336017,
+     "mem": 636057,
+     "dim": 584017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1562536,
+     "used": 694536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -249514,7 +249514,7 @@
        5408265
       ],
       "main_memory": [
-       1562536,
+       694536,
        5000000
       ],
       "hash": [
@@ -249679,21 +249679,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "cf58a102cfbeeb59dddf368a4366fb9f68f0c5cf5e31c0590894bb2c6fcd5504",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "5caf3a303ef44a38910585ac9f50172846373c9347f990b0ffcbd366fd81f734",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 564057,
-     "dim": 480017,
+     "mem": 141057,
+     "dim": 120017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -249705,7 +249705,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -250372,21 +250372,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "c006ca96980efce984b177b3cdca3443aa4ffd40bbe37a2323add68870e6554f",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "3e1fa0b4b7ed6abfc224b973dd7d804670e1b131d8c2df637a5fcd48250d7f63",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1128057,
-     "dim": 960017,
+     "mem": 282057,
+     "dim": 240017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -250398,7 +250398,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -250435,21 +250435,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "2c039cb30dfb874405b404fbf656a697432d9f12dd232f3db34987d5ed279d87",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "cf58a102cfbeeb59dddf368a4366fb9f68f0c5cf5e31c0590894bb2c6fcd5504",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2256057,
-     "dim": 1920017,
+     "mem": 564057,
+     "dim": 480017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -250461,7 +250461,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -250626,21 +250626,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "6d1ec0f123cee1ce0ee468ce7ba5dddc31d7bebf5719d10881b0dc2de834e329",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "801038ac13cd0032e845503be3caa37a2bf026d809d8d69f345d592f8966b06d",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 1248057,
-     "dim": 900017,
+     "mem": 312057,
+     "dim": 225017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 761536,
+     "used": 502796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -250652,7 +250652,7 @@
        5408265
       ],
       "main_memory": [
-       761536,
+       502796,
        5000000
       ],
       "hash": [
@@ -251319,21 +251319,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "f325694382d09642c309721a002dc664f6512acc6fa1a8dd3586003a3637cbf4",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "aabe4ab047bd5664cd1e4adc7cff338f47050711f34602293f7d3ef4b394acb5",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 2496057,
-     "dim": 1800017,
+     "mem": 624057,
+     "dim": 450017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1118536,
+     "used": 582536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -251345,7 +251345,7 @@
        5408265
       ],
       "main_memory": [
-       1118536,
+       582536,
        5000000
       ],
       "hash": [
@@ -251382,21 +251382,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "748b05c8a173469b0bdf49d7b95863a3f7702e5fb885f845ade652fc6f9772aa",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "6d1ec0f123cee1ce0ee468ce7ba5dddc31d7bebf5719d10881b0dc2de834e329",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 4992057,
-     "dim": 3600017,
+     "mem": 1248057,
+     "dim": 900017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1832536,
+     "used": 761536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -251408,7 +251408,7 @@
        5408265
       ],
       "main_memory": [
-       1832536,
+       761536,
        5000000
       ],
       "hash": [
@@ -251573,21 +251573,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "9cb12e96238a38059cb682713c0d907b17bc5a602efb62f3e76298c7bc1ee17c",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "3b2f71d145de1ab4cf6ddedad73d5c9337eace5f74ca45c9cf1e7adc9b36241d",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 436057,
-     "dim": 432017,
+     "mem": 109057,
+     "dim": 108017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 756796,
+     "used": 515796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -251599,7 +251599,7 @@
        5408265
       ],
       "main_memory": [
-       756796,
+       515796,
        5000000
       ],
       "hash": [
@@ -252266,21 +252266,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "0f2bdafc8946316efa0a784b302eb37bc08a2b7f4d72c354d92b5d46ec9c2765",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "e82641ec84732d2bc733bbecb01c3fb01afa37b6e6b013b719c68d3da96a4775",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 872057,
-     "dim": 864017,
+     "mem": 218057,
+     "dim": 216017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1078536,
+     "used": 596796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -252292,7 +252292,7 @@
        5408265
       ],
       "main_memory": [
-       1078536,
+       596796,
        5000000
       ],
       "hash": [
@@ -252329,21 +252329,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "b036935442119abb633449127f917edd912b1ed51c060daf9a68ab91409fb643",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "9cb12e96238a38059cb682713c0d907b17bc5a602efb62f3e76298c7bc1ee17c",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1744057,
-     "dim": 1728017,
+     "mem": 436057,
+     "dim": 432017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1753536,
+     "used": 756796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -252355,7 +252355,7 @@
        5408265
       ],
       "main_memory": [
-       1753536,
+       756796,
        5000000
       ],
       "hash": [
@@ -252457,21 +252457,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "5ea533b6ceea36ad24427ed1c175f22539f67074245e3670bcca8ce73a083da3",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "a83f789bc93fd97b4a5d809eef19a85766df1ad3cea3f900e8f941719fbec31b",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 647796,
+     "used": 515796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -252483,7 +252483,7 @@
        5408265
       ],
       "main_memory": [
-       647796,
+       515796,
        5000000
       ],
       "hash": [
@@ -253024,21 +253024,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "8e54d190c5f401cca182665fcdc86f971f290d471dd38befbf45c86c2e1be260",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "490f20037619e8b9dd8647073d49dafc1b7d55ac76e9449d6f540d8b4ca5382f",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 814796,
+     "used": 564796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -253050,7 +253050,7 @@
        5408265
       ],
       "main_memory": [
-       814796,
+       564796,
        5000000
       ],
       "hash": [
@@ -253087,21 +253087,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "0aa5cdffc8df33955513249dbb033fea7c79a2eca8bf62d7e00a69de5affeb55",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "5ea533b6ceea36ad24427ed1c175f22539f67074245e3670bcca8ce73a083da3",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1209114,
+     "used": 647796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -253113,7 +253113,7 @@
        5408265
       ],
       "main_memory": [
-       1209114,
+       647796,
        5000000
       ],
       "hash": [
@@ -253215,21 +253215,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "c897b377475caa7dffff3025b2f7dbe1f316364ba3ba0783e2d6b5de3e42929d",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "ab26896aa1c0cbddadd385b3267acb50e53a19424362dec57708aef2df089f49",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 492017,
+     "mem": 143057,
+     "dim": 123017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -253241,7 +253241,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -253782,21 +253782,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "1f928c7a7e4bb552fdf1f0a294dc7ced78d3eb72be6454ad1948bcec31800460",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "9440ee06324c80621e07c41af100bbe6d0e912ac36d3622ba08286c097253208",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 984017,
+     "mem": 286057,
+     "dim": 246017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -253808,7 +253808,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -253845,21 +253845,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "7096927b09b1673eee481306bb4ff518b13e69b06b5c3928563f127ae697a6fa",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "c897b377475caa7dffff3025b2f7dbe1f316364ba3ba0783e2d6b5de3e42929d",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 1968017,
+     "mem": 572057,
+     "dim": 492017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -253871,7 +253871,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -253973,21 +253973,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "821c37767a0e24245bb30956c56af68679903c34366d8ba83af97cdab4947332",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "3eed3b5ff35e7e19a79af5785f8f2e4d62e962ca0a6a3e09f39618ab6b669a97",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 572057,
-     "dim": 504017,
+     "mem": 143057,
+     "dim": 126017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -253999,7 +253999,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -254540,21 +254540,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "7b79a76e4d2bd6a126297b7d9823f386d3e28197bbd10a1d86aaaf123d8685e8",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "1567e599d3e99a2a2f7689d24028c396ebd73dff7b3b6fabdc747c666cfb5ca2",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1144057,
-     "dim": 1008017,
+     "mem": 286057,
+     "dim": 252017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -254566,7 +254566,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -254603,21 +254603,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "59669486e18013c1cdb0d03a7fc738cc00faf31203bf9abe33311881b4e3065b",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "821c37767a0e24245bb30956c56af68679903c34366d8ba83af97cdab4947332",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2288057,
-     "dim": 2016017,
+     "mem": 572057,
+     "dim": 504017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -254629,7 +254629,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -254731,21 +254731,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "d1b39aeaf232426c9cdc38654df17372c501c21dbe1e1fdf9c11ff5d1481af9e",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "12621744fb4c0d7de7558d0693d9b862c6146367151055f8fed4b35deebb03a3",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 468057,
-     "dim": 472017,
+     "mem": 117057,
+     "dim": 118017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 660796,
+     "used": 514796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -254757,7 +254757,7 @@
        5408265
       ],
       "main_memory": [
-       660796,
+       514796,
        5000000
       ],
       "hash": [
@@ -255298,21 +255298,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "1b6fd00b356ff38476fa32f9f50be8a5a53b4665f6b2a48ec15508f6f1ffd860",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "841188673db6399731c03fb2b67b48e2bc6b6a1b20d485df7810a8532e27b23d",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 936057,
-     "dim": 944017,
+     "mem": 234057,
+     "dim": 236017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 827796,
+     "used": 577796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -255324,7 +255324,7 @@
        5408265
       ],
       "main_memory": [
-       827796,
+       577796,
        5000000
       ],
       "hash": [
@@ -255361,21 +255361,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "3896d8faec0b9aaa07368e151675ceaa34148ae222d71d4e7be2e6513c58a19b",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "d1b39aeaf232426c9cdc38654df17372c501c21dbe1e1fdf9c11ff5d1481af9e",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1872057,
-     "dim": 1888017,
+     "mem": 468057,
+     "dim": 472017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1181260,
+     "used": 660796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -255387,7 +255387,7 @@
        5408265
       ],
       "main_memory": [
-       1181260,
+       660796,
        5000000
       ],
       "hash": [
@@ -255489,21 +255489,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "abedc9aca73798372fd862d0bd9ca2208026fa15d3300de4943d1b3763cee5b4",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "9f5a52bd9d75707eb612f6a7ea0772d008dd7dd537bd32c2eb5c66a280ae482b",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 468057,
-     "dim": 472017,
+     "mem": 117057,
+     "dim": 118017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 660796,
+     "used": 514796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -255515,7 +255515,7 @@
        5408265
       ],
       "main_memory": [
-       660796,
+       514796,
        5000000
       ],
       "hash": [
@@ -256056,21 +256056,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "5e7cf765bc3c04122ae29a3bf91d07568589ff262775ab4c178c0a4f3849f3a3",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "40d8492dfa1bf9aac43725701f14a4d7a34ee7b793d93aefcfb12af6a2d78753",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 936057,
-     "dim": 944017,
+     "mem": 234057,
+     "dim": 236017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 827796,
+     "used": 577796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -256082,7 +256082,7 @@
        5408265
       ],
       "main_memory": [
-       827796,
+       577796,
        5000000
       ],
       "hash": [
@@ -256119,21 +256119,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "88ea573c71cdaf9bfe78fefb60c8280f1747ec295d08a8f7d888b14b8aa37dce",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "abedc9aca73798372fd862d0bd9ca2208026fa15d3300de4943d1b3763cee5b4",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1872057,
-     "dim": 1888017,
+     "mem": 468057,
+     "dim": 472017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1181260,
+     "used": 660796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -256145,7 +256145,7 @@
        5408265
       ],
       "main_memory": [
-       1181260,
+       660796,
        5000000
       ],
       "hash": [
@@ -256310,21 +256310,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "4e4faaac2395da758e40e3c12d169246250614ba5509c24fc2a2b5916e6157cb",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "064fc513fedb178bc9a3c479314f45f39394ae5b4381aca179e18783423b14be",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 772057,
-     "dim": 664017,
+     "mem": 193057,
+     "dim": 166017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 702536,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -256336,7 +256336,7 @@
        5408265
       ],
       "main_memory": [
-       702536,
+       497796,
        5000000
       ],
       "hash": [
@@ -257003,21 +257003,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "b44c4b5ec32c7f729b5e4c0a368469fbd013a2411dfee9e0c0554f72d140c73c",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "d5267d74bf782b7de19341a7e749ca96c287e59ed0b1416078b0e4046c57d3d5",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1544057,
-     "dim": 1328017,
+     "mem": 386057,
+     "dim": 332017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 999536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -257029,7 +257029,7 @@
        5408265
       ],
       "main_memory": [
-       999536,
+       560796,
        5000000
       ],
       "hash": [
@@ -257066,21 +257066,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "ec35e7742b68aca53feea3c1fe507854697ba31ff3631a3ffb5b5ebf659091ea",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "4e4faaac2395da758e40e3c12d169246250614ba5509c24fc2a2b5916e6157cb",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 3088057,
-     "dim": 2656017,
+     "mem": 772057,
+     "dim": 664017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1594536,
+     "used": 702536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -257092,7 +257092,7 @@
        5408265
       ],
       "main_memory": [
-       1594536,
+       702536,
        5000000
       ],
       "hash": [
@@ -257763,21 +257763,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "5667e7f11c993c35974cdc3e2fb119f2cb8612dd28878dbcff9bb991237a51ff",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "0aa4290ebc355e1adc703015a96c6f4b5b3283d27c82d339cbceebce1d0d5458",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 536057,
-     "dim": 468017,
+     "mem": 134057,
+     "dim": 117017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -257789,7 +257789,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -258330,21 +258330,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "7d1503b2538766be603072d51a81a0edf454525b64983918805b90525000699c",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "1bdace79eefabc0069f2c6c233a9428af35e0541add7301b2c9d17c9d3918ea2",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1072057,
-     "dim": 936017,
+     "mem": 268057,
+     "dim": 234017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -258356,7 +258356,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -258393,21 +258393,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "322f869762e282bb5eedcf7e98b876c3e37c7af469a0694226b629f8f183c3e1",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "5667e7f11c993c35974cdc3e2fb119f2cb8612dd28878dbcff9bb991237a51ff",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2144057,
-     "dim": 1872017,
+     "mem": 536057,
+     "dim": 468017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -258419,7 +258419,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -258521,21 +258521,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "40175aa56f38c018e3d4606273ef06d27d719410b4f31c39be1aabd51b82bf6b",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "2f45370326a4d4e2c94ad4944dcd1a11082ee53e4dcd65ff48cad4a77666e15e",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 484017,
+     "mem": 138057,
+     "dim": 121017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -258547,7 +258547,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -259088,21 +259088,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "c6dcaa849f8b8bf0db36a1a604bef193c11d3810f752bc09a4711ca6e565f39c",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "963b05a8ea897d18bc9dab1df6d6449161746499a6502b2d16ae7a92708f9ae0",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 968017,
+     "mem": 276057,
+     "dim": 242017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -259114,7 +259114,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -259151,21 +259151,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "0bc64b210213e1ce418f5476cf909ce3a75c23012b33e36a9c82bbe436f52fdb",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "40175aa56f38c018e3d4606273ef06d27d719410b4f31c39be1aabd51b82bf6b",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1936017,
+     "mem": 552057,
+     "dim": 484017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -259177,7 +259177,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -259279,21 +259279,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "c550f84619d34660cc412bc0606690de84b8752908cf074f4cebb9b35399f275",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "c5b012628d176981bedd85b8ea2668c1ba6ccacf420827d909cfc341d60d9004",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 484017,
+     "mem": 138057,
+     "dim": 121017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -259305,7 +259305,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -259846,21 +259846,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "ab68ba507dba34a13bf6e7a7131c46c4022bd43c5a11b4a70680d2b15591cbde",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "f0f78e406b8f1a0973438300f50a712ee613206bd633b022bb60768897684e59",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 968017,
+     "mem": 276057,
+     "dim": 242017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -259872,7 +259872,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -259909,21 +259909,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "d12309b53d90f3e172aa334db35b165c0035af037d7cbca9dc401e78022d92ca",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "c550f84619d34660cc412bc0606690de84b8752908cf074f4cebb9b35399f275",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1936017,
+     "mem": 552057,
+     "dim": 484017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -259935,7 +259935,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [
@@ -260037,21 +260037,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "781b1e3c742087afbb488ed24a58a32fd5b72a4a66e3985ea2ced2bbc6534f83",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "2621b08647fe41ee4615f4e463496c510eb3d3d07585e88efb399e0500d39230",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 472057,
-     "dim": 480017,
+     "mem": 118057,
+     "dim": 120017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 650796,
+     "used": 514796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -260063,7 +260063,7 @@
        5408265
       ],
       "main_memory": [
-       650796,
+       514796,
        5000000
       ],
       "hash": [
@@ -260604,21 +260604,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "33d55d2ebc51db694b36aef7e326465d4413ad5529979a1949c1d569fae0b976",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "4ecc09f11208e629f63e18ebfe21b7fdf44ab2705375c7f4eef30621bc8d3587",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 944057,
-     "dim": 960017,
+     "mem": 236057,
+     "dim": 240017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 817796,
+     "used": 567796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -260630,7 +260630,7 @@
        5408265
       ],
       "main_memory": [
-       817796,
+       567796,
        5000000
       ],
       "hash": [
@@ -260667,21 +260667,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "4325885c1e4981a95e2bce00bf25a547f7b977c2d2265cc85d2cf3f2f07882cc",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "781b1e3c742087afbb488ed24a58a32fd5b72a4a66e3985ea2ced2bbc6534f83",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 1888057,
-     "dim": 1920017,
+     "mem": 472057,
+     "dim": 480017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1209390,
+     "used": 650796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -260693,7 +260693,7 @@
        5408265
       ],
       "main_memory": [
-       1209390,
+       650796,
        5000000
       ],
       "hash": [
@@ -260795,21 +260795,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@4000": {
-     "sha256": "6b8e90cda3443f9854cbb69ec5f9af28097153dbc32cf96469fa93a99d288823",
-     "ntoks": 20003,
+    "R-MEM-MSCRIPT@1000": {
+     "sha256": "0d0ba6de10ad12da8805f17b497581478f7080100565e4b01e296359d3217362",
+     "ntoks": 5003,
      "held": 0,
-     "mem": 552057,
-     "dim": 488017,
+     "mem": 138057,
+     "dim": 122017,
      "verdict": "not_strict",
-     "count": 4000,
+     "count": 1000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 685796,
+     "used": 497796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -260821,7 +260821,7 @@
        5408265
       ],
       "main_memory": [
-       685796,
+       497796,
        5000000
       ],
       "hash": [
@@ -261362,21 +261362,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "a43d0e73e4ef45f91b866fd9d76479dbc17496e048be9c4d21735e4951afd75b",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@2000": {
+     "sha256": "99347dfa5f950c71c144239c6c1e73c9e242d1a67fced339d1efc0a831669cdd",
+     "ntoks": 10003,
      "held": 0,
-     "mem": 1104057,
-     "dim": 976017,
+     "mem": 276057,
+     "dim": 244017,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 2000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 952536,
+     "used": 560796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -261388,7 +261388,7 @@
        5408265
       ],
       "main_memory": [
-       952536,
+       560796,
        5000000
       ],
       "hash": [
@@ -261425,21 +261425,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@16000": {
-     "sha256": "b8a7ec5daad8831f206c02a786601e4effca5410252927d59694f88ac2073b11",
-     "ntoks": 80003,
+    "R-MEM-MSCRIPT@4000": {
+     "sha256": "6b8e90cda3443f9854cbb69ec5f9af28097153dbc32cf96469fa93a99d288823",
+     "ntoks": 20003,
      "held": 0,
-     "mem": 2208057,
-     "dim": 1952017,
+     "mem": 552057,
+     "dim": 488017,
      "verdict": "not_strict",
-     "count": 16000,
+     "count": 4000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1500536,
+     "used": 685796,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -261451,7 +261451,7 @@
        5408265
       ],
       "main_memory": [
-       1500536,
+       685796,
        5000000
       ],
       "hash": [

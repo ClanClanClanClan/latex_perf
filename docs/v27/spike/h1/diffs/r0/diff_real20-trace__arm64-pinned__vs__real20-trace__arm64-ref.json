@@ -1,0 +1,71 @@
+{
+ "set": "real20-trace",
+ "a": "real20-trace/arm64:pinned",
+ "b": "real20-trace/arm64:ref",
+ "documents": 20,
+ "missing_on_b": 0,
+ "verdicts": {
+  "DIFF": 14,
+  "IDENTICAL": 3,
+  "EQUAL_MASKED": 3
+ },
+ "masks_needed": {
+  "__stdout:workdir-path": 3,
+  "log:banner-date(applied)": 3,
+  "log:workdir-path(applied)": 1
+ },
+ "final_rc_of_a": {
+  "rc0": 17,
+  "rc1": 2,
+  "timeout": 1
+ },
+ "diffs": {
+  "2506.10519v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count302=123}' | b'{into \\\\count302=124}'"
+  ],
+  "2506.14318v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count357=103}' | b'{into \\\\count357=105}'"
+  ],
+  "2506.17968v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count328=112}' | b'{into \\\\count328=115}'"
+  ],
+  "2506.21507v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count352=120}' | b'{into \\\\count352=122}'",
+   "p2 h1trace.log: line 11: b'{into \\\\count352=121}' | b'{into \\\\count352=123}'",
+   "p3 h1trace.log: line 11: b'{into \\\\count352=121}' | b'{into \\\\count352=123}'"
+  ],
+  "2507.00167v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count323=95}' | b'{into \\\\count323=98}'",
+   "p2 h1trace.log: line 11: b'{into \\\\count323=96}' | b'{into \\\\count323=99}'",
+   "p3 h1trace.log: lengths 320898828 vs 320898830"
+  ],
+  "2507.00573v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count313=107}' | b'{into \\\\count313=109}'"
+  ],
+  "2507.03418v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count307=117}' | b'{into \\\\count307=118}'"
+  ],
+  "2507.04187v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count353=95}' | b'{into \\\\count353=96}'"
+  ],
+  "2507.07609v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count335=112}' | b'{into \\\\count335=115}'"
+  ],
+  "2507.08525v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count296=126}' | b'{into \\\\count296=127}'"
+  ],
+  "2507.09421v1": [
+   "p1 h1trace.log: lengths 1403867136 vs 1423716352"
+  ],
+  "2507.09928v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count354=124}' | b'{into \\\\count354=128}'"
+  ],
+  "2507.10072v1": [
+   "p1 h1trace.log: lengths 508249046 vs 508246970",
+   "p1 h1trace.pdf: line 27831: b'      <xmpMM:InstanceID>uuid:39b62bb1-8d7f-4dc9-99bb-1888d759b626</xmpMM:InstanceID>' | b'      <xmpMM:InstanceID>uuid:62675462-b620-4054-98d1-8205fd7f267a</xmpMM:InstanceID>'"
+  ],
+  "2507.11367v1": [
+   "p1 h1trace.log: line 11: b'{into \\\\count331=117}' | b'{into \\\\count331=119}'"
+  ]
+ }
+}

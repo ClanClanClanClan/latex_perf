@@ -1,0 +1,25 @@
+{
+ "set": "real-fixclock",
+ "a": "arm64:pinned",
+ "b": "amd64:pinned",
+ "documents": 25,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 22,
+  "DIFF_STDOUT_ONLY": 1,
+  "EQUAL_MASKED": 2
+ },
+ "masks_needed": {
+  "log:workdir-path": 2,
+  "__stdout:workdir-path": 2
+ },
+ "final_rc_of_a": {
+  "rc0": 23,
+  "rc1": 2
+ },
+ "diffs": {
+  "2507.07609v1": [
+   "p1 __stdout: line 916: b'mf: <WORKDIR>/tv/fonts/source/lh/lh-t2a/lati0600.mf: successfully generated.' | b'mf: /usr/local/texlive/2026/texmf-dist/fonts/source/lh/lh-t2a/lati0600.mf: successfully generated.'"
+  ]
+ }
+}

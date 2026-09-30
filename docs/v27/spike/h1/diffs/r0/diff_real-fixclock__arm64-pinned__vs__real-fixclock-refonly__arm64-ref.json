@@ -1,0 +1,23 @@
+{
+ "set": "real-fixclock",
+ "a": "real-fixclock/arm64:pinned",
+ "b": "real-fixclock-refonly/arm64:ref",
+ "documents": 200,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 186,
+  "EQUAL_MASKED": 14
+ },
+ "masks_needed": {
+  "log:pdffilemoddate-line": 4,
+  "__stdout:workdir-path": 9,
+  "log:workdir-path": 7,
+  "gz:workdir-path": 1,
+  "gz:gunzip": 1
+ },
+ "final_rc_of_a": {
+  "rc0": 189,
+  "rc1": 11
+ },
+ "diffs": {}
+}

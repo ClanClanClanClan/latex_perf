@@ -1,0 +1,1202 @@
+[
+{
+"arxiv_id": "2507.02366v1",
+"toplevel": "Manuscript.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04187v1",
+"toplevel": "tmlr_accept.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.00167v1",
+"toplevel": "rank-2-integral-points.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11285v1",
+"toplevel": "ekr_t_int_assoc_scheme.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10072v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.10356v1",
+"toplevel": "manuscript.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09421v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08367v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.14318v1",
+"toplevel": "template.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.00573v1",
+"toplevel": "paper.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.17968v1",
+"toplevel": "bare_jrnl_compsoc.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.07609v1",
+"toplevel": "orbSaito_ADE_running.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11367v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.03418v1",
+"toplevel": "Realization_D21alpha.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.21507v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.19051v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.10519v1",
+"toplevel": "GS_orbits_asympt_characters.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09928v1",
+"toplevel": "main-neuirps25.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.16766v1",
+"toplevel": "Palojarvi_Trudgian_12thPowerMoment_Submitted.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08525v1",
+"toplevel": "augmip.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10053v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.07998v2",
+"toplevel": "arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08590v1",
+"toplevel": "Paper__3259_Visual_Semantic_Description_Generation_with_MLLMs_for_Image-Text_Matching.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.23526v1",
+"toplevel": "D-module-cohomology.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.14432v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08726v1",
+"toplevel": "root.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08536v1",
+"toplevel": "paper.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.14914v1",
+"toplevel": "medima-template.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08444v1",
+"toplevel": "decastro_gribonval_jouvin.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.07811v1",
+"toplevel": "template.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.19791v1",
+"toplevel": "VoronoiSphericalCDF_paper.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09958v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08137v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10784v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.03824v1",
+"toplevel": "FM-antiquantum-063025-submitted.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.06730v1",
+"toplevel": "SierpinskiProductsPackingColoring.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.07717v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.23298v2",
+"toplevel": "Paper.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04394v1",
+"toplevel": "Witnessing_and_guiding_sets_-_arXive.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.18389v1",
+"toplevel": "paper.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.20308v1",
+"toplevel": "manuscript.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09036v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08094v1",
+"toplevel": "ChustCoelhoLeapsComp_arXiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.07461v1",
+"toplevel": "conference_101719.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11058v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.05913v1",
+"toplevel": "ICML-Workshop-SBoN_v2.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.16866v1",
+"toplevel": "Quantum_Hermitian_Matrices_PartIII_3.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08400v1",
+"toplevel": "TPAMI-main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.08684v1",
+"toplevel": "paper_2_reps_of_annuli.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.18011v1",
+"toplevel": "ijcai25.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.19945v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08826v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04521v1",
+"toplevel": "Shulga_arx_ver.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.19181v2",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.04714v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08636v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.23484v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.00667v1",
+"toplevel": "Mult_Jetter_error_010725.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09581v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.10434v2",
+"toplevel": "collas2025_conference.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09410v1",
+"toplevel": "pearc25.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.13364v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08550v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09229v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.21744v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09257v1",
+"toplevel": "arXiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09855v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09071v1",
+"toplevel": "Multimodal_Sparsity.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.22733v1",
+"toplevel": "26-06-2025-Degtyarev-Rams.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.06828v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08139v1",
+"toplevel": "erdosGinzburgZiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11192v1",
+"toplevel": "IOPLaTeXGuidelines_final.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.11236v1",
+"toplevel": "arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.20347v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09256v1",
+"toplevel": "manuscript_clean.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04615v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.14379v2",
+"toplevel": "On_Certain_Diophantine_Equations_Involving_Lucas_and_Pell_Numbers.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.00582v2",
+"toplevel": "MICCAI2025_paper_template.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.20028v1",
+"toplevel": "GMLArxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.20608v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.10139v1",
+"toplevel": "main-arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.23102v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.02720v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.23531v1",
+"toplevel": "Bondal_Conjecture.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.06919v1",
+"toplevel": "paper-v2.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.18221v2",
+"toplevel": "neurips_mixtures.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.11350v1",
+"toplevel": "whipitout.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.03128v1",
+"toplevel": "KKfamilyarxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10999v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.17071v1",
+"toplevel": "stability.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.11166v1",
+"toplevel": "article.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.11399v1",
+"toplevel": "paper_v1_juq_0725.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.00316v2",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.06927v1",
+"toplevel": "allerton-simple.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.21217v1",
+"toplevel": "Embedding-expectational-Shimura-variety-Siegel.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.03909v2",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.10743v1",
+"toplevel": "main_doc.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09353v1",
+"toplevel": "full-paper-template.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08642v1",
+"toplevel": "v12.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10343v1",
+"toplevel": "samplepaper.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08729v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.19462v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08248v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.06789v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.05786v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09487v1",
+"toplevel": "elsarticle-template-num.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.02260v2",
+"toplevel": "cycle-count-3.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.01730v2",
+"toplevel": "GMcKbije24.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.05326v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09815v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10668v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09172v1",
+"toplevel": "time_limit_EPJ_V2.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.24091v1",
+"toplevel": "minimal_regular_snc_models.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09979v1",
+"toplevel": "HBGL2Q.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.19755v1",
+"toplevel": "xreg_main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.07635v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.00448v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10688v1",
+"toplevel": "apssamp.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10385v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04362v1",
+"toplevel": "main_arXiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.00325v1",
+"toplevel": "QUE-PrimePow.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.24028v1",
+"toplevel": "groebner.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.18408v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.10656v1",
+"toplevel": "HA2025.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08767v1",
+"toplevel": "Main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09206v1",
+"toplevel": "multi_ot_arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04273v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10615v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10735v1",
+"toplevel": "1-v2-Newsvendoer-2025.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.16917v1",
+"toplevel": "Garcia_John_Novo.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.17838v1",
+"toplevel": "main_FBS_CSR_ver1.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.04065v1",
+"toplevel": "fg-ac-lie-xv1.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10222v1",
+"toplevel": "New_IEEEtran_how-to.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.06516v1",
+"toplevel": "uai2025-template.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.23633v1",
+"toplevel": "saturation.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11002v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10171v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.06873v1",
+"toplevel": "arxiv_version.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.11352v1",
+"toplevel": "neurips_2025.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09595v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.06142v1",
+"toplevel": "Fourier-Main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11419v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04647v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.05929v1",
+"toplevel": "Roy_Saminger-Platz.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.01729v1",
+"toplevel": "TR_optimization_using_HKI.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.21941v1",
+"toplevel": "Rectangular_representation3.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.07469v2",
+"toplevel": "neurips_2024.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.21326v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11012v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.15429v1",
+"toplevel": "eval.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08503v1",
+"toplevel": "submit.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10421v1",
+"toplevel": "samplepaper.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08280v1",
+"toplevel": "mirrams_arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11494v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10894v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.08418v2",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11116v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.17978v1",
+"toplevel": "TPelast.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.22889v1",
+"toplevel": "RealSepInv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.12644v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.01098v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08438v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.01736v1",
+"toplevel": "mainArxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09392v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08290v1",
+"toplevel": "cross_resolution.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.16267v2",
+"toplevel": "evenoddcranksarxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09733v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.07954v1",
+"toplevel": "mlsp_template_camera_ready.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.16455v1",
+"toplevel": "VT_arXiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.10949v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09966v1",
+"toplevel": "templateArxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09521v1",
+"toplevel": "arXiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.05297v4",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.22012v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.22580v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.11636v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.06916v1",
+"toplevel": "ajgiangreco_EN-CAVFF.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.09811v1",
+"toplevel": "Fractional_Haemers_Bound_of_The_Mycielski_Construction.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.23251v1",
+"toplevel": "rational_quivers_arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.17337v1",
+"toplevel": "MICCAI2025_paper_template.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09447v1",
+"toplevel": "manuscript_arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10827v1",
+"toplevel": "acl_latex.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.10948v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.18713v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09694v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.11003v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.20581v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.09441v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.18948v1",
+"toplevel": "2025num_backward02.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.16937v1",
+"toplevel": "Characteristic_Polynomials_of_Linearized_Polynomials2.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2506.18168v1",
+"toplevel": "krr_preprint.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.06969v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.04007v1",
+"toplevel": "W_til.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.17086v1",
+"toplevel": "toric3.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.06768v1",
+"toplevel": "20250620.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.19055v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": null
+},
+{
+"arxiv_id": "2507.10142v1",
+"toplevel": "main.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.01232v1",
+"toplevel": "plane_curves_imperfect_arxiv.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2506.22587v1",
+"toplevel": "Piltz_Divisor_Problem_on_Number_Field.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+},
+{
+"arxiv_id": "2507.08252v1",
+"toplevel": "Witnessing_network_nonlocality.tex",
+"declared_compiler": "pdflatex",
+"declared_texlive": 2023
+}
+]

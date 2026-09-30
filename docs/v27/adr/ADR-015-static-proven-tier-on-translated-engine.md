@@ -13,16 +13,30 @@ Evidence tags as elsewhere: **[M]** measured, **[R]** read from a source, **[I]*
 
 ## Context
 
-- The per-name route to PROVEN verdicts failed review four rounds running. Each round found a
-  composition or capacity hole the previous one had missed, in a fragment whose semantics we
-  had written by hand: C-92 (a screen that under-read the code), C-94 (TeX's grouping limit
-  once arguments can hold math), C-96 (the R-INERT closure), C-98 (main memory: nested argument
-  frames copy their arguments). These corrections are recorded on the unmerged branch
-  `feat/v27165-strict-args`. Every one of them was a place where *our model* of pdfTeX was
-  wrong, not pdfTeX.
+- The per-name **command-signature track** (M1 slice 2, OPEN-120: each command attested by solo
+  probes under the oracle, then admitted by its signature) failed adversarial review four rounds
+  running, each time on a composition hole the previous round had missed. This is the track the
+  owner was asked about ("The command-signature track (the running dynamic workflow) has failed
+  review 4 rounds running on composition holes. Stop it?", 2026-09-29 06:12:50Z). The rounds, as
+  the assistant listed them to the owner at 06:12:44Z:
+  - round 1: commands that swallow the next token;
+  - round 2: the mode a command leaves behind, and fragile commands inside moving arguments;
+  - round 3: `x \section{a}\par\unskip x`, where whether `\unskip` is allowed depends on what is
+    already on the page;
+  - also round 3: `\label` stores a counter's printed form, and `\ref` makes it fatal on a later
+    pass (the 27th `enumii` item gives "Counter too large").
+
+  The corrections are recorded on the unmerged branch `feat/v27165-contract-signatures` (last
+  commit `1224b4b7`): C-82 (a probe that saw one way of taking a token; a typing witness that
+  toggled the mode it tested) and C-90 (each use attested in isolation, so what a use leaves
+  behind was never attested). Every one of these holes was in *our model* of how commands
+  compose, not in pdfTeX.
+- Corroborating, from a different track: step 2 slice A of the hand-modelled L_S0 kernel
+  (OPEN-122, branch `feat/v27165-strict-args`, unmerged) had its own review rounds find capacity
+  and closure holes: C-92, C-94, C-96, C-98. Slice A is not stopped by this ADR (D4).
 - On 2026-09-29 the owner restated the goal: "the goal is yet again PERFECTNESS: we need to
   provably declare compilation if and only if it will compile (within a subset of latex where
-  this can be done). So no shortcuts, no bandaids, only perfect and durable solutions."
+  thsi [sic] can be done). So no shortcuts, no bandaids, only perfect and durable solutions."
 - Two architectures were then designed to the same depth, as the owner asked ("Design both,
   then decide"):
   - **ADR-013 draft, R-EFFECT.** Per-command behaviour programs, derived from a static read/write
@@ -74,16 +88,18 @@ What this decides, and what it does not:
     document using only proven summaries.
   - *Boundary.* Anything the abstract interpreter cannot summarise soundly, and any combination
     it cannot cover, is **outside the tier**, never guessed.
-- **D3. The foundation spike is funded** (ADR-014 draft §9), each step with its kill criterion:
+- **D3. The foundation spike is funded**: ADR-014 draft §9, the plan the owner approved with "Run
+  steps H.1–H.6 with their kill criteria". The pass criteria, kill criteria and fallbacks below
+  are the draft's, verbatim (work summarised):
 
-  | step | work | kills the approach if |
-  |---|---|---|
-  | H.1 | identify the exact source revision of the pinned binary; build it; show the build is the binary | the revision cannot be identified **and** no revision reproduces the logs |
-  | H.2 | translator for the Pascal subset → Coq AST; `PS` as a fuelled interpreter; extraction | the Coq term or its extraction is intractable (> 2 h compile or > 16 GB) |
-  | H.3 | load the real `pdflatex.fmt` in the model; round-trip; meanings of the kernel names | the load cannot be made exact within the spike |
-  | H.4 | reproduce all L_S0 evidence and the owner's composition cases in the model | disagreements traced to the translated code keep appearing after 3 fixes |
-  | H.5 | speed | > 200x pdfTeX per pass with no profile-guided fix in sight |
-  | H.6 | step-level co-simulation against an instrumented reference build | hidden C state not in the translated globals |
+  | step | work | pass criterion | kills the approach if (fallback) |
+  |---|---|---|---|
+  | H.1 | identify the exact source revision of the pinned binary; build it; confirm `INTEGER_TYPE`, `GLUERATIO_TYPE`, `-ffp-contract` | the reference build's logs and `.aux` equal the pinned binary's on 200 corpus documents (PDF modulo `/ID`) | the revision cannot be identified, **and** no revision reproduces the logs. Fallback: pin the reference build as the new oracle (an ADR-012 decision-7 change) |
+  | H.2 | translator for the Pascal subset → Coq AST; `PS` as a fuelled interpreter; closure compiler; extraction | 100 % of procedures translated; Coq accepts the term; the extracted binary runs INITEX to the `*` prompt | the Coq term or its extraction is intractable (> 2 h compile or > 16 GB). Fallback: split the program into per-part modules, or emit a shallow embedding with a generated reflection lemma |
+  | H.3 | load the real `pdflatex.fmt` in the model; round-trip `store_fmt_file`; meanings of the kernel names; locate F7's byte difference | round trip byte-exact; meanings byte-identical to the contract generator's; F7 explained | the load cannot be made exact within the spike |
+  | H.4 | reproduce all L_S0 evidence, ADR-013's ≈ 50 measured documents and the owner's composition cases in the model | verdict, message and `l.N` agree with the recorded oracle grades on 100 %, or every disagreement is traced to a stubbed external | disagreements traced to the *translated* code keep appearing after 3 fixes |
+  | H.5 | speed: the one-line document, the 12-page synthetic paper, a 40-page corpus paper; cold and from a preamble snapshot | ≤ 60× pdfTeX per pass | > 200× with no profile-guided fix in sight. Fallback: a verified-refinement fast interpreter becomes its own project |
+  | H.6 | co-simulation: a digest change file in the reference build; step-by-step comparison on 20 documents | the first divergence (if any) is localised to a unit automatically | the digest cannot be made to match on a *correct* model (hidden C state not in the translated globals) |
 
   The spike reports before any further architecture commitment.
 - **D4. The per-name signature track is stopped** (answer 1). As a consequence (derived, not a
@@ -123,6 +139,22 @@ What this decides, and what it does not:
 - The draft's source citations were read from TeX Live **trunk**. Ten of the eleven files it
   cites are identical to r78081; `tex.ch` is not (trunk has since changed `scan_file_name`'s
   handling of `\relax`). The spike uses r78081.
-- No difference between the architectures was observed. The aarch64 binary fuses some floating-point
-  operations (FMA) that the x86_64 one does not; H.2's Pascal semantics must model or exclude them.
-  See the report.
+- **The pass criterion was met only with the clock fixed [M].** Under the protocol's real clock, 7 of
+  the 200 real papers differ between the two builds (2 logs, 5 PDFs beyond `/ID`). All 7 differ
+  through the clock; the two binaries are the same bytes. With `FORCE_SOURCE_DATE` and one
+  `SOURCE_DATE_EPOCH`, 200 of 200 agree. Treating the clock as an input is O-5, still open above.
+- **The architectures do differ, in the PDF [M].** The aarch64 binary fuses floating-point
+  multiply-adds (FMA) that the x86_64 one does not.
+  - At `\pdfsetmatrix`'s matrix arithmetic (every graphicx `\rotatebox`/`\scalebox`) the products
+    are inexact. A review-round-1 document with 400,000 rotated links gives PDFs that differ in
+    one `/Rect` byte, with rc, log and `.aux` identical.
+  - Every fused site outside xpdf that reaches TeX state is exact on its whole input range or
+    under a stated bound, or is unreachable in `pdflatex.fmt`. The exception is xpdf's
+    real-number parser for included PDFs, which is open.
+  - On the corpus (200 real papers, 489 evidence documents, 40 traced documents) no
+    difference was observed.
+  - So H.2's semantics must model fused multiply-add per architecture at the matrix sites (no
+    exactness lemma exists there), or not claim the PDF output there. Report §5.
+- **All amd64 evidence is emulated** (qemu-user on an arm64 host): the rebuild, the behaviour runs
+  and the format run. A confirmation on a native amd64 host, the CI runner of `tex-oracle.yml`, is
+  open (OPEN-123).

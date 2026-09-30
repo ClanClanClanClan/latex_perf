@@ -1,0 +1,20 @@
+{
+ "set": "real13-fixclock-regrade2",
+ "a": "real13-fixclock-regrade2/amd64:pinned",
+ "b": "real-fixclock/arm64:pinned",
+ "documents": 13,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 11,
+  "EQUAL_MASKED": 2
+ },
+ "masks_needed": {
+  "__stdout:workdir-path": 2,
+  "log:workdir-path": 2
+ },
+ "final_rc_of_a": {
+  "rc0": 12,
+  "rc1": 1
+ },
+ "diffs": {}
+}

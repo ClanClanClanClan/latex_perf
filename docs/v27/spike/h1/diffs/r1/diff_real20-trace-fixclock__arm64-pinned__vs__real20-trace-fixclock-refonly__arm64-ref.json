@@ -1,0 +1,20 @@
+{
+ "set": "real20-trace-fixclock",
+ "a": "real20-trace-fixclock/arm64:pinned",
+ "b": "real20-trace-fixclock-refonly/arm64:ref",
+ "documents": 20,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 17,
+  "EQUAL_MASKED": 3
+ },
+ "masks_needed": {
+  "__stdout:workdir-path": 3,
+  "log:workdir-path(applied)": 2
+ },
+ "final_rc_of_a": {
+  "rc0": 18,
+  "rc1": 2
+ },
+ "diffs": {}
+}

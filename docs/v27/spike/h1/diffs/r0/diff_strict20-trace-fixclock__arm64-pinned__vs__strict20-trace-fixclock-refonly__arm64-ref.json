@@ -1,0 +1,16 @@
+{
+ "set": "strict20-trace-fixclock",
+ "a": "strict20-trace-fixclock/arm64:pinned",
+ "b": "strict20-trace-fixclock-refonly/arm64:ref",
+ "documents": 20,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 20
+ },
+ "masks_needed": {},
+ "final_rc_of_a": {
+  "rc0": 11,
+  "rc1": 9
+ },
+ "diffs": {}
+}

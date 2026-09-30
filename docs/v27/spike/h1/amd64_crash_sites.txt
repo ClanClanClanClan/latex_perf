@@ -1,0 +1,18 @@
+# amd64 (qemu-user) build crash sites, grepped from ~/.cache/lp-spike-h1/build-amd64.{fail1,attempt2,attempt3}.log
+# pattern: Segmentation fault | internal compiler error | cannot run C compiled | cannot compute suffix (gmp.h-not-found lines are consequences of the gmp crash and are not crash sites)
+build-amd64.fail1.log:2590:./libtool: line 1918: 24555 Segmentation fault      (core dumped) gcc -DHAVE_CONFIG_H -I. -I../../../texk/kpathsea -I./.. -I../../../texk/kpathsea/.. -DMAKE_KPSE_DLL -Wimplicit -Wreturn-type -g -O2 -MT libkpathsea_la-rm-suffix.lo -MD -
+build-amd64.attempt2.log:3609:./libtool: line 1918: 53817 Segmentation fault      (core dumped) gcc -DHAVE_CONFIG_H -I. -I../../../libs/luajit -I../../../libs/luajit/LuaJIT-src/src -DLUAJIT_ENABLE_LUA52COMPAT -DLUAI_HASHLIMIT=6 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_S
+build-amd64.attempt2.log:3993:configure: error: cannot run C compiled programs.
+build-amd64.attempt2.log:5040:gcc: internal compiler error: Segmentation fault signal terminated program cc1
+build-amd64.attempt2.log:5577:gcc: internal compiler error: Segmentation fault signal terminated program cc1
+build-amd64.attempt3.log:370:gcc: internal compiler error: Segmentation fault signal terminated program cc1
+build-amd64.attempt3.log:2189:c++: internal compiler error: Segmentation fault signal terminated program cc1plus
+build-amd64.attempt3.log:2340:c++: internal compiler error: Segmentation fault signal terminated program cc1plus
+build-amd64.attempt3.log:2416:configure: error: cannot run C compiled programs.
+build-amd64.attempt3.log:3178:c++: internal compiler error: Segmentation fault signal terminated program cc1plus
+build-amd64.attempt3.log:3441:make[6]: *** [/work/repo/Work/libs/icu/../../../libs/icu/icu-src/source/config/mh-linux:51: icuexportdata.o] Segmentation fault (core dumped)
+build-amd64.attempt3.log:5556:gcc: internal compiler error: Segmentation fault signal terminated program cc1
+build-amd64.attempt3.log:9430:configure: error: cannot compute suffix of executables: cannot compile and link
+build-amd64.attempt3.log:11092:make[4]: *** [Makefile:21581: tangle.p] Segmentation fault (core dumped)
+build-amd64.attempt3.log:11570:make[4]: *** [Makefile:9478: luatexdir/luafontloader/fontforge/fontforge/libff_a-memory.o] Segmentation fault (core dumped)
+build-amd64.attempt3.log:12925:gcc: internal compiler error: Segmentation fault signal terminated program cc1

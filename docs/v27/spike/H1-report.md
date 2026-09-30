@@ -8,8 +8,10 @@ step H.1 of the ADR-014 draft §9.
 
 **Verdict: the kill criterion did not fire.** The revision is identified by three independent
 sources. Our rebuilds from that source are byte-identical to the pinned binary on **both**
-architectures. The shipped format is reproducible byte for byte. On every document run, the two architectures' pinned binaries gave
-the same results.
+architectures. The shipped format is reproducible byte for byte. On every corpus document run, the two
+architectures' pinned binaries gave the same results; an adversarial document makes their PDFs
+differ in one byte (§5.3), with rc, log and `.aux` equal. The H.1 pass criterion held only with
+the clock fixed (§4.2). Revised after review round 1 (§5, §4.1, [`h1/`](h1/README.md)).
 
 Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 
@@ -20,9 +22,9 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 | Which source built the pinned `pdftex`? | TeX Live svn **r78081**, i.e. TeX-Live/texlive-source commit `dc8efcd41054ec4bf7f96c022cd2d91fe346f6e1` (tag `svn78081`, 2026-02-23T16:24:02Z) | M |
 | Is the image's binary the upstream build of that source? | yes, for both architectures: byte-identical to the `svn78081` GitHub release assets | M |
 | Does our rebuild reproduce it? | **yes, byte for byte, on both architectures**: aarch64 natively (sha256 `cee621bf…`), amd64 under emulation (`1c5ff711…`, §2.3) | M |
-| Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100) | M |
+| Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100). The x86_64 INITEX run was emulated (qemu-user), not native | M |
 | Same binary, same inputs: same outputs? | yes: 3,907 of 3,907 evidence documents, and 200 of 200 real papers once the real clock is fixed | M |
-| Do amd64 and arm64 differ (floating point)? | no difference observed: 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5). The code has one channel that could differ in principle, bounded in §5.1 | M + R + I |
+| Do amd64 and arm64 differ (floating point)? | **on the corpus, no; in general, yes, in the PDF.** 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5.2). But the aarch64 binary fuses multiply-adds that the x86_64 one does not, and at the `\pdfsetmatrix` sites the products are inexact: an adversarial document of 160 `\rotatebox`es holding 400,000 links gives PDFs that differ in **1 byte** (a link `/Rect` coordinate), with rc, `.log` and `.aux` identical (§5.3). Every fused site outside xpdf is classified in §5.1; the ones that reach TeX state are exact on their whole input range or under a stated bound, except xpdf's real-number parser, which is open. All amd64 runs were emulated (qemu-user), not native | M + R + I |
 
 ## 1. The pinned engine
 
@@ -157,11 +159,15 @@ Inside the pinned image, INITEX was re-run with the command recorded in `fmtutil
 
 | run | clock | result |
 |---|---|---|
-| aarch64, today's clock | real | differs from the shipped format in **7 bytes** of 11,621,149 (uncompressed). Offsets 974,183–974,186 are the date digits of the format identifier ("2026.8.30" against "2026.9.29"). Offsets 4,539,858–4,539,875 are the dumped `\time`, `\day` and `\month` words |
+| aarch64, today's clock (2026-09-29) | real | differs from the shipped format in **7 bytes** of 11,621,149 (uncompressed). Offsets 974,182, 974,184 and 974,185 are date digits of the format identifier ("2026.8.30" against "2026.9.29"). Offsets 4,539,857 and 4,539,858 are in the dumped `\time` word (bytes 4,539,855–4,539,858), 4,539,866 in `\day` and 4,539,874 in `\month` |
 | aarch64, `SOURCE_DATE_EPOCH`=2026-08-30 07:51 UTC (the shipped log's start minute), `FORCE_SOURCE_DATE=1` | forced | **byte-identical** to the shipped `a476533c…` (compressed and raw) |
-| aarch64, one minute later | forced | differs in **exactly one byte**: offset 4,539,859, octal 327 → 330, that is `\time` 471 → 472 |
+| aarch64, one minute later | forced | differs in **exactly one byte**: offset 4,539,858, 215 → 216 (octal 327 → 330), the low byte of the big-endian `\time` word: 471 → 472 |
 | x86_64 (emulated), its own start minute 06:10 UTC | forced | **byte-identical** to the shipped x86_64 `5a9dfc4e…` |
 | x86_64 (emulated), the aarch64 start minute 07:51 UTC | forced | **byte-identical to the aarch64 `a476533c…`** |
+
+Offsets are 0-based byte positions in the gunzipped format (`cmp -l` prints them 1-based, one
+higher; the first version of this table gave `cmp`'s 1-based offsets in every row without saying
+so, and gave ranges where the differing bytes are not contiguous).
 
 The rebuild's log equals the shipped `pdflatex.log` except its first (banner) line and the two
 lines `fmtutil` appends (the command line).
@@ -194,8 +200,10 @@ The **reference** binary ran with the same protocol, argv and environment
 `pdflatex.fmt` were the image's own.
 
 Every pass's rc, every file it wrote (sha256 and bytes) and its terminal output were kept. The
-harness is `~/.cache/lp-spike-h1/harness/h1cmp.py` and `h1diff.py`. It is not committed: it starts
-an engine outside `_oracle.py` for the reference binary, which `check_oracle_pin.py` forbids.
+runner is `~/.cache/lp-spike-h1/harness/h1cmp.py`. It is not committed as code: it starts an engine
+outside `_oracle.py` for the reference binary, which `check_oracle_pin.py` forbids for tracked
+code; `h1/README.md` records its sha256. The comparator `h1diff.py`, its kill-tests and every
+comparison summary are committed under [`h1/`](h1/README.md).
 
 **How outputs were compared.** Byte comparison first. If bytes differ, masks are applied, one at
 a time and only when needed; each document records which masks it needed. The masks:
@@ -207,8 +215,19 @@ a time and only when needed; each document records which masks it needed. The ma
 - the byte size in "Output written on … (N pages, M bytes)";
 - a SyncTeX file compared after gunzip;
 - a canonical PDF form, used only where Ghostscript's random font-subset tags differ: streams
-  decompressed, lengths and cross-reference offsets dropped;
+  decompressed; `/Length` values, the cross-reference stream's body, classic xref entries and
+  `startxref` (all byte offsets) dropped; and only those `/XXXXXX+` tags replaced that occur in
+  the same side's Ghostscript intermediates (`*-eps-converted-to.pdf` of the same run). pdfTeX's
+  own subset tags, `/Size`, `/W` and `/Index` are compared. (Review round 1: the first version
+  replaced every tag and dropped `/Size`, `/W` and `/Index`, so it would also have absorbed a
+  pdfTeX tag or object-count difference. Every comparison was re-run with the narrowed mask
+  (`h1/diffs/r1/`); no verdict and no count changed. `h1/tools/h1diff_selftest.py`: 2 of 5 cases
+  pass on the first version, 5 of 5 on the narrowed one);
 - a "Segmentation fault" line printed on the terminal by a crashed helper under emulation.
+
+The work-directory mask assumes both sides' work roots have the same length (line wrapping of
+long paths depends on it). A run in a work root of another length fails closed, as DIFF (it
+happened once, §5.2).
 
 The comparator was checked against injected differences. A changed log byte, a changed `.aux`,
 a changed rc, a missing file, an engine error and a changed glyph position inside a compressed
@@ -224,6 +243,15 @@ designed.
 | (ii′) the same 200, fixed clock (`FORCE_SOURCE_DATE=1`, one `SOURCE_DATE_EPOCH`, both binaries) | 200 | **200 agree**: 186 byte-identical, 14 masked (work-directory path, epstopdf's file date, SyncTeX gunzip) |
 | (iii) `\tracingall` traces, 20 evidence documents | 20 | **20 agree** (19 byte-identical, 1 banner-masked) |
 | (iii) `\tracingall` traces, 20 real papers | 20 | Under the real clock, 14 differ. The one examined diverges first at pgfmath's default random seed `\time`×`\year` (`\count302` = 123 against 124: the two runs started at 02:03 and 02:04 UTC). Both runs of one paper hit the 300 s limit. **Under a fixed clock (both binaries, limit 3,600 s): 20 agree**, 17 byte-identical in every file including logs of up to 1.9 GB, 3 masked (work-directory path) |
+
+**The H.1 pass criterion** (ADR-014 draft §9: "the reference build's logs and `.aux` equal the
+pinned binary's on 200 corpus documents (PDF modulo `/ID`)"). Under the protocol's real clock it
+is **not met as written**: 7 of the 200 differ, 2 of them in the log ("words of memory" +1) and 5
+in the PDF beyond `/ID`. Every one traces to the real clock (the two binaries are the same
+bytes, so the engine cannot be the cause). With the clock fixed, **it is met: 200 of 200**, with
+masks beyond `/ID`: the work-directory path (7 logs, 9 terminal outputs, 1 SyncTeX file),
+epstopdf's file date (4 logs) and SyncTeX compared after gunzip (1); no PDF needed a mask. So the criterion held only after the
+clock was made an input, which is ADR-014 draft O-5's open question, not a result of H.1.
 
 **Note on the real window.** Frame ranks 2000–2199 are neither sealed sample 3 (720–919) nor the
 fix-policy confirmation window (2600–2718); the harness asserted both disjointnesses. The window
@@ -257,39 +285,49 @@ exercise the harness again, not the engine.
   - in the glue printing of `\showbox`/`\tracingoutput`, `round(unity*g)`.
 - `make_accent` computes `delta:=round((w-a)/float_constant(2)+h*t-x*s)` (a kern width: TeX state).
 
-**The aarch64 binary has 524 FMA instructions.** Mapped to functions through the unstripped
-build (§2.2):
-- **485** are in xpdf (the PDF-inclusion parser, C++);
-- **39** are in C functions:
-  - `pdfsetmatrix` 8;
-  - `t1_scan_param` 4;
-  - `makeaccent` 2;
-  - `pdfhlistout` 2;
-  - `hlistout` 2;
-  - `zpdfsetrule` 2;
-  - `do_matrixtransform` 2;
-  - `read_jbig2_info` 2;
-  - the rest in libpng's gamma code and in `ttf_read_post` and `read_pdf_info`.
+**The aarch64 binary has 524 FMA instructions; the x86_64 binary has none** (0
+`vfmadd`/`vfmsub`/`vfnmadd`). The x86_64 build targets baseline x86-64, which has no FMA; doubles
+use SSE2, so there is no x87 excess precision [I, from the ABI default].
 
-**The x86_64 binary has none** (0 `vfmadd`/`vfmsub`/`vfnmadd`). It is built for baseline x86-64,
-which has no FMA; doubles use SSE2, so there is no x87 excess precision [I, from the ABI
-default].
+A fused `a*b+c` rounds once; the unfused one rounds the product and then the sum. The two can
+differ **only when the product `a*b` is inexact** in double precision. So each site is settled by
+one of two things: an argument that its products are exact over the site's inputs, or a
+counterexample.
 
-In `makeaccent`, GCC fused `(w-a)/2 + h*t` into `fmadd` and `… - x*s` into `fmsub`. In
-`pdfhlistout`, the glue product itself is a plain `fmul` (not fused). The function's one
-`fmadd`/`fmsub` pair was not traced back to its source expression. `fin_align` (`zfinalign`) has
-no FMA.
+**Where the 524 are [M].** Each instruction was mapped to its function and source line through the
+DWARF line table of the unstripped build (§2.2; `objdump -d -l`, file
+[`h1/fma/fma_sites_aarch64.tsv`](h1/fma/fma_sites_aarch64.tsv)). 485 are in xpdf (C++, no line
+table). The other **39** are below, every one classified. (Round 0 of this report traced only
+`make_accent` and claimed that "the same argument covers the shipout sites". That was untested,
+and it was false for `\pdfsetmatrix`: review round 1 refuted it with the document of §5.3.)
 
-**When can a fused and an unfused computation differ?** Only when a product is inexact in double
-precision. [I, from the operand bounds]:
-- In `make_accent`, `h*t` is `h * slant/65536`, with `|h| < 2^30` sp. It is exact whenever
-  `|slant| * |h| < 2^53`. That holds for every font whose slant parameter is below 128 in
-  absolute value (real fonts: about 0.1–0.3).
-- `(w-a)/2` is exact.
-- So on real fonts both architectures compute the same `delta`. The channel is real only for
-  absurd TFM parameters.
-- The same argument covers the shipout sites. They move PDF coordinates, and `\pdflastxpos`
-  after `\pdfsavepos`.
+| sites (FMA count) | source, r78081 | expression | what the result reaches | products exact? | channel |
+|---|---|---|---|---|---|
+| `makeaccent` (2) | `pdftex0.c:34419`, `make_accent` | `round((w-a)/2 + h*t - x*s)`, with `t = s = slant/65536` | **TeX state**: the width of the accent kern | yes when `|h|·|slant|` and `|x|·|slant|` are below 2^53, with `slant` in raw TFM units. That holds whenever `|slant| < 128` (`|h|, |x| < 2^30` sp). Real fonts have 0.1–0.3 [I, bound] | **none under the bound**. Beyond it, model per architecture or Stuck |
+| `hlistout` (2), `pdfhlistout` (2) | `pdftex0.c:17915`, `24020`: MLTeX character substitution in `tex.ch` (lines 5050–5059) | the same `delta`, over `base_slant` | `cur_h`: DVI/PDF positions, and `\pdflastxpos` after `\pdfsavepos` (**TeX state**) | same bound as `makeaccent` [I]. Reached only when the format was dumped with MLTeX enabled; `pdflatex.fmt` was not (`fmtutil.cnf` has no `-mltex`) [R] | **none** in the pinned configuration |
+| `zpdfsetrule` (2) | `pdftex0.c:20230`, `20255` | `y - (h+1)/2.0` (the halving compiled as `×0.5`) | PDF rule coordinates | yes, for every integer `h` | **none** |
+| `pdfsetmatrix` (8) | `utils.c:1420–1431` | `e = cur_h·(1-a) - cur_v·c`; the product with the enclosing matrix | the matrix stack, which is read only by `matrixtransformrect`/`matrixtransformpoint` for link, destination and thread rectangles (`pdftex.web` 36445–36553, 36720–36738): **PDF only** | **no**: `a, b, c, d` come from `\pdfsetmatrix`, for example `cos θ` from graphicx's `\rotatebox` (`pdftex.def`) | **yes, output-only** |
+| `do_matrixtransform` (2) | `utils.c:1494–1495` | `DO_ROUND(x·a + y·c + e)`; aarch64 computes `fma(x, a, y·c) + e` | the same rectangles: **PDF only** | **no**. [`h1/fma/matrix_search.py`](h1/fma/matrix_search.py) finds 3 rounding flips in 1,705,191 random sp positions at `a = 0.866025` | **yes, output-only, reproduced end to end** (§5.3) |
+| `read_jbig2_info` (2) | `writejbig2.c:798–799` | `(int)(xres·0.0254 + 0.5)` | **TeX state**: the image resolution sets a JBIG2 image's default width and height (`pdftex.web` 34475–34480) | not always, but **exhaustively, no input flips the result**: every unsigned 32-bit `xres` next to a rounding boundary was tested ([`jbig2_exhaustive.py`](h1/fma/jbig2_exhaustive.py): 0 flips among the 109,092,170 boundaries) [M] | **none** |
+| `read_pdf_info` (1) | `pdftoepdf.cc` (confirmed from the disassembly: `scvtf`, `scvtf`, `fmadd`, `fcvt s`) | `(float)(major + minor·0.1)`, the PDF version allowed | a warning in the log, or an error when `\pdfinclusionerrorlevel` > 0 (**TeX-visible**) | not always, but after the conversion to `float` the results differ only when `minor = -10·major` ([`pdfversion_exhaustive.py`](h1/fma/pdfversion_exhaustive.py)). pdfTeX refuses `\pdfminorversion` outside 0..9 (`pdftex.web` 15475) [M] | **none** |
+| `t1_scan_param` (4) | `writet1.c:621`, `655` | a font's `FontMatrix` under the map file's `SlantFont`/`ExtendFont`; `ItalicAngle` | the embedded Type 1 font program: **PDF only** | no | output-only, not observed |
+| `ttf_read_post` (1) | `writettf.c:485` | `ItalicAngle` | the font descriptor: **PDF only** | no | output-only, not observed |
+| libpng (13: `png_fixed`, `png_fixed_ITU`, `png_XYZ_from_xy` 2, `png_build_gamma_table`, `png_build_8bit_table`, `png_build_16bit_table`, `png_gamma_8bit_correct`, `png_gamma_16bit_correct`, `png_gamma_correct` 2, `png_get_pHYs_dpi` 2) | `png.c`, `pngget.c` | gamma and colour-space arithmetic | PNG pixel data: **PDF only**. `png_get_pHYs_dpi` has **no call site** in the binary; pdfTeX computes a PNG's resolution itself (`writepng.c:51`, `round(0.0254·ppm)`: a product, no FMA) | no | output-only, not observed |
+
+**xpdf (485), not traced one by one.** pdfTeX uses xpdf to parse and copy included PDF files. One
+path from xpdf into TeX state was found. `Lexer::getObj` (2 FMAs) parses PDF real numbers by
+`xf = xf + scale·d` with `scale = 0.1^k`, which is fused on aarch64. The page box of an included
+PDF is parsed this way, and becomes `epdf_width`/`epdf_height` (C `float`, `pdftoepdf.cc:770`),
+then the image's width and height in sp (`writeimg.c:320`): **TeX state**. Measured with
+[`lexsim.py`](h1/fma/lexsim.py), a transcription of `Lexer.cc` lines 157–221:
+- 29 of 300,000 random numerals (0–2,000, 1–6 decimals) parse to different doubles;
+- none of them to different floats;
+- a search at 20,000 float rounding midpoints, with numerals of 8–25 digits, found none either
+  ([`lexmid.py`](h1/fma/lexmid.py)).
+
+This channel is **open**: not observed, not excluded. The other 483 xpdf sites are in rendering,
+shading, annotation and form code, and in number formatting. None of them was followed to a
+TeX-visible value.
 
 **libm:** both binaries import the same functions (`acos asin atan atan2 cos frexp log log10 modf
 pow sin sqrt`, plus `floor` on x86_64). Within pdfTeX's own C code, calls reach them only from
@@ -299,7 +337,10 @@ PDF-side code:
 - libpng's gamma tables (`pow`);
 - xpdf (28 call sites).
 
-None of pdfTeX's own procedures that change TeX state calls libm.
+None of pdfTeX's own procedures that change TeX state calls libm. glibc's x86_64 libm selects
+some implementations at load time by CPU feature (the `ifunc` variants), so an emulated and a
+native amd64 CPU may run different code for the same call. This matters only for the PDF-side
+calls above [I].
 
 ### 5.2 Measured [M]
 
@@ -321,18 +362,58 @@ the clock fixed on both sides, so that runs hours apart are comparable.
 - one emulated oracle container was **mutated** by the run (see §6.1). Every grade made after the
   mutation was discarded and re-run in a fresh container. From then on the harness checks
   every container after every document.
+- **the 13 grades made before the mutation, in that container, before the guard existed**
+  (result files dated 22:42:34–22:49:36 UTC; the mutation was at 22:49:47) had been kept on the
+  inference that the container was still clean then. Review round 1 asked for a measurement
+  instead: all 13 were **re-graded in a fresh, guarded container** (`h1/tools/real13_ids.json`),
+  0 mutations. **13 of 13 agree** with the arm64 grades and with the kept amd64 grades, 11
+  byte-identical and 2 on the work-directory mask (`h1/diffs/r1/diff_real13-fixclock-regrade2__*`).
+  A first re-grade (`…-regrade__*`, kept) used a work root 3 characters longer and failed closed on
+  those 2 documents, where the longer path wraps a log line differently (§4.1); it was repeated
+  with a work root of equal length.
+- **superseded and aborted runs, all disclosed** (none is counted above; each is kept in the
+  cache and summarised in `h1/README.md`): a first cross-architecture comparison of 25 real papers
+  (`DIFF_STDOUT_ONLY` 1: that document is the mutation itself, whose terminal line named the
+  system path, which is how the mutation was found); the 48 grades made in the mutated container
+  (1 timed out under emulation, 1 differs on the mutation's terminal line, 46 agree); an aborted
+  full-evidence amd64 run replaced, for time, by every 8th document (53 of 53 identical); an
+  aborted amd64 run under the protocol clock (4 documents).
 
-**Ghostscript is architecture-dependent; pdfTeX was not.** On one architecture, two runs hours
-apart gave identical EPS conversions; across architectures the conversions' subset tags differed.
+**On the corpus, Ghostscript's output depended on the architecture and pdfTeX's did not.** On one
+architecture, two runs hours apart gave identical EPS conversions; across architectures the
+conversions' subset tags differed. That pdfTeX's own output can differ too is shown in §5.3.
+
+### 5.3 Adversarial: the architectures do write different PDFs [M]
+
+Review round 1 built [`h1/adversarial/rot2.tex`](h1/adversarial/rot2.tex) (sha256 `af4bf4b7…`):
+160 `\rotatebox` blocks at pseudo-random angles holding 400,000 `\pdfstartlink` annotations, with
+`\pdfdecimaldigits=4`. Re-run here in fresh containers of the pinned image (native arm64, emulated
+amd64), `SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1`: rc 0 on both; `.log` and `.aux`
+byte-identical; the PDFs (56,483,205 bytes each) differ in **exactly one byte**, at offset
+2,929,960 (0-based): `/Rect [418.7665 390.6534 …]` on aarch64 against `/Rect [418.7666 …]` on
+x86_64. Same PDF sha256s as the reviewer's run (`c84b12a6…` aarch64, `043e4ebc…` x86_64). This is
+the `do_matrixtransform`/`pdfsetmatrix` channel of §5.1: a link rectangle's corner rounded to the
+other side of a half-sp. (`sscanf`'s parse of the matrix is correctly rounded on both
+architectures, so the matrix entries agree [I].)
 
 **Conclusion.**
-- No difference between the two architectures was observed on any document.
-- The one code-level channel (FMA contraction on aarch64 only) is bounded to inexact products,
-  which real fonts and ordinary dimensions do not produce.
-- `FaithfulEngine` stays per architecture, as ADR-015 states. For H.2, the Pascal-level semantics
-  `PS` does not describe the aarch64 binary's arithmetic at the fused sites. Either `PS` models
-  fused multiply-add at exactly those sites of the translated program, or a lemma shows the
-  products exact under the fragment's bounds and a document outside the bounds is `Stuck`.
+- **On the corpus, no difference between the architectures was observed** (200 real papers, 489
+  evidence documents, 40 traced documents).
+- **In general they differ, in the PDF**: the fused multiply-adds of `\pdfsetmatrix`'s matrix
+  arithmetic change link, destination and thread rectangles (reproduced; output-only: no TeX
+  state, rc or log depends on them).
+- **Every fused site outside xpdf that reaches TeX state is exact** over its whole input range
+  (`read_jbig2_info`, `read_pdf_info`), under a stated bound (`make_accent`: |slant| < 128), or
+  unreachable in the pinned configuration (MLTeX). The exception is xpdf's real-number parser
+  (included PDFs' page boxes), which is **open**.
+- All amd64 evidence, the behaviour runs and the format run, is **emulated** (qemu-user TCG). A
+  confirmation on a native amd64 host (the CI runner of `tex-oracle.yml`) has not been done.
+- `FaithfulEngine` stays per architecture, as ADR-015 states. For H.2 this settles what "model or
+  exclude the fused sites" must mean: `PS` must model fused multiply-add per architecture **at the
+  matrix sites** (or the model's PDF output is not claimed there); no exactness lemma is available
+  at those sites. `make_accent` needs an exactness lemma with the slant bound, and Stuck beyond it.
+  The exhaustive results above suffice for JBIG2 and the PDF version. An included PDF's
+  dimensions stay at the C boundary, modelled per architecture or Stuck.
 
 ## 6. Findings for other tracks
 
@@ -377,7 +458,17 @@ The native backend's inherited stdin (ADR-014 draft, oracle branch C-99).
 
 ## 7. Reproducing this
 
-Everything is under `~/.cache/lp-spike-h1/` on the machine that ran it:
+**Committed evidence** (review round 1: every number above can be re-checked from the repo):
+[`docs/v27/spike/h1/`](h1/README.md) holds every comparison summary (`diffs/r1/`, the narrowed
+mask; `diffs/r0/`, the round-0 files these numbers were first read from), the FMA site map and the
+exhaustive/search scripts with their outputs (`fma/`), the comparator and its kill-tests, the
+document id lists (`tools/`), the adversarial document (`adversarial/`), the build recipe and the
+emulator crash sites. `python3 docs/v27/spike/h1/verify_h1.py` recomputes this report's numbers
+from those files and fails on any mismatch.
+
+**Raw runs** (62 GB of the cache's 72 GB) are under `~/.cache/lp-spike-h1/` on the machine that ran
+it. No number quoted here needs them; pruning them loses only the ability to re-run the comparator
+on the raw outputs (keep `runs/` if a later step, H.4 or H.6, wants to diff against these grades):
 - `src-dc8efcd4.tar` (sha256 above) and `buildpdftex.sh` (the recipe of §2.2);
 - `b-arm64/` and `b-amd64/`, the build trees, with `build-arm64.log` and the amd64 logs
   (`build-amd64.fail1.log`, `.attempt2.log`, `.attempt3.log`, and `build-amd64.log` for the

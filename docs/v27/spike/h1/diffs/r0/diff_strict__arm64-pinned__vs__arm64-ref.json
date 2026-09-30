@@ -1,0 +1,19 @@
+{
+ "set": "strict",
+ "a": "arm64:pinned",
+ "b": "arm64:ref",
+ "documents": 3907,
+ "missing_on_b": 0,
+ "verdicts": {
+  "IDENTICAL": 3697,
+  "EQUAL_MASKED": 210
+ },
+ "masks_needed": {
+  "log:banner-date": 210
+ },
+ "final_rc_of_a": {
+  "rc0": 939,
+  "rc1": 2968
+ },
+ "diffs": {}
+}

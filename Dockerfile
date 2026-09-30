@@ -28,7 +28,11 @@ USER opam
 WORKDIR /home/opam/src
 COPY --chown=opam:opam . .
 
-RUN opam update -y && opam install -y . --deps-only && \
+# Only the executables' dependencies (latex-parse/latex_parse.opam: dune,
+# ocaml, re, uutf, yojson). The root opam file also pulls Coq 8.18 for the
+# proof tree, which this image never ships; building Coq here only cost time
+# and disk (a local build ran out of space compiling coq-core).
+RUN opam update -y && opam install -y ./latex-parse --deps-only && \
     opam exec -- dune build \
       latex-parse/src/validators_cli.exe \
       latex-parse/src/rest_api_server.exe \

@@ -24,8 +24,8 @@
   "contract_config_key": "80abd84bd7677c84ab1478ba239e32daad1374056a5328722dcec5a70e9ced12"
  },
  "kernel_extract_sha256": "e4bac835e742e1b0584c6b23b2acb66186a02313c3cc688307a5db3cd58d06d3",
- "signatures_sha256": "90eb5bd38fcd38929b8f7dd27c12b5e1d223102b01af9e6c16ae8f9a971ce60d",
- "arg_signatures_sha256": "c424e2367a379f011ad4c143dd0436eeee85b2c3b651e42ec423c4b94062fd4b",
+ "signatures_sha256": "0a80481dfbea47f2de1d0c76ea8e035222e20255baa5ff306325003918978a18",
+ "arg_signatures_sha256": "3a0d4b1b1dcf58ed6914d7c7f5150d01619315379117c6d2dde5b9f01a043879",
  "bounds": {
   "max_groups": 200,
   "max_tokens": 20000,
@@ -170,8 +170,8 @@
   "sources": [
    {
     "file": "corpora/strict_s0/capacity.json",
-    "commit": "b837461887407c02c626e80fda74d707ee65c772",
-    "sha256": "42947bbc50c50537bafa77ca4961b9b0b1373f39bb52425ebc4912e67837ddf3",
+    "commit": "f509528e9fe30e3f5f7c78b48b998e2f6a9a7bb0",
+    "sha256": "32e80fb72edddde96a56f92bc43bd9698c370c0c6c11980aea02eedbb35c68e9",
     "records": 3260
    }
   ]
@@ -325797,5 +325797,5 @@
    ]
   }
  ],
- "seconds": 447
+ "seconds": 436
 }

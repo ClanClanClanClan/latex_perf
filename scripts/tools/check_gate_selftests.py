@@ -171,8 +171,13 @@ class Mutation:
 
 
 class GateTest:
-    def __init__(self, name, cmd, level, mutations):
+    def __init__(self, name, cmd, level, mutations, timeout=None):
         self.name, self.cmd, self.level, self.mutations = name, cmd, level, mutations
+        # a gate that legitimately runs longer than GATE_TIMEOUT (C-100:
+        # check_strict_capacity re-runs the extracted decider on every memory
+        # document, ~20M tokens, 90-250 s of CPU; five of its kill-tests run
+        # at once) names its own bound; a hang is still a crash
+        self.timeout = timeout
 
 
 def readme_version_drift(text: str) -> str:
@@ -2742,7 +2747,8 @@ REGISTRY = [
     GateTest(
         "check_strict_capacity", [PY, f"{TOOLS}/check_strict_capacity.py", "--repo", "."],
         "binary",
-        [
+        timeout=1200,
+        mutations=[
             Mutation("a frame pair dropped and its count decremented (M-1)",
                      "corpora/strict_s0/capacity.json",
                      r"FAIL capacity: the recorded frame pairs are not the model's",
@@ -2808,10 +2814,10 @@ LOCK_NAME = ".gate-selftests.lock"
 BACKUP_DIR = ".gate-selftest-backups"
 
 
-def run_gate(cmd, cwd: Path = REPO) -> tuple[int, str]:
+def run_gate(cmd, cwd: Path = REPO, timeout: int | None = None) -> tuple[int, str]:
     try:
         r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
-                           timeout=GATE_TIMEOUT)
+                           timeout=timeout or GATE_TIMEOUT)
     except subprocess.TimeoutExpired:
         return -1, "GATE TIMEOUT — treated as a crash, never as a kill"
     return r.returncode, r.stdout + r.stderr
@@ -3064,7 +3070,7 @@ def run_isolated(gates, jobs: int, records: list) -> int:
             c = free.get()
             try:
                 t = time.monotonic()
-                rc, out = run_gate(g.cmd, c.root)
+                rc, out = run_gate(g.cmd, c.root, g.timeout)
                 secs = time.monotonic() - t
                 if c.status() != c.status0:
                     raise HarnessInfra(
@@ -3086,7 +3092,7 @@ def run_isolated(gates, jobs: int, records: list) -> int:
                     tmp.write_bytes(data)
                     os.chmod(tmp, st.st_mode)
                     os.replace(tmp, tgt)
-                    rc, out = run_gate(g.cmd, c.root)
+                    rc, out = run_gate(g.cmd, c.root, g.timeout)
                 finally:
                     tmp = tgt.with_name(tgt.name + ".restore-tmp")
                     tmp.write_bytes(orig)
@@ -3224,7 +3230,7 @@ def run_in_place(gates, records: list) -> int:
     try:
         for g in gates:
             t = time.monotonic()
-            rc, out = run_gate(g.cmd)
+            rc, out = run_gate(g.cmd, REPO, g.timeout)
             records.append(dict(gate=g.name, kind="baseline", label=None,
                                 rc=rc, secs=time.monotonic() - t,
                                 verdict=None, out=out))
@@ -3244,7 +3250,7 @@ def run_in_place(gates, records: list) -> int:
                 try:
                     t = time.monotonic()
                     m.apply()
-                    rc, out = run_gate(g.cmd)
+                    rc, out = run_gate(g.cmd, REPO, g.timeout)
                     v = classify(g, m, rc, out)
                     records.append(dict(gate=g.name, kind="mutation",
                                         label=m.label, rc=rc,
@@ -3267,7 +3273,7 @@ def run_in_place(gates, records: list) -> int:
                     return 2
                 bfile.unlink()  # only after the round-trip is proven
             t = time.monotonic()
-            rc, out = run_gate(g.cmd)
+            rc, out = run_gate(g.cmd, REPO, g.timeout)
             records.append(dict(gate=g.name, kind="post", label=None, rc=rc,
                                 secs=time.monotonic() - t, verdict=None,
                                 out=out))

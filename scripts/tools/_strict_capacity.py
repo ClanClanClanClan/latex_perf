@@ -359,14 +359,24 @@ def structural_docs(S, level: int = LEVELS[0]) -> list[tuple[str, dict, dict]]:
 
 def more_levels(r: dict, m0: int, count: int, k1: int, cap: int) -> list[int]:
     """The two larger counts of a memory instrument, from its first level's
-    report: the second with at least MEM_PAST_HW words of material past the
-    base, the third twice that, both at most MEM_MAX_WORDS words (under half
-    of main memory with the base: an instrument never counts against the
-    capacity table's margin) and `cap` repetitions."""
+    report (k1 occurrences): the largest, k3, holds twice MEM_PAST_HW words of
+    material past the base (or four times k1), at most MEM_MAX_WORDS words
+    (under half of main memory with the base: an instrument never counts
+    against the capacity table's margin) and `cap` repetitions; the middle
+    one, k2, half of it, and always strictly between k1 and k3 (three levels,
+    so the slope is taken twice and the last pair is past the base's
+    high-water mark)."""
     est = max(1.0, (r["used"] - m0) / count)
-    k2 = int(min(cap, max(2 * k1, -(-MEM_PAST_HW // est))))
-    k3 = int(min(2 * k2, cap, MEM_MAX_WORDS // est))
-    return [k for k in (k2, k3) if k > k1]
+    if MEM_MAX_WORDS // est < 2 * k1:
+        # a costly unit: k1 is already far past the mark; the other two
+        # levels go below it (a quarter and a half)
+        return [max(1, k1 // 4), max(2, k1 // 2)]
+    k3 = int(min(cap, MEM_MAX_WORDS // est, max(4 * k1, 2 * -(-MEM_PAST_HW // est))))
+    k3 = max(k3, k1 + 2)
+    k2 = k3 // 2
+    if k2 <= k1:
+        k2 = (k1 + k3) // 2
+    return [k2, k3]
 
 
 MEM_PAST_HW = 300000

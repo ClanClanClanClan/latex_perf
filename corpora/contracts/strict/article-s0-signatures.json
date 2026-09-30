@@ -34,10 +34,10 @@
  },
  "reuse": {
   "file": "corpora/contracts/strict/article-s0-signatures.json",
-  "commit": "313e9bd1ca7579cde45b9eed5c068cf4a658c0a6",
-  "sha256": "fad0dd7c7d2b2f66258d71b8210d0bbc128459916a101731b7fa413404a0099e",
+  "commit": "daaeb18436f0b8b0695c3ffc42d836fd82349c49",
+  "sha256": "78c681f5596521d824334b166ab2c003fb476584ac11d98b8eabf2149c23cac9",
   "generator_version": "7",
-  "grades_reused": 10785
+  "grades_reused": 10815
  },
  "probes": {
   "T-ALONE": {
@@ -191071,8 +191071,8 @@
    "stage 3c": 0,
    "stage 4": 0
   },
-  "documents_graded_now": 1344,
-  "grades_reused": 10785,
+  "documents_graded_now": 922,
+  "grades_reused": 10815,
   "oracle_timeouts": 1,
   "admitted_by_class": {
    "fatal E3/noad": 50,
@@ -196054,21 +196054,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "675ad3a32946610a212978ec2456daa73c853fc49372ea79d10cf8b25e1b0133",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "646b2fef9b2547c187c0cca5afb5ff1f96b61b8df67cd9c3bb9721a1f946ed95",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1575017,
+     "mem": 1200057,
+     "dim": 1050017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -196080,7 +196080,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -196812,21 +196812,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "0de2e0660bd6cd5dba5bfe62eed5f8c7edab562ff2bb4d4ea1e333b034981de4",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "8dde4fc5b756d152042d725777f448a22c7c57b5a9d6ac7077037ae01e4ff422",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1575017,
+     "mem": 1200057,
+     "dim": 1050017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -196838,7 +196838,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -197570,21 +197570,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "b8490667bb00ac1653edf0d5e28213d95e271ad7d1040faad4208dbe2e07e590",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "af882dd2d9a24d3d336177b40c0eaf6641d496b7423ea8416fd5b1090ab2fc8c",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1575017,
+     "mem": 1200057,
+     "dim": 1050017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -197596,7 +197596,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -199086,21 +199086,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "7bd9c159acc1aead3a5da917ee9d5e2e8429c62a0c3c977c7ff41f5c62841e41",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "b39501373fbcd846749353849cbbdaabd8f2908cb8d5a45b35f871b763db6418",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1500017,
+     "mem": 1200057,
+     "dim": 1000017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -199112,7 +199112,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -200413,6 +200413,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "9b41ed9894c3a3150e35d09b1c2bbe511044ae22f7086685a0e4e86bb05fd9ca",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "4fe247d0e8c675deed682559d6ef7a968b334e3bd803cd3f3c9817f0dfc99f8f",
      "ntoks": 100002,
@@ -200444,6 +200507,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "76c404746d1f0e305191d9aac9e03f3d5876200dd0b4ba9cf124823791732160",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -201866,6 +201992,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "2feaa06ae680f1c588ffa96b3f18ec01995bbdbb8194cf26115bf2a06ce6958f",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 1350038,
+     "dim": 750030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 504528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       504528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "3b7178f2e7d4283e6a3922ae1344d8d1e40d6c853d7a490aa15a523e244045c2",
      "ntoks": 100002,
@@ -201929,21 +202118,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "d7c2f398e196138c55e193aa8bdcd616121abcee07a936b19636beccb87fdc6b",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "77ff62abe69fd12e9cbd1dade7c9fa2699dc37be1e47ce4cfe77a42221e712a1",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 2025057,
-     "dim": 1350017,
+     "mem": 1350057,
+     "dim": 900017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -201955,7 +202144,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -204961,21 +205150,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "2628b7a02b000de15c7a8d434fec4afc46719fdae9ce460d77daf3dc0785f5b7",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "e85edb245c23a0d2f4079e6cf3de9b5da861fcf15ff684bb837394137c7c953f",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 900017,
+     "mem": 1200057,
+     "dim": 600017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -204987,7 +205176,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -205782,6 +205971,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "a3e5adc6b98e9e4348406f1439d04b4898151eaf2310779471e85905703fe1a2",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 1450038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "ca43fadfcd712725d6c5efbf63337ccdb66a03dde4536aa286fb5e58d8c6be98",
      "ntoks": 100002,
@@ -206414,6 +206666,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "8e0683e1ed741e9b95056e0f52cca5397c5b9fa1636c2febf3f4e91770d11c70",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "d0a452085f5a6bdec71988b6c1514e91e7394c701f12ca6d625714e103cbb1fc",
      "ntoks": 100002,
@@ -206445,6 +206760,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "90c891f9f8d1c03b27ecf4e292f9982e9019aa5db0c626f4b1be31aff55fba9b",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -210078,21 +210456,21 @@
       ]
      }
     },
-    "R-MEM-MATH@8000": {
-     "sha256": "3e4bb3e5c45b1b356edfb76ee3f9f61c541837865d8da92750d18bb84f803a1c",
-     "ntoks": 8003,
+    "R-MEM-MATH@5980": {
+     "sha256": "e5eb5a91f79039aa18ef8f028f6a34c72b96025b174fc8b3ccd79841b92cc8f4",
+     "ntoks": 5983,
      "held": 0,
-     "mem": 1560057,
-     "dim": 712017,
+     "mem": 1166157,
+     "dim": 532237,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 5980,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 1656536,
+     "used": 1341416,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -210104,7 +210482,7 @@
        5408265
       ],
       "main_memory": [
-       1656536,
+       1341416,
        5000000
       ],
       "hash": [
@@ -210204,21 +210582,21 @@
       ]
      }
     },
-    "R-MEM-MSCRIPT@8000": {
-     "sha256": "965bbc13873bc1f2eece0f1aa9d5815c22d111b7e60ca64bc38baba0618867ae",
-     "ntoks": 40003,
+    "R-MEM-MSCRIPT@4197": {
+     "sha256": "00141531b95ba7b77f76d1835d94ebd2d8c8658fef823e3488b9b809a9890a62",
+     "ntoks": 20988,
      "held": 0,
-     "mem": 2168057,
-     "dim": 1528017,
+     "mem": 1137444,
+     "dim": 801644,
      "verdict": "not_strict",
-     "count": 8000,
+     "count": 4197,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 2180536,
+     "used": 1337506,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -210230,7 +210608,7 @@
        5408265
       ],
       "main_memory": [
-       2180536,
+       1337506,
        5000000
       ],
       "hash": [
@@ -211594,6 +211972,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "ea5e199f3cdd743689cf112205c42262d2786284233144f95dce96f9e0af7f14",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "e3428c2df40c1520076a86334bd0d2d2b752464ddc67f7a7602eab7334e9553b",
      "ntoks": 100002,
@@ -211625,6 +212066,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "c22ee4d559e874651c45ac6c882ab0b5786e4c282b93084816f014290a58339a",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -213994,6 +214498,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "c6d7b0ea3f89558b49fcc30da06aefc3479021ec52447d7feb39b8ba325f0347",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 6800038,
+     "dim": 2750030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 904528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       904528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "907b01a76e4cacc13acb6c0d999afb96ae5937b2c804ff33320226978d5e4643",
      "ntoks": 100002,
@@ -214878,6 +215445,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "59554ce8a0b5c3e6dde58e08c653f5300ec86b4470d15618ed1486ce5125a31a",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 2650038,
+     "dim": 1150030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 604528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       604528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "d6e797d4a2ad55741d0ab329dd34504f1f7f0394647f33999d275d5e95b5116c",
      "ntoks": 100002,
@@ -215699,21 +216329,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "6288b4fc6a167a44f5fb6fd73e6015197cc4db5fdc3aa3231f785851042dea70",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "2886e6ce127f80e6d2a8bf64258b57c16a773241a0c3abb70fa9f9af4a2c8b1b",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1200017,
+     "mem": 1200057,
+     "dim": 800017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -215725,7 +216355,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -217278,6 +217908,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "aedc987b8eaaf2ebb4ded620b6faa68167f25fb4b7ffbfdc64025dc534381d36",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 2650038,
+     "dim": 950030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 604528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       604528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "613a2abe1a711acf11fdf6bec9b6eb40fea6b26ad9c58c9c1bcf2a506b3ea13c",
      "ntoks": 100002,
@@ -218099,21 +218792,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "0ef182fc3f6cf016c07f71a023e3b54dd6bb145fd9ffccf136c103e4ab60f659",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "75d2a6fa67b9c08647fbd75e92462465804113e8230f87debf631fab5b8b9467",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1500017,
+     "mem": 1200057,
+     "dim": 1000017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -218125,7 +218818,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -218668,6 +219361,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "3b799edb6c1f8bff323005a267c5c08645d480fb7b1372f29543b4961ddd7c1e",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "4c5ce25f5ed4c8483bf6c73a7319a8f1271544ee9abe102b294234d41b9d7018",
      "ntoks": 100002,
@@ -218699,6 +219455,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "3af132098717217215376dd5c6d957f3d0222c593a5664e9c084642ef7fa9dce",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -220058,21 +220877,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "6e7890b644a375cfd54f1c3397cec2c93f61d0a5c3dd868505c20e5c8c4e5120",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "babb0fe758b53a7b3157f657003d9f03a86bb29024e9c1b1bf013c8055987854",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1800017,
+     "mem": 1200057,
+     "dim": 1200017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -220084,7 +220903,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -223090,21 +223909,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "e016e6e6bf58c6da1f591c6488e32068186fe0e62f4de576788ec994e2c622e6",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "a57d3957d8ac76b99f450202f1a6dab0befc8a0b1653d8778e37f587551bba5c",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1350017,
+     "mem": 1200057,
+     "dim": 900017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -223116,7 +223935,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -223848,21 +224667,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "450b4c4e2618ee05f9c3410f4bf30c39001b6be79a508cf158181b3829b7d758",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "1414a711e6f2f8567e57a4d663c8a9ffc6e5b6917e528c5ec9c564377eb8af9e",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1425017,
+     "mem": 1200057,
+     "dim": 950017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -223874,7 +224693,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -225616,6 +226435,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "e4545335331c6e77abeb4b949f3634b1bacff599d12c422dc680884cd07e163b",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 2850038,
+     "dim": 650030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 604528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       604528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "84d7b351f92124bdd8d7aa97af93587c76eb081f510a78dd1e11844f3756d9be",
      "ntoks": 100002,
@@ -226248,6 +227130,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "9ad991cdd42dbf02b2cf7b808acce65a104d951e253aea6e88eede94f581f9b4",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "e9eaf56b34622cd7d17da3eba0d47cc389e4ce1cb73570382ad444bb805c1f6f",
      "ntoks": 100002,
@@ -226279,6 +227224,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "8ac362fe8a14725ab7a406251d110870d7f98f45f9ad6f9627fe6dc17edc7ff8",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -226691,6 +227699,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "b22c0c20b8064f7e5c4cbc39ad8a133e559c51a0a1ef1095ed8cc31231124427",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "2bf6c9101fe81b469fa740935dd3e87fc84ec168543f026c8d7424e93637b13b",
      "ntoks": 100002,
@@ -226722,6 +227793,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "a34b82bfbac75771f9a891d597be1a6b273e682eba83b3d3422c0a14bde41cb6",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -227323,21 +228457,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "ddd117876b6649fff4980c6f53a416832d3a83b8d05b93ab82440abb9777b29e",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "f81064228391de48eb312a1e776fd5aa6f580aa8ffc3e12fc55b6f84b4ea6fac",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1125017,
+     "mem": 1200057,
+     "dim": 750017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -227349,7 +228483,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -227892,6 +229026,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "ff3b5a70667bef40a010f994c33e07d607ff2778cc5b3bb760758ffbd3b8ac85",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       128,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "fbb27fe8ea75a84a3838a17a9f3dc4e0337a4a3fad3c97a5bfa2e5281460acdf",
      "ntoks": 100002,
@@ -227951,6 +229148,69 @@
       ],
       "save_stack": [
        128,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "5fd965b85c32f39fcbea698b6ac5b5a1bd843609ada87a36c4b586129c98cc6e",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
        200000
       ]
      }
@@ -228335,6 +229595,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "fb5bf05eeab0463b7f047eeb760e8601fa7b5681fdd497277a57b49aa7361240",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "e015e2ea42f8c0b93213566d7d15b739fdda4adce4ba0ab31dc142704a88f3ef",
      "ntoks": 100002,
@@ -228366,6 +229689,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "955d0a11211a1e62f0fa8f537254bdbf998eb45f6af335fd421d8c733a8d6618",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -229914,21 +231300,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "a68a92ff9429cfef0d1eaf1f6cf5fdfa56082a2ef00de9544b6fc8c890bce2a2",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "19f6c1522264cb5cdf39d4e842de2a13b3ed3897b5116938f8de34c20fb94b4d",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1575017,
+     "mem": 1200057,
+     "dim": 1050017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -229940,7 +231326,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -230672,21 +232058,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "688eb9cd2fc235bccb7bd3fd9a4b5baa7e57d4f654880806d24fec38fd5ec4d4",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "2907708b6cce30d32b879dfee2b5f39ab2af3b191689a7265fa8b47a6a11af58",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1575017,
+     "mem": 1200057,
+     "dim": 1050017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -230698,7 +232084,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -231430,21 +232816,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "9b186920f529a75e18555057af9342ff9dc9bb29950ef0c81ee391735d82e4eb",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "e6566ebfa2f74b947cb380ddb647c2a83033d7bb7575645de98998c0323f32d2",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1275017,
+     "mem": 1200057,
+     "dim": 850017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -231456,7 +232842,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -232188,21 +233574,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "36f31ec06fdfb478c3fd508e136567540501f74651b0d6fdead562c8ccc58fc4",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "985b3c0df79709ea77c3c53085ebaab6360060111d96a054f52bf78ae07bfa4a",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1575017,
+     "mem": 1200057,
+     "dim": 1050017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -232214,7 +233600,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -232977,6 +234363,69 @@
       ],
       "hash": [
        29853,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-TEXT@50000": {
+     "sha256": "60be4c2bff8da3017b9dbc2220239ce7e85cdfdd4303f4533f67b5d3c2558c1a",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 4250038,
+     "dim": 1650030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 704528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       704528,
+       5000000
+      ],
+      "hash": [
+       29851,
        615000
       ],
       "font_mem": [
@@ -233893,6 +235342,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "846d4b82eaab9c777df73e092d308a7c928df12288e7713c8f926a64ef91b15f",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 2650038,
+     "dim": 1050030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 604528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       604528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "35f2cf85bbc797e766817c70d4eda04ee9a517eb9c93a2611baf28e728474de8",
      "ntoks": 100002,
@@ -234714,6 +236226,69 @@
       ]
      }
     },
+    "R-MEM-MATH@50000": {
+     "sha256": "03df94057c6f072fe8eb5e523c3814b785233673bf56accca98e2b360f025c9c",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 585796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       585796,
+       5000000
+      ],
+      "hash": [
+       29853,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-MATH@100000": {
      "sha256": "a14f2e3b3347ae83abc392d53df20a12db036b89e8a420576cba06d2aa9404de",
      "ntoks": 100003,
@@ -235409,21 +236984,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "0aa61e84f5ce1c6067bfa27e3064579ed189b39bbd3473ee4a3a5681f70719f3",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "979d4a14208ec976cd0b8f7d147fdb387d452c53fa77c807eabb2b6be6707c57",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1875017,
+     "mem": 1200057,
+     "dim": 1250017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -235435,7 +237010,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -236230,6 +237805,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "eef93eb5ce7ff88b78647aaab40d58ae13b6424293bef62d1f3922da99ffaef0",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 2850038,
+     "dim": 1100030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 604528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       604528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "83cbd67eb2436b073ede3c1804571e97f345f8e635b11a8ef3da4ee897d10199",
      "ntoks": 100002,
@@ -236862,6 +238500,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "cd2b14773abf818afb99335a4a5f6738c61fe2ed68503ca1dc58461fc391febe",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "6fa1b052c7d16b2faf40cf65db554a81f255787a47aabcbb3bee09c37fb6f2a2",
      "ntoks": 100002,
@@ -236893,6 +238594,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "197580ee5590c3fbf803bd5a67e1c08008cd457b100ac8c168413837fd1e1351",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -237494,21 +239258,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "9a1471fb25e6471a320ea27fe35333da20d2bf7f69d2aa65e81b1b01fa9c9c04",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "8c6cc7728865f932f8e4c266e1c7c567311dce3484d3277074c133d401188bbb",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1650017,
+     "mem": 1200057,
+     "dim": 1100017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -237520,7 +239284,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -238063,6 +239827,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "37ae57fb7a8b77f71b9ddc3f6c441e32a2528722c425462b92da7a806e47e707",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "ef830b35da61cc6d7ba3af89a66dda84bd7ca070be8f5d497db79d51f2ee6f75",
      "ntoks": 100002,
@@ -238094,6 +239921,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "3d65205c425ec07753f77c101f389400d3832867609569199824c72bd1e51b49",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -238758,6 +240648,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "263d4701531590b04bfd1d05cd6c554d3fcb96546ca2e9267a782a6fe24b08ba",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 1350038,
+     "dim": 800030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 504528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       504528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "d9a29da6a2c7d01425c8f686949c899364b2193800f1fca63735673d285a6b16",
      "ntoks": 100002,
@@ -238821,21 +240774,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "4735ad3b0246f87676fb76365f79af45be5e15da9a9258464157f430995d0e74",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "3315cbd07e5a1640850807c0cf33975f530f181894502c730f2abd1cf815642e",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 2025057,
-     "dim": 1500017,
+     "mem": 1350057,
+     "dim": 1000017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -238847,7 +240800,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -239579,21 +241532,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "e9e4ef89db3ea0b7e67be4df930f6dc594e089480e8286933c118cfbd27f19f5",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "14a40d9ef06c4d02cdf7063f141770d0ce171e0fe0c120286e8caae5ecb217c2",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1500017,
+     "mem": 1200057,
+     "dim": 1000017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -239605,7 +241558,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -241095,21 +243048,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "2078b633f884cf4c922d2d814ebc9a7f48e82c21af847419d4928f8121e77f38",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "8fd61a8d1d1b07195856757fc7f212fd1d0985734dffa602ad426881fe9dec98",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1875017,
+     "mem": 1200057,
+     "dim": 1250017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -241121,7 +243074,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -241884,6 +243837,69 @@
       ],
       "hash": [
        29853,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-TEXT@50000": {
+     "sha256": "0c53dfa9b06dca3afbee5b275811d6f7059a9e4a373255139b676263902ede26",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 2850038,
+     "dim": 1150030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 604528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       604528,
+       5000000
+      ],
+      "hash": [
+       29851,
        615000
       ],
       "font_mem": [
@@ -244316,6 +246332,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "db98dfa1933b42516182a190c461dcfb7b6f808755d729a9b1279cde0b096d3d",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 4250038,
+     "dim": 1650030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 704528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       704528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "98467f966f110cfb482691ede4449641a412f8331d6aea1f2405818a919c8565",
      "ntoks": 100002,
@@ -245200,6 +247279,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "cf56d008fb860b27f403ab04c725c092ba9096ad950755e1db91375c797f5369",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 1350038,
+     "dim": 750030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 504528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       504528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "82c55b185bc5deba5374d71b4a836f55e8b2e08cc8af72c5ea8b7e4c05f3d845",
      "ntoks": 100002,
@@ -245263,21 +247405,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "1b651319d98f4495ad0ab3619c0f72bac6c3518edbb6af09f753a2d8317f7f47",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "adb85df36c35a8a8acb21a847f073584746c875febf3d32f98fbd8f18e5b1e18",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 2025057,
-     "dim": 1350017,
+     "mem": 1350057,
+     "dim": 900017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -245289,7 +247431,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -246084,6 +248226,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "0d97a88bdf2396975cb1623acf63ed769f984bbd4e959eaf06d5d7628c75bd33",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 1350038,
+     "dim": 750030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 504528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       504528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "12e8c9e8da1d953e288bce080d96b285b12af96edb502c2e4fdd1eaa32a4b6d7",
      "ntoks": 100002,
@@ -246147,21 +248352,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "39e27e26150761321a1b669e7a17ec49f159fe7414d9e57e40b43f113b3836a8",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "638aeb720e929e77e151ffbc364288ecee51595003699e7556990c206cc2519f",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 2025057,
-     "dim": 1350017,
+     "mem": 1350057,
+     "dim": 900017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -246173,7 +248378,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -246936,6 +249141,69 @@
       ],
       "hash": [
        29853,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-TEXT@50000": {
+     "sha256": "7c9d88918b8ed1ee5dfc65e45a8ce332df11b85031abb4192a6ccddacc129374",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 4050038,
+     "dim": 1500030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 704528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       704528,
+       5000000
+      ],
+      "hash": [
+       29851,
        615000
       ],
       "font_mem": [
@@ -247852,6 +250120,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "4217817b48610d118d966c15d4f0e25a41748b7954f146ae0d494c385da047c8",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 1350038,
+     "dim": 750030,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 504528,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       504528,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "7861e789c3bb810aaf6fe54470cbc2c1e68d05a3776905c2e0c78459e3fa2890",
      "ntoks": 100002,
@@ -247915,21 +250246,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "bd9c175c29fe822f459df0e87c5e08838624b2f5c7488a1e13a32cddf9810751",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "d1af4959fcd5561620ba982271e7f659bf1ab2495d4bbd76de64278563cccbda",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 2025057,
-     "dim": 1350017,
+     "mem": 1350057,
+     "dim": 900017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -247941,7 +250272,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -251325,21 +253656,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "54e6895b08d618d0e67db50ae3f912032d5112052b46cc92245620d0ff512580",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "18ba533fee26bcc3b3a204825fb6352457fa8f4595df24210eb1795174082760",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1575017,
+     "mem": 1200057,
+     "dim": 1050017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -251351,7 +253682,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -252083,21 +254414,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "caf2ce5c9ac2decac62ceb5f801213532839c620f5e103611abfdb70adc67c4c",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "db2d553eee165070925256fc590e7a836ef2acfe9d8fd6d9a207c19eac0129cb",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1800017,
+     "mem": 1200057,
+     "dim": 1200017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -252109,7 +254440,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -255115,6 +257446,69 @@
       ]
      }
     },
+    "R-MEM-TEXT@50000": {
+     "sha256": "be55b5808635c27eced7367d3ea5d0f77a47f2bbc7d5909d17e76e4bcfa5058a",
+     "ntoks": 50002,
+     "held": 0,
+     "mem": 950038,
+     "dim": 30,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       435,
+       467099
+      ],
+      "pool_size": [
+       8155,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
     "R-MEM-TEXT@100000": {
      "sha256": "5d54d2a33873b5f55fa99f0636424764ec4ff607012df679569d0f656a744ec8",
      "ntoks": 100002,
@@ -255146,6 +257540,69 @@
       ],
       "hash": [
        29851,
+       615000
+      ],
+      "font_mem": [
+       627721,
+       8000000
+      ],
+      "fonts": [
+       40,
+       9000
+      ],
+      "input_stack": [
+       35,
+       10000
+      ],
+      "semantic_nest": [
+       5,
+       1000
+      ],
+      "param_stack": [
+       38,
+       20000
+      ],
+      "buffer": [
+       145,
+       200000
+      ],
+      "save_stack": [
+       124,
+       200000
+      ]
+     }
+    },
+    "R-MEM-MATH@50000": {
+     "sha256": "12f571e7b0d03f5d3d32f0efa659daa38a550da70ee2d0b7645d229113a469b6",
+     "ntoks": 50003,
+     "held": 0,
+     "mem": 950057,
+     "dim": 17,
+     "verdict": "not_strict",
+     "count": 50000,
+     "oracle": [
+      0,
+      true,
+      "",
+      null
+     ],
+     "used": 435796,
+     "of": 5000000,
+     "stats": {
+      "strings": [
+       437,
+       467099
+      ],
+      "pool_size": [
+       8183,
+       5408265
+      ],
+      "main_memory": [
+       435796,
+       5000000
+      ],
+      "hash": [
+       29853,
        615000
       ],
       "font_mem": [
@@ -255747,21 +258204,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "c64ddd8c7cab076344d44db4963e9da035b15260236a486b1a77edda8bfd56da",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "3e009ae9635c38def3476418c21e43e33891db7a9ff44b673dde509947fb0947",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1125017,
+     "mem": 1200057,
+     "dim": 750017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -255773,7 +258230,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -256505,21 +258962,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "9a879e3ffbe8564f7e6622ec499d36b616e52b37e981a3e7132a06f69284662f",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "3a3ab7abe013ce369355e0bb775c8d4e252d35c265bd528a119a53ee5f4f88f7",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1425017,
+     "mem": 1200057,
+     "dim": 950017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -256531,7 +258988,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [
@@ -257263,21 +259720,21 @@
       ]
      }
     },
-    "R-MEM-MATH@75000": {
-     "sha256": "f123a98321df2fa2409358ff1cbc7852d4f676c2e1dd9cff015bf25d4b13fb6c",
-     "ntoks": 75003,
+    "R-MEM-MATH@50000": {
+     "sha256": "387c7a3151c103e35490dd687972eadd583b88620748ffc09ec5f7a0b00f2cb4",
+     "ntoks": 50003,
      "held": 0,
-     "mem": 1800057,
-     "dim": 1425017,
+     "mem": 1200057,
+     "dim": 950017,
      "verdict": "not_strict",
-     "count": 75000,
+     "count": 50000,
      "oracle": [
       0,
       true,
       "",
       null
      ],
-     "used": 854536,
+     "used": 704536,
      "of": 5000000,
      "stats": {
       "strings": [
@@ -257289,7 +259746,7 @@
        5408265
       ],
       "main_memory": [
-       854536,
+       704536,
        5000000
       ],
       "hash": [

@@ -3130,7 +3130,7 @@ REGISTRY = [
             # pages may ship and free what it measures) is refused
             Mutation("the memory instruments leave the retention regime (C-105)",
                      "scripts/tools/_strict_capacity.py",
-                     r"FAIL memory document \S+ \S+: other bytes than the model's in the "
+                     r"FAIL memory document [^\n]*: other bytes than the model's in the "
                      r"retention regime",
                      old="    return tex.replace(_BODY, _BODY + RETAIN)\n",
                      new="    return tex\n"),

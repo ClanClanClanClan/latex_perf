@@ -794,6 +794,23 @@ class EngineRun(tuple):
 # under the target's name (MEASURED) -- makes a second close-write, and the
 # run is REFUSED (OracleError: such a document is ungradable, never graded).
 # An inotify failure or a queue overflow is refused too (fail closed).
+# ONE FILE, MANY NAMES (C-99 amended, review round 4). A name is not a file:
+# the container's work root is virtiofs over the Mac's APFS, which is case-
+# AND Unicode-normalisation-insensitive (MEASURED in the pinned container:
+# doc.log, DOC.log and Doc.LOG stat to one inode; so do NFC and NFD été.log,
+# and straße.log / STRASSE.log / strasse.log), and inotify reports the name
+# the WRITER used. A document that wrote DOc.log and DOc.pdf (a different
+# variant each pass) graded compiles although pdfTeX shipped no page
+# (MEASURED end to end at 20718e42). So the supervisor identifies evidence by
+# the FILE: after the run it stats every name that was close-written or
+# renamed into the run directory, and a name that is not byte-equal to an
+# evidence name but is the same (st_dev, st_ino), or equal to one under
+# canonical caseless matching NFD(casefold(NFD(.))), is an ALIAS: the run is
+# refused. The folding test also covers an alias whose file is gone; on a
+# case-sensitive work root (CI's Linux) it refuses a document that writes
+# DOC.log beside doc.log, which is over-refusal of a document nobody writes,
+# never a grade. A document cannot delete or rename a file (TeX has no such
+# primitive; IN_MOVED_TO is counted as a write all the same).
 # The watch includes IN_MODIFY although only close-writes are counted: the
 # kernel MERGES an event identical to the unread event at the queue's tail,
 # and MEASURED in the pinned image, `echo x > t.log; echo y >> t.log` under
@@ -802,14 +819,18 @@ class EngineRun(tuple):
 # own: pdfTeX writes its final report to the log (an IN_MODIFY) after
 # closing the document's \write streams and before closing the log.
 _SUPERVISOR_SRC = r"""
-import ctypes, json, os, select, struct, subprocess, sys
+import ctypes, json, os, select, struct, subprocess, sys, unicodedata
 nonce, names, cmd = sys.argv[1], sys.argv[2].split("/"), sys.argv[3:]
-ev = {"cw": {}, "overflow": 0, "err": ""}
+def fold(n):
+    n = unicodedata.normalize("NFD", n)
+    return unicodedata.normalize("NFD", n.casefold())
+ev = {"cw": {}, "alias": [], "overflow": 0, "err": ""}
+seen = {}
 fd = -1
 try:
     libc = ctypes.CDLL(None, use_errno=True)
     fd = libc.inotify_init1(0o4000)
-    if fd < 0 or libc.inotify_add_watch(fd, b".", 0x8 | 0x2) < 0:
+    if fd < 0 or libc.inotify_add_watch(fd, b".", 0x8 | 0x2 | 0x80) < 0:
         raise OSError(ctypes.get_errno(), "inotify")
 except Exception as e:
     ev["err"] = repr(e)[:200]
@@ -822,12 +843,12 @@ def drain():
         off = 0
         while off + 16 <= len(buf):
             _, mask, _, ln = struct.unpack_from("iIII", buf, off)
-            name = buf[off + 16:off + 16 + ln].split(b"\0", 1)[0].decode("utf-8", "replace")
+            name = buf[off + 16:off + 16 + ln].split(b"\0", 1)[0]
             off += 16 + ln
             if mask & 0x4000:
                 ev["overflow"] += 1
-            if mask & 0x8 and name in names:
-                ev["cw"][name] = ev["cw"].get(name, 0) + 1
+            if mask & (0x8 | 0x80) and name:
+                seen[name] = seen.get(name, 0) + 1
 try:
     child = subprocess.Popen(cmd, stdin=subprocess.DEVNULL)
 except OSError as e:
@@ -839,6 +860,28 @@ while child.poll() is None:
     else:
         child.wait()
 drain()
+def ident(n):
+    try:
+        st = os.stat(n)
+    except OSError:
+        return None
+    return (st.st_dev, st.st_ino)
+evid = {}
+for e in names:
+    i = ident(os.fsencode(e))
+    if i is not None:
+        evid[i] = e
+folds = {fold(e): e for e in names}
+for n, c in seen.items():
+    s = os.fsdecode(n)
+    if s in names:
+        ev["cw"][s] = ev["cw"].get(s, 0) + c
+        continue
+    hit = evid.get(ident(n)) or folds.get(fold(s))
+    if hit is not None:
+        ev["alias"].append([s[:120], hit])
+        ev["cw"][hit] = ev["cw"].get(hit, 0) + c
+ev["alias"] = ev["alias"][:20]
 sys.stderr.write("\n%s_EVID=%s\n" % (nonce, json.dumps(ev, sort_keys=True)))
 sys.stderr.flush()
 rc = child.returncode
@@ -868,6 +911,17 @@ def check_evidence(stderr: bytes, nonce: str, args, what: str) -> bytes:
         raise OracleError(f"{what}: the supervisor could not watch the run "
                           f"directory ({ev.get('err') or 'inotify queue overflow'}); "
                           f"not a grade (C-99)")
+    alias = ev.get("alias")
+    if not isinstance(alias, list):
+        raise OracleError(f"{what}: the supervisor's evidence line has no alias "
+                          f"list; not a grade (C-99)")
+    if alias:
+        raise OracleError(
+            f"{what}: the document wrote pdfTeX's own evidence file under "
+            f"another name ({alias[:3]}: the same file by inode, or by the "
+            f"case/Unicode folding of a case-insensitive work root): the "
+            f"evidence of the run is the document's, so it is ungradable -- "
+            f"refused, never graded (C-99 amended)")
     twice = sorted(n for n, c in ev.get("cw", {}).items() if c > 1)
     if twice:
         raise OracleError(
@@ -924,6 +978,26 @@ def _unwrap_log(data: bytes) -> list[bytes]:
     return out
 
 
+def terminal_tails(job: str) -> set[bytes]:
+    """Every text pdfTeX itself prints on the terminal after its final report
+    (lines joined, so TeX's 79-byte wrap and SyncTeX's unwrapped printf
+    need no line model): nothing; "Transcript written on <job>.log."; and,
+    with \\synctex set, "SyncTeX written on <job>.synctex.gz." (or
+    .synctex.) before it. MEASURED in the pinned image, review round 4: 9
+    frame papers set \\synctex=1, and pdfTeX prints the SyncTeX line on the
+    terminal only (the log's tail is unchanged). Only pdfTeX writes the
+    terminal after its report, so admitting its own SyncTeX line adds no
+    forgery; a forged report followed by these lines still meets the log,
+    which must agree (pdf_written)."""
+    j = job.encode()
+    t = b"Transcript written on " + j + b".log."
+    out = {b"", t}
+    for ext in (b".synctex.gz", b".synctex"):
+        sy = b"SyncTeX written on " + j + ext + b"."
+        out |= {sy, sy + t}
+    return out
+
+
 def final_report(data: bytes, job: str, channel: str):
     """pdfTeX's final report in `data` (a log or a terminal stream):
     ("pdf", pages), ("none", 0), or None when there is none (a terminal
@@ -939,7 +1013,7 @@ def final_report(data: bytes, job: str, channel: str):
     if channel == "log":
         ok = all(ln == b"PDF statistics:" or ln.startswith(b" ") for ln in tail)
     else:
-        ok = tail in ([], [b"Transcript written on " + job.encode() + b".log."])
+        ok = b"".join(tail) in terminal_tails(job)
     if not ok:
         raise OracleError(f"text follows pdfTeX's final report in the run's "
                           f"{channel} ({tail[:2]!r:.200}); pdfTeX prints nothing "
@@ -1121,6 +1195,7 @@ class OracleRun:
 
 class _Base:
     backend = "?"
+    supervised = True  # a grading backend's every engine run (C-99)
 
     def __init__(self):
         self._fp = None
@@ -1317,6 +1392,7 @@ class _Base:
 class NativeOracle(_Base):
     """Only inside the pinned image. Verified, never assumed."""
     backend = "native"
+    # Only HostDiagnostic, which is never a grade, sets supervised = False.
 
     def __init__(self):
         super().__init__()
@@ -1356,9 +1432,11 @@ class NativeOracle(_Base):
         # used to inherit the grader's stdin), in its own process group so a
         # timeout kills the engine and everything it started.
         nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
+        argv = ([engine, *args] if not self.supervised else
+                ["python3", "-I", "-c", _SUPERVISOR_SRC, nonce,
+                 evidence_names(args), engine, *args])
         try:
-            p = subprocess.Popen(["python3", "-I", "-c", _SUPERVISOR_SRC, nonce,
-                                  evidence_names(args), engine, *args],
+            p = subprocess.Popen(argv,
                                  cwd=cwd, env=env, stdin=subprocess.DEVNULL,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                  start_new_session=True)
@@ -1376,7 +1454,8 @@ class NativeOracle(_Base):
             return EngineRun(124, b"", True)
         if p.returncode == 127:
             raise OracleError(f"cannot execute {engine}: {err.decode(errors='replace')[:300]}")
-        err = check_evidence(err, nonce, args, f"native {engine}")
+        if self.supervised:
+            err = check_evidence(err, nonce, args, f"native {engine}")
         _require_pdftex_ran(p.returncode, out, f"native {engine}")
         _require_output_written(out + err, args, f"native {engine}")
         _require_free_space(cwd, "after")
@@ -1397,8 +1476,15 @@ class HostDiagnostic(NativeOracle):
     oracle-baseline diff to the host tree (ADR-012 decision 7 asks for each
     changed cell to be classified). It is NOT the oracle: `get_oracle()` never
     returns it, it verifies nothing, and its provenance says so, so a grade it
-    produces cannot be mistaken for one. Callers: oracle_baseline_classify.py."""
+    produces cannot be mistaken for one. Callers: oracle_baseline_classify.py.
+
+    UNSUPERVISED (review round 4): the evidence supervisor needs inotify,
+    which the Mac hosting this TeX Live lacks, so a supervised run refused
+    every host run and the tool died on its first row. A diagnostic proves
+    nothing about the document's evidence anyway; the engine still reads
+    /dev/null, and get_oracle() never returns this class."""
     backend = "host-diagnostic-NOT-THE-ORACLE"
+    supervised = False
 
     def __init__(self):
         _Base.__init__(self)
@@ -1841,6 +1927,8 @@ def get_oracle(full_state: bool = True) -> _Base:
             _ORACLE = NativeOracle()
         else:
             _ORACLE = ContainerOracle()
+    if not _ORACLE.supervised:  # never a grade without the evidence supervisor
+        raise OracleError(f"{type(_ORACLE).__name__} runs unsupervised (C-99)")
     if full_state and not _STATE_CHECKED and isinstance(_ORACLE, ContainerOracle):
         _ORACLE.check_state()
         _STATE_CHECKED = True

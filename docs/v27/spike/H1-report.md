@@ -498,7 +498,7 @@ in fresh containers of the pinned image, native aarch64 and emulated x86_64,
 
 | document | member, site | aarch64 | x86_64 |
 |---|---|---|---|
-| `snapy0.tex`: `\pdfsnapy 0pt` (the primitive only refuses a *negative* snap glue) | division, `gap_amount` (`pdftex0.c:23709`) | rc 0 | **rc 136 (SIGFPE)** |
+| `snapy0.tex`: `\pdfsnapy 0pt` (the primitive only refuses a *negative* snap glue) | division, `gap_amount` (`pdftex0.c:23709`: the only division by the snap unit [I]; the rc and the `snapy1` control are [M]) | rc 0 | **rc 136 (SIGFPE)** |
 | `snapy1.tex`: `\pdfsnapy 1pt` (control) | | rc 0 | rc 0 |
 | `imgwide.tex`: a valid 40000×8 px JPEG, no resolution | conversion, `ext_xn_over_d` (`utils.c:405`), which only warns "number too big" | `\wd` = 32767.99998pt, **rc 1** ("Huge page cannot be shipped out") | `\wd` = −32768pt, **rc 0** |
 | `jpgconv.tex`: Exif XResolution 2·10⁹ per cm | conversion, `read_APP1_Exif` (`writejpg.c:236`) | rc 0 (resolution ignored) | **rc 1** ("invalid image dimensions") |

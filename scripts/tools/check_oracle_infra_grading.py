@@ -1041,6 +1041,13 @@ class Checker:
             got = "N_LEAK=" in p.stderr and "rc=1" in p.stdout
             self.expect(f"the container leak check on {label}: leak={got}, want "
                         f"{leak} (C-97)", got == leak, (p.stdout + p.stderr)[:200])
+            if label == "a persistent zombie":
+                # The pid alone is the identity, so a glob-expanded token
+                # would still be detected; what globbing breaks is the
+                # diagnostic, which must name the process ps listed.
+                self.expect("the container leak check on a persistent zombie named "
+                            "a glob-expanded process, not '3096:[pdflatex]:Z' (C-97)",
+                            "N_LEAK=3096:[pdflatex]:Z" in p.stderr, p.stderr[:200])
 
     def host_diagnostic_checks(self) -> None:
         """HostDiagnostic (oracle_baseline_classify's host arm, never a

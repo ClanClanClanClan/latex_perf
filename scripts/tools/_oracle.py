@@ -810,7 +810,13 @@ class EngineRun(tuple):
 # case-sensitive work root (CI's Linux) it refuses a document that writes
 # DOC.log beside doc.log, which is over-refusal of a document nobody writes,
 # never a grade. A document cannot delete or rename a file (TeX has no such
-# primitive; IN_MOVED_TO is counted as a write all the same).
+# primitive); a RENAME inside the run directory carries the close-writes of
+# the old name to the new one (IN_MOVED_FROM/TO, paired by cookie), so a file
+# written elsewhere and renamed onto <job>.pdf still counts. pdfTeX itself
+# renames: -recorder writes pdflatex<pid>.fls and renames it to <job>.fls
+# while it is still open (MEASURED in the pinned image; counting the rename
+# as a write, my first version, refused every -recorder run, i.e. every
+# gen_contract job).
 # The watch includes IN_MODIFY although only close-writes are counted: the
 # kernel MERGES an event identical to the unread event at the queue's tail,
 # and MEASURED in the pinned image, `echo x > t.log; echo y >> t.log` under
@@ -825,12 +831,12 @@ def fold(n):
     n = unicodedata.normalize("NFD", n)
     return unicodedata.normalize("NFD", n.casefold())
 ev = {"cw": {}, "alias": [], "overflow": 0, "err": ""}
-seen = {}
+seen, moves = {}, {}
 fd = -1
 try:
     libc = ctypes.CDLL(None, use_errno=True)
     fd = libc.inotify_init1(0o4000)
-    if fd < 0 or libc.inotify_add_watch(fd, b".", 0x8 | 0x2 | 0x80) < 0:
+    if fd < 0 or libc.inotify_add_watch(fd, b".", 0x8 | 0x2 | 0x40 | 0x80) < 0:
         raise OSError(ctypes.get_errno(), "inotify")
 except Exception as e:
     ev["err"] = repr(e)[:200]
@@ -842,12 +848,17 @@ def drain():
             return
         off = 0
         while off + 16 <= len(buf):
-            _, mask, _, ln = struct.unpack_from("iIII", buf, off)
+            _, mask, cookie, ln = struct.unpack_from("iIII", buf, off)
             name = buf[off + 16:off + 16 + ln].split(b"\0", 1)[0]
             off += 16 + ln
             if mask & 0x4000:
                 ev["overflow"] += 1
-            if mask & (0x8 | 0x80) and name:
+            if mask & 0x40:
+                moves[cookie] = name
+            if mask & 0x80 and cookie in moves:
+                src = moves.pop(cookie)
+                seen[name] = seen.get(name, 0) + seen.pop(src, 0)
+            if mask & 0x8 and name:
                 seen[name] = seen.get(name, 0) + 1
 try:
     child = subprocess.Popen(cmd, stdin=subprocess.DEVNULL)

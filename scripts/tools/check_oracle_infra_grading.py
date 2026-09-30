@@ -983,7 +983,12 @@ class Checker:
                      "echo x > t.log\necho y > T.pdf\n", "refused"),
                     ("the document renames a file onto the PDF",
                      "echo x > t.log\necho y > z.txt\nmv z.txt t.pdf\necho w > t.pdf\n",
-                     "refused")):
+                     "refused"),
+                    # pdfTeX's -recorder writes pdflatex<pid>.fls and renames
+                    # it, still open, to <job>.fls: ONE write of t.fls
+                    ("pdfTeX's recorder renames its open .fls",
+                     "exec 3>pdflatex99.fls\necho a >&3\nmv pdflatex99.fls t.fls\n"
+                     "echo x > t.log\necho b >&3\nexec 3>&-\n", "graded")):
                 got = run(script)
                 self.expect(f"the real supervisor: {label}: got {got!r}, want {want!r} "
                             f"(C-99)", got.startswith(want))

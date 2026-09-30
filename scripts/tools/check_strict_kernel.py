@@ -1308,6 +1308,15 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
                                f"account {m0 + r['mem']} (sha256 {r['sha256'][:12]}; C-100)")
     if nrec == 0:
         out.append("signatures: no graded memory record")
+    # C-100: the slack a high-water mark can hide, measured; every context
+    # whose levels are all under the mark must still be under its cost
+    sl = max([C.slack(st, m0, "S:")] + [C.slack(r, m0, "R-MEM-")
+                                         for r in mem1.get("names", {}).values()])
+    out += [f"signatures: structural {q}" for q in C.absorbed_findings(st, m0, "S:", sl, T,
+                                                                        per_token=True)]
+    for n, recs in sorted(mem1.get("names", {}).items()):
+        cst = sig.get("signatures", {}).get(n, {}).get("cost", 0)
+        out += [f"signatures: {n!r} {q}" for q in C.absorbed_findings(recs, m0, "R-MEM-", sl, cst)]
     dd = None
     try:
         dd = _dims_derived(Path(__file__).resolve().parents[2], sig.get("dims_derivation", {}))
@@ -1370,6 +1379,9 @@ def memory_findings(sig: dict, asig: dict) -> list[str]:
             out.append(f"arg signatures: {n!r}'s copy/cost {h.get('copy')}/{h.get('cost')} "
                        f"are not what its memory documents give (copy {d.get('copy')}, "
                        f"cost at least {d.get('cost')}; C-98)")
+        for pre in ("G-MEM-FLAT:", "G-MEM-FLATX:"):
+            out += [f"arg signatures: {n!r} {q}" for q in C.absorbed_findings(
+                am.get("records", {}).get(n, {}), m0, pre, sl, h.get("cost", 0))]
         mb = cap_a.get("memory_bound", {}).get(n, {})
         for w in ("text", "math"):
             if h[w][0] != "run":

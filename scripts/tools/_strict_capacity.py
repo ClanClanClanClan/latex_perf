@@ -358,25 +358,59 @@ def structural_docs(S, level: int = LEVELS[0]) -> list[tuple[str, dict, dict]]:
 
 
 def more_levels(r: dict, m0: int, count: int, k1: int, cap: int) -> list[int]:
-    """The two larger counts of a memory instrument, from its first level's
-    report (k1 occurrences): the largest, k3, holds twice MEM_PAST_HW words of
-    material past the base (or four times k1), at most MEM_MAX_WORDS words
-    (under half of main memory with the base: an instrument never counts
-    against the capacity table's margin) and `cap` repetitions; the middle
-    one, k2, half of it, and always strictly between k1 and k3 (three levels,
-    so the slope is taken twice and the last pair is past the base's
-    high-water mark)."""
+    """The two other counts of a memory instrument, from its first level's
+    report (k1 occurrences): 2 k1 and 4 k1 while the largest stays under
+    MEM_MAX_WORDS words of material (under half of main memory with the
+    base), else lower ones. Whether the levels are past the base's
+    high-water mark is checked afterwards (`absorbed_findings`): a context
+    whose levels are all under it must have a cost floored at the token
+    cost by the measured slack."""
     est = max(1.0, (r["used"] - m0) / count)
-    if MEM_MAX_WORDS // est < 2 * k1:
-        # a costly unit: k1 is already far past the mark; the other two
-        # levels go below it (a quarter and a half)
-        return [max(1, k1 // 4), max(2, k1 // 2)]
-    k3 = int(min(cap, MEM_MAX_WORDS // est, max(4 * k1, 2 * -(-MEM_PAST_HW // est))))
-    k3 = max(k3, k1 + 2)
-    k2 = k3 // 2
-    if k2 <= k1:
-        k2 = (k1 + k3) // 2
-    return [k2, k3]
+    for ks in ([2 * k1, 4 * k1], [k1 // 2, 2 * k1], [k1 // 4, k1 // 2]):
+        if est * max(ks) <= MEM_MAX_WORDS and max(ks) <= cap:
+            return [max(1, k) for k in ks]
+    return [max(1, k1 // 8), max(2, k1 // 4)]
+
+
+def slack(records: dict, m0: int, prefix: str) -> float:
+    """The largest part of the base's high-water mark a document's material
+    can hide: over every context of `records` (families `{prefix}...@level`)
+    whose two largest levels both report more than the base, M0 minus the
+    intercept of the line through them (the memory the report would show
+    with no material, in the linear regime)."""
+    out = 0.0
+    for ctx, rs in _levels(records, prefix).items():
+        rs = [r for r in rs if _ok(r)]
+        if len(rs) < 2:
+            continue
+        a, b = rs[-2], rs[-1]
+        if a["used"] <= m0:
+            continue
+        xa, xb = (a.get("count") or a.get("units") or a["ntoks"]), \
+            (b.get("count") or b.get("units") or b["ntoks"])
+        c = (b["used"] - a["used"]) / (xb - xa)
+        out = max(out, m0 - (a["used"] - c * xa))
+    return out
+
+
+def absorbed_findings(records: dict, m0: int, prefix: str, sl: float, cost: int,
+                      per_token: bool = False) -> list[str]:
+    """C-100: a context whose second-largest level reports only the base (its
+    material hidden under the high-water mark) proves only that its memory
+    per occurrence (per token, for the structural shapes) is at most slack /
+    count: the cost charged must be above that."""
+    out = []
+    for ctx, rs in _levels(records, prefix).items():
+        if len(rs) < 2:
+            continue
+        a = rs[-2]
+        if a["used"] > m0:
+            continue
+        n = a["ntoks"] if per_token else (a.get("count") or a.get("units"))
+        if not sl / n < cost - 1:
+            out.append(f"{prefix}{ctx}: its levels are under the base's high-water mark "
+                       f"and slack {sl:.0f} / {n} is not under the cost {cost}")
+    return out
 
 
 MEM_PAST_HW = 300000

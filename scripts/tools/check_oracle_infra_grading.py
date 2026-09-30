@@ -168,8 +168,9 @@ nonce = a[i + 3]
 banner = "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026)\n"
 def rcline(rc):
     # the run supervisor's evidence line (C-99), then the in-container rc line
-    sys.stderr.write("\n%s_EVID=%s\n" % (nonce, os.environ.get(
-        "FAKE_EVID", '{"cw": {}, "err": "", "overflow": 0}')))
+    evid = os.environ.get("FAKE_EVID", '{"alias": [], "cw": {}, "err": "", "overflow": 0}')
+    if evid != "OMIT":   # OMIT: a supervisor that died before reporting
+        sys.stderr.write("\n%s_EVID=%s\n" % (nonce, evid))
     sys.stderr.write("\n%s=%d\n" % (nonce, rc))
 if mode == "ok":
     sys.stdout.write(banner + "Output written on t.pdf (1 page).\n"); rcline(0)
@@ -193,12 +194,15 @@ elif mode == "openout":
     sys.stdout.write(banner + "! I can't write on file `../x.tex'.\n"); rcline(1)
 elif mode == "leak":       # the in-container leak check refused (C-97)
     sys.stderr.write("\n%s_LEAK=301:gs:Z \n" % nonce)
-elif mode in ("batchforge", "termtail", "batchok", "errforge"):
+elif mode in ("batchforge", "termtail", "batchok", "errforge", "termonly", "synctex"):
     # batchforge: the terminal carries a FORGED report, the log pdfTeX's real
     # "No pages of output." (\\batchmode silenced it on the terminal);
     # termtail: text after the terminal's report; batchok: a page shipped,
     # the terminal silent (\\batchmode), the log reports it; errforge: a page
-    # shipped after the document printed a forged "! ..." error line.
+    # shipped after the document printed a forged "! ..." error line;
+    # termonly: the terminal reports a page, the log carries no report at
+    # all; synctex: a page shipped with \\synctex=1 (pdfTeX's own SyncTeX
+    # line on the terminal between its report and the transcript line).
     cwd = a[a.index("-w") + 1]
     job = a[-1].rsplit("/", 1)[-1].rpartition(".")[0]
     real = ("No pages of output." if mode == "batchforge"
@@ -206,12 +210,16 @@ elif mode in ("batchforge", "termtail", "batchok", "errforge"):
     if mode != "batchforge":
         open(os.path.join(cwd, job + ".pdf"), "w").write("%PDF-1.5 x\n")
     open(os.path.join(cwd, job + ".log"), "w").write(
-        banner + "! Undefined control sequence.\nl.3 \\foo\n" + real
-        + "\nPDF statistics:\n 3 PDF objects out of 1000\n\n")
+        banner + "! Undefined control sequence.\nl.3 \\foo\n"
+        + ("" if mode == "termonly" else real
+           + "\nPDF statistics:\n 3 PDF objects out of 1000\n\n"))
     term = {"batchforge": "Output written on %s.pdf (1 page, 9 bytes).\n"
                           "Transcript written on %s.log.\n" % (job, job),
             "termtail": real + "\nTranscript written on %s.log.\nMORE\n" % job,
             "batchok": "",
+            "termonly": real + "\nTranscript written on %s.log.\n" % job,
+            "synctex": real + "\nSyncTeX written on %s.synctex.gz.\n"
+                       "Transcript written on %s.log.\n" % (job, job),
             "errforge": "! Undefined control sequence.\n" + real
                         + "\nTranscript written on %s.log.\n" % job}[mode]
     sys.stdout.write(banner + term); rcline(0)
@@ -300,7 +308,7 @@ FAKE_SUPERVISOR = """#!/bin/sh
 shift 3
 n=$1; shift 2
 "$@"; rc=$?
-printf '\\n%s_EVID={"cw": {}, "err": "", "overflow": 0}\\n' "$n" >&2
+printf '\\n%s_EVID={"alias": [], "cw": {}, "err": "", "overflow": 0}\\n' "$n" >&2
 exit $rc
 """
 
@@ -333,13 +341,12 @@ ORACLE_API_FILES = {
     "scripts/tools/_oracle.sh": "the oracle's shell helpers",
     "scripts/tools/check_oracle_infra_grading.py": "this gate: fakes and fixtures",
     "scripts/tools/check_oracle_pin.py": "a gate: engine-call fixtures",
+    "scripts/tools/check_oracle_forgery.py": "a gate: forgery fixtures (TeX source)",
     "scripts/tools/check_gen_contract_parsers.py": "a gate: recorded log fixtures",
     "scripts/tools/check_gate_selftests.py": "the kill-test harness",
 }
 # (file, the stripped source line): why the literal is not a run's evidence
 OUTPUT_NAME_ALLOW = {
-    ("scripts/tools/diff_real_roots.py", 'r"-eps-converted-to\\.pdf\' not found"'):
-        "a first-error classification pattern (a figure name in a message)",
     ("scripts/tools/gen_contract.py", '_NOT_JOB_WRITTEN = {".tex", ".log", ".fls", ".pdf"}'):
         "extensions EXCLUDED from the job-written set, not a name read",
     ("scripts/tools/gen_contract.py", '"lazy_files": "first-run .fls INPUT files minus those of the same "'):
@@ -403,6 +410,7 @@ def output_names_findings(repo: Path) -> list[str]:
     import ast
     clients, shc = oracle_clients(repo)
     hits = []
+    used = set()
     for f in sorted(clients | shc):
         if f in ORACLE_API_FILES:
             continue
@@ -427,15 +435,25 @@ def output_names_findings(repo: Path) -> list[str]:
                         and id(n) not in skip):
                     v = n.value if isinstance(n.value, str) else n.value.decode("latin-1")
                     line = lines[n.lineno - 1].strip()
-                    if _EXT.search(v) and (f, line) not in OUTPUT_NAME_ALLOW:
-                        hits.append(f"{f}:{n.lineno}: {line[:90]}")
+                    if _EXT.search(v):
+                        if (f, line) in OUTPUT_NAME_ALLOW:
+                            used.add((f, line))
+                        else:
+                            hits.append(f"{f}:{n.lineno}: {line[:90]}")
         else:
             for k, ln in enumerate(lines, 1):
                 if ln.lstrip().startswith("#"):
                     continue
                 code = re.sub(r"\$\{?job\}?\.(pdf|log|fls|aux)\b", "", ln)
-                if _EXT.search(code) and (f, ln.strip()) not in OUTPUT_NAME_ALLOW:
-                    hits.append(f"{f}:{k}: {ln.strip()[:90]}")
+                if _EXT.search(code):
+                    if (f, ln.strip()) in OUTPUT_NAME_ALLOW:
+                        used.add((f, ln.strip()))
+                    else:
+                        hits.append(f"{f}:{k}: {ln.strip()[:90]}")
+    # A STALE allow-list entry is itself a finding (review round 4): it
+    # would silently re-admit the same literal if it came back.
+    for f, line in sorted(set(OUTPUT_NAME_ALLOW) - used):
+        hits.append(f"{f}: OUTPUT_NAME_ALLOW entry matches no line: {line[:80]}")
     for f, rx in PDF_VERDICT_SOURCE.items():
         t = (repo / f).read_text(errors="replace") if (repo / f).is_file() else ""
         if not re.search(rx, t):
@@ -702,10 +720,14 @@ class Checker:
         stdin: no engine run inherits the grader's stdin."""
         wr = self.workroot
         # (1) the supervisor saw the document write pdfTeX's own log/pdf twice
-        for evid, what in (('{"cw": {"t.log": 2}, "err": "", "overflow": 0}', "its own log"),
-                           ('{"cw": {"t.pdf": 2}, "err": "", "overflow": 0}', "its own pdf"),
-                           ('{"cw": {}, "err": "OSError(38)", "overflow": 0}', "no inotify"),
-                           ('{"cw": {}, "err": "", "overflow": 1}', "a queue overflow"),
+        for evid, what in (('{"alias": [], "cw": {"t.log": 2}, "err": "", "overflow": 0}', "its own log"),
+                           ('{"alias": [], "cw": {"t.pdf": 2}, "err": "", "overflow": 0}', "its own pdf"),
+                           ('{"alias": [], "cw": {}, "err": "OSError(38)", "overflow": 0}', "no inotify"),
+                           ('{"alias": [], "cw": {}, "err": "", "overflow": 1}', "a queue overflow"),
+                           ('{"alias": [["T.LOG", "t.log"]], "cw": {"t.log": 1}, "err": "", '
+                            '"overflow": 0}', "an alias of its own log (case-insensitive root)"),
+                           ('{"cw": {}, "err": "", "overflow": 0}', "no alias list"),
+                           ("OMIT", "no evidence line at all"),
                            ("NOT-JSON", "an unreadable evidence line")):
             os.environ["FAKE_EVID"] = evid
             try:
@@ -718,13 +740,25 @@ class Checker:
         # (2) the terminal and the log must agree; text after the report
         for plan, what in (("batchforge", "a forged terminal report and a "
                                           "silenced real one (\\batchmode)"),
-                           ("termtail", "text after the terminal's final report")):
+                           ("termtail", "text after the terminal's final report"),
+                           ("termonly", "a terminal report and a log with none")):
             o = self.oracle(plan)
             try:
                 r = o.run_to_fixpoint(wr, "t.tex", self.tv(), 60)
                 self.expect(f"run_to_fixpoint graded {what} as {r!r} (C-99)", False)
             except _oracle.OracleError:
                 self.expect("-", True)
+        for f in ("t.pdf", "t.log"):
+            (wr / f).unlink(missing_ok=True)
+        # \synctex=1: pdfTeX's own SyncTeX line follows its terminal report
+        o = self.oracle("synctex")
+        try:
+            r = o.run_to_fixpoint(wr, "t.tex", self.tv(), 60)
+            self.expect(f"a \\synctex=1 document that ships a page no longer grades "
+                        f"compiles: {r!r} (review round 4)", r.compiles)
+        except _oracle.OracleError as e:
+            self.expect("a \\synctex=1 document that ships a page was REFUSED "
+                        "(review round 4: 9 frame papers)", False, str(e)[:200])
         for f in ("t.pdf", "t.log"):
             (wr / f).unlink(missing_ok=True)
         # a batchmode document: no terminal report, the (supervised) log decides
@@ -778,12 +812,44 @@ class Checker:
                 ("a report naming another job", "t",
                  b"Output written on u.pdf (1 page, 9 bytes).\n", ("none", 0)),
                 ("a fatal error", "t", b"!  ==> Fatal error occurred, no output PDF file "
-                 b"produced!\n", ("none", 0))):
+                 b"produced!\n", ("none", 0)),
+                ("text after the log's report", "t", b"Output written on t.pdf (1 page, "
+                 b"9 bytes).\nPDF statistics:\n 1 x\nMORE\n", "OracleError")):
             try:
                 got = _oracle.final_report(log, job, "log")
             except _oracle.OracleError as e:
                 got = f"OracleError {e}"
-            self.expect(f"final_report on {label} = {got!r}, want {want!r}", got == want)
+            if want == "OracleError":
+                self.expect(f"final_report on {label} = {got!r}, want a refusal",
+                            str(got).startswith("OracleError"))
+            else:
+                self.expect(f"final_report on {label} = {got!r}, want {want!r}", got == want)
+        # the terminal channel: pdfTeX's own post-report lines, and nothing else
+        rep = b"Output written on t.pdf (1 page, 9 bytes)."
+        syn = b"SyncTeX written on t.synctex.gz."
+        tr = b"Transcript written on t.log."
+        j48 = "a" * 48   # the SyncTeX line is then exactly 79 bytes (unwrapped)
+        s48 = b"SyncTeX written on " + j48.encode() + b".synctex.gz."
+        for label, job, term, ok in (
+                ("the transcript line", "t", rep + b"\n" + tr + b"\n", True),
+                ("SyncTeX then the transcript", "t", rep + b"\n" + syn + b"\n" + tr + b"\n", True),
+                ("SyncTeX (uncompressed)", "t", rep + b"\nSyncTeX written on t.synctex.\n"
+                 + tr + b"\n", True),
+                ("a 79-byte SyncTeX line", j48, b"Output written on " + j48.encode()
+                 + b".pdf (1 page, 9 bytes).\n" + s48 + b"\nTranscript written on "
+                 + j48.encode() + b".log.\n", True),
+                ("SyncTeX of another job", "t", rep + b"\nSyncTeX written on u.synctex.gz.\n"
+                 + tr + b"\n", False),
+                ("SyncTeX after the transcript", "t", rep + b"\n" + tr + b"\n" + syn + b"\n",
+                 False),
+                ("other text", "t", rep + b"\n" + syn + b"\nMORE\n" + tr + b"\n", False)):
+            try:
+                _oracle.final_report(term, job, "terminal")
+                got = True
+            except _oracle.OracleError:
+                got = False
+            self.expect(f"final_report on a terminal with {label}: accepted={got}, "
+                        f"want {ok} (review round 4, \\synctex)", got == ok)
         # (4) M1: arguments the oracle cannot name exactly are refused
         (wr / "u.ltx").write_text("x")
         (wr / "u.ltx.tex").write_text("x")
@@ -819,6 +885,7 @@ class Checker:
             (wr / f).unlink(missing_ok=True)
         (wr / "dir.tex").rmdir()
         self.supervisor_checks()
+        self.host_diagnostic_checks()
         # (5) no engine run inherits the grader's stdin: the container's docker
         # client and the native supervisor both get /dev/null
         rfd, wfd = os.pipe()
@@ -903,7 +970,20 @@ class Checker:
                     ("pdfTeX alone, holding its log open", "exec 3>t.log\n"
                      "echo x >&3\necho z >&3\nexec 3>&-\n", "graded"),
                     ("the document writes other files freely",
-                     "echo x > t.log\necho a > t.aux\necho b > t.aux\n", "graded")):
+                     "echo x > t.log\necho a > t.aux\necho b > t.aux\n", "graded"),
+                    # ONE FILE, MANY NAMES (review round 4): the same inode
+                    # under another name, and a case/Unicode variant (on a
+                    # case-insensitive root, virtiofs over APFS, the SAME
+                    # file; here a different one, refused all the same)
+                    ("the document writes the log through a hard link",
+                     "echo x > t.log\nln t.log hard.txt\necho y > hard.txt\n", "refused"),
+                    ("the document writes a case variant of the log",
+                     "echo x > t.log\necho y > T.LOG\n", "refused"),
+                    ("the document writes a case variant of the PDF, pdfTeX none",
+                     "echo x > t.log\necho y > T.pdf\n", "refused"),
+                    ("the document renames a file onto the PDF",
+                     "echo x > t.log\necho y > z.txt\nmv z.txt t.pdf\necho w > t.pdf\n",
+                     "refused")):
                 got = run(script)
                 self.expect(f"the real supervisor: {label}: got {got!r}, want {want!r} "
                             f"(C-99)", got.startswith(want))
@@ -916,6 +996,66 @@ class Checker:
             self.expect(f"the real supervisor without inotify ({sys.platform}) was "
                         f"not refused: {got!r} (fail closed, C-99)",
                         got.startswith("refused"))
+
+    def host_diagnostic_checks(self) -> None:
+        """HostDiagnostic (oracle_baseline_classify's host arm, never a
+        grade) runs WITHOUT the evidence supervisor: the Mac hosting that TeX
+        Live has no inotify, so supervising it refused every host run (review
+        round 4). It still gives the engine /dev/null. And get_oracle() never
+        hands out an unsupervised backend."""
+        bindir = self.td / "hbin"
+        bindir.mkdir(exist_ok=True)
+        wr = self.td / "hwork"
+        wr.mkdir(exist_ok=True)
+        (wr / "t.tex").write_text("x")
+        marker = self.td / "hdiag-supervisor-ran"
+        dump = self.td / "hdiag-stdin"
+        eng = bindir / _oracle.ENGINE_PDFLATEX
+        eng.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
+                       f"cat > '{dump}'\necho x > t.pdf\n"
+                       "printf 'Output written on t.pdf (1 page, 9 bytes).\\n"
+                       "PDF statistics:\\n' > t.log\n"
+                       "echo 'Output written on t.pdf (1 page, 9 bytes).'\nexit 0\n")
+        eng.chmod(0o755)
+        py = bindir / "python3"
+        py.write_text(f"#!/bin/sh\ntouch '{marker}'\nexit 99\n")
+        py.chmod(0o755)
+        h = _oracle.HostDiagnostic.__new__(_oracle.HostDiagnostic)
+        _oracle._Base.__init__(h)
+        h.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
+        rfd, wfd = os.pipe()
+        os.write(wfd, b"SECRET-STDIN\n")
+        os.close(wfd)
+        saved0 = os.dup(0)
+        os.dup2(rfd, 0)
+        os.close(rfd)
+        try:
+            with tempfile.TemporaryDirectory(prefix="hd-") as td:
+                r = h.run_to_fixpoint(wr, "t.tex", _oracle.oracle_tex_env(Path(td)), 60)
+            self.expect(f"HostDiagnostic graded a compiling fake run as {r!r}",
+                        r.compiles)
+        except _oracle.OracleError as e:
+            self.expect("HostDiagnostic refused a host run (it needs no supervisor, "
+                        "review round 4)", False, str(e)[:200])
+        finally:
+            os.dup2(saved0, 0)
+            os.close(saved0)
+        self.expect("HostDiagnostic ran the evidence supervisor", not marker.exists())
+        self.expect("HostDiagnostic's engine read the grader's stdin (stdin=DEVNULL)",
+                    dump.exists() and dump.read_bytes() == b"",
+                    repr(dump.read_bytes()[:40] if dump.exists() else None))
+        saved = _oracle._ORACLE
+        _oracle._ORACLE = h
+        try:
+            _oracle.get_oracle(full_state=False)
+            self.expect("get_oracle() handed out an unsupervised backend (C-99)", False)
+        except _oracle.OracleError:
+            self.expect("-", True)
+        finally:
+            _oracle._ORACLE = saved
+        self.expect("a grading backend is unsupervised",
+                    getattr(_oracle.NativeOracle, "supervised", False) is True
+                    and getattr(_oracle.ContainerOracle, "supervised", False) is True)
 
     # ------------------------------------------------ the contract generator
     def generator_client(self) -> None:

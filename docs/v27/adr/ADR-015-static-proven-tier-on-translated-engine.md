@@ -17,7 +17,8 @@ Evidence tags as elsewhere: **[M]** measured, **[R]** read from a source, **[I]*
   composition or capacity hole the previous one had missed, in a fragment whose semantics we
   had written by hand: C-92 (a screen that under-read the code), C-94 (TeX's grouping limit
   once arguments can hold math), C-96 (the R-INERT closure), C-98 (main memory: nested argument
-  frames copy their arguments). Every one of them was a place where *our model* of pdfTeX was
+  frames copy their arguments). These corrections are recorded on the unmerged branch
+  `feat/v27165-strict-args`. Every one of them was a place where *our model* of pdfTeX was
   wrong, not pdfTeX.
 - On 2026-09-29 the owner restated the goal: "the goal is yet again PERFECTNESS: we need to
   provably declare compilation if and only if it will compile (within a subset of latex where
@@ -87,8 +88,9 @@ What this decides, and what it does not:
   The spike reports before any further architecture commitment.
 - **D4. The per-name signature track is stopped** (answer 1). As a consequence (derived, not a
   separate question put to the owner): OPEN-122's slices B–D of ADR-012 step 2 are **frozen**
-  pending the synthesis. Slice A and the L_S0 kernel stay as they are, the synchronous fast path
-  and regression evidence.
+  pending the synthesis. The L_S0 kernel on `main` stays as it is: the synchronous fast path and
+  regression evidence. Slice A (branch `feat/v27165-strict-args`, not merged) is unaffected by this
+  ADR; whether it merges is decided on its own review.
 - **Not decided here** (ADR-014 draft §12, still open): O-5 (quantify verdicts over the date and
   the random seed, or change the oracle to a forced date — the clock measurement of #625 moved no
   grade on the fragment, but the run-dependent primitives exist); O-9 (restricted `\write18`);

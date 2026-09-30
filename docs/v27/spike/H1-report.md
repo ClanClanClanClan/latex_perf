@@ -22,7 +22,7 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 | Does our rebuild reproduce it? | **aarch64: yes, byte for byte** (sha256 `cee621bf…`). amd64: not rebuilt, see §2.3 | M |
 | Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100) | M |
 | Same binary, same inputs: same outputs? | yes: 3,907 of 3,907 evidence documents, and 200 of 200 real papers once the real clock is fixed | M |
-| Do amd64 and arm64 differ (floating point)? | no difference observed: 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of the traced runs that completed (§5). The code has one channel that could differ in principle, bounded in §5.1 | M + R + I |
+| Do amd64 and arm64 differ (floating point)? | no difference observed: 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5). The code has one channel that could differ in principle, bounded in §5.1 | M + R + I |
 
 ## 1. The pinned engine
 
@@ -294,12 +294,12 @@ the clock fixed on both sides, so that runs hours apart are comparable.
 | real papers, ranks 2000–2199 | 200 | **200 agree**: 186 byte-identical, 14 masked. Masks needed, counted in documents: the work-directory path (terminal output 9, log 7); Ghostscript's font-subset tags inside EPS conversions (PDF canonical form 4), and the PDF byte size that follows from them (3); epstopdf's file date (4) and size (2); SyncTeX gunzip (1); an emulator "Segmentation fault" terminal line (4). Final rc 189 × 0, 11 × 1 on both |
 | evidence documents, every 8th of the 3,907 | 489 | **489 byte-identical** in every file, the terminal output included |
 | `\tracingall` traces, 20 evidence documents | 20 | **20 byte-identical** |
-| `\tracingall` traces, 20 real papers | 20 | 9 byte-identical; the other 11 did not finish under emulation within 300 s (see below) and are being re-run with a 5,400 s limit |
+| `\tracingall` traces, 20 real papers | 20 | **20 agree**: 17 byte-identical in every file, the \tracingall logs included (up to 1.9 GB), and 3 masked (work-directory path; one emulator "Segmentation fault" terminal line). Final rc 18 × 0, 2 × 1 on both |
 
 **Emulation artefacts, all re-run and none counted as agreement:**
 - real papers: 3 engine runs segfaulted under qemu before printing pdfTeX's banner (exit 139; `_oracle.py` refused them as "pdfTeX did not run"); 1 left a `core` file from a crashed helper in the work directory; 1 hit the 300 s limit (emulated METAFONT). All 5 were re-run, with a 3,000 s limit, and agree;
 - evidence sample: 8 engine segfaults (exit 139), re-run, and all 8 agree;
-- traced real papers: 10 hit the 300 s limit under emulation, and 1 failed its first pass on a font that emulated `mktexpk` could not make (`missfont.log`). Re-run with a 5,400 s limit: in progress at the time of this commit.
+- traced real papers: 10 hit the 300 s limit under emulation, and 1 failed its first pass on a font that emulated `mktexpk` could not make (`missfont.log`). All 11 were re-run with a 5,400 s limit, finished, and agree.
 - one emulated oracle container was **mutated** by the run (see §6.1). Every grade made after the
   mutation was discarded and re-run in a fresh container. From then on the harness checks
   every container after every document.

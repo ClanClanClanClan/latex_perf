@@ -6,8 +6,14 @@ Revision 2026-04-23. Evergreen document (spec L-9).
 
 ## Overview
 
-LaTeX Perfectionist v26.2 is a five-layer incremental LaTeX analysis pipeline
-with formal (Coq) soundness proofs for every validator rule, a tiered
+> ⚠ **Partly stale (revision 2026-04-23; counts corrected 2026-09-30).** For the
+> measured position see [v27/PROJECT_STATE.md](v27/PROJECT_STATE.md); for what the
+> compile verdict means, [COMPILATION_GUARANTEE.md](COMPILATION_GUARANTEE.md).
+
+LaTeX Perfectionist (written for v26.2) is a five-layer incremental LaTeX analysis pipeline
+with a Coq development over an abstract model (the per-rule "soundness"
+theorems restate each checker's own definition and are not tied to the shipped
+OCaml rules, see Proof System below), a tiered
 language contract (LP-Core / LP-Extended / LP-Foreign), a real validator
 dependency graph driven by `specs/rules/rule_contracts.yaml`, a pre-compile
 T0–T5 readiness contract (`Compile_contract.check_ready_to_compile`), and a
@@ -124,7 +130,7 @@ Appendix I). Orchestrates L0-L4, maintains cross-layer consistency.
 
 ## Validator Engine (`validators.ml`)
 
-629 rules across 645 spec entries. Rules organized by family prefix
+643 shipped rules across 660 spec entries. Rules organized by family prefix
 (TYPO, ENC, CHAR, SPC, MATH, etc.) and layer (L0-L4).
 
 ### Rule Registration
@@ -157,8 +163,10 @@ results returned as values.
 ## ML Pipeline
 
 v2 ByteClassifier (CNN+BiLSTM, 538K params) for 8 ambiguous TYPO rules.
-Trained on A100, F1=0.9799. Formally verified in
-`proofs/ML/SpanExtractorSound.v`.
+Trained on A100, F1=0.9799 on its evaluation set.
+`proofs/ML/SpanExtractorSound.v` transcribes the measured error rates as
+constants and proves by arithmetic (`lra`) that they clear the 94% thresholds;
+the measurement itself is not proved, and nothing proves the classifier accurate.
 
 - **Deterministic rules** (8): F1=1.0 by construction
 - **Ambiguous rules** (8): ML candidate classifier
@@ -168,14 +176,17 @@ Trained on A100, F1=0.9799. Formally verified in
 
 ## Proof System
 
-142 Coq files, 1,130 theorems/lemmas, 0 admits, 0 axioms.
+192 Coq files, 1,591 theorems/lemmas, 0 admits, 0 axioms (generated counts;
+see [PROOFS.md](PROOFS.md)). 803 of the 1,591 are the generated shared-body
+per-rule theorems; the other 788 are everything else.
 
-- **Core proofs** (33): Lexer, parser, expansion, arena, snapshot consistency,
+- **Core proofs** (65): Lexer, parser, expansion, arena, snapshot consistency,
   language contract, execution classes, validator DAG, hybrid invalidation,
   partial-parse locality, damage containment, repair monotonicity, stable
   node IDs, project/include graph, user-macro expansion, build-log
   conditional soundness
-- **Generated proofs** (108): Per-rule soundness via `gen_coq_proofs.py`
+- **Generated proofs** (114): per-rule "soundness" via `gen_coq_proofs.py` (shared body; see above)
+- **Strict kernel** (12, `proofs/Strict/`): not wired into any verdict; its `Faithful` premise is false of the pinned pdfTeX (OPEN-124)
 - **ML proof** (1): `SpanExtractorSound.v` with measured precision/recall bounds
 - **Tactic**: `qed_text_sound` in `RegexFamily.v` — one-shot solver for VPD families
 

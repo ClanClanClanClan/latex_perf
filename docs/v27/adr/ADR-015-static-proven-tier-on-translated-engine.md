@@ -115,6 +115,40 @@ What this decides, and what it does not:
   O-7's exact wording of the trusted base. O-8 (accept a reference build as the oracle if the
   revision cannot be identified) is moot after H.1: see below.
 
+## Owner decisions of 2026-09-30 (after the H.1 report)
+
+This section is the one place of record for these decisions. Other documents (OPEN-123,
+OPEN-124, the CHANGELOG) point here. Where a decision answers an open question of the ADR-014
+draft §12, the O-n id is given; otherwise none exists and none is invented.
+
+- **E1. The Pascal "Stuck" rule is ACCEPTED.** Arithmetic that pdfTeX's Pascal semantics leave
+  undefined (signed overflow, division by zero or INT_MIN/−1, out-of-range real→integer
+  conversion) stops the run in `PS`: the document is **outside the tier**, never assigned a
+  verdict. This is the reading H.1 proposed for H.2 (§H.1 result above, report §5.4). It needs no
+  per-architecture model for those operations. It settles, for this class, part of what O-7's
+  trusted base must name (the implementation-defined classes, `char` signedness and FMA
+  contraction, remain parameters of `FaithfulEngine` per architecture, as above).
+- **E2. The CPU architecture IS part of the oracle's identity.** A PROVEN verdict names its
+  architecture, and graders must not compare grades across architectures (C-103: the same image
+  digest gives different exit codes on aarch64 and x86_64). This makes the per-architecture
+  `FaithfulEngine` of D2 and O-7 binding on the oracle as well as on the proofs. It amends
+  ADR-012 decision 7 (the digest-pinned oracle) by adding the architecture to the pin.
+  **Implementation is a later oracle PR**; until it lands, nothing in `_oracle.py` or the
+  artefacts enforces it.
+- **E3. Native amd64 confirmation: approved, not yet run.** The owner approved confirming the
+  emulated amd64 evidence of H.1 by a one-off GitHub Actions job on the spike branch. That job has
+  not been created or run: adding the workflow awaits the owner's permission. Until it runs, all
+  amd64 evidence stays emulated and OPEN-123 lists the confirmation as open.
+- **E4. Speed: no optimisation funding yet.** The spike's speed measurements so far (≈150–300×
+  pdfTeX, taken at a machine load average of 57–114, so not a speed measurement a decision can
+  rest on) fund no optimisation work. Speed is re-measured on a quiet machine with a real
+  document during H.3. H.5's pass and kill criteria (D3's table: pass at ≤ 60× per pass, kill
+  above 200× with no profile-guided fix in sight) are **unchanged**.
+- **E5. Step 2 (ADR-012 step 2, slice A, branch `feat/v27165-strict-args`) is PARKED**, as
+  OPEN-124 already records. This is the answer to the slice-A part of O-10: the branch is kept as
+  a backup and does not merge; capacity limits are to be derived from the translated engine
+  (Consequences, first bullet), not modelled by hand.
+
 ## Consequences
 
 - Nothing about TeX's behaviour is written by hand any more; what remains hand-modelled is the

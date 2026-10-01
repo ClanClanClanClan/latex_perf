@@ -1,5 +1,5 @@
 (lang dune 3.10)
-(version 27.1.63)
+(version 27.1.64)
 (using coq 0.8)
 (name latex-perfectionist)
 (generate_opam_files true)
@@ -9,7 +9,7 @@
 
 (package
  (name latex-perfectionist)
- (synopsis "LaTeX Perfectionist v25 bootstrap")
+ (synopsis "LaTeX Perfectionist: LaTeX linter and heuristic compile-readiness checker")
  (maintainers "Clan Maintainers <maintainers@clan.dev>")
  (authors "Clan Labs")
  (homepage "https://github.com/ClanClanClanClan/latex_perf")

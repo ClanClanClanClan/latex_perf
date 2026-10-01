@@ -1,5 +1,5 @@
-site_name: LaTeX Perfectionist v25
-site_description: Formally-verified, high-performance LaTeX validation system
+site_name: LaTeX Perfectionist
+site_description: LaTeX linter and heuristic compile-readiness checker; see docs/v27/PROJECT_STATE.md for what is measured and what is proved
 site_url: https://ClanClanClanClan.github.io/latex_perf/
 
 repo_name: ClanClanClanClan/latex_perf
@@ -13,28 +13,31 @@ theme:
     - search.suggest
     - content.code.copy
 
+# nav paths are relative to docs_dir (docs/). Until 2026-09-30 14 of the 15
+# entries were dead: they carried a `docs/` prefix (resolving to docs/docs/…)
+# or named files outside docs_dir (ARCHITECTURE.md, ml/, governance/,
+# CHANGELOG.md), which mkdocs cannot serve. No CI workflow builds this site.
 nav:
   - Home: index.md
+  - Status:
+    - Project state (source of truth): v27/PROJECT_STATE.md
+    - Compilation guarantee (what is and is not proved): COMPILATION_GUARANTEE.md
   - Architecture:
-    - Overview: ARCHITECTURE.md
-    - Build System: docs/BUILD_SYSTEM_GUIDE.md
-    - REST API: docs/REST_API.md
+    - Overview: ARCH.md
+    - Build System: BUILD_SYSTEM_GUIDE.md
+    - REST API: REST_API.md
   - Rules:
-    - Implementation Plan: docs/RULES_IMPLEMENTATION_PLAN.md
-    - Runtime: docs/VALIDATORS_RUNTIME.md
-    - Token-Aware: docs/TOKEN_AWARE_VALIDATORS.md
+    - Runtime: VALIDATORS_RUNTIME.md
+    - Token-Aware: TOKEN_AWARE_VALIDATORS.md
+    - Candidate fixes: CANDIDATE_FIXES.md
   - Proofs:
-    - Overview: docs/PROOFS.md
+    - Overview: PROOFS.md
+    - Proof classes: PROOF_CLASSES.md
   - CI/CD:
-    - Status Checks: docs/CI_STATUS_CHECKS.md
-    - Notifications: docs/NOTIFICATIONS.md
-    - Test Coverage: docs/TEST_COVERAGE_MATRIX.md
-  - ML Pipeline:
-    - Architecture: ml/ARCHITECTURE.md
-    - Results: ml/RESULTS.md
-  - Governance:
-    - Risk Register: governance/risk-register.md
-  - Changelog: CHANGELOG.md
+    - Status Checks: CI_STATUS_CHECKS.md
+    - Notifications: NOTIFICATIONS.md
+    - Test Coverage: TEST_COVERAGE_MATRIX.md
+  - Security: SECURITY.md
 
 markdown_extensions:
   - tables

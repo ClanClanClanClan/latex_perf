@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.1.63
+# LaTeX Perfectionist v27.1.64
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -12,7 +12,12 @@
 <!-- UNIT_TESTS_BADGE_END -->
 ![Perf Sparkline](https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf_spark.svg)
 
-LaTeX Perfectionist is a formally-verified, high-performance LaTeX validation system with 660 rules across 21 languages. See [specs/v26/](specs/v26/) for the v26 language contract, support matrix, and workstream roadmap; [specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md) for the architecture memo.
+LaTeX Perfectionist is a LaTeX linter (660 rules specified, 643 shipped) with a heuristic compile-readiness check (`--compile-check`).
+
+- **What is proved, and what is not.** The Coq development (0 admits, 0 axioms) proves properties of an abstract document model, not of the shipped OCaml rules. Most per-rule "soundness" theorems restate a checker's own definition; see the proof caveat under Current Status.
+- **No document gets a proven compile verdict today.** Every verdict the CLI issues is heuristic. Its measured false-READY rate on an unseen sample is published in [docs/v27/PROJECT_STATE.md](docs/v27/PROJECT_STATE.md) §1, and [docs/COMPILATION_GUARANTEE.md](docs/COMPILATION_GUARANTEE.md) says what the verdict means.
+- **Languages.** Language-specific rules exist for several languages. The "21 languages" this line used to claim was a hard-coded target, not a measured count.
+- **Where the truth lives.** Where this file and PROJECT_STATE disagree, PROJECT_STATE wins. The current architecture decision is [ADR-015](docs/v27/adr/ADR-015-static-proven-tier-on-translated-engine.md).
 
 ## Installation
 
@@ -141,7 +146,7 @@ The `READY`/`NOT-READY` token line and the exit codes (0 = no known blocker,
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status — v27.1.63 (July 2026)
+## Current Status — v27.1.64 (2026-10-01)
 
 > ⚠ **Where the numbers live.** `docs/v27/PROJECT_STATE.md` §1 is the single
 > source of truth for the measured position; it is generated and diffed by
@@ -156,15 +161,25 @@ The `READY`/`NOT-READY` token line and the exit codes (0 = no known blocker,
 > kinds, so a `PREMISE-CERTIFIED` verdict certifies the model's premises, not
 > your bytes. How often a certified paper still fails to compile is measured
 > and published in `docs/v27/PROJECT_STATE.md` §1 (sample 2 is design-seen
-> since ADR-012; the virgin figure will come from sample 3).
+> since ADR-012; the virgin sample 3, drawn 2026-09-27, gives FALSE-READY 4/200,
+> one-sided 95% upper bound 4.5%).
 
-All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
-- **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (63 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.
-- **Proofs**: 180 Coq files, 1,599 theorems/lemmas. 0 admits, 0 axioms. Per-rule proof classes: 637 formal_faithful + 20 formal_conservative + 3 formal_conditional = 660, i.e. every catalogued rule (the figure previously published here as "643 per-rule soundness" was the non-reserved rule headcount, not a proof count, and its three parts never summed to it — see OPEN-014/OPEN-051). ML: `v2_span_extractor_sound` QED.
-- **Validators**: 643 rule IDs / 660 spec. 164 fix-producing rules (Bucket A) + 124 Bucket-C candidate rules. 19 L3 file-based + 12 expl3 rules.
+All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799 on its evaluation set; its proof is described below):
+- **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (65 core + 114 generated + 1 ML + 12 Strict) via `(coq.theory)` stanzas.
+- **Proofs**: 192 Coq files, 1,591 theorems/lemmas (declarations, counted by `scripts/tools/generate_project_facts.py`). 0 admits, 0 axioms.
+  - **803 of the 1,591 are generated per-rule theorems that share one proof body** (`qed_text_sound`). Each restates a checker's own definition. 57 of those checkers are the constant `false`.
+  - **The other 788 are everything else.** That is a count, not a measure of strength.
+  - **Per-rule proof classes:** 637 formal_faithful + 20 formal_conservative + 3 formal_conditional = 660. ⚠ These are LABELS: `formal_faithful` is the generator's default for every rule not on a denylist, not a measurement. The "643 per-rule soundness" once published here was the non-reserved rule headcount, not a proof count (OPEN-014/OPEN-051).
+  - **ML:** `v2_span_extractor_sound` is QED. It proves by arithmetic that the measured error rates, transcribed into the file as constants, clear the 94% thresholds. The measurement itself is not proved.
+- **Validators**: 643 rule IDs / 660 spec. 19 L3 file-based + 12 expl3 rules.
+  - **Fixes:** 164 rules can produce an auto-fix, but **the default `--apply-fixes` applies only 1 of them (MATH-106)**. The rest are opt-in (`--apply-fixes-for`, `--apply-fixes-all`); see above.
+  - **Candidates:** 124 Bucket-C candidate rules suggest a fix and never apply it.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799 (precision=0.975, recall=0.985) **on the candidate-anchored TYPO-rule evaluation set** — not a whole-catalog metric; deterministic rules skip ML. Proved in `proofs/ML/SpanExtractorSound.v`.
-- **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
+- **Performance — the whole pipeline is NOT real-time yet.**
+  - **Per-keystroke budget at 300 KB:** the rules stage takes **203.3 ms against a 30 ms budget (6.8× over)**, and the structural stage 54.9 ms against 15 ms (3.7×).
+  - **Source:** perf-ci run 36683234282 on `main` at `84b8f6ef`, 2026-09-30. That is one run. The committed ratchet baseline in `corpora/perf/keystroke_budget.json` still records 284.0 ms, transcribed from CI on 2026-08-02 at `3543095b`.
+  - **The lexer microbench is not a keystroke latency.** Its figures (p95 ≈ 2.73 / 2.96 ms on a 1.1 MB file) measure the **L0 SIMD tokenizer alone**. They come from `core/l0_lexer/current_baseline_performance.json`, last run 2026-02-08.
 
 ### Milestones
 - ✅ v25.0.0 (2026-04-14): rule coverage + ML v2 + SIMD + chunk store
@@ -289,10 +304,19 @@ bash scripts/latency_smoke_expand.sh 200
 
 ## Performance Targets
 
+**Whole pipeline, per keystroke.** This is the number that decides whether the tool is real-time. The budget is from `docs/v27/ROADMAP.md`; the gate is `check_keystroke_budget.py`.
+
+| Stage at 300 KB | Budget | Measured | Source |
+|--------|--------|----------|--------|
+| rules | ≤ 30 ms | **203.3 ms (6.8× over)** | perf-ci run 36683234282, `main` @ `84b8f6ef`, 2026-09-30 |
+| structural | ≤ 15 ms | 54.9 ms (3.7× over) | same run |
+
+**Lexer/tokenizer only (L0).** These figures do NOT include expansion, parsing or any rule.
+
 | Metric | Target | Repository Baseline |
 |--------|--------|---------------------|
-| Full-doc p95 (1.1MB) | ≤ 20ms | p95 ≈ 2.96 ms (1 M iters) |
-| Edit-window p95 (4 KB) | ≤ 1.2ms | p95 ≈ 0.017 ms (5 K iters) |
+| L0 tokenizer, full doc p95 (1.1MB) | ≤ 20ms | p95 ≈ 2.96 ms (1 M iters, measured 2025-09-19; `core/l0_lexer/current_baseline_performance.json`) |
+| L0 tokenizer, edit window (4 KB) | ≤ 1.2ms | microbench only; the 0.017 ms once quoted here matches no stored run |
 | First-token latency | ≤ 350μs (scalar) / ≤ 200μs (SIMD) | |
 
 ## Architecture
@@ -301,17 +325,20 @@ bash scripts/latency_smoke_expand.sh 200
 - **Language contract** (v26): LP-Core / LP-Extended / LP-Foreign tiers. See [specs/v26/language_contract.md](specs/v26/language_contract.md).
 - **Rule contracts** (v26.1): per-rule execution/proof/project metadata in [specs/rules/rule_contracts.yaml](specs/rules/rule_contracts.yaml); drives the validator DAG.
 - **Execution classes**: A (keystroke-critical) / B (debounce) / C (build-coupled) / D (advisory). Formalised in [proofs/ExecutionClasses.v](proofs/ExecutionClasses.v).
-- **Proof strategy**: 0 admits, 0 axioms; 180 Coq files, 1,599 theorems/lemmas.
+- **Proof strategy**: 0 admits, 0 axioms; 192 Coq files, 1,591 theorems/lemmas. 803 of them are the generated shared-body per-rule theorems and 788 are other theorems (see Current Status).
 
 ### SIMD Implementation
 
-- **Rust SIMD lane**: AVX-512/AVX2/NEON intrinsics with runtime feature detection.
-- **C-extension lane**: enabled on Apple Silicon (NEON); auto-disabled if slower than scalar.
+- **C SIMD tokenizer**: AVX2 / NEON kernels in C (`latex-parse/src/simd_tokenizer_fixed.c`, `core/l0_lexer/simd/`). It is enabled on Apple Silicon (NEON) and auto-disabled if slower than scalar.
+- **No AVX-512, no Rust SIMD.** An earlier version of this line claimed a Rust AVX-512 lane; `rust/` holds only a small proxy and client.
 - Feature-flagged with auto-fallback.
 
 ## Documentation
 
-- **[specs/v27/V27_REPO_EXACT_MASTER_SPEC.md](specs/v27/V27_REPO_EXACT_MASTER_SPEC.md)** — current release master spec (v26: [specs/v26/V26_REPO_EXACT_MASTER_SPEC.md](specs/v26/V26_REPO_EXACT_MASTER_SPEC.md))
+- **[docs/v27/PROJECT_STATE.md](docs/v27/PROJECT_STATE.md)** — the measured position, OPEN ledger and corrections log (source of truth)
+- **[docs/v27/adr/](docs/v27/adr/)** — current architecture decisions (ADR-012 three-tier verdicts; ADR-015 static proven tier on a translated engine)
+- **[docs/COMPILATION_GUARANTEE.md](docs/COMPILATION_GUARANTEE.md)** — what the compile verdict does and does not guarantee
+- [specs/v27/V27_REPO_EXACT_MASTER_SPEC.md](specs/v27/V27_REPO_EXACT_MASTER_SPEC.md) — the v27 platform-roadmap draft, historical and superseded by the ADRs above (v26: [specs/v26/V26_REPO_EXACT_MASTER_SPEC.md](specs/v26/V26_REPO_EXACT_MASTER_SPEC.md))
 - **[specs/v26/language_contract.md](specs/v26/language_contract.md)** — LP-Core / LP-Extended / LP-Foreign tiers
 - **[docs/SUPPORT_MATRIX.yaml](docs/SUPPORT_MATRIX.yaml)** — machine-readable support contract
 - **[specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md)** — architecture memo (v26/v27 plan)
@@ -321,18 +348,17 @@ bash scripts/latency_smoke_expand.sh 200
 - **[docs/BUILD_LOG_CONTRACT.md](docs/BUILD_LOG_CONTRACT.md)** — Class C compile-log contract
 - **[docs/UNIT_TESTS.md](docs/UNIT_TESTS.md)**, **[docs/BUILD_SYSTEM_GUIDE.md](docs/BUILD_SYSTEM_GUIDE.md)**, **[docs/REST_API.md](docs/REST_API.md)**
 
-## Success Metrics (v27.1.63)
+## Success Metrics (v27.1.64)
 
 - 660 rules specified / 643 shipped
-- 164 auto-fix producers + 124 Bucket-C candidate rules. ⚠ This read 167 until 2026-09-12; the delta is exactly the three producers WITHDRAWN for corrupting real documents (HI-001, TYPO-038, TYPO-028 — see OPEN-064/075/076), so the old figure advertised retracted fixes.
-- 637 formal faithful + 20 conservative + 3 conditional proofs
+- 164 auto-fix producers, of which the default `--apply-fixes` applies 1 (MATH-106; allow-list, OPEN-112), + 124 Bucket-C candidate rules. ⚠ This read 167 until 2026-09-12; the delta is exactly the three producers WITHDRAWN for corrupting real documents (HI-001, TYPO-038, TYPO-028 — see OPEN-064/075/076), so the old figure advertised retracted fixes.
+- 637 formal faithful + 20 conservative + 3 conditional proof-class LABELS (a generator default, not a measurement; see Current Status)
 - 0 admits, 0 axioms
-- 21-language target (7 live + 14 stubbed)
-- p95 edit-window ≈ 0.017 ms (target ≤ 1.2 ms)
+- Rules stage per keystroke at 300 KB: 203.3 ms against a 30 ms budget (perf-ci, 2026-09-30, `84b8f6ef`); the budget is not met
 
 ---
 
-**Status**: v27.1.63 released 2026-09-12 — the first release graded against real documents. 643 validators implemented, **164 fix-producing rules**, 1,599 theorems across 180 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments. Tiers 1–3 are complete (v27.1.20–v27.1.40): the Tier 2 L3-AST migration (`ast_semantic_state` + REF migration + regex-vs-AST parity gate) and the Tier 3 faithful pdflatex operational semantics (token/aux/log/pass model, tight ≤2-pass convergence, WS8 capstone re-proved against it + Stage-6 residuals: PDF-artefact model, genuine T2/T3/T4, document-feature coherence) both shipped; see [`specs/v27/V27_2_MASTER_EXECUTION_PLAN.md`](specs/v27/V27_2_MASTER_EXECUTION_PLAN.md) and [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md). Honest residuals (T0/T1/T5 universal obligations, byte-exact PDF structural semantics) remain conservative/deferred.
+**Status**: v27.1.64 (2026-10-01) — the oracle container, the fixer allow-list default (`--apply-fixes` applies MATH-106 only), a published image that runs, and this honesty sweep; see `CHANGELOG.md`. v27.1.63 (2026-09-12) was the first release graded against real documents. 643 validators implemented, 164 fix-producing rules (since the OPEN-112 allow-list, the default `--apply-fixes` applies 1 of them, MATH-106), 1,591 theorems across 192 Coq files (0 admits, 0 axioms; 803 of them the generated shared-body per-rule theorems), ML v2 byte classifier trained (F1=0.9799 on its evaluation set). ⚠ The WS8 capstone below is proved over a four-token-kind abstract model, not over documents. ADR-012 demoted what it certifies to "premise-certified", and no document gets a proven compile verdict (OPEN-124). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments. Tiers 1–3 are complete (v27.1.20–v27.1.40): the Tier 2 L3-AST migration (`ast_semantic_state` + REF migration + regex-vs-AST parity gate) and the Tier 3 faithful pdflatex operational semantics (token/aux/log/pass model, tight ≤2-pass convergence, WS8 capstone re-proved against it + Stage-6 residuals: PDF-artefact model, genuine T2/T3/T4, document-feature coherence) both shipped; see [`specs/v27/V27_2_MASTER_EXECUTION_PLAN.md`](specs/v27/V27_2_MASTER_EXECUTION_PLAN.md) and [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md). Honest residuals (T0/T1/T5 universal obligations, byte-exact PDF structural semantics) remain conservative/deferred.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

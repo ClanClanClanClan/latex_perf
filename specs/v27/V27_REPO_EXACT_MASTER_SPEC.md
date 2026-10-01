@@ -1,5 +1,17 @@
 # LaTeX Perfectionist v27 — Repo-exact master specification
 
+> ⚠ **SUPERSEDED — historical (banner added 2026-09-30; the text below is unchanged history).**
+> This platform-roadmap draft is not the current plan. "WS8 SHIPPED + PROVEN" and
+> "faithfulness caveat closed" below are wrong as claims about documents: the WS8
+> capstone is proved over a four-token-kind abstract model, ADR-012 demoted its
+> certificate to premise-certified, and no document gets a proven compile verdict
+> (OPEN-124: the strict kernel's `Faithful` premise is false of the pinned pdfTeX).
+> WS10/WS11 are parked (ADR-010). Current: [PROJECT_STATE.md](../../docs/v27/PROJECT_STATE.md),
+> [ADR-012](../../docs/v27/adr/ADR-012-contract-bounded-proven-tier.md),
+> [ADR-015](../../docs/v27/adr/ADR-015-static-proven-tier-on-translated-engine.md),
+> [ROADMAP.md](../../docs/v27/ROADMAP.md).
+
+
 Version: v27-draft-repo-exact  
 Status: platform-roadmap  
 Dependency: v26 substrate must be complete first

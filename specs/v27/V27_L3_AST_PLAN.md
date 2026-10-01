@@ -1,5 +1,13 @@
 # V27_L3_AST_PLAN — L3 AST migration (revised stage decomposition)
 
+> ⚠ **NOT CURRENT — historical plan (banner added 2026-09-30; the text below is unchanged).**
+> None of the 9 stage boxes below is checked, and this plan is not among the
+> current priorities (proven tier: [ADR-015](../../docs/v27/adr/ADR-015-static-proven-tier-on-translated-engine.md);
+> measured position and open work: [PROJECT_STATE.md](../../docs/v27/PROJECT_STATE.md)).
+> Part of the L3-AST work shipped under Tier 2 (v27.1.28/36, `ast_semantic_state`);
+> treat this file as a record of intent, not of status.
+
+
 **Goal:** Migrate the L3 semantic layer from its current
 source-regex-derived form to a true AST/project-semantics-derived
 representation, per `docs/L3_ROADMAP.md` and memo §15.5.

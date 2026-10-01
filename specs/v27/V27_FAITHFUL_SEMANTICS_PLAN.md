@@ -1,5 +1,15 @@
 # V27_FAITHFUL_SEMANTICS_PLAN — Faithful operational pdflatex semantics
 
+> ⚠ **SUPERSEDED — historical (banner added 2026-09-30; the text below is unchanged history).**
+> "COMPLETE" below means the plan's stages shipped as Coq developments; it does
+> not mean the semantics is faithful to pdfTeX. The legacy files
+> (`LexerFaithfulStep.v`, `FaithfulWS8Bridge.v`) model an abstract token stream,
+> and the later strict kernel's `Faithful` premise is measured FALSE of the pinned
+> pdfTeX (OPEN-124). The current plan for a faithful engine is
+> [ADR-015](../../docs/v27/adr/ADR-015-static-proven-tier-on-translated-engine.md)
+> (a Coq translation of the pinned pdfTeX); state: [PROJECT_STATE.md](../../docs/v27/PROJECT_STATE.md).
+
+
 > **STATUS: ✅ COMPLETE (shipped across v27.1.29–v27.1.39).** All stages
 > (1–6) plus residual hardening are done: token model, aux/log evolution,
 > `project_tokens` (label/ref + profile + document-required features), a

@@ -15,6 +15,17 @@ Classification per rule id (by the constructor it calls):
 A small hand-maintained RECOVERABLE set records diagnose-only rules that an
 audit found DO have a determinate bounded fix and should still be wired — kept
 tiny and explicit so it is visible, not buried.
+
+⚠ 2026-09-30. The constructor regexes required `~id:` IMMEDIATELY after the
+constructor name, so every producer that passes another labelled argument
+first (`mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-106"`) was missed:
+this file reported 67 producers against the 164 of the producer registry,
+labelled 53 real producers "diagnose-only" (MATH-106, the one rule on the
+default allow-list, among them) and dropped 44 more entirely. `--check` only
+compared the file with this same generator, so it could not see it. `--check`
+now ALSO checks the classification against the producer registry
+(`produces_fix: true` in specs/rules/rule_contracts.yaml — the set
+check_producer_coverage.py proves at run time), independently of the diff.
 """
 import re
 import sys
@@ -22,7 +33,10 @@ import glob
 import os
 from collections import defaultdict
 
+import yaml
+
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+CONTRACTS = os.path.join(REPO, "specs", "rules", "rule_contracts.yaml")
 SRC = os.path.join(REPO, "latex-parse", "src")
 OUT = os.path.join(REPO, "specs", "v27", "CANDIDATE_BACKLOG.md")
 
@@ -38,15 +52,48 @@ RECOVERABLE = {
 }
 
 
+# Labelled arguments that may precede ~id (e.g. `~src:s`, `~fix:(...)`).
+_LABELS = r"(?:\s+~\w+(?::(?:[\w.']+|\([^()]*\)))?)*?"
+_ID = r'\s+~id:"([A-Z0-9-]+)"'
+PRODUCER_RE = re.compile(r"\bmk_result_with_fix\w*" + _LABELS + _ID)
+CANDIDATE_RE = re.compile(r"\bmk_result_with_candidates\w*" + _LABELS + _ID)
+DIAGNOSE_RE = re.compile(r"\bmk_result(?=\s)" + _LABELS + _ID)
+
+
 def classify():
     producer, candidate, diagnose = set(), set(), set()
     for f in glob.glob(os.path.join(SRC, "validators_*.ml")):
         s = open(f, encoding="utf-8").read()
-        producer |= set(re.findall(r'mk_result_with_fix\w* ~id:"([A-Z0-9-]+)"', s))
-        candidate |= set(re.findall(r'mk_result_with_candidates ~id:"([A-Z0-9-]+)"', s))
-        diagnose |= set(re.findall(r'mk_result ~id:"([A-Z0-9-]+)"', s))
+        producer |= set(PRODUCER_RE.findall(s))
+        candidate |= set(CANDIDATE_RE.findall(s))
+        diagnose |= set(DIAGNOSE_RE.findall(s))
     diagnose -= producer | candidate
     return producer, candidate, diagnose
+
+
+def registry_producers():
+    """The producer registry: `produces_fix: true` in rule_contracts.yaml."""
+    with open(CONTRACTS, encoding="utf-8") as f:
+        rules = yaml.safe_load(f)["rules"]
+    return {r["rule_id"] for r in rules if r.get("produces_fix") is True}
+
+
+def registry_failures(producer, candidate, diagnose, registry):
+    """Classification vs the registry (primary data), never vs our own output."""
+    out = []
+    missed = registry - producer
+    extra = producer - registry
+    wrong_diag = diagnose & registry
+    if missed:
+        out.append(f"{len(missed)} registry producer(s) not classified as producers: "
+                   f"{', '.join(sorted(missed))}")
+    if extra:
+        out.append(f"{len(extra)} classified producer(s) not in the registry: "
+                   f"{', '.join(sorted(extra))}")
+    if wrong_diag:
+        out.append(f"{len(wrong_diag)} registry producer(s) labelled diagnose-only: "
+                   f"{', '.join(sorted(wrong_diag))}")
+    return out
 
 
 def fam(rid):
@@ -100,6 +147,13 @@ def render():
 def main():
     text = render()
     if "--check" in sys.argv:
+        fails = registry_failures(*classify(), registry_producers())
+        if fails:
+            print("[candidate-backlog] FAIL: classification disagrees with the producer "
+                  "registry (specs/rules/rule_contracts.yaml produces_fix):", file=sys.stderr)
+            for f in fails:
+                print(f"  - {f}", file=sys.stderr)
+            sys.exit(1)
         cur = open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else ""
         if cur.strip() != text.strip():
             print("[candidate-backlog] DRIFT: CANDIDATE_BACKLOG.md is stale; run "

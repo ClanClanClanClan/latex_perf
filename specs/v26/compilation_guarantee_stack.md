@@ -1,5 +1,16 @@
 # Compilation guarantee theorem stack (v26.2 + v27 WS8)
 
+> ⚠ **SUPERSEDED — historical (banner added 2026-09-30; the text below is unchanged history).**
+> The §1 guarantee below ("compilation succeeds") holds only of an abstract
+> document model. ADR-012 demoted what it certifies to **premise-certified**
+> (a heuristic verdict, not a proof about the document), and certified papers
+> measurably fail to compile. Current statement:
+> [docs/COMPILATION_GUARANTEE.md](../../docs/COMPILATION_GUARANTEE.md); decisions:
+> [ADR-012](../../docs/v27/adr/ADR-012-contract-bounded-proven-tier.md),
+> [ADR-015](../../docs/v27/adr/ADR-015-static-proven-tier-on-translated-engine.md);
+> measured position: [PROJECT_STATE.md](../../docs/v27/PROJECT_STATE.md).
+
+
 **Status:** v26.2 ships hypothesis-parametric T0–T7 scaffolding; v27 WS8 discharges hypotheses with a concrete toolchain model.
 **Authoritative:** memo `REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md` §5.
 **Companion ADR:** [ADR-004](../../docs/v26_2/adr/ADR-004-hypothesis-parametric-t6-t7.md), [ADR-007](../../docs/v26_2/adr/ADR-007-compile-stack-ships-in-v26-2.md).

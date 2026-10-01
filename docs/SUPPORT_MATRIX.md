@@ -18,7 +18,7 @@
 
 | Engine | Status | Tier | Notes |
 |---|---|---|---|
-| pdfLaTeX | GA | LP-Core | Primary target for v26 deterministic support. **The compile-guarantee verdict is pdflatex-computed today**: the runtime defaults every project to pdflatex and the differential harness runs pdflatex only. |
+| pdfLaTeX | GA | LP-Core | Primary target. **Every compile verdict today is heuristic** (ADR-012; no document gets a proven verdict, OPEN-124). **The verdict is pdflatex-computed today**: the runtime defaults every project to pdflatex and the differential harness runs pdflatex only. |
 | XeLaTeX | Planned | LP-Extended | **Not yet a distinct engine at runtime.** The compile-guarantee capstone `xelatex_compile_safe` is currently a **proof-alias** (`:= pdflatex_compile_safe`); `--compile-check` defaults the engine to pdflatex, so the verdict is pdflatex-computed. Real per-engine coverage (distinct Unicode/font semantics) is planned under roadmap Track **S-ENGINE**. |
 | LuaLaTeX | Planned | LP-Extended | **Not yet a distinct engine at runtime.** `lualatex_compile_safe` is likewise a **proof-alias** (`:= pdflatex_compile_safe`) and the runtime resolves to pdflatex; real per-engine coverage is planned under roadmap Track **S-ENGINE**. |
 | pTeX / upTeX | Experimental | LP-Extended | CJK compatibility shim exists; not part of strongest guarantees. Verdict is pdflatex-computed today (see S-ENGINE). |
@@ -44,7 +44,7 @@
 
 | Tier | Status | Contract | Proof |
 |---|---|---|---|
-| LP-Core | GA | Fully guaranteed subset; see `specs/v26/language_contract.md`. | `proofs/LanguageContract.v` |
+| LP-Core | GA | The v26 "fully guaranteed subset" (`specs/v26/language_contract.md`, superseded). Since ADR-012 an LP-Core READY is **premise-certified and heuristic, not a guarantee**: it can fail to compile, and the measured rate is in `docs/v27/PROJECT_STATE.md` §1. See `docs/COMPILATION_GUARANTEE.md`. | `proofs/LanguageContract.v` (over the abstract model) |
 | LP-Extended | Beta | Practical but weaker contracts; bounded LP-Foreign feature detection. | Partial (conservative). |
 | LP-Foreign | GA (detection) | Explicit rejection domain; surfaced via `--profile` banner. | `LanguageContract.classify_lp_foreign_sound`. |
 
@@ -55,7 +55,7 @@ release). Current ship state:
 
 | Class | Status | Rule count | Meaning |
 |---|---|---|---|
-| Formal / faithful | GA | 637 | Rule logic matches formal model closely enough to justify strong soundness claims. |
+| Formal / faithful | GA | 637 | ⚠ A default LABEL, not a measurement: assigned to every rule not on a denylist; nothing ties a Coq checker to its OCaml rule (OPEN-067). See `docs/PROOF_CLASSES.md`. |
 | Formal / conservative | GA | 20 | Rule covered by theorem via a conservative wrapper (`check = false`) for external binary checks. |
 | Formal / conditional | GA | 3 | Sound given log predicate. LAY-025/026/027 compile-log-derived rules. |
 | Statistically validated (overlay) | GA | 8 | v2 ByteClassifier precision/recall bounds in `proofs/ML/SpanExtractorSound.v`. Overlay on faithful proofs for 8 ambiguous TYPO rules. |

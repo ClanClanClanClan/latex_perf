@@ -45,8 +45,11 @@ jobs:
       # a random 4096-byte slice. None of them touches the stages ROADMAP.md:276
       # actually budgets (parse / shared / rules / structural / IPC at 300 KB).
       # Measured consequence: edit_window_gate reports p95 = 0.031 ms on a
-      # 300 KB document while the `rules` stage of that same document is ~11x
-      # OVER its 30 ms budget. This step closes that hole by measuring the
+      # 300 KB document while the `rules` stage of that same document is far
+      # OVER its 30 ms budget: 9.5x at the recorded baseline
+      # (corpora/perf/keystroke_budget.json, 284 ms, 2026-08-02) and 6.8x in
+      # this job on main on 2026-09-30 (run 36683234282, 203.3 ms). (This
+      # comment said "~11x" until 2026-09-30.) This step closes that hole by measuring the
       # readiness kernel per stage at real sizes, plus the batch full-lint pass
       # which ROADMAP.md:80 (Principle 9) requires a budget for and never had.
       #

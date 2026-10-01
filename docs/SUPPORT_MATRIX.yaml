@@ -7,8 +7,8 @@
 # Memo reference: REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md §12
 # Human prose:    docs/SUPPORT_MATRIX.md
 
-version: v27.1.61
-last_updated: "2026-07-24"
+version: v27.1.64
+last_updated: "2026-09-30"
 
 # Release-state taxonomy
 release_state:
@@ -24,7 +24,7 @@ engines:
   pdflatex:
     status: GA
     tier: lp_core
-    notes: "Primary target for v26 deterministic support."
+    notes: "Primary target. Every compile verdict today is HEURISTIC (ADR-012): premise-certified over an abstract model, not a proof about the document; the measured false-READY rate is in docs/v27/PROJECT_STATE.md section 1. No document gets a proven verdict (OPEN-124)."
   xelatex:
     status: planned
     tier: lp_extended
@@ -80,8 +80,8 @@ macro_support:
 proof_classes:
   formal_faithful:
     status: GA
-    rule_count: 622
-    notes: "Rule logic mirrors formal model closely enough to justify strong soundness claims."
+    rule_count: 637
+    notes: "A LABEL, not a measurement: generate_rule_contracts.py assigns it to every rule not on a denylist (16 Reserved rules included). Nothing ties a Coq checker to its OCaml rule (OPEN-067); the generated theorems share one proof body (qed_text_sound). Count from governance/project_facts.yaml (this file read 622 until 2026-09-30)."
   formal_conservative:
     status: GA
     rule_count: 20

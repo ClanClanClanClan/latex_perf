@@ -152,7 +152,7 @@ Total recorded rows: **3**. pdflatex-graded: `True`.
 ### Infrastructure
 
 - Required CI contexts: **12** — build, format, l1-smoke, perf-ci, proof-ci, rest-smoke, smoke-cli, spec-drift, tex-oracle, unicode-smoke, unit-tests, xxh-selfcheck
-- Version of record: **v27.1.63** (`project_facts.yaml` release_date 2026-09-12)
+- Version of record: **v27.1.64** (`project_facts.yaml` release_date 2026-10-01)
 - Release debt: run `git describe --tags`. A distance greater than 0 means merged work is unreleased, and **no gate compares any version marker to a tag** (OPEN-013) — so this is the one number here you must check by hand.
 
 <!-- END GENERATED: measured-position -->

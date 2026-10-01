@@ -16,7 +16,8 @@
 #                                          and the curated remediation
 #                                          (rule_remediation.yaml), not the
 #                                          generic fallback
-#   5. rest_api_server start-up         -> loads the macro catalogue
+#   5. the default entrypoint (REST)    -> HTTP 200 on POST /tokenize, and the
+#                                          macro catalogue loaded
 #
 # Usage: scripts/tools/docker_smoke.sh ghcr.io/clanclanclanclan/latex_perf:vX
 #        (DOCKER_SMOKE_PLATFORM=linux/amd64 to run an amd64 image elsewhere)
@@ -67,9 +68,28 @@ rc_is explain 0 && has explain 'message: +Ellipsis' \
   && has explain 'remediation: ' \
   && lacks explain 'remediation: +No auto-fix is available'
 
-# 5. REST server start-up loads the macro catalogue (then is stopped)
-run rest sh -c 'timeout 5 rest_api_server -p 8080; exit 0'
-has rest 'Loaded macro catalogue: [1-9][0-9]* symbols'
+# 5. The DEFAULT entrypoint (lp-serve: main_service + REST) answers
+#    POST /tokenize with HTTP 200, and loaded the macro catalogue.
+CID="$(docker run -d "${PLATFORM_ARGS[@]}" --network none "${IMAGE}")"
+BODY='{"latex":"\\documentclass{article}\\begin{document}Hello $x^2$\\end{document}"}'
+: > "${OUT}/rest.out"; echo 1 > "${OUT}/rest.rc"
+# Up to ~20 attempts: the service's workers start asynchronously and the first
+# request can be slow (measured locally under load: >5 s), so each attempt
+# waits up to 20 s for the response.
+for _ in $(seq 1 20); do
+  if docker exec -e BODY="${BODY}" "${CID}" bash -c '
+      exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1
+      printf "POST /tokenize HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s" "${#BODY}" "${BODY}" >&3
+      timeout 20 head -c 65536 <&3' > "${OUT}/rest.out" 2>&1 \
+     && grep -q "^HTTP/1\.[01] 200" "${OUT}/rest.out"; then
+    echo 0 > "${OUT}/rest.rc"; break
+  fi
+  sleep 2
+done
+docker logs "${CID}" >> "${OUT}/rest.out" 2>&1
+docker rm -f "${CID}" > /dev/null 2>&1
+rc_is rest 0 && has rest '^HTTP/1\.[01] 200' \
+  && has rest 'Loaded macro catalogue: [1-9][0-9]* symbols'
 
 for n in lint ready notready explain rest; do
   echo "smoke ${n}: rc=$(cat "${OUT}/${n}.rc") lines=$(wc -l < "${OUT}/${n}.out" | tr -d ' ')"

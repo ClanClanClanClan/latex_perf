@@ -26,14 +26,17 @@ RUN apt-get update && \
 
 USER opam
 WORKDIR /home/opam/src
-COPY --chown=opam:opam . .
 
 # Only the executables' dependencies (latex-parse/latex_parse.opam: dune,
 # ocaml, re, uutf, yojson). The root opam file also pulls Coq 8.18 for the
 # proof tree, which this image never ships; building Coq here only cost time
-# and disk (a local build ran out of space compiling coq-core).
-RUN opam update -y && opam install -y ./latex-parse --deps-only && \
-    opam exec -- dune build \
+# and disk (a local build ran out of space compiling coq-core). The opam file
+# is copied alone first so this layer is cached across source changes.
+COPY --chown=opam:opam latex-parse/latex_parse.opam latex-parse/latex_parse.opam
+RUN opam update -y && opam install -y ./latex-parse --deps-only
+
+COPY --chown=opam:opam . .
+RUN opam exec -- dune build \
       latex-parse/src/validators_cli.exe \
       latex-parse/src/rest_api_server.exe \
       latex-parse/src/main_service.exe
@@ -62,8 +65,13 @@ ENV LP_RULE_CONTRACTS_JSON=/usr/share/latex-perfectionist/specs/rules/rule_contr
     L0_CATALOGUE_V25R2=/usr/share/latex-perfectionist/data/macro_catalogue.v25r2.json \
     L0_CATALOGUE_ARGSAFE=/usr/share/latex-perfectionist/data/macro_catalogue.argsafe.v25r1.json
 
+COPY scripts/docker_entrypoint.sh /usr/local/bin/lp-serve
+
 EXPOSE 8080
 
-# Default: REST API server on port 8080
-ENTRYPOINT ["rest_api_server"]
+# Default: REST API server on port 8080. lp-serve starts main_service first —
+# rest_api_server alone exits 1 ("SIMD service not running"), so the previous
+# ENTRYPOINT ["rest_api_server"] could never serve a request.
+# For the CLI: docker run --rm -v "$PWD:/w" -w /w --entrypoint validators_cli IMAGE paper.tex
+ENTRYPOINT ["lp-serve"]
 CMD ["-p", "8080"]

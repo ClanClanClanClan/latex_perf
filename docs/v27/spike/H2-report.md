@@ -303,7 +303,7 @@ Now:
 - `pipeline.sh` writes `provenance.json` (sha256 of every input, every committed source, every
   generated Coq file, every extracted OCaml file, and `ps.exe`) and `measure.tsv`; both are
   committed in `evidence/build/`;
-- every committed model output names the `ps.exe` it came from (`inirun/run.json`, the
+- every committed model output names the `ps.exe` it came from (`h2/evidence/inirun/run.json`, the
   `ps_exe_sha256_16` column of `diff/results-*.tsv`);
 - **pure mode says what it is:** "pure (consistency of the committed evidence; nothing re-run)".
   It fails when a committed source no longer hashes as the measured build's (the evidence is

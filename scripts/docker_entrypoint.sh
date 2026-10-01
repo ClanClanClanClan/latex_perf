@@ -7,14 +7,22 @@
 # main_service, waits for its socket, then execs the REST server with the
 # given arguments (default: -p 8080).
 #
-# The service settings default to rest-smoke.yml's (scalar mode allowed, a
-# two-core worker pool, 4 MB minor heap, no mlock); override any of them by
-# setting the variable. Like rest-smoke.yml, expect the FIRST request after
-# start-up to be slow or to time out while the worker pool warms up.
+# Service settings: scalar mode allowed, 4 MB minor heap, no mlock (as in
+# rest-smoke.yml), and a ONE-worker pool. Override any of them by setting the
+# variable.
+#
+# ⚠ ONE worker, not rest-smoke.yml's two, because of a MEASURED defect
+# (linux/arm64 under colima, 2026-10-01): inside a container a two-worker pool
+# (L0_POOL_CORES=0,1) leaves requests unanswered. Six identical POST /tokenize
+# requests: 2 got no response within 20 s, 4 answered at once; six direct UDS
+# requests to main_service: 3 timed out at 15 s. With L0_POOL_CORES=0: 6 of 6
+# answered at once, both ways. The cause (the broker with two workers in a
+# container) is not diagnosed; until it is, the image runs the configuration
+# measured to work, and docker_smoke.sh's 5-in-a-row check guards it.
 set -eu
 : "${L0_ALLOW_SCALAR:=1}"
 : "${L0_NO_MLOCK:=1}"
-: "${L0_POOL_CORES:=0,1}"
+: "${L0_POOL_CORES:=0}"
 : "${L0_MINOR_HEAP_MB:=4}"
 export L0_ALLOW_SCALAR L0_NO_MLOCK L0_POOL_CORES L0_MINOR_HEAP_MB
 rm -f /tmp/l0_lex_svc.sock

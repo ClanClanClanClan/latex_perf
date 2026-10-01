@@ -16,8 +16,8 @@
 #                                          and the curated remediation
 #                                          (rule_remediation.yaml), not the
 #                                          generic fallback
-#   5. the default entrypoint (REST)    -> HTTP 200 on POST /tokenize, and the
-#                                          macro catalogue loaded
+#   5. the default entrypoint (REST)    -> HTTP 200 on POST /tokenize, then 5
+#                                          more in a row; macro catalogue loaded
 #
 # Usage: scripts/tools/docker_smoke.sh ghcr.io/clanclanclanclan/latex_perf:vX
 #        (DOCKER_SMOKE_PLATFORM=linux/amd64 to run an amd64 image elsewhere)
@@ -69,23 +69,39 @@ rc_is explain 0 && has explain 'message: +Ellipsis' \
   && lacks explain 'remediation: +No auto-fix is available'
 
 # 5. The DEFAULT entrypoint (lp-serve: main_service + REST) answers
-#    POST /tokenize with HTTP 200, and loaded the macro catalogue.
+#    POST /tokenize with HTTP 200 — once to come up (up to 20 attempts), then
+#    5 more times in a row — and loaded the macro catalogue. The 5-in-a-row
+#    part is what catches the two-worker container defect (lp-serve's header):
+#    with L0_POOL_CORES=0,1 about one request in three got no response.
+#    The status line is read with bash's `read -t`: a `timeout head`/`cat`
+#    reader loses its buffered output when it is killed, because the server
+#    keeps the connection open after answering.
 CID="$(docker run -d "${PLATFORM_ARGS[@]}" --network none "${IMAGE}")"
 BODY='{"latex":"\\documentclass{article}\\begin{document}Hello $x^2$\\end{document}"}'
 : > "${OUT}/rest.out"; echo 1 > "${OUT}/rest.rc"
-# Up to ~20 attempts: the service's workers start asynchronously and the first
-# request can be slow (measured locally under load: >5 s), so each attempt
-# waits up to 20 s for the response.
-for _ in $(seq 1 20); do
-  if docker exec -e BODY="${BODY}" "${CID}" bash -c '
-      exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1
-      printf "POST /tokenize HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s" "${#BODY}" "${BODY}" >&3
-      timeout 20 head -c 65536 <&3' > "${OUT}/rest.out" 2>&1 \
-     && grep -q "^HTTP/1\.[01] 200" "${OUT}/rest.out"; then
-    echo 0 > "${OUT}/rest.rc"; break
-  fi
+for _ in $(seq 1 30); do
+  docker logs "${CID}" 2>&1 | grep -q 'REST API Server listening' && break
   sleep 2
 done
+post() {
+  docker exec -e BODY="${BODY}" "${CID}" bash -c '
+      exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1
+      printf "POST /tokenize HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s" "${#BODY}" "${BODY}" >&3
+      IFS= read -r -t 20 line <&3 && printf "%s\n" "${line%$(printf "\r")}"' 2>&1
+}
+up=0
+for _ in $(seq 1 20); do
+  if post | tee -a "${OUT}/rest.out" | grep -q '^HTTP/1\.[01] 200'; then up=1; break; fi
+  sleep 2
+done
+ok=0
+if [ "${up}" -eq 1 ]; then
+  for _ in 1 2 3 4 5; do
+    post | tee -a "${OUT}/rest.out" | grep -q '^HTTP/1\.[01] 200' && ok=$((ok + 1))
+  done
+fi
+echo "rest: up=${up}, ${ok}/5 consecutive requests answered 200" >> "${OUT}/rest.out"
+[ "${up}" -eq 1 ] && [ "${ok}" -eq 5 ] && echo 0 > "${OUT}/rest.rc"
 docker logs "${CID}" >> "${OUT}/rest.out" 2>&1
 docker rm -f "${CID}" > /dev/null 2>&1
 rc_is rest 0 && has rest '^HTTP/1\.[01] 200' \

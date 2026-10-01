@@ -109,7 +109,9 @@ CLI's strict-tier predicate is a stub (`in_strict_m0 … = false` in
   copied `specs/rules/rule_contracts.json`, and nothing ran the image before it was
   pushed. The image now ships every runtime data file (rule contracts, rule
   catalogue, remediation table, macro catalogues), the default entrypoint starts
-  `main_service` before the REST server (which refuses to start alone), and
+  `main_service` before the REST server (which refuses to start alone) with a
+  ONE-worker pool — ⚠ inside a container a two-worker pool left 2 of 6 requests
+  unanswered (measured; cause not yet diagnosed) — and
   `docker-push.yml` runs `scripts/tools/docker_smoke.sh` on the built image and
   pushes only the smoked bytes. ⚠ **Do not use the v27.1.63 image.**
 - **fix (#628)**: `generated/project_facts.json` said `release_state: rc`

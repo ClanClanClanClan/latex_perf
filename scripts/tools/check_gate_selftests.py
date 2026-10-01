@@ -2719,6 +2719,9 @@ def check_spec_drift_coverage() -> list[str]:
     pf_path = REPO / ".github/workflows/proof.yml"
     pf = pf_path.read_text() if pf_path.is_file() else ""
     invoked = set(re.findall(r"(check_[a-z_]+\.py)", sd + ci + pf))
+    # A gate need not be named check_*: gen_candidate_backlog.py --check is
+    # a spec-drift gate with kill-tests too (honesty sweep, 2026-09-30).
+    invoked |= set(re.findall(r"scripts/tools/([a-z_0-9]+\.py)", sd + ci + pf))
     # The script is the first cmd element ending in .py, NOT cmd[-1]: gates that
     # need arguments (check_repo_facts --facts ..., check_regression_gates
     # --skip-mutation) put flags after it, and keying on the last element then

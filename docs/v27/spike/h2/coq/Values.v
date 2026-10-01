@@ -159,10 +159,32 @@ Record io : Type := mkio {
   io_files : list (Z * list Z);          (* open input files: handle, remaining bytes *)
   io_next_handle : Z;
   io_fs : list (list Z * list Z);        (* the file-system snapshot: name, contents *)
-  io_env : list (list Z * Z);            (* texmf.cnf integer variables (kpathsea) *)
+  io_env : list (list Z * list Z);       (* the process environment, as getenv(3) sees it:
+                                            name, value bytes (no parsing here; Boundary.v
+                                            applies C's own parsing: STREQ, strtoull, atoi) *)
+  io_kpse : list (list Z * list Z);      (* what kpse_var_value(name) returns in the pinned
+                                            image for this run's environment (kpathsea looks at
+                                            the environment first, then texmf.cnf, then expands
+                                            the value): name, value bytes; absent = NULL *)
+  io_clock : list (Z * Z);               (* the gettimeofday(2) readings not yet consumed, in
+                                            call order: (tv_sec, tv_usec). The real clock is a
+                                            nondeterministic input, so it is an explicit part of
+                                            the run's identity; none left = Stuck *)
   io_cstate : list (Z * Z)               (* C-internal variables of the boundary, by number:
                                             one-shot flags and the like (Boundary.v names them) *)
 }.
+
+(* functional updates of one field of io (positional mkio calls are error-prone) *)
+Definition io_set_out (x : io) (o : list (Z * list Z)) : io :=
+  mkio o (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_clock x) (io_cstate x).
+Definition io_set_stdin (x : io) (b : list Z) : io :=
+  mkio (io_out x) b (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_clock x) (io_cstate x).
+Definition io_set_files (x : io) (fs : list (Z * list Z)) (nh : Z) : io :=
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) fs nh (io_fs x) (io_env x) (io_kpse x) (io_clock x) (io_cstate x).
+Definition io_set_clock (x : io) (c : list (Z * Z)) : io :=
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) c (io_cstate x).
+Definition io_set_cstate (x : io) (c : list (Z * Z)) : io :=
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_clock x) c.
 
 Record state : Type := mkst {
   heap : array block; hp : Z; fp : Z; fsp : Z; st_io : io }.
@@ -192,7 +214,22 @@ Definition store_conv (char_signed : bool) (c : ct) (v : val) : conv_res :=
       else COk (KInt (Z.modulo z 256))
   | CF64, VF f => COk (KDbl f)
   | CF64, VI _ z => match float_of_int z with Some f => COk (KDbl f) | None => CStuck (StConv "int to double") end
-  | (CU8 | CU16 | CS8 | CS16 | CI32 | CI64 | CC8), VF _ => CStuck (StConv "double to integer")
+  (* C11 6.3.1.4: a double converted to an integer type is truncated toward zero; the
+     behaviour is undefined when the truncated value is outside the type's range (and for
+     NaN and infinities): Stuck. Plain char takes the architecture's range. *)
+  | (CU8 | CU16 | CS8 | CS16 | CI32 | CI64 | CC8), VF f =>
+    match float_trunc f with
+    | None => CStuck (StConv "double to integer of NaN or inf")
+    | Some z =>
+      let ok := match c with
+                | CU8 => in_range 0 255 z | CU16 => in_range 0 65535 z
+                | CS8 => in_range (-128) 127 z | CS16 => in_range (-32768) 32767 z
+                | CI32 => in_i32 z | CI64 => in_i64 z
+                | _ => if char_signed then in_range (-128) 127 z else in_range 0 255 z end in
+      (* plain char cells keep the byte (as the CC8 integer case above does) *)
+      if ok then COk (KInt (match c with CC8 => Z.modulo z 256 | _ => z end))
+      else CStuck (StConv "double to integer out of range")
+    end
   | CPTR, VP b o => COk (KPtr b o)
   | CPTR, VN => COk KNull
   | CFILE, VFile h => COk (KFile h)

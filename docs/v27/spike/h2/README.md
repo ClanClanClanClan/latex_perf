@@ -23,10 +23,13 @@ extraction is intractable (> 2 h compile or > 16 GB)".
 | `coq/Values.v` | cells, values, the chunked heap, C's conversions, IEEE-754 bit patterns, integer arithmetic with Stuck on undefined behaviour |
 | `coq/Interp.v` | `PS`: the fuelled big-step interpreter (gotos by continuation, web2c's `for`, C's `switch`, calls with frames) |
 | `coq/Boundary.v` | the C-boundary model: each modelled external with the C function it follows; everything else Stuck |
-| `coq/Main.v`, `coq/Extract.v`, `coq/driver.ml` | initial state (C static storage + C main's writes), extraction to OCaml, the command-line driver |
-| `pipeline.sh`, `relink.sh` | translate, compile every Coq file under `/usr/bin/time -l`, extract, compile OCaml incrementally, link `ps.exe` |
+| `coq/Main.v`, `coq/Extract.v`, `coq/driver.ml` | initial state (C static storage + C main's writes), extraction to OCaml (with the `PArray` realizers stated in `Extract.v`: no patch of the extracted code), the driver (`ps.exe FUEL SPEC STDIN`: SPEC is the run's identity, see `driver.ml`) |
+| `pipeline.sh`, `relink.sh` | translate, compile every Coq file, extract, compile OCaml incrementally, link `ps.exe`; every stage under `/usr/bin/time -l` into `measure.tsv` (wall, user, peak memory, load), then `provenance.json` |
+| `provenance.py` | `write` the build's provenance (sha256 of inputs, committed sources, generated and extracted files, `ps.exe`), `summary` of `measure.tsv`, `record` both into `evidence/build/` |
 | `coq/build.sh` | checkpoint 1's syntax-only build |
-| `evidence/` | `manifest.json` (the translation's counts), `cmain/` (the gdb measurement), `inirun/` (the model's and the binary's INITEX outputs); `verify_h2.py` re-checks them |
+| `diff/` | the differential, model against pinned binary, on 178 inputs: [`diff/README.md`](diff/README.md) |
+| `evidence/` | `build/` (the measured build: `provenance.json`, `measure.tsv`), `manifest.json` (the translation's counts), `cmain/` (the gdb measurement), `inirun/` (the INITEX run: the model's and the binary's outputs in both configurations, the real-clock control, `run.json` with every sha256) |
+| `verify_h2.py` | pure mode: the committed evidence is consistent with itself, with the committed sources (by hash) and with the report; `--reproduce translate` and `--reproduce model` re-run them |
 
 Inputs: `Work/texk/web2c/pdftex.p` (tangle's output, identical in the aarch64 and x86_64 build
 trees, sha256 `d1a7d257…`) and the four `.defines` files web2c's `convert` prepends
@@ -38,8 +41,9 @@ copies). Build and run (writes only under `~/.cache/lp-spike-h1/h2/`):
 
 ```sh
 ./pipeline.sh            # translate, Coq, extract, OCaml -> ~/.cache/lp-spike-h1/h2/run/build/ps.exe
-cd ~/.cache/lp-spike-h1/h2/run/build
-PS_DUMPDIR=dump PS_PROCNAMES=../procnames.txt ./ps.exe 4000000000 <path to evidence/inirun/env.txt> '\relax'
+python3 provenance.py record --out ~/.cache/lp-spike-h1/h2/run      # when it backs a reported number
+PS_DUMPDIR=DIR ~/.cache/lp-spike-h1/h2/run/build/ps.exe 4000000000 evidence/inirun/model-arm64.spec evidence/inirun/stdin
+python3 verify_h2.py && python3 verify_h2.py --reproduce translate && python3 verify_h2.py --reproduce model --ps ~/.cache/lp-spike-h1/h2/run/build/ps.exe
 ```
 
 The C main measurement (`evidence/cmain/`) was taken with `dump.py`/`dump2.py` under gdb, in a

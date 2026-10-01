@@ -2,7 +2,20 @@
    Big_int_Z, nat (fuel) to OCaml int, and the primitive ints, floats and persistent
    arrays to coq-core's kernel implementations (the same code Coq's own kernel runs). *)
 From Coq Require Import ExtrOcamlBasic ExtrOcamlZBigInt ExtrOcamlNatInt ExtrOCamlInt63
-                        ExtrOCamlFloats ExtrOCamlPArray ExtrOcamlString.
+                        ExtrOCamlFloats ExtrOcamlString.
+From Coq Require Import PArray.
+(* Coq 8.18's ExtrOCamlPArray, minus its `Extraction Inline PArray.array`: with that
+   inline, extraction prints a nested array type as `cell 'a Parray.t 'a Parray.t`, which
+   OCaml rejects (H.2 checkpoint 2 repaired it with a textual sed patch of the extracted
+   code). Without the inline the type is `cell array array`, with PArray's extracted module
+   defining `type 'a array = 'a Parray.t`: the same realizers, and no patch. *)
+Extract Constant PArray.array "'a" => "'a Parray.t".
+Extract Constant PArray.make => "Parray.make".
+Extract Constant PArray.get => "Parray.get".
+Extract Constant PArray.default => "Parray.default".
+Extract Constant PArray.set => "Parray.set".
+Extract Constant PArray.length => "Parray.length".
+Extract Constant PArray.copy => "Parray.copy".
 From PS Require Import Syntax Values Interp Boundary Main.
 Set Extraction Output Directory ".".
 (* the kernel's own OCaml modules must not be shadowed by extracted Coq modules of the

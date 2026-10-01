@@ -1,0 +1,30 @@
+warning: Error disabling address space randomization: Operation not permitted
+
+Program stopped.
+0x0000f8fd8866a1c0 in ?? () from /lib/ld-linux-aarch64.so.1
+Breakpoint 1 at 0xb8427f13bfb8: file ../../../texk/web2c/pdftexdir/mapfile.c, line 487.
+Breakpoint 2 at 0xb8427f13c098: file ../../../texk/web2c/pdftexdir/mapfile.c, line 487.
+Breakpoint 3 at 0xb8427f0ca000: file pdftex0.c, line 1365.
+Breakpoint 4 at 0xb8427f0ca034: file pdftex0.c, line 1370.
+Breakpoint 5 at 0xb8427f122190: file pdftex0.c, line 18140.
+Breakpoint 6 at 0xb8427f121550: file pdftex0.c, line 18511.
+Breakpoint 7 at 0xb8427f1054cc: file pdftex0.c, line 23709.
+Breakpoint 8 at 0xb8427f125c08: file pdftex0.c, line 24311.
+Breakpoint 9 at 0xb8427f124f90: file pdftex0.c, line 24739.
+Breakpoint 10 at 0xb8427f13ebf4: file ../../../texk/web2c/pdftexdir/utils.c, line 1496.
+Breakpoint 11 at 0xb8427f13ec20: file ../../../texk/web2c/pdftexdir/utils.c, line 1496.
+Breakpoint 12 at 0xb8427f13ec08: file ../../../texk/web2c/pdftexdir/utils.c, line 1497.
+Breakpoint 13 at 0xb8427f13ec34: file ../../../texk/web2c/pdftexdir/utils.c, line 1497.
+Breakpoint 14 at 0xb8427f13ec44: file ../../../texk/web2c/pdftexdir/utils.c, line 1497.
+Breakpoint 15 at 0xb8427f140024: file ../../../texk/web2c/pdftexdir/utils.c, line 405.
+Breakpoint 16 at 0xb8427f140040: file ../../../texk/web2c/pdftexdir/utils.c, line 405.
+Breakpoint 17 at 0xb8427f147528: file ../../../texk/web2c/pdftexdir/writejpg.c, line 218.
+Breakpoint 18 at 0xb8427f1475c4: file ../../../texk/web2c/pdftexdir/writejpg.c, line 222.
+Breakpoint 19 at 0xb8427f147660: file ../../../texk/web2c/pdftexdir/writejpg.c, line 236.
+Breakpoint 20 at 0xb8427f147664: file ../../../texk/web2c/pdftexdir/writejpg.c, line 237.
+TRACE installed 20 breakpoints for arm64
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/aarch64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 156) exited with code 01]
+The program is not being run.
+TRACE wrote /w/res/nh-intmin.json

@@ -104,8 +104,7 @@ Fixpoint out_append (h : Z) (bytes : list Z) (outs : list (Z * list Z)) : list (
 
 Definition emit (h : Z) (bytes : list Z) (st : state) : state :=
   let x := st_io st in
-  set_io st (mkio (out_append h bytes (io_out x)) (io_stdin x) (io_argv x) (io_char_signed x)
-                  (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_cstate x)).
+  set_io st (io_set_out x (out_append h bytes (io_out x))).
 
 Fixpoint digits_rev (fuel : nat) (n : Z) : list Z :=
   match fuel with

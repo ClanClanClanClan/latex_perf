@@ -8,7 +8,14 @@ plain \\xleaders then diverges (rc 0 / SIGFPE). A hand argument is therefore no
 longer a verdict. The table below still records it, as the ARGUED column; the
 VERDICT is computed from evidence only:
   DIVERGES     a committed probe's recorded outcomes differ between the two
-               architectures (verify_h1.py re-checks the recorded outputs)
+               architectures (verify_h1.py re-checks the recorded outputs) AND
+               (review round 4, MEDIUM-2) the gdb trace shows that probe
+               executing the site's own instructions WITH AN EDGE OPERAND on
+               every architecture on which the site has instructions; both
+               architectures were traced (reach_trace/: aarch64 native gdb,
+               x86_64 through qemu-user's gdbstub). The probe-to-site link was a
+               hand attribution until round 4; a candidate the trace does not
+               confirm is not DIVERGES, its row says why (TRACE: ...)
   NOT-REACHED  every function holding the site's instructions is unreferenced
                in both builds (reach.py, a machine check; output reach.out)
   PS-STUCK     scope TRANSLATED (pdftex0.c/pdftexini.c: web2c's C for the
@@ -165,12 +172,41 @@ s('writettf.c:484', F, 'OUTPUT-ONLY', 'TrueType ItalicAngle into the font descri
 # ---------------- libraries, grouped
 LIBPNG = ('OPEN', 'libpng: pixel, gamma and text-chunk arithmetic. pdfTeX reads the header with png_read_info (dimensions and resolution are computed by pdfTeX itself, writepng.c) and the pixels at shipout; these sites are on the pixel/gamma path (PDF bytes) or error paths (rc if one traps). Not traced one by one')
 XPDF = ('OPEN', 'xpdf (C++, no line table): pdfTeX uses it to parse and copy included PDFs. A trap in parsing reaches rc; values reach TeX state only through the page box, rotation and page count (bp2int clamps the box, see zround.c). Not traced one by one')
+# DIVERGES needs the trace (reach_trace/reach_trace.tsv, built from the raw gdb
+# output by reach_trace/build_trace.py): the attributed probe executes one of the
+# site's instructions with an edge operand, on each architecture that has any
+TRACE = {}
+for r in csv.DictReader(open('reach_trace/reach_trace.tsv'), delimiter='\t'):
+    TRACE[(r['doc'], r['class'], r['site'], r['arch'])] = r
+SITE_ARCHS = collections.defaultdict(set)
+for r in csv.DictReader(open('reach_trace/site_addrs.tsv'), delimiter='\t'):
+    SITE_ARCHS[(r['class'], r['site'])].add(r['arch'])
+assert {a for k in TRACE for a in [k[3]]} == {'arm64', 'amd64'}, 'the trace must cover both architectures'
+
+
+def trace_note(probe, k):
+    """'' if the trace confirms probe -> site, else why not."""
+    why = []
+    for arch in sorted(SITE_ARCHS[k]):
+        t = TRACE.get((probe, k[0], k[1], arch))
+        if t is None:
+            why.append(f'{probe} was not traced on {arch}')
+        elif int(t['edge_hits']) == 0:
+            hits = sum(map(int, t['hits'].split(',')))
+            why.append(f'{probe} executes this site on {arch} {hits} time(s), never with an edge operand'
+                       if hits else f'{probe} never executes this site on {arch} (instructions {t["addrs"]})')
+    if not SITE_ARCHS[k]:
+        why.append('the site has no instructions in the trace')
+    return '; '.join(why)
+
+
 # NOT-REACHED needs reach.py's machine check (reach.out): UNREFERENCED in both builds
 UNREF = collections.defaultdict(set)
-for ln in open('reach.out'):
+for ln in open('reach.out'):   # reach.py's literal output: <dis> <function> <verdict> ...
     f = ln.split()
-    if f[3] == 'UNREFERENCED':
-        UNREF[f[2]].add(f[1])
+    assert f[0] in ('arm64.dis', 'amd64.dis'), ln
+    if f[2] == 'UNREFERENCED':
+        UNREF[f[1]].add(f[0][:-len('.dis')])
 rows = list(csv.DictReader(open('census_sites.tsv'), delimiter='\t'))
 with open('classification.tsv', 'w') as o:
     o.write('class\tgroup\tsite\tscope\tverdict\tprobe\targued\treason\n')
@@ -188,7 +224,11 @@ with open('classification.tsv', 'w') as o:
         scope = 'TRANSLATED' if r['site'].split(':')[0] in ('pdftex0.c', 'pdftexini.c') else 'BOUNDARY'
         probe = PROBES.get(k, '')
         fns = r['functions'].split(',')
-        if v[0] == 'DIVERGES':
+        note = trace_note(probe, k) if v[0] == 'DIVERGES' else ''
+        if note:
+            v = (v[0], f'{v[1]}. TRACE (review round 4): probe {probe} is NOT confirmed at this site: {note}')
+            probe = ''
+        if v[0] == 'DIVERGES' and not note:
             verdict = 'DIVERGES'
         elif v[0] == 'NOT-REACHED' and all(UNREF[fn] == {'arm64', 'amd64'} for fn in fns):
             verdict = 'NOT-REACHED'

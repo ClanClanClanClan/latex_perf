@@ -1,0 +1,2 @@
+\catcode`\{=1 \catcode`\}=2 \catcode`\#=6 \catcode`\^=7 \catcode`\$=3 \catcode`\&=4 \def\d#1{\expandafter\def\csname c#1\endcsname{#1}}\count1=0 \def\l{\ifnum\count1<3000 \advance\count1 1 \d{\the\count1}\expandafter\l\fi}\l \message{\csname c2999\endcsname}
+\end

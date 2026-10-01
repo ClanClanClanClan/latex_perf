@@ -1,0 +1,30 @@
+--- file handle 3 = texput.log
+--- stdin bytes not read: 0
+--- clock readings used: 1 of 8
+--- handle 1 (190 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)
+ restricted \write18 enabled.
+**
+*
+! Emergency stop.
+<*> 
+    
+No pages of output.
+Transcript written on texput.log.
+
+--- handle 3 (238 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)  30 AUG 2026 07:51
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**\relax
+
+*
+! Emergency stop.
+<*> 
+    
+End of file on the terminal!
+
+No pages of output.
+
+RESULT: exit 1
+TIME: 61.31 s

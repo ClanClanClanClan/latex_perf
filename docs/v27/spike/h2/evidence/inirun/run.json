@@ -1,0 +1,52 @@
+{
+ "clockshim_sha256": {
+  "amd64": "360d4706f7c89e81faac0037f27305b6847353377311eb38bafe98cb2ce61d97",
+  "arm64": "981f50cbef2266bfece65536284a487a193302a16824eb7328722be8de823358"
+ },
+ "configs": {
+  "amd64": {
+   "binary": "amd64 under qemu-user on an arm64 host",
+   "charsigned": 1,
+   "load1": 252.5390625,
+   "model_wall_s": 61.62
+  },
+  "arm64": {
+   "binary": "native arm64",
+   "charsigned": 0,
+   "load1": 484.10498046875,
+   "model_wall_s": 60.92
+  }
+ },
+ "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
+ "input": "diff/inputs/t0.tex",
+ "ps_sha256": "991ae9a56a8b72bbde0260bc8c2641dbd54198a9143f608e946212d2e7026686",
+ "sha256": {
+  "model-amd64.driver.out": "242bf72c4c0bc19c7a1096d3fe219e9af5e0e73212cb5074f4c80829b9344207",
+  "model-amd64.spec": "147e802460f11a0ffd08e8988f033c70b038f1424e08440c9067897577eed36e",
+  "model-amd64.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "model-amd64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
+  "model-amd64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",
+  "model-arm64.driver.out": "ce42970496cd01ead1fe583c9167b5dcea87c810ba3b19c46ab617e6d69fe898",
+  "model-arm64.spec": "0a4e05d4f0d28486a4cce48bc18067305cf4486bf84ac7cdbe2c20082e3ce3b2",
+  "model-arm64.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "model-arm64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
+  "model-arm64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",
+  "ref-amd64.clock.log": "0ae774defb67e2f11bcc6015661aba355ed4c7e5aca453373a4ef819685e2c3c",
+  "ref-amd64.rc": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "ref-amd64.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "ref-amd64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
+  "ref-amd64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",
+  "ref-arm64.clock.log": "0ae774defb67e2f11bcc6015661aba355ed4c7e5aca453373a4ef819685e2c3c",
+  "ref-arm64.rc": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "ref-arm64.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "ref-arm64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
+  "ref-arm64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",
+  "ref-realclock-amd64.rc": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "ref-realclock-amd64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
+  "ref-realclock-amd64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",
+  "ref-realclock-arm64.rc": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "ref-realclock-arm64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
+  "ref-realclock-arm64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",
+  "stdin": "136308bbaa927354a712c465a6de891f0fa5665888afc27cc62d354b2213fc9b"
+ }
+}

@@ -1,5 +1,6 @@
 --- file handle 3 = texput.log
 --- stdin bytes not read: 0
+--- clock readings used: 1 of 8
 --- handle 1 (190 bytes)
 This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)
  restricted \write18 enabled.
@@ -26,4 +27,4 @@ End of file on the terminal!
 No pages of output.
 
 RESULT: exit 1
-TIME: 45.07 s
+TIME: 60.76 s

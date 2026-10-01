@@ -908,7 +908,7 @@
  ],
  "strings": 101,
  "types_as_args": [],
- "ir_nodes": 185084,
+ "ir_nodes": 185086,
  "proc_names": [
   "initialize",
   "println",

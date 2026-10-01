@@ -171,8 +171,8 @@ What this decides, and what it does not:
   - On the corpus (200 real papers, 489 evidence documents, 40 traced documents) no difference was
     observed.
   So `FaithfulEngine` is per architecture in substance, not as a formality: the proven tier's
-  verdict for a document is a verdict *for one architecture*. **Proposed for H.2, pending the
-  owner's decision** (report §5.4; review round 3 found round 2 had written it here as settled):
+  verdict for a document is a verdict *for one architecture*. **Proposed for H.2, then pending the
+  owner's decision, and accepted by the owner on 2026-09-30** (report §5.4; review round 3 found round 2 had written it here as settled):
   the undefined-behaviour members (division by zero or INT_MIN/−1, out-of-range conversion,
   signed overflow) are **Stuck** in `PS`, which is Pascal's own reading and needs no
   per-architecture model; the implementation-defined ones (`char` signedness, contraction) are
@@ -181,25 +181,31 @@ What this decides, and what it does not:
   glue whose width plus 10 sp overflows, and an image whose size overflows are outside the tier on
   both architectures. The rule covers **only the translated program**: `PS` is the semantics of
   the tangled Pascal, and the C boundary stays hand-modelled. Of the 316 division and conversion
-  sites, 18 diverge (reproduced; review round 3 added plain `\xleaders`, rc 0 / SIGFPE, at four
-  sites round 2 had called safe by a false bound, C-106), 4 are machine-checked unreachable, 76
-  are translated sites the rule would cover, and 218 are boundary sites with no evidence either
-  way. H.2's C-boundary work list: the 227 boundary sites not shown unreachable, and the 649
+  sites, 15 diverge (reproduced; review round 3 added plain `\xleaders`, rc 0 / SIGFPE, at four
+  sites round 2 had called safe by a false bound, C-106; review round 4 traced every probe under
+  gdb on both architectures and refuted 3 of the 18 hand attributions), 4 are machine-checked
+  unreachable, 77 are translated sites the rule covers, and 220 are boundary sites with no
+  evidence either way. H.2's C-boundary work list: the 227 boundary sites not shown unreachable, and the 649
   boundary functions whose code changes under `-fwrapv` (463) or `-fsigned-char` (314),
   including `input_line`, `read_jpg_info` and `fm_scan_line`. All x86_64 runs were emulated.
 - **All amd64 evidence is emulated** (qemu-user on an arm64 host): the rebuild, the behaviour runs
   and the format run. A confirmation on a native amd64 host, the CI runner of `tex-oracle.yml`, is
   open (OPEN-123).
 
-## H.2 result (2026-09-30, full numbers in `docs/v27/spike/H2-report.md`)
+## H.2 result (2026-09-30; review round 1 closed 2026-10-01; full numbers in `docs/v27/spike/H2-report.md`)
 
 - **Pass criterion met; the kill criterion did not fire [M].** 603 of 603 procedures of the tangled
   `pdftex.p` are translated into a Coq deep embedding; Coq accepts the program with its semantics
-  `PS` (a fuelled interpreter) in 257 s at 586 MB peak; extraction and OCaml compilation stay under
-  0.6 GB per module; the extracted program runs INITEX through the `*` prompt, and on that run its
-  terminal output, log file and exit status are byte-identical to the pinned binary's on both
-  architectures.
-- `PS` implements the proposed Stuck rule (still the owner's decision, H.1 report §8).
+  `PS` (a fuelled interpreter) and extracts it to OCaml in minutes, under 0.6 GB per file (the
+  committed measurement is `docs/v27/spike/h2/evidence/build/measure.tsv`); the extracted program
+  runs INITEX through the `*` prompt, and on that run its terminal output, log file and exit status
+  are byte-identical to the pinned binary's, in the x86_64 `char` configuration against the amd64
+  binary under qemu emulation and in a hybrid aarch64 configuration (aarch64's `char`, unfused
+  floating point) against the arm64 binary.
+- `PS` implements the Stuck rule, accepted by the owner on 2026-09-30, with one exception that
+  follows the binary: the 13 pointer-arithmetic sites that form a pointer before an array's start.
 - The C boundary is the open part, as this ADR expected: 23 of the program's 189 externals are
-  modelled; the others are Stuck. The model is about 200 times slower than pdfTeX on this run,
-  which H.5 measures against its > 200× kill line.
+  modelled; the others are Stuck. Review round 1 found the clock modelled by a fixed value the real
+  `gettimeofday` never returns (C-107); every external's environment inputs are now explicit inputs
+  of the run's identity or Stuck. The differential of `docs/v27/spike/h2/diff/` (178 inputs, both
+  configurations) is H.4's seed. Speed was not measured (H.5).

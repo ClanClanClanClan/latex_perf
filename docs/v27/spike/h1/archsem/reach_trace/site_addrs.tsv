@@ -1,0 +1,40 @@
+class	site	arch	function	addr	offset	insn
+F2I	mapfile.c:487	amd64	fm_scan_line	0x47f755	0x795	cvttsd2si %xmm1,%eax
+F2I	mapfile.c:487	amd64	fm_scan_line	0x47f828	0x868	cvttsd2si %xmm1,%eax
+F2I	mapfile.c:487	arm64	fm_scan_line	0xebfb8	0x868	fcvtzs w0, d0
+F2I	mapfile.c:487	arm64	fm_scan_line	0xec098	0x948	fcvtzs w0, d0
+DIV	pdftex0.c:1363	amd64	zxovern.part.0	0x41ce12	0x12	idiv %esi
+DIV	pdftex0.c:1365	arm64	zxovern.part.0	0x7a000	0x10	sdiv w0, w2, w1
+DIV	pdftex0.c:1370	arm64	zxovern.part.0	0x7a034	0x44	udiv w0, w2, w1
+DIV	pdftex0.c:1371	amd64	zxovern.part.0	0x41ce20	0x20	idiv %esi
+DIV	pdftex0.c:18140	amd64	hlistout	0x469f26	0xaa6	idiv %r9d
+DIV	pdftex0.c:18140	arm64	hlistout	0xd2190	0xa40	udiv w2, w1, w11
+DIV	pdftex0.c:18511	amd64	vlistout	0x469263	0x613	idiv %r9d
+DIV	pdftex0.c:18511	arm64	vlistout	0xd1550	0x71c	udiv w2, w12, w13
+DIV	pdftex0.c:23709	amd64	zgapamount	0x450430	0x60	idiv %ecx
+DIV	pdftex0.c:23709	arm64	zgapamount	0xb54cc	0x7c	sdiv w3, w3, w2
+DIV	pdftex0.c:24311	amd64	pdfhlistout	0x46cdc2	0x462	idiv %r8d
+DIV	pdftex0.c:24311	arm64	pdfhlistout	0xd5c08	0x838	udiv w3, w2, w23
+DIV	pdftex0.c:24739	amd64	pdfvlistout	0x46c3d5	0x4d5	idiv %r9d
+DIV	pdftex0.c:24739	arm64	pdfvlistout	0xd4f90	0x590	udiv w2, w3, w25
+F2I	utils.c:1496	amd64	do_matrixtransform	0x48230c	0x7c	cvttsd2si %xmm1,%eax
+F2I	utils.c:1496	amd64	do_matrixtransform	0x482328	0x98	cvttsd2si %xmm1,%eax
+F2I	utils.c:1496	arm64	do_matrixtransform	0xeebf4	0x64	fcvtzs w0, d1
+F2I	utils.c:1496	arm64	do_matrixtransform	0xeec20	0x90	fcvtzs w0, d1
+F2I	utils.c:1497	amd64	do_matrixtransform	0x482318	0x88	cvttsd2si %xmm0,%eax
+F2I	utils.c:1497	amd64	do_matrixtransform	0x482334	0xa4	cvttsd2si %xmm0,%eax
+F2I	utils.c:1497	arm64	do_matrixtransform	0xeec08	0x78	fcvtzs w0, d0
+F2I	utils.c:1497	arm64	do_matrixtransform	0xeec34	0xa4	fcvtzs w0, d0
+F2I	utils.c:1497	arm64	do_matrixtransform	0xeec44	0xb4	fcvtzs w0, d0
+F2I	utils.c:405	amd64	extxnoverd	0x48340a	0x6a	cvttsd2si %xmm0,%eax
+F2I	utils.c:405	amd64	extxnoverd	0x483410	0x70	cvttsd2si %xmm0,%eax
+F2I	utils.c:406	arm64	extxnoverd	0xf0024	0x60	fcvtzs w0, d8
+F2I	utils.c:406	arm64	extxnoverd	0xf0040	0x7c	fcvtzs w0, d8
+DIV	writejpg.c:218	amd64	read_jpg_info	0x48a71d	0x88d	idiv %r11d
+DIV	writejpg.c:218	arm64	read_jpg_info	0xf7528	0x894	sdiv w0, w14, w13
+DIV	writejpg.c:222	amd64	read_jpg_info	0x48a756	0x8c6	idiv %r11d
+DIV	writejpg.c:222	arm64	read_jpg_info	0xf75c4	0x930	sdiv w0, w14, w13
+F2I	writejpg.c:236	amd64	read_jpg_info	0x48a633	0x7a3	cvttsd2si %xmm2,%ebp
+F2I	writejpg.c:236	arm64	read_jpg_info	0xf7660	0x9cc	fcvtzs w24, d2
+F2I	writejpg.c:237	amd64	read_jpg_info	0x48a637	0x7a7	cvttsd2si %xmm0,%r12d
+F2I	writejpg.c:237	arm64	read_jpg_info	0xf7664	0x9d0	fcvtzs w21, d0

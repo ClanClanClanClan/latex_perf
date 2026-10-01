@@ -5,8 +5,18 @@ unreferenced in a build iff (1) no instruction outside its own body names it
 address computations) and (2) no aarch64 adrp+add pair computes its entry address, and (3) its entry address does not occur as an 8-byte
 little-endian word anywhere in the ELF file (a function pointer in data, or the
 addend of a PIE RELATIVE relocation, over-approximated: any matching word counts).
-Usage: reach.py <objdump -d output> <unstripped ELF> <function>...
-Prints one line per function: <build> <function> UNREFERENCED|REFERENCED <why>."""
+Usage: reach.py <dis> <elf> <function>...
+  <dis>  `objdump -d -l --no-show-raw-insn` of the UNSTRIPPED reference build
+         (it carries the symbols: ~/.cache/lp-spike-h1/archsem/arm64.dis and
+         amd64.dis, made by archsem/dis.sh in recipes.md);
+  <elf>  the file searched for 8-byte data words in (3): the STRIPPED pinned
+         binary from the release tarball, ~/.cache/lp-spike-h1/rel/aarch64-linux/pdftex
+         (sha256 cee621bf...) or rel/x86_64-linux/pdftex (1c5ff711...). Strip removes
+         only symbol and debug sections, so its loaded bytes are the reference
+         build's and the data words are the same.
+Prints one line per function: <dis> <function> UNREFERENCED|REFERENCED|ABSENT <why>,
+where <dis> is the first argument as given (reach.out: arm64.dis / amd64.dis,
+the run of recipes.md, concatenated arm64 first)."""
 import re, sys, struct
 dis, elf, names = sys.argv[1], sys.argv[2], sys.argv[3:]
 FN = re.compile(r'^([0-9a-f]+) <(.+)>:$')
@@ -34,7 +44,7 @@ for line in open(dis, errors='replace'):
 blob = open(elf, 'rb').read()
 for n in names:
     if n not in addr:
-        print(sys.argv[1], n, 'ABSENT', 'no symbol of that name in this build'); continue
+        print(dis, n, 'ABSENT', 'no symbol of that name in this build'); continue
     refs[n] += [f'{c}: {l}' for a, c, l in sums if a == addr[n] and c != n]
     word = struct.pack('<Q', addr[n])
     hits = blob.count(word)

@@ -1,0 +1,24 @@
+0x000000400081ed80 in ?? ()
+Breakpoint 1 at 0x47f755: file ../../../texk/web2c/pdftexdir/mapfile.c, line 487.
+Breakpoint 2 at 0x47f828: file ../../../texk/web2c/pdftexdir/mapfile.c, line 487.
+Breakpoint 3 at 0x41ce12: file pdftex0.c, line 1363.
+Breakpoint 4 at 0x41ce20: file pdftex0.c, line 1371.
+Breakpoint 5 at 0x469f26: file pdftex0.c, line 18140.
+Breakpoint 6 at 0x469263: file pdftex0.c, line 18511.
+Breakpoint 7 at 0x450430: file pdftex0.c, line 23709.
+Breakpoint 8 at 0x46cdc2: file pdftex0.c, line 24311.
+Breakpoint 9 at 0x46c3d5: file pdftex0.c, line 24739.
+Breakpoint 10 at 0x48230c: file ../../../texk/web2c/pdftexdir/utils.c, line 1496.
+Breakpoint 11 at 0x482328: file ../../../texk/web2c/pdftexdir/utils.c, line 1496.
+Breakpoint 12 at 0x482318: file ../../../texk/web2c/pdftexdir/utils.c, line 1497.
+Breakpoint 13 at 0x482334: file ../../../texk/web2c/pdftexdir/utils.c, line 1497.
+Breakpoint 14 at 0x48340a: file ../../../texk/web2c/pdftexdir/utils.c, line 405.
+Breakpoint 15 at 0x483410: file ../../../texk/web2c/pdftexdir/utils.c, line 405.
+Breakpoint 16 at 0x48a71d: file ../../../texk/web2c/pdftexdir/writejpg.c, line 218.
+Breakpoint 17 at 0x48a756: file ../../../texk/web2c/pdftexdir/writejpg.c, line 222.
+Breakpoint 18 at 0x48a633: file ../../../texk/web2c/pdftexdir/writejpg.c, line 236.
+Breakpoint 19 at 0x48a637: file ../../../texk/web2c/pdftexdir/writejpg.c, line 237.
+TRACE installed 19 breakpoints for amd64
+[Inferior 1 (process 1) exited normally]
+The program is not being run.
+TRACE wrote /w/res/nh-strings.json

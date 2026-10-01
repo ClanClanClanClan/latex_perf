@@ -22,7 +22,11 @@ stored in the report itself:
      architectures (any line: rc, messages, /Rect, output hashes), every
      NOT-REACHED row's functions are UNREFERENCED in both builds (reach.out),
      scopes follow from the file; and every -fwrapv/-fsigned-char total is
-     recomputed from functions.tsv.
+     recomputed from functions.tsv;
+  5. (review round 4, MEDIUM-2) every DIVERGES row's probe REACHES the site:
+     archsem/reach_trace/reach_trace.tsv (rebuilt from the raw gdb output and
+     compared) shows it executing the site's own instructions with an edge
+     operand on each architecture on which the site has instructions.
 Exit 0 when all hold, 1 otherwise, listing each failure."""
 import json
 import re
@@ -177,7 +181,9 @@ if len(sites) != 316 or "**316 sites**" not in R:
     fails.append(f"census sites {len(sites)}, report quotes 316")
 # review round 3 (C-106): a verdict is computed from evidence, never argued
 v = Counter(r["verdict"] for r in cls)
-want = {"DIVERGES": 18, "NOT-REACHED": 4, "PS-STUCK": 76, "OPEN": 218}
+# review round 4 (MEDIUM-2): the trace refuted 3 of round 3's 18 attributions
+# (pdftex0.c:1365, writejpg.c:222, writejpg.c:237), so 15, 77 and 220
+want = {"DIVERGES": 15, "NOT-REACHED": 4, "PS-STUCK": 77, "OPEN": 220}
 if dict(v) != want:
     fails.append(f"classification verdicts {dict(v)}, report quotes {want}")
 for r in cls:
@@ -193,20 +199,24 @@ for r in cls:
 sc = Counter(r["scope"] for r in cls)
 if sc != Counter({"TRANSLATED": 85, "BOUNDARY": 231}):
     fails.append(f"scopes {dict(sc)}, report quotes 85 translated, 231 boundary")
-for q in ("| **DIVERGES** | **18** (9 translated, 9 boundary) |", "| NOT-REACHED | 4 |", "| PS-STUCK | 76 |",
-          "| **OPEN** | **218** |", "the 227 boundary\n    division and conversion sites"):
+for q in ("| **DIVERGES** | **15** (8 translated, 7 boundary) |", "| NOT-REACHED | 4 |", "| PS-STUCK | 77 |",
+          "| **OPEN** | **220** |", "the 227 boundary\n    division and conversion sites", "(220 OPEN, 7 DIVERGES)",
+          "| **OPEN** | **220** | boundary, none of the above: 68 in pdfTeX's own C"):
     if q not in R:
         fails.append(f"§5.4 does not quote {q!r}")
 op = Counter(r["group"] for r in cls if r["verdict"] == "OPEN")
-if (op["xpdf"], op["libpng"], sum(op.values()) - op["xpdf"] - op["libpng"]) != (106, 46, 66):
-    fails.append(f"OPEN by group {dict(op)}, report quotes 66 other, 46 libpng, 106 xpdf")
+if (op["xpdf"], op["libpng"], sum(op.values()) - op["xpdf"] - op["libpng"]) != (106, 46, 68):
+    fails.append(f"OPEN by group {dict(op)}, report quotes 68 other, 46 libpng, 106 xpdf")
 # NOT-REACHED: every function of the site UNREFERENCED in both builds (reach.out)
 unref = {}
-for ln in (A / "reach.out").read_text().splitlines():
+for ln in (A / "reach.out").read_text().splitlines():   # reach.py's literal output: <dis> <function> <verdict> ...
     f = ln.split()
-    unref.setdefault(f[2], set())
-    if f[3] == "UNREFERENCED":
-        unref[f[2]].add(f[1])
+    if f[0] not in ("arm64.dis", "amd64.dis"):
+        fails.append(f"reach.out: line does not start with arm64.dis or amd64.dis: {ln[:60]!r}")
+        continue
+    unref.setdefault(f[1], set())
+    if f[2] == "UNREFERENCED":
+        unref[f[1]].add(f[0][:-len(".dis")])
 sites_fn = {(r["class"], r["site"]): r["functions"].split(",") for r in csv.DictReader(open(A / "census_sites.tsv"), delimiter="\t")}
 for r in cls:
     if r["verdict"] == "NOT-REACHED":
@@ -237,6 +247,47 @@ for r in cls:
         fails.append(f"{r['site']}: probe {pr} has no recorded outcome on both architectures")
     elif ba[pr] == bx[pr]:
         fails.append(f"{r['site']}: probe {pr}'s recorded outcomes are EQUAL on both architectures")
+# review round 4 (MEDIUM-2): the probe-to-site link is re-checked from the
+# committed gdb trace, not trusted from classify.py. The trace table must be
+# exactly what build_trace.py makes of the raw gdb output (which also checks
+# every breakpoint address against site_addrs.tsv and every traced rc against
+# the recorded one), and every DIVERGES row's probe must execute one of the
+# site's instructions with an edge operand on EACH architecture on which the
+# site has instructions (site_addrs.tsv, itself checked against the census)
+import subprocess
+T = A / "reach_trace"
+bt = subprocess.run([sys.executable, str(T / "build_trace.py"), "--check"], capture_output=True, text=True)
+if bt.returncode != 0:
+    fails.append(f"reach_trace/build_trace.py --check: {bt.stdout.strip().splitlines()[-1] if bt.stdout.strip() else bt.stderr.strip()[-200:]}")
+    fails.extend(f"  {ln}" for ln in bt.stdout.splitlines() if ln.startswith("FAIL"))
+sa = list(csv.DictReader(open(T / "site_addrs.tsv"), delimiter="\t"))
+site_archs = {}
+for x in sa:
+    site_archs.setdefault((x["class"], x["site"]), set()).add(x["arch"])
+cand = {(r["class"], r["site"]) for r in cls if r["argued"] == "DIVERGES"}
+if set(site_archs) != cand:
+    fails.append(f"reach_trace/site_addrs.tsv sites {sorted(set(site_archs) ^ cand)} differ from the argued-DIVERGES candidates")
+trace = {(x["doc"], x["class"], x["site"], x["arch"]): x for x in csv.DictReader(open(T / "reach_trace.tsv"), delimiter="\t")}
+if {k[3] for k in trace} != {"arm64", "amd64"}:
+    fails.append("reach_trace.tsv does not cover both architectures")
+for r in cls:
+    if r["verdict"] != "DIVERGES":
+        continue
+    k = (r["class"], r["site"])
+    if not site_archs.get(k):
+        fails.append(f"{r['site']}: DIVERGES but not a traced site (reach_trace/site_addrs.tsv)")
+    for arch in sorted(site_archs.get(k, ())):
+        t = trace.get((r["probe"], *k, arch))
+        if t is None:
+            fails.append(f"{r['site']}: probe {r['probe']} has no trace row on {arch}")
+        elif int(t["edge_hits"]) == 0:
+            fails.append(f"{r['site']}: probe {r['probe']} does not reach this site with an edge operand on {arch} "
+                         f"(hits {t['hits']} at {t['addrs']})")
+# a candidate the trace confirms and whose probe diverges must not be dropped either
+for r in cls:
+    k = (r["class"], r["site"])
+    if r["argued"] == "DIVERGES" and r["verdict"] != "DIVERGES" and "TRACE (review round 4)" not in r["reason"]:
+        fails.append(f"{r['site']}: argued DIVERGES, verdict {r['verdict']}, and no TRACE reason")
 # the leaders set (review round 3): x diverges rc 0/136; every control equal
 for d in ("hdvi", "vdvi", "hpdf", "vpdf"):
     if not (ba.get(f"lead-{d}-x", "").startswith(f"lead-{d}-x rc=0") and bx.get(f"lead-{d}-x", "").startswith(f"lead-{d}-x rc=136")):

@@ -1,0 +1,100 @@
+x86_64
+78c49dada8dba515a125aba81c685144d5d2a5c59cbd820ea50a5f0c412b63ed  /usr/local/texlive/2026/bin/ref/pdftex
+imgwide gdbrc=0
+imgwide shellrc=0
+   [WD=--32768.0pt] [HT=8.03pt] 
+jpgbig gdbrc=0
+jpgbig shellrc=0
+   too large image resolution ignored [WD=4.015pt] 
+jpgconv gdbrc=0
+jpgconv shellrc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+jpgconvneg gdbrc=0
+jpgconvneg shellrc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+jpgctrl gdbrc=0
+jpgctrl shellrc=0
+   [WD=0.9636pt] 
+jpgdiv gdbrc=0
+jpgdiv shellrc=136
+
+matnan gdbrc=0
+matnan shellrc=0
+
+nh-intmin gdbrc=0
+nh-intmin shellrc=1
+   [c1=-2147483648] [div-1=-2147483648] [divself=1] [dmul=--32768.0pt] [ddiv=0.0pt] ! Arithmetic overflow. [ne1=0] ! Arithmetic overflow. [ne2=0] ! Arithmetic overflow. [ne3=0] ! Arithmetic overflow. [ne4=0] ! Arithmetic overflow. [de1=0.0pt] ! Arithmetic overflow. [de2=0.0pt] [rom=x] [num=-2147483648]
+
+nh-strings gdbrc=0
+nh-strings shellrc=0
+
+pdfboxinf gdbrc=0
+pdfboxinf shellrc=0
+   [WD=1.00375pt] [HT=100.375pt] 
+pdfboxnan gdbrc=0
+pdfboxnan shellrc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+slantctl gdbrc=0
+slantctl shellrc=0
+
+slanthuge gdbrc=0
+slanthuge shellrc=0
+
+slantnan gdbrc=0
+slantnan shellrc=0
+
+snapy0 gdbrc=0
+snapy0 shellrc=136
+
+snapy1 gdbrc=0
+snapy1 shellrc=0
+
+lead-hdvi-a gdbrc=0
+lead-hdvi-a shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-hdvi-c gdbrc=0
+lead-hdvi-c shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-hdvi-x gdbrc=0
+lead-hdvi-x shellrc=136
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-hdvi-xctl gdbrc=0
+lead-hdvi-xctl shellrc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-hpdf-a gdbrc=0
+lead-hpdf-a shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-hpdf-c gdbrc=0
+lead-hpdf-c shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-hpdf-x gdbrc=0
+lead-hpdf-x shellrc=136
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-hpdf-xctl gdbrc=0
+lead-hpdf-xctl shellrc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lw=24383.99998pt] [w2=0.0pt] 
+lead-vdvi-a gdbrc=0
+lead-vdvi-a shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+lead-vdvi-c gdbrc=0
+lead-vdvi-c shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+lead-vdvi-x gdbrc=0
+lead-vdvi-x shellrc=136
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+lead-vdvi-xctl gdbrc=0
+lead-vdvi-xctl shellrc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lh=24383.99998pt] [h2=0.0pt] 
+lead-vpdf-a gdbrc=0
+lead-vpdf-a shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+lead-vpdf-c gdbrc=0
+lead-vpdf-c shellrc=0
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+lead-vpdf-x gdbrc=0
+lead-vpdf-x shellrc=136
+   [s0=32767.99997pt] [s1=-32767.99997pt] [lh=24383.99998pt] [h2=0.0pt] 
+lead-vpdf-xctl gdbrc=0
+lead-vpdf-xctl shellrc=0
+   [s0=16383.99998pt] [s1=-16383.99998pt] [lh=24383.99998pt] [h2=0.0pt] 
+RC=0

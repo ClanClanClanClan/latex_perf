@@ -1,6 +1,6 @@
-build arm64 gzfread UNREFERENCED entry 0x12f9d4: no text ref, no data word
-build arm64 gzfwrite UNREFERENCED entry 0x130790: no text ref, no data word
-build arm64 hash_print REFERENCED 2 text refs, 0 data words ['kpathsea_init_db: 1d6a58:\tbl\t1d89c0 <hash_print>', 'kpathsea_init_db: 1d6bf0:\tbl\t1d89c0 <hash_print>']
-build amd64 gzfread UNREFERENCED entry 0x4c4a40: no text ref, no data word
-build amd64 gzfwrite UNREFERENCED entry 0x4c56e0: no text ref, no data word
-build amd64 hash_print REFERENCED 2 text refs, 0 data words ['kpathsea_init_db: 56e045:\tcallq  56ff20 <hash_print>', 'kpathsea_init_db: 56e1a4:\tcallq  56ff20 <hash_print>']
+arm64.dis gzfread UNREFERENCED entry 0x12f9d4: no text ref, no data word
+arm64.dis gzfwrite UNREFERENCED entry 0x130790: no text ref, no data word
+arm64.dis hash_print REFERENCED 2 text refs, 0 data words ['kpathsea_init_db: 1d6a58:\tbl\t1d89c0 <hash_print>', 'kpathsea_init_db: 1d6bf0:\tbl\t1d89c0 <hash_print>']
+amd64.dis gzfread UNREFERENCED entry 0x4c4a40: no text ref, no data word
+amd64.dis gzfwrite UNREFERENCED entry 0x4c56e0: no text ref, no data word
+amd64.dis hash_print REFERENCED 2 text refs, 0 data words ['kpathsea_init_db: 56e045:\tcallq  56ff20 <hash_print>', 'kpathsea_init_db: 56e1a4:\tcallq  56ff20 <hash_print>']

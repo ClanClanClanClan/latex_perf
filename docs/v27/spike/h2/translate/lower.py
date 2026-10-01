@@ -465,7 +465,11 @@ class Lowerer:
             if t not in ("i32", "i64", "f64"):
                 raise TranslateError(f"{self.where}: unary {op} on {t}")
             if op == "neg":
-                return (("un", "neg", t, x), t)
+                # web2c-parser.y UNARY_OP: unary_minus_tok { my_output ("- (integer)"); }:
+                # the operand is cast to integer (C int) before it is negated, whatever its
+                # type: a longinteger operand is narrowed (outside int: PS Stuck, C's
+                # implementation-defined conversion), a real one truncated
+                return (("un", "neg", "i32", self.conv(x, t, "i32")), "i32")
             return (x, t)
         if k == "bin":
             op = e[1]

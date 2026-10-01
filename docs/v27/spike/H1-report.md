@@ -1,5 +1,12 @@
 # Foundation spike, step H.1: the pinned pdfTeX's source revision, reproduced
 
+> **This copy on `main`.** Copied verbatim from branch `spike/v27165-engine-translation` at
+> commit `6988d649`, which stays the home of the spike's code and evidence. Every relative `h1/…`
+> path below (and `diffs/…`, `fma/…`, `tools/…`, `adversarial/…` in §7) names a file under
+> `docs/v27/spike/h1/` on that commit, not on `main`. The only edits are that the links now point at
+> that commit, that five path spans are written `6988d649:docs/v27/spike/h1/…`, the form
+> `git show` takes, and this note.
+
 **Spike:** [ADR-015](../adr/ADR-015-static-proven-tier-on-translated-engine.md) (ledger OPEN-123),
 step H.1 of the ADR-014 draft §9.
 **Dates:** begun 2026-09-29 by a session that an API limit cut off; resumed and completed on
@@ -209,8 +216,8 @@ The **reference** binary ran with the same protocol, argv and environment
 Every pass's rc, every file it wrote (sha256 and bytes) and its terminal output were kept. The
 runner is `~/.cache/lp-spike-h1/harness/h1cmp.py`. It is not committed as code: it starts an engine
 outside `_oracle.py` for the reference binary, which `check_oracle_pin.py` forbids for tracked
-code; `h1/README.md` records its sha256. The comparator `h1diff.py`, its kill-tests and every
-comparison summary are committed under [`h1/`](h1/README.md).
+code; `6988d649:docs/v27/spike/h1/README.md` records its sha256. The comparator `h1diff.py`, its kill-tests and every
+comparison summary are committed under [`h1/`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/README.md).
 
 **How outputs were compared.** Byte comparison first. If bytes differ, masks are applied, one at
 a time and only when needed; each document records which masks it needed. The masks:
@@ -233,7 +240,7 @@ a time and only when needed; each document records which masks it needed. The ma
   with no Ghostscript intermediate, and dropped the whole xref stream and any bytes after a zlib
   end, so it absorbed a zlib-level change, an object moved into an object stream, and trailing
   bytes. Every comparison was re-run with each fix (`h1/diffs/r1/`, `h1/diffs/r2/`); no verdict
-  and no count changed. `h1/tools/h1diff_selftest.py`: 2 of the first 5 cases pass on the first
+  and no count changed. `6988d649:docs/v27/spike/h1/tools/h1diff_selftest.py`: 2 of the first 5 cases pass on the first
   version; 6 of 12 on the second; 12 of 12 now);
 - a "Segmentation fault" line printed on the terminal by a crashed helper under emulation.
 
@@ -308,7 +315,7 @@ counterexample.
 
 **Where the 524 are [M].** Each instruction was mapped to its function and source line through the
 DWARF line table of the unstripped build (§2.2; `objdump -d -l`, file
-[`h1/fma/fma_sites_aarch64.tsv`](h1/fma/fma_sites_aarch64.tsv)). 485 are in xpdf (C++, no line
+[`h1/fma/fma_sites_aarch64.tsv`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/fma/fma_sites_aarch64.tsv)). 485 are in xpdf (C++, no line
 table). The other **39** are below, every one classified. (Round 0 of this report traced only
 `make_accent` and claimed that "the same argument covers the shipout sites". That was untested,
 and it was false for `\pdfsetmatrix`: review round 1 refuted it with the document of §5.3.)
@@ -319,9 +326,9 @@ and it was false for `\pdfsetmatrix`: review round 1 refuted it with the documen
 | `hlistout` (2), `pdfhlistout` (2) | `pdftex0.c:17915`, `24020`: MLTeX character substitution in `tex.ch` (lines 5050–5059) | the same `delta`, over `base_slant` | `cur_h`: DVI/PDF positions, and `\pdflastxpos` after `\pdfsavepos` (**TeX state**) | same bound as `makeaccent` [I]. Reached only when the format was dumped with MLTeX enabled; `pdflatex.fmt` was not (`fmtutil.cnf` has no `-mltex`) [R] | **none** in the pinned configuration |
 | `zpdfsetrule` (2) | `pdftex0.c:20230`, `20255` | `y - (h+1)/2.0` (the halving compiled as `×0.5`) | PDF rule coordinates | yes, for every integer `h` | **none** |
 | `pdfsetmatrix` (8) | `utils.c:1420–1431` | `e = cur_h·(1-a) - cur_v·c`; the product with the enclosing matrix | the matrix stack, which is read only by `matrixtransformrect`/`matrixtransformpoint` for link, destination and thread rectangles (`pdftex.web` 36445–36553, 36720–36738): **PDF only** | **no**: `a, b, c, d` come from `\pdfsetmatrix`, for example `cos θ` from graphicx's `\rotatebox` (`pdftex.def`) | **yes, output-only** |
-| `do_matrixtransform` (2) | `utils.c:1494–1495` | `DO_ROUND(x·a + y·c + e)`; aarch64 computes `fma(x, a, y·c) + e` | the same rectangles: **PDF only** | **no**. [`h1/fma/matrix_search.py`](h1/fma/matrix_search.py) finds 3 rounding flips in 1,705,191 random sp positions at `a = 0.866025` | **yes, output-only, reproduced end to end** (§5.3) |
-| `read_jbig2_info` (2) | `writejbig2.c:798–799` | `(int)(xres·0.0254 + 0.5)` | **TeX state**: the image resolution sets a JBIG2 image's default width and height (`pdftex.web` 34475–34480) | not always, but **exhaustively, no input flips the result**: every unsigned 32-bit `xres` next to a rounding boundary was tested ([`jbig2_exhaustive.py`](h1/fma/jbig2_exhaustive.py): 0 flips among the 109,092,170 boundaries) [M] | **none** |
-| `read_pdf_info` (1) | `pdftoepdf.cc` (confirmed from the disassembly: `scvtf`, `scvtf`, `fmadd`, `fcvt s`) | `(float)(major + minor·0.1)`, the PDF version allowed | a warning in the log, or an error when `\pdfinclusionerrorlevel` > 0 (**TeX-visible**) | not always, but after the conversion to `float` the results differ only when `minor = -10·major` ([`pdfversion_exhaustive.py`](h1/fma/pdfversion_exhaustive.py)). pdfTeX refuses `\pdfminorversion` outside 0..9 (`pdftex.web` 15475) [M] | **none** |
+| `do_matrixtransform` (2) | `utils.c:1494–1495` | `DO_ROUND(x·a + y·c + e)`; aarch64 computes `fma(x, a, y·c) + e` | the same rectangles: **PDF only** | **no**. [`6988d649:docs/v27/spike/h1/fma/matrix_search.py`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/fma/matrix_search.py) finds 3 rounding flips in 1,705,191 random sp positions at `a = 0.866025` | **yes, output-only, reproduced end to end** (§5.3) |
+| `read_jbig2_info` (2) | `writejbig2.c:798–799` | `(int)(xres·0.0254 + 0.5)` | **TeX state**: the image resolution sets a JBIG2 image's default width and height (`pdftex.web` 34475–34480) | not always, but **exhaustively, no input flips the result**: every unsigned 32-bit `xres` next to a rounding boundary was tested ([`jbig2_exhaustive.py`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/fma/jbig2_exhaustive.py): 0 flips among the 109,092,170 boundaries) [M] | **none** |
+| `read_pdf_info` (1) | `pdftoepdf.cc` (confirmed from the disassembly: `scvtf`, `scvtf`, `fmadd`, `fcvt s`) | `(float)(major + minor·0.1)`, the PDF version allowed | a warning in the log, or an error when `\pdfinclusionerrorlevel` > 0 (**TeX-visible**) | not always, but after the conversion to `float` the results differ only when `minor = -10·major` ([`pdfversion_exhaustive.py`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/fma/pdfversion_exhaustive.py)). pdfTeX refuses `\pdfminorversion` outside 0..9 (`pdftex.web` 15475) [M] | **none** |
 | `t1_scan_param` (4) | `writet1.c:621`, `655` | a font's `FontMatrix` under the map file's `SlantFont`/`ExtendFont`; `ItalicAngle` | the embedded Type 1 font program: **PDF only** | no | output-only, not observed |
 | `ttf_read_post` (1) | `writettf.c:485` | `ItalicAngle` | the font descriptor: **PDF only** | no | output-only, not observed |
 | libpng (13: `png_fixed`, `png_fixed_ITU`, `png_XYZ_from_xy` 2, `png_build_gamma_table`, `png_build_8bit_table`, `png_build_16bit_table`, `png_gamma_8bit_correct`, `png_gamma_16bit_correct`, `png_gamma_correct` 2, `png_get_pHYs_dpi` 2) | `png.c`, `pngget.c` | gamma and colour-space arithmetic | PNG pixel data: **PDF only**. `png_get_pHYs_dpi` has **no call site** in the binary; pdfTeX computes a PNG's resolution itself (`writepng.c:51`, `round(0.0254·ppm)`: a product, no FMA) | no | output-only, not observed |
@@ -331,11 +338,11 @@ path from xpdf into TeX state was found. `Lexer::getObj` (2 FMAs) parses PDF rea
 `xf = xf + scale·d` with `scale = 0.1^k`, which is fused on aarch64. The page box of an included
 PDF is parsed this way, and becomes `epdf_width`/`epdf_height` (C `float`, `pdftoepdf.cc:770`),
 then the image's width and height in sp (`writeimg.c:320`): **TeX state**. Measured with
-[`lexsim.py`](h1/fma/lexsim.py), a transcription of `Lexer.cc` lines 157–221:
+[`lexsim.py`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/fma/lexsim.py), a transcription of `Lexer.cc` lines 157–221:
 - 29 of 300,000 random numerals (0–2,000, 1–6 decimals) parse to different doubles;
 - none of them to different floats;
 - a search at 20,000 float rounding midpoints, with numerals of 8–25 digits, found none either
-  ([`lexmid.py`](h1/fma/lexmid.py)).
+  ([`lexmid.py`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/fma/lexmid.py)).
 
 This channel is **open**: not observed, not excluded. The other 483 xpdf sites are in rendering,
 shading, annotation and form code, and in number formatting. None of them was followed to a
@@ -377,14 +384,14 @@ the clock fixed on both sides, so that runs hours apart are comparable.
 - **the 13 grades made before the mutation, in that container, before the guard existed**
   (result files dated 22:42:34–22:49:36 UTC; the mutation was at 22:49:47) had been kept on the
   inference that the container was still clean then. Review round 1 asked for a measurement
-  instead: all 13 were **re-graded in a fresh, guarded container** (`h1/tools/real13_ids.json`),
+  instead: all 13 were **re-graded in a fresh, guarded container** (`6988d649:docs/v27/spike/h1/tools/real13_ids.json`),
   0 mutations. **13 of 13 agree** with the arm64 grades and with the kept amd64 grades, 11
   byte-identical and 2 on the work-directory mask (`h1/diffs/r1/diff_real13-fixclock-regrade2__*`).
   A first re-grade (`…-regrade__*`, kept) used a work root 3 characters longer and failed closed on
   those 2 documents, where the longer path wraps a log line differently (§4.1); it was repeated
   with a work root of equal length.
 - **superseded and aborted runs, all disclosed** (none is counted above; each is kept in the
-  cache and summarised in `h1/README.md`): a first cross-architecture comparison of 25 real papers
+  cache and summarised in `6988d649:docs/v27/spike/h1/README.md`): a first cross-architecture comparison of 25 real papers
   (`DIFF_STDOUT_ONLY` 1: that document is the mutation itself, whose terminal line named the
   system path, which is how the mutation was found); the 48 grades made in the mutated container
   (1 timed out under emulation, 1 differs on the mutation's terminal line, 46 agree); an aborted
@@ -397,7 +404,7 @@ conversions' subset tags differed. That pdfTeX's own output can differ too is sh
 
 ### 5.3 Adversarial: the architectures do write different PDFs [M]
 
-Review round 1 built [`h1/adversarial/rot2.tex`](h1/adversarial/rot2.tex) (sha256 `af4bf4b7…`):
+Review round 1 built [`h1/adversarial/rot2.tex`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/adversarial/rot2.tex) (sha256 `af4bf4b7…`):
 160 `\rotatebox` blocks at pseudo-random angles holding 400,000 `\pdfstartlink` annotations, with
 `\pdfdecimaldigits=4`. Re-run here in fresh containers of the pinned image (native arm64, emulated
 amd64), `SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1`: rc 0 on both; `.log` and `.aux`
@@ -426,7 +433,7 @@ which refutes round 1's "in the PDF only").
   sites. `make_accent` needs an exactness lemma with the slant bound, and Stuck beyond it. The
   exhaustive results above suffice for JBIG2 and the PDF version (the PDF-version check now covers
   pdfTeX's whole input range, every major 1..2^31−1 with every minor 0..9:
-  [`fma/pdfversion_full.c`](h1/fma/pdfversion_full.c), 21,474,836,470 pairs, 0 differ; review
+  [`fma/pdfversion_full.c`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/fma/pdfversion_full.c), 21,474,836,470 pairs, 0 differ; review
   round 2 found that the round-1 script, called exhaustive, covered majors 0..9 only). An included
   PDF's dimensions stay at the C boundary, modelled per architecture or Stuck. This is **not
   sufficient** on its own: §5.4.
@@ -459,8 +466,8 @@ overflows the 8 MB stack does so at different depths), and uninitialised or out-
 (heap layout; `read_APP1_Exif` reads an attacker-chosen offset `tiff_header + value` without a
 bounds check).
 
-**Division and conversion sites** ([`archsem/census_sites.tsv`](h1/archsem/census_sites.tsv),
-from [`census.py`](h1/archsem/census.py); every instruction in `census_insns.tsv.gz`). 620 DIV
+**Division and conversion sites** ([`archsem/census_sites.tsv`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/archsem/census_sites.tsv),
+from [`census.py`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/archsem/census.py); every instruction in `census_insns.tsv.gz`). 620 DIV
 and 474 F2I instructions over both binaries, at **316 sites** (source lines; xpdf, C++ without a
 line table, by function). Each site has one verdict in
 [`classification.tsv`](h1/archsem/classification.tsv), computed by
@@ -511,7 +518,7 @@ as an unsigned divide and gets −1; x86_64 gcc 11 compiles it as `x div n` and 
 reachable from plain TeX, because `\advance` does not check integer overflow.
 
 **`char` signedness.** The `-fsigned-char` rebuild changes **317 functions**
-([`signedchar_changed.txt`](h1/archsem/signedchar_changed.txt)): 163 in xpdf; the rest in
+([`signedchar_changed.txt`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/archsem/signedchar_changed.txt)): 163 in xpdf; the rest in
 kpathsea (file names and `texmf.cnf`), the font loaders (Type 1, TrueType, Type 3, encodings, map
 files), libpng's text chunks, SyncTeX, and pdfTeX's string utilities. Of the translated program
 only three functions change, `open_log_file`, `prompt_file_name` and `main_body` (file names and
@@ -524,7 +531,7 @@ functions were swept over all 255 non-null bytes (`\pdfescapestring`, `\pdfescap
 byte-identical on both architectures (sha256 `b513a15e…`). The other changed functions are OPEN
 (file names with bytes ≥ 0x80, font and map files).
 
-**Reproduced** ([`archsem/probes/`](h1/archsem/probes/), documents and outputs; plain `pdftex`
+**Reproduced** ([`archsem/probes/`](https://github.com/ClanClanClanClan/latex_perf/tree/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/archsem/probes/), documents and outputs; plain `pdftex`
 in fresh containers of the pinned image, native aarch64 and emulated x86_64,
 `SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1`):
 
@@ -633,9 +640,9 @@ The native backend's inherited stdin (ADR-014 draft, oracle branch C-99).
 ## 7. Reproducing this
 
 **Committed evidence** (review round 1: every number above can be re-checked from the repo; review
-round 2 added [`h1/archsem/`](h1/archsem/README.md), the census, classification and probes of §5.4,
+round 2 added [`h1/archsem/`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/archsem/README.md), the census, classification and probes of §5.4,
 and `diffs/r2/`, every comparison re-run with the round-2 comparator):
-[`docs/v27/spike/h1/`](h1/README.md) holds every comparison summary (`diffs/r1/`, the narrowed
+[`docs/v27/spike/h1/`](https://github.com/ClanClanClanClan/latex_perf/blob/6988d649a02be825729c2eefcbf3c89f9de7b0bb/docs/v27/spike/h1/README.md) holds every comparison summary (`diffs/r1/`, the narrowed
 mask; `diffs/r0/`, the round-0 files these numbers were first read from), the FMA site map and the
 exhaustive/search scripts with their outputs (`fma/`), the comparator and its kill-tests, the
 document id lists (`tools/`), the adversarial document (`adversarial/`), the build recipe and the

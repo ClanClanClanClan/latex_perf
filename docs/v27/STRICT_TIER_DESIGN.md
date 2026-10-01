@@ -325,6 +325,13 @@ type verdict =
 
 ## F. Build plan
 
+> ⚠ **SUPERSEDED from M1 slice 2 on by [ADR-015](adr/ADR-015-static-proven-tier-on-translated-engine.md)
+> (accepted 2026-09-29; banner added 2026-09-30, the plan below is unchanged history).** The per-name
+> admission of M1 slice 2 (OPEN-120) and M3's structure, definer and on-demand attestation plan are
+> replaced by ADR-015 D2 (a Coq translation of the pinned pdfTeX, names admitted by a Coq-proven sound
+> abstract interpreter). The plan of record is ADR-015 D3's foundation spike (OPEN-123). M2's kernel on
+> `main` is not faithful and must not be wired as it is (OPEN-124).
+
 Each milestone ships alone. The measured effect is stated as the thing to publish.
 
 | # | size | deliverable | proof work | measured effect to publish |

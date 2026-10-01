@@ -6,6 +6,21 @@ North-Star heading of `PROJECT_STATE.md` §1 before this ADR.
 **Related:** OPEN-116 (the programme), OPEN-024, OPEN-034, OPEN-101, ADR-011 decision 4.
 **Design:** [`docs/v27/STRICT_TIER_DESIGN.md`](../STRICT_TIER_DESIGN.md).
 
+> ⚠ **PARTLY SUPERSEDED by [ADR-015](ADR-015-static-proven-tier-on-translated-engine.md) (accepted
+> 2026-09-29; banner added 2026-09-30, the text below is unchanged history).** ADR-015 keeps this ADR's
+> goals, verdict type, oracle and exit codes, and replaces the *mechanism* by which names enter the
+> proven tier. Superseded: **M1's per-name admission** (decision 1's contract "solo-attested" name by
+> name; M1 slice 2, the signature probes, OPEN-120, stopped by the owner) and **M3 as planned** in the
+> design's milestone plan (§F: per-name structure and definer admission, and the on-demand
+> configuration attestation service). In their place (ADR-015 D2): pdfTeX's own program translated into
+> Coq as the foundation, names admitted offline by a Coq-proven sound abstract interpreter over their
+> real definitions, and the fast static kernel deciding in real time. ADR-015 D1 states the purpose
+> behind decision 3: a PROVEN verdict is computed without running a TeX engine on the document. The
+> plan of record after M2 is ADR-015 D3's foundation spike (H.1–H.6, OPEN-123), which reports before any
+> further architecture commitment. M1 slice 1 (the contract generator) is not addressed by ADR-015. The
+> M2 kernel on `main` stays as the synchronous fast path and regression evidence (ADR-015 D4), and
+> OPEN-124 records that it is not faithful to pdfTeX and must not be wired as it is.
+
 ## Context
 
 Until this ADR the project published *proven-verdict coverage* as its North Star, and

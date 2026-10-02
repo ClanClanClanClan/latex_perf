@@ -1,0 +1,132 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.8.30)  30 AUG 2026 07:51
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**&pdflatex \dump
+Beginning to dump on file texput.fmt
+ (preloaded format=texput 2026.8.30)
+32913 strings of total length 842083
+435021 memory locations dumped; current usage is 243&403295
+29447 multiletter control sequences
+\font\nullfont=nullfont
+\font\c__fp_exp_intarray=cmr10 at 0.00002pt
+\font\c__fp_trig_intarray=cmr10 at 0.00003pt
+\font\c_initex_cctab=cmr10 at 0.00005pt
+\font\c_other_cctab=cmr10 at 0.00006pt
+\font\c_str_cctab=cmr10 at 0.00008pt
+\font\g_tmpa_cctab=cmr10 at 0.00009pt
+\font\g_tmpb_cctab=cmr10 at 0.0001pt
+\font\g__regex_state_active_intarray=cmr10 at 0.00012pt
+\font\g__regex_thread_info_intarray=cmr10 at 0.00014pt
+\font\g__regex_submatch_prev_intarray=cmr10 at 0.00015pt
+\font\g__regex_submatch_begin_intarray=cmr10 at 0.00017pt
+\font\g__regex_submatch_end_intarray=cmr10 at 0.00018pt
+\font\g__regex_submatch_case_intarray=cmr10 at 0.0002pt
+\font\g__regex_balance_intarray=cmr10 at 0.00021pt
+\font\g__codepoint_category_index_intarray=cmr10 at 0.00023pt
+\font\g__codepoint_grapheme_index_intarray=cmr10 at 0.00024pt
+\font\g__codepoint_lowercase_index_intarray=cmr10 at 0.00026pt
+\font\g__codepoint_uppercase_index_intarray=cmr10 at 0.00027pt
+\font\g__codepoint_wordbreak_index_intarray=cmr10 at 0.00029pt
+\font\g__codepoint_category_blocks_intarray=cmr10 at 0.0003pt
+\font\g__codepoint_grapheme_blocks_intarray=cmr10 at 0.00032pt
+\font\g__codepoint_lowercase_blocks_intarray=cmr10 at 0.00034pt
+\font\g__codepoint_uppercase_blocks_intarray=cmr10 at 0.00035pt
+\font\g__codepoint_wordbreak_blocks_intarray=cmr10 at 0.00037pt
+\font\OMX/cmex/m/n/10=cmex10
+\font\tenln=line10
+\font\tenlnw=linew10
+\font\tencirc=lcircle10
+\font\tencircw=lcirclew10
+\font\OT1/cmr/m/n/5=cmr5
+\font\OT1/cmr/m/n/7=cmr7
+\font\OT1/cmr/m/n/10=cmr10
+\font\OML/cmm/m/it/5=cmmi5
+\font\OML/cmm/m/it/7=cmmi7
+\font\OML/cmm/m/it/10=cmmi10
+\font\OMS/cmsy/m/n/5=cmsy5
+\font\OMS/cmsy/m/n/7=cmsy7
+\font\OMS/cmsy/m/n/10=cmsy10
+\font\c_code_cctab=cmr10 at 0.00038pt
+\font\c_document_cctab=cmr10 at 0.0004pt
+627714 words of font info for 40 preloaded fonts
+1141 hyphenation exceptions
+Hyphenation trie of length 427599 has 8944 ops out of 35111
+  143 for language 90
+  110 for language 88
+  138 for language 87
+  7 for language 86
+  12 for language 85
+  53 for language 84
+  127 for language 83
+  195 for language 82
+  71 for language 81
+  248 for language 80
+  62 for language 79
+  66 for language 78
+  119 for language 76
+  76 for language 75
+  58 for language 74
+  21 for language 73
+  194 for language 72
+  37 for language 71
+  23 for language 70
+  852 for language 69
+  852 for language 68
+  21 for language 67
+  38 for language 66
+  38 for language 65
+  77 for language 64
+  58 for language 63
+  206 for language 62
+  25 for language 61
+  216 for language 60
+  27 for language 59
+  7 for language 58
+  37 for language 57
+  229 for language 56
+  38 for language 55
+  21 for language 54
+  147 for language 41
+  185 for language 40
+  18 for language 38
+  50 for language 37
+  429 for language 36
+  235 for language 35
+  207 for language 34
+  39 for language 33
+  76 for language 32
+  40 for language 31
+  89 for language 30
+  6 for language 29
+  31 for language 28
+  113 for language 25
+  145 for language 24
+  377 for language 23
+  224 for language 22
+  265 for language 21
+  60 for language 20
+  63 for language 19
+  19 for language 18
+  14 for language 17
+  3 for language 15
+  21 for language 14
+  54 for language 13
+  36 for language 12
+  5 for language 11
+  148 for language 8
+  97 for language 7
+  46 for language 6
+  137 for language 5
+  440 for language 4
+  440 for language 3
+  2 for language 1
+  181 for language 0
+0 words of pdfTeX memory
+0 indirect objects
+No pages of output.
+PDF statistics:
+ 0 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

@@ -1,0 +1,24 @@
+run	build	names	verdict	live_words_at_exit	top_heap_words	load_at_start
+before-0	17677bfb (H.3 run 1)	0	finished rc 0 peak 3139MB in 47s	-	385387697	4.81 5.69 25.42
+before-250	17677bfb (H.3 run 1)	250	finished rc 0 peak 3777MB in 43s	-	468778161	4.36 5.45 24.32
+before-500	17677bfb (H.3 run 1)	500	killed: rss 4003MB > 4000MB at 47s	-	-	5.58 5.75 23.46
+before-1000	17677bfb (H.3 run 1)	1000	killed: rss 4015MB > 4000MB at 47s	-	-	5.97 5.78 22.56
+before-2000	17677bfb (H.3 run 1)	2000	killed: rss 4019MB > 4000MB at 45s	-	-	6.42 5.90 21.64
+after-0	fix 1: callp closure	0	finished rc 0 peak 3129MB in 28s	-	385387697	10.01 6.85 21.09
+after-250	fix 1: callp closure	250	finished rc 0 peak 3769MB in 41s	-	468778161	10.74 7.29 20.83
+after-500	fix 1: callp closure	500	finished rc 0 peak 3825MB in 56s	-	552217777	9.20 7.38 20.17
+after-1000	fix 1: callp closure	1000	killed: rss 4019MB > 4000MB at 44s	-	-	11.35 8.23 19.68
+after-2000	fix 1: callp closure	2000	killed: rss 4034MB > 4000MB at 62s	-	-	11.73 8.73 19.27
+after2-0	fix 1+2: + initial heap not a constant	0	finished rc 0 peak 2538MB in 31s	-	385383601	16.06 10.64 17.79
+after2-250	fix 1+2: + initial heap not a constant	250	finished rc 0 peak 3048MB in 42s	-	468798641	13.53 10.68 17.52
+after2-500	fix 1+2: + initial heap not a constant	500	finished rc 0 peak 2499MB in 62s	-	552975537	9.07 9.89 16.91
+after2-1000	fix 1+2: + initial heap not a constant	1000	finished rc 0 peak 3066MB in 95s	-	758475953	6.65 9.04 16.11
+after2-2000	fix 1+2: + initial heap not a constant	2000	killed: rss 4013MB > 4000MB at 55s	-	-	5.58 8.03 14.97
+after3-0	fix 1-4: + PArray default, ERealloc	0	finished rc 0 peak 3124MB in 54s	73511297	385752241	23.53 24.33 20.31
+after3-500	fix 1-4: + PArray default, ERealloc	500	finished rc 0 peak 4436MB in 121s	73964504	557878449	55.01 31.24 23.02
+after3-2000	fix 1-4: + PArray default, ERealloc	2000	finished rc 0 peak 5758MB in 278s	75413669	1147284657	33.45 32.10 24.56
+after3-2000-o=40	fix 1-4: + PArray default, ERealloc	2000	finished rc 0 peak 4371MB in 467s	75413670	1127935153	-
+after3-2000-o=40,s=4M	fix 1-4: + PArray default, ERealloc	2000	finished rc 0 peak 5374MB in 481s	75413671	1103125681	-
+after3-2000-compact	fix 1-4: + PArray default, ERealloc	2000	finished rc 0 peak 3583MB in 376s	75413686	1147284657	-
+diag-0	fix 1+2 (state reachability measured)	0	finished rc 0 peak 3133MB in 32s	81623320	385387697	-
+diag-500	fix 1+2 (state reachability measured)	500	finished rc 0 peak 4403MB in 64s	96957358	552975537	-

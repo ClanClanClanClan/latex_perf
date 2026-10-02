@@ -3,13 +3,21 @@
   "engine": "pdflatex",
   "distribution": "TeX Live 2026",
   "version": "pdfTeX 3.141592653-2.6-1.40.29",
-  "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint) \u2014 APPLIED TO ALL 200/200 rows",
+  "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint), PDF recorded (compiles = rc 0 AND a PDF) \u2014 APPLIED TO ALL 200/200 rows",
   "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
   "arch": "aarch64",
   "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
   "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
   "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
-  "backend": "container"
+  "backend": "container",
+  "clock": "real",
+  "grading_code": {
+   "files": {
+    "scripts/tools/_oracle.py": "b7be411e515e24194f45d5b3e4da74add0a5f443",
+    "scripts/tools/diff_real_roots.py": "23bb9655a4cb95bbd924f3455332f4475d13bf0a"
+   },
+   "sha256": "3cb3a156473083a533769f929c33ae2a53979015ea1e4a569cc26abd34cd7d19"
+  }
  },
  "frame": {
   "corpus": "LP_v24_FULL_BACKUP_20250716_165548/corpus/papers",
@@ -3834,6 +3842,7 @@
  ],
  "measured_at_sha": "e6e82b1130741eab048ec9b4ca94f09810b6a3c5",
  "measured_at_note": "Measured with the oracle tooling of branch feat/v27165-container-oracle (commit bc172774, which exists only on that branch) over the engine tree latex-parse/src = fe673dc1608eac5528314f23bea1bb50bcd5e433, identical to that tree at main commit e6e82b11; measured_at_sha is therefore stamped e6e82b11, so the provenance survives a squash merge (C-73). What the branch changes is the GRADING tool (scripts/tools/_oracle.py and the graders that call it), not the engine: the CLI verdicts are those of fe673dc1, the pdflatex grades are the pinned image's.",
- "measured_at": "ORACLE-BASELINE CHANGE (ADR-012 decision 7): every row re-graded under the pinned TeX Live image texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b (aarch64, container backend); multi-pass re-grade, scope=all: every row, regardless of prior grade (<= 3 passes, 200/200 rows now carry a pdflatex_passes count); CLI verdicts carried forward from the prior run",
- "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433"
+ "measured_at": "RE-BASELINE (--rebaseline-oracle): every row re-graded under the pinned TeX Live image texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b (aarch64, container backend, grading code 3cb3a1564730) because the recorded grades were not this oracle's: the recorded grades: records no grading_code (the git blob ids of the oracle and grader sources that produced it, OPEN-126); multi-pass re-grade, scope=all: every row, regardless of prior grade (<= 3 passes, 200/200 rows now carry a pdflatex_passes count); CLI verdicts carried forward from the prior run",
+ "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433",
+ "oracle_regraded_at_sha": "a652a675d8582c7860bc87bd12f275880cb5c770"
 }

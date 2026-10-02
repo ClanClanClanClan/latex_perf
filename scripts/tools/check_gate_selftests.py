@@ -270,6 +270,24 @@ def stale_theorem_total(text: str) -> str:
     return out
 
 
+def unregister_math106(text: str) -> str:
+    """Drop MATH-106 from the producer registry (rule_contracts.yaml).
+
+    gen_candidate_backlog --check used to compare its file only with its own
+    output, so a registry/classification disagreement was invisible (it
+    reported 67 producers against a registry of 164 for weeks). With MATH-106
+    unregistered, the OCaml source still calls a fix constructor for it, so
+    the registry cross-check must fire while the regenerate-and-diff alone
+    stays green (the rendered file does not change)."""
+    pat = re.compile(r"(- rule_id: MATH-106\n(?:  .*\n)*?  produces_fix: )true\n")
+    out, n = pat.subn(r"\1null\n", text)
+    if n != 1:
+        print(f"[gate-selftests] REGISTRY ROT: MATH-106's produces_fix: true "
+              f"occurs {n}x in rule_contracts.yaml (need exactly 1)")
+        sys.exit(2)
+    return out
+
+
 def prov_stale_build(text: str) -> str:
     """Same engine source, different binary — the STALE BUILD case (C-68).
 
@@ -2492,6 +2510,17 @@ REGISTRY = [
                      transform=stale_governance_count),
         ]),
     GateTest(
+        "gen_candidate_backlog", [PY, f"{TOOLS}/gen_candidate_backlog.py", "--check"],
+        "pure",
+        [
+            Mutation("a producer the OCaml source wires is missing from the "
+                     "producer registry (the backlog gate checked only its own "
+                     "output, honesty sweep 2026-09-30)",
+                     "specs/rules/rule_contracts.yaml",
+                     r"classified producer\(s\) not in the registry: MATH-106",
+                     transform=unregister_math106),
+        ]),
+    GateTest(
         "check_repo_facts",
         [PY, f"{TOOLS}/check_repo_facts.py",
          "--facts", "governance/project_facts.yaml", "--repo", "."],
@@ -2690,6 +2719,9 @@ def check_spec_drift_coverage() -> list[str]:
     pf_path = REPO / ".github/workflows/proof.yml"
     pf = pf_path.read_text() if pf_path.is_file() else ""
     invoked = set(re.findall(r"(check_[a-z_]+\.py)", sd + ci + pf))
+    # A gate need not be named check_*: gen_candidate_backlog.py --check is
+    # a spec-drift gate with kill-tests too (honesty sweep, 2026-09-30).
+    invoked |= set(re.findall(r"scripts/tools/([a-z_0-9]+\.py)", sd + ci + pf))
     # The script is the first cmd element ending in .py, NOT cmd[-1]: gates that
     # need arguments (check_repo_facts --facts ..., check_regression_gates
     # --skip-mutation) put flags after it, and keying on the last element then

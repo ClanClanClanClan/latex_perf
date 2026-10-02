@@ -1,6 +1,6 @@
-version: v27.1.63
+version: v27.1.64
 release_state: GA
-release_date: '2026-09-12'
+release_date: '2026-10-01'
 generated_by: scripts/tools/generate_project_facts.py
 honesty_annotation:
   note: The counts listed under `constructed` are NOT measurements of proof strength
@@ -10,9 +10,11 @@ honesty_annotation:
       \ a catalogue headcount, not a proof count"
     proofs.formal_faithful_count: a generator DEFAULT applied to every rule not on
       a 23-id denylist
-    proofs.theorem_count_reported: a raw Theorem/Lemma/Corollary grep; 803 of the
-      804 theorems under proofs/generated share ONE byte-identical proof body (`Proof.
-      qed_text_sound. Qed.`) over 316 distinct predicates, 57 of which are `:= false`
+    proofs.theorem_count_reported: "a count of Theorem/Lemma/Corollary DECLARATIONS\
+      \ (recursive, archive excluded); proofs.theorem_count_generated_shared_body\
+      \ of them share ONE proof body (`Proof. qed_text_sound. Qed.`) and proofs.generated_false_predicates\
+      \ of their checkers are `:= false` \u2014 quote proofs.theorem_count_other beside\
+      \ any total"
     languages.live/stubbed/target: three hardcoded integers; the generator returns
       literals
   measured_and_true:
@@ -89,16 +91,26 @@ rules:
     C: 17
     D: 49
 proofs:
-  proof_files_total: 180
+  proof_files_total: 192
   proof_files_core: 65
   proof_files_generated: 114
   proof_files_ml: 1
+  proof_files_strict: 12
+  proof_files_by_dir:
+    ML: 1
+    Strict: 12
+    generated: 114
+    top: 65
   proof_files_archive: 7
   per_rule_soundness_count: 643
   formal_faithful_count: 637
   formal_conservative_count: 20
   formal_conditional_count: 3
-  theorem_count_reported: 1599
+  theorem_count_reported: 1591
+  theorem_count_generated_shared_body: 803
+  theorem_count_other: 788
+  generated_false_predicates: 57
+  theorem_count_over_false_predicates: 57
   admits: 0
   axioms: 0
 languages:
@@ -118,20 +130,19 @@ ci:
 interfaces:
   cli: GA
   rest: GA
-  grpc: planned
+  grpc: deferred
   collaboration: not_shipped
 support:
   engines:
     pdflatex: GA
-    xelatex: beta
-    lualatex: beta
+    xelatex: planned
+    lualatex: planned
     ptex_uptex: experimental
   document_modes:
     single_file: GA
     build_coupled_single_file: beta
     multi_file: planned
     beamer: deferred
-  macro_support_level: catalogue-only in v25; bounded user macro subset planned for
-    v26
+  macro_support_level: builtin catalogue GA; bounded user macros GA (docs/SUPPORT_MATRIX.yaml)
   build_coupled_features: partial via log_parser and L3 file validators
   collaboration_features: not shipped

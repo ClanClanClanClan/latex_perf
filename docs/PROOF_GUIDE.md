@@ -141,10 +141,12 @@ Runs on every push and PR. Cannot be bypassed.
 
 ---
 
-## Current State (v27.1.63)
+## Current State (v27.1.64)
 
-- **1,599 theorems/lemmas** across 180 files
-- **637 faithful proofs** (VPD-pattern match, exact Coq model)
+- **1,591 theorems/lemmas** across 192 files (declarations; generated into `governance/project_facts.yaml`)
+  - 803 are the generated per-rule theorems sharing one body (`qed_text_sound`); each restates its checker's definition, and 57 of those checkers are the constant `false`
+  - 788 are everything else (a count, not a measure of strength)
+- **637 "faithful" proof-class labels** — the generator's default for every rule not on a denylist, not a measured property (the Coq model of a style rule is not tied to the shipped OCaml, OPEN-067)
 - **20 conservative proofs** (L3 file-based rules — external binary checks, no Coq string model possible)
 - **3 conditional proofs** (LAY-025/026/027 — sound given compile-log predicate)
 - **0 admits, 0 axioms**

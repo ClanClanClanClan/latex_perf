@@ -1,3 +1,10 @@
+> ⚠ **SUPERSEDED — historical v25 plan (banner added 2026-09-30; the text below is unchanged).**
+> Its "single source of truth" line no longer holds: the current measured position is
+> [docs/v27/PROJECT_STATE.md](../../docs/v27/PROJECT_STATE.md) and the current decisions
+> are in [docs/v27/adr/](../../docs/v27/adr/). Several v25 targets (1 ms p99 per
+> keystroke, 21 languages, Rust AVX-512, a Coq soundness proof tied to every shipped rule) were
+> never delivered.
+
 Below is the LaTeX Perfectionist v25 – Unified Ground‑Truth Master Plan (Revision R0‑2025‑07‑28).
 It merges (a) the original “LaTeX Perfectionist v25 – 3‑Year Solo‑Developer Master Plan”, (b) every answer to the 87 integration‑gap questions, and (c) all follow‑up clarifications and decisions taken up to 2025‑07‑28.
 Nothing from the prior documents is omitted; every open decision is now resolved and documented.

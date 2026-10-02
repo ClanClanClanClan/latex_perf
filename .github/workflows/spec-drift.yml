@@ -35,8 +35,9 @@ jobs:
       # this job (check_project_state.py, check_apply_fixes_real_differential.py)
       # treated that non-zero exit as a pass, so NEITHER had ever fired in CI —
       # on any PR, since they were written. As of 2026-09-20 no workflow in this
-      # repo set fetch-depth at all. It also brings tags, which the release-debt
-      # gate needs. Removing this line silently blinds both ratchets again; the
+      # repo set fetch-depth at all. It also brings tags, which ADR-011's
+      # release-debt gate (N = 25) will need — that gate is NOT built yet (it
+      # is specified to land after the v27.1.64 tag). Removing this line silently blinds both ratchets again; the
       # kill-tests registered for them are what stops that going unnoticed.
       - uses: actions/checkout@v4
         with:
@@ -49,9 +50,12 @@ jobs:
       - run: pip install pyyaml
 
       # Ground truth is the OCaml source: this greps the actual result
-      # constructor each rule calls. The committed doc is a MIRROR of that, so
-      # regenerating it cannot launder anything -- unlike gen_producer_triggers,
-      # whose goldens derive from the producer under test.
+      # constructor each rule calls. The committed doc is a MIRROR of that --
+      # but a mirror of a WRONG grep launders the error: until 2026-09-30 the
+      # grep missed every producer with a labelled argument before ~id and the
+      # file read 67 producers against a registry of 164, while this step was
+      # green. --check now also compares the classification with the producer
+      # registry (produces_fix in rule_contracts.yaml), which is primary data.
       # It was stale on main (70 producers vs a true 67 -- TYPO-028, TYPO-038
       # and HI-001, withdrawn for corrupting real documents) while its own
       # header claimed a CI check kept it in sync. `grep -rn gen_candidate_backlog

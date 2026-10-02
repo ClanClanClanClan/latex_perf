@@ -239,11 +239,13 @@ let _dag_validate_fn : (rule list -> unit) ref = ref (fun _ -> ())
    effective belt is 12.
 
    Role 2, tier-filter protection (C-41): [_filter_by_tier] keeps a rule
-   unconditionally when [is_compile_blocking r.id] holds. ZERO of the 660
-   contracts carry [Any_tier], so under an LP-Foreign context every rule NOT in
-   this list is dropped. Pruning the 24 would therefore silence them on any
-   document the raw-view classifier calls foreign — which is exactly the
-   false-READY channel C-41 fixed, in a smaller blast radius.
+   unconditionally when [is_compile_blocking r.id] holds. Only 29 of the 660
+   contracts carry [Any_tier] (project_scope "any": FIG-020, 13 LAY,
+   MATH-026/027, REF-001..012, TIKZ-002), so under an LP-Foreign context every
+   other rule NOT in this list is dropped. (This comment said ZERO until
+   2026-09-30; it was false when written.) Pruning the 24 would therefore
+   silence them on any document the raw-view classifier calls foreign — which is
+   exactly the false-READY channel C-41 fixed, in a smaller blast radius.
 
    So the list stays at 36 and the CLAIM is what gets corrected. If you want the
    fast path to stop running rules that cannot affect the verdict, that is a
@@ -305,12 +307,13 @@ let _filter_by_tier (rules : rule list) : rule list =
              depend on whether the document lies inside our certified SUBSET.
              The LP-Foreign filter exists to stop emitting STYLE findings on
              documents we cannot model; silencing the FATAL belt as well was a
-             measured false-READY channel (C-41). ZERO of the 660 contracts
-             carry [Any_tier], so under an LP-Foreign context every contracted
-             rule was dropped — and a document with a genuine unclosed
-             [\\textbf{] argument (pdflatex rc 1,1) returned READY as soon as
-             ONE COMMENTED-OUT foreign construct made the raw-view classifier
-             say foreign. Keep the compile-blocking belt unconditionally. *)
+             measured false-READY channel (C-41). Only 29 of the 660 contracts
+             carry [Any_tier], so under an LP-Foreign context every other
+             contracted rule was dropped — and a document with a genuine
+             unclosed [\\textbf{] argument (pdflatex rc 1,1) returned READY as
+             soon as ONE COMMENTED-OUT foreign construct made the raw-view
+             classifier say foreign. Keep the compile-blocking belt
+             unconditionally. *)
           is_compile_blocking r.id
           ||
           match Rule_contract_loader.find_opt r.id with

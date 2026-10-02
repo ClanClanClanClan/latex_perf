@@ -1,3 +1,10 @@
+> ⚠ **SUPERSEDED — historical v25 plan (banner added 2026-09-30; the text below is unchanged).**
+> Its "single source of truth for v25" line no longer holds: the current measured
+> position is [docs/v27/PROJECT_STATE.md](../../docs/v27/PROJECT_STATE.md) and the
+> current decisions are in [docs/v27/adr/](../../docs/v27/adr/). Several v25 targets
+> (1 ms p99 per keystroke, 21 languages, Rust AVX-512, a Coq soundness proof tied to every
+> rule) were never delivered.
+
 <!--
 Provenance: This R1 update integrates every change from the audit into the textual master plan, aligning it with the machine‑readable YAML edition and the 623‑rule catalog. Sources: YAML edition (“LaTeX Perfectionist — v25 ▸ Unified Ground‑Truth Master Plan — YAML”)  [oai_citation:0‡v25_master.yaml](file-service://file-Jei1ndCmY4MvRuAwMe5JLL) and rules.yaml (623 rules)  [oai_citation:1‡rules_v3.yaml](file-service://file-Hch2y7Aqe3nMyQrFh1EvNK).
 -->

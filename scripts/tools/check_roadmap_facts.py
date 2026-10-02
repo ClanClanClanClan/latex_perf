@@ -200,28 +200,42 @@ def check(repo: Path) -> int:
             )
 
     # ---- proof-file counts ---------------------------------------------- #
-    # "N proof files total = A core + B generated + C ML (plus D archived ...)"
-    # NB project_facts.proof_files_total counts the ACTIVE tree (core+gen+ml);
+    # "N proof files total = A core + B generated + C ML + E Strict (plus D archived ...)"
+    # NB project_facts.proof_files_total counts the ACTIVE tree, recursively
+    # (core+gen+ml+Strict since 2026-09-30; it used to miss proofs/Strict);
     # the archived .disabled files are tracked separately (proof_files_archive),
     # so total need not equal core+gen+ml+archived. Each component is asserted
     # against its own authoritative field rather than a sum.
     pm = re.search(
         r"\*\*(\d+)\s+proof files total\*\*\s*=\s*\*\*(\d+)\s+core\s*\+\s*"
-        r"(\d+)\s+generated\s*\+\s*(\d+)\s+ML\*\*.*?\*\*(\d+)\s+archived\*\*",
+        r"(\d+)\s+generated\s*\+\s*(\d+)\s+ML\s*\+\s*(\d+)\s+Strict\*\*"
+        r".*?\*\*(\d+)\s+archived\*\*",
         text,
     )
     if not pm:
         failures.append(
             "ROADMAP.md: could not locate the "
-            "'N proof files total = A core + B generated + C ML (plus D archived)' claim"
+            "'N proof files total = A core + B generated + C ML + E Strict (plus D archived)' claim"
         )
     else:
-        r_total, r_core, r_gen, r_ml, r_arch = (int(pm.group(i)) for i in range(1, 6))
+        r_total, r_core, r_gen, r_ml, r_strict, r_arch = (
+            int(pm.group(i)) for i in range(1, 7))
         auth_proof_arch = int(facts["proofs"]["proof_files_archive"])
         expect("proof-files total", r_total, auth_proof_total)
         expect("proof-files core", r_core, auth_proof_core)
         expect("proof-files generated", r_gen, auth_proof_gen)
         expect("proof-files ML", r_ml, auth_proof_ml)
+        expect("proof-files Strict", r_strict,
+               int(facts["proofs"].get("proof_files_strict", -1)))
+        # Every bucket the generator found must be named in the claim: a new
+        # proofs/ subdirectory must not be absorbed silently into the total.
+        named = {"top", "generated", "ML", "Strict"}
+        unnamed = set(facts["proofs"].get("proof_files_by_dir", {})) - named
+        if unnamed:
+            failures.append(
+                f"ROADMAP.md proof-file claim does not name the proofs/ "
+                f"subdirector{'y' if len(unnamed) == 1 else 'ies'} "
+                f"{sorted(unnamed)} that governance counts")
         expect("proof-files archived", r_arch, auth_proof_arch)
 
     # ---- theorem / admit / axiom counts --------------------------------- #

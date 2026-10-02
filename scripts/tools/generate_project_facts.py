@@ -44,31 +44,68 @@ def count_rules(repo: Path):
     }
 
 
+# A theorem DECLARATION: `Theorem|Lemma|Corollary <name>` at the start of a
+# line. The old count was a raw word grep (`\bTheorem\b|...`), which also
+# counted the words in comments and doc strings (1,684 hits against 1,591
+# declarations on 2026-09-30).
+_DECL_RE = re.compile(r"^\s*(?:Theorem|Lemma|Corollary)\s+[A-Za-z_][\w']*", re.M)
+# One declaration through the end of its proof script.
+_THM_RE = re.compile(
+    r"^\s*(?:Theorem|Lemma|Corollary)\s+[\w']+(?P<stmt>.*?)\bProof\."
+    r"(?P<body>.*?)\b(?:Qed|Defined|Admitted)\.", re.S | re.M)
+# A generated checker that is the constant `false` (it can never fire, so its
+# soundness theorem says nothing).
+_FALSE_PRED_RE = re.compile(
+    r"Definition\s+(\w+)\s*\([^)]*\)\s*:\s*bool\s*:=\s*false\s*\.")
+# The single proof body shared by the generated per-rule "soundness" theorems.
+SHARED_BODY = "qed_text_sound."
+
+
+def _proof_files(repo: Path):
+    """Every non-archive .v file under proofs/, RECURSIVELY.
+
+    The old version globbed only proofs/, proofs/generated and proofs/ML, so it
+    never saw proofs/Strict (12 files, the strict kernel) or any future
+    subdirectory. Buckets are keyed by the first path component under proofs/
+    ("top" for proofs/*.v)."""
+    root = repo / "proofs"
+    out = []
+    for f in sorted(root.rglob("*.v")):
+        parts = f.relative_to(root).parts
+        if parts[0] == "archive":
+            continue
+        out.append(("top" if len(parts) == 1 else parts[0], f))
+    return out
+
+
 def count_proofs(repo: Path):
-    """Count proofs from .v files."""
-    proof_dirs = [repo / "proofs", repo / "proofs/generated", repo / "proofs/ML"]
+    """Count proofs from .v files (recursively; archive excluded)."""
     theorem_count = 0
+    shared_body = 0
+    shared_body_false = 0
+    false_preds = 0
     admits = 0
     axioms = 0
-    files_core = 0
-    files_generated = 0
-    files_ml = 0
+    by_dir = Counter()
 
-    for d in proof_dirs:
-        if not d.exists():
-            continue
-        for f in d.glob("*.v"):
-            content = f.read_text(errors="replace")
-            theorems = len(re.findall(r"\bTheorem\b|\bLemma\b|\bCorollary\b", content))
-            theorem_count += theorems
-            admits += content.count("Admitted.")
-            axioms += len(re.findall(r"^Axiom\b|^Parameter\b", content, re.MULTILINE))
-            if "generated" in str(d):
-                files_generated += 1
-            elif "ML" in str(d):
-                files_ml += 1
-            else:
-                files_core += 1
+    for bucket, f in _proof_files(repo):
+        content = f.read_text(errors="replace")
+        by_dir[bucket] += 1
+        theorem_count += len(_DECL_RE.findall(content))
+        admits += content.count("Admitted.")
+        axioms += len(re.findall(r"^Axiom\b|^Parameter\b", content, re.MULTILINE))
+        falses = set(_FALSE_PRED_RE.findall(content))
+        false_preds += len(falses)
+        for m in _THM_RE.finditer(content):
+            if m.group("body").strip() == SHARED_BODY:
+                shared_body += 1
+                chk = re.search(r"text_validator\s+(\w+)", m.group("stmt"))
+                if chk and chk.group(1) in falses:
+                    shared_body_false += 1
+    files_core = by_dir.get("top", 0)
+    files_generated = by_dir.get("generated", 0)
+    files_ml = by_dir.get("ML", 0)
+    files_strict = by_dir.get("Strict", 0)
 
     # Archive files (don't count)
     files_archive = 0
@@ -97,16 +134,31 @@ def count_proofs(repo: Path):
     rules = count_rules(repo)
 
     return {
-        "proof_files_total": files_core + files_generated + files_ml,
+        "proof_files_total": sum(by_dir.values()),
         "proof_files_core": files_core,
         "proof_files_generated": files_generated,
         "proof_files_ml": files_ml,
+        "proof_files_strict": files_strict,
+        "proof_files_by_dir": dict(sorted(by_dir.items())),
         "proof_files_archive": files_archive,
         "per_rule_soundness_count": rules["total_non_reserved"],
         "formal_faithful_count": faithful,
         "formal_conservative_count": conservative,
         "formal_conditional_count": conditional,
         "theorem_count_reported": theorem_count,
+        # The split the headline must never hide (C-40, OPEN-015):
+        # theorem_count_generated_shared_body are the generated per-rule
+        # "soundness" theorems whose whole proof is `qed_text_sound.`; they
+        # restate a checker's own definition and are NOT evidence that any
+        # OCaml rule is right (nothing ties `chk` to the OCaml rule, OPEN-067).
+        # theorem_count_other is everything else — a count of declarations,
+        # not a measure of strength.
+        "theorem_count_generated_shared_body": shared_body,
+        "theorem_count_other": theorem_count - shared_body,
+        # Generated checkers defined as the constant `false` (can never fire),
+        # and how many shared-body theorems are about one of them.
+        "generated_false_predicates": false_preds,
+        "theorem_count_over_false_predicates": shared_body_false,
         "admits": admits,
         "axioms": axioms,
     }
@@ -162,6 +214,17 @@ def get_version(repo: Path):
 def generate(repo: Path) -> dict:
     rules = count_rules(repo)
     proofs = count_proofs(repo)
+    # Support statuses are READ from docs/SUPPORT_MATRIX.yaml, the declared
+    # source of truth. They used to be literals here, and they drifted:
+    # xelatex/lualatex read "beta" while the matrix (correctly) says "planned"
+    # — both are proof-aliases of the pdflatex capstone with no engine-specific
+    # verdict (honesty sweep, 2026-09-30).
+    matrix = yaml.safe_load((repo / "docs/SUPPORT_MATRIX.yaml").read_text())
+    engines = {k: v["status"] for k, v in matrix["engines"].items()}
+    macro = matrix["macro_support"]
+    macro_level = (f"builtin catalogue {macro['builtin_catalogue']['status']}; "
+                   f"bounded user macros {macro['bounded_user_macros']['status']} "
+                   f"(docs/SUPPORT_MATRIX.yaml)")
     tests = count_tests(repo)
     wf_count = count_workflows(repo)
     langs = count_languages(repo)
@@ -260,10 +323,13 @@ def generate(repo: Path) -> dict:
                     "a generator DEFAULT applied to every rule not on a "
                     "23-id denylist",
                 "proofs.theorem_count_reported":
-                    "a raw Theorem/Lemma/Corollary grep; 803 of the 804 "
-                    "theorems under proofs/generated share ONE byte-identical "
-                    "proof body (`Proof. qed_text_sound. Qed.`) over 316 "
-                    "distinct predicates, 57 of which are `:= false`",
+                    "a count of Theorem/Lemma/Corollary DECLARATIONS "
+                    "(recursive, archive excluded); "
+                    "proofs.theorem_count_generated_shared_body of them share "
+                    "ONE proof body (`Proof. qed_text_sound. Qed.`) and "
+                    "proofs.generated_false_predicates of their checkers are "
+                    "`:= false` — quote proofs.theorem_count_other beside any "
+                    "total",
                 "languages.live/stubbed/target":
                     "three hardcoded integers; the generator returns literals",
             },
@@ -290,23 +356,18 @@ def generate(repo: Path) -> dict:
         "interfaces": {
             "cli": "GA",
             "rest": "GA",
-            "grpc": "planned",
+            "grpc": matrix["interfaces"]["grpc_streaming"]["status"],
             "collaboration": "not_shipped",
         },
         "support": {
-            "engines": {
-                "pdflatex": "GA",
-                "xelatex": "beta",
-                "lualatex": "beta",
-                "ptex_uptex": "experimental",
-            },
+            "engines": engines,
             "document_modes": {
                 "single_file": "GA",
                 "build_coupled_single_file": "beta",
                 "multi_file": "planned",
                 "beamer": "deferred",
             },
-            "macro_support_level": "catalogue-only in v25; bounded user macro subset planned for v26",
+            "macro_support_level": macro_level,
             "build_coupled_features": "partial via log_parser and L3 file validators",
             "collaboration_features": "not shipped",
         },

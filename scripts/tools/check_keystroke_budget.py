@@ -76,7 +76,8 @@ MONOTONE, LIKE THE OTHER BASELINES IN THIS REPO
 Same idiom as corpora/false_ready/manifest.json and corpora/apply_fixes/
 manifest.json: the measured numbers are recorded, the gate lands GREEN, and it
 fails on a REGRESSION. It additionally reports the distance to the ROADMAP:276
-budget on every run and fails if that gap WIDENS, so an 11x miss is a tracked,
+budget on every run and fails if that gap WIDENS, so a large miss (9.5x at the
+recorded rules baseline, 6.8x in CI on 2026-09-30) is a tracked,
 visible debt instead of an absent one.
 
 ⚠ TIMING GATES ARE NOISY AND THIS ONE KNOWS IT. The recorded baseline carries the

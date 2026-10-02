@@ -1,5 +1,15 @@
 # ADR-004: T6/T7 proofs use Section + Variable (not Parameter / Axiom)
 
+> ⚠ **SUPERSEDED IN ITS CLAIM — historical (banner added 2026-09-30; the text below is unchanged history).**
+> "Discharged" below means `pdflatex_compile_safe` is Qed over the abstract document
+> model of `proofs/PdflatexModel.v`. It is not a guarantee about documents:
+> [ADR-012](../../v27/adr/ADR-012-contract-bounded-proven-tier.md) (via ADR-011
+> decision 4) relabelled the certificate it backs as **premise-certified**, a
+> heuristic verdict that is "not a proof about the document", and certified papers
+> measurably fail to compile (rates in [PROJECT_STATE.md](../../v27/PROJECT_STATE.md) §1).
+> What the verdict means today: [COMPILATION_GUARANTEE.md](../../COMPILATION_GUARANTEE.md).
+
+
 - **Status:** Accepted (2026-04-22); **Discharged for pdflatex profile in v27.0.0** (`pdflatex_compile_safe` Qed at commit `492ff90`); T0/T1/T4/T5 wired in v27.0.1 / v27.0.2 (PRs #312 / #313→#317).
 - **Context owner:** v26.2 architectural decisions (plan §2.4)
 

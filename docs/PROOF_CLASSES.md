@@ -3,14 +3,26 @@
 Canonical reference for the proof classes in LaTeX Perfectionist.
 Counts sourced from `governance/project_facts.yaml` (regenerated per release).
 
+> ⚠ **These classes are LABELS, not measurements (honesty sweep, 2026-09-30).**
+> `formal_faithful` is what `scripts/tools/generate_rule_contracts.py`
+> (`pick_proof_class`) assigns to every rule not on a conservative/conditional
+> denylist; nothing checks that the Coq check function mirrors the OCaml
+> validator (OPEN-067), and the generated theorems share one proof body
+> (`qed_text_sound`), 57 of them over a checker that is the constant `false`.
+> The 637 also include 16 of the 17 Reserved rules. `governance/project_facts.yaml`
+> (`honesty_annotation`) records the same caveat. Read "Formal faithful" below as
+> "labelled faithful by default".
+
 ---
 
 ## Classification
 
-### Formal Faithful (637 rules)
+### Formal Faithful (637 rules — the default label, see ⚠ above)
 
-The Coq check function mirrors the OCaml validator's logic. If the Coq
-model says "no violation," the OCaml validator agrees.
+Intended meaning: the Coq check function mirrors the OCaml validator's logic,
+so that if the Coq model says "no violation," the OCaml validator agrees.
+**This is not established for any rule**: no gate or proof ties a Coq checker
+to its OCaml validator (OPEN-067).
 
 **VPD pattern families**: count_substring, multi_substring, count_char,
 byte_ge, byte_range, line_pred, multi_substring_all, substring_pair,
@@ -108,11 +120,11 @@ Per-rule classification (rule-level soundness proofs):
 
 | Class | Count | Percentage |
 |-------|-------|-----------|
-| Formal faithful | 637 | 98.9% |
-| Formal conservative | 20 | 3.1% |
+| Formal faithful (default label) | 637 | 96.5% |
+| Formal conservative | 20 | 3.0% |
 | Formal conditional | 3 | 0.5% |
 | Statistical (ML) | 8 | (overlay on faithful) |
-| **Total with proofs** | **660** | **100% (of 644 shipped; 16 Reserved excluded)** |
+| **Total labelled** | **660** | **100% of the 660 catalogued rules (643 shipped + 17 Reserved)** |
 
 Substrate proofs (not per-rule; memo §4–§8):
 

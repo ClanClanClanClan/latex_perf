@@ -5,7 +5,9 @@ The authority is `.github/required-status-checks.json`, which
 `branch-protection.yml` PUTs on every push to main (process invariant 7).
 Edit that file, never the API, and never this list on its own.
 
-As of 2026-09-12 it holds **11** contexts:
+As of 2026-09-30 it holds **12** contexts (checked against the live branch
+protection: `gh api repos/ClanClanClanClan/latex_perf/branches/main/protection
+--jq '.required_status_checks.contexts'`; `enforce_admins` is on):
 
 - Build / build
 - Proof CI (Coq) / proof-ci
@@ -18,10 +20,11 @@ As of 2026-09-12 it holds **11** contexts:
 - Spec Drift / spec-drift
 - TeX Oracle (real pdflatex) / tex-oracle
 - XXH64 SIMD Selfcheck / xxh-selfcheck
+- CI / format (`dune fmt`; missing from this list until 2026-09-30)
 
 ⚠ This document listed only the first seven of these until 2026-09-12, omitting
 `build`, `spec-drift`, `tex-oracle` and `xxh-selfcheck` — the build, the whole
-19-gate drift belt, the real-pdflatex oracle and the hash self-check. Anyone
+drift belt (19 gates then; 33 distinct gate scripts, 34 invocations, in `spec-drift.yml` on 2026-09-30), the real-pdflatex oracle and the hash self-check. Anyone
 following it would have switched four required contexts off. Recorded as
 OPEN-085.
 

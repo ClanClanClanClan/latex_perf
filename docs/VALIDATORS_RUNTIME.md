@@ -11,7 +11,7 @@ This document explains how runtime validators are wired into the current service
 ## Feature Flag
 - Env var: `L0_VALIDATORS`
   - Values enabling the pilot: `pilot`, `1`, `true`, `PILOT`
-  - Unset/other values: run the minimal baseline rules only
+  - Unset/other values: run the **default rule set** (548 rules, see below) — NOT a minimal baseline (this line said "minimal baseline rules only" until 2026-09-30)
 - Enable for REST:
   ```bash
   L0_VALIDATORS=pilot make rest-run
@@ -20,9 +20,14 @@ This document explains how runtime validators are wired into the current service
   ```
 
 ## Rule Sets
-- Baseline (minimal): `rules_basic`
-  - Includes `no_tabs`, `require_documentclass`, `unmatched_braces`, `missing_section_title`
-- Pilot (L0 subset): `rules_pilot`
+- Default (`L0_VALIDATORS` unset): `rules_basic @ rules_enc_char_spc @ rules_l1 @ rules_typo_promoted`
+  (`Validators.get_rules`, `latex-parse/src/validators.ml`), then tier-filtered.
+  **548 rules** (548 distinct ids), measured 2026-09-30 by calling
+  `Validators.get_rules ()` at `e60d4508`. `rules_basic` is only its first 4 entries
+  (`no_tabs`, `require_documentclass`, `unmatched_braces`, `missing_section_title`).
+- Pilot (`L0_VALIDATORS=pilot`): `rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1`
+  — **574 rules**, measured the same way.
+- Pilot L0 subset: `rules_pilot`
   - IDs aligned with `specs/rules/rules_v3.yaml`
   - Implemented string-level: `TYPO-001`…`TYPO-010`
   - See `specs/rules/pilot_v1.yaml` for the enumerated pilot list

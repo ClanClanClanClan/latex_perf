@@ -1,5 +1,15 @@
 # LaTeX Perfectionist — Formal Language Contract (v26)
 
+> ⚠ **SUPERSEDED — historical (banner added 2026-09-30; the text below is unchanged history).**
+> "LP-Core — fully guaranteed subset" is no longer a claim this project makes: an
+> LP-Core READY is **premise-certified and heuristic** since
+> [ADR-012](../../docs/v27/adr/ADR-012-contract-bounded-proven-tier.md), and LP-Core
+> papers measurably fail to compile (rates in
+> [PROJECT_STATE.md](../../docs/v27/PROJECT_STATE.md) §1). What the verdict means today:
+> [docs/COMPILATION_GUARANTEE.md](../../docs/COMPILATION_GUARANTEE.md). The tier
+> classification itself (LP-Core / LP-Extended / LP-Foreign) is still what the runtime computes.
+
+
 **Status:** v26 normative
 **Source of truth:** this document + `specs/v26/language_contract.yaml`
 **Runtime:** `latex-parse/src/language_profile.ml`

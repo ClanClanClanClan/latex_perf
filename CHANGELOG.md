@@ -2,6 +2,149 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.64] — 2026-10-01
+
+**THE RELEASE IN ONE LINE: one pinned pdflatex oracle, a fixer that by default
+applies one rule, and a strict-tier kernel that is built but NOT wired into any
+verdict.** 128 commits to `e60d4508`, PRs #597–#627 (31 PRs; #621 reached main
+only via its re-land #623), plus the two release PRs (the container fix and the
+honesty sweep) below. **No document receives a proven verdict in this release**: the
+CLI's strict-tier predicate is a stub (`in_strict_m0 … = false` in
+`validators_cli.ml`) and `--require-proof` exits 4 on every document.
+
+### Behaviour change — `--apply-fixes` is now an allow-list
+
+- **feat (#610, OPEN-112)**: default `--apply-fixes` applies **MATH-106 only**
+  (`Fix_policy.default_allowlist`); the previous apply-everything behaviour is
+  `--apply-fixes-all`. MEASURED on the sealed window (ranks 2600–2718):
+  under `-all` 13/104 papers broken and 84/91 text-changed; under the
+  allow-list 0 and 0. `check_fix_allowlist.py` refuses any entry without
+  committed evidence. `--apply-fixes` was taken off the recommended path (#605).
+- **feat (#609, OPEN-110)**: env-gated measurement hooks `LP_FIX_TRACE`,
+  `LP_FIX_ONLY`, `LP_FIX_EXCLUDE` (inert when unset); tools no longer read a
+  fixer crash as "no edits" (C-70).
+- **fix (#599, #602, #606, #608)**: producer fixes bisected by necessity and
+  sufficiency (MATH-009, TYPO-001, SCRIPT-019; virgin window 6/39 → 3/39,
+  tuned 0/38); ENC-015's two unsafe rewrites withdrawn; no region guard moved
+  the out-of-sample break rate (OPEN-109, C-69).
+- **fix (#611, OPEN-114)**: CY-001 never advanced its scan index — the L0
+  linter hung forever on a real paper.
+- **fix (#613, OPEN-117)**: REF-007 flagged legal `\cite{a, b}`; now fires only
+  on a key that keeps internal whitespace, demoted Error → Warning
+  (1,463 → 6 findings on the 297-package sample).
+
+### Oracle container and hygiene
+
+- **feat (#617, OPEN-118)**: one pdflatex oracle, `scripts/tools/_oracle.py`,
+  running CI's digest-pinned TeX Live image; the graded artefacts were re-graded
+  under it (0 cells moved).
+- **fix (#622, C-91)**: one grading protocol imposed by the oracle —
+  environment and argv allow-lists, private writable TeX trees, a pin gate
+  over every engine name.
+- **fix (#626, C-93/95/97/99/101)**: the grade is what pdfTeX did, never a file
+  or log line the document can write (TMPDIR/stale-PDF/leak checks). Re-measured
+  on 227 rows, 0 grades moved; ⚠ that is a partial re-grade — sample 3 was not
+  re-graded under the final oracle code (OPEN-118).
+- ⚠ **Oracle identity is not yet per-architecture**: aarch64 and x86_64 can
+  give different verdicts on the same image digest (C-103). The owner decided on
+  2026-09-30 that the architecture is part of the oracle's identity (ADR-015 E2);
+  the implementation is a later oracle PR, not in this release.
+- **measure (#625)**: the oracle's clock moved 0 of 8,557 fragment documents
+  and 0 of 170 clock-reading papers; R-CLOCK keeps run-dependent primitives out
+  of the strict fragment.
+- **measure (#619, OPEN-119)**: virgin sample 3 (ranks 721–920) graded once and
+  sealed: 188/200 correct, **FALSE-READY 4/200 = 2.0%** (one-sided 95% upper
+  bound 4.5%), over-rejection 8/200. Within noise of sample 2; this does NOT
+  show the heuristic tier improved.
+- **measure (#605, OPEN-103)**: the 182 previously uncompiled sample-1 READY
+  rows compiled — the in-sample zero FALSE-READY holds.
+
+### Strict kernel M0–M2 — NOT wired into the CLI
+
+- **feat (#614, ADR-012 M0)**: one verdict type; `--compile-check` prints a
+  TIER line (LIKELY OK / LIKELY FAIL / FOREIGN, "not a proof");
+  `--require-proof`; closure boundary scan. Exit codes unchanged.
+- **feat (#618, M1 slice 1)**: `gen_contract.py`, per-configuration name
+  contracts from the pinned image. Data only: nothing reads a contract yet.
+- **feat (#620, #623 re-landing #621, OPEN-121)**: Coq kernel of fragment L_S0,
+  reader and `decide_bytes` (`proofs/Strict/`, all Qed), usable only through
+  `strict_decide.exe`. ⚠ **OPEN-124 (#627): the kernel is not faithful to
+  pdfTeX** — a 3,282-line `\quad` document it decides PROVEN-READY fails with
+  `! Dimension too large.` The theorems' `Faithful` premise is false of the
+  pinned engine; do not wire the kernel into any verdict as it stands.
+- **feat (#601, D2a)**: `proofs/BuildGraphFrontEnd.v` — D1's Channel 1 is
+  unreachable for encoder-built graphs.
+
+### Performance
+
+- **perf (#612, #615, OPEN-104)**: linear structural detectors (−36% cold at
+  300 KB, −58% on one real paper); first recorded cold `--compile-check`
+  baseline from idle CI (1105 ms at 300 KB), still ~11x over the 100 ms SLO.
+- **fix (#598, OPEN-021)**: the real-time bench was timing its own memo
+  (1.2–1.5x flattering).
+
+### Docs and ADRs
+
+- **docs (#604, #614, #627)**: ADR-011 (fund Track R, demote `--apply-fixes`);
+  ADR-012 (contract-bounded proven tier); ADR-015 (static proven tier on a
+  translated engine) as decision of record. ADR-013/014 land as drafts only (#627).
+
+### Gates and CI
+
+- **fix (#597, OPEN-091/092/093)**: five gate scripts were outside CI.
+- **fix (#603, C-55)**: four CI readiness loops reported READY while nothing
+  was ready; `setup-ocaml` switch init now retried.
+- **fix (#600, OPEN-056)**: the "1 in 40 flake" was measuring the retry policy.
+- **fix (#604, #607, #616, C-68/C-73)**: staleness ratchets that had never fired
+  in CI; `cli_sha256` subordinate to the source anchor; re-measure after
+  squash merges (0 of 720 rows changed).
+- **perf (#624)**: gate kill-tests in parallel worktree copies, same verdicts,
+  772 s → 169 s.
+
+### Release/container — the published image runs
+
+- **fix (#628)**: the v27.1.63 image `ghcr.io/clanclanclanclan/latex_perf:v27.1.63`
+  exits 2 with `Rule_contracts_missing` on EVERY input — `validators_cli` and the
+  default REST entrypoint alike (reproduced 2026-09-30). The Dockerfile never
+  copied `specs/rules/rule_contracts.json`, and nothing ran the image before it was
+  pushed. The image now ships every runtime data file (rule contracts, rule
+  catalogue, remediation table, macro catalogues), the default entrypoint starts
+  `main_service` before the REST server (which refuses to start alone) with a
+  ONE-worker pool — ⚠ inside a container a two-worker pool left 2 of 6 requests
+  unanswered (measured; cause not yet diagnosed) — and
+  `docker-push.yml` runs `scripts/tools/docker_smoke.sh` on the built image and
+  pushes only the smoked bytes. ⚠ **Do not use the v27.1.63 image.**
+- **fix (#628)**: `generated/project_facts.json` said `release_state: rc`
+  for a version that was GitHub's "Latest" release; the state is now derived from
+  whether the version's tag exists.
+
+### Honesty sweep (release PR 2)
+
+- **docs**: README, `docs/index.md`, `ARCH.md`, `PROOFS.md`, `PROOF_GUIDE.md`,
+  `PROOF_CLASSES.md`, `SUPPORT_MATRIX`, `SECURITY.md`, `CI_STATUS_CHECKS.md` and
+  `VALIDATORS_RUNTIME.md` no longer claim "formally verified" rules, "21
+  languages", a Rust AVX-512 lane, an active seccomp sandbox or a lexer
+  microbench as keystroke latency. The rules stage at 300 KB is **203.3 ms
+  against a 30 ms budget** (perf-ci, 2026-09-30, `84b8f6ef`). Superseded banners
+  on the v25/v26/v27 specs and ADR-004 that still read "fully guaranteed",
+  "SHIPPED + PROVEN" or "single source of truth". `mkdocs.yml` nav: 14 of 15
+  links were dead.
+- **fix (facts generator)**: `generate_project_facts.py` now counts `proofs/`
+  recursively (it missed `proofs/Strict`) and counts theorem declarations, not
+  word hits: **192 files, 1,591 theorems, of which 803 are generated per-rule
+  theorems sharing one proof body (`qed_text_sound`) and 788 are everything
+  else.** `check_repo_facts.py` now fails on any stale "N theorems" / "N Coq
+  files" in the public docs. Engine statuses are read from `SUPPORT_MATRIX.yaml`
+  (xelatex/lualatex are "planned", not "beta").
+- **fix (backlog generator)**: `gen_candidate_backlog.py` reported 67 producers
+  against a registry of 164 and labelled MATH-106 — the one allow-listed fix —
+  "diagnose-only"; its gate compared the file only with itself. Now 164 / 124 /
+  352, and `--check` compares with the producer registry (OPEN-102 corrected).
+- **docs (ADR-015)**: owner decisions of 2026-09-30 recorded (E1–E5): Pascal
+  "Stuck" rule accepted; architecture is part of the oracle's identity; native
+  amd64 confirmation approved, not yet run; no speed-optimisation funding yet;
+  step 2 parked (OPEN-123, OPEN-124).
+
 ## [v27.1.63] — 2026-09-12
 
 **THE RELEASE IN ONE LINE: the tool was graded against real documents for the first

@@ -37,7 +37,9 @@ echo "[release] Regenerating governance/project_facts.yaml..."
 # LP_RELEASE_DATE stamps the date of a tag that does not exist yet: this
 # commit is authored BEFORE step 8 tags it. Once the tag lands, the
 # generator's own tag lookup reproduces the same value (OPEN-082).
-LP_RELEASE_DATE="$(date -u +%Y-%m-%d)" \
+# LP_RELEASE_STATE=GA likewise: this commit IS the release of ${TAG}; the
+# generator's tag lookup reproduces "GA" once the tag exists.
+LP_RELEASE_DATE="$(date -u +%Y-%m-%d)" LP_RELEASE_STATE=GA \
   python3 scripts/tools/generate_project_facts.py > /dev/null
 echo "[release] Regenerating specs/rules/rule_contracts.{yaml,json}..."
 python3 scripts/tools/generate_rule_contracts.py 2>&1 | tail -3

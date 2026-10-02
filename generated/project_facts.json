@@ -1,6 +1,6 @@
 {
   "version": "v27.1.63",
-  "release_state": "rc",
+  "release_state": "GA",
   "release_date": "2026-09-12",
   "generated_by": "scripts/tools/generate_project_facts.py",
   "honesty_annotation": {

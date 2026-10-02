@@ -1,0 +1,58 @@
+{
+  "keystroke": {
+    "4": {
+      "bytes": 3994,
+      "parse_ms": 0.1,
+      "fastrun_ms": 6.8,
+      "rules_ms": 6.7,
+      "structural_ms": 1.3
+    },
+    "50": {
+      "bytes": 49936,
+      "parse_ms": 2.1,
+      "fastrun_ms": 72.8,
+      "rules_ms": 70.7,
+      "structural_ms": 18.1
+    },
+    "100": {
+      "bytes": 99981,
+      "parse_ms": 6.8,
+      "fastrun_ms": 108.0,
+      "rules_ms": 101.2,
+      "structural_ms": 24.8
+    },
+    "300": {
+      "bytes": 300008,
+      "parse_ms": 16.1,
+      "fastrun_ms": 326.9,
+      "rules_ms": 310.7,
+      "structural_ms": 88.0
+    }
+  },
+  "cold_check_ms": {
+    "4": 70.4,
+    "50": 359.3,
+    "100": 665.9,
+    "300": 2079.0
+  },
+  "batch_ms": {
+    "4": 148.7,
+    "50": 1318.5,
+    "100": 2687.9,
+    "300": 8622.4
+  },
+  "spec_gap_300kb": {
+    "parse": 0.4,
+    "rules": 10.36,
+    "structural": 5.87
+  },
+  "reps": 9,
+  "loadavg_1min": 241.06,
+  "provenance": {
+    "ci_run_id": "",
+    "ci_sha": "",
+    "ci_ref": "",
+    "runner_os": "",
+    "runner_arch": ""
+  }
+}

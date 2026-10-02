@@ -125,8 +125,9 @@ jobs:
           # ADR-012 decision 7: the banner pins the engine BINARY, never the
           # macro layer. The ONE oracle entry point, scripts/tools/_oracle.py,
           # records the TeX tree fingerprint of each platform image of this
-          # digest (the digest is a multi-arch INDEX: CI grades amd64, a Mac
-          # grades arm64). Verify the tree this job will grade with IS that tree.
+          # digest (the digest is a multi-arch INDEX). Both CI and a Mac grade
+          # on arm64, the architecture of record (ADR-015 E2, OPEN-126).
+          # Verify the tree this job will grade with IS that tree.
           # Every grader below runs with LP_ORACLE_IN_IMAGE set, which is what
           # selects _oracle.py's native backend; outside the image that variable
           # makes the oracle fail loudly rather than grade with a host TeX.

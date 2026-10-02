@@ -1832,6 +1832,34 @@ REGISTRY = [
         [PY, f"{TOOLS}/check_oracle_infra_grading.py"],
         "pure",
         [
+            # OPEN-126 / ADR-015 E2: the oracle refuses another architecture,
+            # a writable TeX tree, a root engine; and a container not started
+            # read-only is replaced.
+            Mutation("the oracle grades on any architecture again",
+                     "scripts/tools/_oracle.py",
+                     r"_check_fingerprint accepted an oracle on x86_64",
+                     old='    if fp["arch"] != ARCH_OF_RECORD:\n',
+                     new='    if False:\n'),
+            Mutation("the oracle lets its engine run as root",
+                     "scripts/tools/_oracle.py",
+                     r"check_readonly accepted a root engine",
+                     old='    if probe.get("euid") in (0, None):\n',
+                     new='    if probe.get("euid") is None:\n'),
+            Mutation("the oracle accepts a writable TeX tree",
+                     "scripts/tools/_oracle.py",
+                     r"check_readonly accepted a writable tree",
+                     old='    if probe.get("tree_ro") is not True or probe.get("root_ro") is not True:\n',
+                     new='    if probe.get("root_ro") is not True:\n'),
+            Mutation("a non-read-only container is kept",
+                     "scripts/tools/_oracle.py",
+                     r"_ensure_container on a container with a writable root filesystem",
+                     old='                    or ro != "true" or user != self.user):\n',
+                     new='                    or user != self.user):\n'),
+            Mutation("require_same_oracle ignores the architecture",
+                     "scripts/tools/_oracle.py",
+                     r"require_same_oracle accepted another architecture",
+                     old='IDENTITY_KEYS = ("image", "arch", "tlpdb_sha256", "macro_layer_sha256",\n',
+                     new='IDENTITY_KEYS = ("image", "tlpdb_sha256", "macro_layer_sha256",\n'),
             # The contract generator is an oracle client (run_engine): the
             # engine it names must be the one that runs, and on the native
             # backend no host TeX variable may cross into its jobs.

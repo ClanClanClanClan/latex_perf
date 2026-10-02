@@ -1522,7 +1522,9 @@ def main() -> int:
                         f"tree fingerprint or no CI runner in ARCH_RUNNERS")
     if set(fps) != {"aarch64", "x86_64"}:
         findings.append(f"_oracle.TREE_FINGERPRINTS covers {sorted(fps)}, "
-                        f"expected both aarch64 (local) and x86_64 (CI)")
+                        f"expected both aarch64 (the architecture of record, "
+                        f"local and CI) and x86_64 (measured, not an oracle: "
+                        f"ADR-015 E2/E3)")
     elif fps["aarch64"]["macro_layer_sha256"] != fps["x86_64"]["macro_layer_sha256"]:
         findings.append("the arm64 and amd64 images of the pinned digest have "
                         "DIFFERENT macro layers: a local grade would not be the "

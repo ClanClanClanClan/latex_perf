@@ -104,6 +104,8 @@ DEAD_MSG = ("failed to connect to the docker API at unix:///nonexistent.sock; "
 #   openout   banner, then the DOCUMENT's own \openout refused under
 #             openout_any=p ("I can't write on file `../x.tex'"), nonce rc=1:
 #             a real document failure, must still be graded
+# The fake container's user (OPEN-126: --user, never root).
+FAKE_USER = "501:20"
 FAKE_DOCKER = r'''#!/usr/bin/env python3
 import os, sys
 a = sys.argv[1:]
@@ -154,6 +156,11 @@ if a[:1] == ["exec"] and "python3" not in a and "-c" in a \
     sys.stdout.write(os.environ.get(      # check_texmf_trees
         "FAKE_TREES", "D /tmp/texmf\nD /tmp/.texlive2026/texmf-var\n"
         "D /tmp/.texlive2026/texmf-config\n")); sys.exit(0)
+if a[:1] == ["exec"] and "python3" in a and "-c" in a \
+        and "ST_RDONLY" in a[a.index("-c") + 1]:   # the read-only probe (OPEN-126)
+    sys.stdout.write(os.environ.get("FAKE_RO", '{"euid": 501, "texmfroot": '
+        '"/usr/local/texlive/2026", "root_ro": true, "tree_ro": true}'))
+    sys.exit(0)
 if a[:1] == ["exec"] and "python3" in a:  # the tree fingerprint snippet
     sys.stdout.write(os.environ.get("FAKE_FP", "{}")); sys.exit(0)
 if a[:1] == ["exec"] and "-c" not in a:
@@ -503,6 +510,7 @@ class Checker:
         o = _oracle.ContainerOracle.__new__(_oracle.ContainerOracle)
         _oracle._Base.__init__(o)
         o.docker, o.workroot, o.name = str(self.fake), self.workroot, "lp-oracle-fake"
+        o.user = FAKE_USER
         _oracle._ORACLE = o
         # The session's full state scan is tested on its own (argv_and_state);
         # here the fake stands for a container already scanned.
@@ -1561,11 +1569,26 @@ class Checker:
         calls, state = self.td / "calls", self.td / "cstate"
         img = _oracle.IMAGE
         lim = str(_oracle.PIDS_LIMIT)
-        cases = (("no --init", f"true {img} false {lim}", "true " + lim, True, True),
-                 ("no --pids-limit", f"true {img} true 0", "true " + lim, True, True),
-                 ("the oracle's own", f"true {img} true {lim}", "true " + lim, False, True),
-                 ("docker ignoring --init", f"true {img} false {lim}", "false " + lim,
-                  True, False))
+        u = FAKE_USER
+        good = f"true {lim} true {u}"
+        # (label, inspect: running image init pids read-only user,
+        #  hostcfg after (re)creation: init pids read-only user,
+        #  want replaced, want accepted)
+        cases = (("no --init", f"true {img} false {lim} true {u}", good, True, True),
+                 ("no --pids-limit", f"true {img} true 0 true {u}", good, True, True),
+                 ("the oracle's own", f"true {img} true {lim} true {u}", good, False, True),
+                 ("docker ignoring --init", f"true {img} false {lim} true {u}",
+                  f"false {lim} true {u}", True, False),
+                 # OPEN-126: a writable root filesystem or a root engine is
+                 # replaced, and a docker that ignores the flags is refused.
+                 ("a writable root filesystem", f"true {img} true {lim} false {u}",
+                  good, True, True),
+                 ("a root user", f"true {img} true {lim} true 0:0", good, True, True),
+                 ("no user at all", f"true {img} true {lim} true", good, True, True),
+                 ("docker ignoring --read-only", f"true {img} true {lim} false {u}",
+                  f"true {lim} false {u}", True, False),
+                 ("docker ignoring --user", f"true {img} true {lim} true 0:0",
+                  f"true {lim} true 0:0", True, False))
         saved = {k: os.environ.get(k) for k in
                  ("FAKE_CALLS", "FAKE_STATE", "FAKE_INSPECT", "FAKE_HOSTCFG")}
         try:
@@ -1577,6 +1600,7 @@ class Checker:
                 o = _oracle.ContainerOracle.__new__(_oracle.ContainerOracle)
                 _oracle._Base.__init__(o)
                 o.docker, o.workroot, o.name = str(self.fake), self.workroot, "lp-oracle-fake"
+                o.user = FAKE_USER
                 try:
                     _silenced(o._ensure_container)
                     ok = True
@@ -1586,6 +1610,9 @@ class Checker:
                 runs = [c for c in log if c.startswith("run -d")]
                 replaced = any(c.startswith("rm -f") for c in log) and bool(runs)
                 flags_ok = all("--init" in r.split() and f"--pids-limit {lim}" in r
+                               and "--read-only" in r.split()
+                               and f"--user {FAKE_USER}" in r
+                               and "--tmpfs" in r.split()
                                for r in runs)
                 self.expect(f"_ensure_container on a container with {label}: "
                             f"replaced={replaced} (want {want_replace}), accepted="
@@ -1594,6 +1621,81 @@ class Checker:
                             replaced == want_replace and ok == want_ok and flags_ok,
                             "; ".join(log)[:300])
         finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def identity_and_readonly(self) -> None:
+        """OPEN-126. (a) ADR-015 E2: an oracle on another architecture than
+        ARCH_OF_RECORD refuses to grade, and two oracle blocks that differ in
+        architecture are refused as incomparable. (b) A writable TeX tree or a
+        root engine is refused (check_readonly), on the container backend's
+        construction too."""
+        import json as _json
+        rec = _oracle.ARCH_OF_RECORD
+        for arch in sorted(_oracle.TREE_FINGERPRINTS):
+            fp = dict(_oracle.TREE_FINGERPRINTS[arch], arch=arch,
+                      banner="pdfTeX " + _oracle.EXPECT_VERSION)
+            try:
+                _oracle._check_fingerprint(fp, "test")
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"_check_fingerprint {'refused' if arch == rec else 'accepted'} "
+                        f"an oracle on {arch} (architecture of record {rec})",
+                        ok == (arch == rec))
+        a = dict(_oracle.TREE_FINGERPRINTS[rec], arch=rec, image=_oracle.IMAGE)
+        for label, b, want in (
+                ("the same oracle", dict(a), True),
+                ("another architecture", dict(a, arch="x86_64"), False),
+                ("no architecture", {k: v for k, v in a.items() if k != "arch"}, False),
+                ("another format", dict(a, fmt_sha256="0" * 64), False)):
+            try:
+                _oracle.require_same_oracle(b, a, "test")
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"require_same_oracle {'refused' if want else 'accepted'} "
+                        f"{label}", ok == want)
+        base = {"euid": 501, "texmfroot": "/t", "root_ro": True, "tree_ro": True}
+        for label, probe, want in (
+                ("a read-only tree, unprivileged", base, True),
+                ("a writable tree", dict(base, tree_ro=False), False),
+                ("a writable root filesystem", dict(base, root_ro=False), False),
+                ("an unreadable mount table", dict(base, tree_ro=None), False),
+                ("a root engine", dict(base, euid=0), False)):
+            try:
+                _oracle.check_readonly(probe, "test")
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"check_readonly {'refused' if want else 'accepted'} {label}",
+                        ok == want)
+        fp = dict(_oracle.TREE_FINGERPRINTS[rec], arch=rec,
+                  banner="pdfTeX " + _oracle.EXPECT_VERSION)
+        cenv = self.td / "container-env-ro"
+        cenv.write_text("\0".join(f"{k}={v}" for k, v in _oracle.IMAGE_ENV.items()))
+        saved = {k: os.environ.get(k) for k in ("FAKE_FP", "FAKE_CENV", "FAKE_RO")}
+        try:
+            os.environ.update(FAKE_FP=_json.dumps(fp), FAKE_CENV=str(cenv))
+            for ro, want in ((None, True), (_json.dumps(dict(base, tree_ro=False)), False),
+                             (_json.dumps(dict(base, euid=0)), False)):
+                if ro is None:
+                    os.environ.pop("FAKE_RO", None)
+                else:
+                    os.environ["FAKE_RO"] = ro
+                try:
+                    self.oracle("ok").fingerprint()
+                    ok = True
+                except _oracle.OracleError:
+                    ok = False
+                self.expect(f"ContainerOracle.fingerprint {'refused' if want else 'accepted'} "
+                            f"a container whose read-only probe is {ro or 'clean'}",
+                            ok == want)
+        finally:
+            _oracle._ORACLE = None
             for k, v in saved.items():
                 if v is None:
                     os.environ.pop(k, None)
@@ -1941,7 +2043,8 @@ def main() -> int:
         # section (the oracle refused a run the protocol makes), reported
         # with its message, never a crash that hides the other sections.
         for section in (c.python_graders, c.generator_client, c.grading_env,
-                        c.argv_and_state, c.container_init, c.shell_grader):
+                        c.argv_and_state, c.container_init,
+                        c.identity_and_readonly, c.shell_grader):
             try:
                 section()
             except _oracle.OracleError as e:

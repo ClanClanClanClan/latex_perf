@@ -1,0 +1,10 @@
+{
+  "_what": "Kill-test fixture for check_release_debt.py (check_gate_selftests.py mutates these fields). Clean: a 2-commit branch merged --no-ff after v1.0.0 is ONE first-parent commit (3 in all), so max 1 PASSES only under first-parent counting.",
+  "tag": "v1.0.0",
+  "dune_version_at_tag": "1.0.0",
+  "dune_version_at_head": "1.0.0",
+  "side_commits": 2,
+  "direct_commits": 0,
+  "clone": "full",
+  "max": 1
+}

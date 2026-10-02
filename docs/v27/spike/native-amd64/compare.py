@@ -230,9 +230,13 @@ def main(argv):
     # ---- report
     hdr = ["group", "probe", "verdict", "rc_qemu", "rc_native", "detail"]
     tsv_out = "\t".join(hdr) + "\n" + "".join("\t".join(x.replace("\t", " ") for x in r) + "\n" for r in rows)
+    # Tally by the FULL verdict: "CONFIRMS (mask: date)" is equality under a mask, not byte
+    # identity, and must never be counted with the byte-identical CONFIRMS (review round 1: the
+    # first-word tally folded 4 masked H.2 inputs into "CONFIRMS 176", and the report then said
+    # 176 inputs were byte-identical when 172 are).
     tally = {}
     for r in rows:
-        k = (r[0] if r[0] in ("BASELINE",) else r[0], r[2].split(" ")[0])
+        k = (r[0], r[2])
         tally[k] = tally.get(k, 0) + 1
     lines = [f"{g}: {v} {c}" for (g, v), c in sorted(tally.items())]
     print("\n".join(lines))

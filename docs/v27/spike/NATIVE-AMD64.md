@@ -10,15 +10,20 @@ workflow [`spike-native-amd64.yml`](../../../.github/workflows/spike-native-amd6
 **Why:** every x86_64 result of spike H.1 and H.2 was produced by the amd64 binary under
 qemu-user emulation on an arm64 Mac (H1-report.md §5.4, H2-report.md "Configurations").
 
-**Verdict: CONFIRMS, with two qemu rows of H.2 REFUTED.** On a native x86_64 host the pinned
-amd64 binary reproduces, byte for byte, every committed outcome of every H.1 architecture probe
-(33 documents and their controls), the H.1 adversarial `rot2.tex`, the H.1 §3 format run, the
-H.2 INITEX evidence, and 176 of the 178 inputs of the H.2 differential's binary side. The two
-others, `t205` and `t208`, are the two inputs where the committed amd64 row recorded qemu
-hanging (killed after 900 s, rc 137, with a qemu core file): natively the amd64 binary dies with
-SIGSEGV, rc 139, at once, exactly as the native arm64 binary does, with terminal output,
-standard error and log byte-identical to the qemu run's. That is correction C-112. No H.1
-divergence between the architectures and no H.2 class (IDENTICAL/STUCK/LIMIT) changes.
+**Verdict: CONFIRMS, with two qemu exit statuses of H.2 REFUTED.** On a native x86_64 host the
+pinned amd64 binary reproduces byte for byte every committed outcome of every H.1 architecture
+probe (33 documents and their controls), the H.1 adversarial `rot2.tex`, the H.1 §3 format run
+and the H.2 INITEX evidence. Of the 178 inputs of the H.2 differential's binary side, 172 are
+byte-identical to the qemu run, 4 (the real-clock inputs `env-fsd01`, `env-fsd-empty`,
+`env-fsd-unset`, `env-sde-unset`) are equal only under the declared `date` mask (they print the
+wall clock, §3), and 2, `t205` and `t208`, differ in the exit status only. There the committed
+amd64 row says rc 137: under qemu the guest's SIGSEGV was delivered and dumped as a core file
+(the qemu core's NT_PRSTATUS note: signal 11), but the emulator then did not exit and the
+container was killed. Natively the amd64 binary exits 139 (SIGSEGV), as the native arm64 binary
+does, with terminal output, standard error and log byte-identical to the qemu run's. The rc 137
+is the emulator's exit path, not the binary's (correction C-113). No H.1 divergence between the
+architectures and no H.2 class (IDENTICAL/STUCK/LIMIT) changes. What this run did NOT re-run is
+listed in §5.
 
 Evidence tags as in H1-report.md: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 
@@ -133,38 +138,60 @@ Per-probe rows with every hash: [`native-amd64/native/compare.tsv`](native-amd64
 
 ### H.2 (H2-report.md checkpoint 3; `h2/diff/`, `h2/evidence/inirun/`)
 
-| set | inputs | CONFIRMS | REFUTES |
-|---|---|---|---|
-| review A's graded inputs | 153 | 151 | 2 (`t205`, `t208`) |
-| deep-recursion inputs (`deep5000`, `deep20000`, `deep28000`) | 3 | 3 | 0 |
-| the INITEX run `t0` | 1 | 1 | 0 |
-| checkpoint-3 regressions (`clk-*`, `env-*`, `kpse-*`) | 21 | 21 (4 of them under the `date` mask) | 0 |
-| **all** | **178** | **176** | **2** |
+Columns: CONFIRMS split into byte-identical (every non-core output file and the rc equal, no
+mask) and equal only under the `date` mask; REFUTES. `verify_native.py` recomputes this table
+from `native/compare.tsv` and fails if it drifts.
+
+| set | inputs | CONFIRMS, byte-identical | CONFIRMS, `date` mask | REFUTES |
+|---|---|---|---|---|
+| review A's graded inputs | 153 | 151 | 0 | 2 |
+| deep-recursion inputs (`deep5000`, `deep20000`, `deep28000`) | 3 | 3 | 0 | 0 |
+| the INITEX run `t0` | 1 | 1 | 0 | 0 |
+| checkpoint-3 regressions (`clk-*`, `env-*`, `kpse-*`) | 21 | 17 | 4 | 0 |
+| **all** | **178** | **172** | **4** | **2** |
 | `h2/evidence/inirun/ref-amd64.*` (rc, stdout, stderr, `texput.log`, `clock.log`) | | byte-identical | |
 | `h2/evidence/inirun/ref-realclock-amd64.*` (rc, stdout, `texput.log`) | | byte-identical | |
 
 **The two REFUTES.** `t205` and `t208` (gen6 documents where `finiteshrink` prints to a log that
 is not open; the model is Stuck there: "type: write to a non-file"):
-- committed amd64 (qemu): rc 137, the container killed by the watchdog after 900 s, and a file
-  `qemu_pdftex_….core` in the run's directory, which the committed row lists among the binary's
-  output files;
-- native amd64: rc 139 (SIGSEGV) at once, a kernel `core` file; stdout, stderr and `texput.log`
-  byte-identical to the qemu run's;
+- committed amd64 (qemu): rc 137, and a file `qemu_pdftex_….core` in the run's directory, which
+  the committed row lists among the binary's output files. The raw qemu run directories
+  (`~/.cache/lp-spike-h1/h2/diff/w-amd64/t20{5,8}/bin/`) show [M]: each core is an x86_64 ELF core
+  of `pdftex -ini` whose NT_PRSTATUS note has `si_signo` 11 and `pr_cursig` 11 (SIGSEGV); its
+  file time is about 31 s (`t205`) and 53 s (`t208`) after the run started; the container ended
+  much later: `t208` was killed by the 900 s watchdog at age 917 s (`watch.log`), and `t205`'s
+  rc file was written 30.6 min after its start, before the watchdog's script existed (its killer
+  is not recorded);
+- native amd64, both runs: rc 139 (SIGSEGV), a kernel `core` file; stdout, stderr and
+  `texput.log` byte-identical to the qemu run's. No per-input time was recorded: the job's H.2
+  step ran all 178 inputs and the real-clock control in 105.7 s (first run) and 70.9 s
+  (replication), which bounds each of these two runs [M];
 - native arm64 (committed `results-arm64.tsv`): rc 139, a `core` file.
 
-So the amd64 binary does not hang there: it crashes as the arm64 binary does, and qemu did not
-deliver the fault. The committed `results-amd64.tsv` rows for these two inputs describe the
-emulator, not the binary (C-112). The H.2 class is STUCK either way, and H2-report.md labelled
-the 137 as qemu's; what it implied, a behavioural difference between the architectures at these
-two inputs, does not exist natively.
+So the amd64 binary does not hang there: it segfaults, as the arm64 binary does, and qemu
+delivered that fault to the guest and dumped its core, as the committed qemu files already
+recorded. What did not finish under qemu was the emulator's own exit after the dump [M: the core
+precedes the kill by 15 to 30 minutes]; why it hung is not established (plausibly the host
+dumping qemu's own core under `core_pattern=core`) [I]. The committed rc 137 in
+`results-amd64.tsv` is therefore the emulator's, not the binary's (C-113). The H.2 class is
+STUCK either way, and H2-report.md labelled the 137 as qemu's; what it implied, a behavioural
+difference between the architectures at these two inputs, does not exist natively.
+
+**Two transient qemu failures not repeated natively [M].** H2-report.md records one amd64 binary
+run (`xsct1`) that first ended with rc 139 and no output under qemu and gave rc 1 on three
+reruns, and review B's one (`jpgbig`); it attributed both to the emulation. Both native runs
+give `xsct1` rc 1 and `jpgbig` rc 0, equal to the committed (rerun) rows, and no native run gave
+rc 139 anywhere but `t205` and `t208`.
 
 ### 4.1 Replication [M]
 
 The commit that recorded these results triggered the workflow again
 (<https://github.com/ClanClanClanClan/latex_perf/actions/runs/36983126000>, on an AMD EPYC 7763
-runner): the same verdicts, row for row (`native-amd64/native-run2/compare-summary.txt`). Of
-the 1,133 files the two native runs hashed, 1,121 are byte-identical. The 12 that differ are of
-two kinds, both expected:
+runner): the same verdicts, row for row (`native-amd64/native-run2/compare-summary.txt`). Each
+native manifest has 1,139 sha256 leaves: 1,133 files the runs wrote or read in their run
+directories, and the 6 captured terminal outputs (the five `*-amd64.out` and `f7amd.log`).
+1,127 leaves are byte-identical between the two runs. The 12 that differ are of two kinds, both
+expected:
 - the 8 outputs of the four real-clock H.2 inputs (`out` and `texput.log`): they print the
   wall-clock time, and they are equal under the `date` mask;
 - the 4 kernel core dumps (`snapy0`, `jpgdiv`, `t205`, `t208`): memory images, excluded from
@@ -173,17 +200,30 @@ two kinds, both expected:
 ## 5. What this does and does not settle
 
 Settled natively [M]: every committed x86_64 outcome of the H.1 architecture probes, the H.1
-adversarial PDF, the §3 format runs, and the H.2 binary side, as listed above. Since the native
-binary's outputs equal the qemu binary's byte for byte on 176 inputs, the H.2 model's IDENTICAL
-rows in the x86_64 configuration stand against the native binary too [I: transitivity of byte
-equality; the model was not re-run].
+adversarial PDF, the §3 format runs, and the H.2 binary side, as listed above (172 inputs
+byte-identical, 4 under the `date` mask, 2 differing in rc only). The 4 masked inputs are STUCK
+in `results-amd64.tsv` (the real clock), so every H.2 input the model calls IDENTICAL in the
+x86_64 configuration is among the 172 byte-identical ones, and those IDENTICAL rows stand
+against the native binary too [I: transitivity of byte equality; the model was not re-run
+natively, and its comparison in the x86_64 configuration was made against qemu].
 
 Not re-run natively, so still qemu-only:
 - H.1 §5.2's corpus comparisons (200 real papers, 489 evidence documents, 40 `\tracingall`
   traces): they run through `_oracle.py` on a local corpus that is not in the repository;
 - H.1's gdb reach traces (`h1/archsem/reach_trace/`): x86_64 was traced through qemu-user's
   gdbstub, and the trace needs the unstripped reference build, which is not committed;
-- H.1 §2.3's x86_64 rebuild of the binary (byte-identical to the pinned one under emulation).
+- H.1 §2.3's x86_64 rebuild of the binary (byte-identical to the pinned one under emulation);
+- the H.2 model itself, in either configuration; in particular the hybrid aarch64 configuration
+  (aarch64's `char`, x86_64's unfused floating point) is not touched by this run, and aarch64's
+  fused sites stay unconfirmed.
+
+**What the uploaded artifact cannot re-derive [M].** The upload leaves out the kernel core dumps,
+`runs/rot/amd/rot2.pdf` and the three `.fmt` files of `runs/f7amd/`
+(`.github/workflows/spike-native-amd64.yml`, the upload step). Their native hashes (`rot2.pdf`
+`043e4ebc…`, the formats `5a9dfc4e…` and `a476533c…`) rest on the manifest the job itself wrote
+(committed here) and, for the formats, on `f7amd.log`'s own `sha256sum` lines; the two runs
+agree on all of them. A reviewer can re-hash every other file from the artifact (review round 1
+did, for both runs). The artifact expires after 30 days (`retention-days: 30`).
 
 **Two x86_64 CPU models, both AMD** (EPYC 9V74 in the first run, EPYC 7763 in the
 replication). glibc's x86_64 libm selects some functions by CPU feature at load time
@@ -192,10 +232,31 @@ other x86_64 CPUs (Intel among them) are not covered [I].
 
 ## 6. Files
 
-`native-amd64/`: `manifest.py`, `compare.py`, `qemu-amd64-manifest.json` (the qemu baseline),
+`native-amd64/`: `manifest.py`, `compare.py`, `verify_native.py` (recomputes this report's
+comparison and H.2 table from the committed manifests), `qemu-amd64-manifest.json` (the qemu baseline),
 `clockshim-amd64.so`, `intmin.tex`, and `native/` (from the run's artifact
 `native-amd64-outcomes`): `native-amd64-manifest.json`, `compare.tsv`, `compare-summary.txt`, the
 five terminal summaries, `rot-amd.rc`, `f7amd.log`, `bin-amd64.log`, `realclock-amd64.log`,
 `watchdog.log` and `env/` (host, image, binfmt, core pattern, harness hashes); `native-run2/`
 (the replication: its manifest, comparison and `env/`).
-Re-check: `python3 docs/v27/spike/native-amd64/compare.py --native docs/v27/spike/native-amd64/native/native-amd64-manifest.json`.
+Re-check: `python3 docs/v27/spike/native-amd64/verify_native.py`.
+
+The two `compare-summary.txt` files were regenerated after review round 1 from the committed
+manifests: the artifact's version tallied verdicts by their first word, which counted the 4
+masked inputs as "CONFIRMS 176"; `compare.py` now tallies by full verdict ("CONFIRMS 172",
+"CONFIRMS (mask: date) 4"). The `compare.tsv` files are unchanged (byte-identical on
+regeneration).
+
+## 7. Statements elsewhere that this run changes
+
+On this branch (corrected here): ADR-015's H.1 result ("All x86_64 runs were emulated", "All
+amd64 evidence is emulated"); H1-report.md §0 (the format row), §3, §5.3, §5.4, §6 and §8;
+H2-report.md's configurations paragraph, its `t205`/`t208` sentence and its open list;
+PROJECT_STATE OPEN-123. `h2/diff/results-amd64.tsv` is left as the record of the qemu run (its
+rc 137 is annotated by C-113, not rewritten).
+
+NOT on this branch, so still stale until the spike reaches main: on `origin/main`, ADR-015's E3
+("approved, not yet run … Until it runs, all amd64 evidence stays emulated") and PROJECT_STATE's
+E3 line and OPEN-123 ("ALL amd64 evidence is qemu-emulated; a native-amd64 confirmation … is NOT
+DONE"). This PR targets the spike branch; the main-side text is the lead's to update (in the
+spike's merge to main, or a separate main PR).

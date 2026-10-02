@@ -187,10 +187,12 @@ What this decides, and what it does not:
   unreachable, 77 are translated sites the rule covers, and 220 are boundary sites with no
   evidence either way. H.2's C-boundary work list: the 227 boundary sites not shown unreachable, and the 649
   boundary functions whose code changes under `-fwrapv` (463) or `-fsigned-char` (314),
-  including `input_line`, `read_jpg_info` and `fm_scan_line`. All x86_64 runs were emulated.
-- **All amd64 evidence is emulated** (qemu-user on an arm64 host): the rebuild, the behaviour runs
-  and the format run. A confirmation on a native amd64 host, the CI runner of `tex-oracle.yml`, is
-  open (OPEN-123).
+  including `input_line`, `read_jpg_info` and `fm_scan_line`. All x86_64 runs were emulated; the
+  probes were confirmed natively on 2026-10-02 (below).
+- **The amd64 evidence was produced under emulation** (qemu-user on an arm64 host): the rebuild,
+  the behaviour runs and the format run. The behaviour runs and the format run were **confirmed on
+  a native amd64 host** on 2026-10-02 (owner decision E3, `docs/v27/spike/NATIVE-AMD64.md`); the
+  rebuild, the corpus comparisons and the gdb traces remain emulated only (OPEN-123).
 
 ## H.2 result (2026-09-30; review round 1 closed 2026-10-01; full numbers in `docs/v27/spike/H2-report.md`)
 

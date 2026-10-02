@@ -426,6 +426,15 @@ def pc_summary_off_by_one(text: str) -> str:
     return _json.dumps(d, indent=1)
 
 
+def pc_ready_flip(text: str) -> str:
+    """OPEN-126: a proven-coverage row whose CLI readiness is not its results
+    row's (two artefacts measured with different CLIs)."""
+    import json as _json
+    d = _json.loads(text)
+    d["rows"][0]["ready"] = not d["rows"][0]["ready"]
+    return _json.dumps(d, indent=1)
+
+
 def prov_unresolvable_sha(text: str) -> str:
     """Point an artefact's provenance at a sha no clone can resolve.
 
@@ -2353,6 +2362,11 @@ REGISTRY = [
                      r"proven_coverage_sample3\.json: its summary .* is not the "
                      r"one its rows give",
                      transform=pc_summary_off_by_one),
+            Mutation("a proven-coverage row measured with another CLI",
+                     "corpora/real_roots/proven_coverage_sample1.json",
+                     r"proven_coverage_sample1\.json: \S+ records ready=\w+ but "
+                     r"corpora/real_roots/results\.json records cli_rc=",
+                     transform=pc_ready_flip),
             # A hand-edited digit inside the generated block must be caught.
             Mutation("generated-block digit edited",
                      "docs/v27/PROJECT_STATE.md",

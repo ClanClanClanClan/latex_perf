@@ -388,6 +388,36 @@ def main() -> int:
         except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
             findings.append(f"{f.name} is unreadable or malformed: {exc}")
             continue
+        # The rows JOIN a results artefact: each row's cell must be the
+        # results row's cell, and its CLI readiness the results row's cli_rc.
+        # MEASURED 2026-10-02 (OPEN-126): proven_coverage_sample2 said READY
+        # for 2507.03521v2 and 2507.09165v1 (the fe673dc1 CLI it ran) while
+        # results_sample2 recorded cli_rc 1 for both (an older CLI), and the
+        # rows carried the cell false-NOT-READY -- a READY, compiling row
+        # published as an over-rejection. Nothing compared the two files.
+        src = (doc.get("provenance") or {}).get("results_source")
+        rp = repo / src if src else None
+        if rp is None or not rp.is_file():
+            findings.append(f"{f.name}: provenance.results_source {src!r} is "
+                            f"not a file in the repository")
+        else:
+            rrows = {d["arxiv_id"]: d for d in json.loads(rp.read_text())["docs"]}
+            if set(rrows) != {r["id"] for r in doc["rows"]}:
+                findings.append(f"{f.name}: its rows and {src}'s are different "
+                                f"documents")
+            for r in doc["rows"]:
+                d = rrows.get(r["id"])
+                if d is None:
+                    continue
+                if r.get("cell") != d.get("cell"):
+                    findings.append(f"{f.name}: {r['id']} has cell "
+                                    f"{r.get('cell')!r} but {src} says "
+                                    f"{d.get('cell')!r}; rejoin it")
+                if bool(r.get("ready")) != (d.get("cli_rc") == 0):
+                    findings.append(
+                        f"{f.name}: {r['id']} records ready={r.get('ready')} but "
+                        f"{src} records cli_rc={d.get('cli_rc')}: the two "
+                        f"artefacts were measured with different CLIs")
         if doc.get("summary") != want:
             findings.append(
                 f"{f.name}: its summary {doc.get('summary')} is not the one its "

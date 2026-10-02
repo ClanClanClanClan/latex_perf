@@ -394,7 +394,9 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
 
 
 def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
-                     timeout: int, results_name: str = "results.json") -> int:
+                     timeout: int, results_name: str = "results.json",
+                     sample_offset: int | None = None,
+                     cli_checkout: Path | None = None) -> int:
     """Recompute ONLY the CLI verdict, reusing the recorded pdflatex results.
 
     A full run recompiles 200 papers with pdflatex and takes ~20 minutes. That
@@ -420,15 +422,51 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
     manifest_sample3.json). Sample 3 is the sealed VIRGIN sample (OPEN-119):
     refreshing its CLI side is a re-measurement, taken only after a change
     was validated on other documents.
+
+    SAMPLE 2 (OPEN-126, closing OPEN-081's "no producer"). It has no hash
+    manifest: `sample_offset` names its window in the frame, the ids are
+    asserted equal to that window, and each row's own `sha256_tree` (recorded
+    by --repass) is asserted against the corpus.
+
+    WHICH CLI (OPEN-126). `cli_checkout` runs the CLI built in ANOTHER
+    checkout (its `_build`), and the artefact then names THAT checkout's HEAD
+    and engine tree: measured_at_sha/src_tree_sha are the provenance of the
+    CLI that produced the verdicts, never of the tool that ran it. The
+    checkout's latex-parse/src must be clean. This is how sample 2 was brought
+    to the engine tree samples 1 and 3 were measured with, fe673dc1: its
+    recorded CLI verdicts were NOT that tree's (2 of 200 rows differ in rc,
+    MEASURED 2026-10-02), although its measured_at_note said they were.
     """
     results_path = outdir / results_name
     manifest_path = outdir / (
         "manifest.json" if results_name == "results.json"
         else results_name.replace("results", "manifest", 1))
-    if not results_path.is_file() or not manifest_path.is_file():
+    if not results_path.is_file():
         return die(2, "no recorded results to refresh — run a full sweep first")
     res = json.loads(results_path.read_text())
-    man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+    if sample_offset is None:
+        if not manifest_path.is_file():
+            return die(2, f"no {manifest_path.name}: a sample without a hash "
+                          f"manifest needs --sample-offset")
+        man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+    else:
+        frame = build_frame(root)
+        window = select(frame, len(frame))[sample_offset:sample_offset + len(res["docs"])]
+        if {d["arxiv_id"] for d in window} != {d["arxiv_id"] for d in res["docs"]}:
+            return die(2, f"{results_name}: its ids are not ranks {sample_offset}.."
+                          f"{sample_offset + len(res['docs']) - 1} of the frame")
+        if not all(d.get("sha256_tree") for d in res["docs"]):
+            return die(2, f"{results_name}: a row has no sha256_tree; re-grade it "
+                          f"with --repass --sample-offset first")
+        man = {d["arxiv_id"]: {"sha256_tree": d["sha256_tree"]} for d in res["docs"]}
+    checkout = Path(cli_checkout).resolve() if cli_checkout else repo
+    if cli_checkout:
+        st = subprocess.run(["git", "--no-optional-locks", "status", "--porcelain",
+                             "--", "latex-parse/src"], cwd=checkout,
+                            capture_output=True, text=True)
+        if st.returncode != 0 or st.stdout.strip():
+            return die(2, f"--cli-checkout {checkout}: latex-parse/src is not a "
+                          f"clean checkout of its HEAD ({st.stdout.strip()[:200] or st.stderr.strip()[:200]})")
 
     skew = oracle_skew(res.get("oracle"))
     if skew:
@@ -436,7 +474,9 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
                       f"the recorded pdflatex grades forward; re-grade with "
                       f"--repass --repass-scope all --rebaseline-oracle.")
 
-    cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
+    cli = checkout / "_build/default/latex-parse/src/validators_cli.exe"
+    if not cli.is_file():
+        return die(2, f"{cli} not built")
     env = dict(os.environ, L0_VALIDATORS="pilot")
     changed = []
     for i, d in enumerate(res["docs"], 1):
@@ -476,9 +516,14 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
               flush=True)
 
     res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
-    res["measured_at_sha"] = git_head(repo)
-    res["src_tree_sha"] = engine_tree(repo)
-    res["measured_at"] = "cli-only refresh; pdflatex verdicts carried forward"
+    res["measured_at_sha"] = git_head(checkout)
+    res["src_tree_sha"] = engine_tree(checkout)
+    res["measured_at"] = ("cli-only refresh with the CLI built at "
+                          f"{res['measured_at_sha'][:12]} (engine tree "
+                          f"{res['src_tree_sha'][:12]}), run by "
+                          f"diff_real_roots.py at {git_head(repo)[:12]}; "
+                          "pdflatex verdicts carried forward (oracle side: "
+                          "oracle_regraded_at_sha)")
     results_path.write_text(json.dumps(res, indent=1) + "\n")
     print(f"\n[real-roots] refreshed: {len(changed)} cell change(s)")
     for a, b, c in changed:
@@ -909,8 +954,9 @@ def main() -> int:  # noqa: C901
                     help="the results artefact under --out that --repass "
                          "re-grades (results_sample2.json for sample 2)")
     ap.add_argument("--sample-offset", type=int, default=None,
-                    help="with --repass on an artefact that has no hash "
-                         "manifest (sample 2): its first frame rank (200)")
+                    help="with --repass or --refresh-cli on an artefact that "
+                         "has no hash manifest (sample 2): its first frame "
+                         "rank (200)")
     ap.add_argument("--rebaseline-oracle", action="store_true",
                     help="the one-time ORACLE-BASELINE CHANGE (ADR-012 "
                          "decision 7): re-grade every row of an artefact graded "
@@ -918,6 +964,10 @@ def main() -> int:  # noqa: C901
                          "--repass --repass-scope all")
     ap.add_argument("--diff-out", default=None,
                     help="with --repass: write the per-row before/after diff here")
+    ap.add_argument("--cli-checkout", default=None,
+                    help="with --refresh-cli: run the CLI built in this "
+                         "checkout and stamp ITS HEAD and engine tree (its "
+                         "latex-parse/src must be clean)")
     ap.add_argument("--clock", default=PROTOCOL_CLOCK, choices=sorted(CLOCKS),
                     help="with --repass --experiment-out: re-grade under this "
                          "clock (O-5 measurement; 'forced' sets "
@@ -972,7 +1022,9 @@ def main() -> int:  # noqa: C901
 
     if ns.refresh_cli:
         return refresh_cli_only(repo, root, outdir, banner, ns.timeout,
-                                results_name=ns.results)
+                                results_name=ns.results,
+                                sample_offset=ns.sample_offset,
+                                cli_checkout=ns.cli_checkout)
 
     frame = build_frame(root)
     if len(frame) < ns.offset + ns.n:

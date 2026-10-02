@@ -5,7 +5,8 @@
 **Run:** <https://github.com/ClanClanClanClan/latex_perf/actions/runs/36980556818> (2026-10-02,
 workflow [`spike-native-amd64.yml`](../../../.github/workflows/spike-native-amd64.yml), commit
 `6b5be1d1`). The committed native outcomes are this run's artifact
-`native-amd64-outcomes`.
+`native-amd64-outcomes`. **Replication:** <https://github.com/ClanClanClanClan/latex_perf/actions/runs/36983126000>
+(commit `5cb14326`, another runner CPU), same verdicts, §4.1.
 **Why:** every x86_64 result of spike H.1 and H.2 was produced by the amd64 binary under
 qemu-user emulation on an arm64 Mac (H1-report.md §5.4, H2-report.md "Configurations").
 
@@ -157,6 +158,18 @@ emulator, not the binary (C-112). The H.2 class is STUCK either way, and H2-repo
 the 137 as qemu's; what it implied, a behavioural difference between the architectures at these
 two inputs, does not exist natively.
 
+### 4.1 Replication [M]
+
+The commit that recorded these results triggered the workflow again
+(<https://github.com/ClanClanClanClan/latex_perf/actions/runs/36983126000>, on an AMD EPYC 7763
+runner): the same verdicts, row for row (`native-amd64/native-run2/compare-summary.txt`). Of
+the 1,133 files the two native runs hashed, 1,121 are byte-identical. The 12 that differ are of
+two kinds, both expected:
+- the 8 outputs of the four real-clock H.2 inputs (`out` and `texput.log`): they print the
+  wall-clock time, and they are equal under the `date` mask;
+- the 4 kernel core dumps (`snapy0`, `jpgdiv`, `t205`, `t208`): memory images, excluded from
+  every comparison.
+
 ## 5. What this does and does not settle
 
 Settled natively [M]: every committed x86_64 outcome of the H.1 architecture probes, the H.1
@@ -172,9 +185,10 @@ Not re-run natively, so still qemu-only:
   gdbstub, and the trace needs the unstripped reference build, which is not committed;
 - H.1 §2.3's x86_64 rebuild of the binary (byte-identical to the pinned one under emulation).
 
-**The runner is one CPU model** (AMD EPYC 9V74). glibc's x86_64 libm selects some functions by
-CPU feature at load time (H1-report.md §5.1): only PDF-side code calls libm, and no probe here
-showed a difference, but a different x86_64 CPU is not covered [I].
+**Two x86_64 CPU models, both AMD** (EPYC 9V74 in the first run, EPYC 7763 in the
+replication). glibc's x86_64 libm selects some functions by CPU feature at load time
+(H1-report.md §5.1). Only PDF-side code calls libm, and no probe here showed a difference, but
+other x86_64 CPUs (Intel among them) are not covered [I].
 
 ## 6. Files
 
@@ -182,5 +196,6 @@ showed a difference, but a different x86_64 CPU is not covered [I].
 `clockshim-amd64.so`, `intmin.tex`, and `native/` (from the run's artifact
 `native-amd64-outcomes`): `native-amd64-manifest.json`, `compare.tsv`, `compare-summary.txt`, the
 five terminal summaries, `rot-amd.rc`, `f7amd.log`, `bin-amd64.log`, `realclock-amd64.log`,
-`watchdog.log` and `env/` (host, image, binfmt, core pattern, harness hashes).
+`watchdog.log` and `env/` (host, image, binfmt, core pattern, harness hashes); `native-run2/`
+(the replication: its manifest, comparison and `env/`).
 Re-check: `python3 docs/v27/spike/native-amd64/compare.py --native docs/v27/spike/native-amd64/native/native-amd64-manifest.json`.

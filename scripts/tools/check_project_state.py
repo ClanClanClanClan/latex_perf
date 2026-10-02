@@ -200,7 +200,9 @@ def main() -> int:
         ("corpora/real_roots/results.json", ("measured_at_sha",),
          "python3 scripts/tools/diff_real_roots.py --repo . --refresh-cli"),
         ("corpora/real_roots/results_sample2.json", ("measured_at_sha",),
-         "OPEN-081: this artefact has no producer in-repo"),
+         "python3 scripts/tools/diff_real_roots.py --repo . --refresh-cli "
+         "--results results_sample2.json --sample-offset 200 (OPEN-126 gave it "
+         "a producer; add --cli-checkout DIR to measure with another engine)"),
         ("corpora/real_roots/proven_coverage_sample1.json",
          ("provenance", "measured_at_sha"),
          "python3 scripts/tools/gen_proven_coverage.py --results "
@@ -231,17 +233,15 @@ def main() -> int:
     # removes it. Pinned to its exact size: adding a new unwatched artefact, or
     # quietly widening this set, fails the gate. Removing an entry here without
     # the artefact gaining a sha also fails, in the loop below.
-    NO_PROVENANCE_YET = {
-        "corpora/real_roots/results_sample2.json":
-            "OPEN-081 — measured_at_sha is null and NO script in the repo "
-            "writes this file; the sha cannot be stamped honestly until the "
-            "producer exists. Do not hand-stamp it: a guessed provenance is "
-            "worse than a declared absence.",
-    }
-    if len(NO_PROVENANCE_YET) != 1:
+    # Was {results_sample2.json: OPEN-081, "no producer"}. OPEN-126 gave it
+    # one (diff_real_roots.py --refresh-cli --sample-offset 200) and measured
+    # its CLI side with it, so the set is empty and pinned at 0: an artefact
+    # owning a published number is staleness-checked, no exceptions.
+    NO_PROVENANCE_YET: dict = {}
+    if len(NO_PROVENANCE_YET) != 0:
         findings.append(
             f"NO_PROVENANCE_YET holds {len(NO_PROVENANCE_YET)} entries, expected "
-            f"exactly 1. Every artefact owning a published number must be "
+            f"exactly 0. Every artefact owning a published number must be "
             f"staleness-checked; widening this set needs a ledger row and a "
             f"deliberate edit here (C-47).")
 

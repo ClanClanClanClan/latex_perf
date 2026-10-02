@@ -134,7 +134,12 @@ draft §12, the O-n id is given; otherwise none exists and none is invented.
   `FaithfulEngine` of D2 and O-7 binding on the oracle as well as on the proofs. It amends
   ADR-012 decision 7 (the digest-pinned oracle) by adding the architecture to the pin.
   **Implementation is a later oracle PR**; until it lands, nothing in `_oracle.py` or the
-  artefacts enforces it.
+  artefacts enforces it. *Implementation note (2026-10-02, OPEN-126, branch
+  `fix/v27165-oracle-arch`; not a new decision):* the architecture of record is aarch64
+  (`_oracle.ARCH_OF_RECORD`); the oracle refuses to grade on any other, every comparer refuses
+  grades of another architecture, CI's `tex-oracle` job moves to a native arm64 runner, and
+  `check_oracle_pin.py` enforces all three. Choosing aarch64 for CI (rather than keeping amd64
+  with per-architecture baselines) is put to the owner in OPEN-126.
 - **E3. Native amd64 confirmation: approved, not yet run.** The owner approved confirming the
   emulated amd64 evidence of H.1 by a one-off GitHub Actions job on the spike branch. That job has
   not been created or run: adding the workflow awaits the owner's permission. Until it runs, all

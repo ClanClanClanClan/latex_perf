@@ -441,10 +441,20 @@ def build(repo: Path) -> str:
             return out
 
         o3, f3 = s3["oracle"], s3["frame"]
+        _rg3 = repo / "corpora/oracle_baseline/regrade_open126_sample3.json"
+        rg3 = json.loads(_rg3.read_text()) if _rg3.is_file() else None
         L += ["### Virgin position (sample 3 — sealed for measurement, OPEN-119)", "",
               f"Frame offset {f3['offset']}, ranks {f3['offset'] + 1}-"
               f"{f3['offset'] + f3['n']} of the same deterministic ordering "
-              f"(frame {f3['frame_size']}); pdflatex grades taken ONCE, CLI "
+              f"(frame {f3['frame_size']}); drawn and graded ONCE"
+              + (f", the pdflatex side re-graded under the final oracle at "
+                 f"`{str(s3['oracle_regraded_at_sha'])[:8]}` (OPEN-126: "
+                 f"{rg3['summary']['cells_moved']} of {rg3['summary']['rows']} "
+                 f"cells and {rg3['summary']['outcomes_moved']} rc/PDF/pass "
+                 f"outcomes moved, corpora/oracle_baseline/"
+                 f"regrade_open126_sample3.json)"
+                 if s3.get("oracle_regraded_at_sha") and rg3 else "")
+              + f", CLI "
               f"verdicts measured at "
               f"`{str(s3.get('measured_at_sha', '?'))[:8]}`, under the pinned "
               f"image `{o3.get('image', '?')}` ({o3.get('arch', '?')}, "

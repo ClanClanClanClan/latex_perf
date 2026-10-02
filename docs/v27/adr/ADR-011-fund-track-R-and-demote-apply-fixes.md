@@ -142,7 +142,7 @@ same N would have meant about 6 PRs at the rate since v27.1.63 (140 commits over
 first-parent commits at `497150ac`).
 
 **Implemented** as `scripts/tools/check_release_debt.py`, a required step of
-`spec-drift` (PR #PRNUM), after the v27.1.64 tag rather than ahead of the next tag
+`spec-drift` (PR #631), after the v27.1.64 tag rather than ahead of the next tag
 as the paragraph above planned: built before it, it would have been red on arrival.
 The threshold lives only in that script's `MAX_FIRST_PARENT_DEBT`. It FAILS when
 the debt exceeds it; it PASSES with a note when `dune-project`'s version is newer

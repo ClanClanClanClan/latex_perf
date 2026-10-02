@@ -133,8 +133,11 @@ soundness headline built on 180 unconfirmed rows.
 
 #### Amendment (owner decision, 2026-10-02): first-parent units — implemented
 
-**Decision.** N = 25 counts **first-parent** commits of HEAD since the nearest
-`v[0-9]*` tag (`git rev-list --first-parent --count T..HEAD`), not all commits.
+**Decision.** N = 25 counts **first-parent** commits of HEAD since the latest
+release tag `T` (`git rev-list --first-parent --count T..HEAD`), not all commits.
+`T` is the highest tag of the exact form `vX.Y.Z` reachable from HEAD (`git tag
+--merged HEAD`); any other tag, such as `v26.2.0-alpha1` or a spike tag, is not a
+release and is ignored.
 On main a first-parent commit is one merged PR or one direct push, whichever merge
 style was used — a squash adds one, a true merge adds one — so the unit is stable
 across the owner's switch from squash to true merges. With all-commit units the
@@ -144,19 +147,30 @@ first-parent commits at `497150ac`).
 **Implemented** as `scripts/tools/check_release_debt.py`, a required step of
 `spec-drift` (PR #631), after the v27.1.64 tag rather than ahead of the next tag
 as the paragraph above planned: built before it, it would have been red on arrival.
-The threshold lives only in that script's `MAX_FIRST_PARENT_DEBT`. It FAILS when
+The threshold lives only in that script's `MAX_FIRST_PARENT_DEBT`, and every run
+exits 2 unless it equals the N in the Decision paragraph above, so the limit cannot
+move in code without this record moving with it. It FAILS when
 the debt exceeds it; it PASSES with a note when `dune-project`'s version is newer
 than the tag's (a release in preparation, so the release PR can land); it FAILS
 when `dune-project`'s version is *behind* the tag (a version marker contradicting a
 tag, the other half of OPEN-013); and a shallow clone, no reachable tag or any git
 error is exit 2, never a pass. Nothing it measures is committed (C-13).
 
-**Known limit.** The exemption is unbounded: a `dune-project` bump that is never
+**Known limits.** The exemption is unbounded: a `dune-project` bump that is never
 tagged silences the gate indefinitely. The gate still prints the count while
-exempt.
+exempt. A release tag must be spelled exactly `vX.Y.Z`; a misspelt one (`v27.1.065`,
+`v27.1.65-final`) is ignored, so that release counts as never tagged: with
+`dune-project` already bumped to it, the gate stays in the exemption above.
+
+**Correction (C-116).** The first implementation chose `T` with `git describe`, which
+picks the tag with the fewest commits to HEAD across all parents. An older hotfix
+tag on a side branch merged after a newer release then wins, and because
+`dune-project` is newer than that hotfix, the exemption passed any debt. It also
+exited 2 on every PR whenever a pre-release or annotation `v` tag was the nearest.
+Neither shape exists on main today; both are now fixture cases of the kill-tests.
 
 **Correction (C-115).** "Would have fired around day 34 of that 47-day window"
-does not reproduce in either unit. Replaying main's first-parent history from
+does not reproduce in either unit (the record does not say how 34 was obtained). Replaying main's first-parent history from
 v27.1.62 (tagged 2026-07-27) and taking the first main state over 25: all-commit
 units fire at `1a277c56` on 2026-08-20 (day 24; 26 all, 17 first-parent);
 first-parent units fire at `4bad2553` on 2026-08-22 (day 26; 35 all, 26

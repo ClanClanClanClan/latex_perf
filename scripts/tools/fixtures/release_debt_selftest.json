@@ -1,10 +1,61 @@
 {
-  "_what": "Kill-test fixture for check_release_debt.py (check_gate_selftests.py mutates these fields). Clean: a 2-commit branch merged --no-ff after v1.0.0 is ONE first-parent commit (3 in all), so max 1 PASSES only under first-parent counting.",
-  "tag": "v1.0.0",
-  "dune_version_at_tag": "1.0.0",
-  "dune_version_at_head": "1.0.0",
-  "side_commits": 2,
-  "direct_commits": 0,
-  "clone": "full",
-  "max": 1
+  "_what": "Kill-test fixture for check_release_debt.py. Every case must PASS clean; check_gate_selftests.py mutates one case per kill-test. merge-shape: a 2-commit branch merged --no-ff after v1.0.0 is ONE first-parent commit (3 in all), so max 1 passes only under first-parent counting. release-prep: 31 first-parent commits past v1.0.0 pass ONLY through the exemption (a PATCH bump, so a major-only comparison fails it). side-branch-tag: an older tag v1.0.1 on a branch merged after v2.0.0 must not be chosen as T (git describe chooses it, C-116); the true debt is 36 past v2.0.0. non-release-tags: v*-tags that are not vX.Y.Z (a spike tag, a pre-release, an annotation tag on the release commit with a later date, a leading-zero name) must be ignored, not chosen and not exit 2.",
+  "cases": [
+    {
+      "name": "merge-shape",
+      "ops": [
+        {"op": "version", "v": "1.0.0"},
+        {"op": "tag", "name": "v1.0.0"},
+        {"op": "branch", "name": "side"},
+        {"op": "commits", "n": 2},
+        {"op": "checkout", "name": "main"},
+        {"op": "merge", "name": "side"}
+      ],
+      "clone": "full",
+      "max": 1
+    },
+    {
+      "name": "release-prep",
+      "ops": [
+        {"op": "version", "v": "1.0.0"},
+        {"op": "tag", "name": "v1.0.0"},
+        {"op": "commits", "n": 30},
+        {"op": "version", "v": "1.0.1"}
+      ],
+      "clone": "full",
+      "max": 1
+    },
+    {
+      "name": "side-branch-tag",
+      "ops": [
+        {"op": "version", "v": "1.0.0"},
+        {"op": "tag", "name": "v1.0.0"},
+        {"op": "branch", "name": "hotfix"},
+        {"op": "commits", "n": 20},
+        {"op": "tag", "name": "v1.0.1"},
+        {"op": "checkout", "name": "main"},
+        {"op": "version", "v": "2.0.0"},
+        {"op": "tag", "name": "v2.0.0"},
+        {"op": "commits", "n": 30},
+        {"op": "merge", "name": "hotfix"},
+        {"op": "commits", "n": 5}
+      ],
+      "clone": "full",
+      "max": 36
+    },
+    {
+      "name": "non-release-tags",
+      "ops": [
+        {"op": "version", "v": "1.0.0"},
+        {"op": "tag", "name": "v1.0.0", "date": "2026-01-01T00:00:00Z"},
+        {"op": "tag", "name": "v1.0.0-ground-truth", "date": "2026-06-01T00:00:00Z"},
+        {"op": "commits", "n": 1},
+        {"op": "tag", "name": "v27165-spike", "annotated": false},
+        {"op": "tag", "name": "v1.1.0-alpha1"},
+        {"op": "tag", "name": "v01.2.0"}
+      ],
+      "clone": "full",
+      "max": 1
+    }
+  ]
 }

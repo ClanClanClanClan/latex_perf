@@ -9,14 +9,27 @@ is the window in which users run a version already known to be wrong, and
 nothing watched it.
 
 WHAT IT MEASURES, AT RUN TIME, FROM GIT ONLY.
-  T    = git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD
-         (the nearest release tag reachable from HEAD; must read vX.Y.Z)
+  T    = the HIGHEST release tag reachable from HEAD: among
+         `git tag --merged HEAD`, the names of the exact form vX.Y.Z
+         (no leading zeros, nothing after Z), ordered as version tuples.
+         Every other tag (v26.2.0-alpha1, v25-R0-...-ground-truth, a spike
+         tag) is NOT a release and is ignored, so it can neither choose T nor
+         turn CI red. NOT `git describe`: describe picks the tag with the
+         fewest commits to HEAD across ALL parents, so an older hotfix tag on
+         a merged side branch beats the real latest release on main — and
+         the exemption below then passed any amount of debt (C-116).
   debt = git rev-list --first-parent --count T..HEAD
          (FIRST-PARENT commits: on main, one per merged PR or direct push,
          whichever merge style the owner used — a squash and a true merge
          both add exactly one first-parent commit)
   The all-commit count `git rev-list --count T..HEAD` is printed for
   information only; it is never compared with anything.
+
+THE LIMIT. MAX_FIRST_PARENT_DEBT below is the only constant. Because the
+owner's decision lives in ADR-011 §6's amendment, the gate reads the N stated
+in that amendment's Decision paragraph on every run and exits 2 if it differs
+from the constant (or cannot be found exactly once): raising the limit in code
+without an ADR edit cannot pass.
 
 RULE (owner decision 2026-10-02, amending ADR-011 §6 to first-parent units):
   * dune-project's (version) at HEAD GREATER than T's version: PASS, with a
@@ -32,15 +45,16 @@ next commit. This gate computes it from git each run and compares it with the
 one constant below, nothing else.
 
 FAILS CLOSED (C-55 / OPEN-101). A shallow clone, no reachable release tag
-(tags not fetched), an unparseable tag or version, or ANY git error is exit 2
-— never a pass. A `rev-list` exit 128 read as green is exactly how two
+(tags not fetched), an unparseable dune-project version, an ADR/constant
+mismatch, or ANY git error is exit 2 — never a pass. A `rev-list` exit 128 read as green is exactly how two
 staleness ratchets in this repo were blind in CI for their whole lives.
 
 Exit: 0 pass (including the exemption), 1 debt or version failure, 2 infra.
 
-`--selftest-fixture PATH` builds a throwaway git repository described by a
-JSON file, clones it the way the file says, and runs the SAME `evaluate` on
-the clone. It exists so check_gate_selftests.py can prove each arm fails by
+`--selftest-fixture PATH` builds one throwaway git repository per case of a
+JSON file (each a list of ops: version bumps, commits, tags, branches,
+--no-ff merges), clones it the way the case says, and runs the SAME
+`evaluate` on the clone; the exit code is the worst over the cases. It exists so check_gate_selftests.py can prove each arm fails by
 mutating that JSON; it is never used by CI's real run.
 """
 from __future__ import annotations
@@ -58,8 +72,11 @@ from pathlib import Path
 # This is the ONLY place the threshold lives. Change it here, with an ADR.
 MAX_FIRST_PARENT_DEBT = 25
 
-TAG_GLOB = "v[0-9]*"
-TAG_RE = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+_NUM = r"(0|[1-9][0-9]*)"
+TAG_RE = re.compile(rf"\Av{_NUM}\.{_NUM}\.{_NUM}\Z")
+ADR_011 = "docs/v27/adr/ADR-011-fund-track-R-and-demote-apply-fixes.md"
+ADR_N_RE = re.compile(r"\*\*Decision\.\*\* N = (\d+) counts \*\*first-parent\*\*")
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DUNE_VERSION_RE = re.compile(r"^\(version\s+(\d+)\.(\d+)\.(\d+)\)\s*$", re.M)
 
 
@@ -87,22 +104,46 @@ def count(repo: Path, *args: str) -> int:
     return int(out)
 
 
+def check_adr_limit(root: Path = REPO_ROOT) -> None:
+    """The constant must equal the N the owner's ADR-011 §6 amendment states."""
+    try:
+        text = (root / ADR_011).read_text(encoding="utf-8")
+    except OSError as exc:
+        raise Infra(f"cannot read {ADR_011} to confirm the limit: {exc}") from exc
+    ns = ADR_N_RE.findall(text)
+    if len(ns) != 1:
+        raise Infra(f"{ADR_011} states the first-parent N {len(ns)}x "
+                    f"(need exactly 1 '**Decision.** N = <n> counts "
+                    f"**first-parent**')")
+    if int(ns[0]) != MAX_FIRST_PARENT_DEBT:
+        raise Infra(f"ADR-011 §6 states N = {ns[0]} but MAX_FIRST_PARENT_DEBT "
+                    f"is {MAX_FIRST_PARENT_DEBT} — the limit is the owner's "
+                    f"decision; change both or neither")
+
+
+def latest_release_tag(repo: Path) -> tuple[str, tuple[int, int, int]]:
+    """The highest vX.Y.Z tag reachable from HEAD (see the module doc)."""
+    names = git(repo, "tag", "--merged", "HEAD").splitlines()
+    rel = []
+    for name in names:
+        m = TAG_RE.match(name)
+        if m:
+            rel.append((tuple(int(x) for x in m.groups()), name))
+    if not rel:
+        raise Infra(f"no release tag (vX.Y.Z) is reachable from HEAD among "
+                    f"{len(names)} reachable tag(s) — tags not fetched, or "
+                    f"never released")
+    ver, name = max(rel)
+    return name, ver
+
+
 def evaluate(repo: Path, limit: int) -> tuple[int, list[str]]:
     """(exit code, report lines). Raises Infra for anything untrustworthy."""
     if git(repo, "rev-parse", "--is-shallow-repository") != "false":
         raise Infra("shallow clone: the distance to the last release tag "
                     "cannot be measured (CI must check out with "
                     "fetch-depth: 0)")
-    try:
-        tag = git(repo, "describe", "--tags", "--abbrev=0",
-                  "--match", TAG_GLOB, "HEAD")
-    except Infra as exc:
-        raise Infra(f"no tag matching '{TAG_GLOB}' is reachable from HEAD — "
-                    f"tags not fetched, or never released ({exc})") from exc
-    m = TAG_RE.match(tag)
-    if not m:
-        raise Infra(f"nearest release tag {tag!r} is not of the form vX.Y.Z")
-    tag_ver = tuple(int(x) for x in m.groups())
+    tag, tag_ver = latest_release_tag(repo)
 
     dune = git(repo, "show", "HEAD:dune-project")
     vs = DUNE_VERSION_RE.findall(dune)
@@ -111,7 +152,7 @@ def evaluate(repo: Path, limit: int) -> tuple[int, list[str]]:
                     f"lines (need exactly 1)")
     dune_ver = tuple(int(x) for x in vs[0])
 
-    rng = f"{tag}..HEAD"
+    rng = f"refs/tags/{tag}..HEAD"
     fp = count(repo, "--first-parent", rng)
     allc = count(repo, rng)
     dv = ".".join(map(str, dune_ver))
@@ -149,8 +190,10 @@ FIXTURE_ENV = {
 }
 
 
-def _fx(cwd: Path, *args: str) -> None:
+def _fx(cwd: Path, *args: str, date: str | None = None) -> None:
     env = {**os.environ, **FIXTURE_ENV}
+    if date:
+        env["GIT_AUTHOR_DATE"] = env["GIT_COMMITTER_DATE"] = date
     r = subprocess.run(["git", "-c", "init.defaultBranch=main",
                         "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false",
                         *args], cwd=cwd, env=env, capture_output=True,
@@ -160,36 +203,51 @@ def _fx(cwd: Path, *args: str) -> None:
                     f"{r.returncode}: {r.stderr.strip()[:300]}")
 
 
-def build_fixture(spec: dict, root: Path) -> Path:
-    """origin: a tagged release commit, then `side_commits` commits on a
-    branch merged with --no-ff (ONE first-parent commit, side_commits + 1 in
-    all), then `direct_commits` commits straight on main. Cloned per
-    spec["clone"]: "full" | "no-tags" | "shallow"."""
+def build_fixture(case: dict, root: Path) -> Path:
+    """Replay case["ops"] in a fresh repo on branch main, then clone it per
+    case["clone"]: "full" | "no-tags" | "shallow". Ops:
+      {"op": "version", "v": "1.0.0"}   write dune-project, commit
+      {"op": "commits", "n": k}         k one-file commits
+      {"op": "tag", "name": ..., "annotated": bool, "date": optional ISO}
+      {"op": "branch", "name": ...}     git checkout -b
+      {"op": "checkout", "name": ...}
+      {"op": "merge", "name": ...}      git merge --no-ff (ONE first-parent
+                                        commit, however many it brings in)
+    """
     src = root / "origin"
     src.mkdir()
     _fx(src, "init", "-q")
-    (src / "dune-project").write_text(
-        f"(lang dune 3.0)\n(version {spec['dune_version_at_tag']})\n")
-    _fx(src, "add", "dune-project")
-    _fx(src, "commit", "-q", "-m", "release")
-    _fx(src, "tag", "-a", spec["tag"], "-m", spec["tag"])
-    _fx(src, "checkout", "-q", "-b", "side")
-    for i in range(spec["side_commits"]):
-        (src / f"side{i}").write_text(f"{i}\n")
-        _fx(src, "add", f"side{i}")
-        _fx(src, "commit", "-q", "-m", f"side {i}")
-    _fx(src, "checkout", "-q", "main")
-    _fx(src, "merge", "-q", "--no-ff", "-m", "merge side", "side")
-    for i in range(spec["direct_commits"]):
-        (src / f"direct{i}").write_text(f"{i}\n")
-        _fx(src, "add", f"direct{i}")
-        _fx(src, "commit", "-q", "-m", f"direct {i}")
-    if spec["dune_version_at_head"] != spec["dune_version_at_tag"]:
-        (src / "dune-project").write_text(
-            f"(lang dune 3.0)\n(version {spec['dune_version_at_head']})\n")
-        _fx(src, "commit", "-q", "-am", "bump")
+    seq = 0
+    for op in case["ops"]:
+        kind = op["op"]
+        if kind == "version":
+            (src / "dune-project").write_text(
+                f"(lang dune 3.0)\n(version {op['v']})\n")
+            _fx(src, "add", "dune-project")
+            _fx(src, "commit", "-q", "-m", f"version {op['v']}")
+        elif kind == "commits":
+            for _ in range(op["n"]):
+                seq += 1
+                (src / f"f{seq}").write_text(f"{seq}\n")
+                _fx(src, "add", f"f{seq}")
+                _fx(src, "commit", "-q", "-m", f"commit {seq}")
+        elif kind == "tag":
+            if op.get("annotated", True):
+                _fx(src, "tag", "-a", op["name"], "-m", op["name"],
+                    date=op.get("date"))
+            else:
+                _fx(src, "tag", op["name"])
+        elif kind == "branch":
+            _fx(src, "checkout", "-q", "-b", op["name"])
+        elif kind == "checkout":
+            _fx(src, "checkout", "-q", op["name"])
+        elif kind == "merge":
+            _fx(src, "merge", "-q", "--no-ff", "-m", f"merge {op['name']}",
+                op["name"])
+        else:
+            raise Infra(f"fixture: unknown op {kind!r}")
     dst = root / "clone"
-    mode = spec["clone"]
+    mode = case["clone"]
     if mode == "full":
         _fx(root, "clone", "-q", str(src), str(dst))
     elif mode == "no-tags":
@@ -199,6 +257,26 @@ def build_fixture(spec: dict, root: Path) -> Path:
     else:
         raise Infra(f"fixture: unknown clone mode {mode!r}")
     return dst
+
+
+def run_fixture(path: Path) -> int:
+    """Every case of the fixture; the exit code is the worst one (2 > 1 > 0)."""
+    cases = json.loads(path.read_text())["cases"]
+    worst = 0
+    for case in cases:
+        tagname = f"[release-debt] [{case['name']}]"
+        try:
+            with tempfile.TemporaryDirectory(prefix="release-debt-") as td:
+                rc, lines = evaluate(build_fixture(case, Path(td)),
+                                     case["max"])
+        except Infra as exc:
+            print(f"{tagname} INFRA (exit 2, never a pass): {exc}")
+            worst = 2
+            continue
+        for ln in lines:
+            print(f"{tagname} {ln}")
+        worst = max(worst, rc)
+    return worst
 
 
 def main() -> int:
@@ -214,13 +292,10 @@ def main() -> int:
     if ns.max < 0:
         ap.error("--max must be >= 0")
     try:
+        check_adr_limit()
         if ns.selftest_fixture:
-            spec = json.loads(Path(ns.selftest_fixture).read_text())
-            limit = spec["max"]
-            with tempfile.TemporaryDirectory(prefix="release-debt-") as td:
-                rc, lines = evaluate(build_fixture(spec, Path(td)), limit)
-        else:
-            rc, lines = evaluate(Path(ns.repo), ns.max)
+            return run_fixture(Path(ns.selftest_fixture))
+        rc, lines = evaluate(Path(ns.repo), ns.max)
     except Infra as exc:
         print(f"[release-debt] INFRA (exit 2, never a pass): {exc}")
         return 2

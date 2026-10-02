@@ -490,8 +490,9 @@ def build(repo: Path) -> str:
           f"(`project_facts.yaml` release_date {facts.get('release_date','?')})",
           "- Release debt: not shown here, because it changes on every commit "
           "(C-13). It is **gated** by `scripts/tools/check_release_debt.py` in "
-          "required `spec-drift`: HEAD more first-parent commits past the nearest "
-          "`v*` tag than its ADR-011 §6 limit fails, unless `dune-project` already "
+          "required `spec-drift`: HEAD more first-parent commits past the highest "
+          "`vX.Y.Z` tag reachable from HEAD (other `v*` tags are not releases and "
+          "are ignored) than its ADR-011 §6 limit fails, unless `dune-project` already "
           "names a newer version (a release in preparation); a `dune-project` "
           "version behind that tag also fails (OPEN-013). Run the script for "
           "today's figure.",

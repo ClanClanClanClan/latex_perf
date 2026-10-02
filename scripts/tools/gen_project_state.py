@@ -37,6 +37,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# THE one definition of "certified" (in a tier, FOREIGN excluded; OPEN-126).
+from gen_proven_coverage import in_tier_certified  # noqa: E402
+
 BEGIN = "<!-- BEGIN GENERATED: measured-position -->"
 END = "<!-- END GENERATED: measured-position -->"
 DOC = Path("docs/v27/PROJECT_STATE.md")
@@ -221,13 +225,13 @@ def build(repo: Path) -> str:
         rows = raw["rows"] if isinstance(raw, dict) else raw
         n = len(rows)
         certified_ok = sum(1 for r in rows
-                           if r.get("model") == "certified" and r["cell"] == "true-READY")
+                           if in_tier_certified(r) and r["cell"] == "true-READY")
         core_ok = sum(1 for r in rows
-                      if r.get("model") == "certified" and r["cell"] == "true-READY"
+                      if in_tier_certified(r) and r["cell"] == "true-READY"
                       and r.get("profile") == "lp-core")
-        heur = sum(1 for r in rows if r.get("model") != "certified" and r.get("ready"))
+        heur = sum(1 for r in rows if not in_tier_certified(r) and r.get("ready"))
         fr_cert = sum(1 for r in rows
-                      if r["cell"] == "FALSE-READY" and r.get("model") == "certified")
+                      if r["cell"] == "FALSE-READY" and in_tier_certified(r))
         return [f"| {label} | {core_ok}/{n} = {100*core_ok/n:.1f}% | "
                 f"{certified_ok}/{n} = {100*certified_ok/n:.1f}% | {heur} | {fr_cert} |"]
 
@@ -245,7 +249,7 @@ def build(repo: Path) -> str:
         for tier_label, sel in (("any tier", rows),
                                 ("LP-Core", [r for r in rows
                                              if r.get("profile") == "lp-core"])):
-            cert = [r for r in sel if r.get("model") == "certified"]
+            cert = [r for r in sel if in_tier_certified(r)]
             bad = [r for r in cert if r["cell"] in fails]
             if not cert:
                 continue

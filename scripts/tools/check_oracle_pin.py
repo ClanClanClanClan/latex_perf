@@ -192,6 +192,49 @@ PRE_BASELINE = {
 }
 PRE_BASELINE_SIZE = 4
 
+# GRADED artefacts that do not yet name their GRADING CODE (OPEN-126): graded
+# before the oracle recorded it, and not re-graded since. Each still names its
+# image, ARCHITECTURE and tree (checked above); what it cannot show is which
+# version of _oracle.py and its grader produced it. Pinned to its exact
+# contents and size: an entry is removed by re-grading the artefact with a
+# producer that records `grading_code` (_oracle.grading_code), and an entry
+# whose artefact has gained the block fails until it is removed here.
+GRADING_CODE_PENDING = {
+    "corpora/apply_fixes_real/results.json":
+        "OPEN-126: apply_fixes_real window 2000; producer "
+        "gen_apply_fixes_real_differential.py does not record it yet",
+    "corpora/apply_fixes_real/results_virgin.json":
+        "OPEN-126: apply_fixes_real window 2100; as results.json",
+    "corpora/apply_fixes_real/results_fresh.json":
+        "OPEN-126: apply_fixes_real window 2300; as results.json",
+    "corpora/strict_battery/manifest.json":
+        "OPEN-126: producer gen_strict_battery.py does not record it yet",
+    "corpora/false_ready/manifest.json":
+        "OPEN-126: producer false_ready_oracle.sh (STRICT_GRADE re-record) "
+        "does not record it yet",
+    "corpora/apply_fixes/manifest.json":
+        "OPEN-126: a hand-maintained baseline confirmed by CI's property-(b) "
+        "run; no producer writes its oracle block",
+    "corpora/oracle_baseline/equivalence.json":
+        "OPEN-126: producer check_oracle_equivalence.py does not record it yet",
+    "corpora/contracts/strict/article-s0-signatures.json":
+        "OPEN-126: producer gen_strict_signatures.py does not record it yet",
+    "corpora/strict_s0/rule_probes.json":
+        "OPEN-126: producer gen_strict_lexical.py/_strict_s0.py does not "
+        "record it yet",
+    "corpora/strict_s0/differential_v2.json":
+        "OPEN-126: producer strict_differential.py does not record it yet",
+}
+GRADING_CODE_PENDING_SIZE = 10
+
+# The CI job that grades in the pinned image must run on the architecture of
+# record (ADR-015 E2): GitHub's native arm64 runner. And every in-image run
+# must be started read-only, with a tmpfs /tmp, as a non-root user (OPEN-126;
+# the native backend verifies it, this catches the workflow before a run).
+TEX_ORACLE_WORKFLOW = ".github/workflows/tex-oracle.yml"
+ARCH_RUNNERS = {"aarch64": ("ubuntu-24.04-arm", "ubuntu-22.04-arm")}
+INIMAGE_RUN_FLAGS = ("--read-only", "--tmpfs /tmp", "--user ")
+
 # Files allowed to start pdflatex: the oracle itself. And files not scanned
 # because they NAME engines as data about this scan: this gate (its ENGINES
 # tuple) and the selftest harness (its kill-test payloads are the evasion
@@ -1473,6 +1516,10 @@ def main() -> int:
                         f"{_oracle.FINGERPRINTED_IMAGE}; re-measure both "
                         f"platform images in the re-pin PR")
     fps = _oracle.TREE_FINGERPRINTS
+    record = _oracle.ARCH_OF_RECORD
+    if record not in fps or record not in ARCH_RUNNERS:
+        findings.append(f"_oracle.ARCH_OF_RECORD = {record!r} has no recorded "
+                        f"tree fingerprint or no CI runner in ARCH_RUNNERS")
     if set(fps) != {"aarch64", "x86_64"}:
         findings.append(f"_oracle.TREE_FINGERPRINTS covers {sorted(fps)}, "
                         f"expected both aarch64 (local) and x86_64 (CI)")
@@ -1486,7 +1533,32 @@ def main() -> int:
                 findings.append(f"_oracle.TREE_FINGERPRINTS[{arch}][{k}] is not a sha256")
 
     # 2./3. every graded artefact names the pinned image
+    notes: list[str] = []
     graded_paths = {p for p, _ in GRADED}
+    if len(GRADING_CODE_PENDING) != GRADING_CODE_PENDING_SIZE:
+        findings.append(f"GRADING_CODE_PENDING holds {len(GRADING_CODE_PENDING)} "
+                        f"entries, pinned at {GRADING_CODE_PENDING_SIZE}; "
+                        f"changing it needs a ledger row and a deliberate edit")
+    for rel in sorted(set(GRADING_CODE_PENDING) - graded_paths):
+        findings.append(f"{rel} is in GRADING_CODE_PENDING but not in GRADED")
+    # E2 in CI: the in-image job runs on the architecture of record, and
+    # every in-image docker run is read-only, tmpfs /tmp, non-root.
+    wf = repo / TEX_ORACLE_WORKFLOW
+    wtext = wf.read_text() if wf.is_file() else ""
+    runners = re.findall(r"^\s*runs-on:\s*(\S+)\s*$", wtext, re.M)
+    if not runners or any(r not in ARCH_RUNNERS.get(record, ()) for r in runners):
+        findings.append(f"{TEX_ORACLE_WORKFLOW}: runs-on {runners} is not a "
+                        f"native {record} runner {ARCH_RUNNERS.get(record)}; "
+                        f"CI would grade on another architecture (ADR-015 E2)")
+    for cmd in re.findall(r"docker run\b(?:[^\n]*\\\n)*[^\n]*", wtext):
+        if "LP_ORACLE_IN_IMAGE" in cmd:
+            flat = re.sub(r"\\\n\s*", " ", cmd)
+            miss = [f.strip() for f in INIMAGE_RUN_FLAGS if f not in flat]
+            if miss:
+                findings.append(f"{TEX_ORACLE_WORKFLOW}: an in-image `docker "
+                                f"run` lacks {miss} (OPEN-126: the oracle's "
+                                f"tree is read-only and no engine runs as "
+                                f"root): {flat[:120]!r}")
     if len(PRE_BASELINE) != PRE_BASELINE_SIZE:
         findings.append(f"PRE_BASELINE holds {len(PRE_BASELINE)} entries, pinned at "
                         f"{PRE_BASELINE_SIZE}; widening it needs a ledger row and a "
@@ -1517,6 +1589,24 @@ def main() -> int:
         if block.get("backend") not in BACKENDS:
             findings.append(f"{rel}: oracle backend {block.get('backend')!r} is not "
                             f"one of {sorted(BACKENDS)}")
+        if block.get("arch") != record:
+            findings.append(
+                f"{rel}: graded on {block.get('arch')!r}, not the oracle's "
+                f"architecture of record {record!r}. Grades are not compared "
+                f"across architectures (ADR-015 E2, C-103); re-grade it on "
+                f"{record}.")
+        if rel in GRADING_CODE_PENDING:
+            if "grading_code" in block:
+                findings.append(f"{rel} now records its grading_code but is "
+                                f"still in GRADING_CODE_PENDING; remove it there")
+        else:
+            gc_find, gc_notes = _oracle.grading_code_drift(
+                block.get("grading_code"), repo)
+            findings.extend(
+                f"{rel}: {f}. Re-grade it under the current code (for "
+                f"real_roots: diff_real_roots.py --repass --repass-scope all "
+                f"--rebaseline-oracle)" for f in gc_find)
+            notes.extend(f"{rel}: {n}" for n in gc_notes)
         want = fps.get(block.get("arch"))
         if want is None:
             findings.append(f"{rel}: oracle arch {block.get('arch')!r} has no "
@@ -1582,13 +1672,18 @@ def main() -> int:
                 findings.append(f"{rel}: allow-listed in-image line no longer "
                                 f"present, prune WORKFLOW_ALLOW: {ln[:60]!r}")
 
+    for n in notes:
+        print(f"[oracle-pin] NOTE: {n}", file=sys.stderr)
     if findings:
         print("[oracle-pin] FAIL:", file=sys.stderr)
         for f in findings:
             print(f"  - {f}", file=sys.stderr)
         return 1
     print(f"[oracle-pin] OK: {len(GRADED)} graded artefacts name {image} with "
-          f"its tree fingerprints; {len(PRE_BASELINE)} pre-baseline artefacts "
+          f"its tree fingerprints, all on {record}; "
+          f"{len(GRADED) - len(GRADING_CODE_PENDING)} name their current "
+          f"grading code, {len(GRADING_CODE_PENDING)} pending (OPEN-126); "
+          f"{len(PRE_BASELINE)} pre-baseline artefacts "
           f"pinned; {scanned} tracked code files start no TeX engine directly")
     return 0
 

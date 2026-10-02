@@ -53,10 +53,17 @@ runs:
         sudo rm -f /etc/apt/sources.list.d/microsoft* \
                    /etc/apt/sources.list.d/*azure* 2>/dev/null || true
         sudo apt-get update
+        # The multilib compilers exist for x86 only; tex-oracle runs on a
+        # native arm64 runner (ADR-015 E2, OPEN-126), where apt has no
+        # g++-multilib/gcc-multilib and the install would fail. Every x64
+        # job installs exactly what it did before.
+        multilib=""
+        if [ "${RUNNER_ARCH:-X64}" = "X64" ]; then
+          multilib="g++-multilib gcc-multilib"
+        fi
         sudo apt-get install -y \
           bubblewrap \
-          g++-multilib \
-          gcc-multilib \
+          $multilib \
           mercurial \
           musl-tools \
           rsync

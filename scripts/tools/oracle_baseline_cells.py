@@ -25,6 +25,30 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _oracle import ARCH_OF_RECORD  # noqa: E402
+
+
+def oracle_block(doc: dict) -> dict:
+    prov = doc.get("provenance") or {}
+    return (doc.get("oracle") or prov.get("oracle")
+            or prov.get("oracle_provenance") or {})
+
+
+def arch_refusal(old: dict, new: dict) -> str | None:
+    """ADR-015 E2: grades are never compared across architectures. The
+    "after" artefact must be graded on the architecture of record, and a
+    "before" that names an architecture must name the same one (a host-graded
+    "before" names none: that is the oracle-baseline change itself)."""
+    a, b = oracle_block(old).get("arch"), oracle_block(new).get("arch")
+    if b != ARCH_OF_RECORD:
+        return (f"the re-graded artefact was graded on {b!r}, not the "
+                f"architecture of record {ARCH_OF_RECORD!r}")
+    if a is not None and a != b:
+        return (f"before was graded on {a!r} and after on {b!r}; grades are "
+                f"not compared across architectures (C-103)")
+    return None
+
 
 def rows_of(kind: str, doc: dict) -> dict:
     out = {}
@@ -58,6 +82,10 @@ def main() -> int:
     old = json.loads(subprocess.run(["git", "show", f"{ns.rev}:{ns.path}"], cwd=repo,
                                     capture_output=True, text=True, check=True).stdout)
     new = json.loads((repo / ns.path).read_text())
+    why = arch_refusal(old, new)
+    if why:
+        print(f"[cells] REFUSED: {why}", file=sys.stderr)
+        return 2
     a, b = rows_of(ns.kind, old), rows_of(ns.kind, new)
     if set(a) != set(b):
         print(f"row sets differ: only before {sorted(set(a) - set(b))}, "

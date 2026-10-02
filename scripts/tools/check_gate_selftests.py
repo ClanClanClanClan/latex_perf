@@ -386,6 +386,46 @@ def prov_stale_engine_tree(text: str) -> str:
     return _json.dumps(d, indent=2)
 
 
+def gc_old_grader(text: str) -> str:
+    """OPEN-126: point the virgin sample's grading code at the grader as it
+    was on main before OPEN-126 (a real blob, so the "not in this repository"
+    arm is NOT what fires) and re-hash the files map (so the hand-edit arm is
+    not either): only the behaviour arm can catch it."""
+    import _oracle
+    import json as _json
+    d = _json.loads(text)
+    files = d["oracle"]["grading_code"]["files"]
+    files["scripts/tools/diff_real_roots.py"] = (
+        "7ebb303994844731529c55f021528cdb8ebc4598")
+    d["oracle"]["grading_code"]["sha256"] = _oracle.grading_code_sha256(files)
+    return _json.dumps(d, indent=1)
+
+
+def gc_hand_edit(text: str) -> str:
+    """OPEN-126: a grading_code block whose hash is not its files map's."""
+    import json as _json
+    d = _json.loads(text)
+    d["oracle"]["grading_code"]["sha256"] = "0" * 64
+    return _json.dumps(d, indent=1)
+
+
+def gc_dropped(text: str) -> str:
+    """OPEN-126: a re-graded artefact that stops naming its grading code."""
+    import json as _json
+    d = _json.loads(text)
+    del d["oracle"]["grading_code"]
+    return _json.dumps(d, indent=1)
+
+
+def pc_summary_off_by_one(text: str) -> str:
+    """OPEN-126: a stored summary that its rows do not give (the 89-vs-88
+    shape of sample 3, one FOREIGN row counted as certified)."""
+    import json as _json
+    d = _json.loads(text)
+    d["summary"]["lp_core_certified_and_compiles"] += 1
+    return _json.dumps(d, indent=1)
+
+
 def prov_unresolvable_sha(text: str) -> str:
     """Point an artefact's provenance at a sha no clone can resolve.
 
@@ -1734,6 +1774,46 @@ REGISTRY = [
                      'span_extractor_training\\.ipynb:\\d+: starts a TeX engine directly',
                      old='"!nvidia-smi\\n",',
                      new='"!nvidia-smi\\n",\n    "!pdflatex main.tex\\n",'),
+            # ADR-015 E2 / OPEN-126: the architecture is part of the oracle's
+            # identity. One kill per arm.
+            Mutation("a graded artefact recorded on another architecture",
+                     "corpora/strict_battery/manifest.json",
+                     r"strict_battery/manifest\.json: graded on 'x86_64', not "
+                     r"the oracle's architecture of record 'aarch64'",
+                     old='"arch": "aarch64"', new='"arch": "x86_64"'),
+            Mutation("the architecture of record itself changed",
+                     "scripts/tools/_oracle.py",
+                     r"results_sample3\.json: graded on 'aarch64', not the "
+                     r"oracle's architecture of record 'x86_64'",
+                     old='ARCH_OF_RECORD = "aarch64"\n',
+                     new='ARCH_OF_RECORD = "x86_64"\n'),
+            Mutation("CI's tex-oracle job back on an amd64 runner",
+                     ".github/workflows/tex-oracle.yml",
+                     r"runs-on \['ubuntu-latest'\] is not a native aarch64 runner",
+                     old="    runs-on: ubuntu-24.04-arm\n",
+                     new="    runs-on: ubuntu-latest\n"),
+            Mutation("an in-image docker run without --read-only",
+                     ".github/workflows/tex-oracle.yml",
+                     r"an in-image `docker run` lacks \['--read-only'\]",
+                     old='          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
+                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n',
+                     new='          docker run --rm --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
+                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n'),
+            # OPEN-126: the grading code is part of a grade's provenance.
+            Mutation("a re-graded artefact graded by older grader code",
+                     "corpora/real_roots/results_sample3.json",
+                     r"results_sample3\.json: scripts/tools/diff_real_roots\.py "
+                     r"changed in behaviour since the grade",
+                     transform=gc_old_grader),
+            Mutation("a grading_code block edited by hand",
+                     "corpora/real_roots/results.json",
+                     r"results\.json: grading_code\.sha256 is not the hash of "
+                     r"its own files map",
+                     transform=gc_hand_edit),
+            Mutation("a re-graded artefact stops naming its grading code",
+                     "corpora/real_roots/results_sample2.json",
+                     r"results_sample2\.json: records no grading_code",
+                     transform=gc_dropped),
         ]),
     GateTest(
         # OPEN-118 review round 2: a run with no proof that pdfTeX ran (the
@@ -2267,6 +2347,12 @@ REGISTRY = [
         "check_project_state", [PY, f"{TOOLS}/check_project_state.py"],
         "pure",
         [
+            # OPEN-126: a stored proven-coverage summary its rows do not give.
+            Mutation("a proven-coverage summary its rows do not give",
+                     "corpora/real_roots/proven_coverage_sample3.json",
+                     r"proven_coverage_sample3\.json: its summary .* is not the "
+                     r"one its rows give",
+                     transform=pc_summary_off_by_one),
             # A hand-edited digit inside the generated block must be caught.
             Mutation("generated-block digit edited",
                      "docs/v27/PROJECT_STATE.md",

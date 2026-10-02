@@ -371,6 +371,30 @@ def main() -> int:
                     f"{name}: {rid} has cell '{cell}' but cli_rc={row.get('cli_rc')} "
                     f"with compiles={comp} implies '{want}'.")
 
+    # ── SUMMARY CONSISTENCY (OPEN-126): a proven_coverage artefact's summary
+    # must be the function of its own rows that gen_proven_coverage.summarize
+    # defines. Sample 3's said LP-Core 89 while its in-tier rows give 88 (one
+    # FOREIGN row counted as certified), and nothing compared the two: the
+    # published block recomputed from the rows, the stored summary went
+    # unread. Recompute from the PRIMARY data, never trust a stored total.
+    from gen_proven_coverage import summarize  # noqa: E402
+    for s_ in (1, 2, 3):
+        f = repo / f"corpora/real_roots/proven_coverage_sample{s_}.json"
+        if not f.is_file():
+            continue
+        try:
+            doc = json.loads(f.read_text())
+            want = summarize(doc["rows"])
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
+            findings.append(f"{f.name} is unreadable or malformed: {exc}")
+            continue
+        if doc.get("summary") != want:
+            findings.append(
+                f"{f.name}: its summary {doc.get('summary')} is not the one its "
+                f"rows give {want} (gen_proven_coverage.summarize). Recompute: "
+                f"gen_proven_coverage.py --rejoin --results <its results> "
+                f"--out {f.relative_to(repo)}")
+
     if findings:
         print(f"[project-state] FAIL: {len(findings)} problem(s)", file=sys.stderr)
         for f in findings:

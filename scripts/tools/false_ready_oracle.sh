@@ -110,6 +110,11 @@ if [ ! -x "$CLI" ]; then
 fi
 
 [ -f "$MAN" ] || die_infra "no manifest at $MAN"
+# The manifest's grades are compared with this run's: they must be of the
+# SAME oracle -- image, ARCHITECTURE and tree (ADR-015 E2: the pinned pdfTeX
+# gives different verdicts on aarch64 and x86_64, C-103).
+python3 "$ROOT/scripts/tools/_oracle.py" check-recorded "$MAN" oracle \
+  || die_infra "the manifest's grades are not comparable with this oracle's (see above)"
 
 # A CLI that cannot execute (wrong ABI inside the container, missing loader)
 # returns non-zero for EVERY document, which reads as a uniform column of

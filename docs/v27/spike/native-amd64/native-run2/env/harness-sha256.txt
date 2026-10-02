@@ -1,0 +1,10 @@
+run-r.sh: OK
+run-qs.sh: OK
+run2.sh: OK
+run-lead.sh: OK
+run-rot.sh: OK
+f7amd.sh: OK
+run_bin.zsh: OK
+run_realclock.zsh: OK
+clockshim-amd64.so: OK
+intmin.tex: OK

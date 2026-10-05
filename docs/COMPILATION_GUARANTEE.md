@@ -95,10 +95,12 @@ documents that pdflatex rejects do get READY. Two measurements, both under the
 laptop pin `pdfTeX 3.141592653-2.6-1.40.29` (pre-baseline under ADR-012
 decision 7): the standing battery `corpora/strict_battery/` has 22 minimal
 documents that pdflatex rejects, and READY (exit 0) is returned on 17 of them
-(`manifest.json` `summary` is authoritative); and among real papers whose
-premises the checker certified, pdflatex rejects 14/197 = 7.1% on sample 2 and
-12/199 = 6.0% on sample 1 (any tier; LP-Core 8/102 and 4/104), generated into
-`docs/v27/PROJECT_STATE.md` §1, which is authoritative if these drift. What is NOT verified at runtime: T1
+(`manifest.json` `summary` is authoritative); and pdflatex rejects some of
+the real papers whose premises the checker certified. That rate, per sample
+and tier, is generated from the per-row artefacts into
+`docs/v27/PROJECT_STATE.md` §1 ("certified but pdflatex fails") and is
+deliberately not copied here: the copy that stood here went stale when a
+re-grade moved it (C-126). What is NOT verified at runtime: T1
 macro-expansion (skipped), T4 without an `.aux` (skipped), and the
 byte-for-byte connection from your source to the abstract model the T6/T7
 compile-safety capstone is proved over (see the residual-gap note below).

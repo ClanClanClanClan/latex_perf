@@ -40,6 +40,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # THE one definition of "certified" (in a tier, FOREIGN excluded; OPEN-126).
 from gen_proven_coverage import in_tier_certified  # noqa: E402
+from _results_summary import cell_counts, diff_summary  # noqa: E402
 
 BEGIN = "<!-- BEGIN GENERATED: measured-position -->"
 END = "<!-- END GENERATED: measured-position -->"
@@ -116,6 +117,13 @@ def build(repo: Path) -> str:
 
     rr_path = repo / "corpora/real_roots/results.json"
     rr = json.loads(rr_path.read_text()) if rr_path.is_file() else None
+    # Every number below is computed from the ROWS, never read from a stored
+    # total (C-126). This read rr["counts"], so a hand-edited `counts` made a
+    # self-consistent wrong block that the regenerate-and-diff gate passed;
+    # check_project_state separately refuses a stored total that its rows
+    # contradict.
+    if rr:
+        rr["counts"] = cell_counts(rr["docs"])
 
     facts = {}
     for line in (repo / "governance/project_facts.yaml").read_text().splitlines():
@@ -390,7 +398,7 @@ def build(repo: Path) -> str:
     s2_path = repo / "corpora/real_roots/results_sample2.json"
     if s2_path.is_file():
         s2 = json.loads(s2_path.read_text())
-        c2 = s2["counts"]
+        c2 = cell_counts(s2["docs"])                # C-126: from the rows
         g2 = sum(v for k, v in c2.items() if not k.startswith("ungraded"))
         ok2 = c2.get("true-READY", 0) + c2.get("true-NOT-READY", 0)
         L += ["### Out-of-sample position (sample 2 — untuned)", "",
@@ -417,6 +425,7 @@ def build(repo: Path) -> str:
     s3_path = repo / "corpora/real_roots/results_sample3.json"
     if s3_path.is_file():
         s3 = json.loads(s3_path.read_text())
+        s3["counts"] = cell_counts(s3["docs"])      # C-126: from the rows
         ids3 = {d["arxiv_id"] for d in s3["docs"]}
         if not SAMPLE3_NAMED_IDS <= ids3:
             raise SystemExit(
@@ -444,6 +453,8 @@ def build(repo: Path) -> str:
         o3, f3 = s3["oracle"], s3["frame"]
         _rg3 = repo / "corpora/oracle_baseline/regrade_open126_sample3.json"
         rg3 = json.loads(_rg3.read_text()) if _rg3.is_file() else None
+        if rg3:
+            rg3["summary"] = diff_summary(rg3["rows"])   # C-126: from the rows
         L += ["### Virgin position (sample 3 — sealed for measurement, OPEN-119)", "",
               f"Frame offset {f3['offset']}, ranks {f3['offset'] + 1}-"
               f"{f3['offset'] + f3['n']} of the same deterministic ordering "
@@ -473,8 +484,8 @@ def build(repo: Path) -> str:
         if rr:
             L.append(conf_row("sample 1 (tuned)", rr["counts"]))
         if s2_path.is_file():
-            L.append(conf_row("sample 2 (design-seen)",
-                              json.loads(s2_path.read_text())["counts"]))
+            L.append(conf_row("sample 2 (design-seen)", cell_counts(
+                json.loads(s2_path.read_text())["docs"])))
         L.append(conf_row(SAMPLE3_LABEL, s3["counts"]))
         rest = [d for d in s3["docs"] if d["arxiv_id"] not in SAMPLE3_NAMED_IDS]
         named = [d for d in s3["docs"] if d["arxiv_id"] in SAMPLE3_NAMED_IDS]

@@ -109,10 +109,10 @@ What this decides, and what it does not:
   pending the synthesis. The L_S0 kernel on `main` stays as it is: the synchronous fast path and
   regression evidence. Slice A (branch `feat/v27165-strict-args`, not merged) is unaffected by this
   ADR; whether it merges is decided on its own review.
-- **Not decided here** (ADR-014 draft §12, still open): O-5 (*decided 2026-10-05: E10*) (quantify verdicts over the date and
-  the random seed, or change the oracle to a forced date — the clock measurement of #625 moved no
-  grade on the fragment, but the run-dependent primitives exist); O-9 (restricted `\write18`);
-  O-7's exact wording of the trusted base. O-8 (accept a reference build as the oracle if the
+- **Not decided here** (ADR-014 draft §12, still open): O-9 (restricted `\write18`); O-7's exact
+  wording of the trusted base. (O-5, the clock — quantify verdicts over the date and the random
+  seed, or change the oracle to a forced date — was listed here; it was decided on 2026-10-05 by
+  E10 below.) O-8 (accept a reference build as the oracle if the
   revision cannot be identified) is moot after H.1: see below.
 
 ## Owner decisions of 2026-09-30 (after the H.1 report)
@@ -198,10 +198,13 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
   *Rationale (the evidence and argument of OPEN-126, which the owner was shown; no other reason
   is of record):* E2 forbids comparing grades across
   architectures, and every graded artefact was recorded on aarch64 (all 15, MEASURED in OPEN-126),
-  while CI had graded on amd64 since #617 (C-119). Keeping amd64 CI would first need a native
-  amd64 grade of every fixture set, and then two baselines to keep in step for every
-  oracle-baseline change. One architecture means one baseline, and a CI grade and a local grade
-  are then the same comparison. This makes OPEN-126's choice of `ubuntu-24.04-arm` and
+  while CI had graded on amd64 since #617 (C-119). Keeping amd64 CI with per-architecture
+  baselines would first need a native amd64 grade of every fixture set.
+  *Author's note, NOT a reason the owner was shown (added by the recording agent, 2026-10-05):*
+  per-architecture baselines are two baselines to keep in step at every oracle-baseline change;
+  one architecture means one baseline, and a CI grade and a local grade are then the same
+  comparison.
+  *Consequence:* this makes OPEN-126's choice of `ubuntu-24.04-arm` and
   `check_oracle_pin`'s refusal of any non-arm64 `tex-oracle` runner **binding**; E2's
   implementation note no longer awaits the owner. E3's one-off amd64 confirmation is unaffected:
   it measures the difference between the architectures, it does not grade.
@@ -213,13 +216,19 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
   *Rationale (the evidence and argument of OPEN-126 (d), which the owner was shown; no other
   reason is of record):* under `FORCE_SOURCE_DATE=1` 0 of 600
   sample rows moved (MEASURED, OPEN-126 (d)), but `FORCE_SOURCE_DATE` alone does not fix every
-  run-dependent input: `\pdfrandomseed` is seeded from the real time on every run, and
-  `\pdfelapsedtime` and `\pdffilemoddate` are not pinned by it (MEASURED 2026-09-29,
-  `check_strict_kernel.py` R-CLOCK). Adopting it alone would therefore be a second
-  oracle-baseline change later, and a grade would still not be a function of the input bytes.
-  Fixing every run-dependent input at once makes it one. Quantifying over dates would leave the
-  grade itself a function of the day it was taken. The H.1 pass criterion was met only with the clock fixed (§ H.1
-  result).
+  run-dependent input: it does not pin `\pdfrandomseed`, `\pdfelapsedtime` or
+  `\pdffilemoddate` (MEASURED 2026-09-29,
+  `check_strict_kernel.py` R-CLOCK), so under it a grade would still not be a function of the
+  input bytes; adopting it also changes how `gen_contract.py` finds the kernel's date-dependent
+  names, so every contract is regenerated; and only the 600 sample rows were measured under it
+  (OPEN-126 (d) (i)-(iii)). E7's clock shim could fix the seed and the timers as well as the date
+  (OPEN-126 (d) (iv)). The question put to the owner marked the combined option ("date, seed and
+  timers at once") as recommended. OPEN-126 (d) made no argument against quantifying over dates
+  (option (ii)); no reason for rejecting it is of record.
+  *Author's notes, NOT reasons the owner was shown (added by the recording agent, 2026-10-05):*
+  adopting `FORCE_SOURCE_DATE` alone now would be one oracle-baseline change, and fixing the rest
+  of the run-dependent inputs later a second; and the H.1 pass criterion was met only with the
+  clock fixed (§ H.1 result).
   *What this means for the implementation (derived, not separate decisions):*
   - The change is ONE oracle-baseline change. It is made by a **follow-up track** (E7's
     measurement entry point plus the fixed clock), not by OPEN-126's branch. Until it lands,
@@ -232,9 +241,10 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
     the grading environment does not force the date. Under E10 both are replaced: the names are
     found by running under two or more DIFFERENT fixed clocks. Every contract and the L_S0
     signature file are regenerated.
-  - Every graded artefact and fixture set is re-graded under the fixed clock: the three results
-    artefacts, the strict battery, the false_ready and apply_fixes fixtures, the bytes probes and
-    the contracts. Only the 600 sample rows have been measured under a forced date so far.
+  - Every graded artefact and fixture set is re-graded under the fixed clock: the set is
+    `check_oracle_pin.GRADED` (15 artefacts on 2026-10-05, the gate's list, not a copy of it here),
+    plus the bytes probes, every contract and the L_S0 signature file. Only the 600 sample rows
+    have been measured under a forced date so far.
 
 ## Consequences
 

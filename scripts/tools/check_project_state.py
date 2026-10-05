@@ -425,6 +425,33 @@ def main() -> int:
                 f"gen_proven_coverage.py --rejoin --results <its results> "
                 f"--out {f.relative_to(repo)}")
 
+    # ── STORED TOTALS (C-126): every total a real-paper artefact stores must
+    # be what its rows give. The proven-coverage summaries above were the
+    # only ones recomputed; results_sample2.json kept "correct": 179 while
+    # its rows gave 181 (no writer maintained it: `--refresh-cli` rewrites
+    # `counts` alone), and an edited `counts` passed every gate because
+    # gen_project_state published FROM it. The generator now counts rows
+    # itself; this refuses a stale total and any results key no writer
+    # maintains, in the results artefacts and in the re-grade diffs that
+    # OPEN-126 cites as evidence ("0 of 600 moved").
+    from _results_summary import (  # noqa: E402
+        diff_summary_findings, results_summary_findings)
+    for name in ("results.json", "results_sample2.json", "results_sample3.json"):
+        f = repo / "corpora/real_roots" / name
+        if not f.is_file():
+            continue
+        try:
+            findings.extend(results_summary_findings(
+                json.loads(f.read_text()), name))
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
+            findings.append(f"{name} is unreadable or malformed: {exc}")
+    for f in sorted((repo / "corpora/oracle_baseline").glob("regrade_open126_sample*.json")) + \
+            sorted((repo / "corpora/oracle_baseline").glob("o5_forced_clock_sample*.json")):
+        try:
+            findings.extend(diff_summary_findings(json.loads(f.read_text()), f.name))
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
+            findings.append(f"{f.name} is unreadable or malformed: {exc}")
+
     if findings:
         print(f"[project-state] FAIL: {len(findings)} problem(s)", file=sys.stderr)
         for f in findings:

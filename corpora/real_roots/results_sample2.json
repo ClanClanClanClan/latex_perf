@@ -27,8 +27,6 @@
   "FALSE-READY": 7,
   "true-NOT-READY": 8
  },
- "correct": 179,
- "graded": 200,
  "docs": [
   {
    "arxiv_id": "2506.11486v1",

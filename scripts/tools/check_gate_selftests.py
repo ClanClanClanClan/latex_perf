@@ -426,6 +426,45 @@ def pc_summary_off_by_one(text: str) -> str:
     return _json.dumps(d, indent=1)
 
 
+def rr_unmaintained_total(text: str) -> str:
+    """C-126: put back the stored total no writer maintained, exactly as it
+    stood (sample 2 said "correct": 179 while its rows gave 181)."""
+    import json as _json
+    d = _json.loads(text)
+    assert "correct" not in d, "results_sample2 regained 'correct'; update registry"
+    d["correct"] = 179
+    return _json.dumps(d, indent=1) + "\n"
+
+
+def rr_counts_shifted(text: str) -> str:
+    """C-126: stored `counts` moved one true-READY to false-NOT-READY with the
+    rows untouched. The generator used to publish FROM `counts`, so after a
+    --write the block agreed and every gate passed."""
+    import json as _json
+    d = _json.loads(text)
+    d["counts"]["true-READY"] -= 1
+    d["counts"]["false-NOT-READY"] += 1
+    return _json.dumps(d, indent=1) + "\n"
+
+
+def diff_summary_moved(text: str) -> str:
+    """C-126: a re-grade diff whose stored summary claims a moved cell that
+    its before/after rows do not show."""
+    import json as _json
+    d = _json.loads(text)
+    d["summary"]["cells_moved"] += 1
+    return _json.dumps(d, indent=1) + "\n"
+
+
+def diff_row_flag_flipped(text: str) -> str:
+    """C-126: a re-grade diff row whose outcome_changed flag its own
+    before/after pair contradicts (the flag the summary counts)."""
+    import json as _json
+    d = _json.loads(text)
+    d["rows"][0]["outcome_changed"] = not d["rows"][0]["outcome_changed"]
+    return _json.dumps(d, indent=1) + "\n"
+
+
 def pc_ready_flip(text: str) -> str:
     """OPEN-126: a proven-coverage row whose CLI readiness is not its results
     row's (two artefacts measured with different CLIs)."""
@@ -2441,6 +2480,30 @@ REGISTRY = [
                      r"proven_coverage_sample1\.json: \S+ records ready=\w+ but "
                      r"corpora/real_roots/results\.json records cli_rc=",
                      transform=pc_ready_flip),
+            # C-126: stored totals of the results artefacts and of the
+            # re-grade diffs must be what their rows give. Each regex names
+            # the artefact, so the (now impossible) stale-block finding
+            # cannot supply a false kill.
+            Mutation("a results artefact's total that no writer maintains",
+                     "corpora/real_roots/results_sample2.json",
+                     r"results_sample2\.json: top-level key\(s\) \['correct'\] "
+                     r"that no writer maintains",
+                     transform=rr_unmaintained_total),
+            Mutation("a results artefact's stored counts its rows contradict",
+                     "corpora/real_roots/results_sample2.json",
+                     r"results_sample2\.json: stored counts .* is not what its "
+                     r"rows give",
+                     transform=rr_counts_shifted),
+            Mutation("a re-grade diff summary its rows contradict",
+                     "corpora/oracle_baseline/regrade_open126_sample3.json",
+                     r"regrade_open126_sample3\.json: its summary .* is not "
+                     r"what its rows give",
+                     transform=diff_summary_moved),
+            Mutation("an O-5 experiment row flag its before/after contradict",
+                     "corpora/oracle_baseline/o5_forced_clock_sample2.json",
+                     r"o5_forced_clock_sample2\.json: \S+ records "
+                     r"outcome_changed=\w+ but its before/after give",
+                     transform=diff_row_flag_flipped),
             # A hand-edited digit inside the generated block must be caught.
             Mutation("generated-block digit edited",
                      "docs/v27/PROJECT_STATE.md",

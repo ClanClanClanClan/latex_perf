@@ -149,6 +149,38 @@ draft §12, the O-n id is given; otherwise none exists and none is invented.
   a backup and does not merge; capacity limits are to be derived from the translated engine
   (Consequences, first bullet), not modelled by hand.
 
+## Owner decisions of 2026-10-05 (after the H.3 checkpoint 1 report)
+
+Same rule as above: this is the one place of record. The H.3 report and its evidence are on
+branch `spike/v27165-engine-translation` (`docs/v27/spike/H3-report.md`, commit `7d927b5f`).
+
+- **E3 status (no new decision).** The native amd64 confirmation approved in E3 was RUN on
+  2026-10-02 on GitHub-hosted x86_64 runners (`spike-native-amd64.yml`, branch
+  `ci/v27165-native-amd64`, PR #630 into the spike branch). It CONFIRMS every committed H.1
+  architecture probe. For H.2's differential it confirms 176 of 178 rows and REFUTES 2: at
+  `t205` and `t208` the committed emulated amd64 exit code was qemu's, not the binary's (C-113 on
+  that branch). E3's "not yet run" is superseded by this line.
+- **E6. H.3's "round trip byte-exact" means MODEL = BINARY.** The pass clause is met when the
+  model's run, given `pdflatex.fmt` and dumping again, is byte-identical to the pinned binary's
+  run of the same input: terminal output, log and the dumped format stream. It does **not** mean
+  that dumping a loaded format reproduces the loaded file (`store(load(x)) = x`). The pinned
+  pdfTeX does not satisfy that reading either: its re-dump appends the strings created by the run.
+  The difference between the re-dumped and the shipped format must still be **fully explained**,
+  byte by byte, by decoding the format beyond the string pool. "Not yet decoded" is not an
+  explanation.
+- **E7. `_oracle.py` gets a measurement entry point.** It must provide terminal input, an explicit
+  architecture and the clock shim, so that every run of the pinned binary goes through the pinned,
+  checked oracle and `check_oracle_pin`. That includes the binary side of the spike's H.2 and H.3
+  evidence (today a quoted recipe) and of H.4 and H.6. It builds on E2's implementation (OPEN-126,
+  branch `fix/v27165-oracle-arch`) and lands after it.
+- **E8. Memory: measure before funding.** No new heap representation is funded yet. The model's
+  full meaning dump (H.3's remaining clause) is first run once on a GitHub-hosted runner. The
+  repository is public, so `ubuntu-latest` is documented as 4 vCPU / 16 GB; the job records what
+  it actually got. The run records the peak memory, time and result. Whether the remaining heap
+  growth (C-112 on the spike branch) is an H.5 matter is decided on that measurement.
+  Profile-guided fixes of the kind already made stay within the spike's scope (D3, H.5's kill
+  criterion).
+
 ## Consequences
 
 - Nothing about TeX's behaviour is written by hand any more; what remains hand-modelled is the

@@ -9,7 +9,13 @@
 #   full          the model as built (OCaml's default GC), all 23,519 names
 #   full-compact  the same run with the driver's PS_COMPACT=3 (a compaction every third major
 #                 cycle: the profile-guided setting H.3 checkpoint 1 measured, not a model change)
-#   prefixes      the model on the first 0, 2000, 6000, 12000 names: memory against names
+#   prefixes      the model on the first 0, 250, 500, 1000, 2000, 4000 names: memory against names
+#
+# Run 1 (37302258127) showed the model's step itself killed by SIGTERM (exit 143) at ~15.6 GB,
+# just under its cgroup cap, with no cgroup OOM event: something outside the cap (the
+# runner's whole-system memory pressure) acted first. From run 2 the cap leaves 2 GiB to the
+# rest of the runner, systemd-oomd is stopped (its state recorded), the kernel's and oomd's
+# logs are uploaded, and the model step cannot fail the job (continue-on-error).
 #
 # It fails ONLY on an infrastructure error (the build's inputs or generated program not the
 # measured ones, the image not pulled, the binary's run producing nothing). The model running
@@ -213,7 +219,7 @@ jobs:
           python3 docs/v27/spike/h3/tools/meanblock.py . "$M/full" | tee "$D/out/stdin-full.json"
           grep -q '"stdin_sha256": "b2af378bab4cb2ae0ff7d4ab7bedae40012688c1e2fca86612324a93d684b7f7"' "$D/out/stdin-full.json" || \
             { echo "::error::not the measured meaning-dump input"; exit 1; }
-          for n in 0 2000 6000 12000; do python3 docs/v27/spike/h3/tools/meanblock.py . "$M/p$n" $n > "$D/out/stdin-p$n.json"; done
+          for n in 0 250 500 1000 2000 4000; do python3 docs/v27/spike/h3/tools/meanblock.py . "$M/p$n" $n > "$D/out/stdin-p$n.json"; done
           sed "s#=PATH-OF-THE-DECOMPRESSED-pdflatex.fmt#=$D/fmt/pdflatex.fmt.raw#" \
             docs/v27/spike/h3/evidence/meanings/model.spec.template > "$M/spec"
           [ "$(grep -c "=$D/fmt/pdflatex.fmt.raw" "$M/spec")" -eq 1 ] || { echo "::error::spec template"; exit 1; }
@@ -239,15 +245,19 @@ jobs:
           sha256sum "$B/out" "$B/w/texput.log" "$B/w/clock.log" | tee -a "$D/out/binary-run.txt"
 
       - name: The model (memory cap just under physical RAM, swap off, wall-clock limit)
+        continue-on-error: true      # an out-of-memory or time-out is a finding, recorded below
         run: |
           set -uo pipefail
           M="$D/m"; P="$D/build/build/ps.exe"; O="$D/out"
+          { systemctl is-active systemd-oomd.service; systemctl is-enabled systemd-oomd.service; } > "$O/runner/oomd-before.txt" 2>&1 || true
+          sudo systemctl stop systemd-oomd.socket systemd-oomd.service > /dev/null 2>&1 || true
+          systemctl is-active systemd-oomd.service > "$O/runner/oomd-during.txt" 2>&1 || true
           sudo swapoff -a || true; swapon --show > "$O/runner/swap-during-run.txt" 2>&1 || true
           total_kb=$(awk '/^MemTotal:/{print $2}' /proc/meminfo)
-          cap_kb=$(( total_kb - 1048576 ))            # 1 GiB under physical RAM for the runner itself
+          cap_kb=$(( total_kb - 2097152 ))            # 2 GiB under physical RAM for the runner itself
           echo "MemTotal ${total_kb} kB; cap (MemoryMax) ${cap_kb} kB" | tee "$O/cap.txt"
           compact=""; [ "${{ matrix.variant }}" = full-compact ] && compact=3
-          case "${{ matrix.variant }}" in prefixes) runs="p0 p2000 p6000 p12000" ;; *) runs="full" ;; esac
+          case "${{ matrix.variant }}" in prefixes) runs="p0 p250 p500 p1000 p2000 p4000" ;; *) runs="full" ;; esac
           printf 'run\tnames\tresult\texit\twall_s\tmaxrss_kb_time_v\tcgroup_peak_bytes\toom_kills\n' > "$O/runs.tsv"
           for r in $runs; do
             used=$(( $(date +%s) - JOB_T0 ))
@@ -293,6 +303,9 @@ jobs:
             printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$r" "$n" "$res" "$ec" "$wall" "$maxrss" "$lastpeak" "${oom:-}" | tee -a "$O/runs.tsv"
           done
           sudo swapon -a || true
+          sudo journalctl -k -b --no-pager > "$O/runner/kernel-log.txt" 2>&1 || true
+          sudo journalctl -u systemd-oomd -b --no-pager > "$O/runner/oomd-log.txt" 2>&1 || true
+          exit 0
 
       - name: Compare (model against binary, byte for byte; both against the contract) and summarise
         if: always()

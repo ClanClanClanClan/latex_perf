@@ -111,9 +111,11 @@ LOW-3; checkpoint 2 said "byte-identical to the pinned binary's on both architec
 The model has two architecture parameters: plain `char` signedness (`charsigned`) and
 contraction (fused multiply-add), which is **not modelled**: `PS` is always unfused. So:
 - the **x86_64 configuration** (`charsigned 1`, unfused) is x86_64's on both parameters; it was
-  compared with the pinned amd64 binary **run under qemu-user emulation** on an arm64 host (no
-  native amd64 run: the owner approved one on 2026-09-30, and it needs a CI workflow the owner
-  has not yet permitted);
+  compared with the pinned amd64 binary **run under qemu-user emulation** on an arm64 host. The binary side alone was re-run
+  natively on 2026-10-02 (owner decision E3, `NATIVE-AMD64.md`): 172 inputs byte-identical to
+  the qemu run, 4 equal under the `date` mask (all four STUCK), and `t205`/`t208` differing in rc
+  only (below); the model was not re-run natively, so its agreement with the native binary on
+  the IDENTICAL rows is by transitivity [I];
 - the **aarch64 configuration** (`charsigned 0`, unfused) is a hybrid: aarch64's `char` with
   x86_64's floating point. It was compared with the pinned arm64 binary, natively. Its agreement
   says nothing about aarch64's fused sites (H.1 §5.1) unless an input reaches one.
@@ -274,8 +276,9 @@ in 900 s (review A's run had no result either). The 43 Stuck runs stop at an unm
 environment), signed overflow (4), a conversion (3: `tv_sec` beyond 2038, a negative
 `SOURCE_DATE_EPOCH`, a kpathsea value outside `int`), and a write to a non-file (2: `t205`,
 `t208`, where `finiteshrink` prints to a log that is not open; the arm64 binary dies there with
-SIGSEGV, rc 139, and the amd64 binary under qemu did not finish in 15 minutes and was killed, rc
-137). One amd64 binary run (`xsct1`) first ended with rc 139 and no output; rerun three times it
+SIGSEGV, rc 139; under qemu the amd64 binary's SIGSEGV was delivered and dumped (the qemu core
+records signal 11) but the emulator did not exit, and the container was killed, rc 137; natively
+the amd64 binary exits 139 there too, so the committed amd64 rc 137 is the emulator's, C-113). One amd64 binary run (`xsct1`) first ended with rc 139 and no output; rerun three times it
 gave rc 1 and output identical to the model's; it is recorded as a transient failure of the
 emulation (review B saw one too, `jpgbig`), and the committed row is the rerun's. The 21
 regressions behave as their C source says: `FORCE_SOURCE_DATE` = `01`, empty or unset and an
@@ -422,8 +425,9 @@ or reports Stuck. It rests on, mapped to the ADR-014 draft's TB rows:
 - **Claims about the binary not yet checked in its disassembly:** the 13 pointer-arithmetic sites
   are plain address arithmetic; the 29 order-dependent sites (which gcc order was chosen).
 - **Contraction** as an aarch64 parameter of PS (the fused sites of H.1 §5.1).
-- **Native amd64**: approved by the owner on 2026-09-30, not run (it needs a CI workflow the owner
-  has not yet permitted). Every amd64 comparison here is emulated.
+- **Native amd64**: the binary side and the INITEX evidence were re-run natively on 2026-10-02
+  (`NATIVE-AMD64.md`); the model-against-binary comparison in the x86_64 configuration was made
+  against qemu only.
 - **Speed**: H.5 (measured on a quiet machine during H.3).
 - **Attestation beyond these inputs**: H.4 and H.6.
 

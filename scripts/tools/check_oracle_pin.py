@@ -107,7 +107,8 @@ and checks four things:
                name an engine as a word of a string literal.
        workflow  as shell, minus `name:` keys and YAML mapping KEYS (their
                values are scanned), with an exact allow-list of the in-image
-               canary lines of tex-oracle.yml. Composite actions, pre-commit
+               canary lines of tex-oracle.yml and the verbatim harness lines of
+               spike-native-amd64.yml (owner decision E3). Composite actions, pre-commit
                hooks, compose files and .github/ and infra/k8s/ YAML likewise.
      KNOWN RESIDUALS (OPEN-118 known limit (g)): a static scan cannot see a
      value that is not a function of the file's literals -- a name read from
@@ -261,12 +262,27 @@ OTHER_CODE_EXT = (".c", ".h", ".rs", ".js", ".mjs", ".ts", ".rb", ".pl",
 OTHER_LITERAL = re.compile(r"\"((?:[^\"\\\n]|\\.)*)\"|'((?:[^'\\\n]|\\.)*)'")
 COMPARE_OPS = {"==", "!=", "in"}
 # Workflow lines that run an engine INSIDE the pinned image (the oracle
-# itself). Exact stripped lines, pinned by count: a new one fails.
+# itself, and the E3 confirmation below). Exact stripped lines, pinned by
+# count: a new one fails.
 WORKFLOW_ALLOW = {
     ".github/workflows/tex-oracle.yml": (
         'got=$(docker run --rm "$TEX_IMAGE" pdflatex --version | head -1)',
         'if ! pdflatex -interaction=nonstopmode -halt-on-error canary.tex >canary.stdout 2>&1 \\',
         '&& pdflatex -interaction=nonstopmode -halt-on-error t.tex >t.log 2>&1 \\',
+    ),
+    # Owner decision E3 (ADR-015; "go" 2026-10-02): the one-off native amd64 confirmation
+    # of spike H.1/H.2. Each line is a VERBATIM line of a harness script the committed qemu
+    # outcomes were made with (h1/recipes.md, h2/diff/README.md; the workflow checks each
+    # script's sha256 before it runs), executed only inside the pinned image.
+    ".github/workflows/spike-native-amd64.yml": (
+        '(cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex -halt-on-error -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")',
+        'uname -m; sha256sum $(readlink -f $(which pdftex)) | cut -c1-16',
+        'cd /w/$1 && cp /w/rot2.tex . && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 pdflatex -interaction=nonstopmode -halt-on-error rot2.tex > stdout.txt 2>&1; echo "rc=$? arch=$(uname -m) pdftex=$(sha256sum $(readlink -f $(which pdftex)) | cut -c1-16)"',
+        'F=$(kpsewhich -engine=pdftex pdflatex.fmt); cp $F shipped-$(uname -m).fmt',
+        'mkdir -p $n; (cd $n && rm -f pdflatex.* && SOURCE_DATE_EPOCH=$E FORCE_SOURCE_DATE=1 pdftex -ini -jobname=pdflatex -progname=pdflatex -translate-file=cp227.tcx \'*pdflatex.ini\' </dev/null >/dev/null 2>&1; echo "$n rc=$?")',
+        '$IMG pdftex -ini < $d/stdin > $d/bin/out 2> $d/bin/err',
+        '$IMG pdftex -ini < $d/stdin > $d/realclock/out 2> $d/realclock/err',
+        '(cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex $H -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")',
     ),
 }
 # Python lines that hold an engine's NAME as data, not a command: exact stripped lines, pinned

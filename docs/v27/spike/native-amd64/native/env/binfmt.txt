@@ -1,0 +1,33 @@
+total 0
+drwxr-xr-x 2 root root 0 Oct  2 07:32 .
+dr-xr-xr-x 1 root root 0 Oct  2 07:32 ..
+-rw-r--r-- 1 root root 0 Oct  2 07:32 llvm-16-runtime.binfmt
+-rw-r--r-- 1 root root 0 Oct  2 07:32 llvm-17-runtime.binfmt
+-rw-r--r-- 1 root root 0 Oct  2 07:32 llvm-18-runtime.binfmt
+-rw-r--r-- 1 root root 0 Oct  2 07:32 python3.12
+--w------- 1 root root 0 Oct  2 07:32 register
+-rw-r--r-- 1 root root 0 Oct  2 07:32 status
+== /proc/sys/fs/binfmt_misc/llvm-16-runtime.binfmt
+enabled
+interpreter /usr/bin/lli-16
+flags: 
+offset 0
+magic 4243
+== /proc/sys/fs/binfmt_misc/llvm-17-runtime.binfmt
+enabled
+interpreter /usr/bin/lli-17
+flags: 
+offset 0
+magic 4243
+== /proc/sys/fs/binfmt_misc/llvm-18-runtime.binfmt
+enabled
+interpreter /usr/bin/lli-18
+flags: 
+offset 0
+magic 4243
+== /proc/sys/fs/binfmt_misc/python3.12
+enabled
+interpreter /usr/bin/python3.12
+flags: 
+offset 0
+magic cb0d0d0a

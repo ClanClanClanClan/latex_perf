@@ -895,6 +895,11 @@ def debt_side_tag_max35(text: str) -> str:
                       lambda c: _set_if(c, "max", 36, 35))
 
 
+def debt_numeric_order_max2(text: str) -> str:
+    return _debt_case(text, "numeric-order",
+                      lambda c: _set_if(c, "max", 3, 2))
+
+
 def lexical_catcode_changed(text: str) -> str:
     """The lexical contract no longer what the evidence ran (~ made other)."""
     d = json.loads(text)
@@ -2368,6 +2373,14 @@ REGISTRY = [
                      r"\[side-branch-tag\] FAIL: release debt is 36 "
                      r"first-parent commit\(s\) past v2\.0\.0, limit 35",
                      transform=debt_side_tag_max35),
+            # T is ordered as a version, not as a name: by name v1.9.0 sorts
+            # above v1.10.0 (on this repo v27.1.9 above v27.1.64), and the
+            # exemption would then pass any debt.
+            Mutation("debt past v1.10.0 with v1.9.0 sorting higher by name",
+                     'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[numeric-order\] FAIL: release debt is 3 "
+                     r"first-parent commit\(s\) past v1\.10\.0, limit 2",
+                     transform=debt_numeric_order_max2),
             # The constant is the owner's ADR-011 §6 decision: raising it in
             # one place without the other must not pass.
             Mutation("ADR-011 §6 N edited without the constant",

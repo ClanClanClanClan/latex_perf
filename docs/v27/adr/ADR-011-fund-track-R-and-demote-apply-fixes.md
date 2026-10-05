@@ -149,7 +149,8 @@ first-parent commits at `497150ac`).
 as the paragraph above planned: built before it, it would have been red on arrival.
 The threshold lives only in that script's `MAX_FIRST_PARENT_DEBT`, and every run
 exits 2 unless it equals the N in the Decision paragraph above, so the limit cannot
-move in code without this record moving with it. It FAILS when
+move in code without this record moving with it; the script takes no `--max`
+override, so the workflow step cannot raise it either. It FAILS when
 the debt exceeds it; it PASSES with a note when `dune-project`'s version is newer
 than the tag's (a release in preparation, so the release PR can land); it FAILS
 when `dune-project`'s version is *behind* the tag (a version marker contradicting a
@@ -167,7 +168,15 @@ picks the tag with the fewest commits to HEAD across all parents. An older hotfi
 tag on a side branch merged after a newer release then wins, and because
 `dune-project` is newer than that hotfix, the exemption passed any debt. It also
 exited 2 on every PR whenever a pre-release or annotation `v` tag was the nearest.
-Neither shape exists on main today; both are now fixture cases of the kill-tests.
+Replaying all 526 first-parent commits of main (at `cfab5748`) with both rules: the
+side-branch shape never occurred, but the pre-release shape did, at 9 commits on
+2026-04-22/23 (`de77b55e` onwards, where `describe` answers `v26.2.0-alpha1` or
+`-alpha2` and the old gate would have exited 2 while `v26.1.0` was reachable).
+Today both rules choose `v27.1.64`, so no verdict on main changes. Both shapes are
+now fixture cases: the pre-release one fails a `describe` gate's clean run, the
+side-branch one its `max 35` kill-test. Review also found the tag order must be
+by version, not by name (by name `v27.1.9` sorts above `v27.1.64`), now a fixture
+case with its own kill-test, and removed the script's `--max` flag.
 
 **Correction (C-115).** "Would have fired around day 34 of that 47-day window"
 does not reproduce in either unit (the record does not say how 34 was obtained). Replaying main's first-parent history from

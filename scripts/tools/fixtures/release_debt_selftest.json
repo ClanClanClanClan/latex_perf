@@ -1,5 +1,5 @@
 {
-  "_what": "Kill-test fixture for check_release_debt.py. Every case must PASS clean; check_gate_selftests.py mutates one case per kill-test. merge-shape: a 2-commit branch merged --no-ff after v1.0.0 is ONE first-parent commit (3 in all), so max 1 passes only under first-parent counting. release-prep: 31 first-parent commits past v1.0.0 pass ONLY through the exemption (a PATCH bump, so a major-only comparison fails it). side-branch-tag: an older tag v1.0.1 on a branch merged after v2.0.0 must not be chosen as T (git describe chooses it, C-116); the true debt is 36 past v2.0.0. non-release-tags: v*-tags that are not vX.Y.Z (a spike tag, a pre-release, an annotation tag on the release commit with a later date, a leading-zero name) must be ignored, not chosen and not exit 2.",
+  "_what": "Kill-test fixture for check_release_debt.py. Every case must PASS clean; check_gate_selftests.py mutates one case per kill-test. merge-shape: a 2-commit branch merged --no-ff after v1.0.0 is ONE first-parent commit (3 in all), so max 1 passes only under first-parent counting. release-prep: 31 first-parent commits past v1.0.0 pass ONLY through the exemption (a PATCH bump, so a major-only comparison fails it). side-branch-tag: an older tag v1.0.1 on a branch merged after v2.0.0 must not be chosen as T (git describe chooses it, C-116); the true debt is 36 past v2.0.0. non-release-tags: v*-tags that are not vX.Y.Z (a spike tag, a pre-release, an annotation tag on the release commit with a later date, a leading-zero name) must be ignored, not chosen and not exit 2. numeric-order: v1.10.0 is a higher release than v1.9.0 although its NAME sorts lower; the true debt is 3 past v1.10.0 (choosing T by name picks v1.9.0, and the exemption then passes any debt).",
   "cases": [
     {
       "name": "merge-shape",
@@ -56,6 +56,18 @@
       ],
       "clone": "full",
       "max": 1
+    },
+    {
+      "name": "numeric-order",
+      "ops": [
+        {"op": "version", "v": "1.9.0"},
+        {"op": "tag", "name": "v1.9.0"},
+        {"op": "version", "v": "1.10.0"},
+        {"op": "tag", "name": "v1.10.0"},
+        {"op": "commits", "n": 3}
+      ],
+      "clone": "full",
+      "max": 3
     }
   ]
 }

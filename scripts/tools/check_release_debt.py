@@ -11,7 +11,8 @@ nothing watched it.
 WHAT IT MEASURES, AT RUN TIME, FROM GIT ONLY.
   T    = the HIGHEST release tag reachable from HEAD: among
          `git tag --merged HEAD`, the names of the exact form vX.Y.Z
-         (no leading zeros, nothing after Z), ordered as version tuples.
+         (no leading zeros, nothing after Z), ordered as version tuples
+         (NOT as names: by name v27.1.9 sorts above v27.1.64).
          Every other tag (v26.2.0-alpha1, v25-R0-...-ground-truth, a spike
          tag) is NOT a release and is ignored, so it can neither choose T nor
          turn CI red. NOT `git describe`: describe picks the tag with the
@@ -29,7 +30,9 @@ THE LIMIT. MAX_FIRST_PARENT_DEBT below is the only constant. Because the
 owner's decision lives in ADR-011 §6's amendment, the gate reads the N stated
 in that amendment's Decision paragraph on every run and exits 2 if it differs
 from the constant (or cannot be found exactly once): raising the limit in code
-without an ADR edit cannot pass.
+without an ADR edit cannot pass. There is deliberately NO command-line
+override of the limit: a `--max` flag would let a one-word edit of the
+workflow step raise it with neither the constant nor the ADR moving.
 
 RULE (owner decision 2026-10-02, amending ADR-011 §6 to first-parent units):
   * dune-project's (version) at HEAD GREATER than T's version: PASS, with a
@@ -262,6 +265,9 @@ def build_fixture(case: dict, root: Path) -> Path:
 def run_fixture(path: Path) -> int:
     """Every case of the fixture; the exit code is the worst one (2 > 1 > 0)."""
     cases = json.loads(path.read_text())["cases"]
+    if not cases:
+        raise Infra(f"{path}: the fixture has no cases (an empty fixture "
+                    f"would pass vacuously)")
     worst = 0
     for case in cases:
         tagname = f"[release-debt] [{case['name']}]"
@@ -282,20 +288,15 @@ def run_fixture(path: Path) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--max", type=int, default=MAX_FIRST_PARENT_DEBT,
-                    help=f"first-parent commits allowed past the last release "
-                         f"tag (default {MAX_FIRST_PARENT_DEBT}, ADR-011 §6)")
     ap.add_argument("--selftest-fixture", metavar="JSON",
                     help="evaluate a throwaway repo built from this spec "
                          "(kill-tests only)")
     ns = ap.parse_args()
-    if ns.max < 0:
-        ap.error("--max must be >= 0")
     try:
         check_adr_limit()
         if ns.selftest_fixture:
             return run_fixture(Path(ns.selftest_fixture))
-        rc, lines = evaluate(Path(ns.repo), ns.max)
+        rc, lines = evaluate(Path(ns.repo), MAX_FIRST_PARENT_DEBT)
     except Infra as exc:
         print(f"[release-debt] INFRA (exit 2, never a pass): {exc}")
         return 2

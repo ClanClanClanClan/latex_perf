@@ -1,0 +1,12 @@
+MEMDIAG block 838 size 8000001 words 9900441
+MEMDIAG block 837 size 6250001 words 7945308
+MEMDIAG block 835 size 5000001 words 6417110
+MEMDIAG block 147 size 1 words 5037475
+MEMDIAG block 834 size 630194 words 2554159
+MEMDIAG block 833 size 629680 words 2520915
+MEMDIAG block 30 size 1 words 1600099
+MEMDIAG block 890 size 427601 words 1286031
+MEMDIAG block 891 size 427601 words 1286031
+MEMDIAG block 892 size 427601 words 1286031
+MEMDIAG block 862 size 288032 words 867393
+MEMDIAG block 800 size 200001 words 592607

@@ -1,0 +1,42 @@
+{
+ "sizes": [
+  11621149,
+  11621681
+ ],
+ "header_differs": {
+  "hashhigh": [
+   21364,
+   21371
+  ]
+ },
+ "strings": [
+  32901,
+  32913
+ ],
+ "pool_bytes": [
+  841735,
+  842083
+ ],
+ "A_strings_are_a_prefix_of_B": true,
+ "strings_only_in_B": [
+  "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) kpathsea version 6.4.2",
+  "sys_if_shell:F",
+  "sys_if_shell_p:",
+  "sys_if_shell_unrestricted:T",
+  "sys_if_shell_unrestricted:F",
+  "sys_if_shell_unrestricted:TF",
+  "sys_if_shell_unrestricted_p:",
+  "sys_if_shell_restricted:T",
+  "sys_if_shell_restricted:TF",
+  "sys_if_shell_restricted_p:",
+  "texput.log",
+  " (preloaded format=texput 2026.8.30)"
+ ],
+ "after_pool": {
+  "bytes": [
+   10646962,
+   10647098
+  ],
+  "differing_bytes_at_equal_offsets": 1881851
+ }
+}

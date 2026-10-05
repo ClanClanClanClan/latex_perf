@@ -1,6 +1,6 @@
 # ADR-011 — Fund Track R; take `--apply-fixes` off the recommended path; four measurement decisions
 
-**Status:** Accepted (2026-09-20). **Deciders:** maintainer.
+**Status:** Accepted (2026-09-20); §6 amended by the owner 2026-10-02 (first-parent units). **Deciders:** maintainer.
 **Supersedes:** nothing. **Related:** OPEN-104, OPEN-105, OPEN-103, OPEN-101, ADR-010.
 
 ## Context
@@ -130,6 +130,39 @@ N = 25 is green today and would have fired around day 34 of that 47-day window.
 The gate ships independently of and ahead of the next tag; the tag itself waits for
 the OPEN-103 sweep and the fixer class sweep, since cutting one today would ship a
 soundness headline built on 180 unconfirmed rows.
+
+#### Amendment (owner decision, 2026-10-02): first-parent units — implemented
+
+**Decision.** N = 25 counts **first-parent** commits of HEAD since the nearest
+`v[0-9]*` tag (`git rev-list --first-parent --count T..HEAD`), not all commits.
+On main a first-parent commit is one merged PR or one direct push, whichever merge
+style was used — a squash adds one, a true merge adds one — so the unit is stable
+across the owner's switch from squash to true merges. With all-commit units the
+same N would have meant about 6 PRs at the rate since v27.1.63 (140 commits over 32
+first-parent commits at `497150ac`).
+
+**Implemented** as `scripts/tools/check_release_debt.py`, a required step of
+`spec-drift` (PR #631), after the v27.1.64 tag rather than ahead of the next tag
+as the paragraph above planned: built before it, it would have been red on arrival.
+The threshold lives only in that script's `MAX_FIRST_PARENT_DEBT`. It FAILS when
+the debt exceeds it; it PASSES with a note when `dune-project`'s version is newer
+than the tag's (a release in preparation, so the release PR can land); it FAILS
+when `dune-project`'s version is *behind* the tag (a version marker contradicting a
+tag, the other half of OPEN-013); and a shallow clone, no reachable tag or any git
+error is exit 2, never a pass. Nothing it measures is committed (C-13).
+
+**Known limit.** The exemption is unbounded: a `dune-project` bump that is never
+tagged silences the gate indefinitely. The gate still prints the count while
+exempt.
+
+**Correction (C-115).** "Would have fired around day 34 of that 47-day window"
+does not reproduce in either unit. Replaying main's first-parent history from
+v27.1.62 (tagged 2026-07-27) and taking the first main state over 25: all-commit
+units fire at `1a277c56` on 2026-08-20 (day 24; 26 all, 17 first-parent);
+first-parent units fire at `4bad2553` on 2026-08-22 (day 26; 35 all, 26
+first-parent). From v27.1.63 (tagged 2026-09-12) the same replay fires at
+`7683b475` on 2026-09-24 (all-commit, day 12) and `7bf85335` on 2026-09-28
+(first-parent, day 16).
 
 ## Consequences
 

@@ -556,8 +556,18 @@ def drop_one_passes_count(text: str) -> str:
     whose protocol claims the multi-pass protocol wholesale (no APPLIED-TO
     clause). The claim-provenance check (C-28) must see that the published
     protocol no longer describes every row. It was written for results.json
-    alone; this proves the sample-3 arm of the loop is reached."""
+    alone; this proves the sample-3 arm of the loop is reached.
+
+    OPEN-126's full re-grade gave every results artefact an "APPLIED TO ALL
+    200/200 rows" clause, which routes a missing pass count to the APPLIED-TO
+    arm instead (killed by its own mutation above). So the clause is removed
+    first: without it the WHOLESALE arm stays reachable by a mutation, though
+    no artefact exercises it today."""
     d = json.loads(text)
+    proto = d["oracle"]["protocol"]
+    stripped = re.sub(r" — APPLIED TO (?:ALL )?\d+/\d+ rows$", "", proto)
+    assert stripped != proto or "APPLIED TO" not in proto, proto
+    d["oracle"]["protocol"] = stripped
     row = next(r for r in d["docs"] if r.get("pdflatex_passes"))
     del row["pdflatex_passes"]
     return json.dumps(d, indent=1) + "\n"

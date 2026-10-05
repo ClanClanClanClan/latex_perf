@@ -25,6 +25,15 @@ on:
       - '.github/workflows/docker-push.yml'
       - 'scripts/tools/docker_smoke.sh'
       - 'scripts/tools/docker_smoke/**'
+      # The image's own entrypoint and the service it runs (OPEN-125: a
+      # broker defect that only the image's REST check exercised end to end).
+      - 'scripts/docker_entrypoint.sh'
+      - 'latex-parse/src/main_service.ml'
+      - 'latex-parse/src/broker.ml'
+      - 'latex-parse/src/worker.ml'
+      - 'latex-parse/src/ipc.ml'
+      - 'latex-parse/src/hedge_timer.ml'
+      - 'latex-parse/src/hedge_timer_stubs.c'
   workflow_dispatch:
 
 permissions:

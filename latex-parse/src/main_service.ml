@@ -265,9 +265,16 @@ let run () =
         dump_csv ());
       loop ()
     in
-    try loop ()
-    with Unix.Unix_error _ | End_of_file | Exit -> (
-      try Unix.close c with Unix.Unix_error _ -> ())
+    (* The connection is closed on EVERY exit from the loop. Before OPEN-125
+       only Unix_error/End_of_file/Exit closed it; a Failure from read_exact on
+       the payload (client gone mid-frame) or any other exception ended the
+       thread with [c] open, and the client waited for a reply that never
+       came. *)
+    Fun.protect
+      ~finally:(fun () -> try Unix.close c with Unix.Unix_error _ -> ())
+      (fun () ->
+        try loop ()
+        with Unix.Unix_error _ | End_of_file | Exit | Failure _ -> ())
   in
 
   let rec accept_loop () =

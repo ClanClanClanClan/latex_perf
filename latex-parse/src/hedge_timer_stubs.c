@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include <errno.h>
+
 #if defined(__APPLE__)
   #include <sys/event.h>
   #include <sys/time.h>
@@ -16,6 +18,12 @@
   CAMLprim value ocaml_ht_arm_ns(value vkq, value vns){
     int kq = Int_val(vkq); int64_t ns = Int64_val(vns);
     struct kevent kev;
+    /* Delete first: re-adding a oneshot timer whose previous arming already
+       fired would otherwise leave that stale expiry queued, and the next wait
+       would report a hedge the moment it starts. ENOENT (never armed, or its
+       oneshot already retrieved) is expected. */
+    EV_SET(&kev, 1, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+    (void)kevent(kq, &kev, 1, NULL, 0, NULL);
     EV_SET(&kev, 1, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, (int)(ns/1000000LL), NULL);
     if (kevent(kq, &kev, 1, NULL, 0, NULL) < 0) uerror("kevent(timer)", Nothing);
     return Val_unit;
@@ -30,10 +38,11 @@
     if (fd2 >= 0) { EV_SET(&kevset[nset++], fd2, EVFILT_READ, EV_ADD|EV_ENABLE, 0, 0, NULL); }
     if (nset>0)  { if (kevent(kq, kevset, nset, NULL, 0, NULL) < 0) uerror("kevent(add)", Nothing); }
     struct kevent out[3];
+    int nev;
     caml_enter_blocking_section();
-      int nev = kevent(kq, NULL, 0, out, 3, NULL);
+      nev = kevent(kq, NULL, 0, out, 3, NULL);
     caml_leave_blocking_section();
-    if (nev < 0) uerror("kevent(wait)", Nothing);
+    int wait_errno = errno;
     int timer_fired = 0; int which = -1;
     for (int i=0;i<nev;i++){
       if (out[i].filter == EVFILT_TIMER) timer_fired = 1;
@@ -42,6 +51,16 @@
         else if (fd2 >= 0 && (int)out[i].ident == fd2) which = fd2;
       }
     }
+    /* Deregister the fds again (as the epoll branch does): a registration
+       left behind keeps reporting that fd in later waits that did not ask
+       for it, which crowd the 3-slot result and spin the caller. */
+    nset = 0;
+    if (fd1 >= 0) { EV_SET(&kevset[nset++], fd1, EVFILT_READ, EV_DELETE, 0, 0, NULL); }
+    if (fd2 >= 0 && fd2 != fd1) { EV_SET(&kevset[nset++], fd2, EVFILT_READ, EV_DELETE, 0, 0, NULL); }
+    if (nset > 0) (void)kevent(kq, kevset, nset, NULL, 0, NULL);
+    /* EINTR is raised, not retried here, so that OCaml signal handlers run;
+       Hedge_timer.wait_two retries. */
+    if (nev < 0) { errno = wait_errno; uerror("kevent(wait)", Nothing); }
     value t = caml_alloc_tuple(2);
     Store_field(t,0, Val_int(timer_fired));
     Store_field(t,1, Val_int(which));
@@ -105,10 +124,11 @@
         epoll_ctl(ep, EPOLL_CTL_MOD, fd2, &ev2);
     }
     struct epoll_event out[3];
+    int n;
     caml_enter_blocking_section();
-      int n = epoll_wait(ep, out, 3, -1);
+      n = epoll_wait(ep, out, 3, -1);
     caml_leave_blocking_section();
-    if (n < 0) uerror("epoll_wait", Nothing);
+    int wait_errno = errno;
     int timer_fired = 0; int which = -1;
     for (int i = 0; i < n; i++) {
       if (out[i].data.fd == g_timer_fd) {
@@ -126,6 +146,9 @@
        when workers rotate (new fd with same number). Timer stays. */
     if (fd1 >= 0) epoll_ctl(ep, EPOLL_CTL_DEL, fd1, NULL);
     if (fd2 >= 0) epoll_ctl(ep, EPOLL_CTL_DEL, fd2, NULL);
+    /* EINTR is raised, not retried here, so that OCaml signal handlers run;
+       Hedge_timer.wait_two retries. */
+    if (n < 0) { errno = wait_errno; uerror("epoll_wait", Nothing); }
     value t = caml_alloc_tuple(2);
     Store_field(t, 0, Val_int(timer_fired));
     Store_field(t, 1, Val_int(which));

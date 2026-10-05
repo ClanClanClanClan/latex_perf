@@ -16,8 +16,9 @@
 #                                          and the curated remediation
 #                                          (rule_remediation.yaml), not the
 #                                          generic fallback
-#   5. the default entrypoint (REST)    -> HTTP 200 on POST /tokenize, then 5
-#                                          more in a row; macro catalogue loaded
+#   5. the entrypoint (REST), default   -> HTTP 200 on POST /tokenize, then 10
+#      pool and a two-worker pool          more in a row, then 4 clients x 5
+#                                          concurrently; macro catalogue loaded
 #
 # Usage: scripts/tools/docker_smoke.sh ghcr.io/clanclanclanclan/latex_perf:vX
 #        (DOCKER_SMOKE_PLATFORM=linux/amd64 to run an amd64 image elsewhere)
@@ -68,46 +69,69 @@ rc_is explain 0 && has explain 'message: +Ellipsis' \
   && has explain 'remediation: ' \
   && lacks explain 'remediation: +No auto-fix is available'
 
-# 5. The DEFAULT entrypoint (lp-serve: main_service + REST) answers
-#    POST /tokenize with HTTP 200 — once to come up (up to 20 attempts), then
-#    5 more times in a row — and loaded the macro catalogue. The 5-in-a-row
-#    part is what catches the two-worker container defect (lp-serve's header):
-#    with L0_POOL_CORES=0,1 about one request in three got no response.
+# 5. The entrypoint (lp-serve: main_service + REST) answers POST /tokenize
+#    with HTTP 200 — once to come up (up to 20 attempts), then SEQ more times
+#    in a row, then CONC_CLIENTS concurrent clients x CONC_EACH requests, all
+#    200 — and loaded the macro catalogue. Run twice: the image default, and a
+#    two-worker pool (L0_POOL_CORES=0,1).
+#    The two-worker run is what catches OPEN-125: forked workers inherited the
+#    parent's end of earlier workers' sockets, so retiring a worker hung the
+#    request that retired it, and a units bug retired a worker after every
+#    request — with two workers about one request in three got no response.
+#    The concurrent part catches the unserialised broker (concurrent calls
+#    decoded each other's frames).
 #    The status line is read with bash's `read -t`: a `timeout head`/`cat`
 #    reader loses its buffered output when it is killed, because the server
 #    keeps the connection open after answering.
-CID="$(docker run -d "${PLATFORM_ARGS[@]}" --network none "${IMAGE}")"
+SEQ=10
+CONC_CLIENTS=4
+CONC_EACH=5
 BODY='{"latex":"\\documentclass{article}\\begin{document}Hello $x^2$\\end{document}"}'
-: > "${OUT}/rest.out"; echo 1 > "${OUT}/rest.rc"
-for _ in $(seq 1 30); do
-  docker logs "${CID}" 2>&1 | grep -q 'REST API Server listening' && break
-  sleep 2
-done
-post() {
-  docker exec -e BODY="${BODY}" "${CID}" bash -c '
+post() {  # post CID : print the HTTP status line of one POST /tokenize
+  docker exec -e BODY="${BODY}" "$1" bash -c '
       exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1
       printf "POST /tokenize HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s" "${#BODY}" "${BODY}" >&3
       IFS= read -r -t 20 line <&3 && printf "%s\n" "${line%$(printf "\r")}"' 2>&1
 }
-up=0
-for _ in $(seq 1 20); do
-  if post | tee -a "${OUT}/rest.out" | grep -q '^HTTP/1\.[01] 200'; then up=1; break; fi
-  sleep 2
-done
-ok=0
-if [ "${up}" -eq 1 ]; then
-  for _ in 1 2 3 4 5; do
-    post | tee -a "${OUT}/rest.out" | grep -q '^HTTP/1\.[01] 200' && ok=$((ok + 1))
+rest_check() {  # rest_check NAME [docker run -e ...]
+  local name="$1"; shift
+  local cid up=0 ok=0 cok=0 i j
+  cid="$(docker run -d "${PLATFORM_ARGS[@]}" --network none "$@" "${IMAGE}")"
+  : > "${OUT}/${name}.out"; echo 1 > "${OUT}/${name}.rc"
+  for _ in $(seq 1 30); do
+    docker logs "${cid}" 2>&1 | grep -q 'REST API Server listening' && break
+    sleep 2
   done
-fi
-echo "rest: up=${up}, ${ok}/5 consecutive requests answered 200" >> "${OUT}/rest.out"
-[ "${up}" -eq 1 ] && [ "${ok}" -eq 5 ] && echo 0 > "${OUT}/rest.rc"
-docker logs "${CID}" >> "${OUT}/rest.out" 2>&1
-docker rm -f "${CID}" > /dev/null 2>&1
-rc_is rest 0 && has rest '^HTTP/1\.[01] 200' \
-  && has rest 'Loaded macro catalogue: [1-9][0-9]* symbols'
+  for _ in $(seq 1 20); do
+    if post "${cid}" | tee -a "${OUT}/${name}.out" | grep -q '^HTTP/1\.[01] 200'; then up=1; break; fi
+    sleep 2
+  done
+  if [ "${up}" -eq 1 ]; then
+    for _ in $(seq 1 "${SEQ}"); do
+      post "${cid}" | tee -a "${OUT}/${name}.out" | grep -q '^HTTP/1\.[01] 200' && ok=$((ok + 1))
+    done
+    for i in $(seq 1 "${CONC_CLIENTS}"); do
+      ( for j in $(seq 1 "${CONC_EACH}"); do post "${cid}"; done ) \
+        > "${OUT}/${name}.conc${i}" 2>&1 &
+    done
+    wait
+    for i in $(seq 1 "${CONC_CLIENTS}"); do
+      cat "${OUT}/${name}.conc${i}" >> "${OUT}/${name}.out"
+      cok=$((cok + $(grep -c '^HTTP/1\.[01] 200' "${OUT}/${name}.conc${i}")))
+    done
+  fi
+  echo "${name}: up=${up}, ${ok}/${SEQ} consecutive and ${cok}/$((CONC_CLIENTS * CONC_EACH)) concurrent requests answered 200" >> "${OUT}/${name}.out"
+  [ "${up}" -eq 1 ] && [ "${ok}" -eq "${SEQ}" ] \
+    && [ "${cok}" -eq $((CONC_CLIENTS * CONC_EACH)) ] && echo 0 > "${OUT}/${name}.rc"
+  docker logs "${cid}" >> "${OUT}/${name}.out" 2>&1
+  docker rm -f "${cid}" > /dev/null 2>&1
+  rc_is "${name}" 0 && has "${name}" '^HTTP/1\.[01] 200' \
+    && has "${name}" 'Loaded macro catalogue: [1-9][0-9]* symbols'
+}
+rest_check rest
+rest_check rest2w -e L0_POOL_CORES=0,1
 
-for n in lint ready notready explain rest; do
+for n in lint ready notready explain rest rest2w; do
   echo "smoke ${n}: rc=$(cat "${OUT}/${n}.rc") lines=$(wc -l < "${OUT}/${n}.out" | tr -d ' ')"
 done
 if [ "${FAILS}" -ne 0 ]; then

@@ -335,6 +335,11 @@
  (libraries latex_parse_lib unix))
 
 (test
+ (name test_broker_pool)
+ (modules test_broker_pool)
+ (libraries latex_parse_lib unix threads))
+
+(test
  (name test_infra_smoke)
  (modules test_infra_smoke)
  (libraries latex_parse_lib test_helpers unix bigarray))

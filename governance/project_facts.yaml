@@ -106,7 +106,7 @@ languages:
   stubbed: 14
   target: 21
 ci:
-  workflow_count: 38
+  workflow_count: 39
   hard_gates:
   - zero_admit
   - build

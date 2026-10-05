@@ -1,0 +1,316 @@
+# Spike E3 (ADR-015, owner decision E3, 2026-09-30; "go" 2026-10-02): a ONE-OFF native amd64
+# confirmation of the spike's x86_64 evidence, which was all produced under qemu-user on an arm64
+# Mac. It re-runs, on a native x86_64 runner, every committed H.1 architecture probe with its
+# controls (docs/v27/spike/h1/archsem/probes, probes/lead, h1/adversarial/rot2.tex, the format run
+# of H1-report.md §3) and the binary side of the committed H.2 differential (docs/v27/spike/h2/diff,
+# 178 inputs, the INITEX run among them), with the harness the committed qemu outcomes were made
+# with: the scripts below are verbatim copies, and each one is checked against its recorded
+# sha256 before it runs. docs/v27/spike/NATIVE-AMD64.md is the report.
+#
+# It fails ONLY on an infrastructure error (not x86_64, an emulator registered, the pinned image
+# not pulled, a harness hash mismatch, a run that produced nothing). A difference between native
+# and qemu is a FINDING, printed by the compare step and uploaded, never a red job.
+#
+# Every line here that names a TeX engine runs it INSIDE the pinned image, and is allow-listed
+# line by line in scripts/tools/check_oracle_pin.py (WORKFLOW_ALLOW). It does not go through
+# _oracle.py because the measured harness did not: terminal input, a chosen architecture and the
+# gettimeofday shim are outside _oracle.py (H2-report.md, "Owner decisions this checkpoint needs").
+name: spike-native-amd64
+
+on:
+  push:
+    branches: [ci/v27165-native-amd64]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spike-native-amd64-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-amd64:
+    name: native-amd64
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert a native x86_64 host with no x86_64 emulator registered
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/na"; mkdir -p "$D/env"; echo "D=$D" >> "$GITHUB_ENV"
+          m=$(uname -m); echo "uname -m: $m" | tee "$D/env/uname.txt"
+          uname -a >> "$D/env/uname.txt"
+          if [ "$m" != x86_64 ]; then echo "::error::host is $m, not x86_64"; exit 1; fi
+          grep -m1 'model name' /proc/cpuinfo | tee "$D/env/cpu.txt"
+          grep -m1 '^flags' /proc/cpuinfo >> "$D/env/cpu.txt"
+          ls -la /proc/sys/fs/binfmt_misc/ > "$D/env/binfmt.txt" 2>&1 || true
+          for f in /proc/sys/fs/binfmt_misc/*; do
+            case "${f##*/}" in register|status|'*') continue ;; esac
+            echo "== $f" >> "$D/env/binfmt.txt"; cat "$f" >> "$D/env/binfmt.txt" || true
+          done
+          python3 - "$D/env/binfmt.txt" <<'PY'
+          import pathlib, sys
+          # A handler matching x86_64 ELF executables (e_machine 0x3e at byte 18, offset 0) would
+          # run the amd64 binary through an emulator. Any such handler, enabled, is an error.
+          bad = []
+          root = pathlib.Path("/proc/sys/fs/binfmt_misc")
+          for f in (root.iterdir() if root.is_dir() else []):
+              if f.name in ("register", "status"):
+                  continue
+              t = f.read_text(errors="replace")
+              if not t.startswith("enabled"):
+                  continue
+              kv = dict(l.split(" ", 1) for l in t.splitlines()[1:] if " " in l)
+              mag, off = kv.get("magic", ""), kv.get("offset", "0").strip()
+              name = f.name.lower()
+              if ("qemu" in t.lower() and ("x86_64" in name or "x86-64" in name or "amd64" in name)) or (
+                      off == "0" and len(mag) >= 40 and mag[:8] == "7f454c46" and mag[36:40] == "3e00"):
+                  bad.append(f.name)
+          print("x86_64 emulator handlers:", bad or "none")
+          sys.exit(1 if bad else 0)
+          PY
+          echo "core_pattern before: $(cat /proc/sys/kernel/core_pattern)" | tee "$D/env/core.txt"
+          # the qemu runs' host (colima's VM) had core_pattern 'core'; align, and record
+          sudo sysctl -w kernel.core_pattern=core
+          echo "core_pattern after: $(cat /proc/sys/kernel/core_pattern)" | tee -a "$D/env/core.txt"
+          docker version > "$D/env/docker.txt" 2>&1; docker info >> "$D/env/docker.txt" 2>&1
+          df -h / "$RUNNER_TEMP" | tee "$D/env/df.txt"
+
+      - name: Pull the pinned image (digest read from _oracle.py's source, tex-oracle.yml)
+        run: |
+          set -euo pipefail
+          IMG=$(python3 -c 'import sys; sys.path.insert(0, "scripts/tools"); import _oracle as O; assert O.IMAGE == O.FINGERPRINTED_IMAGE, (O.IMAGE, O.FINGERPRINTED_IMAGE); print(O.IMAGE)')
+          echo "IMG=$IMG" >> "$GITHUB_ENV"; echo "image: $IMG" | tee "$D/env/image.txt"
+          docker pull "$IMG"
+          docker image inspect "$IMG" --format '{{.Id}} {{.Architecture}} {{.Os}} {{json .RepoDigests}}' | tee -a "$D/env/image.txt"
+          a=$(docker run --rm --platform linux/amd64 "$IMG" uname -m)
+          echo "container uname -m: $a" | tee -a "$D/env/image.txt"
+          if [ "$a" != x86_64 ]; then echo "::error::container reports $a"; exit 1; fi
+          df -h / | tee -a "$D/env/df.txt"
+
+      - name: Write the verbatim harness and check every hash
+        run: |
+          set -euo pipefail
+          H="$D/harness"; mkdir -p "$H"
+          cat > "$H/run-r.sh" <<'EOF_HARNESS'
+          cd /w
+          for t in *.tex; do f=${t%.tex}
+            rm -rf o-$f; mkdir o-$f; cp $t *.jpg *.pdf o-$f/ 2>/dev/null
+            (cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex -halt-on-error -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")
+            grep -ohE '^!.*|\[[a-zA-Z0-9=-]+=[^]]*\]|too (large|small)[^.]*|number too big|invalid[^.]*' o-$f/term.txt | tr '\n' ' ' | cut -c1-500 | sed 's/^/   /'; echo
+            [ -f o-$f/$f.pdf ] && grep -aoE '/Rect \[[^]]*\]' o-$f/$f.pdf | tr '\n' ' ' | sed 's/^/   /'; echo
+          done
+          EOF_HARNESS
+          cat > "$H/run-qs.sh" <<'EOF_HARNESS'
+          cd /w
+          for t in *.tex; do f=${t%.tex}
+            H=-halt-on-error; case $f in nh-*) H=;; esac; rm -rf o-$f; mkdir o-$f; cp $t *.jpg *.pdf o-$f/ 2>/dev/null
+            (cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex $H -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")
+            grep -ohE '^!.*|\[[a-zA-Z0-9=-]+=[^]]*\]|too (large|small)[^.]*|number too big|invalid[^.]*' o-$f/term.txt | tr '\n' ' ' | cut -c1-500 | sed 's/^/   /'; echo
+            [ -f o-$f/$f.pdf ] && grep -aoE '/Rect \[[^]]*\]' o-$f/$f.pdf | tr '\n' ' ' | sed 's/^/   /'; echo
+          done
+          EOF_HARNESS
+          cat > "$H/run2.sh" <<'EOF_HARNESS'
+          cd /w
+          for t in slant*.tex; do f=${t%.tex}
+            rm -rf o-$f; mkdir o-$f; cp $t o-$f/
+            (cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex -halt-on-error -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")
+            grep -ohiE 'warning[^)]*|^!.*' o-$f/$f.log | tr '\n' ' ' | cut -c1-300 | sed 's/^/   /'; echo
+            [ -f o-$f/$f.pdf ] && sha256sum o-$f/$f.pdf | cut -c1-16 | sed 's/^/   pdf sha256 /'
+          done
+          EOF_HARNESS
+          cat > "$H/run-lead.sh" <<'EOF_HARNESS'
+          cd /w
+          uname -m; sha256sum $(readlink -f $(which pdftex)) | cut -c1-16
+          for t in lead-*.tex; do f=${t%.tex}
+            rm -rf o-$f; mkdir o-$f; cp $t o-$f/
+            (cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex -halt-on-error -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")
+            grep -ohE '^!.*|\[[a-zA-Z0-9=-]+=[^]]*\]' o-$f/term.txt | tr '\n' ' ' | cut -c1-300 | sed 's/^/   /'; echo
+            for x in pdf dvi; do [ -s o-$f/$f.$x ] && sha256sum o-$f/$f.$x | cut -c1-16 | sed "s/^/   $x sha256 /"; done
+            rm -f o-$f/core o-$f/*.core
+          done
+          EOF_HARNESS
+          cat > "$H/run-rot.sh" <<'EOF_HARNESS'
+          set -u
+          cd /w/$1 && cp /w/rot2.tex . && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 pdflatex -interaction=nonstopmode -halt-on-error rot2.tex > stdout.txt 2>&1; echo "rc=$? arch=$(uname -m) pdftex=$(sha256sum $(readlink -f $(which pdftex)) | cut -c1-16)"
+          EOF_HARNESS
+          cat > "$H/f7amd.sh" <<'EOF_HARNESS'
+          set -u
+          cd /f7
+          F=$(kpsewhich -engine=pdftex pdflatex.fmt); cp $F shipped-$(uname -m).fmt
+          L1=$(head -1 $(dirname $F)/pdflatex.log); echo "$L1"
+          # the amd64 shipped build's own start minute, parsed from its log banner
+          D=$(echo "$L1" | sed -E 's/.*\)  ([0-9]+) ([A-Z]+) ([0-9]+) ([0-9:]+)$/\1 \2 \3 \4/')
+          TA=$(date -u -d "$D" +%s); echo "amd64 start minute $D epoch $TA"
+          TARM=$(date -u -d '2026-08-30 07:51:00' +%s)
+          for v in own:$TA armclock:$TARM; do
+            n=${v%%:*}; E=${v#*:}
+            mkdir -p $n; (cd $n && rm -f pdflatex.* && SOURCE_DATE_EPOCH=$E FORCE_SOURCE_DATE=1 pdftex -ini -jobname=pdflatex -progname=pdflatex -translate-file=cp227.tcx '*pdflatex.ini' </dev/null >/dev/null 2>&1; echo "$n rc=$?")
+          done
+          sha256sum shipped-$(uname -m).fmt own/pdflatex.fmt armclock/pdflatex.fmt
+          EOF_HARNESS
+          cat > "$H/run_bin.zsh" <<'EOF_HARNESS'
+          #!/bin/zsh
+          # The binary side of the H.2 differential (docs/v27/spike/h2/diff/README.md quotes this
+          # file verbatim). usage: run_bin.zsh ARCH WORK SHIMDIR [NAME...]
+          # WORK is the directory `diff.py prepare --arch ARCH --work WORK` wrote; SHIMDIR holds
+          # clockshim-ARCH.so built from diff/clockshim.c. For each input: WORK/NAME/bin/{out,err,rc}
+          # and the files the run wrote, in WORK/NAME/bin/w/ (clock.log: the clock readings used).
+          set -u
+          A=$1; WORK=$2; SHIM=$3; shift 3
+          IMG=texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b
+          names=($@); [ ${#names} -eq 0 ] && names=(${(f)"$(<$WORK/inputs.txt)"})
+          for n in $names; do
+            d=$WORK/$n; rm -rf $d/bin; mkdir -p $d/bin/w
+            envs=(); for l in ${(f)"$(<$d/docker.env)"}; do envs+=(-e "$l"); done
+            docker run --rm -i --platform linux/$A --network none -v $SHIM:/shim:ro -v $d/bin/w:/w -w /w \
+              -e LD_PRELOAD=/shim/clockshim-$A.so -e LP_CLOCK_LOG=/w/clock.log $envs \
+              $IMG pdftex -ini < $d/stdin > $d/bin/out 2> $d/bin/err
+            echo $? > $d/bin/rc
+            echo "$n rc=$(<$d/bin/rc)"
+          done
+          EOF_HARNESS
+          cat > "$H/run_realclock.zsh" <<'EOF_HARNESS'
+          #!/bin/zsh
+          # The real-clock control of the INITEX run (docs/v27/spike/h2/diff/README.md quotes this
+          # file verbatim): input t0 with no clock shim, so gettimeofday is the real clock.
+          # usage: run_realclock.zsh ARCH WORK
+          set -u
+          A=$1; WORK=$2
+          IMG=texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b
+          d=$WORK/t0; rm -rf $d/realclock; mkdir -p $d/realclock/w
+          docker run --rm -i --platform linux/$A --network none -v $d/realclock/w:/w -w /w \
+            -e SOURCE_DATE_EPOCH=1788076260 -e FORCE_SOURCE_DATE=1 \
+            $IMG pdftex -ini < $d/stdin > $d/realclock/out 2> $d/realclock/err
+          echo $? > $d/realclock/rc
+          echo "t0 real clock $A rc=$(<$d/realclock/rc)"
+          EOF_HARNESS
+          N=docs/v27/spike/native-amd64
+          cp "$N/clockshim-amd64.so" "$N/intmin.tex" "$H/"
+          # recorded hashes: h1/recipes.md, h2/diff/README.md, h2/evidence/inirun/run.json, and
+          # (run-r.sh, run-rot.sh, intmin.tex) the qemu run directories, NATIVE-AMD64.md §2
+          (cd "$H" && sha256sum -c - <<'EOF_SUMS'
+          91b42cf5b830b7b75e8527c1c714752889978e8c56f5a6dd59ef1e997dc65019  run-r.sh
+          bbce7ca0b479de3b141e1f6cfa669c8b1c36c09b4949bbed207263619381114d  run-qs.sh
+          8f374495aaab30d70a80606b023abcd1a6ee0b1dd265a50b8eeca5246cd82b3d  run2.sh
+          7bc156c36bc40551bb5bc73ea8c3b05edd2e6fe2344c4f1e7e79158f31124f63  run-lead.sh
+          6192d620d4beeb58a9b12faacad9df01cd6b5629affd34a8a939867bbe8885a1  run-rot.sh
+          af70f5eb536b658d96fac714ca50d1840546ba60e1b085ce72bae719c71a2e45  f7amd.sh
+          8e016ab3906e08384914b91b7821f0303c448db2364923d5bbf8d8342cc75380  run_bin.zsh
+          dfe0cb7f743672f67dbbf493c939e49512770ec44d27d7e25c737738e43dbd35  run_realclock.zsh
+          360d4706f7c89e81faac0037f27305b6847353377311eb38bafe98cb2ce61d97  clockshim-amd64.so
+          2ef8346d90d2fc18d60a90f0fc0bd909c2d742a3597a853b6aba892c35fd3b0c  intmin.tex
+          EOF_SUMS
+          ) | tee "$D/env/harness-sha256.txt"
+          # the scripts hard-code the image; it must be the pinned one
+          for f in run_bin.zsh run_realclock.zsh; do
+            grep -qxF "IMG=$IMG" "$H/$f" || { echo "::error::$f does not name $IMG"; exit 1; }
+          done
+
+      - name: H.1 architecture probes (run.sh, run2.sh, lead/run.sh), as in h1/recipes.md
+        run: |
+          set -uo pipefail
+          P=docs/v27/spike/h1/archsem/probes; H="$D/harness"; R="$D/runs"; mkdir -p "$R"
+          # r: the round-2 set (every document but nh-* and slant*, with intmin.tex), images, PDFs
+          mkdir "$R/r-amd64"
+          for t in "$P"/*.tex; do case "${t##*/}" in nh-*|slant*) ;; *) cp "$t" "$R/r-amd64/" ;; esac; done
+          cp "$H/intmin.tex" "$P"/*.jpg "$P"/*.pdf "$R/r-amd64/"; cp "$H/run-r.sh" "$R/r-amd64/run.sh"
+          mkdir "$R/q-amd64"; cp "$P/nh-intmin.tex" "$R/q-amd64/"; cp "$H/run-qs.sh" "$R/q-amd64/run.sh"
+          mkdir "$R/s-amd64"; cp "$P/nh-strings.tex" "$R/s-amd64/"; cp "$H/run-qs.sh" "$R/s-amd64/run.sh"
+          mkdir "$R/t-amd64"; cp "$P"/slant*.tex "$R/t-amd64/"; cp "$H/run2.sh" "$R/t-amd64/run2.sh"
+          mkdir "$R/lead-amd64"; cp "$P"/lead/*.tex "$R/lead-amd64/"; cp "$H/run-lead.sh" "$R/lead-amd64/run.sh"
+          for g in r q s; do
+            docker run --rm --platform linux/amd64 -v "$R/$g-amd64":/w "$IMG" sh -c 'uname -m; sh /w/run.sh' > "$R/$g-amd64.out" 2>&1
+            echo "RC=$?" >> "$R/$g-amd64.out"
+          done
+          docker run --rm --platform linux/amd64 -v "$R/t-amd64":/w "$IMG" sh -c 'uname -m; sh /w/run2.sh' > "$R/t-amd64.out" 2>&1
+          echo "RC=$?" >> "$R/t-amd64.out"
+          docker run --rm --platform linux/amd64 -v "$R/lead-amd64":/w "$IMG" sh -c 'sh /w/run.sh' > "$R/lead-amd64.out" 2>&1
+          echo "amd64 RC=$?" >> "$R/lead-amd64.out"
+          for g in r q s t lead; do
+            echo "== $g"; cat "$R/$g-amd64.out"
+            tail -1 "$R/$g-amd64.out" | grep -qE '(^| )RC=0$' || { echo "::error::$g: the run itself failed"; exit 1; }
+          done
+
+      - name: H.1 §5.3 adversarial rot2.tex and the §3 format run (f7amd.sh)
+        run: |
+          set -uo pipefail
+          H="$D/harness"; R="$D/runs"
+          mkdir -p "$R/rot/amd" "$R/f7amd"
+          cp docs/v27/spike/h1/adversarial/rot2.tex "$R/rot/"; cp "$H/run-rot.sh" "$R/rot/run.sh"
+          docker run --rm --platform linux/amd64 -v "$R/rot":/w "$IMG" sh /w/run.sh amd > "$R/rot/amd.rc"
+          echo "docker rc=$?"; cat "$R/rot/amd.rc"
+          docker run --rm -i --platform linux/amd64 -v "$R/f7amd":/f7 "$IMG" bash -s < "$H/f7amd.sh" > "$R/f7amd.log" 2>&1
+          echo "RC=$?" >> "$R/f7amd.log"; cat "$R/f7amd.log"
+          grep -q '^rc=' "$R/rot/amd.rc" || { echo "::error::rot2 produced no rc line"; exit 1; }
+          tail -1 "$R/f7amd.log" | grep -qx 'RC=0' || { echo "::error::f7amd.sh failed"; exit 1; }
+
+      - name: H.2 binary side (run_bin.zsh over 178 inputs, run_realclock.zsh), as in h2/diff/README.md
+        run: |
+          set -uo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq zsh > /dev/null
+          H="$D/harness"; W="$D/runs/h2"; S="$D/shim"; mkdir -p "$S"
+          cp "$H/clockshim-amd64.so" "$S/"
+          python3 docs/v27/spike/h2/diff/diff.py prepare --arch amd64 --work "$W" || exit 1
+          zsh "$H/run_bin.zsh" amd64 "$W" "$S" > "$D/runs/bin-amd64.log" 2>&1 &
+          pid=$!
+          # The qemu run's watchdog (watch.zsh, h2/diff/README.md): kill a container of this run
+          # older than 900 s. It waits on the harness PID, never on a process pattern.
+          : > "$D/runs/watchdog.log"
+          while kill -0 "$pid" 2>/dev/null; do
+            for id in $(docker ps -q); do
+              # A container listed by `docker ps` can exit before it is inspected; that is not an error.
+              m=$(docker inspect -f '{{range .Mounts}}{{.Source}} {{end}}' "$id" 2>/dev/null) || continue
+              case "$m" in *"$W"/*) ;; *) continue ;; esac
+              st=$(docker inspect -f '{{.State.StartedAt}}' "$id" 2>/dev/null) || continue
+              age=$(( $(date +%s) - $(date -d "$st" +%s) ))
+              if [ "$age" -gt 900 ]; then echo "$(date -u) kill $id age $age $m" | tee -a "$D/runs/watchdog.log"; docker kill "$id" > /dev/null 2>&1 || true; fi
+            done
+            sleep 30
+          done
+          wait "$pid"; echo "run_bin.zsh rc=$?" | tee -a "$D/runs/bin-amd64.log"
+          zsh "$H/run_realclock.zsh" amd64 "$W" | tee "$D/runs/realclock-amd64.log"
+          cat "$D/runs/bin-amd64.log"
+          n=$(ls "$W"/*/bin/rc | wc -l); echo "inputs with an rc: $n"
+          [ "$n" -eq "$(wc -l < "$W/inputs.txt")" ] || { echo "::error::only $n inputs ran"; exit 1; }
+          [ -f "$W/t0/realclock/rc" ] || { echo "::error::real-clock control did not run"; exit 1; }
+
+      - name: Manifest and compare (native against the committed qemu outcomes)
+        run: |
+          set -euo pipefail
+          sudo chown -R "$(id -u):$(id -g)" "$D/runs"
+          R="$D/runs"; N=docs/v27/spike/native-amd64; O="$D/out"; mkdir -p "$O"
+          python3 "$N/manifest.py" --out "$O/native-amd64-manifest.json" \
+            r=archsem:"$R/r-amd64":"$R/r-amd64.out" q=archsem:"$R/q-amd64":"$R/q-amd64.out" \
+            s=archsem:"$R/s-amd64":"$R/s-amd64.out" t=archsem:"$R/t-amd64":"$R/t-amd64.out" \
+            lead=archsem:"$R/lead-amd64":"$R/lead-amd64.out" rot=rot:"$R/rot" \
+            f7amd=f7amd:"$R/f7amd":"$R/f7amd.log" h2=h2:"$R/h2"
+          rc=0; python3 "$N/compare.py" --native "$O/native-amd64-manifest.json" --outdir "$O" || rc=$?
+          cp -R "$D/env" "$O/env"
+          for f in r q s t lead; do cp "$R/$f-amd64.out" "$O/"; done
+          cp "$R/rot/amd.rc" "$O/rot-amd.rc"; cp "$R/f7amd.log" "$R/bin-amd64.log" "$R/realclock-amd64.log" "$R/watchdog.log" "$O/"
+          {
+            echo "## native amd64 against committed qemu-amd64"
+            echo '```'; cat "$O/compare-summary.txt"; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -ne 0 ]; then echo "::error::compare.py: missing native outputs (infrastructure), rc=$rc"; exit "$rc"; fi
+
+      - name: Upload the raw outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-amd64-outcomes
+          path: |
+            ${{ runner.temp }}/na/out
+            ${{ runner.temp }}/na/runs
+            !${{ runner.temp }}/na/runs/**/core
+            !${{ runner.temp }}/na/runs/**/*.core
+            !${{ runner.temp }}/na/runs/rot/amd/rot2.pdf
+            !${{ runner.temp }}/na/runs/f7amd/**/*.fmt
+            !${{ runner.temp }}/na/runs/f7amd/*.fmt
+            !${{ runner.temp }}/na/runs/h2/*/model.spec
+          retention-days: 30
+          if-no-files-found: error

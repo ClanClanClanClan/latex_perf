@@ -36,7 +36,7 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 | Which source built the pinned `pdftex`? | TeX Live svn **r78081**, i.e. TeX-Live/texlive-source commit `dc8efcd41054ec4bf7f96c022cd2d91fe346f6e1` (tag `svn78081`, 2026-02-23T16:24:02Z) | M |
 | Is the image's binary the upstream build of that source? | yes, for both architectures: byte-identical to the `svn78081` GitHub release assets | M |
 | Does our rebuild reproduce it? | **yes, byte for byte, on both architectures**: aarch64 natively (sha256 `cee621bf…`), amd64 under emulation (`1c5ff711…`, §2.3) | M |
-| Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100). The x86_64 INITEX run was emulated (qemu-user), not native | M |
+| Is `pdflatex.fmt` reproducible? | **yes, byte for byte**, given the INITEX run's clock; and it does not depend on the architecture (the ADR-014 draft's F7 was wrong: C-100). The x86_64 INITEX run was emulated (qemu-user); reproduced natively on 2026-10-02 (owner decision E3, `NATIVE-AMD64.md`): the same two format hashes | M |
 | Same binary, same inputs: same outputs? | yes: 3,907 of 3,907 evidence documents, and 200 of 200 real papers once the real clock is fixed | M |
 | Do amd64 and arm64 differ? | **on the corpus, no; in general, yes, in the compile verdict itself** (review round 2, C-103). Five classes of architecture-defined C semantics were enumerated from the two binaries (§5.4): integer division (x86_64 traps), float-to-int conversion out of range (x86_64 gives INT_MIN, aarch64 saturates), signed overflow (the two compilers exploit it differently), fused multiply-add, and `char` signedness. Adversarial documents reproduce the first three as different rc, log or TeX state: `\pdfsnapy 0pt` exits 0 / 136 (SIGFPE); a valid 40000×8 px JPEG with no resolution is "Huge page", rc 1, on aarch64 and `\wd` = −32768pt, rc 0, on x86_64; `\divide` of INT_MIN by INT_MIN gives −1 / 1; a plain `\xleaders` over a glue of 2³¹−2 sp exits 0 / 136 (review round 3). Of the 316 division and conversion sites, **15 diverge** (reproduced, and each probe traced under gdb on both architectures executing the site's own instruction with the diverging operand; review round 4 refuted 3 of round 3's 18 hand attributions), **4 are unreachable** (machine-checked), **77** are in the translated program with no divergence reproduced, and **220** are C-boundary sites with no evidence either way (152 in libpng and xpdf). Round 2's count "98 settled safe" rested on hand-argued bounds, one of them false (C-106); an argument is now a note, not a verdict. The proposed H.2 rule (Stuck on every undefined operation, pending the owner) covers the translated program's 85 sites without per-site bounds; the 227 boundary sites that are not unreachable, and the C-boundary functions whose code changes under `-fwrapv` (463) or `-fsigned-char` (314), are H.2's C-boundary work list. Round 1's FMA answer, kept below: **on the corpus, no; in general, yes, in the PDF.** 489 of 489 evidence documents and 200 of 200 real papers agree, and so do the \tracingall logs of 20 evidence documents and 20 real papers (§5.2). But the aarch64 binary fuses multiply-adds that the x86_64 one does not, and at the `\pdfsetmatrix` sites the products are inexact: an adversarial document of 160 `\rotatebox`es holding 400,000 links gives PDFs that differ in **1 byte** (a link `/Rect` coordinate), with rc, `.log` and `.aux` identical (§5.3). Every fused site outside xpdf is classified in §5.1; the ones that reach TeX state are exact on their whole input range or under a stated bound, except xpdf's real-number parser, which is open. All amd64 runs were emulated (qemu-user), not native | M + R + I |
 
@@ -178,6 +178,8 @@ Inside the pinned image, INITEX was re-run with the command recorded in `fmtutil
 | aarch64, one minute later | forced | differs in **exactly one byte**: offset 4,539,858, 215 → 216 (octal 327 → 330), the low byte of the big-endian `\time` word: 471 → 472 |
 | x86_64 (emulated), its own start minute 06:10 UTC | forced | **byte-identical** to the shipped x86_64 `5a9dfc4e…` |
 | x86_64 (emulated), the aarch64 start minute 07:51 UTC | forced | **byte-identical to the aarch64 `a476533c…`** |
+
+Both x86_64 rows were reproduced on a native x86_64 host on 2026-10-02 (owner decision E3, the same `f7amd.sh`, checked by sha256): the same two hashes, every file of the run identical (`NATIVE-AMD64.md` §4) [M].
 
 Offsets are 0-based byte positions in the gunzipped format (`cmp -l` prints them 1-based, one
 higher; the first version of this table gave `cmp`'s 1-based offsets in every row without saying
@@ -408,7 +410,7 @@ Review round 1 built [`h1/adversarial/rot2.tex`](https://github.com/ClanClanClan
 160 `\rotatebox` blocks at pseudo-random angles holding 400,000 `\pdfstartlink` annotations, with
 `\pdfdecimaldigits=4`. Re-run here in fresh containers of the pinned image (native arm64, emulated
 amd64), `SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1`: rc 0 on both; `.log` and `.aux`
-byte-identical; the PDFs (56,483,205 bytes each) differ in **exactly one byte**, at offset
+byte-identical; the PDFs (56,483,205 bytes each) differ in **exactly one byte** (the x86_64 PDF reproduced on a native x86_64 host on 2026-10-02, `NATIVE-AMD64.md` §4), at offset
 2,929,960 (0-based): `/Rect [418.7665 390.6534 …]` on aarch64 against `/Rect [418.7666 …]` on
 x86_64. Same PDF sha256s as the reviewer's run (`c84b12a6…` aarch64, `043e4ebc…` x86_64). This is
 the `do_matrixtransform`/`pdfsetmatrix` channel of §5.1: a link rectangle's corner rounded to the
@@ -426,8 +428,10 @@ which refutes round 1's "in the PDF only").
   (`read_jbig2_info`, `read_pdf_info`), under a stated bound (`make_accent`: |slant| < 128), or
   unreachable in the pinned configuration (MLTeX). The exception is xpdf's real-number parser
   (included PDFs' page boxes), which is **open**.
-- All amd64 evidence, the behaviour runs and the format run, is **emulated** (qemu-user TCG). A
-  confirmation on a native amd64 host (the CI runner of `tex-oracle.yml`) has not been done.
+- The amd64 behaviour runs and the format run were made under emulation (qemu-user TCG) and were
+  **confirmed on a native amd64 host** on 2026-10-02 (owner decision E3, `NATIVE-AMD64.md`): every
+  committed outcome reproduced. Still emulated only: the §5.2 corpus comparisons, the gdb reach
+  traces and the §2.3 rebuild.
 - For the FMA sites: `PS` must model fused multiply-add per architecture **at the matrix sites**
   (or the model's PDF output is not claimed there); no exactness lemma is available at those
   sites. `make_accent` needs an exactness lemma with the slant bound, and Stuck beyond it. The
@@ -553,11 +557,12 @@ in fresh containers of the pinned image, native aarch64 and emulated x86_64,
 | `pdfboxnan.tex`: an included PDF whose MediaBox width is ∞ − ∞ | conversion of NaN in TeX's `round` | rc 1 | rc 1 (both refuse the image) |
 | `nh-strings.tex`: the string sweep above | `char` signedness | log `b513a15e…` | identical |
 
-All x86_64 runs are qemu-user emulation. qemu implements `cvttsd2si`'s INT_MIN and the `#DE`
-trap as the x86 specification defines them, so a native amd64 host is expected to agree [I]; that
-confirmation is **still open** after review round 3 (OPEN-123). It needs a native amd64 host,
-e.g. a run of these probes on `tex-oracle.yml`'s runner; no native host was available to the
-spike.
+All x86_64 runs here were qemu-user emulation. qemu implements `cvttsd2si`'s INT_MIN and the `#DE`
+trap as the x86 specification defines them, so a native amd64 host was expected to agree [I].
+**Confirmed natively on 2026-10-02** (owner decision E3, `NATIVE-AMD64.md` §4): every document of this
+table and every control, run with the same scripts (checked by sha256) on a native x86_64 GitHub
+runner with no x86_64 emulator registered, gives the committed x86_64 rc and byte-identical
+outputs, twice (two AMD EPYC CPU models; other x86_64 CPUs are not covered) [M].
 
 **What this means.**
 - **The architectures differ in the compile verdict.** Round 1's "in the PDF only" was wrong.
@@ -689,11 +694,11 @@ decision, and the ADR, the ledger and this report state them as proposals:
    boundary, whose work list §5.4 states.
 2. **The architecture in the oracle's identity** (§6.4): grade on one architecture and scope
    verdicts to it, or grade on both and treat disagreement as outside the tier.
-3. **A native amd64 confirmation** (§5.4): every x86_64 result here is qemu-user emulation. A run
-   of the committed probes on a native amd64 host (for example `tex-oracle.yml`'s runner) would
-   close it; it needs a CI change or a host, which the spike does not have.
+3. **A native amd64 confirmation** (§5.4): every x86_64 result here was qemu-user emulation.
+   Done on 2026-10-02 for the probes, `rot2.tex` and the format run (`NATIVE-AMD64.md`); the corpus
+   comparisons, the gdb traces and the rebuild remain emulated only.
 
 **The owner's answers (2026-09-30; recorded on `main` by a separate docs change, whose wording
 wins):** (1) the `PS` rule is accepted; (2) the CPU architecture is part of the oracle's identity;
-(3) the native amd64 confirmation is approved but not run: it needs a CI workflow, which needs
-the owner's permission.
+(3) the native amd64 confirmation is approved (run on 2026-10-02 by a one-off GitHub Actions
+job, `NATIVE-AMD64.md`).

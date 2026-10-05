@@ -1,0 +1,46 @@
+x86_64
+imgwide rc=0
+   number too big [WD=--32768.0pt] [HT=8.03pt] 
+
+
+intmin rc=1
+   [c1=-2147483648] [div-1=-2147483648] [divself=1] ! Arithmetic overflow. [mul-1=\the\count4] !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+jpgbig rc=0
+   too large image resolution ignored [WD=4.015pt] 
+
+
+jpgconv rc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+jpgconvneg rc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+jpgctrl rc=0
+   [WD=0.9636pt] 
+
+
+jpgdiv rc=136
+
+
+matnan rc=0
+
+   /Rect [32645.579 768.894 32645.579 771.882] /Rect [32645.579 32645.579 32645.579 32645.579] 
+pdfboxinf rc=0
+   [WD=1.00375pt] [HT=100.375pt] 
+
+
+pdfboxnan rc=1
+   ! pdfTeX error (ext1): invalid image dimensions. !  ==> Fatal error occurred, no output PDF file produced! 
+
+
+snapy0 rc=136
+
+
+snapy1 rc=0
+
+
+RC=0

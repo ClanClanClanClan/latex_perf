@@ -1,0 +1,21 @@
+PROBE wall 94.5 cpu 54.80 ext 256 minor 15705648549 promoted 60285792 major 97701460 minc 59920 majc 13 heap 96065394 top 96065394 set 25369339 get 68199276 make 23258 make_words 35978595 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PROBE wall 117.6 cpu 68.82 ext 24320 minor 19796389358 promoted 81821116 major 129588346 minc 75526 majc 14 heap 123858097 top 123858097 set 34964157 get 81253196 make 73024 make_words 46453661 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PROBE wall 144.7 cpu 90.24 ext 25088 minor 25688555348 promoted 88679043 major 136446052 minc 98003 majc 14 heap 130874545 top 130874545 set 40849901 get 100634091 make 820189 make_words 48075816 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PROBE wall 169.3 cpu 104.93 ext 25856 minor 29675342319 promoted 93589790 major 141356468 minc 113212 majc 15 heap 135920817 top 135920817 set 44843432 get 113333017 make 1334776 make_words 49169859 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PROBE wall 173.3 cpu 106.61 ext 26009 minor 30119148753 promoted 94231166 major 141998396 minc 114905 majc 15 heap 136580273 top 136580273 set 45288127 get 114751255 make 1392202 make_words 49291919 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PARRAYC set 45288127 get 114751255 make 1392202 make_words 49291919 reroot_steps 0 stale 0 copy 0
+allocated_words: 30167064825
+minor_words: 30119297595
+promoted_words: 94231166
+major_words: 141998396
+minor_collections: 114905
+major_collections: 15
+forced_major_collections: 0
+heap_words: 136580273
+top_heap_words: 136580273
+mean_space_overhead: 1.987645

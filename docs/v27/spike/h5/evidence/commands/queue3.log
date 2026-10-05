@@ -1,0 +1,5 @@
+finished rc 0 peak 3214MB in 465s
+finished rc 0 peak 3182MB in 101s
+finished rc 0 peak 6070MB in 170s
+{'model_result': 'exit 0', 'binary_rc': 0, 'contract_meanings_sha256': '4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e', 'class': 'IDENTICAL'}
+QUEUE3 DONE

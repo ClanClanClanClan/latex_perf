@@ -1,0 +1,37 @@
+(* ocamlfind ocamlopt ... -dlambda Interp.ml, lines 5170-5205: exec_list's fS and fO closures *)
+                                                      st1/1534)))
+                                               default: x/1535)))
+                                        fO/1529 =
+                                          (function param/1532[int]
+                                            (makeblock 4 3 st/1528)))
+                                       (if (== fuel/1521 0) (apply fO/1529 0)
+                                         (apply fS/1530 (- fuel/1521 1)))))
+                                 exec_list/919
+                                   (function fuel/1543[int] all/1544
+                                     rest/1545 st/1546
+                                     (let
+                                       (fS/1548 =
+                                          (function f/1551[int]
+                                            (if (isint rest/1545)
+                                              (makeblock 0 st/1546)
+                                              (let
+                                                (x/1557 =
+                                                   (apply exec/917 f/1551
+                                                     (field_imm 0 rest/1545)
+                                                     st/1546))
+                                                (switch x/1557
+                                                 case tag 0:
+                                                  (apply exec_list/919 f/1551
+                                                    all/1544
+                                                    (field_imm 1 rest/1545)
+                                                    (field_imm 0 x/1557))
+                                                 case tag 1:
+                                                  (apply goto_in/920 f/1551
+                                                    (field_imm 0 x/1557)
+                                                    all/1544 all/1544
+                                                    (field_imm 1 x/1557))
+                                                 default: x/1557))))
+                                        fO/1547 =
+                                          (function param/1550[int]
+                                            (makeblock 4 3 st/1546)))
+                                       (if (== fuel/1543 0) (apply fO/1547 0)

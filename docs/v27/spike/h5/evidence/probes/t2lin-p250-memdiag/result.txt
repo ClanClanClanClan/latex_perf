@@ -1,0 +1,30 @@
+MEMDIAG live_words 73727757 top_heap_words 117434516
+MEMDIAG reachable_words(state) 73713653 heap 38610029 io 35103618
+MEMDIAG hp 898
+MEMDIAG block 838 size 8000001 words 9900441
+MEMDIAG block 837 size 6250001 words 7946192
+MEMDIAG block 835 size 5000001 words 6417105
+MEMDIAG block 834 size 630194 words 2554152
+MEMDIAG block 833 size 629680 words 2520915
+MEMDIAG block 890 size 427601 words 1286031
+MEMDIAG block 891 size 427601 words 1286031
+MEMDIAG block 892 size 427601 words 1286031
+MEMDIAG block 862 size 288032 words 867393
+MEMDIAG block 800 size 200001 words 592941
+MEMDIAG block 836 size 500001 words 570515
+MEMDIAG block 894 size 122080 words 367266
+MEMDIAG block 520 size 70223 words 214318
+MEMDIAG block 802 size 200001 words 202101
+MEMDIAG block 803 size 70007 words 74002
+MEMDIAG block 511 size 35111 words 54833
+MEMDIAG block 512 size 35111 words 54833
+MEMDIAG block 513 size 35111 words 54833
+MEMDIAG block 522 size 35111 words 36945
+MEMDIAG block 523 size 35111 words 36945
+MEMDIAG block 863 size 9001 words 30327
+MEMDIAG block 864 size 9001 words 30327
+MEMDIAG block 866 size 9001 words 30327
+MEMDIAG block 867 size 9001 words 30327
+MEMDIAG block 868 size 9001 words 30327
+RESULT: exit 0
+TIME: 18.04 s

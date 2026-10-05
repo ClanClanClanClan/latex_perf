@@ -119,7 +119,7 @@ names) under a 4–9 GB resident cap and a wall-clock time-out (`h3/tools/capped
      a run).
   After the four fixes the live data at exit is flat: 73.5 M words with 0 names, 74.0 M with
   500, 75.4 M with 2,000 (before: 81.6 M and 97.0 M with 0 and 500, and growing).
-- **What remains is not live data:** OCaml's peak major heap still grows with the work done
+- **What remains is not live data** (**corrected, C-142:** it IS live data during the run, old versions kept reachable by the extraction's fuel closures, invisible at exit; `H5-heap-design.md` §2): OCaml's peak major heap still grows with the work done
   (385 M words with 0 names, 558 M with 500, 1,147 M with 2,000), independent of
   `space_overhead` 120 or 40 and the minor heap size; periodic compaction lowers the resident peak
   (5.8 GB → 3.6 GB at 2,000 names) but not the heap high-water mark [M]. Every write promotes its
@@ -263,7 +263,7 @@ cap 1 GiB under RAM). Outputs: `h3/evidence/meanings/run2-37306038862/`, `run1-3
 - **Build**: texlive-source r78081 rebuilt on the runner; the 7 translator inputs hash as
   `h2/evidence/build/provenance.json` records; `pipeline.sh` with Coq 8.18.0 / OCaml 5.2.0 gives
   the same generated Coq tree (`e9ae7712…`) and the same sources and inputs; the extracted OCaml
-  tree hashes `72b2ea79…` there (a different value from the macOS build's; not investigated, recorded);
+  tree hashes `72b2ea79…` there (**corrected, C-143:** the same value as the macOS build's, all 93 files equal; this report first said "a different value", which its own `provenance-check.txt` refutes);
   `ps.exe` is that host's compilation (`f7d6631a…`).
 - **Binary side** (linux/arm64 under qemu, the h3/README.md recipe): exit 0 in 4–5 s;
   `meanings_sha256` = `4879fa65…`, **the contract's digest**, 23,519 records, all defined.
@@ -309,7 +309,7 @@ memory is not a speed measurement, but it bears on H.5: the same run puts the mo
 0.12 s per name (2,000 names in 301 s, 60 s of it load) against the binary's 23,519 names in
 4–5 s under qemu, a ratio far above 200× [I: different processes, the binary emulated]. The
 profile-guided fixes of checkpoint 1 removed the retention but not the growth; **the remaining
-growth (≈ 3 MB per name, not live data) has no fix in sight within the current heap
+growth (≈ 3 MB per name; "not live data" was wrong, C-142) has no fix in sight within the current heap
 representation**, which E8 leaves unfunded. Owner decision needed (below).
 
 ### H.3's criteria at checkpoint 2

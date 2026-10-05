@@ -1,0 +1,14 @@
+# sha256 of the builds measured in H5-heap-design.md (model build = H.3 checkpoint 2; the others are profiling variants)
+e41941bf3c19b04bc2fad2fb6ac1f40c5859cafabb2f686cbb24a266150fd388  ~/.cache/lp-spike-h1/h3/cp2/build/ps.exe
+dd1529474cb7d44ef926d64623532359e2763b9f4e31873310430d53906c298c  ~/.cache/lp-spike-h1/h5/prof/ps-prof.exe
+2713803c8138f83caea055770c88a9bba43ddb9b6446648068e7523b0f7f039a  ~/.cache/lp-spike-h1/h5/prof-t1/ps-t1.exe
+2639e1885c48cd664b43ebc5e30b7648726667c993895635cd53c5bb3eea68a8  ~/.cache/lp-spike-h1/h5/prof-t2/ps-t2.exe
+# Provenance notes (every byte of these builds is from the committed tools, except as stated):
+# - ps-prof.exe: mkvariant.py prof. The two persistent deep-probe runs of section 2.1
+#   (prof-p50-deep-probe5-aborted, -probe15-aborted) used an EARLIER build of the same variant whose
+#   prof.ml restarted the probe interval before the probe's own work instead of after it (no
+#   PROBECOST line); that binary was overwritten by this one and its hash was not recorded.
+# - ps-t1.exe: mkvariant.py t1, built when zr.ml held only the T1 definitions (u63_to_z, s63_to_z,
+#   z_to_u63, eq); the committed zr.ml adds the T2 definitions and the check hooks, which the t1
+#   variant does not call. A rebuild from the committed tools therefore has a different hash.
+# - ps-t2.exe: mkvariant.py t2 with the committed tools.

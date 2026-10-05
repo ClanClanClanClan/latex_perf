@@ -1,0 +1,3 @@
+PROBE wall 29.2 cpu 27.13 ext 26009 minor 9384777999 promoted 419831045 major 467598275 minc 35810 majc 17 heap 466209969 top 466209969 set 45288127 get 114751255 make 1392202 make_words 49291919 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PARRAYC set 45288127 get 114751255 make 1392202 make_words 49291919 reroot_steps 0 stale 0 copy 0

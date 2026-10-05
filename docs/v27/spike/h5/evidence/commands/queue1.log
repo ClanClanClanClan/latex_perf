@@ -1,0 +1,20 @@
+finished rc 0 peak 1236MB in 176s
+finished rc 0 peak 992MB in 58s
+finished rc 0 peak 3734MB in 102s
+finished rc 0 peak 1906MB in 342s
+finished rc 0 peak 1013MB in 82s
+finished rc 0 peak 1014MB in 25s
+== t1lin-p250-check
+Only in runs/base-p250/dump: driver.out
+STDOUT-IDENTICAL
+== t1lin-p250
+diff -r runs/base-p250/dump/driver.out runs/t1lin-p250/dump/driver.out
+287c287
+< TIME: 246.66 s
+---
+> TIME: 55.07 s
+STDOUT-IDENTICAL
+== t1-p250
+Only in runs/base-p250/dump: driver.out
+STDOUT-IDENTICAL
+QUEUE1 DONE

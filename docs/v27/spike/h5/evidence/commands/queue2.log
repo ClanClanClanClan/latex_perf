@@ -1,0 +1,9 @@
+/Users/dylanpossamai/.cache/lp-spike-h1/h5/tools/capped.sh:23: parse error near `fi'
+finished rc 0 peak 1238MB in 133s
+finished rc 0 peak 1069MB in 16s
+finished rc 0 peak 1050MB in 28s
+finished rc 0 peak 1073MB in 40s
+{'model_result': 'exit 0', 'binary_rc': 0, 'contract_meanings_sha256': '4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e', 'class': 'IDENTICAL'}
+{'model_result': 'exit 0', 'binary_rc': 0, 'contract_meanings_sha256': '4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e', 'class': 'IDENTICAL'}
+{'model_result': 'exit 0', 'binary_rc': 0, 'contract_meanings_sha256': '4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e', 'class': 'IDENTICAL'}
+QUEUE2 DONE

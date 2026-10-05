@@ -12,13 +12,18 @@
 # variable.
 #
 # ⚠ ONE worker, not rest-smoke.yml's two, because of a MEASURED defect
-# (linux/arm64 under colima, 2026-10-01): inside a container a two-worker pool
-# (L0_POOL_CORES=0,1) leaves requests unanswered. Six identical POST /tokenize
-# requests: 2 got no response within 20 s, 4 answered at once; six direct UDS
-# requests to main_service: 3 timed out at 15 s. With L0_POOL_CORES=0: 6 of 6
-# answered at once, both ways. The cause (the broker with two workers in a
-# container) is not diagnosed; until it is, the image runs the configuration
-# measured to work, and docker_smoke.sh's 5-in-a-row check guards it.
+# (linux/arm64 under colima, 2026-10-01): a two-worker pool (L0_POOL_CORES=0,1)
+# left requests unanswered (6 POST /tokenize: 2 got no response in 20 s; 6
+# direct UDS requests: 3 timed out at 15 s; L0_POOL_CORES=0: 6 of 6).
+# DIAGNOSED AND FIXED 2026-10-02 (OPEN-125, C-122..C-124): it was not the
+# container. Forked workers inherited the parent's end of earlier workers'
+# sockets, so retiring a worker hung the request that retired it, and a units
+# bug retired a worker after EVERY request; the same drop reproduced natively
+# on macOS (7 of 12 answered) and is the rust-proxy-smoke failure of OPEN-056.
+# docker_smoke.sh now checks a two-worker pool too (10 in a row + 4x5
+# concurrent). The default stays at one worker until a two-worker image has
+# been measured on linux/arm64 (the platform of the original measurement):
+# that run could not be made on 2026-10-02 (colima's docker disk was 99% full).
 set -eu
 : "${L0_ALLOW_SCALAR:=1}"
 : "${L0_NO_MLOCK:=1}"

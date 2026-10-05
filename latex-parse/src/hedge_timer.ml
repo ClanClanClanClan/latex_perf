@@ -9,6 +9,9 @@ type t = { k : Unix.file_descr }
 let create () = { k = ht_create () }
 let arm t ~ns = ht_arm_ns t.k ns
 
-let wait_two t ~fd1 ~fd2 =
-  let tf, which = ht_wait2 t.k fd1 fd2 in
-  (tf, which)
+(* EINTR: retried here, after OCaml has had the chance to run signal handlers
+   (the stub raises it rather than looping in C). *)
+let rec wait_two t ~fd1 ~fd2 =
+  match ht_wait2 t.k fd1 fd2 with
+  | tf, which -> (tf, which)
+  | exception Unix.Unix_error (Unix.EINTR, _, _) -> wait_two t ~fd1 ~fd2

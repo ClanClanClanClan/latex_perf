@@ -60,7 +60,7 @@ let reset_spawn_counters st =
 
 let alloc_mb_since_spawn st =
   let words = words_total () -. st.words_at_spawn in
-  words *. (float Sys.word_size /. 8.0) /. 1.048_576
+  words *. (float Sys.word_size /. 8.0) /. 1_048_576.0
 
 let majors_since_spawn st = major_collections () - st.majors_at_spawn
 
@@ -128,10 +128,7 @@ let handle_req st ~req_id (input : bytes) =
 
   (* Optional fault injection: post-tokenize *)
   (match fault_phase with `Post -> maybe_fault () | `Pre -> ());
-  let s = Gc.quick_stat () in
-  let words = s.minor_words +. s.major_words in
-  let bytes = words *. (float Sys.word_size /. 8.0) in
-  let alloc_mb10 = int_of_float (10.0 *. (bytes /. 1.048_576)) in
+  let alloc_mb10 = int_of_float (10.0 *. alloc_mb_since_spawn st) in
   let majors = majors_since_spawn st in
   (match st.cur_req with
   | Some id when not st.cancelled ->

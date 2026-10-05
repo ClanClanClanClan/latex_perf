@@ -4072,6 +4072,7 @@
   "rows": 200,
   "cell_changed": 0,
   "rc_changed": 0,
+  "rc_unrecorded_before": 200,
   "verdict_changed": 0,
   "rc0_without_pdf": 0,
   "first_error_text_changed": 15,

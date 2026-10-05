@@ -435,7 +435,10 @@ def main() -> int:
     # maintains, in the results artefacts and in the re-grade diffs that
     # OPEN-126 cites as evidence ("0 of 600 moved").
     from _results_summary import (  # noqa: E402
-        diff_summary_findings, results_summary_findings)
+        BASELINE_SUMMARY, CLI_VERIFY, OPEN118_CELL_DIFFS, OPEN118_ROOT_DIFFS,
+        REGRADE_DIFFS, baseline_summary_findings, cell_diff_findings,
+        cli_verify_findings, diff_summary_findings, field_moves,
+        id_set_findings, real_roots_diff_findings, results_summary_findings)
     for name in ("results.json", "results_sample2.json", "results_sample3.json"):
         f = repo / "corpora/real_roots" / name
         if not f.is_file():
@@ -445,12 +448,52 @@ def main() -> int:
                 json.loads(f.read_text()), name))
         except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
             findings.append(f"{name} is unreadable or malformed: {exc}")
-    for f in sorted((repo / "corpora/oracle_baseline").glob("regrade_open126_sample*.json")) + \
-            sorted((repo / "corpora/oracle_baseline").glob("o5_forced_clock_sample*.json")):
+    # C-127 (review round 2): the six diffs OPEN-126 (d)/(e) cite are named,
+    # not globbed (a deleted one was unseen); each covers its results
+    # artefact's rows exactly (a dropped row with re-derived totals passed);
+    # and the claim "0 cells, 0 rc, 0 PDF verdicts, 0 pass counts, 0
+    # first-error lines moved" is checked over EVERY before/after field, not
+    # only the outcome flags (a changed first_error passed).
+    _cache: dict = {}
+
+    def _load(rel):
+        if rel not in _cache:
+            _cache[rel] = json.loads((repo / rel).read_text())
+        return _cache[rel]
+    for rel, res in REGRADE_DIFFS.items():
+        name = Path(rel).name
         try:
-            findings.extend(diff_summary_findings(json.loads(f.read_text()), f.name))
+            doc = _load(rel)
+            findings.extend(diff_summary_findings(doc, name))
+            findings.extend(id_set_findings(doc.get("rows") or [],
+                                            _load(res).get("docs") or [],
+                                            name, Path(res).name))
+            moved = field_moves(doc.get("rows") or [])
+            if moved:
+                findings.append(
+                    f"{name}: before/after differ in {moved}; OPEN-126 (d)/(e) "
+                    f"say no field of any row moved (C-127)")
+        except FileNotFoundError:
+            findings.append(f"{rel} is missing: OPEN-126 (d)/(e) cite it")
         except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
-            findings.append(f"{f.name} is unreadable or malformed: {exc}")
+            findings.append(f"{name} is unreadable or malformed: {exc}")
+    # C-127: the OPEN-118 evidence's stored totals (round 2 changed them and
+    # every gate passed).
+    try:
+        for rel, res in OPEN118_ROOT_DIFFS.items():
+            findings.extend(real_roots_diff_findings(
+                _load(rel), _load(res), Path(rel).name, Path(res).name))
+        for rel, (art, key) in OPEN118_CELL_DIFFS.items():
+            findings.extend(cell_diff_findings(
+                _load(rel), _load(art), Path(rel).name, art, key))
+        findings.extend(baseline_summary_findings(_load(BASELINE_SUMMARY), _load))
+        findings.extend(cli_verify_findings(_load(CLI_VERIFY), _load))
+    except FileNotFoundError as exc:
+        findings.append(f"an OPEN-118/OPEN-126 evidence artefact is missing: {exc}")
+    except (json.JSONDecodeError, OSError, KeyError, TypeError,
+            AttributeError) as exc:
+        findings.append(f"an OPEN-118/OPEN-126 evidence artefact is malformed: "
+                        f"{exc!r}")
 
     if findings:
         print(f"[project-state] FAIL: {len(findings)} problem(s)", file=sys.stderr)

@@ -136,9 +136,15 @@ draft §12, the O-n id is given; otherwise none exists and none is invented.
   **Implementation is a later oracle PR**; until it lands, nothing in `_oracle.py` or the
   artefacts enforces it. *Implementation note (2026-10-02, OPEN-126, branch
   `fix/v27165-oracle-arch`; not a new decision):* the architecture of record is aarch64
-  (`_oracle.ARCH_OF_RECORD`); the oracle refuses to grade on any other, every comparer refuses
-  grades of another architecture, CI's `tex-oracle` job moves to a native arm64 runner, and
-  `check_oracle_pin.py` enforces all three. Choosing aarch64 for CI (rather than keeping amd64
+  (`_oracle.ARCH_OF_RECORD`); the oracle refuses to grade on any other; every oracle block
+  recorded in a tracked JSON file must name it (`check_oracle_pin.py` DISCOVERS every such block
+  and fails one that is unregistered or of another architecture; until review round 2 it checked
+  a hand list of 15 and missed the L_S0 bytes evidence, the contracts and the re-grade diffs,
+  C-127), so a recorded grade and a live one are of one architecture by construction; the
+  comparers check it again on the recorded side (`require_same_oracle`; `gen_contract.py probes`
+  and `check_contracts_reproducible.py` compare a contract pin's image, architecture and format);
+  and CI's `tex-oracle` job runs on a native arm64 runner, which `check_oracle_pin.py` also
+  enforces. Choosing aarch64 for CI (rather than keeping amd64
   with per-architecture baselines) is put to the owner in OPEN-126. *Decided 2026-10-05: E9
   (aarch64; no per-architecture baselines).*
 - **E3. Native amd64 confirmation: approved, not yet run.** The owner approved confirming the
@@ -204,6 +210,10 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
   per-architecture baselines are two baselines to keep in step at every oracle-baseline change;
   one architecture means one baseline, and a CI grade and a local grade are then the same
   comparison.
+  *Author's note (review round 2 of OPEN-126, 2026-10-05):* "all 15" was the hand list
+  `check_oracle_pin.GRADED`. The gate now discovers every recorded oracle block. There are 40, in
+  36 files, and every one is aarch64 except the pinned host diagnostic, which is no grade
+  (C-127). The rationale shown to the owner holds for all of them.
   *Consequence:* this makes OPEN-126's choice of `ubuntu-24.04-arm` and
   `check_oracle_pin`'s refusal of any non-arm64 `tex-oracle` runner **binding**; E2's
   implementation note no longer awaits the owner. E3's one-off amd64 confirmation is unaffected:
@@ -242,9 +252,20 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
     found by running under two or more DIFFERENT fixed clocks. Every contract and the L_S0
     signature file are regenerated.
   - Every graded artefact and fixture set is re-graded under the fixed clock: the set is
-    `check_oracle_pin.GRADED` (15 artefacts on 2026-10-05, the gate's list, not a copy of it here),
-    plus the bytes probes, every contract and the L_S0 signature file. Only the 600 sample rows
-    have been measured under a forced date so far.
+    `check_oracle_pin.GRADED` (18 artefacts on 2026-10-05, among them the L_S0 signature file and
+    bytes evidence) plus the contracts (the `corpora/contracts` rows of
+    `check_oracle_pin.ORACLE_RECORDS`). The gate discovers every recorded oracle block, so a
+    block left out of both lists fails it (C-127); and once `PROTOCOL_CLOCK` changes, it fails
+    every GRADED block that does not record the new clock. Contracts record no clock, so the
+    gate cannot see whether one was regenerated under it. Only the 600 sample rows have been measured under a forced date so far.
+  - *Author's note, not an owner decision:* that change edits `_oracle.py`, which is grading code
+    (a behavioural edit voids every recorded grade until it is re-graded, OPEN-126 (b)), so it
+    also carries the two `_oracle.py` fixes that review round 2 of OPEN-126 found and that this
+    branch deliberately did not make: `require_same_oracle` compares image, architecture and
+    tree but not the CLOCK, and `diff_real_roots.oracle_skew` reads a block with no clock as
+    `PROTOCOL_CLOCK`. Until then `check_oracle_pin` keeps both unreachable for published grades:
+    a GRADED block must record the protocol clock, or record none only while it is in
+    `GRADING_CODE_PENDING` and the protocol clock is the real one.
 
 ## Consequences
 

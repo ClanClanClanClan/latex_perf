@@ -107,3 +107,212 @@ def diff_summary_findings(doc: dict, name: str) -> list[str]:
     if "summary" not in doc and "counts" not in doc:
         out.append(f"{name}: no stored summary or counts to check")
     return out
+
+
+# ── C-127 (review round 2): THE REST OF THE EVIDENCE THE LEDGER CITES ──────
+# C-126 checked the totals of three results artefacts and six re-grade diffs
+# and said "every stored total". Review round 2 changed totals in four more
+# evidence artefacts (the OPEN-118 re-grade diffs, the oracle-baseline
+# summary, the CLI re-verification) and every gate passed; and it dropped a
+# row from an O-5 diff (with `counts` re-derived), cut a re-grade diff to 150
+# rows, and changed a first-error line, all unseen. The definitions below
+# close those, artefact by artefact. The artefacts whose stored totals ARE
+# checked are exactly CHECKED below; a total outside them is NOT checked (the
+# false_ready, apply_fixes and compile_check entries of
+# oracle_baseline/summary.json record runs whose rows are not committed).
+
+#: re-grade diff -> the results artefact it re-grades, for the six diffs
+#: OPEN-126 (d)/(e) cite; every one must exist (a deleted diff is a finding).
+REGRADE_DIFFS = {
+    f"corpora/oracle_baseline/{kind}_sample{n}.json": res
+    for kind in ("regrade_open126", "o5_forced_clock")
+    for n, res in ((1, "corpora/real_roots/results.json"),
+                   (2, "corpora/real_roots/results_sample2.json"),
+                   (3, "corpora/real_roots/results_sample3.json"))}
+
+#: OPEN-118's two real_roots re-grade diffs -> their results artefact.
+OPEN118_ROOT_DIFFS = {
+    "corpora/oracle_baseline/diff_real_roots_sample1.json":
+        "corpora/real_roots/results.json",
+    "corpora/oracle_baseline/diff_real_roots_sample2.json":
+        "corpora/real_roots/results_sample2.json"}
+
+#: OPEN-118's cell diffs (oracle_baseline_cells.py) -> their artefact and the
+#: row-id key of that artefact's rows.
+OPEN118_CELL_DIFFS = {
+    "corpora/oracle_baseline/diff_apply_fixes_real_results.json":
+        ("corpora/apply_fixes_real/results.json", "arxiv_id"),
+    "corpora/oracle_baseline/diff_apply_fixes_real_results_virgin.json":
+        ("corpora/apply_fixes_real/results_virgin.json", "arxiv_id"),
+    "corpora/oracle_baseline/diff_apply_fixes_real_results_fresh.json":
+        ("corpora/apply_fixes_real/results_fresh.json", "arxiv_id"),
+    "corpora/oracle_baseline/diff_strict_battery.json":
+        ("corpora/strict_battery/manifest.json", "file")}
+
+BASELINE_SUMMARY = "corpora/oracle_baseline/summary.json"
+CLI_VERIFY = "corpora/oracle_baseline/cli_verify_fe673dc1.json"
+
+#: Every artefact whose stored totals this module checks.
+CHECKED = (("corpora/real_roots/results.json",
+            "corpora/real_roots/results_sample2.json",
+            "corpora/real_roots/results_sample3.json")
+           + tuple(REGRADE_DIFFS) + tuple(OPEN118_ROOT_DIFFS)
+           + tuple(OPEN118_CELL_DIFFS) + (BASELINE_SUMMARY, CLI_VERIFY))
+
+
+def _ids(rows, key="arxiv_id"):
+    return [r.get(key) for r in rows]
+
+
+def id_set_findings(rows, results_docs, name, res_name) -> list[str]:
+    """A diff must cover its results artefact exactly: the same ids, each
+    once. A dropped row with re-derived totals passes every total check."""
+    got, want = _ids(rows), _ids(results_docs)
+    out = []
+    dup = sorted({i for i in got if got.count(i) > 1})
+    if dup:
+        out.append(f"{name}: rows repeat {dup[:5]}")
+    if set(got) != set(want):
+        out.append(f"{name}: its rows are not {res_name}'s ({len(got)} rows "
+                   f"vs {len(want)} docs; only in the diff "
+                   f"{sorted(set(got) - set(want))[:5]}, missing "
+                   f"{sorted(set(want) - set(got))[:5]})")
+    return out
+
+
+def field_moves(rows) -> dict:
+    """field -> number of rows whose before and after differ in it, over
+    EVERY field either side records (cell, rc, PDF, verdict, passes, first
+    error...), not only OUTCOME_KEYS."""
+    out = collections.Counter()
+    for r in rows:
+        b, a = r.get("before") or {}, r.get("after") or {}
+        for k in sorted(set(b) | set(a)):
+            if b.get(k) != a.get(k):
+                out[k] += 1
+    return dict(out)
+
+
+def real_roots_diff_summary(rows) -> dict:
+    """OPEN-118's real_roots diff summary, from its rows (the checking
+    definition; the one-off writer of 4adcc30c was not committed). rc is
+    compared only where the before side recorded one: sample 2's recorder
+    stored none (200/200), which `rc_unrecorded_before` states, so its
+    `rc_changed` 0 is not read as 200 comparisons."""
+    def bf(r, k):
+        return (r.get("before") or {}).get(k)
+
+    def af(r, k):
+        return (r.get("after") or {}).get(k)
+    return {
+        "rows": len(rows),
+        "cell_changed": sum(bf(r, "cell") != af(r, "cell") for r in rows),
+        "rc_changed": sum(bf(r, "pdflatex_rc") is not None
+                          and bf(r, "pdflatex_rc") != af(r, "pdflatex_rc")
+                          for r in rows),
+        "rc_unrecorded_before": sum(bf(r, "pdflatex_rc") is None for r in rows),
+        "verdict_changed": sum(bf(r, "pdflatex_verdict") != af(r, "pdflatex_verdict")
+                               for r in rows),
+        "rc0_without_pdf": sum(af(r, "pdflatex_rc") == 0 and not af(r, "pdflatex_pdf")
+                               for r in rows),
+        "first_error_text_changed": sum(bf(r, "first_error") != af(r, "first_error")
+                                        for r in rows)}
+
+
+def real_roots_diff_findings(doc, results_doc, name, res_name) -> list[str]:
+    rows = doc.get("rows") or []
+    out = id_set_findings(rows, results_doc.get("docs") or [], name, res_name)
+    for r in rows:
+        want = (r["before"]["cell"] != r["after"]["cell"])
+        if r.get("cell_changed") != want:
+            out.append(f"{name}: {r.get('arxiv_id')} records cell_changed="
+                       f"{r.get('cell_changed')!r} but its before/after give {want!r}")
+    want = real_roots_diff_summary(rows)
+    got = {k: v for k, v in (doc.get("summary") or {}).items()
+           if k != "first_error_note"}
+    if got != want:
+        out.append(f"{name}: its summary {got} is not what its rows give, "
+                   f"{want} (C-127)")
+    return out
+
+
+def cell_diff_findings(doc, artefact_doc, name, art_name, key) -> list[str]:
+    """oracle_baseline_cells.py's diff: its `rows` total is the artefact's
+    row count, and every row it names is one of the artefact's. (Its before
+    side is a git revision, not committed rows; its lists are what it
+    found, so their lengths are the totals summary.json quotes.)"""
+    rows = artefact_doc.get("rows") or []
+    ids = set(_ids(rows, key))
+    out = []
+    if doc.get("rows") != len(rows):
+        out.append(f"{name}: records rows={doc.get('rows')!r} but {art_name} "
+                   f"has {len(rows)} (C-127)")
+    for lst in ("outcome_moved", "first_error_changed_only"):
+        for m in doc.get(lst) or []:
+            if m.get("row") not in ids:
+                out.append(f"{name}: {lst} names {m.get('row')!r}, not a row "
+                           f"of {art_name}")
+    return out
+
+
+def baseline_summary_findings(summ, load) -> list[str]:
+    """oracle_baseline/summary.json's per-artefact totals, each from the diff
+    it names (`load(rel)` reads a repo file). Entries naming no diff record a
+    run whose rows are not committed and are not checked."""
+    out = []
+    for label, e in (summ.get("artefacts") or {}).items():
+        dpath = e.get("diff")
+        if not dpath:
+            continue
+        d = load(dpath)
+        where = f"{BASELINE_SUMMARY} [{label}]"
+        if dpath in OPEN118_ROOT_DIFFS:
+            rows = d.get("rows") or []
+            want = {"rows": len(rows),
+                    "outcome_changed": sum(
+                        r["before"]["cell"] != r["after"]["cell"]
+                        or r["before"].get("pdflatex_verdict") != r["after"].get("pdflatex_verdict")
+                        or (r["before"].get("pdflatex_rc") is not None
+                            and r["before"]["pdflatex_rc"] != r["after"].get("pdflatex_rc"))
+                        for r in rows)}
+            if "reason_changed_class_i" in e:
+                want["reason_changed_class_i"] = sum(
+                    str(r.get("classification") or "").startswith("(i)") for r in rows)
+        elif dpath in OPEN118_CELL_DIFFS:
+            want = {"rows": d.get("rows"),
+                    "outcome_changed": len(d.get("outcome_moved") or [])}
+            if "broken" in e:
+                arows = load(OPEN118_CELL_DIFFS[dpath][0]).get("rows") or []
+                cells = collections.Counter(r.get("cell") for r in arows)
+                want["broken"] = (f"{cells['broken']}/"
+                                  f"{len(arows) - cells['excluded-did-not-compile']}")
+        else:
+            out.append(f"{where}: names diff {dpath}, which this module does "
+                       f"not know how to check; add it to OPEN118_*_DIFFS")
+            continue
+        got = {k: e.get(k) for k in want}
+        if got != want:
+            out.append(f"{where}: {got} is not what {dpath} gives, {want} (C-127)")
+    return out
+
+
+def cli_verify_findings(doc, load) -> list[str]:
+    """cli_verify_fe673dc1.json: per sample, `rows` is the results
+    artefact's doc count, `differ` the number of listed diffs, `rc_differs`
+    the listed diffs whose rc differs, and every listed id is a doc."""
+    out = []
+    for res_name, s in (doc.get("samples") or {}).items():
+        docs = load(f"corpora/real_roots/{res_name}").get("docs") or []
+        diffs = s.get("diffs") or []
+        want = {"rows": len(docs), "differ": len(diffs),
+                "rc_differs": sum(d.get("rec_rc") != d.get("rc") for d in diffs)}
+        got = {k: s.get(k) for k in want}
+        if got != want:
+            out.append(f"{CLI_VERIFY} [{res_name}]: {got} is not what its diffs "
+                       f"and {res_name} give, {want} (C-127)")
+        ids = set(_ids(docs))
+        for d in diffs:
+            if d.get("id") not in ids:
+                out.append(f"{CLI_VERIFY} [{res_name}]: lists {d.get('id')!r}, "
+                           f"not a doc of {res_name}")
+    return out

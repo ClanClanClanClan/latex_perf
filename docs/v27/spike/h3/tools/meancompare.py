@@ -26,20 +26,24 @@ def sha(b):
     return hashlib.sha256(b).hexdigest()
 
 
-def digest(repo, names, log):
-    sys.path.insert(0, str(repo / "scripts" / "tools"))
-    import gen_contract as g
-    d = g.parse_dump(log)
-    m = {g.name_str(g.name_bytes(n)): d["meanings"].get(i) for i, n in enumerate(names)}
-    defined = {n: g.name_str(v) for n, v in m.items() if v is not None}
-    dig = sha("\n".join("%s\t%s" % (n, defined[n]) for n in sorted(defined)).encode("utf-8"))
-    return {"records": len(d["meanings"]), "defined": len(defined), "undefined": len(m) - len(defined),
-            "error": d["error"], "meanings_sha256": dig}
+def digest(repo, names_path, log_bytes, tmp):
+    """The contract generator's meanings_sha256 of one log, computed by meandigest.py (which
+    uses gen_contract's own parse_dump) in a separate process: this module only compares bytes
+    and does not import the oracle's client code (check_oracle_infra_grading)."""
+    import subprocess
+    lp = Path(tmp)
+    lp.write_bytes(log_bytes)
+    r = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "meandigest.py"), str(repo),
+                        str(names_path), str(lp)], capture_output=True, text=True, check=True)
+    d = json.loads(r.stdout)
+    return {"records": d["records"], "defined": d["defined"], "undefined": d["undefined"], "error": d["error"],
+            "meanings_sha256": d["digest"]}
 
 
 def main():
+    import tempfile
+    tmpd = tempfile.mkdtemp()
     repo, md, bd = Path(opt("--repo")), Path(opt("--model")), Path(opt("--bin"))
-    names = json.loads(Path(opt("--names")).read_text())
     contract = json.loads((repo / "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json").read_text())
     if not (bd / "rc").exists() or not (md / "driver.out").exists():
         print("missing inputs", file=sys.stderr)
@@ -66,7 +70,7 @@ def main():
                       "files_sha256": {k: sha(v) for k, v in sorted(bfiles.items())}},
            "contract_meanings_sha256": contract["meanings_sha256"]}
     if "texput.log" in bfiles:
-        out["binary"]["digest"] = digest(repo, names, bfiles["texput.log"])
+        out["binary"]["digest"] = digest(repo, opt("--names"), bfiles["texput.log"], Path(tmpd) / "binary.log")
         out["binary"]["digest_equals_contract"] = out["binary"]["digest"]["meanings_sha256"] == contract["meanings_sha256"]
     if res.startswith("exit "):
         mrc = int(res.split()[1])
@@ -77,7 +81,7 @@ def main():
         out["model"] = {"stdout_sha256": sha(rd(1)), "stderr_sha256": sha(rd(2)), "clock_readings": mclock,
                         "files_sha256": {k: sha(v) for k, v in sorted(mfiles.items())}}
         if "texput.log" in mfiles:
-            out["model"]["digest"] = digest(repo, names, mfiles["texput.log"])
+            out["model"]["digest"] = digest(repo, opt("--names"), mfiles["texput.log"], Path(tmpd) / "model.log")
             out["model"]["digest_equals_contract"] = out["model"]["digest"]["meanings_sha256"] == contract["meanings_sha256"]
     elif res.startswith("stuck"):
         out["class"] = "STUCK"

@@ -1,6 +1,6 @@
 (* Hedged-RPC broker over a pool of forked worker processes.
 
-   INVARIANTS (each was violated before OPEN-127; see PROJECT_STATE
+   INVARIANTS (each was violated before OPEN-125; see PROJECT_STATE
    C-122..C-124):
 
    (I1) A worker process owns exactly stdin, stdout, stderr and its own end of

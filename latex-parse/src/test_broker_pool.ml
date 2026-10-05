@@ -1,4 +1,4 @@
-(* Regression test for OPEN-127: the multi-worker pool dropped requests.
+(* Regression test for OPEN-125: the multi-worker pool dropped requests.
 
    Each scenario runs in a re-exec'd copy of this binary that the parent kills
    after a deadline, so a hang is a FAIL naming the last step started, never a

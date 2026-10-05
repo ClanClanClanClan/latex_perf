@@ -265,7 +265,7 @@ let run () =
         dump_csv ());
       loop ()
     in
-    (* The connection is closed on EVERY exit from the loop. Before OPEN-127
+    (* The connection is closed on EVERY exit from the loop. Before OPEN-125
        only Unix_error/End_of_file/Exit closed it; a Failure from read_exact on
        the payload (client gone mid-frame) or any other exception ended the
        thread with [c] open, and the client waited for a reply that never

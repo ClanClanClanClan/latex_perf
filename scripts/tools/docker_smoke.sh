@@ -74,7 +74,7 @@ rc_is explain 0 && has explain 'message: +Ellipsis' \
 #    in a row, then CONC_CLIENTS concurrent clients x CONC_EACH requests, all
 #    200 — and loaded the macro catalogue. Run twice: the image default, and a
 #    two-worker pool (L0_POOL_CORES=0,1).
-#    The two-worker run is what catches OPEN-127: forked workers inherited the
+#    The two-worker run is what catches OPEN-125: forked workers inherited the
 #    parent's end of earlier workers' sockets, so retiring a worker hung the
 #    request that retired it, and a units bug retired a worker after every
 #    request — with two workers about one request in three got no response.

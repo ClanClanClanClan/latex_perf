@@ -15,7 +15,7 @@
 # (linux/arm64 under colima, 2026-10-01): a two-worker pool (L0_POOL_CORES=0,1)
 # left requests unanswered (6 POST /tokenize: 2 got no response in 20 s; 6
 # direct UDS requests: 3 timed out at 15 s; L0_POOL_CORES=0: 6 of 6).
-# DIAGNOSED AND FIXED 2026-10-02 (OPEN-127, C-122..C-124): it was not the
+# DIAGNOSED AND FIXED 2026-10-02 (OPEN-125, C-122..C-124): it was not the
 # container. Forked workers inherited the parent's end of earlier workers'
 # sockets, so retiring a worker hung the request that retired it, and a units
 # bug retired a worker after EVERY request; the same drop reproduced natively

@@ -152,7 +152,7 @@ draft §12, the O-n id is given; otherwise none exists and none is invented.
 ## Owner decisions of 2026-10-05 (after the H.3 checkpoint 1 report)
 
 Same rule as above: this is the one place of record. The H.3 report and its evidence are on
-branch `spike/v27165-engine-translation` (`docs/v27/spike/H3-report.md`, commit `7d927b5f`).
+branch `spike/v27165-engine-translation`, at `7d927b5f:docs/v27/spike/H3-report.md`.
 
 - **E3 status (no new decision).** The native amd64 confirmation approved in E3 was RUN on
   2026-10-02 on GitHub-hosted x86_64 runners (`spike-native-amd64.yml`, branch

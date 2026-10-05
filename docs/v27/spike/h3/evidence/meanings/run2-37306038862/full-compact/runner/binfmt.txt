@@ -1,0 +1,16 @@
+total 0
+drwxr-xr-x 2 root root 0 Oct  5 12:15 .
+dr-xr-xr-x 1 root root 0 Oct  5 11:54 ..
+-rw-r--r-- 1 root root 0 Oct  5 11:54 llvm-16-runtime.binfmt
+-rw-r--r-- 1 root root 0 Oct  5 11:54 llvm-17-runtime.binfmt
+-rw-r--r-- 1 root root 0 Oct  5 11:54 llvm-18-runtime.binfmt
+-rw-r--r-- 1 root root 0 Oct  5 11:54 python3.12
+-rw-r--r-- 1 root root 0 Oct  5 12:15 qemu-aarch64
+--w------- 1 root root 0 Oct  5 11:54 register
+-rw-r--r-- 1 root root 0 Oct  5 11:54 status
+enabled
+interpreter /usr/bin/qemu-aarch64
+flags: POCF
+offset 0
+magic 7f454c460201010000000000000000000200b700
+mask ffffffffffffff00fffffffffffffffffeffffff

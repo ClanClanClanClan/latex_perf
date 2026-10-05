@@ -1,0 +1,20 @@
+{
+ "variant": "full-compact",
+ "runner": {
+  "MemTotal": "16373452 kB",
+  "nproc": "4",
+  "uname_m": "x86_64"
+ },
+ "cap": "MemTotal 16373452 kB; cap (MemoryMax) 14276300 kB",
+ "runs": [],
+ "comparison": {
+  "class": "LIMIT",
+  "differs_in": null,
+  "model_result": "no result (the driver did not finish)",
+  "binary_rc": 0,
+  "binary_digest": "4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e",
+  "model_digest": null,
+  "contract_digest": "4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e"
+ },
+ "binary_run": "binary rc=0 in 5 s (qemu)\n8803ec328f7b2bfc78d96607b1d422f293e90729f75a8ec0707fe588186f5657  /home/runner/work/_temp/h3/bin/out\n335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce  /home/runner/work/_temp/h3/bin/w/texput.log\nb6717415a480b5554989a83728826c21f967dea5a2f27125d6e2f3fb304d8e86  /home/runner/work/_temp/h3/bin/w/clock.log\n"
+}

@@ -89,6 +89,11 @@ def lit_ty(z):
     return "i64" if abs(z) > 32767 else "i32"
 
 
+# Build macros that expand to a C string literal (texmfmp.h of r78081, under
+# `#if defined (pdfTeX)`, lines 53-54): web2c's C has the literal where the Pascal names the
+# constant, so the IR has the literal too (spike H.3; before, TEXMFENGINENAME was an external)
+BUILD_STRING_MACROS = {"TEXMFENGINENAME": "pdftex", "TEXMFPOOLNAME": "pdftex.pool"}
+
 PROMOTE = {"w8": "w8", "w4": "w4", "c8": "i32", "u8": "i32", "s8": "i32", "s16": "i32", "u16": "i32", "i32": "i32", "i64": "i64", "f64": "f64",
            "ptr": "ptr", "cstr": "cstr", "file": "file"}
 
@@ -165,7 +170,7 @@ class Lowerer:
             return e[1]
         if e[0] == "id":
             v = self.consts.get(e[1])
-            if v is None or v[0] == "str":
+            if v is None or v[0] in ("str", "cstrlit", "ext"):
                 raise TranslateError(f"not a numeric constant: {e[1]}")
             return v[0]
         if e[0] == "bin":
@@ -180,9 +185,12 @@ class Lowerer:
         self.consts["false"] = (0, "i32")
         self.consts["maxint"] = (INT_MAX, "i32")  # cpascal.h: maxint INTEGER_MAX
         for n, e in self.P["consts"]:
-            if e[0] == "id" and e[1] not in self.consts:
-                self.consts[n] = ("ext", e[1])   # a C macro from the build (TEXMFPOOLNAME, ...)
+            if e[0] == "id" and e[1] in BUILD_STRING_MACROS:
+                # a build macro that is a C string literal: the C code has the literal
+                self.consts[n] = ("cstrlit", BUILD_STRING_MACROS[e[1]])
                 continue
+            if e[0] == "id" and e[1] not in self.consts:
+                self.consts[n] = ("ext", e[1])   # a C macro from the build
             z = self.cval(e)
             self.consts[n] = (z, lit_ty(z))
 
@@ -229,7 +237,7 @@ class Lowerer:
         if b[0] == "num":
             return b[1]
         n = b[1]
-        if n in self.consts and self.consts[n][0] != "ext":
+        if n in self.consts and self.consts[n][0] not in ("ext", "cstrlit"):
             return self.consts[n][0]
         # a variable bound (web2c allows var_id_tok): the C type is integer, and the
         # array has no static size; only used in types of pointer targets / subranges
@@ -443,6 +451,8 @@ class Lowerer:
                 v = self.consts[n]
                 if v[0] == "ext":
                     return (("ext", self.ext(v[1]), []), "cstr")
+                if v[0] == "cstrlit":
+                    return (("str", v[1]), "ptr")   # a C string literal: a static char array
                 return (("int", v[1], v[0]), v[1])
             if n in self.procs:
                 return self.fcall(n, [])

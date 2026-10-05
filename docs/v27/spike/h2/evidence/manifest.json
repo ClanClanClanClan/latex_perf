@@ -157,7 +157,6 @@
   "printmoddate",
   "wopenout",
   "dumpint",
-  "TEXMFENGINENAME",
   "strcpy",
   "dumpthings",
   "dumphh",
@@ -906,7 +905,7 @@
   "translatefilename",
   "versionstring"
  ],
- "strings": 101,
+ "strings": 102,
  "types_as_args": [],
  "ir_nodes": 185086,
  "proc_names": [
@@ -1523,7 +1522,7 @@
   "goto": 552,
   "return": 195
  },
- "unsequenced_pairs_checked": 45742,
+ "unsequenced_pairs_checked": 45756,
  "unsequenced_conflicts": [
   [
    "settagcode",
@@ -1624,22 +1623,6 @@
   [
    "doextension",
    "assign"
-  ],
-  [
-   "openfmtfile",
-   "args"
-  ],
-  [
-   "loadfmtfile",
-   "write"
-  ],
-  [
-   "loadfmtfile",
-   "write"
-  ],
-  [
-   "loadfmtfile",
-   "args"
   ]
  ],
  "gotos_into_structured": [

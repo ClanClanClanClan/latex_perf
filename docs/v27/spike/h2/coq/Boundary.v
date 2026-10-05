@@ -345,6 +345,23 @@ Definition init_start_time (st : state) : eres :=
     end
   end.
 
+(* texmfmp.c makepdftime(start_time, start_time_str, utc = true), the string initstarttime
+   computes when SOURCE_DATE_EPOCH is set: strftime "D:%Y%m%d%H%M%S" of gmtime (glibc's %Y:
+   the year in decimal, unpadded; a gmtime second is never 60), then the offset of local
+   time from gmtime, 0 for utc: "Z". Defined for kind 1 (start_time known); for kind 2 the
+   string is localtime of the real clock: None (Stuck where it is read) *)
+Fixpoint dec_digits (n : nat) (v : Z) (acc : list Z) : list Z :=
+  match n with O => acc | S n' => if v <? 10 then (48 + v) :: acc else dec_digits n' (Z.div v 10) ((48 + Z.modulo v 10) :: acc) end.
+Definition two_digits (v : Z) : list Z := [48 + Z.div v 10; 48 + Z.modulo v 10].
+Definition start_time_str (st : state) : option (list Z) :=
+  if negb (cstate st CS_start_time_kind =? 1) then None else
+  let e := cstate st CS_start_time in
+  let days := Z.div e 86400 in
+  let secs := Z.modulo e 86400 in
+  let '(y, m, d) := civil_from_days days in
+  Some ([68; 58] ++ dec_digits 30 y [] ++ two_digits m ++ two_digits d ++ two_digits (Z.div secs 3600)
+        ++ two_digits (Z.modulo (Z.div secs 60) 60) ++ two_digits (Z.modulo secs 60) ++ [90]).
+
 (* gmtime(&t) for 0 <= t <= 2^55, as get_date_and_time stores it *)
 Definition put_gmtime (st : state) (e : Z) (a1 a2 a3 a4 : xarg) : eres :=
   let days := Z.div e 86400 in
@@ -376,6 +393,302 @@ Definition plain_new_name (st : state) (name : list Z) : bool :=
          && negb (existsb (fun hn => list_eq_dec_bool (snd hn) name) (io_files (st_io st)))
          && negb (existsb (fun fc => list_eq_dec_bool (fst fc) name) (io_fs (st_io st)))
   end.
+
+
+Inductive Stuck_or (A : Type) : Type := Ok (a : A) | Err (s : stuck).
+Arguments Ok {A} a. Arguments Err {A} s.
+
+(* ================================================================ spike H.3: the format file
+
+   The externals pdfTeX's format loading and dumping call (tex.ch, texmfmp.h, texmfmp.c,
+   openclose.c, writeimg.c, tounicode.c of r78081), modelled from their C source. The
+   compressed format is read through zlib (gzdopen/gzread); decompression is outside the
+   model (TB-7): the run's identity gives, per path, the decompressed stream (io_gz), and
+   what the model dumps is the uncompressed stream gzwrite receives. *)
+
+Definition CS_fullnameoffile : Z := 8.            (* texmfmp.c fullnameoffile: a block id, 0 = NULL *)
+Definition CS_image_limit : Z := 9.               (* writeimg.c image_limit (0 in static storage) *)
+Definition CS_tounicode_tree : Z := 10.           (* tounicode.c glyph_unicode_tree: 0 = NULL *)
+
+Definition alloc_cells (cs : list cell) (st : state) : option (state * Z) :=
+  if heap_cap <=? hp st + 1 then None else
+  let b := hp st in
+  let st1 := hput (mkst (heap st) (b + 1) (fp st) (fsp st) (st_io st)) b
+                  (new_block (Z.max 1 (Z.of_nat (List.length cs))) KUndef) in
+  match put_cells cs b 0 st1 with Some st2 => Some (st2, b) | None => None end.
+
+Definition free_block (st : state) (b : Z) : state := hput st b empty_block.
+
+Definition gfile (st : state) (g : Z) : option Z :=
+  match cell_at st g 0 with Some (KFile h) => Some h | _ => None end.
+
+Fixpoint lookup_in (h : Z) (l : list (Z * list Z)) : option (list Z) :=
+  match l with [] => None | (h', b) :: r => if h =? h' then Some b else lookup_in h r end.
+Fixpoint set_in (h : Z) (v : list Z) (l : list (Z * list Z)) : list (Z * list Z) :=
+  match l with [] => [(h, v)] | (h', b) :: r => if h =? h' then (h, v) :: r else (h', b) :: set_in h v r end.
+Fixpoint drop_in (h : Z) (l : list (Z * list Z)) : list (Z * list Z) :=
+  match l with [] => [] | (h', b) :: r => if h =? h' then r else (h', b) :: drop_in h r end.
+
+Fixpoint lookup_find (f m : Z) (name : list Z) (t : list (Z * Z * list Z * list Z)) : option (list Z) :=
+  match t with
+  | [] => None
+  | (f', m', n, r) :: rest => if (f =? f') && (m =? m') && list_eq_dec_bool n name then Some r
+                              else lookup_find f m name rest
+  end.
+
+(* C's sizeof of an (un)dumped item, by its storage type; texmfmem.h: memoryword and
+   twohalves are 8 bytes, fourquarters and fmemoryword 4 *)
+Definition item_size (c : ct) : option Z :=
+  match c with
+  | CU8 | CS8 | CC8 => Some 1 | CU16 | CS16 => Some 2 | CI32 => Some 4
+  | CI64 | CW8 | CF64 => Some 8 | CW4 => Some 4 | _ => None
+  end.
+
+(* big-endian: the format file's byte order (texmfmp.c do_dump/do_undump swap every item
+   on a little-endian host, swap_items) *)
+Fixpoint be_value (bs : list Z) (acc : Z) : Z :=
+  match bs with [] => acc | b :: r => be_value r (acc * 256 + b) end.
+Fixpoint be_bytes (n : nat) (v : Z) (acc : list Z) : list Z :=
+  match n with O => acc | S n' => be_bytes n' (Z.shiftr v 8) (Z.land v 255 :: acc) end.
+
+Definition signed_of (bits u : Z) : Z := if Z.testbit u (bits - 1) then u - Z.shiftl 1 bits else u.
+
+(* one undumped item: the cell its bytes make in a cell of storage type c *)
+Definition cell_of_bytes (c : ct) (bs : list Z) : option cell :=
+  let u := be_value bs 0 in
+  match c with
+  | CU8 | CC8 | CU16 => Some (KInt u)
+  | CS8 => Some (KInt (signed_of 8 u)) | CS16 => Some (KInt (signed_of 16 u))
+  | CI32 => Some (KInt (signed_of 32 u)) | CI64 => Some (KInt (signed_of 64 u))
+  | CW8 => Some (KWord u 255) | CW4 => Some (KWord u 15)
+  | CF64 => (* a NaN's payload is not kept by the model: not modelled *)
+            if (Z.land (Z.shiftr u 52) 2047 =? 2047) && negb (Z.land u (Z.ones 52) =? 0) then None
+            else Some (KDbl (float_of_bits u))
+  | _ => None
+  end.
+
+(* one dumped item: its bytes, from a cell of storage type c; an indeterminate byte (a
+   never-written cell or word byte) is the binary's garbage: not modelled, None *)
+Definition bytes_of_cell (c : ct) (k : cell) : option (list Z) :=
+  match item_size c, k with
+  | Some n, KInt z => Some (be_bytes (Z.to_nat n) (Z.modulo z (Z.shiftl 1 (8 * n))) [])
+  | Some n, KWord bits mask => if mask =? Z.ones n then Some (be_bytes (Z.to_nat n) bits []) else None
+  | Some n, KDbl f => match bits_of_float f with Some b => Some (be_bytes (Z.to_nat n) b []) | None => None end
+  | _, _ => None
+  end.
+
+Fixpoint take (n : nat) (l : list Z) : option (list Z * list Z) :=
+  match n with
+  | O => Some ([], l)
+  | S n' => match l with [] => None | x :: r => match take n' r with Some (a, b) => Some (x :: a, b) | None => None end end
+  end.
+
+Fixpoint undump_cells (k : nat) (c : ct) (sz : nat) (bs : list Z) (acc : list cell) : option (list cell * list Z) :=
+  match k with
+  | O => Some (rev_append acc [], bs)
+  | S k' => match take sz bs with
+            | Some (item, rest) => match cell_of_bytes c item with
+                                   | Some cl => undump_cells k' c sz rest (cl :: acc)
+                                   | None => None end
+            | None => None
+            end
+  end.
+
+(* texmfmp.c do_undump(p, sizeof(base), len, fmtfile): gzread of len items, FATAL when
+   fewer bytes remain (not modelled: Stuck); swap_items; the items land in consecutive
+   cells from base. Returns the new state and the integer values (for the checked forms). *)
+Definition do_undump (st : state) (a : xarg) (len : Z) : Stuck_or (state * list cell) :=
+  match a, gfile st G_fmtfile with
+  | XLoc l c _, Some h =>
+    match lsl l, item_size c, lookup_in h (io_in (st_io st)) with
+    | None, Some n, Some bs =>
+      if (len <? 0) || negb (in_i32 (n * len)) then Err (StConv "undump: item_size * nitems outside int") else
+      match undump_cells (Z.to_nat len) c (Z.to_nat n) bs [] with
+      | None => Err (StExternal "do_undump: FATAL (short format file) or an item not modelled")
+      | Some (cells, rest) =>
+        match put_cells cells (lb l) (Values.lo l) st with
+        | Some st1 => Ok (set_io st1 (io_set_in (st_io st1) (set_in h rest (io_in (st_io st1)))), cells)
+        | None => Err (StBounds "undump")
+        end
+      end
+    | _, _, _ => Err (StType "undump: base or fmtfile")
+    end
+  | _, _ => Err (StType "undump arguments")
+  end.
+
+Definition emit_handle (h : Z) (bytes : list Z) (st : state) : state :=
+  set_io st (io_set_out (st_io st) (out_append h bytes (io_out (st_io st)))).
+
+(* texmfmp.c do_dump(p, sizeof(base), len, fmtfile): swap_items, gzwrite (a write failure
+   is outside the environment class), swap back *)
+Definition do_dump (st : state) (a : xarg) (len : Z) : Stuck_or state :=
+  match a, gfile st G_fmtfile with
+  | XLoc l c _, Some h =>
+    match lsl l, item_size c, read_cells (Z.to_nat len) (lb l) (Values.lo l) st with
+    | None, Some n, Some ks =>
+      if (len <? 0) || negb (in_i32 (n * len)) then Err (StConv "dump: item_size * nitems outside int") else
+      match fold_right (fun k acc => match bytes_of_cell c k, acc with
+                                     | Some b, Some r => Some (b ++ r) | _, _ => None end) (Some []) ks with
+      | Some bytes => Ok (emit_handle h bytes st)
+      | None => Err (StUninit)
+      end
+    | _, _, None => Err (StBounds "dump")
+    | _, _, _ => Err (StType "dump: base")
+    end
+  | _, _ => Err (StType "dump arguments")
+  end.
+
+(* openclose.c open_input(&f, DUMP_FORMAT = kpse_fmt_format, "rb"), then gzdopen: the
+   texmfmp.h macro wopenin. *f_ptr = NULL; free(fullnameoffile), = NULL; no
+   -output-directory (measured command line); filefmt >= 0, must_exist = 1 (not the tex
+   or vf format); fname = kpse_find_file(nameoffile + 1, kpse_fmt_format, 1) (the run's
+   table); found: fullnameoffile = xstrdup(fname); a leading "./" is removed unless
+   nameoffile + 1 starts with one; xfopen (the run's file system must hold it);
+   free(nameoffile); namelength = strlen(fname); nameoffile = xmalloc(namelength + 2) (its
+   cell 0 never written); strcpy(nameoffile + 1, fname); recorder off (measured command
+   line); gzdopen of the stream. Not found: false, f stays NULL *)
+Definition wopenin (st : state) (a : xarg) : eres :=
+  if negb (argv_measured st) then EStk (StExternal "wopenin: a command line other than the measured one") st else
+  match a, gptr st G_nameoffile with
+  | XLoc l CFILE _, Some (nb, 0) =>
+    match cstring 100000 nb 1 st with
+    | None => EStk (StType "wopenin: nameoffile") st
+    | Some name =>
+      let fb0 := cstate st CS_fullnameoffile in
+      let st0 := set_cstate (if fb0 =? 0 then st else free_block st fb0) CS_fullnameoffile 0 in
+      match write_loc st0 CFILE l VN with
+      | WStk s0 => EStk s0 st0
+      | WOk st1 =>
+        match lookup_find 10 1 name (io_kpsefind (st_io st1)) with
+        | None => EStk (StExternal "kpse_find_file: a query not in the run's table") st1
+        | Some [] => EOk (VI TI32 0) st1
+        | Some fname0 =>
+          match alloc_cells (map KInt (fname0 ++ [0])) st1 with
+          | None => EStk (StOther "heap blocks exhausted") st1
+          | Some (st2, fb) =>
+            let st3 := set_cstate st2 CS_fullnameoffile fb in
+            let fname := match fname0, name with
+                         | 46 :: 47 :: _, 46 :: 47 :: _ => fname0
+                         | 46 :: 47 :: rest, _ => rest
+                         | _, _ => fname0 end in
+            match lookup_bytes fname (io_gz (st_io st3)) with
+            | None => EStk (StExternal "xfopen: the run's file system does not hold the file kpathsea found") st3
+            | Some stream =>
+              match alloc_cells (KUndef :: map KInt (fname ++ [0])) (free_block st3 nb) with
+              | None => EStk (StOther "heap blocks exhausted") st3
+              | Some (st4, nb') =>
+                match gput st4 G_nameoffile (KPtr nb' 0) with
+                | None => EStk (StBounds "nameoffile") st4
+                | Some st5 =>
+                  match gput st5 G_namelength (KInt (Z.of_nat (List.length fname))) with
+                  | None => EStk (StBounds "namelength") st5
+                  | Some st6 =>
+                    let x0 := st_io st6 in
+                    let h := io_next_handle x0 in
+                    let x1 := io_set_files x0 ((h, fname) :: io_files x0) (h + 1) in
+                    let st7 := set_io st6 (io_set_in x1 ((h, stream) :: io_in x1)) in
+                    match write_loc st7 CFILE l (VFile h) with
+                    | WOk st8 => EOk (VI TI32 1) st8
+                    | WStk s0 => EStk s0 st7
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  | _, _ => EStk (StType "wopenin arguments") st
+  end.
+
+(* texmfmp.h wopenout(f) = open_output(&f, "wb") && gzdopen && gzsetparams(f, 1,
+   Z_DEFAULT_STRATEGY) == Z_OK: open_output as for aopenout (the same environment class
+   and name restriction); the model keeps the uncompressed stream gzwrite receives *)
+Definition wopenout (st : state) (a : xarg) : eres :=
+  if negb (argv_measured st) then EStk (StExternal "wopenout: a command line other than the measured one") st else
+  match a, gptr st G_nameoffile with
+  | XLoc l CFILE _, Some (nb, no) =>
+    match cstring 100000 nb (no + 1) st with
+    | Some name =>
+      if negb (plain_new_name st name) then EStk (StExternal "wopenout: not a new single-component name (not modelled)") st else
+      let x0 := st_io st in
+      let h := io_next_handle x0 in
+      let st1 := set_io st (io_set_files x0 ((h, name) :: io_files x0) (h + 1)) in
+      match write_loc st1 CFILE l (VFile h) with
+      | WOk st2 => EOk (VI TI32 1) st2
+      | WStk s0 => EStk s0 st1
+      end
+    | None => EStk (StType "wopenout name") st
+    end
+  | _, _ => EStk (StType "wopenout arguments") st
+  end.
+
+Fixpoint all_in_range (lo hi : Z) (ks : list cell) : bool :=
+  match ks with
+  | [] => true
+  | KInt v :: r => (lo <=? v) && (v <=? hi) && all_in_range lo hi r
+  | _ :: _ => false
+  end.
+
+(* tounicode.c undumptounicode, the records of the glyph-to-unicode AVL tree as the dump has
+   them: dumpcharptr(name) (an integer x = strlen + 1, then x bytes, the NUL included);
+   generic_dump(code) (an integer); if code = UNI_STRING (-2), dumpcharptr(unicode_seq).
+   A NULL name or sequence is pdftex_fail; a name equal to an earlier one fails avl_probe's
+   assert: both Stuck. The model keeps the records' bytes and re-dumps them in the order
+   dumptounicode's in-order traversal gives, which is the order of strcmp on the names; it
+   requires the undumped names to be strictly increasing (then that order is the file's
+   order) and every string to have no NUL before its last byte (else strlen would differ),
+   and is Stuck otherwise. *)
+Definition CS_tounicode_count : Z := 11.
+Definition CS_tounicode_len : Z := 12.
+
+Fixpoint lt_bytes (a b : list Z) : bool :=          (* strcmp(a, b) < 0, unsigned bytes *)
+  match a, b with
+  | [], [] => false | [], _ :: _ => true | _ :: _, [] => false
+  | x :: a', y :: b' => if x <? y then true else if y <? x then false else lt_bytes a' b'
+  end.
+
+Definition cstring_ok (bs : list Z) : bool :=        (* ends in its only NUL *)
+  match rev' bs with 0 :: r => negb (existsb (fun c => c =? 0) r) | _ => false end.
+
+(* one dumpcharptr record: (its bytes, the string, the rest) *)
+Definition take_charptr (bs : list Z) : option (list Z * list Z * list Z) :=
+  match take 4 bs with
+  | Some (b4, r1) =>
+    let x := signed_of 32 (be_value b4 0) in
+    if (x <=? 0) || (Z.shiftl 1 20 <? x) then None else
+    match take (Z.to_nat x) r1 with
+    | Some (str, r2) => if cstring_ok str then Some (b4 ++ str, str, r2) else None
+    | None => None
+    end
+  | None => None
+  end.
+
+Fixpoint parse_tounicode (n : nat) (bs : list Z) (prev : option (list Z)) (acc : list Z)
+  : option (list Z * list Z) :=                       (* (record bytes, reversed), rest *)
+  match n with
+  | O => Some (acc, bs)
+  | S n' =>
+    match take_charptr bs with
+    | Some (rec1, name, r1) =>
+      if match prev with Some p => negb (lt_bytes p name) | None => false end then None else
+      match take 4 r1 with
+      | Some (cb, r2) =>
+        if signed_of 32 (be_value cb 0) =? -2 then
+          match take_charptr r2 with
+          | Some (rec2, _, r3) => parse_tounicode n' r3 (Some name) (rev_append (rec1 ++ cb ++ rec2) acc)
+          | None => None
+          end
+        else parse_tounicode n' r2 (Some name) (rev_append (rec1 ++ cb) acc)
+      | None => None
+      end
+    | None => None
+    end
+  end.
+
+Definition undump_result (r : Stuck_or (state * list cell)) (st : state) : eres :=
+  match r with Ok (st', _) => ok st' | Err s0 => EStk s0 st end.
 
 (* the model; callp calls back into the translated program *)
 Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xarg) (st : state) : eres :=
@@ -596,4 +909,224 @@ Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xa
   else if x =? X_uexit then
     match args with [a] => match xint st a with Some c => EHalt c st | None => EStk (StType "uexit") st end
                | _ => EStk (StType "uexit arity") st end
+  (* cpascal.h ucharcast(x) ((unsigned char) (x)): conversion to unsigned char, modulo 256
+     (C11 6.3.1.3), then promoted to int *)
+  else if x =? X_ucharcast then
+    match args with
+    | [a] => match xint st a with Some z => EOk (VI TI32 (Z.modulo z 256)) st
+                                | None => EStk (StType "ucharcast") st end
+    | _ => EStk (StType "ucharcast arity") st
+    end
+  (* C strlen(s): the number of bytes before the NUL, as size_t (the translator types it
+     as a 64-bit integer) *)
+  else if x =? X_strlen then
+    match args with
+    | [a] => match xstring st a with Some b => EOk (VI TI64 (Z.of_nat (List.length b))) st
+                                   | None => EStk (StType "strlen") st end
+    | _ => EStk (StType "strlen arity") st
+    end
+  (* C strcpy(d, s): the bytes of s and its NUL to d's cells; d is returned. Overlapping
+     objects are undefined: here, the same block is Stuck *)
+  else if x =? X_strcpy then
+    match args with
+    | [d; s0] => match xptr st d, xstring st s0, xptr st s0 with
+                 | Some (VP db dofs), Some b, Some (VP sb _) =>
+                   if db =? sb then EStk (StOther "strcpy within one object") st else
+                   match put_cells (map KInt (b ++ [0])) db dofs st with
+                   | Some st1 => EOk (VP db dofs) st1
+                   | None => EStk (StBounds "strcpy") st
+                   end
+                 | _, _, _ => EStk (StType "strcpy arguments") st
+                 end
+    | _ => EStk (StType "strcpy arity") st
+    end
+  (* texmfmp.c getcreationdate: initstarttime() (already run at start-up: a no-op); len =
+     strlen(start_time_str); if (unsigned)(poolptr + len) >= (unsigned) poolsize then
+     poolptr = poolsize and return; else memcpy into strpool at poolptr, poolptr += len *)
+  else if x =? X_getcreationdate then
+    if negb (cstate st CS_start_time_set =? 1) then EStk (StExternal "getcreationdate before initstarttime (not modelled)") st else
+    match start_time_str st, gptr st G_strpool, gint st G_poolptr, gint st G_poolsize with
+    | Some str, Some (pb, po), Some pp, Some ps =>
+      let len := Z.of_nat (List.length str) in
+      if (pp <? 0) || (ps <? 0) then EStk (StConv "getcreationdate: unsigned comparison of a negative value") st else
+      if ps <=? pp + len then
+        match gput st G_poolptr (KInt ps) with Some st1 => ok st1 | None => EStk (StBounds "getcreationdate") st end
+      else
+        match put_cells (map KInt str) pb (po + pp) st with
+        | Some st1 => match gput st1 G_poolptr (KInt (pp + len)) with Some st2 => ok st2 | None => EStk (StBounds "getcreationdate") st1 end
+        | None => EStk (StBounds "getcreationdate") st
+        end
+    | None, _, _, _ => EStk (StExternal "getcreationdate: start_time_str of the real clock (localtime)") st
+    | _, _, _, _ => EStk (StType "getcreationdate globals") st
+    end
+  (* ---- spike H.3: the format file (see wopenin and do_undump above) ---- *)
+  else if x =? X_wopenin then
+    match args with [a] => wopenin st a | _ => EStk (StType "wopenin arity") st end
+  else if x =? X_wopenout then
+    match args with [a] => wopenout st a | _ => EStk (StType "wopenout arity") st end
+  (* texmfmp.h wclose(f) = gzclose(f): a read stream is dropped; a written one keeps its
+     bytes; gzclose(NULL) is an error return, no effect *)
+  else if x =? X_wclose then
+    match args with
+    | [XLoc l _ _] => match read_loc st TFILE l with
+                      | LdOk (VFile h) => ok (set_io st (io_set_in (st_io st) (drop_in h (io_in (st_io st)))))
+                      | LdOk VN => ok st
+                      | _ => EStk (StType "wclose") st end
+    | _ => EStk (StType "wclose arity") st
+    end
+  (* texmfmp.h undumpthings(base, len) = do_undump(&base (as a char pointer), sizeof (base), len, fmtfile);
+     undumpint = undumphh = generic_undump(x) = undumpthings(x, 1) (REGFIX is not defined) *)
+  else if x =? X_undumpthings then
+    match args with
+    | [b; n] => match xint st n with Some len => undump_result (do_undump st b len) st
+                                   | None => EStk (StType "undumpthings length") st end
+    | _ => EStk (StType "undumpthings arity") st
+    end
+  else if (x =? X_undumpint) || (x =? X_undumphh) then
+    match args with [b] => undump_result (do_undump st b 1) st | _ => EStk (StType "undump arity") st end
+  (* texmfmp.h undumpcheckedthings(low, high, base, len): undumpthings, then FATAL5 if an
+     item is < low or > high (not modelled: Stuck); undumpuppercheckthings(high, base, len)
+     the same with no lower bound *)
+  else if x =? X_undumpcheckedthings then
+    match args with
+    | [lo; hi; b; n] =>
+      match xint st lo, xint st hi, xint st n with
+      | Some lo', Some hi', Some len =>
+        match do_undump st b len with
+        | Ok (st1, ks) => if all_in_range lo' hi' ks then ok st1
+                          else EStk (StExternal "undumpcheckedthings: FATAL on an item out of range (not modelled)") st1
+        | Err s0 => EStk s0 st
+        end
+      | _, _, _ => EStk (StType "undumpcheckedthings") st
+      end
+    | _ => EStk (StType "undumpcheckedthings arity") st
+    end
+  else if x =? X_undumpuppercheckthings then
+    match args with
+    | [hi; b; n] =>
+      match xint st hi, xint st n with
+      | Some hi', Some len =>
+        match do_undump st b len with
+        | Ok (st1, ks) => if all_in_range (- two64) hi' ks then ok st1
+                          else EStk (StExternal "undumpuppercheckthings: FATAL on an item out of range (not modelled)") st1
+        | Err s0 => EStk s0 st
+        end
+      | _, _ => EStk (StType "undumpuppercheckthings") st
+      end
+    | _ => EStk (StType "undumpuppercheckthings arity") st
+    end
+  (* texmfmp.h dumpthings(base, len) = do_dump(&base (as a char pointer), sizeof (base), len, fmtfile);
+     dumphh = generic_dump(x) = dumpthings(x, 1) *)
+  else if x =? X_dumpthings then
+    match args with
+    | [b; n] => match xint st n with
+                | Some len => match do_dump st b len with Ok st1 => ok st1 | Err s0 => EStk s0 st end
+                | None => EStk (StType "dumpthings length") st end
+    | _ => EStk (StType "dumpthings arity") st
+    end
+  else if x =? X_dumphh then
+    match args with
+    | [b] => match do_dump st b 1 with Ok st1 => ok st1 | Err s0 => EStk s0 st end
+    | _ => EStk (StType "dumphh arity") st
+    end
+  (* texmfmp.h dumpint(x): integer x_val = (x); generic_dump(x_val): 4 bytes; a value
+     outside int is an implementation-defined conversion: Stuck *)
+  else if x =? X_dumpint then
+    match args, gfile st G_fmtfile with
+    | [a], Some h => match xint st a with
+                     | Some z => if in_i32 z then ok (emit_handle h (be_bytes 4 (Z.modulo z two32) []) st)
+                                 else EStk (StConv "dumpint: to integer") st
+                     | None => EStk (StType "dumpint") st end
+    | _, _ => EStk (StType "dumpint arguments") st
+    end
+  (* writeimg.c undumpimagemeta(major, minor, inclusion level): undumpinteger(image_limit);
+     image_array = xtalloc(image_limit, image_entry); undumpinteger(cur_image); then one
+     record per image, each re-read from its file: with images, not modelled (Stuck) *)
+  else if x =? X_undumpimagemeta then
+    match gfile st G_fmtfile with
+    | Some h =>
+      match lookup_in h (io_in (st_io st)) with
+      | Some bs =>
+        match take 4 bs with
+        | Some (b1, r1) =>
+          let lim := signed_of 32 (be_value b1 0) in
+          match take 4 r1 with
+          | Some (b2, r2) =>
+            if negb (be_value b2 0 =? 0) then EStk (StExternal "undumpimagemeta: a format with images (not modelled)") st
+            else if (lim <? 0) || (Z.shiftl 1 20 <? lim) then EStk (StExternal "undumpimagemeta: image_limit outside the modelled range") st
+            else ok (set_cstate (set_io st (io_set_in (st_io st) (set_in h r2 (io_in (st_io st))))) CS_image_limit lim)
+          | None => EStk (StExternal "do_undump: FATAL (short format file, not modelled)") st
+          end
+        | None => EStk (StExternal "do_undump: FATAL (short format file, not modelled)") st
+        end
+      | None => EStk (StType "undumpimagemeta stream") st
+      end
+    | None => EStk (StType "undumpimagemeta fmtfile") st
+    end
+  (* writeimg.c dumpimagemeta: dumpinteger(image_limit); cur_image = image_ptr - image_array
+     (0: no image was ever read, since every external that reads one is Stuck) *)
+  else if x =? X_dumpimagemeta then
+    match gfile st G_fmtfile with
+    | Some h => ok (emit_handle h (be_bytes 4 (Z.modulo (cstate st CS_image_limit) two32) [] ++ [0; 0; 0; 0]) st)
+    | None => EStk (StType "dumpimagemeta fmtfile") st
+    end
+  (* tounicode.c undumptounicode: generic_undump(remaining); 0: return; else an AVL tree
+     (not modelled: Stuck) *)
+  else if x =? X_undumptounicode then
+    match gfile st G_fmtfile with
+    | Some h =>
+      match lookup_in h (io_in (st_io st)) with
+      | Some bs => match take 4 bs with
+                   | Some (b1, r1) =>
+                     let cnt := signed_of 32 (be_value b1 0) in
+                     let st1 := set_io st (io_set_in (st_io st) (set_in h r1 (io_in (st_io st)))) in
+                     if cnt =? 0 then ok st1
+                     else if (cnt <? 0) || negb (cstate st CS_tounicode_tree =? 0) || (Z.shiftl 1 20 <? cnt)
+                     then EStk (StExternal "undumptounicode: a negative count, a second tree, or more than 2^20 records (not modelled)") st
+                     else
+                     match parse_tounicode (Z.to_nat cnt) r1 None [] with
+                     | None => EStk (StExternal "undumptounicode: a record not modelled (NULL string, inner NUL, names not strictly increasing, short file)") st
+                     | Some (racc, rest) =>
+                       let raw := rev' racc in
+                       match alloc_cells (map KInt raw) st with
+                       | None => EStk (StOther "heap blocks exhausted") st
+                       | Some (st2, b) =>
+                         let st3 := set_io st2 (io_set_in (st_io st2) (set_in h rest (io_in (st_io st2)))) in
+                         ok (set_cstate (set_cstate (set_cstate st3 CS_tounicode_tree b) CS_tounicode_count cnt)
+                                        CS_tounicode_len (Z.of_nat (List.length raw)))
+                       end
+                     end
+                   | None => EStk (StExternal "do_undump: FATAL (short format file, not modelled)") st end
+      | None => EStk (StType "undumptounicode stream") st
+      end
+    | None => EStk (StType "undumptounicode fmtfile") st
+    end
+  (* tounicode.c dumptounicode: NULL tree: count 0; else avl_count and each record in order
+     (the undumped records, kept in that order, see parse_tounicode; no external that adds
+     to the tree is modelled) *)
+  else if x =? X_dumptounicode then
+    match gfile st G_fmtfile with
+    | Some h =>
+      let b := cstate st CS_tounicode_tree in
+      if b =? 0 then ok (emit_handle h [0; 0; 0; 0] st) else
+      match read_cells (Z.to_nat (cstate st CS_tounicode_len)) b 0 st with
+      | Some ks =>
+        match fold_right (fun k acc => match k, acc with KInt v, Some r => Some (v :: r) | _, _ => None end) (Some []) ks with
+        | Some raw => ok (emit_handle h (be_bytes 4 (cstate st CS_tounicode_count) [] ++ raw) st)
+        | None => EStk (StType "dumptounicode records") st
+        end
+      | None => EStk (StBounds "dumptounicode") st
+      end
+    | None => EStk (StType "dumptounicode fmtfile") st
+    end
+  (* C strcmp(a, b): 0 when the two strings are equal; when they differ glibc returns a
+     non-zero value whose magnitude is the library's: not modelled (Stuck) *)
+  else if x =? X_strcmp then
+    match args with
+    | [a; b] => match xstring st a, xstring st b with
+                | Some sa, Some sb => if list_eq_dec_bool sa sb then EOk (VI TI32 0) st
+                                      else EStk (StExternal "strcmp of different strings (its value is glibc's)") st
+                | _, _ => EStk (StType "strcmp arguments") st end
+    | _ => EStk (StType "strcmp arity") st
+    end
   else stuck_ext x st.

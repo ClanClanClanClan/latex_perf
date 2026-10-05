@@ -11,8 +11,11 @@ usage:
       for every input, DIR/NAME/model.spec (the model's run identity, driver.ml's SPEC)
       and DIR/NAME/docker.env (the same environment for the binary, one NAME=VALUE per
       line, plus LP_CLOCK for the clock shim); DIR/inputs.txt lists the names
-  diff.py model --arch A --work DIR --ps PS.EXE [--jobs N] [--timeout S] [--only NAME...]
-      runs the model on every prepared input: DIR/NAME/model/{driver.out,handle-*}
+  diff.py model --arch A --work DIR --ps PS.EXE [--jobs N] [--timeout S] [--cap-mb M] [--only NAME...]
+      runs the model on every prepared input: DIR/NAME/model/{driver.out,handle-*}; with
+      --cap-mb, a run whose physical footprint (macOS: top's MEM, resident + compressed +
+      swapped; Linux: VmRSS + VmSwap) exceeds M MB is killed and recorded as a resource
+      limit (LIMIT), like the time-out
   (the binary side is the recipe in README.md: it starts the engine, which this
    repository's check_oracle_pin.py allows only inside _oracle.py)
   diff.py compare --arch A --work DIR [--write]
@@ -40,6 +43,7 @@ import os
 import subprocess
 import sys
 import time
+import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -114,7 +118,47 @@ def prepare(arch, work):
     print(f"prepared {len(names())} inputs for {arch} in {work}")
 
 
-def run_model(arch, work, ps, jobs, timeout, only):
+def footprint_mb(pid):
+    """The process's physical footprint in MB, or None when it is gone."""
+    if sys.platform == "darwin":
+        r = subprocess.run(["top", "-l", "1", "-pid", str(pid), "-stats", "mem"], capture_output=True, text=True)
+        lines = r.stdout.strip().splitlines()
+        m = re.fullmatch(r"([0-9.]+)([KMGB])[+-]?", lines[-1].strip()) if lines else None
+        if not m:
+            return None
+        return float(m.group(1)) * {"B": 1 / 1048576, "K": 1 / 1024, "M": 1, "G": 1024}[m.group(2)]
+    try:
+        st = Path(f"/proc/{pid}/status").read_text()
+    except OSError:
+        return None
+    kb = sum(int(x) for x in re.findall(r"^(?:VmRSS|VmSwap):\s+(\d+) kB", st, re.M))
+    return kb / 1024
+
+
+def run_capped(cmd, env, timeout, cap_mb, outf):
+    """Run cmd with stdout+stderr to outf; kill it past timeout s or cap_mb MB.
+    Returns (rc, peak_mb, why) where why is None, 'time-out' or 'memory cap'."""
+    with open(outf, "wb") as fo:
+        p = subprocess.Popen(cmd, stdout=fo, stderr=subprocess.STDOUT, env=env)
+        t0, peak, why = time.time(), 0.0, None
+        while p.poll() is None:
+            if cap_mb:
+                mb = footprint_mb(p.pid)
+                if mb is not None:
+                    peak = max(peak, mb)
+                    if mb > cap_mb:
+                        why = "memory cap"
+            if why is None and time.time() - t0 > timeout:
+                why = "time-out"
+            if why:
+                p.kill()
+                p.wait()
+                break
+            time.sleep(1.0)
+        return p.returncode, peak, why
+
+
+def run_model(arch, work, ps, jobs, timeout, only, cap_mb=None):
     todo = only or (work / "inputs.txt").read_text().split()
     ps_sha = sha(Path(ps).read_bytes())
 
@@ -126,16 +170,16 @@ def run_model(arch, work, ps, jobs, timeout, only):
             f.unlink()
         env = dict(os.environ, PS_DUMPDIR=str(m), PS_PROCNAMES=str(Path(ps).parent.parent / "procnames.txt"))
         t0 = time.time()
-        try:
-            p = subprocess.run([ps, "4000000000", str(d / "model.spec"), str(d / "stdin")],
-                               capture_output=True, env=env, timeout=timeout)
-            out, rc = p.stdout + p.stderr, p.returncode
-        except subprocess.TimeoutExpired as e:
-            out, rc = (e.stdout or b"") + b"\nRESULT: model resource limit: time-out\n", -1
+        rc, peak, why = run_capped([ps, "4000000000", str(d / "model.spec"), str(d / "stdin")], env, timeout,
+                                   cap_mb, m / "driver.out")
         wall = time.time() - t0
-        (m / "driver.out").write_bytes(out)
+        if why:
+            with open(m / "driver.out", "ab") as fo:
+                fo.write(b"\nRESULT: model resource limit: " + why.encode() + b"\n")
+            rc = -1
         (m / "run.json").write_text(json.dumps({"ps_sha256": ps_sha, "rc": rc, "wall_s": round(wall, 2),
-                                                "load1": os.getloadavg()[0]}) + "\n")
+                                                "load1": os.getloadavg()[0], "cap_mb": cap_mb,
+                                                "peak_footprint_mb": round(peak) if cap_mb else None}) + "\n")
         return n, wall
 
     with ThreadPoolExecutor(jobs) as ex:
@@ -210,7 +254,9 @@ def main():
         prepare(arch, work)
     elif cmd == "model":
         only = sys.argv[sys.argv.index("--only") + 1:] if "--only" in sys.argv else None
-        run_model(arch, work, opt("--ps"), int(opt("--jobs", "4")), int(opt("--timeout", "900")), only)
+        cap = opt("--cap-mb")
+        run_model(arch, work, opt("--ps"), int(opt("--jobs", "4")), int(opt("--timeout", "900")), only,
+                  int(cap) if cap else None)
     elif cmd == "compare":
         compare(arch, work, "--write" in sys.argv)
     else:

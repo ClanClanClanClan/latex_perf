@@ -9,7 +9,9 @@ t0=$(date +%s); peak=0
 while kill -0 $pid 2>/dev/null; do
   # top's MEM is the physical footprint: resident plus compressed and swapped pages (ps's RSS
   # drops when the system pages the process out, so it cannot cap a process under pressure)
-  m=$(top -l 1 -pid $pid -stats mem 2>/dev/null | tail -1 | tr -d ' +-'); [ -z "$m" ] && break
+  m=$(top -l 1 -pid $pid -stats mem 2>/dev/null | tail -1 | tr -d ' +-')
+  # no reading (top failed, or the process just ended): poll again; never stop capping
+  if [ -z "$m" ]; then sleep 0.5; continue; fi
   mb=$(print -r -- $m | awk '/G$/{printf "%d", $0*1024; next} /M$/{printf "%d", $0; next} /K$/{printf "%d", $0/1024; next} {print 0}')
   [ $mb -gt $peak ] && peak=$mb
   el=$(( $(date +%s) - t0 )); print "$el\t$mb" >> $out/rss.tsv

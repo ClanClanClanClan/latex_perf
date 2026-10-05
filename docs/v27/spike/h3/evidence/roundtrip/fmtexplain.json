@@ -1,0 +1,2626 @@
+{
+ "streams": {
+  "shipped": {
+   "bytes": 11621149,
+   "sha256": "6fccc888937067b4de842d81e280764bd9a65f39d2417bfba6cebdd48705de93"
+  },
+  "round_trip": {
+   "bytes": 11621681,
+   "sha256": "55629ae0caf61d68710bf29b91fe8729de2a846823c30c4667f86cc2d0f46db8"
+  }
+ },
+ "elements": {
+  "shipped": 3338623,
+  "round_trip": 3338996,
+  "unchanged": 3338224
+ },
+ "checks": {
+  "decode+encode is the identity on both streams": {
+   "ok": true
+  },
+  "the binary's dump statistics (texput.log) equal the decoded counts": {
+   "ok": true,
+   "detail": []
+  },
+  "S: the shipped string pool is an exact prefix of the round trip's": {
+   "ok": true
+  },
+  "F: the format identifier is the last string, §1508's ' (preloaded format=JOB Y.M.D)' for job texput and the run's \\year.\\month.\\day": {
+   "ok": true,
+   "detail": " (preloaded format=texput 2026.8.30)"
+  },
+  "S: the second-to-last new string is the log file's name (open_log_file)": {
+   "ok": true
+  },
+  "S: the first new string is the banner load_fmt_file's makepdftexbanner makes": {
+   "ok": true,
+   "detail": "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) kpathsea version 6.4.2"
+  },
+  "H: replaying id_lookup for the 9 new names on the shipped hash gives the round trip's hash, hash_used and hash_high": {
+   "ok": true,
+   "detail": {
+    "placed": {
+     "3912": "sys_if_shell_restricted:T",
+     "3961": "sys_if_shell_unrestricted:F",
+     "51557": "sys_if_shell:F",
+     "51558": "sys_if_shell_p:",
+     "51559": "sys_if_shell_unrestricted:T",
+     "51560": "sys_if_shell_unrestricted:TF",
+     "51561": "sys_if_shell_unrestricted_p:",
+     "51562": "sys_if_shell_restricted:TF",
+     "51563": "sys_if_shell_restricted_p:"
+    },
+    "hash_high": [
+     21364,
+     21371
+    ]
+   }
+  },
+  "H: cs_count is §1318's 15513 - hash_used + hash_high + (entries dumped sparsely), shipped": {
+   "ok": true
+  },
+  "H: cs_count is §1318's 15513 - hash_used + hash_high + (entries dumped sparsely), round trip": {
+   "ok": true
+  },
+  "E: the eqtb entries that differ are exactly the contract generator's \\everyjob names (its own trace of the \\everyjob replay)": {
+   "ok": true,
+   "detail": {
+    "differing": 29,
+    "everyjob_names": 29
+   }
+  },
+  "M: no word of variable-size (lo) memory differs, and lo_mem_max, rover, sa_root, hi_mem_min agree": {
+   "ok": true
+  },
+  "M: the round trip's free list is cells pushed on a suffix of the shipped one (a stack)": {
+   "ok": true,
+   "detail": {
+    "shipped_free": 31184,
+    "round_trip_free": 31480,
+    "common_suffix": 30854,
+    "popped": 330,
+    "pushed": 626
+   }
+  },
+  "M: dyn_used = mem_end + 1 - hi_mem_min - free cells (shipped)": {
+   "ok": true
+  },
+  "M: dyn_used = mem_end + 1 - hi_mem_min - free cells (round trip)": {
+   "ok": true
+  },
+  "M-live: the popped cells that are live now are exactly the cells of the new token lists": {
+   "ok": true,
+   "detail": {
+    "cells": 33
+   }
+  },
+  "M-freed: the cells free now that were live are exactly the cells of the freed old lists": {
+   "ok": true,
+   "detail": {
+    "cells": 329
+   }
+  },
+  "M-refcount: every list the changed entries point to (or pointed to) has the reference count its eqtb references give (ref_count = null + references - 1), before and after": {
+   "ok": true,
+   "detail": {
+    "4623170": [
+     1,
+     2,
+     0,
+     1,
+     true
+    ],
+    "4996426": [
+     21,
+     24,
+     20,
+     23,
+     true
+    ],
+    "4964812": [
+     1,
+     0,
+     0,
+     0,
+     true
+    ],
+    "4996880": [
+     10,
+     11,
+     9,
+     10,
+     true
+    ],
+    "4603218": [
+     0,
+     1,
+     268438385,
+     0,
+     true
+    ],
+    "4996885": [
+     3,
+     5,
+     2,
+     4,
+     true
+    ],
+    "4795613": [
+     1,
+     2,
+     0,
+     1,
+     true
+    ],
+    "4602537": [
+     0,
+     1,
+     268438386,
+     0,
+     true
+    ],
+    "4986991": [
+     323,
+     323,
+     322,
+     322,
+     true
+    ],
+    "4662768": [
+     0,
+     1,
+     268482771,
+     0,
+     true
+    ],
+    "4996913": [
+     13,
+     16,
+     12,
+     15,
+     true
+    ],
+    "4622449": [
+     1,
+     2,
+     0,
+     1,
+     true
+    ],
+    "4795443": [
+     1,
+     2,
+     0,
+     1,
+     true
+    ],
+    "4794742": [
+     1,
+     0,
+     0,
+     0,
+     true
+    ],
+    "4568191": [
+     1,
+     2,
+     0,
+     1,
+     true
+    ]
+   }
+  },
+  "M-freed: a freed cell differs only in its link, and only if it was its list's last cell": {
+   "ok": true
+  },
+  "M-scratch: temp_head's and garbage's links point to cells the run freed, to temp_head (the_toks of an empty list) or are null; their info fields are unchanged": {
+   "ok": true,
+   "detail": {
+    "temp_head": [
+     [
+      4619928,
+      -268435455
+     ],
+     [
+      4640316,
+      -268435455
+     ]
+    ],
+    "garbage": [
+     [
+      4603129,
+      -268435455
+     ],
+     [
+      4999996,
+      -268435455
+     ]
+    ]
+   }
+  },
+  "T: replaying the model's mem writes of the run (after load_fmt_file returns) on the shipped mem gives the round trip's mem: every written word ends with the dumped value": {
+   "ok": true,
+   "detail": {
+    "writes": 15956,
+    "words_written": 430
+   }
+  },
+  "T: every differing mem word was written during the run": {
+   "ok": true
+  }
+ },
+ "by_cause": {
+  "E": {
+   "changed": {
+    "elements": 19,
+    "bytes": 86
+   },
+   "new": {
+    "elements": 10,
+    "bytes": 80
+   }
+  },
+  "F": {
+   "changed": {
+    "elements": 1,
+    "bytes": 1
+   }
+  },
+  "H": {
+   "changed": {
+    "elements": 9,
+    "bytes": 17
+   },
+   "new": {
+    "elements": 11,
+    "bytes": 80
+   }
+  },
+  "M": {
+   "changed": {
+    "elements": 2,
+    "bytes": 5
+   }
+  },
+  "M-freed": {
+   "changed": {
+    "elements": 2,
+    "bytes": 8
+   }
+  },
+  "M-live": {
+   "changed": {
+    "elements": 33,
+    "bytes": 104
+   }
+  },
+  "M-refcount": {
+   "changed": {
+    "elements": 9,
+    "bytes": 9
+   }
+  },
+  "M-scratch": {
+   "changed": {
+    "elements": 2,
+    "bytes": 5
+   }
+  },
+  "M-temp": {
+   "changed": {
+    "elements": 305,
+    "bytes": 751
+   }
+  },
+  "R": {
+   "changed": {
+    "elements": 5,
+    "bytes": 5
+   },
+   "new": {
+    "elements": 2,
+    "bytes": 16
+   },
+   "removed": {
+    "elements": 10,
+    "bytes": 40
+   }
+  },
+  "S": {
+   "changed": {
+    "elements": 2,
+    "bytes": 3
+   },
+   "new": {
+    "elements": 360,
+    "bytes": 396
+   }
+  }
+ },
+ "m_temp": {
+  "cells": 305,
+  "restored_in_place": 13,
+  "link_bytes": 214,
+  "info_bytes_dead_data": 537,
+  "info_as_tokens_in_free_list_order": [
+   "\\g__sys_everyjob_tl",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:i",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11::",
+   "11:T",
+   "2:}",
+   "\\use:n",
+   "\\cs_new_eq:cN",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11::",
+   "11:F",
+   "2:}",
+   "\\use_none:n",
+   "\\cs_new_eq:cN",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:i",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11::",
+   "11:T",
+   "11:F",
+   "2:}",
+   "\\use_i:nn",
+   "\\cs_new_eq:cN",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:i",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11:_",
+   "11:p",
+   "11::",
+   "2:}",
+   "\\c_true_bool",
+   "\\cs_new_eq:cN",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:i",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11::",
+   "11:T",
+   "2:}",
+   "\\use_none:n",
+   "\\cs_new_eq:cN",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:i",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11::",
+   "11:F",
+   "2:}",
+   "\\use:n",
+   "\\cs_new_eq:cN",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:i",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11::",
+   "11:T",
+   "11:F",
+   "\\use_ii:nn",
+   "\\cs_new_eq:cN",
+   "1:{",
+   "11:s",
+   "11:y",
+   "11:s",
+   "11:_",
+   "11:i",
+   "11:f",
+   "11:_",
+   "11:s",
+   "11:h",
+   "11:e",
+   "11:l",
+   "11:l",
+   "11:_",
+   "11:r",
+   "11:e",
+   "11:s",
+   "11:t",
+   "11:r",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11:_",
+   "11:p",
+   "11::",
+   "\\c_false_bool",
+   "\\sys_if_shell_restricted_p:",
+   "\\sys_if_shell_restricted_p:",
+   "1:{",
+   "11:k",
+   "11:e",
+   "11:r",
+   "11:n",
+   "11:e",
+   "11:l",
+   "2:}",
+   "1:{",
+   "11:c",
+   "11:o",
+   "11:m",
+   "11:m",
+   "11:a",
+   "11:n",
+   "11:d",
+   "12:-",
+   "11:a",
+   "11:l",
+   "11:r",
+   "11:e",
+   "11:a",
+   "11:d",
+   "11:y",
+   "12:-",
+   "11:d",
+   "11:e",
+   "11:f",
+   "11:i",
+   "11:n",
+   "11:e",
+   "11:d",
+   "2:}",
+   "1:{",
+   "\\token_to_str:N",
+   "\\sys_if_shell_restricted_p:",
+   "2:}",
+   "1:{",
+   "\\token_to_meaning:N",
+   "\\sys_if_shell_restricted_p:",
+   "2:}",
+   "\\sys_if_shell_restricted_p:",
+   "1:{",
+   "2:}",
+   "11:i",
+   "11:c",
+   "11:t",
+   "11:e",
+   "11:d",
+   "11:_",
+   "11:p",
+   "11::",
+   "2:}",
+   "1:{",
+   "\\token_to_meaning:N",
+   "\\sys_if_shell_unrestricted_p:",
+   "2:}",
+   "\\sys_if_shell_unrestricted_p:",
+   "1:{",
+   "|in place:",
+   "11:i",
+   "11:p",
+   "2:}",
+   "11:c",
+   "11:e",
+   "11::",
+   "11:_",
+   "11:s",
+   "11:e",
+   "11:r",
+   "11:d",
+   "11:t",
+   "11:t"
+  ]
+ },
+ "naive_equal_offset_comparison": {
+  "whole_streams": {
+   "differing_bytes": 5443537,
+   "in_elements_unchanged_but_moved": 5440744,
+   "in_changed_or_new_elements_by_cause": {
+    "H": 97,
+    "S": 399,
+    "M": 6,
+    "M-refcount": 63,
+    "M-temp": 1835,
+    "M-live": 202,
+    "M-freed": 11,
+    "M-scratch": 10,
+    "E": 147,
+    "R": 23
+   }
+  },
+  "after_the_string_pool (fmtdiff.py's 1,881,851)": {
+   "differing_bytes": 1881851,
+   "in_elements_unchanged_but_moved": 1880748,
+   "in_changed_or_new_elements_by_cause": {
+    "M": 5,
+    "M-refcount": 9,
+    "M-temp": 751,
+    "M-live": 104,
+    "M-freed": 8,
+    "M-scratch": 5,
+    "E": 130,
+    "R": 11,
+    "H": 80
+   }
+  }
+ },
+ "new_strings": [
+  "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) kpathsea version 6.4.2",
+  "sys_if_shell:F",
+  "sys_if_shell_p:",
+  "sys_if_shell_unrestricted:T",
+  "sys_if_shell_unrestricted:F",
+  "sys_if_shell_unrestricted:TF",
+  "sys_if_shell_unrestricted_p:",
+  "sys_if_shell_restricted:T",
+  "sys_if_shell_restricted:TF",
+  "sys_if_shell_restricted_p:",
+  "texput.log",
+  " (preloaded format=texput 2026.8.30)"
+ ],
+ "eqtb_changes": {
+  "c_sys_shell_escape_int": {
+   "loc": 1441,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 69,
+    "eq_level": 1,
+    "equiv": 2
+   }
+  },
+  "sys_rand_seed:": {
+   "loc": 2319,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4602537,
+    "tokens": "14:\u0000 \\tex_the:D \\tex_randomseed:D"
+   }
+  },
+  "sys_if_shell_restricted:T": {
+   "loc": 3912,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996913,
+    "tokens": "13:# 14:\u0000 5:\u0001"
+   }
+  },
+  "sys_if_shell_unrestricted:F": {
+   "loc": 3961,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996913,
+    "tokens": "13:# 14:\u0000 5:\u0001"
+   }
+  },
+  "sys_if_shell:TF": {
+   "loc": 4299,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996885,
+    "tokens": "13:# 13:# 14:\u0000 5:\u0001"
+   }
+  },
+  "c_sys_jobname_str": {
+   "loc": 4881,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 111,
+    "eq_level": 1,
+    "equiv": 33
+   }
+  },
+  "c_sys_year_int": {
+   "loc": 5466,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 69,
+    "eq_level": 1,
+    "equiv": 2026
+   }
+  },
+  "sys_if_shell:T": {
+   "loc": 6622,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996913,
+    "tokens": "13:# 14:\u0000 5:\u0001"
+   }
+  },
+  "sys_gset_rand_seed:n": {
+   "loc": 8131,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4603218,
+    "tokens": "14:\u0001 13:# 14:\u0000 \\tex_setrandomseed:D \\int_eval:n 1:{ 5:\u0001 2:} \\exp_stop_f:"
+   }
+  },
+  "c_sys_timestamp_str": {
+   "loc": 8134,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 114,
+    "eq_level": 1,
+    "token_list": 4662768,
+    "tokens": "14:\u0000 12:D 12:: 12:2 12:0 12:2 12:6 12:0 12:8 12:3 12:0 12:0 12:7 12:5 12:1 12:0 12:0 12:Z"
+   }
+  },
+  "g__sys_everyjob_tl": {
+   "loc": 31525,
+   "shipped": {
+    "eq_type": 114,
+    "eq_level": 1,
+    "token_list": 4964812,
+    "tokens": "14:\u0000 \\cs_new_eq:NN \\c_sys_jobname_str \\tex_jobname:D \\group_begin: \\cs_set:Npn \\__sys_tmp:w 6:# 12:1 1:{ \\str_if_eq:eeTF 1:{ \\cs_meaning:N 6:# 12:1 2:} 1:{ \\token_to_str:N 6:# 12:1 2:} 1:{ 6:# 12:1 2:} 1:{ \\cs_if_exist:NTF \\tex_primitive:D 1:{ \\bool_lazy_and:nnTF 1:{ \\sys_if_engine_xetex_p: 2:} 1:{ \\int_compare_p:nNn 1:{ \\exp_after:wN \\use_none:n \\tex_XeTeXrevision:D 2:} 12:< 1:{ 12:9 12:9 12:9 12"
+   },
+   "round_trip": {
+    "eq_type": 114,
+    "eq_level": 1,
+    "token_list": 4986991,
+    "tokens": "14:\u0000"
+   }
+  },
+  "c_sys_minute_int": {
+   "loc": 31527,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 69,
+    "eq_level": 1,
+    "equiv": 51
+   }
+  },
+  "c_sys_hour_int": {
+   "loc": 31528,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 69,
+    "eq_level": 1,
+    "equiv": 7
+   }
+  },
+  "c_sys_day_int": {
+   "loc": 31529,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 69,
+    "eq_level": 1,
+    "equiv": 30
+   }
+  },
+  "c_sys_month_int": {
+   "loc": 31530,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 69,
+    "eq_level": 1,
+    "equiv": 8
+   }
+  },
+  "sys_if_shell_restricted:F": {
+   "loc": 31536,
+   "shipped": {
+    "eq_type": 104,
+    "eq_level": 0,
+    "equiv": -268435455
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996426,
+    "tokens": "13:# 14:\u0000"
+   }
+  },
+  "g_file_curr_name_str": {
+   "loc": 31541,
+   "shipped": {
+    "eq_type": 114,
+    "eq_level": 1,
+    "token_list": 4986991,
+    "tokens": "14:\u0000"
+   },
+   "round_trip": {
+    "eq_type": 111,
+    "eq_level": 1,
+    "equiv": 33
+   }
+  },
+  "UTFviii@two@octets": {
+   "loc": 41755,
+   "shipped": {
+    "eq_type": 111,
+    "eq_level": 1,
+    "equiv": 2
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4795613,
+    "tokens": "14:\u0000 \\ifincsname \\expandafter \\UTF@two@octets@string \\else \\ifx \\protect \\@typeset@protect \\else \\expandafter \\expandafter \\expandafter \\UTF@two@octets@noexpand \\fi \\fi \\UTFviii@two@octets@combine"
+   }
+  },
+  "UTFviii@three@octets": {
+   "loc": 41756,
+   "shipped": {
+    "eq_type": 111,
+    "eq_level": 1,
+    "equiv": 2
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4795443,
+    "tokens": "14:\u0000 \\ifincsname \\expandafter \\UTF@three@octets@string \\else \\ifx \\protect \\@typeset@protect \\else \\expandafter \\expandafter \\expandafter \\UTF@three@octets@noexpand \\fi \\fi \\UTFviii@three@octets@combine"
+   }
+  },
+  "UTFviii@four@octets": {
+   "loc": 41757,
+   "shipped": {
+    "eq_type": 111,
+    "eq_level": 1,
+    "equiv": 2
+   },
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4623170,
+    "tokens": "14:\u0000 \\ifincsname \\expandafter \\UTF@four@octets@string \\else \\ifx \\protect \\@typeset@protect \\else \\expandafter \\expandafter \\expandafter \\UTF@four@octets@noexpand \\fi \\fi \\UTFviii@four@octets@combine"
+   }
+  },
+  "UTFviii@undefined@err": {
+   "loc": 50877,
+   "shipped": {
+    "eq_type": 114,
+    "eq_level": 1,
+    "token_list": 4794742,
+    "tokens": "13:# 14:\u0000 \\@gobble 5:\u0001"
+   },
+   "round_trip": {
+    "eq_type": 114,
+    "eq_level": 1,
+    "token_list": 4622449,
+    "tokens": "13:# 14:\u0000 \\@latex@error 1:{ 11:U 11:n 11:i 11:c 11:o 11:d 11:e 10:  11:c 11:h 11:a 11:r 11:a 11:c 11:t 11:e 11:r 10:  \\expandafter \\UTFviii@splitcsname \\string 5:\u0001 \\relax \\MessageBreak 11:n 11:o 11:t 10:  11:s 11:e 11:t 10:  11:u 11:p 10:  11:f 11:o 11:r 10:  11:u 11:s 11:e 10:  11:w 11:i 11:t 11:h 10:  11:L 11:a 11:T 11:e 11:X 2:} 1:{ 11:Y 11:o 11:u 10:  11:m 11:a 11:y 10:  11:p 11:r 11:o 11:v 11"
+   }
+  },
+  "UTFviii@invalid@err": {
+   "loc": 50879,
+   "shipped": {
+    "eq_type": 111,
+    "eq_level": 1,
+    "equiv": 2
+   },
+   "round_trip": {
+    "eq_type": 114,
+    "eq_level": 1,
+    "token_list": 4568191,
+    "tokens": "13:# 14:\u0000 \\@latex@error 1:{ 11:I 11:n 11:v 11:a 11:l 11:i 11:d 10:  11:U 11:T 11:F 12:- 12:8 10:  11:b 11:y 11:t 11:e 10:  12:\" \\UTFviii@hexnumber 1:{ 12:` 5:\u0001 2:} 2:} \\UTFviii@invalid@help"
+   }
+  },
+  "sys_if_shell:F": {
+   "loc": 51557,
+   "shipped": "not present (a new entry)",
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996426,
+    "tokens": "13:# 14:\u0000"
+   }
+  },
+  "sys_if_shell_p:": {
+   "loc": 51558,
+   "shipped": "not present (a new entry)",
+   "round_trip": {
+    "eq_type": 68,
+    "eq_level": 1,
+    "equiv": 1
+   }
+  },
+  "sys_if_shell_unrestricted:T": {
+   "loc": 51559,
+   "shipped": "not present (a new entry)",
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996426,
+    "tokens": "13:# 14:\u0000"
+   }
+  },
+  "sys_if_shell_unrestricted:TF": {
+   "loc": 51560,
+   "shipped": "not present (a new entry)",
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996880,
+    "tokens": "13:# 13:# 14:\u0000 5:\u0002"
+   }
+  },
+  "sys_if_shell_unrestricted_p:": {
+   "loc": 51561,
+   "shipped": "not present (a new entry)",
+   "round_trip": {
+    "eq_type": 68,
+    "eq_level": 1,
+    "equiv": 0
+   }
+  },
+  "sys_if_shell_restricted:TF": {
+   "loc": 51562,
+   "shipped": "not present (a new entry)",
+   "round_trip": {
+    "eq_type": 115,
+    "eq_level": 1,
+    "token_list": 4996885,
+    "tokens": "13:# 13:# 14:\u0000 5:\u0001"
+   }
+  },
+  "sys_if_shell_restricted_p:": {
+   "loc": 51563,
+   "shipped": "not present (a new entry)",
+   "round_trip": {
+    "eq_type": 68,
+    "eq_level": 1,
+    "equiv": 1
+   }
+  }
+ },
+ "trace": {
+  "last_writer_by_class": {
+   "M-refcount": {
+    "prefixedcommand": 6,
+    "deletetokenref": 3
+   },
+   "M-temp": {
+    "macrocall": 276,
+    "expand": 18,
+    "flushlist": 11
+   },
+   "M-live": {
+    "scantoks": 14,
+    "strtoks": 17,
+    "prefixedcommand": 2
+   },
+   "M-freed": {
+    "flushlist": 2
+   },
+   "M-scratch": {
+    "insthetoks": 1,
+    "macrocall": 1
+   }
+  },
+  "m_temp_last_writes": {
+   "4598420": {
+    "seq": 14192,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4598424": {
+    "seq": 14018,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4598425": {
+    "seq": 14189,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\cs_new_eq:cN"
+   },
+   "4598426": {
+    "seq": 13825,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\cs_new_eq:cN"
+   },
+   "4598432": {
+    "seq": 14327,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4598444": {
+    "seq": 14324,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4598456": {
+    "seq": 12996,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4598466": {
+    "seq": 14321,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4598644": {
+    "seq": 13918,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4598709": {
+    "seq": 14339,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4598716": {
+    "seq": 15689,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4598722": {
+    "seq": 14255,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4598730": {
+    "seq": 14171,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4598731": {
+    "seq": 15790,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4598733": {
+    "seq": 14312,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4598770": {
+    "seq": 14345,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4598771": {
+    "seq": 13816,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:F"
+   },
+   "4598774": {
+    "seq": 14051,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4598781": {
+    "seq": 15796,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4598783": {
+    "seq": 15814,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:m"
+   },
+   "4598791": {
+    "seq": 13693,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4598801": {
+    "seq": 14054,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4598802": {
+    "seq": 13780,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4598816": {
+    "seq": 13738,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\cs_new_eq:cN"
+   },
+   "4598817": {
+    "seq": 15922,
+    "chain": "flushlist<endtokenlist<getnext<getxtoken<maincontrol<mainbody",
+    "info_token": "\\c_true_bool"
+   },
+   "4598818": {
+    "seq": 13711,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4598827": {
+    "seq": 14252,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4598828": {
+    "seq": 15799,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4598829": {
+    "seq": 13798,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4598910": {
+    "seq": 13921,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4598922": {
+    "seq": 13014,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:p"
+   },
+   "4598928": {
+    "seq": 13774,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4598933": {
+    "seq": 14306,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4598951": {
+    "seq": 13828,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4598960": {
+    "seq": 14270,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:F"
+   },
+   "4598968": {
+    "seq": 14318,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4599071": {
+    "seq": 13208,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\sys_if_shell_unrestricted_p:"
+   },
+   "4599085": {
+    "seq": 13783,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4599157": {
+    "seq": 13978,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4599185": {
+    "seq": 15907,
+    "chain": "flushlist<endtokenlist<macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\sys_if_shell_restricted_p:"
+   },
+   "4599199": {
+    "seq": 14156,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4599225": {
+    "seq": 13786,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4599236": {
+    "seq": 13963,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4599276": {
+    "seq": 14333,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4599293": {
+    "seq": 14039,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4599360": {
+    "seq": 13831,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4599362": {
+    "seq": 13948,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4599393": {
+    "seq": 15895,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\token_to_meaning:N"
+   },
+   "4599401": {
+    "seq": 13202,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4599404": {
+    "seq": 14264,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4599424": {
+    "seq": 13720,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4599456": {
+    "seq": 13657,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4599477": {
+    "seq": 15904,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4599478": {
+    "seq": 15841,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4599483": {
+    "seq": 15910,
+    "chain": "flushlist<endtokenlist<getnext<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4599519": {
+    "seq": 14279,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\cs_new_eq:cN"
+   },
+   "4599538": {
+    "seq": 14063,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4599539": {
+    "seq": 13897,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4599607": {
+    "seq": 14057,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4599634": {
+    "seq": 14150,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4599640": {
+    "seq": 13900,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4599643": {
+    "seq": 14216,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4599651": {
+    "seq": 14108,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4599667": {
+    "seq": 13810,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4599716": {
+    "seq": 14249,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4599735": {
+    "seq": 13906,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:F"
+   },
+   "4599738": {
+    "seq": 13744,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4599773": {
+    "seq": 13840,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4599903": {
+    "seq": 13759,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4599958": {
+    "seq": 13930,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4599965": {
+    "seq": 14066,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4599981": {
+    "seq": 15832,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:a"
+   },
+   "4600006": {
+    "seq": 14237,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4600014": {
+    "seq": 13969,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4600088": {
+    "seq": 14351,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4600116": {
+    "seq": 14045,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4600124": {
+    "seq": 14183,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4600193": {
+    "seq": 15704,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:p"
+   },
+   "4600241": {
+    "seq": 13888,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4600283": {
+    "seq": 15865,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4600341": {
+    "seq": 13705,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4600349": {
+    "seq": 13696,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4600359": {
+    "seq": 13819,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4600493": {
+    "seq": 14231,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4600523": {
+    "seq": 14042,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4600562": {
+    "seq": 13723,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4600588": {
+    "seq": 14303,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4600600": {
+    "seq": 15793,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:n"
+   },
+   "4600602": {
+    "seq": 14132,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4600704": {
+    "seq": 13849,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4600841": {
+    "seq": 15811,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:o"
+   },
+   "4600913": {
+    "seq": 14180,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:F"
+   },
+   "4600927": {
+    "seq": 14144,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4600956": {
+    "seq": 14081,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4600978": {
+    "seq": 15877,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4600980": {
+    "seq": 14153,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4600983": {
+    "seq": 15919,
+    "chain": "flushlist<endtokenlist<getnext<gettoken<prefixedcommand<maincontrol<mainbody",
+    "info_token": "\\sys_if_shell_restricted_p:"
+   },
+   "4601000": {
+    "seq": 15784,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:k"
+   },
+   "4601064": {
+    "seq": 15856,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4601078": {
+    "seq": 13933,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4601104": {
+    "seq": 15874,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4601115": {
+    "seq": 14096,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4601190": {
+    "seq": 15817,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:m"
+   },
+   "4601279": {
+    "seq": 13717,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4601357": {
+    "seq": 14258,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4601379": {
+    "seq": 13879,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4601427": {
+    "seq": 14129,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4601445": {
+    "seq": 13813,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4601510": {
+    "seq": 14309,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4601523": {
+    "seq": 14243,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4601638": {
+    "seq": 13690,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4601695": {
+    "seq": 14360,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4601738": {
+    "seq": 13915,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\cs_new_eq:cN"
+   },
+   "4601824": {
+    "seq": 13942,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4601941": {
+    "seq": 14099,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\use_none:n"
+   },
+   "4601948": {
+    "seq": 13699,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4601970": {
+    "seq": 13966,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4601982": {
+    "seq": 15921,
+    "chain": "flushlist<endtokenlist<getnext<getxtoken<maincontrol<mainbody",
+    "info_token": "\\c_false_bool"
+   },
+   "4602050": {
+    "seq": 13885,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4602111": {
+    "seq": 13876,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4602212": {
+    "seq": 14105,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4602220": {
+    "seq": 13214,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4602269": {
+    "seq": 15835,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4602339": {
+    "seq": 13729,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:T"
+   },
+   "4602399": {
+    "seq": 14138,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4602424": {
+    "seq": 13837,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4602469": {
+    "seq": 13822,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\use_none:n"
+   },
+   "4602519": {
+    "seq": 13834,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4602539": {
+    "seq": 14174,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4602601": {
+    "seq": 15701,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4602622": {
+    "seq": 14201,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4602632": {
+    "seq": 13750,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4602671": {
+    "seq": 14336,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4602688": {
+    "seq": 13678,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4602775": {
+    "seq": 14123,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4602794": {
+    "seq": 15805,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4602829": {
+    "seq": 13714,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4602835": {
+    "seq": 13684,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4602852": {
+    "seq": 15829,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "12:-"
+   },
+   "4602859": {
+    "seq": 15850,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4602865": {
+    "seq": 14030,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4602867": {
+    "seq": 14261,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4602934": {
+    "seq": 15853,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "12:-"
+   },
+   "4602962": {
+    "seq": 13708,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4603126": {
+    "seq": 15781,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4603174": {
+    "seq": 14021,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4603216": {
+    "seq": 13762,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4603245": {
+    "seq": 13765,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4603415": {
+    "seq": 14168,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4603449": {
+    "seq": 14075,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4603482": {
+    "seq": 13945,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4603499": {
+    "seq": 14315,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4603581": {
+    "seq": 13882,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4603587": {
+    "seq": 14186,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\use:n"
+   },
+   "4603598": {
+    "seq": 15823,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:n"
+   },
+   "4603600": {
+    "seq": 13843,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4603653": {
+    "seq": 13669,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4603656": {
+    "seq": 14159,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4603661": {
+    "seq": 14354,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4603680": {
+    "seq": 13660,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4603700": {
+    "seq": 13663,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4603740": {
+    "seq": 15698,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4603894": {
+    "seq": 14024,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4603899": {
+    "seq": 13903,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:T"
+   },
+   "4603900": {
+    "seq": 13217,
+    "chain": "flushlist<endtokenlist<macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\sys_if_shell_unrestricted_p:"
+   },
+   "4603940": {
+    "seq": 13792,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4603942": {
+    "seq": 14162,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4603968": {
+    "seq": 14210,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4604000": {
+    "seq": 13687,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4604011": {
+    "seq": 13861,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4604056": {
+    "seq": 14195,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4604067": {
+    "seq": 13891,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4604074": {
+    "seq": 13909,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4604080": {
+    "seq": 13205,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\token_to_meaning:N"
+   },
+   "4604141": {
+    "seq": 14015,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\cs_new_eq:cN"
+   },
+   "4604187": {
+    "seq": 13747,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4604190": {
+    "seq": 14357,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:p"
+   },
+   "4604225": {
+    "seq": 13675,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4604252": {
+    "seq": 13852,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4604255": {
+    "seq": 14297,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4604297": {
+    "seq": 14033,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4604398": {
+    "seq": 13987,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4604406": {
+    "seq": 14072,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4604436": {
+    "seq": 13924,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4604456": {
+    "seq": 13855,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4604461": {
+    "seq": 13215,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4604539": {
+    "seq": 14267,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:T"
+   },
+   "4604590": {
+    "seq": 15883,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\token_to_str:N"
+   },
+   "4604598": {
+    "seq": 15898,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\sys_if_shell_restricted_p:"
+   },
+   "4604704": {
+    "seq": 14111,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4604734": {
+    "seq": 14084,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4604752": {
+    "seq": 13846,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4604825": {
+    "seq": 14222,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4605035": {
+    "seq": 13873,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4605062": {
+    "seq": 14228,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4605112": {
+    "seq": 14090,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4605143": {
+    "seq": 13789,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4605209": {
+    "seq": 14246,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4605312": {
+    "seq": 14069,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4605379": {
+    "seq": 14126,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4605439": {
+    "seq": 13768,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4605619": {
+    "seq": 15692,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4605649": {
+    "seq": 13927,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4605871": {
+    "seq": 13867,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4605909": {
+    "seq": 13981,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4605956": {
+    "seq": 14120,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4605971": {
+    "seq": 15862,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4606056": {
+    "seq": 14300,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4606563": {
+    "seq": 15905,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4606622": {
+    "seq": 14204,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4606758": {
+    "seq": 13972,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4607141": {
+    "seq": 14048,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4607495": {
+    "seq": 14213,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4607725": {
+    "seq": 15787,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4607966": {
+    "seq": 13960,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4608366": {
+    "seq": 14240,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4609169": {
+    "seq": 12999,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4609193": {
+    "seq": 13999,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4609218": {
+    "seq": 13993,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:p"
+   },
+   "4614526": {
+    "seq": 15826,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4614541": {
+    "seq": 12984,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4614545": {
+    "seq": 13016,
+    "chain": "flushlist<expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4614556": {
+    "seq": 13220,
+    "chain": "flushlist<endtokenlist<getnext<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4614557": {
+    "seq": 13741,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4614798": {
+    "seq": 13975,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4615560": {
+    "seq": 13011,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4616071": {
+    "seq": 13702,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4617084": {
+    "seq": 15868,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:n"
+   },
+   "4617393": {
+    "seq": 12987,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4617398": {
+    "seq": 13870,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4617455": {
+    "seq": 15808,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4617538": {
+    "seq": 13954,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4617663": {
+    "seq": 14348,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4617673": {
+    "seq": 15871,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4617755": {
+    "seq": 13939,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4617913": {
+    "seq": 14087,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4617942": {
+    "seq": 14198,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4617970": {
+    "seq": 14165,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4618066": {
+    "seq": 14135,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4618145": {
+    "seq": 13005,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4618227": {
+    "seq": 15695,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4618267": {
+    "seq": 13681,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4618437": {
+    "seq": 14141,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4618726": {
+    "seq": 14027,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4618734": {
+    "seq": 14147,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4618745": {
+    "seq": 14288,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:y"
+   },
+   "4618809": {
+    "seq": 12993,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4618943": {
+    "seq": 13984,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4618993": {
+    "seq": 13936,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4619011": {
+    "seq": 14294,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4619058": {
+    "seq": 13732,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4619102": {
+    "seq": 13726,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4619608": {
+    "seq": 14285,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4619705": {
+    "seq": 13753,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4619814": {
+    "seq": 15889,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4619928": {
+    "seq": 15859,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4620043": {
+    "seq": 15847,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4620323": {
+    "seq": 13957,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4620325": {
+    "seq": 13672,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4620355": {
+    "seq": 14093,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:T"
+   },
+   "4620359": {
+    "seq": 13912,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\use_i:nn"
+   },
+   "4620690": {
+    "seq": 13996,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4621288": {
+    "seq": 14060,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4621289": {
+    "seq": 15686,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4621321": {
+    "seq": 14291,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4622037": {
+    "seq": 15886,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\sys_if_shell_restricted_p:"
+   },
+   "4623363": {
+    "seq": 15838,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4625310": {
+    "seq": 14225,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4626148": {
+    "seq": 15880,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4627532": {
+    "seq": 14036,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:f"
+   },
+   "4629445": {
+    "seq": 13804,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4630959": {
+    "seq": 14177,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4639465": {
+    "seq": 14342,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4640316": {
+    "seq": 15943,
+    "chain": "flushlist<endtokenlist<getnext<getxtoken<maincontrol<mainbody",
+    "info_token": "\\g__sys_everyjob_tl"
+   },
+   "4656876": {
+    "seq": 15916,
+    "chain": "flushlist<endtokenlist<macrocall<getxtoken<prefixedcommand<maincontrol<mainbody",
+    "info_token": "\\sys_if_shell_restricted_p:"
+   },
+   "4660162": {
+    "seq": 13990,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4660188": {
+    "seq": 14114,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4660263": {
+    "seq": 14234,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4660404": {
+    "seq": 14330,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:s"
+   },
+   "4660584": {
+    "seq": 14276,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\use_ii:nn"
+   },
+   "4660610": {
+    "seq": 15844,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:a"
+   },
+   "4660653": {
+    "seq": 15802,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4660888": {
+    "seq": 14207,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:i"
+   },
+   "4661006": {
+    "seq": 13008,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:d"
+   },
+   "4661058": {
+    "seq": 12990,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4661670": {
+    "seq": 13858,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4662503": {
+    "seq": 14282,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4662723": {
+    "seq": 13654,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4662824": {
+    "seq": 13795,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:r"
+   },
+   "4662893": {
+    "seq": 13951,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   },
+   "4663096": {
+    "seq": 15706,
+    "chain": "flushlist<expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11::"
+   },
+   "4663295": {
+    "seq": 13771,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4663441": {
+    "seq": 13801,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:c"
+   },
+   "4663459": {
+    "seq": 13666,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4664408": {
+    "seq": 14219,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:h"
+   },
+   "4670817": {
+    "seq": 13807,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4671393": {
+    "seq": 14102,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\cs_new_eq:cN"
+   },
+   "4671522": {
+    "seq": 13735,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "\\use:n"
+   },
+   "4671590": {
+    "seq": 14117,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:_"
+   },
+   "4671724": {
+    "seq": 13894,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:e"
+   },
+   "4672521": {
+    "seq": 15892,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "1:{"
+   },
+   "4673774": {
+    "seq": 13199,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "2:}"
+   },
+   "4674655": {
+    "seq": 13002,
+    "chain": "expand<expand<getxtoken<maincontrol<mainbody",
+    "info_token": "11:t"
+   },
+   "4675263": {
+    "seq": 15820,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:a"
+   },
+   "4793527": {
+    "seq": 13864,
+    "chain": "macrocall<getxtoken<maincontrol<mainbody",
+    "info_token": "11:l"
+   }
+  }
+ },
+ "unexplained": []
+}

@@ -59,7 +59,10 @@ Definition procs_array : array proc :=
                     (PArray.set a (Uint63.of_Z i) p, i + 1))
                  procs (PArray.make (Uint63.of_Z (Z.of_nat (List.length procs))) (mkproc [] 1%uint63 None SSkip), 0)).
 
-Definition initial_heap : array block * Z :=
+(* A function of unit, not a constant: extracted as a constant, the initial heap would be a
+   module-level value kept alive for the whole run, and with it, through the persistent
+   arrays' version chains, every write the run makes (spike H.3's memory measurement) *)
+Definition initial_heap (u : unit) : array block * Z :=
   let h0 := PArray.make (Uint63.of_Z heap_cap) empty_block in
   let (h1, g) := fold_left (fun (acc : array block * Z) (s : gshape) => let (h, i) := acc in
                               (PArray.set h (Uint63.of_Z i) (global_block s), i + 1)) globals (h0, 0) in
@@ -67,7 +70,7 @@ Definition initial_heap : array block * Z :=
                (PArray.set h (Uint63.of_Z i) (string_block s), i + 1)) strings (h1, g).
 
 Definition initial_state (x : io) : state :=
-  let (h, next) := initial_heap in
+  let (h, next) := initial_heap tt in
   (* C main's writes, measured (CMain.v) *)
   cmain (mkst h next frame_base frame_base x).
 

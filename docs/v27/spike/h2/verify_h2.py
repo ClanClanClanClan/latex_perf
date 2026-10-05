@@ -131,9 +131,11 @@ def pure():
     m = json.loads((E / "manifest.json").read_text())
     if m["procedures"] != 603 or m["failed"]:
         fails.append(f"manifest: {m['procedures']} procedures, failed {m['failed']}")
-    if len(m["externals"]) != 189:
+    # the measured build is H.3 checkpoint 2's (h3/model.patch merged): TEXMFENGINENAME is a
+    # string literal there, not an external, so 188 externals (H.2's build had 189)
+    if len(m["externals"]) != 188:
         fails.append(f"manifest: {len(m['externals'])} externals")
-    for q in ("603 of 603", "189 distinct externals", f"{m['ir_nodes']:,} IR nodes"):
+    for q in ("603 of 603", "188 distinct externals", f"{m['ir_nodes']:,} IR nodes"):
         quote(q)
     if m["gotos"] != {"goto": 552, "return": 195}:
         fails.append(f"manifest gotos {m['gotos']}")
@@ -143,10 +145,10 @@ def pure():
     for q in (f"{npairs:,} unsequenced pairs", f"{nun} of them", "8 places"):
         quote(q)
     modelled = set(re.findall(r"x =\? X_(\w+)", (H / "coq" / "Boundary.v").read_text()))
-    if len(modelled) != 23:
+    if len(modelled) != 43:
         fails.append(f"Boundary.v models {len(modelled)} externals")
-    quote("23 of the 189 externals")
-    quote("166 of 189 externals are Stuck")
+    quote("43 of the 188 externals")
+    quote("145 of 188 externals are Stuck")
     cm = json.loads((E / "cmain" / "cmain_globals.json").read_text())
     nz = sorted(k for k, v in cm.items() if v.get("nonzero"))
     want = sorted(["iniversion", "parsefirstlinep", "interactionoption", "formatdefaultlength", "TEXformatdefault",

@@ -363,6 +363,35 @@ literal output, the `rel/` paths in the README, and `reach.py`'s usage text.
 **LOW-1, LOW-2, LOW-3:** the measurement corrections, the speed label and the configurations,
 above.
 
+## Re-measured on H.3's model (H.3 checkpoint 2, 2026-10-05) [M]
+
+H.3 changed the model (`h3/model.patch`: the format-file externals, the evaluation-order
+refinement, the memory fixes, the driver's diagnostics). At H.3 checkpoint 2 that patch is
+merged into this directory, so the committed evidence of this report is re-measured on the new
+build and `verify_h2.py` now checks THAT build (`h2/evidence/build/provenance.json`, `ps.exe`
+`e41941bf…`, the same bytes as H.3 checkpoint 1's memory-fixed build). The numbers above are
+H.2's build; the current ones:
+- the translation: 603 of 603 procedures, 185,086 IR nodes (unchanged), 188 distinct externals
+  (`TEXMFENGINENAME` is now web2c's string literal, not an external); 45,756 unsequenced pairs
+  checked, 25 of them Stuck (H.2: 45,742 and 29);
+- the boundary: 43 of the 188 externals are modelled, so 145 of 188 externals are Stuck;
+- the build (load 6.6–7.8, `pipeline.sh` now also runs on Linux): coqc: 25 file(s), 14 s wall,
+  peak 537 MB; extraction: 1 file(s), 2 s wall, peak 638 MB; ocamlopt: 93 file(s), 22 s wall,
+  peak 545 MB;
+- the INITEX run (`h2/evidence/inirun/`): the model's terminal output, standard error and
+  `texput.log` are byte-identical to H.2's in both configurations, so to the binary's; only the
+  driver's `TIME:` line changed;
+- the differential (`diff/results-*.tsv`, the binary side unchanged, so not re-run): the same
+  totals in both configurations, and no row that was IDENTICAL changed. Two rows changed:
+  `dump1` (an INITEX `\dump`) stays STUCK, but its reason moved from the then unmodelled
+  `wopenout` to "read of an uninitialised value" inside `storefmtfile` (`wopenout` is modelled
+  now; that the read is of memory-word halves INITEX never wrote, which C's `malloc` leaves
+  unspecified, is inferred [I], not located); `romn` stays without a result, but now because the
+  run was capped at 5,000 MB (`diff.py model --cap-mb`, new), where H.2's run hit the 900 s
+  time-out (a re-run of `romn` alone under a 12,000 MB cap was killed by the cap too, after 325 s: its memory, not its time, is the limit now; an H.5 matter). Totals: arm64: 178 inputs, 134 identical, 43 Stuck, 1 without a result, 0
+  divergent; amd64 the same. The amd64 binary side is still the qemu run (C-113 on PR #630:
+  `t205`, `t208`).
+
 ## The trusted base of H.2's claim
 
 The claim is: on a run whose identity (SPEC, standard input) lies in the environment class, the

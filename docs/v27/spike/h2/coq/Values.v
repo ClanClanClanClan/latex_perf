@@ -126,9 +126,14 @@ Fixpoint fill_chunks (n : nat) (i : Z) (d : cell) (a : array (array cell)) : arr
   end.
 
 (* a block of at most one chunk is one array of exactly its size (frames, strings) *)
+(* The chunk of a small block is stored with PArray.set, not as PArray.make's default: a
+   persistent array keeps its default for ever, and a default that is the chunk's first
+   version would keep, through the version chain, every write ever made to the block
+   (spike H.3: every scalar global is such a block; the meaning dump exhausted memory) *)
 Definition new_block (n : Z) (d : cell) : block :=
   if n <=? chunk then
-    mkblock n (PArray.make 1 (PArray.make (Uint63.of_Z (Z.max 1 n)) d))
+    mkblock n (PArray.set (PArray.make 1 (PArray.make 1 KUndef)) 0%uint63
+                          (PArray.make (Uint63.of_Z (Z.max 1 n)) d))
   else
   let nch := (n + chunk - 1) / chunk in
   mkblock n (fill_chunks (Z.to_nat nch) 0 d (PArray.make (Uint63.of_Z nch) (PArray.make 1 KUndef))).
@@ -166,6 +171,16 @@ Record io : Type := mkio {
                                             image for this run's environment (kpathsea looks at
                                             the environment first, then texmf.cnf, then expands
                                             the value): name, value bytes; absent = NULL *)
+  io_kpsefind : list (Z * Z * list Z * list Z);
+                                         (* kpse_find_file(name, format, must_exist) in the
+                                            pinned image for this run: (format number,
+                                            must_exist 0/1, name, result path; an empty path
+                                            is NULL). A query not in the table is Stuck *)
+  io_in : list (Z * list Z);             (* an open input stream: handle, the bytes not yet read *)
+  io_gz : list (list Z * list Z);        (* for a file opened through zlib (gzdopen: the
+                                            format file), the bytes gzread returns: path, the
+                                            decompressed stream. Decompression is outside the
+                                            model (TB-7): the driver is given the stream *)
   io_clock : list (Z * Z);               (* the gettimeofday(2) readings not yet consumed, in
                                             call order: (tv_sec, tv_usec). The real clock is a
                                             nondeterministic input, so it is an explicit part of
@@ -176,15 +191,17 @@ Record io : Type := mkio {
 
 (* functional updates of one field of io (positional mkio calls are error-prone) *)
 Definition io_set_out (x : io) (o : list (Z * list Z)) : io :=
-  mkio o (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_clock x) (io_cstate x).
+  mkio o (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_stdin (x : io) (b : list Z) : io :=
-  mkio (io_out x) b (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_clock x) (io_cstate x).
+  mkio (io_out x) b (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_files (x : io) (fs : list (Z * list Z)) (nh : Z) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) fs nh (io_fs x) (io_env x) (io_kpse x) (io_clock x) (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) fs nh (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) (io_cstate x).
+Definition io_set_in (x : io) (i : list (Z * list Z)) : io :=
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) i (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_clock (x : io) (c : list (Z * Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) c (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) c (io_cstate x).
 Definition io_set_cstate (x : io) (c : list (Z * Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_clock x) c.
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) c.
 
 Record state : Type := mkst {
   heap : array block; hp : Z; fp : Z; fsp : Z; st_io : io }.

@@ -37,7 +37,35 @@ EXT_EFFECTS = {
     "aopenout": (("nameoffile", "shellenabledp"), (), ("nameoffile",), (), ()),
     "makepdftexbanner": (("versionstring", "strpool", "poolptr", "poolsize"), ("poolptr", "pdftexbanner"), (),
                          ("strpool",), ("makestring", "getnullstr")),
+    # spike H.3, the format file (Boundary.v): the (un)dump macros use the global fmtfile;
+    # their base argument is a variable, counted read and written below
+    "wopenin": (("nameoffile",), ("nameoffile", "namelength"), ("nameoffile",), ("nameoffile",), ()),
+    "wopenout": (("nameoffile",), (), ("nameoffile",), (), ()),
+    "wclose": ((), (), (), (), ()),
+    "undumpthings": (("fmtfile",), (), (), (), ()), "undumpint": (("fmtfile",), (), (), (), ()),
+    "undumphh": (("fmtfile",), (), (), (), ()), "undumpcheckedthings": (("fmtfile",), (), (), (), ()),
+    "undumpuppercheckthings": (("fmtfile",), (), (), (), ()),
+    "dumpthings": (("fmtfile",), (), (), (), ()), "dumpint": (("fmtfile",), (), (), (), ()),
+    "dumphh": (("fmtfile",), (), (), (), ()),
+    "undumpimagemeta": (("fmtfile",), (), (), (), ()), "dumpimagemeta": (("fmtfile",), (), (), (), ()),
+    "undumptounicode": (("fmtfile",), (), (), (), ()), "dumptounicode": (("fmtfile",), (), (), (), ()),
+    # strcmp reads the two strings its pointer arguments point to: any heap block
+    "strcmp": ((), (), ("*",), (), ()),
+    "ucharcast": ((), (), (), (), ()),
+    "getcreationdate": (("strpool", "poolptr", "poolsize"), ("poolptr",), (), ("strpool",), ()),
+    "strlen": ((), (), ("*",), (), ()),
+    # strcpy writes the block its first argument points to: any heap block
+    "strcpy": ((), (), ("*",), ("*",), ()),
 }
+
+
+# Externals with no effect on the I/O state: a handle constant, a cast, a string read
+# (spike H.3; before, every modelled external counted as writing the I/O state, which made
+# `write(stdout, ..., stringcast(nameoffile+1))` an unsequenced conflict)
+PURE_EXTS = {"stdout", "stderr", "stdin", "stringcast", "ucharcast", "ISDIRSEP", "strcmp", "strlen"}
+# Externals that are C functions (or macros) reading their arguments' values only: a variable
+# argument is read, not written (undumpimagemeta(integer, integer, integer) is a function)
+VALUE_ARG_EXTS = {"undumpimagemeta", "strcmp", "strlen", "stringcast", "ucharcast", "ISDIRSEP", "dumpint"}
 
 
 def modelled(boundary_v_text):
@@ -161,16 +189,17 @@ class Effects:
         g = self.L.globals
         r.update(("g", g[n][0]) for n in gr)
         w.update(("g", g[n][0]) for n in gw)
-        r.update(("h", g[n][0]) for n in hr)
-        w.update(("h", g[n][0]) for n in hw)
-        w.add(("io",))
+        r.update(ANY if n == "*" else ("h", g[n][0]) for n in hr)
+        w.update(ANY if n == "*" else ("h", g[n][0]) for n in hw)
+        if name not in PURE_EXTS:
+            w.add(("io",))
         for c in calls:
             pid = self.L.procs[c]["id"]
             sr, sw = self.summ.get(pid, (set(), set()))
             r |= sr
             w |= sw
         for a in args:
-            self.xarg_eff(a, r, w)
+            self.xarg_eff(a, r, w, name in VALUE_ARG_EXTS)
 
     def arg_eff(self, a, r, w, callee=None):
         if a[0] == "val":
@@ -184,12 +213,13 @@ class Effects:
             self.lval_eff(a[1], r, w)
             r.add(self.lregion(a[1]))
 
-    def xarg_eff(self, a, r, w):
+    def xarg_eff(self, a, r, w, ro=False):
         if a[0] == "lv":
             self.lval_eff(a[1], r, w)
             reg = self.lregion(a[1])
             r.add(reg)
-            w.add(reg)     # a C macro may assign its argument
+            if not ro:
+                w.add(reg)     # a C macro may assign its argument
         elif a[0] == "val":
             self.expr_eff(a[2], r, w)
             if a[2][0] == "addr":      # &x given to a C function, which may write x
@@ -280,9 +310,12 @@ def check(L, procs):
         E.lval_eff(l, r, w)
         return r, w
 
-    def eff_arg(a, xt):
+    def eff_arg(a, xt, ro=False):
         r, w = set(), set()
-        (E.xarg_eff if xt else E.arg_eff)(a, r, w)
+        if xt:
+            E.xarg_eff(a, r, w, ro)
+        else:
+            E.arg_eff(a, r, w)
         return r, w
 
     def group(kind, effs, where, node=None):
@@ -303,7 +336,7 @@ def check(L, procs):
         elif k == "call":
             group("args", [eff_arg(a, False) for a in e[2]], where, e)
         elif k == "ext":
-            group("xargs", [eff_arg(a, True) for a in e[2]], where, e)
+            group("xargs", [eff_arg(a, True, e[1] in VALUE_ARG_EXTS) for a in e[2]], where, e)
         elif k == "padd":
             group("padd", [eff_e(e[1]), eff_e(e[4])], where, e)
         elif k == "load":
@@ -336,7 +369,7 @@ def check(L, procs):
             vl(s[1], where)
             ve(s[3], where)
         elif k in ("pcall", "ext"):
-            group("args", [eff_arg(a, k == "ext") for a in s[2]], where, s)
+            group("args", [eff_arg(a, k == "ext", k == "ext" and s[1] in VALUE_ARG_EXTS) for a in s[2]], where, s)
             for a in s[2]:
                 if a[0] == "val":
                     ve(a[2], where)

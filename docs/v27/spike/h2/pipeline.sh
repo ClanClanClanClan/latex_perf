@@ -10,19 +10,32 @@ H2=${0:a:h}
 SRC=${SRC:-$HOME/.cache/lp-spike-h1/b-arm64/repo}
 OUT=${OUT:-$HOME/.cache/lp-spike-h1/h2/run}
 CMAINJ=$H2/evidence/cmain          # the committed gdb measurement is the build input
-export PATH=$HOME/.opam/l0-testing/bin:$PATH
-eval $(opam env --switch=l0-testing 2>/dev/null)
+# the opam switch with the pinned tools (coqc 8.18.0, OCaml 5.2.0: provenance.json records both)
+SWITCH=${OPAM_SWITCH:-l0-testing}
+[ -d $HOME/.opam/$SWITCH/bin ] && export PATH=$HOME/.opam/$SWITCH/bin:$PATH
+eval $(opam env --switch=$SWITCH 2>/dev/null)
 mkdir -p "$OUT/gen" "$OUT/build"
 M=$OUT/measure.tsv
 print -r -- $'stage\tfile\trc\twall_s\tuser_s\tmaxrss_mb\tload1' > $M
-load1() { sysctl -n vm.loadavg | awk '{print $2}' }
-# timed STAGE FILE LOG cmd...: run under /usr/bin/time -l, append a row to measure.tsv
+# macOS (BSD time -l, sysctl) or Linux (GNU time -f, /proc/loadavg): the same four numbers
+if [[ $OSTYPE == darwin* ]]; then
+  load1() { sysctl -n vm.loadavg | awk '{print $2}' }
+else
+  load1() { awk '{print $1}' /proc/loadavg }
+fi
+# timed STAGE FILE LOG cmd...: run under /usr/bin/time, append a row to measure.tsv
 timed() {
   local stage=$1 file=$2 log=$3; shift 3
-  local l=$(load1)
-  /usr/bin/time -l "$@" > $log 2>&1; local rc=$?
-  local rss=$(grep 'maximum resident' $log | awk '{print $1}')
-  local real=$(grep ' real ' $log | awk '{print $1}') user=$(grep ' real ' $log | awk '{print $3}')
+  local l=$(load1) rss real user rc
+  if [[ $OSTYPE == darwin* ]]; then
+    /usr/bin/time -l "$@" > $log 2>&1; rc=$?
+    rss=$(grep 'maximum resident' $log | awk '{print $1}')       # bytes
+    real=$(grep ' real ' $log | awk '{print $1}') user=$(grep ' real ' $log | awk '{print $3}')
+  else
+    /usr/bin/time -f 'LPTIME %e %U %M' "$@" > $log 2>&1; rc=$?
+    rss=$(( $(grep '^LPTIME ' $log | tail -1 | awk '{print $4}') * 1024 ))   # GNU %M is KiB
+    real=$(grep '^LPTIME ' $log | tail -1 | awk '{print $2}') user=$(grep '^LPTIME ' $log | tail -1 | awk '{print $3}')
+  fi
   print -r -- "$stage"$'\t'"$file"$'\t'"$rc"$'\t'"$real"$'\t'"$user"$'\t'"$(( ${rss:-0} / 1048576 ))"$'\t'"$l" >> $M
   return $rc
 }

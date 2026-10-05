@@ -98,7 +98,7 @@ Fixpoint put_cells (ks : list cell) (b o : Z) (st : state) : option state :=
 (* ---------------------------------------------------------------- output *)
 Fixpoint out_append (h : Z) (bytes : list Z) (outs : list (Z * list Z)) : list (Z * list Z) :=
   match outs with
-  | [] => [(h, rev bytes)]
+  | [] => [(h, rev_append bytes [])]
   | (h', bs) :: rest => if h =? h' then (h', rev_append bytes bs) :: rest else (h', bs) :: out_append h bytes rest
   end.
 
@@ -330,8 +330,9 @@ Fixpoint evale (fuel : nat) (e : expr) (st : state) {struct fuel} : eres :=
         if negb (fits TI32 (z + 1)) || (z + 1 <=? 0) then EStk (StConv "allocation size") st2
         else let b := hp st2 in
              let size := (z + 1) * zi esz in
+             let osize := bsize (hget st2 ob) in   (* read before st2's heap is superseded *)
              let st3 := hput (mkst (heap st2) (b + 1) (fp st2) (fsp st2) (st_io st2)) b (new_block size KUndef) in
-             match copy_cells (Z.to_nat (Z.min size (bsize (hget st2 ob)))) ob 0 b 0 st3 with
+             match copy_cells (Z.to_nat (Z.min size osize)) ob 0 b 0 st3 with
              | Some st4 => EOk (VP b 0) (hput st4 ob empty_block)
              | None => EStk (StBounds "realloc copy") st3
              end
@@ -462,6 +463,11 @@ with callp (fuel : nat) (p : Z) (cells : list cell) (st : state) {struct fuel} :
     match put_cells cells fb 0 st1 with
     | None => EStk (StBounds "parameters") st1
     | Some st2 =>
+      (* the caller's frame pointer, taken now: a closure that referred to the caller's
+         state `st` would keep that state's persistent heap alive for the whole call, and
+         with it a record of every write the callee makes (spike H.3: the meaning dump
+         exhausted 24 GB of memory and swap) *)
+      let caller_fp := fp st in
       let finish (st3 : state) : eres :=
         let res := match p_result pr with
                    | None => LdOk VN
@@ -470,7 +476,7 @@ with callp (fuel : nat) (p : Z) (cells : list cell) (st : state) {struct fuel} :
                                         | CW4 => TW4 | CFILE => TFILE | CC8 => TC8 | _ => TI32 end in
                      read_loc st3 t (mkloc fb (zi off) None)
                    end in
-        let st4 := hput (mkst (heap st3) (hp st3) (fp st) (fsp st) (st_io st3)) fb empty_block in
+        let st4 := hput (mkst (heap st3) (hp st3) caller_fp fb (st_io st3)) fb empty_block in
         match res with LdOk v => EOk v st4 | LdStuck s => EStk (StIn p s) st4 end in
       match exec f (p_body pr) st2 with
       | SNorm st3 => finish st3

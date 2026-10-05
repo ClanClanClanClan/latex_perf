@@ -35,6 +35,8 @@
  },
  "files_sha256": {
   "fmtdiff-shipped-vs-roundtrip.json": "22328cd8c39f0ea20100e939c08c11d3c78850a4ed1a01e8184a9596d4be7a13",
+  "fmtexplain.json": "9fe0d98dff68b0baef7e7d3218d7ab8a634b679d8b91e703380b86f65b8707ad",
+  "memtrace.txt.gz": "207bbf672105727a7422767a909f0b5cafa3b4e3be6aa598d830e582a5378580",
   "model.spec.template": "9e6a82ea7d2b8611e5131cb34ab7f2cd33aa38a06dbdd9b18a84e802b3d8dcb1",
   "model.stdout": "52a3069d258eeab7c3bcf7b6bd2f493505046e9e19ae8864bd2a0d83def728e2",
   "model.texput.log": "ff8088c16d99d4cc131da19e370ca73a84b88328400de075d91bb927cf811d45",
@@ -42,5 +44,16 @@
   "ref-arm64.stdout": "52a3069d258eeab7c3bcf7b6bd2f493505046e9e19ae8864bd2a0d83def728e2",
   "ref-arm64.texput.log": "ff8088c16d99d4cc131da19e370ca73a84b88328400de075d91bb927cf811d45",
   "stdin": "a1a8bdc56b27edfac02691295d012a654a3ed0823793b1b5d522b5d36504cda2"
+ },
+ "checkpoint_2_rerun": {
+  "ps_exe_sha256": "e41941bf3c19b04bc2fad2fb6ac1f40c5859cafabb2f686cbb24a266150fd388",
+  "build": "h2/ with h3/model.patch merged (h2/evidence/build/provenance.json)",
+  "texput_fmt_stream_sha256": "55629ae0caf61d68710bf29b91fe8729de2a846823c30c4667f86cc2d0f46db8",
+  "stdout_and_texput_log_equal_binary": true,
+  "exit": 0,
+  "clock_readings_used": 2,
+  "wall_s": 79,
+  "peak_footprint_mb": 4102,
+  "load_note": "machine shared with other agents; load 38-90 during the session"
  }
 }

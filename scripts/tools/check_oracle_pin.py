@@ -269,6 +269,16 @@ WORKFLOW_ALLOW = {
         '&& pdflatex -interaction=nonstopmode -halt-on-error t.tex >t.log 2>&1 \\',
     ),
 }
+# Python lines that hold an engine's NAME as data, not a command: exact stripped lines, pinned
+# like WORKFLOW_ALLOW (a new one fails; a vanished one must be pruned).
+PY_DATA_ALLOW = {
+    # Spike H.3 (ADR-015): web2c's texmfmp.h defines TEXMFENGINENAME as the string literal
+    # "pdftex" (lines 53-54, under `#if defined (pdfTeX)`); the translator puts that literal
+    # into the Coq program where the Pascal names the constant. Nothing is started.
+    "docs/v27/spike/h2/translate/lower.py": (
+        'BUILD_STRING_MACROS = {"TEXMFENGINENAME": "pdftex", "TEXMFPOOLNAME": "pdftex.pool"}',
+    ),
+}
 FINGERPRINT_KEYS = ("tlpdb_sha256", "macro_layer_sha256", "fmt_sha256")
 BACKENDS = {"container", "native"}
 
@@ -1569,11 +1579,15 @@ def main() -> int:
         if not p.is_file():
             continue
         scanned += 1
-        for n, what in scan(p.read_text(errors="replace")):
+        ptext = p.read_text(errors="replace")
+        plines = ptext.split("\n")
+        for n, what in scan(ptext):
+            if rel in PY_DATA_ALLOW and 0 < n <= len(plines) and plines[n - 1].strip() in PY_DATA_ALLOW[rel]:
+                continue
             findings.append(f"{rel}:{n}: starts a TeX engine directly ({what[:60]!r}); "
                             f"go through scripts/tools/_oracle.py (the host TeX "
                             f"Live is not the oracle)")
-    for rel, lines in WORKFLOW_ALLOW.items():
+    for rel, lines in list(WORKFLOW_ALLOW.items()) + list(PY_DATA_ALLOW.items()):
         f = repo / rel
         text = f.read_text() if f.is_file() else ""
         stripped = {ln.strip() for ln in text.split("\n")}

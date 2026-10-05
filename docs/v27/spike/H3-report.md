@@ -159,6 +159,108 @@ names) under a 4–9 GB resident cap and a wall-clock time-out (`h3/tools/capped
 - The binary-side commands (the round trip, the meaning dump) start the engine outside
   `_oracle.py`, so as in H.1 and H.2 they are recipes ([`h3/README.md`](h3/README.md)).
 
+## Checkpoint 2 (2026-10-05): the model patch merged; the round trip's difference decoded byte by byte
+
+Owner decisions E6–E8 of 2026-10-05 (ADR-015) apply from here. E6: the pass clause "round trip
+byte-exact" means MODEL = BINARY, and the difference between the re-dumped and the shipped format
+must be fully explained, byte by byte.
+
+### The merge and the re-measurement [M]
+
+- `h3/model.patch` is merged into `h2/` (applied with `patch -p0`; the resulting sources equal
+  checkpoint 1's measured working copy file for file). `h2/pipeline.sh` also runs on Linux now
+  (GNU `time`, `/proc/loadavg`, the opam switch from `OPAM_SWITCH`), for E8's CI job.
+- The rebuild gives `ps.exe` `e41941bf…`: the same bytes as checkpoint 1's memory-fixed build.
+  `h2/evidence/build/` records it; `verify_h2.py` pure, `--reproduce translate` and
+  `--reproduce model` all pass on it.
+- H.2's INITEX evidence: the model's terminal output, standard error and `texput.log` are
+  byte-identical to H.2's committed ones in both configurations (only the driver's `TIME:` line
+  changed).
+- H.2's 178-input differential, model side re-run in both configurations against the unchanged
+  binary outputs: the same totals (134 identical, 43 Stuck, 1 without a result, 0 divergent per
+  configuration) and **no IDENTICAL row changed**. Two rows changed, per configuration: `dump1`
+  stays Stuck with a new reason (the now modelled `wopenout` is passed; it is Stuck at a read of
+  an uninitialised value in `storefmtfile`); `romn` stays without a result, now by the new
+  5,000 MB memory cap instead of the 900 s time-out, and alone under 12,000 MB it is killed by the cap after 325 s (H2-report.md, "Re-measured on H.3's model").
+- The round trip on the new build: exit 0, the same terminal output and `texput.log` as the
+  binary, the same `texput.fmt` stream (`55629ae0…`), 79 s, peak footprint 4.1 GB
+  (`h3/evidence/roundtrip/roundtrip.json`, `checkpoint_2_rerun`). **E6's clause, model = binary,
+  holds on the new build.**
+
+### E6: the re-dumped format against the shipped one, every byte [M]
+
+`h3/tools/fmtdecode.py` decodes a decompressed pdfTeX format stream completely, following
+`storefmtfile` of the tangled `pdftex.p` of r78081 (tex.web §1299ff with tex.ch, e-TeX's
+`sa_root`, the MLTeX and encTeX headers, the string pool, the dynamic memory by the rover ring,
+eqtb with §1493/§1494's run-length rule, `prim` and the sparse and dense hash, font info and the
+23 per-font arrays, hyphenation exceptions, the trie, pdfTeX's image meta, `pdf_mem`, `obj_tab`,
+counters and the ToUnicode tree, the trailer) with the C types of `pdftexd.h`/`texmfmem.h`. Every
+byte of both streams is assigned to one field, and **re-encoding the decoded state with
+store_fmt_file's own algorithms gives both streams back byte for byte**: that is the check that
+no byte is skipped or misread. The counts the binary prints while dumping (`texput.log`: 32913
+strings, 435021 memory locations, 243&403295, 29447 control sequences, 627714 words of font
+info, 1141 exceptions, the trie) equal the decoded ones.
+
+`h3/tools/fmtexplain.py` then compares the two streams element by element (an element is keyed
+by what it holds — `mem[a]`, `eqtb[k]`, `hash[p]`, pool byte `i` — not by its offset) and
+attributes every changed, new or removed element to a cause whose check holds
+(`h3/evidence/roundtrip/fmtexplain.json`; 21 checks, all hold; **0 elements unexplained**):
+
+| cause | what changed | the check |
+|---|---|---|
+| S strings | 12 new strings, 348 pool bytes, `str_ptr`, `pool_ptr` | the shipped pool is an exact prefix; the strings are the banner `load_fmt_file`'s `makepdftexbanner` makes, the 9 names `\csname` entered, `texput.log`, the format identifier |
+| F | `format_ident` | it is the last string, §1508's ` (preloaded format=texput 2026.8.30)` from the job name and eqtb's `\year`, `\month`, `\day` |
+| H hash | 2 home slots (3912, 3961), 7 new `hash_extra` entries (51557–51563), 7 chain links, `hash_high` 21364 → 21371, `cs_count` 29438 → 29447 | replaying `idlookup` (pdftex.p §259/§279, web2c's `hash_extra`) for the 9 names in string order on the shipped hash gives the round trip's hash, `hash_used` and `hash_high` exactly; `cs_count` is §1318's formula in both |
+| E eqtb | 29 entries (20 existing, 9 new) | the differing entries are **exactly** the 29 `everyjob_names` the contract generator recorded from its own trace of the `\everyjob` replay (an independent measurement); each entry's old and new meaning is decoded in the JSON |
+| R | 17 elements: run-length headers, and words that moved between explicit and copied | a function of the eqtb array (the encoder reproduces both streams), which differs only at E's entries |
+| M one-word memory | 351 words of hi mem (none of lo mem), `avail`, `dyn_used` | below |
+
+One-word memory. TeX's single-word allocator is a stack, and the round trip's free list is 626
+cells pushed on the shipped list after 330 were popped (common suffix 30,854 cells). Each
+differing word is in exactly one verified class: **M-live** (33 popped cells now in the new token
+lists of changed entries: set equality), **M-freed** (329 cells of old meanings freed: set
+equality; only 2 words differ, each the last cell of its list, only in its link, as
+`flush_list` writes), **M-refcount** (9 lists whose reference count moved by exactly the change
+in eqtb references), **M-scratch** (`temp_head`, `garbage`: their links point at freed cells or
+at `temp_head`, as `the_toks` of an empty list leaves it), **M-temp** (305 cells popped and
+pushed back, 13 of them in place — a list built from consecutive pops and returned whole by
+`flush_list` restores the free list's order, so only its info fields show it was used). `dyn_used`
+and `avail` follow from the free list.
+
+M-temp's 537 info bytes are dead data (no TeX state reads a free cell's info), so a class alone
+would not say why they hold the values they hold. They are therefore derived from the run
+itself: `h3/tools/trace_build.py` builds a DIAGNOSTIC variant of the model (the extracted OCaml
+plus a write hook in `put_cell` and a procedure stack in `callp0`; patches asserted to apply
+once) which records every write into `mem` after `load_fmt_file` returns
+(`h3/evidence/roundtrip/memtrace.txt.gz`, 15,956 writes into 430 words). The traced run writes the
+same `texput.fmt`, terminal output and log as `ps.exe` and the binary. **Replaying those writes
+on the shipped `mem` gives the round trip's `mem` exactly, and every differing word was written
+during the run**; the last writer of each is recorded (M-temp: `macrocall` 276 words — the
+parameter lists of the `\everyjob` code's macro calls, flushed after the call — `expand` 18,
+`flushlist` 11; M-live: `strtoks` 17, `scantoks` 14, `prefixedcommand` 2).
+
+Byte totals (`fmtexplain.json`): of the round trip's 3,338,996 elements, 3,338,224 hold the same
+bytes as the shipped element with the same key. Compared naively at equal offsets the streams
+differ in 5,443,537 bytes; 5,440,744 of them lie in unchanged elements that moved. The
+checkpoint-1 figure, 1,881,851 differing bytes after the string pool, is reproduced and splits
+into 1,880,748 moved-unchanged bytes and 1,103 bytes of changed or new elements, every one
+attributed above.
+
+What this does not establish: the write record is the model's, not the binary's. That the
+binary executed the same writes is inferred [I] from the model writing the same bytes; only the
+binary's outputs, not its writes, were observed. The `\time`/`\day`/`\month`/`\year` entries do
+not differ because this run's clock is the shipped build's start minute (H.1); a run at another
+date would add those entries to E.
+
+### H.3's criteria at checkpoint 2
+
+| criterion (verbatim) | state |
+|---|---|
+| "round trip byte-exact" | **met** in E6's reading (model = binary) on the checkpoint-2 build; and the difference from the shipped format is accounted for byte by byte (above) |
+| "meanings byte-identical to the contract generator's" | **open**: E8's run (below, §meanings) |
+| "F7 explained" | explained by H.1 (C-100); not re-derived by the model |
+| kill: "the load cannot be made exact within the spike" | **not fired** |
+
 ## Open
 
 - The meaning comparison (the full run, then a per-name comparison if the digest differs).

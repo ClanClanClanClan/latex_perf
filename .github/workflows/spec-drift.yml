@@ -35,9 +35,10 @@ jobs:
       # this job (check_project_state.py, check_apply_fixes_real_differential.py)
       # treated that non-zero exit as a pass, so NEITHER had ever fired in CI —
       # on any PR, since they were written. As of 2026-09-20 no workflow in this
-      # repo set fetch-depth at all. It also brings tags, which ADR-011's
-      # release-debt gate (N = 25) will need — that gate is NOT built yet (it
-      # is specified to land after the v27.1.64 tag). Removing this line silently blinds both ratchets again; the
+      # repo set fetch-depth at all. It also brings the tags that
+      # check_release_debt.py (ADR-011 §6, below) measures from; that gate
+      # refuses a shallow or tagless clone with exit 2 rather than passing.
+      # Removing this line silently blinds both ratchets again; the
       # kill-tests registered for them are what stops that going unnoticed.
       - uses: actions/checkout@v4
         with:
@@ -304,6 +305,15 @@ jobs:
         # CHANGELOG↔governance version coherence, generated-file
         # authenticity (regen+diff), orphan consumes capabilities.
         run: python3 scripts/tools/check_release_integrity.py --repo .
+
+      - name: Release debt (ADR-011 §6, OPEN-013)
+        # Fails when HEAD is more FIRST-PARENT commits (merged PRs or direct
+        # pushes) past the nearest v* tag than the limit, which lives only in
+        # the script's MAX_FIRST_PARENT_DEBT, unless dune-project already
+        # names a newer version (a release in preparation). Computed from git
+        # at run time; no committed number. Needs fetch-depth: 0 (above): a
+        # shallow or tagless clone is exit 2, never a pass.
+        run: python3 scripts/tools/check_release_debt.py --repo .
 
       - name: Check support matrix yaml parses
         run: |

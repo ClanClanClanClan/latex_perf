@@ -2380,6 +2380,42 @@ REGISTRY = [
                      r"is an `X <-> X` restatement",
                      transform=reinsert_gates_pass_iff),
         ]),
+    # ADR-011 §6 release-debt gate. Its real input is git state (tags,
+    # clone depth, merge shape), which a file edit in a worktree copy cannot
+    # vary portably — a copy of a TAGGED HEAD has debt 0, and a release-prep
+    # HEAD is exempt, so mutating the live threshold would not reliably kill.
+    # The gate therefore runs its SAME `evaluate` on a throwaway repo built
+    # from this JSON, and each mutation changes one field of it. The clean
+    # fixture passes at max 1 ONLY under first-parent counting (one merge of
+    # a 2-commit branch: 1 first-parent commit, 3 in all), so a regression to
+    # all-commit counting turns the clean run red.
+    GateTest(
+        "check_release_debt",
+        [PY, f"{TOOLS}/check_release_debt.py", "--selftest-fixture",
+         "scripts/tools/fixtures/release_debt_selftest.json"],
+        "pure",
+        [
+            Mutation("--max 0 on an untagged HEAD (debt 1)",
+                     "scripts/tools/fixtures/release_debt_selftest.json",
+                     r"FAIL: release debt is 1 first-parent commit\(s\) past "
+                     r"v1\.0\.0, limit 0",
+                     old='"max": 1', new='"max": 0'),
+            # C-55 / OPEN-101: a clone without tags must be exit 2, never a
+            # pass. The INFRA line is printed only on the exit-2 path.
+            Mutation("clone without tags",
+                     "scripts/tools/fixtures/release_debt_selftest.json",
+                     r"INFRA \(exit 2, never a pass\): no tag matching",
+                     old='"clone": "full"', new='"clone": "no-tags"'),
+            Mutation("shallow clone (actions/checkout default depth)",
+                     "scripts/tools/fixtures/release_debt_selftest.json",
+                     r"INFRA \(exit 2, never a pass\): shallow clone",
+                     old='"clone": "full"', new='"clone": "shallow"'),
+            Mutation("dune-project version behind the reachable tag",
+                     "scripts/tools/fixtures/release_debt_selftest.json",
+                     r"FAIL: dune-project version 0\.9\.0 is BEHIND",
+                     old='"dune_version_at_head": "1.0.0"',
+                     new='"dune_version_at_head": "0.9.0"'),
+        ]),
     GateTest(
         "check_project_state", [PY, f"{TOOLS}/check_project_state.py"],
         "pure",

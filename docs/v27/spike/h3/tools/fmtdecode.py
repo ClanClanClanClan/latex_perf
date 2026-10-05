@@ -256,8 +256,8 @@ def elements(f: Fmt):
     P(("header", "xord"), bytes(f.xord)); P(("header", "xchr"), bytes(f.xchr)); P(("header", "xprn"), bytes(f.xprn))
     for k, v in (("magic3", MAGIC3), ("hash_high", f.hashhigh), ("eTeX_mode", f.etex_mode), ("mem_bot", f.membot),
                  ("mem_top", f.memtop), ("eqtb_size", EQTB_SIZE), ("hash_prime", HASH_PRIME),
-                 ("hyph_prime", HYPH_PRIME), ("mltex_magic", MLTEX), ("mltex", f.mltex),
-                 ("enctex_magic", ENCTEX), ("enctex", f.enctex), ("pool_ptr", f.poolptr), ("str_ptr", f.strptr)):
+                 ("hyph_prime", HYPH_PRIME), ("mltex_magic", MLTEX), ("mltex_flag", f.mltex),
+                 ("enctex_magic", ENCTEX), ("enctex_flag", f.enctex), ("pool_ptr", f.poolptr), ("str_ptr", f.strptr)):
         I(("header", k), v)
     for i, v in enumerate(f.strstart):
         I(("str_start", i), v)

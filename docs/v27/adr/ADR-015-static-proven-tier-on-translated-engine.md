@@ -109,7 +109,7 @@ What this decides, and what it does not:
   pending the synthesis. The L_S0 kernel on `main` stays as it is: the synchronous fast path and
   regression evidence. Slice A (branch `feat/v27165-strict-args`, not merged) is unaffected by this
   ADR; whether it merges is decided on its own review.
-- **Not decided here** (ADR-014 draft §12, still open): O-5 (quantify verdicts over the date and
+- **Not decided here** (ADR-014 draft §12, still open): O-5 (*decided 2026-10-05: E10*) (quantify verdicts over the date and
   the random seed, or change the oracle to a forced date — the clock measurement of #625 moved no
   grade on the fragment, but the run-dependent primitives exist); O-9 (restricted `\write18`);
   O-7's exact wording of the trusted base. O-8 (accept a reference build as the oracle if the
@@ -139,7 +139,8 @@ draft §12, the O-n id is given; otherwise none exists and none is invented.
   (`_oracle.ARCH_OF_RECORD`); the oracle refuses to grade on any other, every comparer refuses
   grades of another architecture, CI's `tex-oracle` job moves to a native arm64 runner, and
   `check_oracle_pin.py` enforces all three. Choosing aarch64 for CI (rather than keeping amd64
-  with per-architecture baselines) is put to the owner in OPEN-126.
+  with per-architecture baselines) is put to the owner in OPEN-126. *Decided 2026-10-05: E9
+  (aarch64; no per-architecture baselines).*
 - **E3. Native amd64 confirmation: approved, not yet run.** The owner approved confirming the
   emulated amd64 evidence of H.1 by a one-off GitHub Actions job on the spike branch. That job has
   not been created or run: adding the workflow awaits the owner's permission. Until it runs, all
@@ -186,6 +187,55 @@ branch `spike/v27165-engine-translation`, at `7d927b5f:docs/v27/spike/H3-report.
   Profile-guided fixes of the kind already made stay within the spike's scope (D3, H.5's kill
   criterion).
 
+## Owner decisions of 2026-10-05 (continued)
+
+Same rule as above: this is the one place of record. Both decisions answer owner questions that
+OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is that row's.
+
+- **E9. The architecture of record for grading is aarch64.** CI's required `tex-oracle` job runs
+  on GitHub's `ubuntu-24.04-arm` runner. No per-architecture baselines are kept.
+  *Chosen over:* keeping amd64 CI with per-architecture baselines.
+  *Rationale (the evidence and argument of OPEN-126, which the owner was shown; no other reason
+  is of record):* E2 forbids comparing grades across
+  architectures, and every graded artefact was recorded on aarch64 (all 15, MEASURED in OPEN-126),
+  while CI had graded on amd64 since #617 (C-119). Keeping amd64 CI would first need a native
+  amd64 grade of every fixture set, and then two baselines to keep in step for every
+  oracle-baseline change. One architecture means one baseline, and a CI grade and a local grade
+  are then the same comparison. This makes OPEN-126's choice of `ubuntu-24.04-arm` and
+  `check_oracle_pin`'s refusal of any non-arm64 `tex-oracle` runner **binding**; E2's
+  implementation note no longer awaits the owner. E3's one-off amd64 confirmation is unaffected:
+  it measures the difference between the architectures, it does not grade.
+- **E10. O-5 (the clock) is ADOPTED TOGETHER WITH E7's clock shim, in one change: grading runs
+  with every run-dependent input fixed.** Contracts are regenerated accordingly. Date-dependent
+  names are found by explicitly VARYING the fixed clock, not by relying on the real clock.
+  *Chosen over:* (i) adopting `FORCE_SOURCE_DATE` alone now; (ii) quantifying verdicts over the
+  dates (O-5 option (a)).
+  *Rationale (the evidence and argument of OPEN-126 (d), which the owner was shown; no other
+  reason is of record):* under `FORCE_SOURCE_DATE=1` 0 of 600
+  sample rows moved (MEASURED, OPEN-126 (d)), but `FORCE_SOURCE_DATE` alone does not fix every
+  run-dependent input: `\pdfrandomseed` is seeded from the real time on every run, and
+  `\pdfelapsedtime` and `\pdffilemoddate` are not pinned by it (MEASURED 2026-09-29,
+  `check_strict_kernel.py` R-CLOCK). Adopting it alone would therefore be a second
+  oracle-baseline change later, and a grade would still not be a function of the input bytes.
+  Fixing every run-dependent input at once makes it one. Quantifying over dates would leave the
+  grade itself a function of the day it was taken. The H.1 pass criterion was met only with the clock fixed (§ H.1
+  result).
+  *What this means for the implementation (derived, not separate decisions):*
+  - The change is ONE oracle-baseline change. It is made by a **follow-up track** (E7's
+    measurement entry point plus the fixed clock), not by OPEN-126's branch. Until it lands,
+    `_oracle.PROTOCOL_CLOCK` stays `real`, and nothing on `main` fixes the clock in grading.
+  - "Every run-dependent input" is a class, not a list. The follow-up must enumerate the class
+    from the engine (C-102/C-103: a census of one member is not a census of the class), and not
+    stop at the names R-CLOCK lists today.
+  - `gen_contract.py` today finds the kernel's date-dependent names by comparing a real-clock run
+    with a forced-date run (review defect R1.3), and `check_gen_contract_parsers.py` asserts that
+    the grading environment does not force the date. Under E10 both are replaced: the names are
+    found by running under two or more DIFFERENT fixed clocks. Every contract and the L_S0
+    signature file are regenerated.
+  - Every graded artefact and fixture set is re-graded under the fixed clock: the three results
+    artefacts, the strict battery, the false_ready and apply_fixes fixtures, the bytes probes and
+    the contracts. Only the 600 sample rows have been measured under a forced date so far.
+
 ## Consequences
 
 - Nothing about TeX's behaviour is written by hand any more; what remains hand-modelled is the
@@ -215,7 +265,7 @@ branch `spike/v27165-engine-translation`, at `7d927b5f:docs/v27/spike/H3-report.
 - **The pass criterion was met only with the clock fixed [M].** Under the protocol's real clock, 7 of
   the 200 real papers differ between the two builds (2 logs, 5 PDFs beyond `/ID`). All 7 differ
   through the clock; the two binaries are the same bytes. With `FORCE_SOURCE_DATE` and one
-  `SOURCE_DATE_EPOCH`, 200 of 200 agree. Treating the clock as an input is O-5, still open above.
+  `SOURCE_DATE_EPOCH`, 200 of 200 agree. Treating the clock as an input is O-5, decided 2026-10-05 by E10 (fixed clock).
 - **The architectures differ in the compile VERDICT, not only in the PDF [M]** (corrected after
   spike review round 2; round 1's record said "in the PDF only", C-103). The same C source means
   different things on the two architectures wherever C leaves the result undefined or

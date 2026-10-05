@@ -262,11 +262,12 @@ jobs:
           : > "$D/runs/watchdog.log"
           while kill -0 "$pid" 2>/dev/null; do
             for id in $(docker ps -q); do
-              m=$(docker inspect -f '{{range .Mounts}}{{.Source}} {{end}}' "$id")
+              # A container listed by `docker ps` can exit before it is inspected; that is not an error.
+              m=$(docker inspect -f '{{range .Mounts}}{{.Source}} {{end}}' "$id" 2>/dev/null) || continue
               case "$m" in *"$W"/*) ;; *) continue ;; esac
-              st=$(docker inspect -f '{{.State.StartedAt}}' "$id")
+              st=$(docker inspect -f '{{.State.StartedAt}}' "$id" 2>/dev/null) || continue
               age=$(( $(date +%s) - $(date -d "$st" +%s) ))
-              if [ "$age" -gt 900 ]; then echo "$(date -u) kill $id age $age $m" | tee -a "$D/runs/watchdog.log"; docker kill "$id" > /dev/null; fi
+              if [ "$age" -gt 900 ]; then echo "$(date -u) kill $id age $age $m" | tee -a "$D/runs/watchdog.log"; docker kill "$id" > /dev/null 2>&1 || true; fi
             done
             sleep 30
           done

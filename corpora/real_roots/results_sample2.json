@@ -12,13 +12,13 @@
   "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
   "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
   "backend": "container",
-  "clock": "real",
+  "clock": "fixed:1785024000",
   "grading_code": {
    "files": {
-    "scripts/tools/_oracle.py": "b7be411e515e24194f45d5b3e4da74add0a5f443",
-    "scripts/tools/diff_real_roots.py": "23bb9655a4cb95bbd924f3455332f4475d13bf0a"
+    "scripts/tools/_oracle.py": "6b4ce94ed1dc829912beb2de6d8169714a092245",
+    "scripts/tools/diff_real_roots.py": "9859cccf0f55030517f7f14924ac84fdb65ab220"
    },
-   "sha256": "3cb3a156473083a533769f929c33ae2a53979015ea1e4a569cc26abd34cd7d19"
+   "sha256": "e063e942d2442b3ee162480c39037e9c8f1504fac5470e06567155c279815b65"
   }
  },
  "counts": {
@@ -3128,9 +3128,9 @@
    "cli_verdict": "READY"
   }
  ],
- "oracle_regraded_at_sha": "a652a675d8582c7860bc87bd12f275880cb5c770",
+ "oracle_regraded_at_sha": "5346cd55191d029f426cb09041e81dfeacadaf88",
  "measured_at_note": "CLI side: re-measured 2026-10-02 (OPEN-126) with diff_real_roots.py --refresh-cli --sample-offset 200 --cli-checkout, running the CLI built at main commit ca7c4809 (engine tree fe673dc1, the tree samples 1 and 3 were measured with). The CLI verdicts recorded before were NOT that tree's, although this note said they were: 2 of 200 rows (2507.03521v2, 2507.09165v1) were NOT-READY under the older CLI that produced them and are READY under fe673dc1, both compile, so both moved false-NOT-READY -> true-READY; the other 198 rows kept their rc (reasons are now the scrape_reasons tokens). Oracle side: re-graded in full (200/200) at oracle_regraded_at_sha, read-only and non-root, 0 cells/rc/PDF/passes/first errors moved (corpora/oracle_baseline/regrade_open126_sample2.json).",
- "measured_at": "cli-only refresh with the CLI built at ca7c48093ec0 (engine tree fe673dc1608e), run by diff_real_roots.py at d7d4df67646f; pdflatex verdicts carried forward (oracle side: oracle_regraded_at_sha)",
+ "measured_at": "RE-BASELINE (--rebaseline-oracle): every row re-graded under the pinned TeX Live image texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b (aarch64, container backend, grading code e063e942d244) because the recorded grades were not this oracle's: the recorded grades: the recorded grades were taken under clock 'real' and this oracle grades under 'fixed:1785024000'. A document can read the clock (\\year, \\pdfrandomseed, \\pdffilemoddate, ...), so grades under two clocks are not compared (ADR-015 E10, OPEN-128); re-grade under 'fixed:1785024000'.; multi-pass re-grade, scope=all: every row, regardless of prior grade (<= 3 passes, 200/200 rows now carry a pdflatex_passes count); CLI verdicts carried forward from the prior run",
  "measured_at_sha": "ca7c48093ec0c289e6345d66230c216f0dadd192",
  "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433"
 }

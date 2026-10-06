@@ -184,6 +184,11 @@ SECOND_JOBNAME = "lpotherjob"
 # second job name.
 STATE_ENVS = (("grading", JOBNAME), ("second_date", JOBNAME),
               ("grading", SECOND_JOBNAME))
+# How many of the three environments' job trees run at once (each a stream
+# of oracle runs, one container at a time). LP_CONTRACT_THREADS lowers it on
+# a machine that may run fewer containers at once; it changes no output
+# (the trees are independent and their results are joined in order).
+ENV_THREADS = max(1, int(os.environ.get("LP_CONTRACT_THREADS", "3")))
 # diff_real_roots.MAX_PASSES (the oracle's pass protocol, B.4); the parser
 # self-test asserts the two agree.
 MAX_PASSES = 3
@@ -1945,7 +1950,7 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     # contract's pass 1 is the S run of the empty history, protocol clock, `job`.
     histories = protocol_histories()
     envs = list(STATE_ENVS)
-    with ThreadPoolExecutor(max_workers=len(envs)) as ex:
+    with ThreadPoolExecutor(max_workers=min(len(envs), ENV_THREADS)) as ex:
         futs = [ex.submit(run_history_tree, tex, "r2_trace_%s_%s" % (e, j), trace_tex,
                           histories, env=e, jobname=j) for e, j in envs]
         trace_trees = [f.result() for f in futs]
@@ -2122,7 +2127,7 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     block, unw = dump_block(universe, actives=True, u8_sweep=True)
     dump_doc = pre + b"\\begin{document}\n" + block + END_DOC
     count_prefix = pre + b"\\begin{document}\n"
-    with ThreadPoolExecutor(max_workers=len(envs)) as ex:
+    with ThreadPoolExecutor(max_workers=min(len(envs), ENV_THREADS)) as ex:
         futs = [ex.submit(run_history_tree, tex, "r3_%s_%s" % (e, j), dump_doc, histories,
                           env=e, jobname=j, count_prefix=count_prefix, universe=universe)
                 for e, j in envs]
@@ -2711,8 +2716,53 @@ def main(argv=None) -> int:
     p.add_argument("--names", help="comma-separated extra names to probe")
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--out", required=True)
+    r = sub.add_parser("regenerate", help="regenerate EVERY committed contract from "
+                       "its recorded configuration and use-names, its kernel file, "
+                       "and every probe report from its recorded selection (an "
+                       "oracle-baseline change, OPEN-128 (7))")
+    r.add_argument("--workers", type=int, default=2)
     a = ap.parse_args(argv)
+    if a.cmd == "regenerate":
+        return cmd_regenerate(a)
     return cmd_generate(a) if a.cmd == "generate" else cmd_probes(a)
+
+
+def cmd_regenerate(a) -> int:
+    """Every committed contract (schema SCHEMA in CONTRACT_DIR) regenerated in
+    place under the current oracle (its clock included), the kernel file with
+    them (built fresh from INITEX once), then every committed probe report
+    (CONTRACT_DIR/probes) from the selection it records."""
+    repo = Path(a.repo).resolve()
+    image = read_image(repo)
+    paths = sorted(p for p in (repo / CONTRACT_DIR).glob("*.json")
+                   if json.loads(p.read_text(encoding="utf-8")).get("schema") == SCHEMA)
+    with Tex(image, Path(a.work).expanduser() if a.work else None) as tex:
+        pin = get_pin(tex, image)
+        fresh = True
+        for path in paths:
+            committed = json.loads(path.read_text(encoding="utf-8"))
+            report: dict = {}
+            kernel = load_kernel(tex, pin, Path(a.cache).expanduser(), fresh, report)
+            fresh = False
+            use = committed.get("self_check", {}).get("use_names_list", [])
+            contract = generate(committed["configuration"], tex, pin, kernel, use, report)
+            attach_kernel_ref(contract, kernel, pin)
+            path.write_text(canonical_json(contract), encoding="utf-8")
+            kp = write_kernel_file(repo, kernel, pin)
+            print("regenerated %s (complete %s; kernel %s)"
+                  % (path.relative_to(repo), contract["complete"], kp), file=sys.stderr)
+    for pr in sorted((repo / CONTRACT_DIR / "probes").glob("*.json")):
+        old = json.loads(pr.read_text(encoding="utf-8"))
+        sel = old.get("selection") or {}
+        target = repo / CONTRACT_DIR / pr.name
+        rc = cmd_probes(argparse.Namespace(
+            repo=str(repo), work=a.work, cache=a.cache, contract=str(target),
+            sample=sel.get("sample", 30), names=",".join(sel.get("extra_names", [])),
+            workers=a.workers, out=str(pr)))
+        if rc:
+            return rc
+        print("regenerated %s" % pr.relative_to(repo), file=sys.stderr)
+    return 0
 
 
 if __name__ == "__main__":

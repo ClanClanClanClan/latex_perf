@@ -1,0 +1,71 @@
+{
+ "variant": "prefixes",
+ "runner": {
+  "MemTotal": "16373448 kB",
+  "nproc": "4",
+  "uname_m": "x86_64"
+ },
+ "cap": "MemTotal 16373448 kB; cap (MemoryMax) 14276296 kB",
+ "runs": [
+  {
+   "run": "p0",
+   "names": "0",
+   "result": "exit 0",
+   "exit": "0",
+   "wall_s": "50",
+   "maxrss_kb_time_v": "1422348",
+   "cgroup_peak_bytes": "1411108864",
+   "oom_kills": "0"
+  },
+  {
+   "run": "p250",
+   "names": "250",
+   "result": "exit 0",
+   "exit": "0",
+   "wall_s": "71",
+   "maxrss_kb_time_v": "1587252",
+   "cgroup_peak_bytes": "1619427328",
+   "oom_kills": "0"
+  },
+  {
+   "run": "p500",
+   "names": "500",
+   "result": "exit 0",
+   "exit": "0",
+   "wall_s": "95",
+   "maxrss_kb_time_v": "1721560",
+   "cgroup_peak_bytes": "1747357696",
+   "oom_kills": "0"
+  },
+  {
+   "run": "p1000",
+   "names": "1000",
+   "result": "exit 0",
+   "exit": "0",
+   "wall_s": "151",
+   "maxrss_kb_time_v": "1850744",
+   "cgroup_peak_bytes": "1889669120",
+   "oom_kills": "0"
+  },
+  {
+   "run": "p2000",
+   "names": "2000",
+   "result": "exit 0",
+   "exit": "0",
+   "wall_s": "251",
+   "maxrss_kb_time_v": "1931828",
+   "cgroup_peak_bytes": "1975005184",
+   "oom_kills": "0"
+  },
+  {
+   "run": "p4000",
+   "names": "4000",
+   "result": "exit 0",
+   "exit": "0",
+   "wall_s": "482",
+   "maxrss_kb_time_v": "2017664",
+   "cgroup_peak_bytes": "2062995456",
+   "oom_kills": "0"
+  }
+ ]
+}

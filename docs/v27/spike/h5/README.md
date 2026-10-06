@@ -32,6 +32,10 @@ inputs, `runs/` the runs, `sample/` the raw profiles.
 | `evidence/fair/` | the 2026-10-06 correction: `bin.txt` (the binary's runs, loads, log hashes), `load.log`, `fr.variants`, `fairtable.txt`, and `runs/` (probes, verdicts, footprint traces and `meancompare` classes of every run of the correction: the rounds `fr*`, and `sm-*`, `b1o3-*`, `dB2*`, `gc*`, `prof-AB2-*`) |
 | `evidence/b-variants.txt`, `evidence/gc-sensitivity.txt`, `evidence/zbench.txt` | B1 and B2 (builds, `-dcmm` counts, runs, comparisons); GC settings against CPU; the `Z` micro-benchmark |
 | `evidence/exe-sha256.txt` | the hashes of the model build and the three variants measured |
+| `tools/b2gen.py` | **stage 2**: generates B2's `../h2/coq/Interp.v` and `RefInterp.v` from the pre-B2 `Interp.v` (`git 9c3315be`); `--check git ../../h2/coq` regenerates both and compares byte for byte |
+| `tools/b2static.py` | **stage 2**, the static half of the standing retention check: every fuel-realizer closure in an extracted tree is a single call on identifiers, or is allowed with its reason |
+| `tools/retprobe.ml`, `tools/retention_probe.sh` | **stage 2**, the standing retention check: `retention_probe.sh ML_DIR OUT_DIR INPUT_DIR [CAP_MB [TIMEOUT_S [PERIOD_S]]]` runs `b2static.py`, then a copy of the tree with a forced-GC probe at the C boundary (every 5 s of CPU) under `capped.sh`; FAIL when more than 1,000,000 words are live but not reachable from the current state. Test input: the first 250 names (`in/p250`). Pre-B2 FAILS, B2 PASSES (`evidence/stage2/retprobe/`) |
+| `evidence/stage2/` | **stage 2**: `b2-proofs.txt` (the generation check, `B2Equiv.v`'s `Print Assumptions`, the mutation control, `b2static.py` on both trees), `retprobe/` (the retention check's runs), `fulldump/` (the full meaning dump on the model build: IDENTICAL, `4879fa65…`) |
 
 **Inputs:** `python3 docs/v27/spike/h3/tools/meanblock.py REPO ~/.cache/lp-spike-h1/h5/in/pN N`
 (N = 0, 50, 250, 1000; all names without N, into `in/pall`). Each input directory also gets the

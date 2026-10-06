@@ -1,0 +1,2 @@
+run	names	result	exit	wall_s	maxrss_kb_time_v	cgroup_peak_bytes	oom_kills
+full	23519	exit 0	0	2476	2466032	2522820608	0

@@ -310,24 +310,87 @@ memory is not a speed measurement, but it bears on H.5: the same run puts the mo
 4–5 s under qemu, a ratio far above 200× [I: different processes, the binary emulated]. The
 profile-guided fixes of checkpoint 1 removed the retention but not the growth; **the remaining
 growth (≈ 3 MB per name; "not live data" was wrong, C-142) has no fix in sight within the current heap
-representation**, which E8 leaves unfunded. Owner decision needed (below).
+representation**, which E8 leaves unfunded. Owner decision needed (below). *(Corrected 2026-10-06,
+C-148: wrong. The retention was held by the extraction's fuel closures, not by the representation.
+B2 removes it with coq-core's persistent arrays unchanged (§"H.5 stage 2", below).)*
 
 ### H.3's criteria at checkpoint 2
 
 | criterion (verbatim) | state |
 |---|---|
 | "round trip byte-exact" | **met** in E6's reading (model = binary) on the checkpoint-2 build; and the difference from the shipped format is accounted for byte by byte (above) |
-| "meanings byte-identical to the contract generator's" | **NOT MET**: the binary side reproduces the contract's digest `4879fa65…`; the model's full dump ran out of memory at ≈ 14.6 GB and ≈ 15.6 GB on 16 GB runners (E8, §meanings), so there is no model output to compare. The CI prefix runs up to 2,000 names finished but were not compared with the binary; one local 50-name prefix (arm64, `ps.exe` `e41941bf…`) is byte-identical to the binary's run of the same input (`h3/evidence/meanings/local-prefix50/compare.json`) |
+| "meanings byte-identical to the contract generator's" | **MET at H.5 stage 2 (2026-10-06) on the B2 model build** (`ps.exe` `cae7a953…`): the full dump is IDENTICAL to the binary's, digest `4879fa65…` (§"H.5 stage 2", below). At checkpoint 2 it was **NOT MET**: the binary side reproduces the contract's digest `4879fa65…`; the model's full dump ran out of memory at ≈ 14.6 GB and ≈ 15.6 GB on 16 GB runners (E8, §meanings), so there is no model output to compare. The CI prefix runs up to 2,000 names finished but were not compared with the binary; one local 50-name prefix (arm64, `ps.exe` `e41941bf…`) is byte-identical to the binary's run of the same input (`h3/evidence/meanings/local-prefix50/compare.json`) |
 | "F7 explained" | explained by H.1 (C-100); not re-derived by the model |
 | kill: "the load cannot be made exact within the spike" | **not fired** |
 
+## H.5 stage 2 (2026-10-06): the meaning dump on the B2 model build [M]
+
+The heap fix the owner funded (E11) was built as candidate B2 (H5-heap-design.md §8): the
+interpreter's fuelled block was restructured at the source, and proved equal to the pre-B2 term
+by reflexivity (`h2/coq/B2Equiv.v`). There is no new realizer, no change to `Extract.v`, and
+neither T1 nor T2. This is the **model build**, `h2/evidence/build/provenance.json`: `ps.exe`
+`cae7a953…` (macOS arm64) and extracted tree `dbace323…`. It is not a profiling variant.
+
+**The round trip, re-run** (`h3/evidence/roundtrip/roundtrip.json`, `h5_stage2_b2_rerun`):
+- exit 0, and the same terminal output and `texput.log` as the binary;
+- the same `texput.fmt` stream, `55629ae0…`;
+- 78.0 s user CPU, peak footprint 1,624 MB (checkpoint 2's build: 4,102 MB).
+
+**E6's clause, model = binary, holds on the B2 build.**
+
+**E8's workflow, run 3** (https://github.com/ClanClanClanClan/latex_perf/actions/runs/37397064131;
+`h3/evidence/meanings/run3-37397064131/`). The runner builds the model with `pipeline.sh`: the
+same generated and extracted trees as the committed build, `differs … in: []`. Its OCaml is 5.2.0
+**without flambda** (`ocamlopt -config`), on x86_64, with 4 cores and 16 GB. So B2's memory
+property is measured on the other compiler as well (H5-heap-design.md §5 B(d)).
+
+The memory against names, on the same runner type as run 2:
+
+| names | run 2 (pre-B2): wall, peak RSS (`time -v`, kB) | run 3 (B2): wall, peak RSS (kB) |
+|---|---|---|
+| 0 | 60 s, 3,106,260 | 50 s, 1,422,348 |
+| 250 | 85 s, 3,741,424 | 71 s, 1,587,252 |
+| 500 | 115 s, 4,441,264 | 95 s, 1,721,560 |
+| 1,000 | 180 s, 6,164,572 | 151 s, 1,850,744 |
+| 2,000 | 301 s, 9,157,536 | 251 s, 1,931,828 |
+| 4,000 | killed at the cap (≈ 14.5 GB) | 482 s, 2,017,664 |
+
+Between 2,000 and 4,000 names the peak grows by 86 MB, which is ≈ 43 kB per name, against ≈ 3.1 MB
+per name before B2. What is left is the I/O lists (H5-heap-design.md §2.5): the log kept in memory
+at 24 bytes per byte. At 4,000 names, the margin cost is ≈ 0.116 s of wall time per name.
+
+**The full meaning dump on the model build, local** (`h5/evidence/stage2/fulldump/`; macOS arm64,
+`ps.exe` `cae7a953…`, all 23,519 names, under `capped.sh` with a 4,000 MB cap):
+- **finished, exit 0**: 2,564.9 s user + 107.7 s sys = **2,672.6 s CPU** (44.5 min), 3,623 s wall;
+- **peak footprint 2,463 MB** (maximum resident set 2.49 GB): 1,974 MB at 1 min, 2,243 MB at
+  10 min, 2,339 MB at 30 min, 2,463 MB at the end;
+- the one-minute load average was 8.3–283 (median 171, 63 samples): the machine was shared, so
+  the wall time is an upper bound;
+- **`meancompare`: IDENTICAL to the pinned arm64 binary's run of the same input**: the same exit
+  status, terminal output, `texput.log` (`335b024c…`, 7,014,728 bytes) and clock readings, and
+  23,519 records, all defined, on both sides. **The model's `meanings_sha256` is `4879fa65…`, the
+  contract's.**
+
+**The full meaning dump on the runner** (run 3, job `meanings-full`,
+`h3/evidence/meanings/run3-37397064131/full/`): x86_64, OCaml without flambda, `ps.exe` this
+host's compilation of the same extracted tree (`274ae67e…`), under the cgroup cap of 14.3 GB:
+- **finished, exit 0**: 2,473.6 s user + 1.3 s sys, 2,476 s wall;
+- peak RSS 2,466,032 kB; cgroup peak 2,522,820,608 bytes; 0 OOM kills;
+- **`meancompare`: IDENTICAL** to the binary's run on the same runner (arm64 under qemu, exit 0
+  in 6 s); the model's digest, the binary's and the contract's are all `4879fa65…`.
+
+So the result holds on both compilers (flambda on macOS arm64, without flambda on Linux x86_64)
+and on both hosts.
+
+**H.3's meanings clause, "meanings byte-identical to the contract generator's", is MET on a model
+build**: the build `verify_h2.py` checks, not a profiling variant.
+
 ## Open
 
-- The meaning comparison: blocked by memory (E8, §meanings). Owner decision needed: fund a heap
-  representation whose cost does not grow with the work done (and count it against H.5), or
-  run the full dump on a runner with ≥ 96 GB, or accept a per-prefix comparison as H.3's
-  evidence (a weaker claim than the clause).
+- ~~The meaning comparison: blocked by memory.~~ Closed at H.5 stage 2 (the owner funded the
+  heap fix, E11): the full dump on the B2 model build is IDENTICAL to the binary's (§"H.5 stage 2").
 - Done at checkpoint 2: the owner's reading (E6: model = binary) and the full decoding of the
   round trip's difference.
 - The amd64 configuration of the round trip (only arm64 here).
-- Peak memory under persistent arrays (H.5's question).
+- Peak memory under persistent arrays (H.5's question): answered for B2: 2.5 GB for the full dump
+  locally, and 2.0 GB at 4,000 names on the runner (§"H.5 stage 2"). Speed is H.5's (H5-heap-design.md §3).

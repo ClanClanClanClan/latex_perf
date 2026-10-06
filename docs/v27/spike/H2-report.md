@@ -371,8 +371,9 @@ above.
 H.3 changed the model (`h3/model.patch`: the format-file externals, the evaluation-order
 refinement, the memory fixes, the driver's diagnostics). At H.3 checkpoint 2 that patch is
 merged into this directory, so the committed evidence of this report is re-measured on the new
-build and `verify_h2.py` now checks THAT build (`h2/evidence/build/provenance.json`, `ps.exe`
-`e41941bf…`, the same bytes as H.3 checkpoint 1's memory-fixed build). The numbers above are
+build and `verify_h2.py` checked THAT build (`h2/evidence/build/provenance.json`, `ps.exe`
+`e41941bf…`, the same bytes as H.3 checkpoint 1's memory-fixed build) until H.5 stage 2's B2 build
+replaced it (next section). The numbers above are
 H.2's build; the current ones:
 - the translation: 603 of 603 procedures, 185,086 IR nodes (unchanged), 188 distinct externals
   (`TEXMFENGINENAME` is now web2c's string literal, not an external); 45,756 unsequenced pairs
@@ -394,6 +395,32 @@ H.2's build; the current ones:
   time-out (a re-run of `romn` alone under a 12,000 MB cap was killed by the cap too, after 325 s: its memory, not its time, is the limit now; an H.5 matter). Totals: arm64: 178 inputs, 134 identical, 43 Stuck, 1 without a result, 0
   divergent; amd64 the same. The amd64 binary side is still the qemu run (C-113 on PR #630:
   `t205`, `t208`).
+
+## Re-measured on H.5 stage 2's B2 build (2026-10-06) [M]
+
+H.5 stage 2 restructured the interpreter's fuelled block (`h2/coq/Interp.v`). Each member's successor
+branch was moved verbatim into a `NAME_body` definition, so that no extracted closure holds a
+state across a call. `h2/coq/B2Equiv.v` proves every member, and `Main.run`, equal to the pre-B2
+term (`h2/coq/RefInterp.v`) by reflexivity (H5-heap-design.md §8). The committed evidence is
+re-measured on that build: `h2/evidence/build/provenance.json`, `ps.exe` `cae7a953…`, extracted tree
+`dbace323…`, generated tree `e9ae7712…` unchanged. Two clean builds gave the same `ps.exe` bytes.
+`provenance.json` now also records `ocamlopt -config` (here `flambda: true`) and zarith 1.14
+(C-146).
+- **The build** (load 26–124: the machine was shared): coqc: 27 file(s), 50 s wall, peak 531 MB;
+  extraction: 1 file(s), 7 s wall, peak 614 MB; ocamlopt: 93 file(s), 73 s wall, peak 541 MB. The
+  two extra Coq files are `RefInterp.v` and `B2Equiv.v`.
+- **The INITEX run** (`evidence/inirun/`): the model's terminal output, standard error and
+  `texput.log` are byte-identical to the previous build's in both configurations, and therefore
+  to the binary's. Only the driver's `TIME:` line changed. `verify_h2.py --reproduce model` is OK
+  on `cae7a953…`, and so is `--reproduce translate`.
+- **The differential** (`diff/results-*.tsv`): the model side was re-run in both configurations
+  (`--jobs 3 --cap-mb 5000 --timeout 900`, the whole run under `capped.sh`) against the
+  unchanged binary outputs. **No row changed** in either configuration: every column but the
+  `ps.exe` prefix is the same as the previous build's, on all 178 rows of each file. Totals:
+  arm64: 178 inputs, 134 identical, 43 Stuck, 1 without a result, 0 divergent; amd64 the same.
+  - `romn` is still the one without a result: killed by the 5,000 MB cap, after 300 s on arm64
+    and 265 s on amd64 (load 108–275). B2 does not change it, so `romn`'s memory is not the
+    retention B2 removes [I: the retention probe was not run on it].
 
 ## The trusted base of H.2's claim
 

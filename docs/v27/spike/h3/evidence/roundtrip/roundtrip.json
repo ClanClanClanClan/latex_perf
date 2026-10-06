@@ -55,5 +55,19 @@
   "wall_s": 79,
   "peak_footprint_mb": 4102,
   "load_note": "machine shared with other agents; load 38-90 during the session"
+ },
+ "h5_stage2_b2_rerun": {
+  "ps_exe_sha256": "cae7a953b5a3822fa9787c6861ebb01b8710108c53113a33ba92872eb04af64b",
+  "build": "H.5 stage 2, B2 (h2/evidence/build/provenance.json; extracted tree dbace323...)",
+  "texput_fmt_stream_sha256": "55629ae0caf61d68710bf29b91fe8729de2a846823c30c4667f86cc2d0f46db8",
+  "stdout_and_texput_log_equal_binary": true,
+  "exit": 0,
+  "clock_readings_used": 2,
+  "user_s": 78.04,
+  "sys_s": 2.24,
+  "wall_s": 86.93,
+  "peak_footprint_mb_capped_sh": 1624,
+  "maximum_resident_set_bytes": 1787822080,
+  "load_note": "load not recorded for this run; the machine was shared"
  }
 }

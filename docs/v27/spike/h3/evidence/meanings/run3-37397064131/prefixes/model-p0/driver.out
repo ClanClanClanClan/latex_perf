@@ -1,0 +1,113 @@
+--- file handle 4 = texput.log
+--- file handle 3 = /usr/local/texlive/2026/texmf-var/web2c/pdftex/pdflatex.fmt
+--- stdin bytes not read: 0
+--- clock readings used: 2 of 8
+--- handle 1 (277 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)
+ restricted \write18 enabled.
+**entering extended mode
+LaTeX2e <2026-06-01>
+L3 programming layer <2026-08-10>
+
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*No pages of output.
+Transcript written on texput.log.
+
+--- handle 4 (11940 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.8.30)  1 JAN 1970 00:00
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**&pdflatex
+
+*\immediate\write-1{LPC:\the\catcode0 ,\the\catcode1 ,\the\catcode2 ,\the\catcode3 ,\the\catcode4 ,\the\catcode5 ,\the\catcode6 ,\the\catcode7 ,\the\catcode8 ,\the\catcode9 ,\the\catcode10 ,\the\catcode11 ,\the\catcode12 ,\the\catcode13 ,\the\catcode14 ,\the\catcode15 ,\the\catcode16 ,\the\catcode17 ,\the\catcode18 ,\the\catcode19 ,\the\catcode20 ,\the\catcode21 ,\the\catcode22 ,\the\catcode23 ,\the\catcode24 ,\the\catcode25 ,\the\catcode26 ,\the\catcode27 ,\the\catcode28 ,\the\catcode29 ,\the\catcode30 ,\the\catcode31 ,\the\catcode32 ,\the\catcode33 ,\the\catcode34 ,\the\catcode35 ,\the\catcode36 ,\the\catcode37 ,\the\catcode38 ,\the\catcode39 ,\the\catcode40 ,\the\catcode41 ,\the\catcode42 ,\the\catcode43 ,\the\catcode44 ,\the\catcode45 ,\the\catcode46 ,\the\catcode47 ,\the\catcode48 ,\the\catcode49 ,\the\catcode50 ,\the\catcode51 ,\the\catcode52 ,\the\catcode53 ,\the\catcode54 ,\the\catcode55 ,\the\catcode56 ,\the\catcode57 ,\the\catcode58 ,\the\catcode59 ,\the\catcode60 ,\the\catcode61 ,\the\catcode62 ,\the\catcode63 ,\the\catcode64 ,\the\catcode65 ,\the\catcode66 ,\the\catcode67 ,\the\catcode68 ,\the\catcode69 ,\the\catcode70 ,\the\catcode71 ,\the\catcode72 ,\the\catcode73 ,\the\catcode74 ,\the\catcode75 ,\the\catcode76 ,\the\catcode77 ,\the\catcode78 ,\the\catcode79 ,\the\catcode80 ,\the\catcode81 ,\the\catcode82 ,\the\catcode83 ,\the\catcode84 ,\the\catcode85 ,\the\catcode86 ,\the\catcode87 ,\the\catcode88 ,\the\catcode89 ,\the\catcode90 ,\the\catcode91 ,\the\catcode92 ,\the\catcode93 ,\the\catcode94 ,\the\catcode95 ,\the\catcode96 ,\the\catcode97 ,\the\catcode98 ,\the\catcode99 ,\the\catcode100 ,\the\catcode101 ,\the\catcode102 ,\the\catcode103 ,\the\catcode104 ,\the\catcode105 ,\the\catcode106 ,\the\catcode107 ,\the\catcode108 ,\the\catcode109 ,\the\catcode110 ,\the\catcode111 ,\the\catcode112 ,\the\catcode113 ,\the\catcode114 ,\the\catcode115 ,\the\catcode116 ,\the\catcode117 ,\the\catcode118 ,\the\catcode119 ,\the\catcode120 ,\the\catcode121 ,\the\catcode122 ,\the\catcode123 ,\the\catcode124 ,\the\catcode125 ,\the\catcode126 ,\the\catcode127 ,\the\catcode128 ,\the\catcode129 ,\the\catcode130 ,\the\catcode131 ,\the\catcode132 ,\the\catcode133 ,\the\catcode134 ,\the\catcode135 ,\the\catcode136 ,\the\catcode137 ,\the\catcode138 ,\the\catcode139 ,\the\catcode140 ,\the\catcode141 ,\the\catcode142 ,\the\catcode143 ,\the\catcode144 ,\the\catcode145 ,\the\catcode146 ,\the\catcode147 ,\the\catcode148 ,\the\catcode149 ,\the\catcode150 ,\the\catcode151 ,\the\catcode152 ,\the\catcode153 ,\the\catcode154 ,\the\catcode155 ,\the\catcode156 ,\the\catcode157 ,\the\catcode158 ,\the\catcode159 ,\the\catcode160 ,\the\catcode161 ,\the\catcode162 ,\the\catcode163 ,\the\catcode164 ,\the\catcode165 ,\the\catcode166 ,\the\catcode167 ,\the\catcode168 ,\the\catcode169 ,\the\catcode170 ,\the\catcode171 ,\the\catcode172 ,\the\catcode173 ,\the\catcode174 ,\the\catcode175 ,\the\catcode176 ,\the\catcode177 ,\the\catcode178 ,\the\catcode179 ,\the\catcode180 ,\the\catcode181 ,\the\catcode182 ,\the\catcode183 ,\the\catcode184 ,\the\catcode185 ,\the\catcode186 ,\the\catcode187 ,\the\catcode188 ,\the\catcode189 ,\the\catcode190 ,\the\catcode191 ,\the\catcode192 ,\the\catcode193 ,\the\catcode194 ,\the\catcode195 ,\the\catcode196 ,\the\catcode197 ,\the\catcode198 ,\the\catcode199 ,\the\catcode200 ,\the\catcode201 ,\the\catcode202 ,\the\catcode203 ,\the\catcode204 ,\the\catcode205 ,\the\catcode206 ,\the\catcode207 ,\the\catcode208 ,\the\catcode209 ,\the\catcode210 ,\the\catcode211 ,\the\catcode212 ,\the\catcode213 ,\the\catcode214 ,\the\catcode215 ,\the\catcode216 ,\the\catcode217 ,\the\catcode218 ,\the\catcode219 ,\the\catcode220 ,\the\catcode221 ,\the\catcode222 ,\the\catcode223 ,\the\catcode224 ,\the\catcode225 ,\the\catcode226 ,\the\catcode227 ,\the\catcode228 ,\the\catcode229 ,\the\catcode230 ,\the\catcode231 ,\the\catcode232 ,\the\catcode233 ,\the\catcode234 ,\the\catcode235 ,\the\catcode236 ,\the\catcode237 ,\the\catcode238 ,\the\catcode239 ,\the\catcode240 ,\the\catcode241 ,\the\catcode242 ,\the\catcode243 ,\the\catcode244 ,\the\catcode245 ,\the\catcode246 ,\the\catcode247 ,\the\catcode248 ,\the\catcode249 ,\the\catcode250 ,\the\catcode251 ,\the\catcode252 ,\the\catcode253 ,\the\catcode254 ,\the\catcode255 ,}%
+LPC:15,13,13,13,13,13,13,13,13,10,12,13,13,5,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,10,12,12,6,3,14,4,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,12,0,12,7,8,12,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,1,12,2,13,15,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,
+
+*\begingroup\catcode1=0 \catcode2=1 \catcode3=2 \catcode4=10 \catcode5=13 \endlinechar=-1 \relax%
+
+*^^Acatcode0=12^^D^^Acatcode6=12^^D^^Acatcode7=12^^D^^Acatcode8=12^^D^^Acatcode9=12^^D^^Acatcode10=12^^D^^Acatcode11=12^^D^^Acatcode12=12^^D^^Acatcode13=12^^D^^Acatcode14=12^^D^^Acatcode15=12^^D^^Acatcode16=12^^D^^Acatcode17=12^^D^^Acatcode18=12^^D^^Acatcode19=12^^D^^Acatcode20=12^^D^^Acatcode21=12^^D^^Acatcode22=12^^D^^Acatcode23=12^^D^^Acatcode24=12^^D^^Acatcode25=12^^D^^Acatcode26=12^^D^^Acatcode27=12^^D^^Acatcode28=12^^D^^Acatcode29=12^^D^^Acatcode30=12^^D^^Acatcode31=12^^D^^Acatcode32=12^^D^^Acatcode33=12^^D^^Acatcode34=12^^D^^Acatcode35=12^^D^^Acatcode36=12^^D^^Acatcode37=12^^D^^Acatcode38=12^^D^^Acatcode39=12^^D^^Acatcode40=12^^D^^Acatcode41=12^^D^^Acatcode42=12^^D^^Acatcode43=12^^D^^Acatcode44=12^^D^^Acatcode45=12^^D^^Acatcode46=12^^D^^Acatcode47=12^^D^^Acatcode48=12^^D^^Acatcode49=12^^D^^Acatcode50=12^^D^^Acatcode51=12^^D^^Acatcode52=12^^D^^Acatcode53=12^^D^^Acatcode54=12^^D^^Acatcode55=12^^D^^Acatcode56=12^^D^^Acatcode57=12^^D^^Acatcode58=12^^D^^Acatcode59=12^^D^^Acatcode60=12^^D^^Acatcode61=12^^D^^Acatcode62=12^^D^^Acatcode63=12^^D^^Acatcode64=12^^D^^Acatcode65=11^^D^^Acatcode66=11^^D^^Acatcode67=11^^D^^Acatcode68=11^^D^^Acatcode69=11^^D^^Acatcode70=11^^D^^Acatcode71=11^^D^^Acatcode72=11^^D^^Acatcode73=11^^D^^Acatcode74=11^^D^^Acatcode75=11^^D^^Acatcode76=11^^D^^Acatcode77=11^^D^^Acatcode78=11^^D^^Acatcode79=11^^D^^Acatcode80=11^^D^^Acatcode81=11^^D^^Acatcode82=11^^D^^Acatcode83=11^^D^^Acatcode84=11^^D^^Acatcode85=11^^D^^Acatcode86=11^^D^^Acatcode87=11^^D^^Acatcode88=11^^D^^Acatcode89=11^^D^^Acatcode90=11^^D^^Acatcode91=12^^D^^Acatcode92=12^^D^^Acatcode93=12^^D^^Acatcode94=12^^D^^Acatcode95=12^^D^^Acatcode96=12^^D^^Acatcode97=11^^D^^Acatcode98=11^^D^^Acatcode99=11^^D^^Acatcode100=11^^D^^Acatcode101=11^^D^^Acatcode102=11^^D^^Acatcode103=11^^D^^Acatcode104=11^^D^^Acatcode105=11^^D^^Acatcode106=11^^D^^Acatcode107=11^^D^^Acatcode108=11^^D^^Acatcode109=11^^D^^Acatcode110=11^^D^^Acatcode111=11^^D^^Acatcode112=11^^D^^Acatcode113=11^^D^^Acatcode114=11^^D^^Acatcode115=11^^D^^Acatcode116=11^^D^^Acatcode117=11^^D^^Acatcode118=11^^D^^Acatcode119=11^^D^^Acatcode120=11^^D^^Acatcode121=11^^D^^Acatcode122=11^^D^^Acatcode123=12^^D^^Acatcode124=12^^D^^Acatcode125=12^^D^^Acatcode126=12^^D^^Acatcode127=12^^D^^Acatcode128=12^^D^^Acatcode129=12^^D^^Acatcode130=12^^D^^Acatcode131=12^^D^^Acatcode132=12^^D^^Acatcode133=12^^D^^Acatcode134=12^^D^^Acatcode135=12^^D^^Acatcode136=12^^D^^Acatcode137=12^^D^^Acatcode138=12^^D^^Acatcode139=12^^D^^Acatcode140=12^^D^^Acatcode141=12^^D^^Acatcode142=12^^D^^Acatcode143=12^^D^^Acatcode144=12^^D^^Acatcode145=12^^D^^Acatcode146=12^^D^^Acatcode147=12^^D^^Acatcode148=12^^D^^Acatcode149=12^^D^^Acatcode150=12^^D^^Acatcode151=12^^D^^Acatcode152=12^^D^^Acatcode153=12^^D^^Acatcode154=12^^D^^Acatcode155=12^^D^^Acatcode156=12^^D^^Acatcode157=12^^D^^Acatcode158=12^^D^^Acatcode159=12^^D^^Acatcode160=12^^D^^Acatcode161=12^^D^^Acatcode162=12^^D^^Acatcode163=12^^D^^Acatcode164=12^^D^^Acatcode165=12^^D^^Acatcode166=12^^D^^Acatcode167=12^^D^^Acatcode168=12^^D^^Acatcode169=12^^D^^Acatcode170=12^^D^^Acatcode171=12^^D^^Acatcode172=12^^D^^Acatcode173=12^^D^^Acatcode174=12^^D^^Acatcode175=12^^D^^Acatcode176=12^^D^^Acatcode177=12^^D^^Acatcode178=12^^D^^Acatcode179=12^^D^^Acatcode180=12^^D^^Acatcode181=12^^D^^Acatcode182=12^^D^^Acatcode183=12^^D^^Acatcode184=12^^D^^Acatcode185=12^^D^^Acatcode186=12^^D^^Acatcode187=12^^D^^Acatcode188=12^^D^^Acatcode189=12^^D^^Acatcode190=12^^D^^Acatcode191=12^^D^^Acatcode192=12^^D^^Acatcode193=12^^D^^Acatcode194=12^^D^^Acatcode195=12^^D^^Acatcode196=12^^D^^Acatcode197=12^^D^^Acatcode198=12^^D^^Acatcode199=12^^D^^Acatcode200=12^^D^^Acatcode201=12^^D^^Acatcode202=12^^D^^Acatcode203=12^^D^^Acatcode204=12^^D^^Acatcode205=12^^D^^Acatcode206=12^^D^^Acatcode207=12^^D^^Acatcode208=12^^D^^Acatcode209=12^^D^^Acatcode210=12^^D^^Acatcode211=12^^D^^Acatcode212=12^^D^^Acatcode213=12^^D^^Acatcode214=12^^D^^Acatcode215=12^^D^^Acatcode216=12^^D^^Acatcode217=12^^D^^Acatcode218=12^^D^^Acatcode219=12^^D^^Acatcode220=12^^D^^Acatcode221=12^^D^^Acatcode222=12^^D^^Acatcode223=12^^D^^Acatcode224=12^^D^^Acatcode225=12^^D^^Acatcode226=12^^D^^Acatcode227=12^^D^^Acatcode228=12^^D^^Acatcode229=12^^D^^Acatcode230=12^^D^^Acatcode231=12^^D^^Acatcode232=12^^D^^Acatcode233=12^^D^^Acatcode234=12^^D^^Acatcode235=12^^D^^Acatcode236=12^^D^^Acatcode237=12^^D^^Acatcode238=12^^D^^Acatcode239=12^^D^^Acatcode240=12^^D^^Acatcode241=12^^D^^Acatcode242=12^^D^^Acatcode243=12^^D^^Acatcode244=12^^D^^Acatcode245=12^^D^^Acatcode246=12^^D^^Acatcode247=12^^D^^Acatcode248=12^^D^^Acatcode249=12^^D^^Acatcode250=12^^D^^Acatcode251=12^^D^^Acatcode252=12^^D^^Acatcode253=12^^D^^Acatcode254=12^^D^^Acatcode255=12^^D^^Aescapechar=92^^D^^Anewlinechar=-1^^D
+
+*^^Aimmediate^^Awrite-1^^BLPP:ifcsname:^^Ameaning^^Aifcsname^^C
+LPP:ifcsname:\ifcsname
+
+*^^Aimmediate^^Awrite-1^^BLPP:endcsname:^^Ameaning^^Aendcsname^^C
+LPP:endcsname:\endcsname
+
+*^^Aimmediate^^Awrite-1^^BLPP:csname:^^Ameaning^^Acsname^^C
+LPP:csname:\csname
+
+*^^Aimmediate^^Awrite-1^^BLPP:immediate:^^Ameaning^^Aimmediate^^C
+LPP:immediate:\immediate
+
+*^^Aimmediate^^Awrite-1^^BLPP:write:^^Ameaning^^Awrite^^C
+LPP:write:\write
+
+*^^Aimmediate^^Awrite-1^^BLPP:expandafter:^^Ameaning^^Aexpandafter^^C
+LPP:expandafter:\expandafter
+
+*^^Aimmediate^^Awrite-1^^BLPP:meaning:^^Ameaning^^Ameaning^^C
+LPP:meaning:\meaning
+
+*^^Aimmediate^^Awrite-1^^BLPP:else:^^Ameaning^^Aelse^^C
+LPP:else:\else
+
+*^^Aimmediate^^Awrite-1^^BLPP:fi:^^Ameaning^^Afi^^C
+LPP:fi:\fi
+
+*^^Aimmediate^^Awrite-1^^BLPP:begingroup:^^Ameaning^^Abegingroup^^C
+LPP:begingroup:\begingroup
+
+*^^Aimmediate^^Awrite-1^^BLPP:endgroup:^^Ameaning^^Aendgroup^^C
+LPP:endgroup:\endgroup
+
+*^^Aimmediate^^Awrite-1^^BLPP:lccode:^^Ameaning^^Alccode^^C
+LPP:lccode:\lccode
+
+*^^Aimmediate^^Awrite-1^^BLPP:lowercase:^^Ameaning^^Alowercase^^C
+LPP:lowercase:\lowercase
+
+*^^Aimmediate^^Awrite-1^^BLPP:catcode:^^Ameaning^^Acatcode^^C
+LPP:catcode:\catcode
+
+*^^Aimmediate^^Awrite-1^^BLPP:the:^^Ameaning^^Athe^^C
+LPP:the:\the
+
+*^^Aendgroup
+
+*\csname @@end\endcsname
+ 
+Here is how much of TeX's memory you used:
+ 11 strings out of 467099
+ 312 string characters out of 5408265
+ 435796 words of memory out of 5000000
+ 29447 multiletter control sequences out of 15000+600000
+ 627721 words of font info for 40 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 11i,0n,13p,4269b,350s stack positions out of 10000i,1000n,20000p,200000b,200000s
+No pages of output.
+PDF statistics:
+ 0 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+
+
+RESULT: exit 0
+TIME: 48.84 s

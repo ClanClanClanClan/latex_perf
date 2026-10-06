@@ -163,8 +163,9 @@ CENSUS = [
      "docs": ["c-dirorder"]},
     {"id": "cwd", "status": "fixed",
      "input": "the run directory's absolute path: getcwd(3)",
-     "observed_by": "`l3sys-query pwd`; the absolute input paths of a .synctex "
-                    "and of a -recorder .fls (PWD line) a later pass can \\input; "
+     "observed_by": "`l3sys-query pwd`; the absolute input paths of a SyncTeX "
+                    "file and of a -recorder file list (its PWD line) a later pass "
+                    "can \\input; "
                     "before OPEN-128 also `kpsewhich -var-value=TMPDIR` (the "
                     "private trees were under the run's temporary directory)",
      "how": "every run's directory is bind-mounted at the fixed RUN_DIR (/lp/run), "
@@ -187,8 +188,9 @@ CENSUS = [
      "docs": []},
     {"id": "pid", "status": "fixed",
      "input": "the process id: getpid(2)",
-     "observed_by": "only the -recorder's temporary pdflatex<pid>.fls (texmfmp.c "
-                    "recorder_start), renamed to <job>.fls; graders do not pass "
+     "observed_by": "only the -recorder's temporary file list, named after the "
+                    "pid (texmfmp.c recorder_start) and renamed to the job's; "
+                    "graders do not pass "
                     "-recorder, and a document cannot set it",
      "how": "every run is a fresh container: a fresh pid namespace, so the engine's "
             "pid is the same in every run (MEASURED: the supervisor reports it, "
@@ -475,7 +477,7 @@ def before_values(checkout: Path, name: str, tex: str, workroot: Path) -> dict:
                             "pdflatex", "--timeout", str(TIMEOUT),
                             "-interaction=nonstopmode", f"{name}.tex"],
                            cwd=d, env=env, capture_output=True, timeout=TIMEOUT + 120)
-        log = d / f"{name}.log"
+        log = _oracle.job_output(d, f"{name}.tex", ".log")
         text = log.read_text(errors="replace") if log.is_file() else ""
         return {"at": int(time.time()), "rc": p.returncode,
                 "values": dict(LPC.findall(text.replace("\n", "")))}

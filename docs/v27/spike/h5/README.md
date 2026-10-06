@@ -23,7 +23,14 @@ inputs, `runs/` the runs, `sample/` the raw profiles.
 | `evidence/probes/` | per run: the `PROBE` lines, the GC's exit statistics, the verdict and the footprint trace |
 | `evidence/compare/` | `meancompare` JSON per compared run |
 | `evidence/profile/` | the `sample` call trees (gzipped), their class summaries, the `-dcmm`/`-dlambda` excerpts |
-| `evidence/binary-times.txt` | the pinned binary's CPU times (five runs per prefix) |
+| `evidence/binary-times.txt` | the pinned binary's CPU times (five runs per prefix). **Superseded (C-145):** its log went to the macOS host through virtiofs; use `evidence/fair/` |
+| `tools/bintime.sh` | the pinned binary's user + sys CPU on meaning-dump prefixes, every file written to container-local storage, with host and VM loads; it starts the engine outside `_oracle.py` (its header says why) |
+| `tools/fairtime.sh`, `tools/fairtable.py` | interleaved rounds of the binary and the model's variants on the same prefixes, and their table (medians on both sides; `evidence/fair/fairtable.txt`) |
+| `tools/b2sim.py` | candidate B2 simulated: the fuel realizer beta-reduced in an extracted tree, every site asserted (`evidence/b-variants.txt`) |
+| `tools/profrun.sh`, `tools/costclass.py` | a capped run profiled by `sample` at given offsets; the samples grouped by what a design change would remove (`evidence/profile/prof-AB2.costclass.txt`) |
+| `tools/zbench.ml` | `Z` against native-int operations on small values (`evidence/zbench.txt`) |
+| `evidence/fair/` | the 2026-10-06 correction: `bin.txt` (the binary's runs, loads, log hashes), `load.log`, `fr.variants`, `fairtable.txt`, and `runs/` (probes, verdicts, footprint traces and `meancompare` classes of every run of the correction: the rounds `fr*`, and `sm-*`, `b1o3-*`, `dB2*`, `gc*`, `prof-AB2-*`) |
+| `evidence/b-variants.txt`, `evidence/gc-sensitivity.txt`, `evidence/zbench.txt` | B1 and B2 (builds, `-dcmm` counts, runs, comparisons); GC settings against CPU; the `Z` micro-benchmark |
 | `evidence/exe-sha256.txt` | the hashes of the model build and the three variants measured |
 
 **Inputs:** `python3 docs/v27/spike/h3/tools/meanblock.py REPO ~/.cache/lp-spike-h1/h5/in/pN N`

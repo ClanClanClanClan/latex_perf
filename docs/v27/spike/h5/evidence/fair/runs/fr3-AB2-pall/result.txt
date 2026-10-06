@@ -1,0 +1,2 @@
+--- file handle 4 = texput.log
+--- file handle 3 = /usr/local/texlive/2026/texmf-var/web2c/pdftex/pdflatex.fmt

@@ -1,0 +1,15 @@
+START Tue  6 Oct 2026 01:49:11 CEST
+killed: rss 4019MB > 4000MB at 48s
+killed: rss 4018MB > 4000MB at 16s
+finished rc 0 peak 1106MB in 17s
+finished rc 0 peak 1173MB in 16s
+finished rc 0 peak 1164MB in 17s
+finished rc 0 peak 1079MB in 18s
+finished rc 0 peak 1173MB in 17s
+finished rc 0 peak 1164MB in 17s
+finished rc 0 peak 1070MB in 19s
+finished rc 0 peak 1174MB in 20s
+finished rc 0 peak 1165MB in 20s
+finished rc 0 peak 1071MB in 19s
+finished rc 0 peak 1637MB in 205s
+QUEUE4 DONE Tue  6 Oct 2026 01:56:40 CEST

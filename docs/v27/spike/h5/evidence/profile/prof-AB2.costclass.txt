@@ -1,0 +1,12 @@
+# costclass.py on the first 1,000 names (A + B2, in place):
+prof-AB2-p1000-t1.txt: 8728 samples  Z 50.9%  interp 11.0%  storage 20.2%  gc 16.5%  io 0.8%  other 0.7%
+Z class, of all samples: conversions Uint63/Sint63/Int64 <-> Z 16.2%, boxing (custom blocks) 8.2%, C-call trampoline and TLS 7.6%, arithmetic and comparison 18.9%
+largest 'other' entries: camlList.existsb_182 0.2%, camlList.rev_append_79 0.2%, __mmap 0.1%, caml_get_domain_state 0.1%, camlDatatypes.length_48 0.1%
+
+# costclass.py on the full dump, three 20 s windows at 20, 80, 140 s:
+prof-AB2-pall-t20.txt: 14582 samples  Z 53.8%  interp 16.6%  storage 19.8%  gc 8.8%  io 0.0%  other 1.0%
+prof-AB2-pall-t80.txt: 14655 samples  Z 53.7%  interp 16.9%  storage 19.0%  gc 9.3%  io 0.0%  other 1.1%
+prof-AB2-pall-t140.txt: 14658 samples  Z 53.6%  interp 16.6%  storage 19.6%  gc 9.1%  io 0.0%  other 1.2%
+ALL: 43895 samples  Z 53.7%  interp 16.7%  storage 19.5%  gc 9.1%  io 0.0%  other 1.1%
+Z class, of all samples: conversions Uint63/Sint63/Int64 <-> Z 18.2%, boxing (custom blocks) 7.9%, C-call trampoline and TLS 7.9%, arithmetic and comparison 19.7%
+largest 'other' entries: camlList.existsb_182 0.6%, caml_get_domain_state 0.1%, camlList.find_199 0.1%, caml_raise_if_exception 0.1%, _platform_memmove 0.1%, camlStdlib__Array.fill_332 0.1%, __mmap 0.0%

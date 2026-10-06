@@ -1,0 +1,1 @@
+PROBE wall 31.1 cpu 32.63 ext 33024 minor 5439890787 promoted 890482564 major 938738989 minc 20777 majc 32 heap 116747492 top 272725874 set 99485283 get 291991643 make 8215570 make_words 63534745 reroot_steps 0 stale 0 copy 0 live 86108312 reach_state 86090529 static 298780 other -280997 stdin_left 3733277

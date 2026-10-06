@@ -55,20 +55,30 @@ comes from a command in §1. Code and evidence: [`h5/`](h5/).
    was compared with the extracted Coq definition: no mismatch. **With T1, T2 and A, a
    profiling build runs the whole dump** (345 s, 2.0 GB). It is IDENTICAL to the pinned binary,
    and its digest is the contract's `4879fa65…`.
-5. **Speed against H.5: below the kill line on the proxy, not yet at the pass line**
-   [M on a proxy, I for H.5]. H.5's documents cannot run yet (the PDF path's externals are
-   Stuck), so the meaning dump is the proxy. The current model is 183× pdfTeX on the format load
-   and ≈ 1,090× per name. With A, T1 and T2 it is 25× on the load, 46× over 1,000 names and
-   ≈ 103× per name. The pass line is ≤ 60× and the kill line > 200×.
+5. **Speed against H.5: past the kill line on the proxy's marginal cost** [M on a proxy, I for
+   H.5]. *(Restated 2026-10-06, C-145: the first version timed the binary with its log written
+   to the macOS host through virtiofs, and mixed medians with minimums and name populations; it
+   said 25× on the load and ≈ 103× per name.)* H.5's documents cannot run yet (the PDF path's
+   externals are Stuck), so the meaning dump is the proxy. With A, T1 and T2, on interleaved
+   medians with the binary on container-local storage (§3.2): **59× on the format load, 122× on
+   the 1,000-name run, 818× on the whole dump, and ≈ 1,540× per name** (≈ 1,260× min against
+   min). The pass line is ≤ 60× and the kill line > 200×. **No profile-guided fix to ≤ 200× is
+   in sight** (§3.4): every further change measured or estimated (native int63 values, a mutable
+   store, a shallow embedding, an I/O buffer, GC tuning) together gives ≈ 4× (≈ 10× at best),
+   leaving ≈ 370× (≈ 150× at best), and only as a new verified execution model, which is H.5's
+   fallback project.
 6. **Platform:** the extracted OCaml tree is the same on the Linux runner and on macOS: all 93
    files, `72b2ea79…` on both [M]. The H.3 report says otherwise; that sentence is a
    transcription error (C-143). The only build output that differs is `ps.exe`, the native code
    of two hosts.
-7. **Recommendation:** candidate A, an in-place `PArray` realizer that fails closed on a
-   superseded version. It keeps the Coq term unchanged and adds to the trusted base a realizer
-   whose model is proved in Coq. T1 and T2 ship with it, in the same `Extract.v` change. It is
-   the only option within the box that stops the growth by construction and moves the speed by
-   a factor. It does not reach ≤ 60× on the marginal cost (§3.3, §6), and two owner questions
+7. **Recommendation, for memory:** candidate A, an in-place `PArray` realizer that fails closed
+   on a superseded version. It keeps the Coq term unchanged and adds to the trusted base a
+   realizer whose model is proved in Coq. T1 and T2 ship with it, in the same `Extract.v`
+   change. **Measured since (§5 B): B2**, the term restructuring that frees the fuel closures,
+   also removes the growth with coq-core's arrays unchanged (full dump in 2.4 GB, IDENTICAL), and
+   adds no realizer; but its memory property is tested only, and it is ≈ 1.4× slower than A.
+   **B1** (flambda `-O3`) does not remove it. **For speed, neither changes the verdict**: on
+   the proxy H.5's kill criterion fires on the marginal cost (§3.3, §3.4). Three owner questions
    remain (§6).
 
 ## 1. Method
@@ -146,7 +156,8 @@ wrong: C-142.
 
 `ExtrOcamlNatInt` extracts `match fuel with O => a | S f => b` as
 `(fun fO fS n -> if n=0 then fO () else fS (n-1)) (fun _ -> a) (fun f -> b) fuel`. OCaml 5.2's
-`ocamlopt`, without flambda, keeps `fS` as a heap closure that captures every free variable of
+`ocamlopt` (here with flambda at its default level, as every local build was; without flambda on
+the GitHub runner: C-146) keeps `fS` as a heap closure that captures every free variable of
 `b`, including the state `st`. Here is `exec_list` in `-dcmm` (`h5/evidence/profile/exec_list.cmm`):
 
 ```
@@ -289,40 +300,88 @@ How to read it:
 
 ### 3.2 CPU time, model against the pinned binary (the meaning dump as a proxy) [M]
 
-The machine's load moved between 13 and 177 during this work, and CPU time under contention
-moves with it (the same persistent 250-name run took 123.6 s at a load of 100–175 and 88–98 s at
-15–27). So the comparison is made by **interleaved rounds**: each round runs every variant once,
-one after the other, on the same input ([`h5/evidence/commands/abtest.sh`](h5/evidence/commands/abtest.sh);
-three rounds at 250 names, two at 0 and at 1,000; load 13–47). Median CPU seconds
-(`h5/evidence/abtest.tsv`, made by `h5/tools/abtable.py`):
+**This section was restated on 2026-10-06 (C-145).** Its first version (commit `b9ea746c`) timed
+the binary with its 7 MB `texput.log` written to a bind mount on the macOS host (virtiofs), which
+inflated the binary's time 4–8× on the full dump. It also divided a model *median* by a binary
+*minimum*, and compared the model's cost per name over the first 1,000 names with the binary's
+average over all 23,519. All three made the model look better than it is. The numbers below
+replace it.
 
-| | 0 names | 250 names | 1,000 names | 23,519 names |
+**Method** ([`h5/tools/fairtime.sh`](h5/tools/fairtime.sh), [`h5/tools/bintime.sh`](h5/tools/bintime.sh),
+table by [`h5/tools/fairtable.py`](h5/tools/fairtable.py); evidence in
+[`h5/evidence/fair/`](h5/evidence/fair/)):
+- **The binary** runs in a container on colima's native arm64 VM, and every file it writes goes
+  to the container's own storage (`/tmp`, overlayfs on the VM's disk). Its input is copied there
+  first. The clock shim fakes the wall clock, so user + sys CPU is read. Every run's `texput.log`
+  is hashed: at all 23,519 names it is `335b024c…`, the same as the comparison run's. The script
+  starts the engine outside `_oracle.py` on purpose; its header says why (E7's measurement entry
+  point is being built on another branch).
+- **The model** runs on the macOS host under `capped.sh` (4 GB cap). Its time is its own CPU time
+  (`Sys.time`: user + sys) at the end of the run.
+- **Interleaved rounds**: in each of 3 rounds, for each prefix in turn (0, 250, 1,000, all 23,519
+  names), the binary 3 times, then each model variant once. Every round records the host's
+  `uptime` and `memory_pressure` free percentage before each run, and the VM's load with each
+  binary run.
+- **Medians on both sides**, over the **same name populations**: the binary's 9 runs per
+  prefix, each variant's 3 runs. The cost per name is (median at N names − median at 0) / N on
+  each side, with the same N.
+- Host load during the rounds: 8.6–38 (1-minute average; 8 cores), memory free 38–47 %. VM load
+  during the binary's runs: 0.00–0.59 (1-minute average).
+
+The variants (profiling builds, never model builds; §1, §5 B):
+- **A** = `t2` in place (`PS_PARRAY=linear`): candidate A with T1 and T2, as in stage 1;
+- **B2** = `b2sim`, persistent: coq-core's `Parray` algorithm unchanged, T1 and T2, and the fuel
+  realizer beta-reduced (§5 B);
+- **A + B2** = `b2sim` in place.
+
+Median CPU seconds (the model's per-round values are in `h5/evidence/fair/fairtable.txt`):
+
+| | 0 names (the format load) | 250 names | 1,000 names | 23,519 names |
 |---|---|---|---|---|
-| pinned binary, native arm64 (min of 5, user + sys) | 0.342 | 0.259 | 0.452 | 3.089 |
-| current representation (`prof`, persistent) | 62.6 | 90.7 | 189.7 | out of memory (≈ 76 GB needed) |
-| A alone (`prof`, in place) | — | 83.3 | — | — |
-| T1 (`t1`, persistent) | — | 29.1 | — | out of memory |
-| A + T1 (`t1`, in place) | — | 19.7 | — | — |
-| **A + T1 + T2** (`t2`, in place) | **8.5** | **8.9** | **20.6** | **345.0** (one run, at load 35–70) |
+| **pinned binary**, user + sys, median of 9 (min–max) | **0.112** (0.074–0.172) | **0.099** (0.075–0.123) | **0.091** (0.079–0.124) | **0.229** (0.211–0.365) |
+| A (`t2`, in place) | 6.63 | 7.11 | 11.06 | 187.2 |
+| A + B2 (`b2sim`, in place) | 5.26 | 6.18 | 15.32 | 190.4 |
+| B2 (`b2sim`, persistent) | 8.93 | 9.36 | 19.34 | 267.7 |
 
-Per-round spread around the median: from −12 % to +27 %. The shortest runs vary most: `t2` at 250
-names took 8.0, 8.9 and 11.2 s.
+The ratios, median against median:
 
-The binary's 0-name run is its own format load: about 0.3 s. Its 250-name minimum is lower than
-that, which is noise. The ratios:
+| | A | A + B2 | B2 |
+|---|---|---|---|
+| the format load (0 names) | **59×** | 47× | 80× |
+| the whole 250-name run | 72× | 62× | 95× |
+| the whole 1,000-name run | **122×** | 168× | 213× |
+| the whole dump (23,519 names) | **818×** | 831× | 1,169× |
+| **per name**, over all 23,519 names: model (pall − p0) / 23,519 against the binary's (0.229 − 0.112) / 23,519 = **4.97 µs** | **7.68 ms ≈ 1,540×** | 7.87 ms ≈ 1,580× | 11.0 ms ≈ 2,210× |
+| per name over the first 1,000 names | model 4.43 ms (A); **the binary's cannot be measured**: its p1000 − p0 difference (−21 ms) is inside its own run-to-run spread (0.07–0.17 s), because 1,000 names cost it about 5 ms | | |
 
-| | current | A + T1 + T2 |
-|---|---|---|
-| the format load (0 names) | 62.6 / 0.342 ≈ **183×** | 8.5 / 0.342 ≈ **25×** |
-| the whole 1,000-name run | 189.7 / 0.452 ≈ **420×** | 20.6 / 0.452 ≈ **46×** |
-| per name, the marginal cost (macro expansion and `\meaning`): model (p1000 − p0) / 1,000 against the binary's (3.089 − 0.342) / 23,519 = 0.117 ms | 127 ms ≈ **1,090×** | 12.1 ms ≈ **103×** |
-| the whole dump | — | 345.0 / 3.089 ≈ 112× (a contended run; at the uncontended per-name rate, ≈ 8.5 + 23,519 × 12.1 ms ≈ 293 s ≈ 95×) [I] |
+How to read it:
+- **The binary is fast enough that only the full dump resolves its per-name cost.** At 0, 250
+  and 1,000 names it runs in 0.09–0.11 s, its start-up and format load, and the names are
+  below its noise. So the per-name ratio is taken over all 23,519 names on both sides, never
+  over a model prefix against a binary average.
+- **The model's cost per name grows during the run**: 4.4 ms over the first 1,000 names, 7.7 ms
+  over all of them. The work per name does not grow: 43 K array writes per name over the first
+  1,000 names, 40 K over all of them (the `set` counter of the final `PROBE` lines of `fr1-A-*`),
+  and 324 against 298 bytes of log per name. The model's *speed* drops: about 100 ns of CPU per
+  array write over the first 1,000 names, about 180 ns over the whole dump. §3.4 measures why.
+  Taking the first 1,000 names as the per-name rate understated the model's cost by 1.7×.
+- **The machine's load moves both sides**, so only interleaved ratios are used. In stage 1, at a
+  host load of 35–70, the same `t2` variant took 345 s on the full dump; here, at 9–17, 176–189 s
+  (1.9× less). The binary took 0.645 s in the review's 7 rounds on container-local storage
+  (median) against 0.229 s here (2.8× less). Pairing measurements taken at different times
+  moves the ratio by more than either side's own spread.
+- **Min against min**, as a bound on the noise: binary 0.074 / 0.211 s, A 4.92 / 176.6 s: per
+  name 5.8 µs against 7.30 ms, ≈ 1,260×. So the per-name ratio is **≈ 1,260–1,540×** for A.
+- **A + B2 is not faster than A**: per round and prefix, A + B2 / A is 0.79–1.39 (median 0.97,
+  12 pairs). B2 halves the words allocated per array write (99 → 53, `PROBE` lines), and that
+  buys about 3 %, within the noise. B2 alone, with the persistent arrays, is 1.28–1.75× slower
+  than A (median 1.41, 12 pairs).
 
-So T1, T2 and A together are **10.2×** faster at 250 names and **10.5×** per name than today.
-
-These ratios are approximate in both directions. The model ran on the macOS host and the binary in
-colima's Linux VM on the same hardware, both under the same varying load. Neither is the
-quiet-machine measurement E4 asks for.
+Against the first version of this table: the format load is **59×**, not 25×; the 1,000-name run
+**122×**, not 46×; the cost per name **≈ 1,540×**, not ≈ 103×; the whole dump **818×**, not 112×.
+The review's corrected figures (per name ≈ 675–945×, whole dump ≈ 430–535×, 1,000 names ≈ 80×,
+load ≈ 35×) paired its own binary runs with stage 1's model medians, taken at other times and
+loads; interleaved, on medians, the gap is larger still.
 
 ### 3.3 What this says about H.5 [M on the proxy; I for H.5's documents]
 
@@ -330,17 +389,96 @@ H.5's documents (the one-line document, the 12-page synthetic paper, a 40-page c
 **cannot be run in the model yet**: a `pdflatex` pass ships PDF through externals that are
 Stuck (43 of 188 are modelled). The meaning dump is macro expansion and printing: the same
 interpreter, arrays and arithmetic as typesetting, but none of the paragraph builder's or the
-font machinery's mix. On that proxy:
-- **The current representation: 183× on the format load, ≈ 1,090× per name**, and out of memory
-  before 4,000 names. Well past the kill line.
-- **A + T1 + T2: 25× on the format load, 46× on the 1,000-name run, ≈ 103× per name.** That is
-  below the kill line (200×). It is under the pass line (60×) for the load and the short run, and
-  about 1.7× over it on the marginal cost. A pass of a real document is load plus typesetting,
-  so its ratio falls between the two; where it falls depends on the document [I].
-- **The pass line (≤ 60× per pass) is not in sight from the heap representation.** What is left
-  is spread over the interpreter, `Z` arithmetic, allocation and the arrays (3.1). Each further
-  factor needs a change to the term (C or D), or to the value representation (machine integers
-  for C's `int` in place of `Z`), and none of those fits the box.
+font machinery's mix. On that proxy, with A, T1 and T2 (A + B2 is within noise of it, §3.2;
+the other variants are slower):
+- **The format load is 59×**: at the pass line (≤ 60×), below the kill line.
+- **The marginal cost, ≈ 1,540× per name** (≈ 1,260× min against min), is **7.7× over the kill
+  line (200×) and 26× over the pass line (60×).** The whole dump is 818×.
+- **A pass of a real document is the format load plus its typesetting** [I]. The one-line
+  document is nearly all format load, so the proxy puts it near 60×. A 12- or 40-page paper
+  spends most of the binary's time in typesetting, so if typesetting costs the model what macro
+  expansion does per unit of the binary's work, its ratio is near the marginal one: of the order
+  of 1,000×, past the kill line.
+- So **on the proxy, H.5's kill criterion fires on the marginal cost**, unless a profile-guided
+  fix is in sight. §3.4 asks whether one is.
+
+What the proxy can and cannot stand for:
+- It **can** stand for the cost of the machinery every pass uses: the interpreter, the `Z`
+  arithmetic, the array representation, the allocation and the GC; and the format load itself,
+  which every pass begins with.
+- It **cannot** give the ratio of a document pass. The proxy's work per unit of the binary's
+  time may differ from typesetting's in either direction: typesetting does more arithmetic per
+  byte of output (glue, badness, `x_over_n`, `xn_over_d`), which is `Z` in the model and cheap
+  machine arithmetic in the binary, and it does far less printing. Its I/O is DVI/PDF bytes
+  rather than the log. It also reaches the paragraph builder's and the font loader's code, which
+  the dump never runs. A per-name ratio of ≈ 1,540× is therefore an estimate of a document's
+  ratio, not a measurement of it [I].
+- It **cannot** say anything about the externals a PDF pass needs (H.4), which are Stuck today.
+
+### 3.4 Speed headroom: where the remaining ≈ 1,540× goes, and what could remove it [M, I]
+
+The profile of the fastest sound variant, A + B2 (in place, T1 and T2, the fuel realizer
+beta-reduced; A alone is within noise of it, §3.2): `sample` at 1 ms over the first 1,000 names
+(12 s from the start: the format load and the names), and three 20 s windows of the full dump at
+20, 80 and 140 s ([`h5/tools/profrun.sh`](h5/tools/profrun.sh); samples and summaries in
+`h5/evidence/profile/prof-AB2-*`). Grouped by **what a change of design would remove**
+([`h5/tools/costclass.py`](h5/tools/costclass.py)), top-of-stack shares:
+
+| class | first 1,000 names (8,728 samples) | full dump, 3 windows (43,895 samples) |
+|---|---|---|
+| **`Z` values**: zarith's code, the C-call trampoline into it and its TLS lookup, its boxed custom blocks, the extracted `BinInt`/`Uint63`/`Sint63` code and the T1/T2 realizers | **50.9 %** | **53.7 %** |
+| – of which conversions `Uint63`/`Sint63`/`Int64` ↔ `Z` | | 18.2 % |
+| – of which boxing (custom blocks: `Z` values ≥ 2^62 and `Int64`) | | 7.9 % |
+| – of which the C-call trampoline and TLS | | 7.9 % |
+| – of which arithmetic and comparison proper | | 19.7 % |
+| **storage**: the arrays (`Parrayc`) and the heap model over them (`Values`: `bget`, `bset`, `load_cell`, `cell_at`, `hput`) | 20.2 % | 19.5 % |
+| **interpreter** (`Interp`: dispatch on the IR, `has_label`/`goto_in` label search, argument lists) | 11.0 % | 16.7 % |
+| **GC and allocation** (allocator slow path, minor and major GC, write barrier) | 16.5 % | 9.1 % |
+| **I/O** (`Boundary`, where the I/O lists are read and extended) | 0.8 % | < 0.1 % |
+| other | 0.7 % | 1.1 % |
+
+The shares are the same in the three windows of the dump (Z 53.6–53.8 %, GC 8.8–9.3 %), so the
+model's slow-down over the run (§3.2: ≈ 100 → ≈ 180 ns per array write) is not a class that
+grows. GC tuning does not move it either: A + B2 at 1,000 names, 3 interleaved rounds each,
+median CPU 15.8 s with OCaml's defaults, 15.9 s with a 4 M-word minor heap (`s=4M`: 949 minor
+collections instead of 15,092), 16.5 s with `s=4M,o=200` (`h5/evidence/gc-sensitivity.txt`).
+Inline allocation in OCaml code (the state records, result pairs and cells) is not visible as
+its own frame: it is counted in the function that allocates, mostly `Interp` and `Values`.
+
+**What each further change could gain, with its trusted-base cost.** Each estimate removes a
+fraction of the class's share and applies Amdahl's law to the rest [I, from the shares above and
+the micro-benchmark]:
+
+| change | what it removes | evidence | speed-up alone | trusted base |
+|---|---|---|---|---|
+| **native int63 values** for C's `int` (and array indices), with overflow detection proved in Coq, in place of `Z` | all conversions, boxing and trampoline (34 % of samples), and arithmetic proper shrinks 1–5× ([`h5/tools/zbench.ml`](h5/tools/zbench.ml), this machine, 3 runs: `Z` add + `logand` 3.1–3.2 ns against 1.4–3.0 ns for the checked int version; compare + sub 4.4–4.7 against 0.85–0.99 ns; div/rem 4.7–5.6 against 1.7–2.0 ns; `h5/evidence/zbench.txt`) | the Z class is 54 %; after the change ≈ 8 % | **≈ 1.8×** (54 % → 8 %) | no new realizer: Coq's `PrimInt63` is already extracted to OCaml `int` by coq-core's `Uint63` (TB-1). But `Values.v`'s `KInt` changes type: a refinement proof that every operation on [−2^31, 2^31) agrees with the `Z` one (one lemma per C operator, plus the overflow cases), and the translator emits int63 literals. Days to weeks |
+| **mutable store behind a proved interface** (candidate C) | the 3-level `heap → block → chunk` indirection, the state record rebuilt per write, version handling | storage 19.5 %; GC 9.1 % mostly follows allocation | ≈ 1.2–1.4× (removing ⅔ of storage and of GC) | C's refinement theorem; the monad's realizer by parametricity (§5 C). 6–10 days |
+| **specialising the interpreter / shallow embedding** (candidate D) | IR dispatch, the linear label search of `goto`, argument lists, the per-node result wrappers | interp 16.7 % | ≈ 1.1–1.2× | per-procedure reflection lemmas; risks H.2's build kill criterion (§5 D). Weeks |
+| **I/O as a mutable buffer** behind a proved interface | the 24 bytes of heap per byte of I/O (§2.5) | I/O < 0.1 % of time | none in time; memory only | one realizer row (a buffer with a list model) |
+| GC tuning | — | measured above: no gain | none | none |
+
+**All of them together** leave, of today's samples, about 8 % (Z) + 6.5 % (storage) + 5.6 %
+(interpreter) + 3 % (GC) + 1.1 % (other) ≈ 24 %: **≈ 4.1×**, so ≈ 1,540× / 4.1 ≈ **370× per
+name**. Under generous assumptions (Z to 4 %, every other class cut 10×) ≈ 9.6 % of today's
+samples: ≈ 10× and ≈ **150×**. The
+format load (59× today) would fall by a similar factor.
+
+**The verdict on headroom:**
+- **≤ 200× (the kill line): NOT in sight as a profile-guided fix.** The central estimate with
+  every change above is ≈ 370× per name; only the generous one crosses 200×, and it needs all
+  four changes at once: int63 values, a mutable store, a shallow embedding and a new I/O
+  buffer. That is a new verified implementation of the engine's execution model, which is
+  exactly H.5's fallback ("a verified-refinement fast interpreter becomes its own project"),
+  weeks to months, not a fix within or near the box. No single change gets more than ≈ 1.8×.
+- **≤ 60× (the pass line): NOT in sight.** It needs ≈ 26× on the marginal cost. No combination
+  of the measured classes gives more than ≈ 10×, because every class would have to shrink by
+  more than 25× at once. Only a different kind of artefact could: OCaml (or C) code generated
+  from the IR with native integers and mutable memory, whose speed would be that of compiled
+  code (an OCaml transliteration of C typically runs within a small factor of it [I]), with a
+  verified compilation from the IR in place of the interpreter. That is a research project of
+  its own, not a refinement of this one.
+- The **format load** is the one place where the pass line holds today (59×). A one-line
+  document is mostly format load, so it would pass on its own [I].
 
 ## 4. Platform reproducibility: the extracted tree is identical [M, R]
 
@@ -367,14 +505,17 @@ therefore a transcription error, and nothing was investigated because there was 
 **Every byte of the trusted path, accounted for:** the source pin, the translator and the
 committed Coq sources are hash-equal; Coq's output (the generated tree, then the extraction) is
 byte-identical across the two hosts. Only `ps.exe` differs, and it must: it is native code for
-two instruction sets and two object formats, produced by the same OCaml 5.2.0 compiler from the
-same 93 files and linked with the same zarith 1.14 and coq-core 8.18.0 kernel library. That
-compilation step is TB-1's "OCaml compiler and runtime". Its per-host output is checked only by
-running it: the differential, the round trip and the meaning prefixes, per architecture as E2
-requires. The provenance does **not** record the versions of GMP (under zarith) or of the C
-toolchain that compiled the OCaml runtime and zarith's stubs; stage 2 adds them to
-`provenance.json` (`opam list`, `gmp` version), because both are on the trusted path of
-`ps.exe`.
+two instruction sets and two object formats, produced by OCaml 5.2.0 from the same 93 files and
+linked with the same zarith 1.14 and coq-core 8.18.0 kernel library. **Not by the same compiler
+configuration, though (C-146):** the macOS switch (`l0-testing`) is OCaml 5.2.0 with flambda, the
+runner's is `ocaml-base-compiler` 5.2.0 with `ocaml-options-vanilla` (no flambda), so the two
+builds also differ in the middle end. That compilation step is TB-1's "OCaml compiler and
+runtime". Its per-host output is checked only by running it: the differential, the round trip
+and the meaning prefixes, per architecture as E2 requires. The provenance does **not** record
+the compiler's configuration (`ocamlopt -config`: `flambda`), the versions of GMP (under zarith)
+or of the C toolchain that compiled the OCaml runtime and zarith's stubs; stage 2 adds them to
+`provenance.json` (`ocamlopt -config`, `opam list`, `gmp` version), because all three are on the
+trusted path of `ps.exe`.
 
 ## 5. Candidate representations
 
@@ -506,33 +647,82 @@ separate body function, `match fuel with O => .. | S f => evale_body f e st end`
 Coq's guard checker must accept the body function. Either it is passed the recursive calls as
 arguments and unfolded, or the body stays in the mutual block with a decreasing fuel argument
 of its own; which of the two Coq 8.18 accepts is untested. Variant **B1** changes the compiler
-instead of the term: `ocamlfind ocamlopt -O3` with flambda inlines the immediately-applied
-`(fun fO fS n -> …)`. No opam switch here has flambda with coq-core and zarith; one would be
-built.
+flags instead of the term: flambda's `-O3`.
 
-**(b) Equivalence.** B2: for each restructured function, a Coq lemma `evale_new = evale` (by
-`reflexivity` or one `destruct fuel`). This is the best class: proved in Coq, and no realizer is
-added. B1: no term change; TB-1's compiler row grows by flambda. But **the memory property itself
-is "tested only" under both B1 and B2.** That old versions are unreachable is a fact about
-compiled code and the GC, which no Coq statement reaches. It can only be measured, with the
-"reachable only from elsewhere" probe of §2.1. One new closure capturing a state anywhere,
-in an external, a helper or a future boundary model, brings the growth back silently, and only
-the probe would show it.
+**Correction (C-146).** The first version of this section said that no opam switch here had
+flambda with coq-core and zarith, and §2.2 said the retention came from "OCaml 5.2's `ocamlopt`,
+without flambda". Both are wrong: the switch every local build used (`l0-testing`, the H.2
+pipeline's default) is OCaml 5.2.0 **with** flambda (`ocamlopt -config`: `flambda: true`), at
+its default optimisation level. The GitHub runner's switch is `ocaml-base-compiler` with
+`ocaml-options-vanilla`, without flambda. The retention appears under both, so the finding of
+§2.2 stands, but the two `ps.exe` builds differ by compiler configuration as well as by host
+(§4), and `provenance.json` records only "5.2.0".
 
-**(c) Memory and speed.** Memory [I]: live data plus the garbage of `Updated` nodes, which every
-write still promotes through the old version's write barrier (427 M promoted words at 250 names,
-against 94 M in place). The probe would read near zero; the top of the heap would be between A's
-137 M words and the current 472 M, depending on the GC's pacing. Speed [I]: no better than A
-(the same allocation, plus the diff nodes, plus a closure per node exactly as now). B2 adds a
-function call per node, which is neutral to slightly negative.
+**(b) How B was measured** (profiling variants, never model builds):
+- **B1**: the `t2` tree compiled with `-O3` (`OCFLAGS=-O3 h5/tools/build.sh`). Flambda then
+  inlines 1 of the 14 fuel closures of `Interp` (`exec_list`'s); the other 13, including `exec`'s
+  and `evale`'s, stay heap closures with the state captured: `-inline 10000` and
+  `-inline-max-depth 10` change nothing (`-dcmm`: 13 `fS` functions, 26 allocation sites).
+- **B2** (simulated): [`h5/tools/b2sim.py`](h5/tools/b2sim.py) beta-reduces, in the extracted
+  OCaml, every application of `ExtrOcamlNatInt`'s realizer: `(fun fO fS n -> if n=0 then fO ()
+  else fS (n-1)) (fun _ -> A) (fun f -> B) N` becomes `let n = N in if n = 0 then A else let f
+  = n - 1 in B`. That is what B2's restructuring gives the compiled code: the successor branch
+  is no longer a closure, and its variables get per-call-site liveness. 33 sites in 9 files,
+  every one counted and asserted; `-dcmm` of `Interp` then has 0 `fS` closures. The arrays are
+  `parrayc` in its persistent mode, which is coq-core 8.18.0's `Parray` algorithm unchanged
+  (plus counters). T1 and T2 are included, as the task fixed.
 
-**(d) Risk.** None to fidelity (B2 is proved). The risk is to the property E11 funds: the
-growth can come back with no test failing, because no fidelity test measures memory.
+**(c) Memory and speed, measured** (fair rounds of §3.2, 3 rounds; the deep probe run
+`dB2o40-pall`):
+
+| | 0 names | 250 names | 1,000 names | 23,519 names |
+|---|---|---|---|---|
+| current representation (stage 1, `prof`, persistent): top of the heap, peak footprint | — | 472 M words, 3,768 MB | 773 M words, 6,070 MB | out of memory (≈ 76 GB) |
+| **B1** (`-O3`, persistent): top of the heap, peak footprint | — | 464 M words, 3,620 MB | **killed at the 4 GB cap** after 16 s | not run |
+| **B2** (persistent): top of the heap, peak footprint | 176 M words, 1,510 MB | 200 M, 1,695 MB | 233 M, 1,860 MB | **307 M, 2,402 MB** |
+| **A** (in place): top of the heap, peak footprint | 115 M, 991 MB | 118 M, 1,079 MB | 127 M, 1,088 MB | 267 M, 1,981 MB |
+| A + B2 (in place) | 115 M, 990 MB | 116 M, 1,073 MB | 121 M, 1,105 MB | 236 M, 1,633 MB |
+| B2, median CPU s (ratio to the binary) | 8.93 (80×) | 9.36 (95×) | 19.34 (213×) | 267.7 (1,169×) |
+| A, median CPU s (ratio to the binary) | 6.63 (59×) | 7.11 (72×) | 11.06 (122×) | 187.2 (818×) |
+
+- **B1 alone does not remove the retention**: at 250 names its heap is the current one's
+  (464 M against 472 M words), and at 1,000 names it passes the 4 GB cap, as the current build
+  does. Flambda does not inline the closures that matter.
+- **B2 removes it.** The full dump finishes in 2.4 GB with coq-core's persistent algorithm,
+  IDENTICAL to the pinned binary (`meancompare`: the same terminal output, `texput.log`
+  `335b024c…`, clock readings, and `meanings_sha256` `4879fa65…`; also at 250 names). The deep
+  probe (a forced full GC every 45 s, `o=40` so that the probe's own heap walk fits the cap; it
+  still passed 4 GB during the sixth walk, at 244 s, so the run covers the first 46 % of the
+  array writes):
+
+  | CPU s | array sets | live words | reachable from the current state | reachable only from elsewhere | stdin bytes not yet read |
+  |---|---|---|---|---|---|
+  | 43.2 | 110,261,148 | 86,225,765 | 86,207,981 | −280,996 | 3,692,857 |
+  | 80.5 | 198,761,202 | 87,174,389 | 87,156,609 | −281,000 | 3,365,408 |
+  | 118.2 | 285,842,993 | 88,148,892 | 88,131,117 | −281,005 | 3,087,590 |
+  | 154.5 | 370,267,605 | 89,091,099 | 89,073,311 | −280,992 | 2,824,270 |
+  | 191.3 | 452,742,485 | 89,932,311 | 89,914,536 | −281,005 | 2,503,810 |
+
+  Nothing is retained beyond the current state at any probe (−0.28 M is the program constants
+  counted twice, as in §2.4). The live words grow by 3.7 M over 342 M writes: the output list.
+  Unlike A (§2.5), where "reachable only from elsewhere" grew by 3 words per stdin byte
+  consumed, B2 frees the consumed input too, because no frame holds an old state at all.
+- **B2 is slower than A**: 1.3–1.6× per round on the full dump (persistent `Updated` nodes:
+  417 M promoted words at 250 names, against 79 M in place), and its heap is larger (307 M
+  against 267 M words at the end). **A + B2 is within noise of A** (§3.2).
+
+**(d) Equivalence and risk.** B2: for each restructured function, a Coq lemma
+`evale_new = evale` (by `reflexivity` or one `destruct fuel`). This is the best class: proved in
+Coq, and no realizer is added. But **the memory property itself is "tested only"**: that old
+versions are unreachable is a fact about compiled code and the GC, which no Coq statement
+reaches. It can only be measured, with the probe of §2.1. One new closure capturing a state
+anywhere, in an external, a helper or a future boundary model, brings the growth back silently.
+The simulation also shows the property depends on the compiler: B2 must be measured on the
+GitHub runner's non-flambda compiler too (stage 2), because the real B2 relies on the `fS`
+closure's call being a tail call, and the simulation does not.
 
 **(e) Effort.** B2: 1.5–2.5 days, depending on the guard checker, over about 15 functions, with
-the same re-verification as A. B1: about 1 day (an opam switch with flambda, coq-core and
-zarith), plus TB-1 review of the flambda pipeline. It fits the box, but it buys a weaker memory
-guarantee and no speed.
+the same re-verification as A. B1: none to build (the switch exists), but it does not work.
 
 ### Candidate C: a state monad over an abstract heap interface, realised by mutable arrays
 
@@ -552,7 +742,8 @@ run-time check, but still not a Coq theorem about OCaml.
 **(c) Memory and speed [I].** Memory: live data only. Speed: on top of A, it removes the `state`
 record rebuilt at every write (6 words), the `EOk (v, st)`-style result pairs, and the 3-level
 `heap → block → chunk` indirection of every access. From the allocation share of §3 (15 %) and
-the arrays' share (11 %), about 1.3–1.6× over A with T1 and T2.
+the arrays' share (11 %), about 1.3–1.6× over A with T1 and T2. (Re-estimated on 2026-10-06 from
+the class shares of §3.4, storage 19.5 % and GC 9.1 %: ≈ 1.2–1.4×.)
 
 **(d) Risk.** The refinement proof makes the rewrite safe, but the rewrite touches every line of
 TB-4 and TB-5. Until the proof is closed, the differential is the only check.
@@ -588,64 +779,96 @@ where the time is.
 
 ### The candidates side by side
 
-| | memory stops growing | how it is proved | trusted base added | speed over today (250 names, CPU) | fits the box |
+| | memory stops growing | how it is proved | trusted base added | speed (CPU, measured on profiling variants unless [I]) | fits the box |
 |---|---|---|---|---|---|
-| **A** in place, fail-closed | **yes**, by construction: a superseded version holds nothing, and a read of one stops the run | the term is unchanged; `LinArray.v` proves the realizer's model refines `PArray`; the OCaml module is checked against the model | one realizer row (≈ 60 lines), with a Coq-proved model | 1.09× alone; **10.2× with T1 + T2** (measured, profiling variant) | yes (≈ 1.5 days) |
-| **B** persistent, retention removed | measured only, and fragile: any closure that captures a state brings it back | B2: Coq lemmas, by `reflexivity`; B1: none (a compiler change) | none (B2) or flambda (B1) | ≈ 1× alone [I]; T1 + T2 apply equally | yes, with no speed gain |
-| **C** state monad, mutable realizer | yes, by construction | a refinement theorem in Coq over the whole of `PS` | the monad's realizer (parametricity) | ≈ 1.3–1.6× over A + T1 + T2 [I] | **no** (6–10 days) |
-| **D** shallow embedding | no (needs A or C) | generated reflection lemmas | none beyond A or C | ≈ 1.3× over A + T1 + T2 [I] | **no** (weeks) |
+| **A** in place, fail-closed | **yes**, by construction: a superseded version holds nothing, and a read of one stops the run | the term is unchanged; `LinArray.v` proves the realizer's model refines `PArray`; the OCaml module is checked against the model | one realizer row (≈ 60 lines), with a Coq-proved model | 1.09× over today alone; **10.2× with T1 + T2** at 250 names; with T1 + T2, ≈ 1,540× pdfTeX per name (§3.2) | yes (≈ 1.5 days) |
+| **B2** persistent, fuel closures restructured | **yes, measured** (full dump in 2.4 GB, IDENTICAL), but only measured, and fragile: any closure that captures a state brings it back | Coq lemmas, by `reflexivity` | none | with T1 + T2, ≈ 1.4× slower than A (≈ 2,210× per name) | yes (1.5–2.5 days) |
+| **B1** flambda `-O3` | **no** (measured: passes 4 GB at 1,000 names) | — | — | — | — |
+| **C** state monad, mutable realizer | yes, by construction | a refinement theorem in Coq over the whole of `PS` | the monad's realizer (parametricity) | ≈ 1.2–1.4× over A + T1 + T2 [I, §3.4] | **no** (6–10 days) |
+| **D** shallow embedding | no (needs A or C) | generated reflection lemmas | none beyond A or C | ≈ 1.1–1.2× over A + T1 + T2 [I, §3.4] | **no** (weeks) |
 
 ## 6. Recommendation and the stage-2 plan
 
-**Fund candidate A, with T1 and T2 in the same `Extract.v` change.**
+*(Restated 2026-10-06 after the corrected timing, C-145, and the B measurements, §5 B.)*
 
-1. It is the only candidate that removes the growth **by construction** within the box. B removes
-   it only as a measured property, and one new closure brings it back silently. C removes it by
-   construction too, but does not fit.
+**For memory, fund candidate A, with T1 and T2 in the same `Extract.v` change.**
+
+1. It removes the growth **by construction**. B2 removes it too, measured on the full dump, with
+   no new realizer, but only as a measured property that one new closure can silently undo, and
+   at ≈ 1.4× the CPU. C removes it by construction too, but does not fit.
 2. It keeps the Coq term byte-identical, so no theorem about `PS` and no translated line is
    touched. The trust it adds is one realizer whose model is **proved** in Coq to refine
    `PArray`, and its failure mode is a "no verdict", not a wrong verdict.
-3. With T1 and T2, it is the change that moves speed by a **factor** (10.2× at 250 names, 10.5× per name; the
-   whole dump in 345 s and 2.0 GB, IDENTICAL to the binary, on a profiling variant). T1 and T2 are where
-   the profile puts the time. They are realizers of the same kind `ExtrOcamlZBigInt` already
-   uses, and each one's obligation is an existing Coq theorem.
+3. With T1 and T2, it is the change that moves speed by a **factor** over today (10.2× at 250
+   names; the whole dump in 2.0 GB, IDENTICAL to the binary, on a profiling variant). T1 and T2
+   are realizers of the same kind `ExtrOcamlZBigInt` already uses, and each one's obligation is
+   an existing Coq theorem.
+4. **If the owner does not accept the new realizer (question 2), B2 is the in-box alternative for
+   memory** (it was C before B2 was measured). It needs no realizer, but stage 2 must then also
+   commit the "reachable only from elsewhere" probe as a standing check, and measure B2 on the
+   runner's non-flambda compiler.
+
+**Memory is worth fixing whatever H.5's speed verdict is**: H.3's meanings clause (the full dump
+on a 16 GB runner, IDENTICAL to `4879fa65…`) fails today on memory alone, and either A or B2
+passes it on the measured profiling variants.
 
 **Stage 2, 2026-10-07 → 2026-10-10:**
 
 | day | work | done when |
 |---|---|---|
-| 10-07 | `Linparray` (OCaml) and `Superseded` in the driver; `Extract.v`: the `PArray` directives, then T1 and T2 as `Extract Constant` with no `Int64` boxing; `pipeline.sh` rebuild; `provenance.json` with zarith, GMP and the C toolchain recorded | the build passes; `t1test` extended to T2 passes; the 50-name prefix is IDENTICAL to the committed one |
+| 10-07 | `Linparray` (OCaml) and `Superseded` in the driver; `Extract.v`: the `PArray` directives, then T1 and T2 as `Extract Constant` with no `Int64` boxing; `pipeline.sh` rebuild; `provenance.json` with `ocamlopt -config`, zarith, GMP and the C toolchain recorded | the build passes; `t1test` extended to T2 passes; the 50-name prefix is IDENTICAL to the committed one |
 | 10-08 | `LinArray.v` (the store model, the trace semantics on `PArray`, the simulation theorem), compiled by `pipeline.sh`, `Print Assumptions` limited to the `PArray` axioms; H.2 re-verification: INITEX evidence, the 178-input differential (arm64 locally) | the theorem closed; no differential row changes class |
 | 10-09 | H.3 re-verification: the round trip; E8's workflow re-run on a 16 GB runner, all 23,519 names (expected ≈ 2 GB from §2.5), with the native amd64 differential | the round trip = binary; the meanings clause compared against `4879fa65…` on the model build |
-| 10-10 | H.5 speed on what can run (§3.3, the question below), on a quiet machine or a CI runner, per E4; the report | the E11 verdict, written up either way |
+| 10-10 | H.5 speed on what can run (question 1), with `fairtime.sh` on a quiet machine or a CI runner, per E4; the report | the E11 verdict, written up either way |
 
-**The kill accounting, as E11 states it.** Memory that does not grow with the work done: A gives
-it (the live words are flat; only the I/O lists grow, at 24 bytes of heap per byte read or
-written, §2.5). Speed at or below 200×
-pdfTeX "on H.5's documents": on the proxy, A + T1 + T2 is 25× on the format load, 46× on the
-1,000-name run and ≈ 103× per name, so no kill on the proxy. **But H.5's documents cannot run in the
-model before the PDF-side externals are modelled** (H.4's work). So E11's speed condition cannot
-be decided on them by 2026-10-10. The owner must say what counts (question 1 below). The pass
-line (≤ 60× per pass) is met by the load and the short run but not by the marginal cost (≈ 103×),
-and no change that fits the box is in sight to close that 1.7×.
+(If question 2 is answered no: 10-07 and 10-08 become B2's restructuring of `Interp.v` and
+`Boundary.v` with its `reflexivity` lemmas, and the standing retention probe.)
+
+**The kill accounting, as E11 states it.**
+- **Memory that does not grow with the work done:** A gives it (the live words are flat; only
+  the I/O lists grow, at 24 bytes of heap per byte read or written, §2.5). B2 gives it as a
+  measured property (§5 B).
+- **Speed at or below 200× pdfTeX "on H.5's documents":** on the proxy, with A, T1 and T2, the
+  format load is 59×, the 1,000-name run 122×, the whole dump 818×, and the marginal cost
+  **≈ 1,540× per name** (§3.2). **On the proxy the kill criterion fires**: the marginal cost is
+  7.7× past the kill line, and no profile-guided fix to ≤ 200× is in sight (§3.4: all the
+  changes together, central estimate ≈ 370×, best case ≈ 150×, and only as a new verified
+  execution model, which is the criterion's own fallback). The first version of this paragraph
+  said "no kill on the proxy"; that rested on the inflated binary times (C-145).
+- **But H.5's documents cannot run in the model before the PDF-side externals are modelled**
+  (H.4's work), and the proxy is not a document (§3.3). So the speed condition *on H.5's
+  documents* cannot be decided by 2026-10-10. The owner must say what counts (question 1).
 
 **Questions for the owner:**
-1. **What does the 2026-10-10 verdict measure, given that H.5's documents cannot run?** (a) The
-   meaning-dump proxy above. (b) H.5's three documents in DVI mode (`\pdfoutput=0`), if
-   the font-file externals they need can be modelled in the box: typesetting without the PDF
-   back end. (c) Defer the speed verdict to after H.4 and judge memory alone on 10-10.
-   Recommendation: (b) if the TFM path runs by 10-09, otherwise (a). The report states which
-   one was used.
+1. **What does the 2026-10-10 speed verdict measure, given that H.5's documents cannot run?**
+   (a) The meaning-dump proxy: then **H.5's kill criterion fires** on the marginal cost
+   (≈ 1,540×), and its fallback ("a verified-refinement fast interpreter becomes its own
+   project") is what remains. (b) H.5's three documents in DVI mode (`\pdfoutput=0`), if the
+   font-file externals they need can be modelled in the box: typesetting without the PDF back
+   end. The one-line document would then be measured near its format load (59× on the proxy);
+   the two papers would be measured for the first time, and the proxy predicts they fail [I].
+   (c) Defer the speed verdict to after H.4 and judge memory alone on 10-10. Recommendation:
+   (a) for the speed verdict, stated as on the proxy, because §3.4 finds no fix in sight that
+   (b) could reveal; and (b) as evidence if the TFM path runs by 10-09.
 2. **Does the trusted base accept realizers checked by a Coq-proved model plus review** (A's
    `Linparray`, as coq-core's `Parray` is today), and realizers whose obligations are existing
-   Coq theorems (T1, T2)? If not, A's alternative is C, and T1's is to emit the IR's literals as
-   `Z` (H.2's size measurement again); neither fits the box.
+   Coq theorems (T1, T2)? If not: for memory, B2 (no realizer, measured property, in the box);
+   for T1, emitting the IR's literals as `Z` (H.2's size measurement again) covers the largest
+   part; T2 has no realizer-free alternative in the box, and without T1 and T2 the model is
+   about 10× slower still.
+3. **Given (1a), is the speed fallback wanted at all?** §3.4 sizes it: native int63 values, a
+   mutable store and a shallow embedding together are estimated at ≈ 4× (≈ 10× at best) over
+   today's best variant, still ≈ 6× short of the pass line (≈ 2.5× at best); reaching ≤ 60× needs compiled
+   code generated from the IR with a verified compilation, a research project. Recommendation:
+   finish stage 2 for memory (it is needed for H.3 either way), record H.5's speed kill on the
+   proxy, and decide on the fallback as a separate funding question with §3.4 as its estimate.
 
 ## 7. What this stage commits
 
 - This document.
 - [`h5/README.md`](h5/README.md), with the binary-side recipes. They start the engine outside
-  `_oracle.py`, so as in H.1–H.3 they are documentation, not scripts.
+  `_oracle.py`, so as in H.1–H.3 they are documentation, not scripts. (The 2026-10-06 correction
+  commits one such script, `bintime.sh`, because the timing must be re-runnable; see below.)
 - [`h5/tools/`](h5/tools/): `mkvariant.py` (the profiling variants, every replacement asserted),
   `parrayc.ml`, `prof.ml`, `zr.ml`, `build.sh`, `run.sh`, `cmp.sh`,
   `selfprof.py`, `callers.py`, `summarize.py`, `abtable.py`, `t1test.ml`. They run against the H.3
@@ -664,6 +887,20 @@ and no change that fits the box is in sight to close that 1.7×.
 - `h3/tools/capped.sh`: caps and kills the whole process tree (C-144).
 - `PROJECT_STATE.md`: C-142, C-143, C-144, and OPEN-123's state line. `H3-report.md`: the two
   sentences that C-142 and C-143 correct are marked in place.
+
+**Added by the 2026-10-06 correction (C-145, C-146):**
+- `h5/tools/bintime.sh` (the binary's CPU time on container-local storage; it starts the engine
+  outside `_oracle.py`, and its header says why), `fairtime.sh` (the interleaved rounds),
+  `fairtable.py` (their table), `b2sim.py` (the B2 simulation), `profrun.sh` (a capped run
+  profiled by `sample`), `costclass.py` (the headroom classes), `zbench.ml` (`Z` against int).
+- `h5/evidence/fair/`: the binary's runs with loads (`bin.txt`), the load log, the variants file,
+  `fairtable.txt`, and in `runs/` the probes, verdicts, footprint traces and comparison classes
+  of every run of the correction;
+  `h5/evidence/b-variants.txt` (B1 and B2: build, `-dcmm` counts, the runs beyond the rounds,
+  the comparisons); `gc-sensitivity.txt`; `zbench.txt`; `profile/prof-AB2-*` (samples, gzipped,
+  and their class summaries).
+- In this document: §3.2 and §3.3 restated, §3.4 new, §5 B measured, §6 restated, the summary's
+  items 5 and 7, and the compiler-configuration sentences of §2.2 and §4 (C-146).
 
 Not committed: any change to the model. `h2/` is untouched, and the profiling variants are built
 from the extracted tree under `~/.cache/`.

@@ -1,0 +1,27 @@
+total top-of-stack samples: 14658
+    3062  20.9%  zarith (Z arithmetic)
+    2600  17.7%  allocation
+    2428  16.6%  interpreter (Interp)
+    1605  10.9%  persistent arrays (Parray)
+    1168   8.0%  values/storage (Values)
+    1102   7.5%  BinInt/BinPos (extracted Coq Z/positive library code)
+     559   3.8%  Uint63/Sint63 <-> Z conversion (extracted Coq library code)
+     446   3.0%  write barrier
+     365   2.5%  system (mmap/TLS/memset)
+     353   2.4%  other: caml_copy_int64
+     273   1.9%  other: camlZr.z_to_u63_77
+     161   1.1%  other: camlZr.s63_to_z_56
+      97   0.7%  other: camlList.existsb_182
+      84   0.6%  major GC
+      78   0.5%  minor GC (promotion)
+      62   0.4%  other: DYLD-STUB$$caml_modify
+      56   0.4%  other: caml_make_vect
+      47   0.3%  other: caml_array_fill
+      30   0.2%  other: caml_process_pending_actions_with_root_exn
+      20   0.1%  other: caml_get_domain_state
+      18   0.1%  other: camlZr.testbit_118
+      12   0.1%  other: caml_raise_if_exception
+      11   0.1%  other: camlList.find_199
+      10   0.1%  other: camlStdlib__Array.fill_332
+       6   0.0%  other: caml_scan_stack
+       5   0.0%  other: caml_find_frame_descr

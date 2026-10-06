@@ -1,0 +1,12 @@
+# GC sensitivity (H5-heap-design.md §3.4): A + B2 (b2sim, PS_PARRAY=linear) at 1,000 names, 3 interleaved rounds; CPU s of the final PROBE line
+# OCAMLRUNPARAM: def = v=0x400 (defaults); s4M = v=0x400,s=4M; s4Mo200 = v=0x400,s=4M,o=200
+gc1-AB2def-p1000 cpu 14.95 minor_collections 15092 major_collections 14 top_heap_words 121133204 loadavg_before { 29.90 26.41 26.94 }
+gc2-AB2def-p1000 cpu 15.83 minor_collections 15092 major_collections 14 top_heap_words 121133204 loadavg_before { 27.08 26.47 26.95 }
+gc3-AB2def-p1000 cpu 16.55 minor_collections 15092 major_collections 14 top_heap_words 121133204 loadavg_before { 27.54 26.19 26.79 }
+gc1-AB2s4M-p1000 cpu 15.53 minor_collections 949 major_collections 11 top_heap_words 123161777 loadavg_before { 31.20 26.95 27.12 }
+gc2-AB2s4M-p1000 cpu 15.87 minor_collections 949 major_collections 11 top_heap_words 123161777 loadavg_before { 23.25 25.63 26.64 }
+gc3-AB2s4M-p1000 cpu 16.85 minor_collections 949 major_collections 11 top_heap_words 123161777 loadavg_before { 28.79 26.55 26.91 }
+gc1-AB2s4Mo200-p1000 cpu 15.53 minor_collections 947 major_collections 9 top_heap_words 123100337 loadavg_before { 30.74 27.10 27.18 }
+gc2-AB2s4Mo200-p1000 cpu 16.47 minor_collections 947 major_collections 9 top_heap_words 123100337 loadavg_before { 21.34 25.09 26.43 }
+gc3-AB2s4Mo200-p1000 cpu 16.90 minor_collections 947 major_collections 9 top_heap_words 123100337 loadavg_before { 36.64 28.32 27.52 }
+# medians: def 15.83, s4M 15.87, s4Mo200 16.47

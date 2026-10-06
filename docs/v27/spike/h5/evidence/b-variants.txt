@@ -1,0 +1,41 @@
+# Candidate B measured (H5-heap-design.md §5 B; 2026-10-06). Profiling variants, never model builds.
+# Source-tree hash = sha256 of the sorted per-file sha256 list of *.ml and *.mli (shasum -a 256).
+
+t2 tree (stage 1, the input of both):  995f460a721bef4e6773c9b345115aa10b09a6bdc3634a45f3bc1826b8c43096
+  ps-t2.exe   2639e1885c48cd664b43ebc5e30b7648726667c993895635cd53c5bb3eea68a8  (A: run with PS_PARRAY=linear)
+
+B1 = the t2 tree unchanged, compiled with flambda -O3:
+  OCFLAGS=-O3 zsh docs/v27/spike/h5/tools/build.sh $H5/b1o3/ml $H5/b1o3/ps-b1o3.exe   (switch l0-testing: ocamlopt -config says flambda: true)
+  ps-b1o3.exe 2e460a7ad5278e91fb7f74f955ac780d494865d874ce823a91de1c258b4644f4
+  ocamlopt -dcmm of Interp.ml, counting the fuel closures (functions named camlInterp.fS_*, and allocation sites naming them):
+    -O3                                    fS functions 13, sites 26   (of 14 realizer uses in Interp.ml; exec_list's is inlined)
+    -O3 -inline 10000                      fS functions 13, sites 26
+    -O3 -inline 100000 -inline-max-depth 10  fS functions 13, sites 26
+  runs: sm-b1o3-p250  finished rc 0 peak 3620MB in 14s; top_heap_words 464215217; meancompare IDENTICAL
+        b1o3-p1000  killed: rss 4018MB > 4000MB at 16s
+
+B2 (simulated) = python3 docs/v27/spike/h5/tools/b2sim.py $H5/prof-t2/ml $H5/b2sim/ml, then build.sh with the default flags:
+  BinInt.ml: 1 sites
+  BinPos.ml: 1 sites
+  Boundary.ml: 10 sites
+  Interp.ml: 14 sites
+  List.ml: 1 sites
+  Main0.ml: 1 sites
+  Nat.ml: 2 sites
+  Uint0.ml: 2 sites
+  Values.ml: 1 sites
+  total 33 sites
+  b2sim tree: 90352b6131ce5063770ab14d0939a7b0c14538295f76158be4d21557972b926c   (regenerated from the t2 tree: 90352b6131ce5063770ab14d0939a7b0c14538295f76158be4d21557972b926c, equal)
+  ps-b2sim.exe 90ecb76243053f56c5e8af90ab7711e4367ccdfe7dfad0a45e2ca7771b8a65f1   (B2: persistent, the default; A + B2: PS_PARRAY=linear)
+  ocamlopt -dcmm of the b2sim Interp.ml: fS functions 0
+  runs beyond the fair rounds:
+    sm-b2-p250   finished rc 0 peak 1619MB in 14s; top_heap_words 200333170; meancompare IDENTICAL
+    dB2-pall     deep probes every 30 s: killed: rss 4019MB > 4000MB at 48s  (the probe's heap walk; one probe recorded)
+    dB2o40-pall  deep probes every 45 s, o=40: killed: rss 4307MB > 4000MB at 244s  (five probes recorded, the sixth walk passed the cap)
+  meancompare of fair-round runs (fair/runs/*/compare-class.json):
+    fr1-A-p1000 IDENTICAL exit 0 4879fa65
+    fr1-A-pall IDENTICAL exit 0 4879fa65
+    fr1-B2-p1000 IDENTICAL exit 0 4879fa65
+    fr1-B2-pall IDENTICAL exit 0 4879fa65
+    fr1-AB2-p1000 IDENTICAL exit 0 4879fa65
+    fr1-AB2-pall IDENTICAL exit 0 4879fa65

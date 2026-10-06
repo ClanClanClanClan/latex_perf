@@ -1,0 +1,1 @@
+PROBE wall 10.6 cpu 10.14 ext 24576 minor 2450743100 promoted 347000772 major 394759618 minc 9359 majc 19 heap 393604273 top 393604273 set 37039914 get 88963884 make 331345 make_words 47011514 reroot_steps 0 stale 0 copy 0

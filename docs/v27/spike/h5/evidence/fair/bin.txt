@@ -1,0 +1,72 @@
+ROUND 1
+LOAD before-p0 1791241824 uptime[17.30 46.00 58.50] mem_free_pct 42%
+BIN p0 1 user 0.146 sys 0.026 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.59/0.92/0.87
+BIN p0 2 user 0.106 sys 0.007 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.59/0.92/0.87
+BIN p0 3 user 0.104 sys 0.012 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.59/0.92/0.87
+LOAD after-p0 1791241824 uptime[17.30 46.00 58.50] mem_free_pct 42%
+ROUND 1
+LOAD before-p250 1791241848 uptime[15.78 43.33 57.18] mem_free_pct 44%
+BIN p250 1 user 0.097 sys 0.016 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.45/0.86/0.85
+BIN p250 2 user 0.086 sys 0.013 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.45/0.86/0.85
+BIN p250 3 user 0.083 sys 0.013 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.45/0.86/0.85
+LOAD after-p250 1791241848 uptime[15.78 43.33 57.18] mem_free_pct 45%
+ROUND 1
+LOAD before-p1000 1791241874 uptime[14.45 40.82 55.87] mem_free_pct 44%
+BIN p1000 1 user 0.081 sys 0.011 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.29/0.79/0.83
+BIN p1000 2 user 0.073 sys 0.008 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.29/0.79/0.83
+BIN p1000 3 user 0.072 sys 0.007 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.35/0.79/0.83
+LOAD after-p1000 1791241874 uptime[14.45 40.82 55.87] mem_free_pct 44%
+ROUND 1
+LOAD before-pall 1791241916 uptime[10.63 36.14 53.37] mem_free_pct 43%
+BIN pall 1 user 0.198 sys 0.031 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.18/0.69/0.79
+BIN pall 2 user 0.195 sys 0.021 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.18/0.69/0.79
+BIN pall 3 user 0.197 sys 0.014 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.18/0.69/0.79
+LOAD after-pall 1791241917 uptime[10.63 36.14 53.37] mem_free_pct 43%
+ROUND 2
+LOAD before-p0 1791242493 uptime[9.78 15.89 33.93] mem_free_pct 47%
+BIN p0 1 user 0.068 sys 0.015 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.03/0.15/0.44
+BIN p0 2 user 0.066 sys 0.008 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.03/0.15/0.44
+BIN p0 3 user 0.072 sys 0.009 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.03/0.15/0.44
+LOAD after-p0 1791242493 uptime[9.78 15.89 33.93] mem_free_pct 47%
+ROUND 2
+LOAD before-p250 1791242513 uptime[9.27 15.37 33.33] mem_free_pct 46%
+BIN p250 1 user 0.076 sys 0.005 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.02/0.14/0.43
+BIN p250 2 user 0.067 sys 0.014 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.02/0.14/0.43
+BIN p250 3 user 0.069 sys 0.006 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.02/0.14/0.43
+LOAD after-p250 1791242513 uptime[9.27 15.37 33.33] mem_free_pct 46%
+ROUND 2
+LOAD before-p1000 1791242538 uptime[9.23 14.85 32.62] mem_free_pct 45%
+BIN p1000 1 user 0.080 sys 0.011 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.01/0.13/0.42
+BIN p1000 2 user 0.073 sys 0.006 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.01/0.13/0.42
+BIN p1000 3 user 0.073 sys 0.011 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.01/0.13/0.42
+LOAD after-p1000 1791242538 uptime[9.23 14.85 32.62] mem_free_pct 45%
+ROUND 2
+LOAD before-pall 1791242586 uptime[16.97 15.98 32.01] mem_free_pct 42%
+BIN pall 1 user 0.206 sys 0.019 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.00/0.10/0.39
+BIN pall 2 user 0.191 sys 0.024 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.00/0.10/0.39
+BIN pall 3 user 0.203 sys 0.035 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.00/0.10/0.39
+LOAD after-pall 1791242587 uptime[16.97 15.98 32.01] mem_free_pct 43%
+ROUND 3
+LOAD before-p0 1791243344 uptime[21.44 27.24 29.14] mem_free_pct 44%
+BIN p0 1 user 0.103 sys 0.027 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.15/0.07/0.19
+BIN p0 2 user 0.097 sys 0.015 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.15/0.07/0.19
+BIN p0 3 user 0.097 sys 0.008 rc 0 logsize 11940 logsha 5d275791da839ea9164ace7d9f030ca2d3368ca9b876de4c1eaf775224453614 vmload 0.15/0.07/0.19
+LOAD after-p0 1791243345 uptime[21.44 27.24 29.14] mem_free_pct 44%
+ROUND 3
+LOAD before-p250 1791243371 uptime[17.66 25.86 28.58] mem_free_pct 44%
+BIN p250 1 user 0.100 sys 0.023 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.10/0.06/0.18
+BIN p250 2 user 0.108 sys 0.013 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.10/0.06/0.18
+BIN p250 3 user 0.106 sys 0.012 rc 0 logsize 78259 logsha 147423b1fdfc9304e08447bdaa171b39c73c63934e6089bc6c4c386f1cf7bc26 vmload 0.10/0.06/0.18
+LOAD after-p250 1791243371 uptime[18.01 25.80 28.54] mem_free_pct 44%
+ROUND 3
+LOAD before-p1000 1791243402 uptime[20.25 25.67 28.41] mem_free_pct 46%
+BIN p1000 1 user 0.111 sys 0.010 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.12/0.07/0.18
+BIN p1000 2 user 0.105 sys 0.019 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.12/0.07/0.18
+BIN p1000 3 user 0.104 sys 0.012 rc 0 logsize 323896 logsha c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41 vmload 0.12/0.07/0.18
+LOAD after-p1000 1791243403 uptime[20.25 25.67 28.41] mem_free_pct 46%
+ROUND 3
+LOAD before-pall 1791243460 uptime[15.93 23.52 27.43] mem_free_pct 46%
+BIN pall 1 user 0.306 sys 0.059 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.04/0.06/0.17
+BIN pall 2 user 0.295 sys 0.019 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.04/0.06/0.17
+BIN pall 3 user 0.279 sys 0.039 rc 0 logsize 7014728 logsha 335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce vmload 0.04/0.06/0.17
+LOAD after-pall 1791243462 uptime[15.61 23.33 27.34] mem_free_pct 47%

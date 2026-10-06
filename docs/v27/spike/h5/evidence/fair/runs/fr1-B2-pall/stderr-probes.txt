@@ -1,0 +1,19 @@
+PROBE wall 30.1 cpu 30.03 ext 39168 minor 7408858926 promoted 1188672594 major 1236929019 minc 28278 majc 29 heap 236154084 top 275113842 set 134409237 get 403363612 make 12699127 make_words 73058546 reroot_steps 0 stale 0 copy 0
+PROBE wall 60.2 cpu 60.01 ext 53760 minor 15193042314 promoted 2335663036 major 2383919461 minc 57979 majc 42 heap 252124388 top 282842994 set 269012481 get 842472931 make 29536432 make_words 108278197 reroot_steps 0 stale 0 copy 0
+PROBE wall 90.8 cpu 90.12 ext 65536 minor 21668087635 promoted 3292085431 major 3340302805 minc 82685 majc 53 heap 273587428 top 287885170 set 381244773 get 1207619030 make 43566880 make_words 137677545 reroot_steps 0 stale 0 copy 0
+PROBE wall 120.9 cpu 120.14 ext 87296 minor 29236791327 promoted 4434224118 major 4482480543 minc 111564 majc 66 heap 280837348 top 292448114 set 515181773 get 1638999827 make 60508258 make_words 173886969 reroot_steps 0 stale 0 copy 0
+PROBE wall 151.2 cpu 150.25 ext 107520 minor 36503899465 promoted 5536498930 major 5584719833 minc 139292 majc 78 heap 282356964 top 296138610 set 644282361 get 2049619896 make 77026267 make_words 209060762 reroot_steps 0 stale 0 copy 0
+PROBE wall 181.5 cpu 180.42 ext 129280 minor 44388876836 promoted 6731600753 major 6779857178 minc 169377 majc 90 heap 271228132 top 300513138 set 784261458 get 2494804308 make 94927840 make_words 247216147 reroot_steps 0 stale 0 copy 0
+PROBE wall 211.6 cpu 210.34 ext 153856 minor 51832144624 promoted 7867611518 major 7915867943 minc 197777 majc 102 heap 274578660 top 304879474 set 917220345 get 2915657197 make 112105669 make_words 283869818 reroot_steps 0 stale 0 copy 0
+PROBE wall 227.3 cpu 226.02 ext 165623 minor 55645134999 promoted 8463338858 major 8511510251 minc 212326 majc 109 heap 291175652 top 306968434 set 984515932 get 3129985477 make 120763096 make_words 302251811 reroot_steps 0 stale 0 copy 0
+PARRAYC set 984515932 get 3129985477 make 120763096 make_words 302251811 reroot_steps 0 stale 0 copy 0
+allocated_words: 55693449169
+minor_words: 55645192744
+promoted_words: 8463338858
+major_words: 8511595283
+minor_collections: 212326
+major_collections: 109
+forced_major_collections: 0
+heap_words: 291175652
+top_heap_words: 306968434
+mean_space_overhead: 52.196503

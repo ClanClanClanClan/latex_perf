@@ -1,0 +1,31 @@
+## binary (pinned pdfTeX, container-local storage): user+sys s
+prefix	n	median	min	max	logsha
+p0	9	0.112	0.074	0.172	5d275791
+p250	9	0.099	0.075	0.123	147423b1
+p1000	9	0.091	0.079	0.124	c362fb24
+pall	9	0.229	0.211	0.365	335b024c
+
+## model variants: CPU s (final probe), top of heap (M words), peak footprint (MB), host load / mem free % before the run
+variant	prefix	cpu per round	median	top_heap_Mw max	peak_MB max	loads	ratio_vs_binary_median
+A	p0	6.68 4.92 6.63	6.63	115.1	991	17.3/42% 9.78/47% 21.44/44%	59x
+A	p250	7.11 6.21 8.50	7.11	117.6	1079	15.78/44% 9.27/46% 18.01/44%	72x
+A	p1000	11.00 11.06 15.64	11.06	126.9	1088	14.45/44% 9.23/45% 20.25/46%	122x
+A	pall	176.63 187.23 189.42	187.23	267.3	1981	10.63/43% 16.97/43% 15.61/47%	818x
+AB2	p0	5.26 4.64 6.08	5.26	114.8	990	16.02/43% 9.64/46% 17.89/44%	47x
+AB2	p250	6.17 6.18 7.91	6.18	116.0	1073	14.84/44% 8.63/43% 20.56/45%	62x
+AB2	p1000	11.21 15.32 15.46	15.32	121.1	1105	11.88/42% 12.44/42% 16.25/45%	168x
+AB2	pall	154.34 225.80 190.36	190.36	235.6	1633	9.27/41% 25.5/38% 21.44/41%	831x
+B2	p0	8.93 6.98 9.04	8.93	175.8	1510	16.49/44% 9.63/47% 19.22/44%	80x
+B2	p250	9.36 8.73 11.34	9.36	200.3	1695	15.11/44% 8.69/46% 19.93/44%	95x
+B2	p1000	17.30 19.34 22.36	19.34	232.7	1860	12.93/45% 9.41/45% 18.49/47%	213x
+B2	pall	226.02 301.71 267.70	267.70	307.0	2402	38.17/44% 16.11/40% 10.55/42%	1169x
+
+## marginal cost per name, (median(pN) - median(p0)) / N on each side
+binary p1000: -0.0210 ms/name  NOT RESOLVABLE: the difference of medians (-21 ms) is within the binary's p0 spread (98 ms)
+  A p1000: 4.430 ms/name (no binary denominator)
+  AB2 p1000: 10.060 ms/name (no binary denominator)
+  B2 p1000: 10.410 ms/name (no binary denominator)
+binary pall: 0.0050 ms/name
+  A pall: 7.679 ms/name = 1544x
+  AB2 pall: 7.870 ms/name = 1582x
+  B2 pall: 11.003 ms/name = 2212x

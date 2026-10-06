@@ -17,6 +17,14 @@
 # rest of the runner, systemd-oomd is stopped (its state recorded), the kernel's and oomd's
 # logs are uploaded, and the model step cannot fail the job (continue-on-error).
 #
+# Run 3 (H.5 stage 2, 2026-10-06): the model build is now B2 (the interpreter's fuelled block
+# restructured at the source so that no extracted closure holds a state across a call;
+# docs/v27/spike/H5-heap-design.md, h2/coq/B2Equiv.v). The provenance check below binds the
+# run to that build. full-compact is dropped (compaction was a probe of the retention B2
+# removes); prefixes stays, as the memory-against-names curve on this runner's compiler, which
+# is OCaml 5.2.0 WITHOUT flambda (the laptop's has flambda, C-146): B2's memory property depends
+# on the compiled code, so it must hold here too.
+#
 # It fails ONLY on an infrastructure error (the build's inputs or generated program not the
 # measured ones, the image not pulled, the binary's run producing nothing). The model running
 # out of memory, out of time, Stuck or differing from the binary is a FINDING: it is recorded,
@@ -58,7 +66,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [full, full-compact, prefixes]
+        variant: [full, prefixes]
     steps:
       - uses: actions/checkout@v4
 

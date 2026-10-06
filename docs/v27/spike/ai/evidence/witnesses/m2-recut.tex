@@ -1,0 +1,7 @@
+\documentclass{article}
+\begin{document}
+% m2-catcode.tex's body re-cut under the table AFTER \catcode`\e=12:
+% \relax followed by the other-character e.  This is what a decider that
+% re-tokenizes the argument with the updated table would decide.
+\emph{\catcode`\e=12 \relax e}
+\end{document}

@@ -1,0 +1,9 @@
+\documentclass{article}
+\makeatletter
+\begin{document}
+% Pass 1: \zzflag is undefined (no .aux yet), so the error fires AFTER the
+% immediate write has put \gdef\zzflag{1} into the .aux.  Pass 2 reads it.
+\immediate\write\@auxout{\gdef\string\zzflag{1}}
+\ifx\zzflag\undefined \GenericError{}{H1 witness: pass-dependent}{}{}\fi
+ok
+\end{document}

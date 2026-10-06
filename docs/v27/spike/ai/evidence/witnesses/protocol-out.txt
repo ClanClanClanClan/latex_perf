@@ -1,0 +1,40 @@
+h1-multipass pass 1 rc 1  first error: ! H1 witness: pass-dependent.
+h1-multipass pass 2 rc 0  first error: 
+h1-multipass pass 3 rc 0 (confirming)  first error: 
+h1-multipass VERDICT rc 0 after 3 passes
+h1-multipass final .aux:
+    \relax 
+    \gdef \zzflag{1}
+    \gdef \@abspage@last{1}
+h2-thepage pass 1 rc 1  first error: ! Undefined control sequence.
+h2-thepage pass 2 rc 1  first error: ! Undefined control sequence.
+h2-thepage pass 3 rc 1  first error: ! Undefined control sequence.
+h2-thepage VERDICT rc 1 after 3 passes
+h2-thepage final .aux:
+    \relax 
+h2-thepage-body pass 1 rc 1  first error: ! Undefined control sequence.
+h2-thepage-body pass 2 rc 1  first error: ! Undefined control sequence.
+h2-thepage-body pass 3 rc 1  first error: ! Undefined control sequence.
+h2-thepage-body VERDICT rc 1 after 3 passes
+h2-thepage-body final .aux:
+    \relax 
+h2-label pass 1 rc 1  first error: ! Undefined control sequence.
+h2-label pass 2 rc 1  first error: ! Undefined control sequence.
+h2-label pass 3 rc 1  first error: ! Undefined control sequence.
+h2-label VERDICT rc 1 after 3 passes
+h2-label final .aux:
+    \relax 
+    \newlabel{a\zzz }{{}{1}{}{}{}}
+    \gdef \@abspage@last{1}
+m2-catcode pass 1 rc 1  first error: ! Undefined control sequence.
+m2-catcode pass 2 rc 1  first error: ! Undefined control sequence.
+m2-catcode pass 3 rc 1  first error: ! Undefined control sequence.
+m2-catcode VERDICT rc 1 after 3 passes
+m2-catcode final .aux:
+    \relax 
+m2-recut pass 1 rc 0  first error: 
+m2-recut pass 2 rc 0 (confirming)  first error: 
+m2-recut VERDICT rc 0 after 2 passes
+m2-recut final .aux:
+    \relax 
+    \gdef \@abspage@last{1}

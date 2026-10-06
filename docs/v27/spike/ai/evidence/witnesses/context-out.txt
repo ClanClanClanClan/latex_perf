@@ -1,0 +1,53 @@
+== h2-thepage pass 1 rc 1
+    ! Undefined control sequence.
+    \thepage ->\zzz 
+                    
+    l.5 \end{document}
+                      
+    The control sequence at the end of the top line
+    of your error message was never \def'ed. If you have
+    misspelled it (e.g., `\hobx'), type `I' and the correct
+    spelling (e.g., `I\hbox'). Otherwise just continue,
+    and I'll forget about whatever was undefined.
+    
+     
+== h2-thepage-body pass 1 rc 1
+    ! Undefined control sequence.
+    \thepage ->\zzz 
+                    
+    l.6 \end{document}
+                      
+    The control sequence at the end of the top line
+    of your error message was never \def'ed. If you have
+    misspelled it (e.g., `\hobx'), type `I' and the correct
+    spelling (e.g., `I\hbox'). Otherwise just continue,
+    and I'll forget about whatever was undefined.
+    
+     
+== h2-label pass 1 rc 1
+    ! Undefined control sequence.
+    <argument> a\zzz 
+                     
+    l.2 \newlabel{a\zzz }{{}{1}{}{}{}}
+                                      
+    The control sequence at the end of the top line
+    of your error message was never \def'ed. If you have
+    misspelled it (e.g., `\hobx'), type `I' and the correct
+    spelling (e.g., `I\hbox'). Otherwise just continue,
+    and I'll forget about whatever was undefined.
+    
+     
+== m2-catcode pass 1 rc 1
+    ! Undefined control sequence.
+    <argument> \catcode `\e=12 \relaxe 
+                                       
+    l.3 \emph{\catcode`\e=12 \relaxe}
+                                     
+    The control sequence at the end of the top line
+    of your error message was never \def'ed. If you have
+    misspelled it (e.g., `\hobx'), type `I' and the correct
+    spelling (e.g., `I\hbox'). Otherwise just continue,
+    and I'll forget about whatever was undefined.
+    
+     
+== m2-recut pass 1 rc 0

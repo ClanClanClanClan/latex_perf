@@ -61,3 +61,33 @@ for r,(c,s,l) in zip(docs,per):
     sig2[(c,frozenset(s&EMPH),frozenset(hs))]+=1
 print("signatures with local files by content hash:",len(sig2),"; papers sharing with an earlier one:",sum(v-1 for v in sig2.values()))
 print("local files shared by >1 paper:",sum(1 for h,v in hashes.items() if v>1),"of",len(hashes))
+# Revision (2026-10-06, C-152): the reuse figure depends on the key, so it is reported for several
+# keys, as a crude two-sided estimate. \emph reads \f@size, which the class's size option sets,
+# and fontenc's option sets the encoding: keys F and H include them. A key with every class option
+# (G) also splits on options \emph never reads (a4paper, twocolumn), so it is not a lower bound.
+OPT=[]; EOPT=[]; H=[]
+for r,(c,s,l) in zip(docs,per):
+    p=os.path.join(ROOT,r['arxiv_id'])
+    H.append(frozenset(hashlib.sha256(open(f,'rb').read()).hexdigest()[:12]
+                       for f in glob.glob(p+"/**/*.cls",recursive=True)+glob.glob(p+"/**/*.sty",recursive=True)))
+    t="".join(open(f,errors='replace').read() for f in glob.glob(p+"/**/*.tex",recursive=True))
+    t="\n".join(x.split('%')[0] for x in t.splitlines())
+    m=re.search(r'\\documentclass\s*(?:\[([^\]]*)\])?',t); o=m.group(1) if m and m.group(1) else ''
+    OPT.append(frozenset(x.strip() for x in o.split(',') if x.strip()))
+    eo=set()
+    for mm in re.finditer(r'\\(?:usepackage|RequirePackage)\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}',t):
+        for x in mm.group(2).split(','):
+            if x.strip() in EMPH: eo.add((x.strip(),(mm.group(1) or '').replace(' ','')))
+    EOPT.append(frozenset(eo))
+def share(keys):
+    cnt=collections.Counter(keys); return len(cnt), sum(v-1 for v in cnt.values())
+size=lambda o: frozenset(x for x in o if re.fullmatch(r'\d+pt',x))
+priv=lambda c,l: c if not any(e=='.cls' for e in l.values()) else 'PRIVATE-CLS'
+hassty=lambda l: bool([k for k,e in l.items() if e=='.sty'])
+for name,keys in [
+    ("A (class or PRIVATE-CLS, emph pkgs, has a local .sty)", [(priv(c,l),frozenset(s&EMPH),hassty(l)) for c,s,l in per]),
+    ("B (class, emph pkgs, local files by hash)", [(c,frozenset(s&EMPH),h) for (c,s,l),h in zip(per,H)]),
+    ("F (B + the class's size option)", [(c,size(o),frozenset(s&EMPH),h) for (c,s,l),h,o in zip(per,H,OPT)]),
+    ("H (F + the emph packages' options)", [(c,size(o),eo,h) for (c,s,l),h,o,eo in zip(per,H,OPT,EOPT)]),
+    ("G (B + every class option)", [(c,o,frozenset(s&EMPH),h) for (c,s,l),h,o in zip(per,H,OPT)])]:
+    k,sh=share(keys); print(f"key {name}: {k} distinct; papers sharing with an earlier one: {sh}")

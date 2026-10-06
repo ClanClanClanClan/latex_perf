@@ -1,0 +1,9 @@
+papers 200; class article 95
+uses float           : 168/200   article:  89/95
+uses mark            :  22/200   article:   8/95
+uses multicol_vsplit :  14/200   article:   8/95
+uses NONE of them: 29/200 = 14.5%
+uses none AND class article (AI-4's scope): 5/200 = 2.5%
+classes of the papers that use none: [('amsart', 17), ('article', 5), ('elsarticle', 2), ('amsproc', 2), ('sn-jnl', 1), ('revtex4-2', 1), ('revtex4-1', 1)]
+article papers that use none: ['2507.03261v1', '2507.05827v1', '2507.07234v2', '2507.09832v1', '2507.11013v1']
+uses none, and the class's default page style sets no marks (['amsart', 'amsbook', 'amsproc'] excluded): 10/200 = 5.0%

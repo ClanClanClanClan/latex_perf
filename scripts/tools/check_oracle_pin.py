@@ -295,6 +295,19 @@ PY_DATA_ALLOW = {
         'BUILD_STRING_MACROS = {"TEXMFENGINENAME": "pdftex", "TEXMFPOOLNAME": "pdftex.pool"}',
     ),
 }
+# Shell lines that start an engine INSIDE the pinned image, outside _oracle.py, to MEASURE it
+# (never to grade): exact stripped lines, pinned like WORKFLOW_ALLOW (a new one fails; a
+# vanished one must be pruned).
+SH_IN_IMAGE_ALLOW = {
+    # Spike H.5 (ADR-015, OPEN-123; C-145): the pinned binary's user + sys CPU time with every
+    # file it writes on container-local storage. _oracle.py bind-mounts its work root from the
+    # macOS host (virtiofs), the I/O that inflated the first measurement 4-8x; E7's measurement
+    # entry point is being built on another branch. The line runs inside `docker run ... $IMG`,
+    # where IMG is read from _oracle.IMAGE; its output is a time, not a verdict.
+    "docs/v27/spike/h5/tools/bintime.sh": (
+        't=$( { time pdftex -ini < /tmp/stdin > /tmp/out 2>&1; echo "rc $?" > /tmp/rc; } 2>&1 )',
+    ),
+}
 FINGERPRINT_KEYS = ("tlpdb_sha256", "macro_layer_sha256", "fmt_sha256")
 BACKENDS = {"container", "native"}
 
@@ -1597,13 +1610,15 @@ def main() -> int:
         scanned += 1
         ptext = p.read_text(errors="replace")
         plines = ptext.split("\n")
+        line_allow = PY_DATA_ALLOW.get(rel, ()) + SH_IN_IMAGE_ALLOW.get(rel, ())
         for n, what in scan(ptext):
-            if rel in PY_DATA_ALLOW and 0 < n <= len(plines) and plines[n - 1].strip() in PY_DATA_ALLOW[rel]:
+            if 0 < n <= len(plines) and plines[n - 1].strip() in line_allow:
                 continue
             findings.append(f"{rel}:{n}: starts a TeX engine directly ({what[:60]!r}); "
                             f"go through scripts/tools/_oracle.py (the host TeX "
                             f"Live is not the oracle)")
-    for rel, lines in list(WORKFLOW_ALLOW.items()) + list(PY_DATA_ALLOW.items()):
+    for rel, lines in (list(WORKFLOW_ALLOW.items()) + list(PY_DATA_ALLOW.items())
+                       + list(SH_IN_IMAGE_ALLOW.items())):
         f = repo / rel
         text = f.read_text() if f.is_file() else ""
         stripped = {ln.strip() for ln in text.split("\n")}

@@ -23,7 +23,9 @@ setopt err_return
 out=$1 reps=$2; shift 2
 H5=${H5:-$HOME/.cache/lp-spike-h1/h5}
 SHIM=${SHIM:-$HOME/.cache/lp-spike-h1/h2/diff/shim}
-IMG=texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b
+# the image is the oracle's pin, read from _oracle.py (one source); the engine runs only inside it
+IMG=$(python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import _oracle; print(_oracle.IMAGE)' ${0:a:h}/../../../../../scripts/tools)
+[[ $IMG == texlive/texlive@sha256:* ]] || { echo "cannot read the pinned image from _oracle.py"; return 2; }
 load() { print -r -- "LOAD $1 $(date +%s) uptime[$(uptime | sed 's/.*load averages*: *//')] mem_free_pct $(memory_pressure 2>/dev/null | awk -F': ' '/free percentage/{print $2}')" >> $out; }
 for p in "$@"; do
   [ -f $H5/in/$p/stdin-meanings ] || { echo "no input $p"; return 2; }

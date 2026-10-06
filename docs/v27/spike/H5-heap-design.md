@@ -899,6 +899,11 @@ passes it on the measured profiling variants.
   `h5/evidence/b-variants.txt` (B1 and B2: build, `-dcmm` counts, the runs beyond the rounds,
   the comparisons); `gc-sensitivity.txt`; `zbench.txt`; `profile/prof-AB2-*` (samples, gzipped,
   and their class summaries).
+- `scripts/tools/check_oracle_pin.py` (`SH_IN_IMAGE_ALLOW`) and
+  `scripts/tools/check_oracle_infra_grading.py` (`OUTPUT_NAME_ALLOW`): `bintime.sh`'s one engine
+  line and the timing harness's four log-naming lines, allow-listed by exact line, each with its
+  reason; a new engine line, or a changed one, still fails (tested). `bintime.sh` reads the
+  image from `_oracle.IMAGE`, so the pin has one source.
 - In this document: §3.2 and §3.3 restated, §3.4 new, §5 B measured, §6 restated, the summary's
   items 5 and 7, and the compiler-configuration sentences of §2.2 and §4 (C-146).
 

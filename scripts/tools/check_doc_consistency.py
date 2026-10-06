@@ -230,8 +230,11 @@ def inv_compile_blocking_count():
                      "check_gate_selftests.py"}
     EXCLUDE_DIRS = ("archive/", "docs/archive/", "specs/archive/", "_build/")
     try:
-        tracked = subprocess.run(["git", "ls-files"], cwd=REPO, check=True,
-                                 capture_output=True, text=True).stdout.split()
+        # -z (C-129): a non-ASCII or spaced path is neither C-quoted nor split.
+        tracked = [f for f in subprocess.run(
+            ["git", "ls-files", "-z"], cwd=REPO, check=True,
+            capture_output=True, encoding="utf-8",
+            errors="surrogateescape").stdout.split("\0") if f]
     except (subprocess.CalledProcessError, FileNotFoundError) as exc:
         fail("compile-blocking-count", f"cannot enumerate tracked files: {exc}")
         return

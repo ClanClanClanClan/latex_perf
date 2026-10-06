@@ -1,6 +1,7 @@
 name: Setup OCaml + Install Dependencies
 description: >-
-  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v2),
+  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v2 on
+  X64 runners, ocaml/setup-ocaml@v3 on others -- see OPEN-126),
   installs system packages, filters darcs from apt, configures opam repos,
   and performs a retry-loop dependency install.  BOTH the switch setup and
   the dependency install retry; both fail the job when their retries are
@@ -53,10 +54,17 @@ runs:
         sudo rm -f /etc/apt/sources.list.d/microsoft* \
                    /etc/apt/sources.list.d/*azure* 2>/dev/null || true
         sudo apt-get update
+        # The multilib compilers exist for x86 only; tex-oracle runs on a
+        # native arm64 runner (ADR-015 E2, OPEN-126), where apt has no
+        # g++-multilib/gcc-multilib and the install would fail. Every x64
+        # job installs exactly what it did before.
+        multilib=""
+        if [ "${RUNNER_ARCH:-X64}" = "X64" ]; then
+          multilib="g++-multilib gcc-multilib"
+        fi
         sudo apt-get install -y \
           bubblewrap \
-          g++-multilib \
-          gcc-multilib \
+          $multilib \
           mercurial \
           musl-tools \
           rsync
@@ -105,8 +113,21 @@ runs:
     # discarded, attempt 2 runs unguarded and its failure fails the job.
     # The two `with:` blocks MUST stay byte-identical -- enforced by failure
     # mode 4 of check_workflow_triggers.py, which runs in required spec-drift.
+    #
+    # ⚠ TWO TOOLCHAIN PAIRS, SELECTED BY RUNNER ARCHITECTURE (OPEN-126).
+    # setup-ocaml@v2 unconditionally `apt-get install`s g++-multilib and
+    # gcc-multilib on every Linux runner, and those packages do not exist on
+    # arm64: the required tex-oracle job, which runs on ubuntu-24.04-arm (the
+    # architecture of record, ADR-015 E2), died here before grading anything
+    # (run 37386039832). setup-ocaml@v3 installs those packages only when apt
+    # can find them. Every X64 job keeps the v2 pair it always had, byte for
+    # byte; only a non-X64 runner takes the v3 pair. Both pairs install the
+    # SAME compiler -- check_workflow_triggers.py refuses the two pairs'
+    # `ocaml-compiler` values drifting apart, as it refuses a pair's attempts
+    # drifting.
     - name: Set up OCaml and opam (attempt 1)
       id: setup_ocaml_attempt_1
+      if: runner.arch == 'X64'
       continue-on-error: true
       uses: ocaml/setup-ocaml@v2
       with:
@@ -139,6 +160,44 @@ runs:
         allow-prerelease-opam: false
         opam-pin: true
         opam-depext: false
+        opam-local-packages: "*.opam"
+        opam-disable-sandboxing: false
+        dune-cache: ${{ inputs.dune-cache }}
+        cache-prefix: v1
+
+    # The non-X64 pair (see the note above attempt 1). v3 has no
+    # `opam-depext` input (it never runs depext implicitly) and otherwise takes
+    # the same settings; pinned to a release, not a moving major tag.
+    - name: Set up OCaml and opam, non-X64 runner (attempt 1)
+      id: setup_ocaml_v3_attempt_1
+      if: runner.arch != 'X64'
+      continue-on-error: true
+      uses: ocaml/setup-ocaml@v3.9.0
+      with:
+        ocaml-compiler: 5.1.1
+        allow-prerelease-opam: false
+        opam-pin: true
+        opam-local-packages: "*.opam"
+        opam-disable-sandboxing: false
+        dune-cache: ${{ inputs.dune-cache }}
+        cache-prefix: v1
+
+    - name: Discard a partially-initialised switch, non-X64 runner
+      if: steps.setup_ocaml_v3_attempt_1.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "::warning::[setup-ocaml-env] switch setup failed on attempt 1;" \
+             "discarding any partial switch and retrying once."
+        opam switch remove . -y 2>/dev/null || true
+        rm -rf _opam
+
+    - name: Set up OCaml and opam, non-X64 runner (attempt 2)
+      if: steps.setup_ocaml_v3_attempt_1.outcome == 'failure'
+      uses: ocaml/setup-ocaml@v3.9.0
+      with:
+        ocaml-compiler: 5.1.1
+        allow-prerelease-opam: false
+        opam-pin: true
         opam-local-packages: "*.opam"
         opam-disable-sandboxing: false
         dune-cache: ${{ inputs.dune-cache }}

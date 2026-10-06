@@ -109,16 +109,85 @@ def parse_tier(out: str):
     return None, None
 
 
+def in_tier_certified(r: dict) -> bool:
+    """A row whose premises the CLI certified AND which some tier holds.
+
+    A FOREIGN verdict "is outside every supported tier ... and does not place
+    this document in any tier" (latex-parse/src/verdict.ml), even when the
+    MODEL-CONNECTED line printed PREMISE-CERTIFIED for it. Counting such a
+    row as certified made sample 3's summary say LP-Core 89 while its
+    in-tier rows give 88 (the stock-take of 2026-09-30 §3b; OPEN-126): row
+    2507.08271v1 is PREMISE-CERTIFIED tier=lp-core and TIER foreign."""
+    return r.get("model") == "certified" and r.get("verdict_tier") != "foreign"
+
+
+def summarize(rows: list) -> dict:
+    """The summary block, a function of the rows ONLY (THE one definition:
+    gen_project_state.py and check_project_state.py import it)."""
+    certified_ok = sum(1 for r in rows
+                       if in_tier_certified(r) and r["cell"] == "true-READY")
+    core_ok = sum(1 for r in rows
+                  if in_tier_certified(r) and r["cell"] == "true-READY"
+                  and r["profile"] == "lp-core")
+    strict_ok = sum(1 for r in rows
+                    if (r["verdict_kind"] == "PROVEN-READY"
+                        and r["cell"] == "true-READY")
+                    or (r["verdict_kind"] == "PROVEN-NOT-READY"
+                        and r["cell"] == "true-NOT-READY"))
+    strict_wrong = sum(1 for r in rows if r["verdict_tier"] == "proven") - strict_ok
+    return {
+        "n": len(rows),
+        "premise_certified_and_compiles": certified_ok,
+        "lp_core_certified_and_compiles": core_ok,
+        # ADR-012. A PROVEN verdict whose cell disagrees with pdflatex is
+        # strict_wrong. The row-level cell carries READY/NOT-READY only, so
+        # a wrong reason or location is not visible here; that is graded
+        # by the strict battery and the generated differential.
+        "strict_tier_matches_oracle": strict_ok,
+        "strict_wrong": strict_wrong,
+    }
+
+
+def rejoin(path: pathlib.Path, results: dict) -> int:
+    """--rejoin: refresh each row's `cell` from a re-graded results artefact
+    and recompute the summary, running NO CLI. The CLI fields of the rows and
+    the provenance (which names the CLI that produced them) are untouched; a
+    re-grade of the oracle side moves cells, never CLI verdicts."""
+    doc = json.loads(path.read_text())
+    cells = {d["arxiv_id"]: d["cell"] for d in results["docs"]}
+    if set(cells) != {r["id"] for r in doc["rows"]}:
+        raise SystemExit(f"[gen-proven-coverage] FATAL: {path} and the results "
+                         f"artefact name different documents")
+    moved = []
+    for r in doc["rows"]:
+        if r["cell"] != cells[r["id"]]:
+            moved.append((r["id"], r["cell"], cells[r["id"]]))
+            r["cell"] = cells[r["id"]]
+    before = doc.get("summary")
+    doc["summary"] = summarize(doc["rows"])
+    path.write_text(json.dumps(doc, indent=1) + "\n")
+    print(f"[gen-proven-coverage] {path}: rejoined, {len(moved)} cell(s) moved "
+          f"{moved}; summary {before} -> {doc['summary']}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", required=True, help="results.json to join against")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--corpus", required=True)
-    ap.add_argument("--cli", required=True)
+    ap.add_argument("--corpus")
+    ap.add_argument("--cli")
+    ap.add_argument("--rejoin", action="store_true",
+                    help="refresh --out's cells from --results and recompute "
+                         "its summary; runs no CLI (see rejoin)")
     args = ap.parse_args()
 
-    cli = pathlib.Path(args.cli)
     results = json.loads(pathlib.Path(args.results).read_text())
+    if args.rejoin:
+        return rejoin(pathlib.Path(args.out), results)
+    if not args.corpus or not args.cli:
+        ap.error("--corpus and --cli are required unless --rejoin")
+    cli = pathlib.Path(args.cli)
     rows = []
     for doc in results["docs"]:
         root = pathlib.Path(args.corpus) / doc["arxiv_id"] / doc["toplevel"]
@@ -149,17 +218,8 @@ def main() -> int:
             "verdict_kind": vkind,
         })
 
-    certified_ok = sum(1 for r in rows
-                       if r["model"] == "certified" and r["cell"] == "true-READY")
-    core_ok = sum(1 for r in rows
-                  if r["model"] == "certified" and r["cell"] == "true-READY"
-                  and r["profile"] == "lp-core")
-    strict_ok = sum(1 for r in rows
-                    if (r["verdict_kind"] == "PROVEN-READY"
-                        and r["cell"] == "true-READY")
-                    or (r["verdict_kind"] == "PROVEN-NOT-READY"
-                        and r["cell"] == "true-NOT-READY"))
-    strict_wrong = sum(1 for r in rows if r["verdict_tier"] == "proven") - strict_ok
+    summary = summarize(rows)
+    core_ok = summary["lp_core_certified_and_compiles"]
     out = {
         "provenance": {
             "produced_by": "scripts/tools/gen_proven_coverage.py",
@@ -184,17 +244,7 @@ def main() -> int:
             "state_vocabulary": sorted(STATES),
             "tier_vocabulary": sorted(TIERS),
         },
-        "summary": {
-            "n": len(rows),
-            "premise_certified_and_compiles": certified_ok,
-            "lp_core_certified_and_compiles": core_ok,
-            # ADR-012. A PROVEN verdict whose cell disagrees with pdflatex is
-            # strict_wrong. The row-level cell carries READY/NOT-READY only, so
-            # a wrong reason or location is not visible here; that is graded
-            # by the strict battery and the generated differential.
-            "strict_tier_matches_oracle": strict_ok,
-            "strict_wrong": strict_wrong,
-        },
+        "summary": summary,
         "rows": rows,
     }
     pathlib.Path(args.out).write_text(json.dumps(out, indent=1) + "\n")

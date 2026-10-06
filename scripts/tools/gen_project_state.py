@@ -37,6 +37,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# THE one definition of "certified" (in a tier, FOREIGN excluded; OPEN-126).
+from gen_proven_coverage import in_tier_certified  # noqa: E402
+from _results_summary import cell_counts, diff_summary  # noqa: E402
+
 BEGIN = "<!-- BEGIN GENERATED: measured-position -->"
 END = "<!-- END GENERATED: measured-position -->"
 DOC = Path("docs/v27/PROJECT_STATE.md")
@@ -112,6 +117,13 @@ def build(repo: Path) -> str:
 
     rr_path = repo / "corpora/real_roots/results.json"
     rr = json.loads(rr_path.read_text()) if rr_path.is_file() else None
+    # Every number below is computed from the ROWS, never read from a stored
+    # total (C-126). This read rr["counts"], so a hand-edited `counts` made a
+    # self-consistent wrong block that the regenerate-and-diff gate passed;
+    # check_project_state separately refuses a stored total that its rows
+    # contradict.
+    if rr:
+        rr["counts"] = cell_counts(rr["docs"])
 
     facts = {}
     for line in (repo / "governance/project_facts.yaml").read_text().splitlines():
@@ -222,13 +234,13 @@ def build(repo: Path) -> str:
         rows = raw["rows"] if isinstance(raw, dict) else raw
         n = len(rows)
         certified_ok = sum(1 for r in rows
-                           if r.get("model") == "certified" and r["cell"] == "true-READY")
+                           if in_tier_certified(r) and r["cell"] == "true-READY")
         core_ok = sum(1 for r in rows
-                      if r.get("model") == "certified" and r["cell"] == "true-READY"
+                      if in_tier_certified(r) and r["cell"] == "true-READY"
                       and r.get("profile") == "lp-core")
-        heur = sum(1 for r in rows if r.get("model") != "certified" and r.get("ready"))
+        heur = sum(1 for r in rows if not in_tier_certified(r) and r.get("ready"))
         fr_cert = sum(1 for r in rows
-                      if r["cell"] == "FALSE-READY" and r.get("model") == "certified")
+                      if r["cell"] == "FALSE-READY" and in_tier_certified(r))
         return [f"| {label} | {core_ok}/{n} = {100*core_ok/n:.1f}% | "
                 f"{certified_ok}/{n} = {100*certified_ok/n:.1f}% | {heur} | {fr_cert} |"]
 
@@ -246,7 +258,7 @@ def build(repo: Path) -> str:
         for tier_label, sel in (("any tier", rows),
                                 ("LP-Core", [r for r in rows
                                              if r.get("profile") == "lp-core"])):
-            cert = [r for r in sel if r.get("model") == "certified"]
+            cert = [r for r in sel if in_tier_certified(r)]
             bad = [r for r in cert if r["cell"] in fails]
             if not cert:
                 continue
@@ -386,7 +398,7 @@ def build(repo: Path) -> str:
     s2_path = repo / "corpora/real_roots/results_sample2.json"
     if s2_path.is_file():
         s2 = json.loads(s2_path.read_text())
-        c2 = s2["counts"]
+        c2 = cell_counts(s2["docs"])                # C-126: from the rows
         g2 = sum(v for k, v in c2.items() if not k.startswith("ungraded"))
         ok2 = c2.get("true-READY", 0) + c2.get("true-NOT-READY", 0)
         L += ["### Out-of-sample position (sample 2 — untuned)", "",
@@ -413,6 +425,7 @@ def build(repo: Path) -> str:
     s3_path = repo / "corpora/real_roots/results_sample3.json"
     if s3_path.is_file():
         s3 = json.loads(s3_path.read_text())
+        s3["counts"] = cell_counts(s3["docs"])      # C-126: from the rows
         ids3 = {d["arxiv_id"] for d in s3["docs"]}
         if not SAMPLE3_NAMED_IDS <= ids3:
             raise SystemExit(
@@ -438,10 +451,22 @@ def build(repo: Path) -> str:
             return out
 
         o3, f3 = s3["oracle"], s3["frame"]
+        _rg3 = repo / "corpora/oracle_baseline/regrade_open126_sample3.json"
+        rg3 = json.loads(_rg3.read_text()) if _rg3.is_file() else None
+        if rg3:
+            rg3["summary"] = diff_summary(rg3["rows"])   # C-126: from the rows
         L += ["### Virgin position (sample 3 — sealed for measurement, OPEN-119)", "",
               f"Frame offset {f3['offset']}, ranks {f3['offset'] + 1}-"
               f"{f3['offset'] + f3['n']} of the same deterministic ordering "
-              f"(frame {f3['frame_size']}); pdflatex grades taken ONCE, CLI "
+              f"(frame {f3['frame_size']}); drawn and graded ONCE"
+              + (f", the pdflatex side re-graded under the final oracle at "
+                 f"`{str(s3['oracle_regraded_at_sha'])[:8]}` (OPEN-126: "
+                 f"{rg3['summary']['cells_moved']} of {rg3['summary']['rows']} "
+                 f"cells and {rg3['summary']['outcomes_moved']} rc/PDF/pass "
+                 f"outcomes moved, corpora/oracle_baseline/"
+                 f"regrade_open126_sample3.json)"
+                 if s3.get("oracle_regraded_at_sha") and rg3 else "")
+              + f", CLI "
               f"verdicts measured at "
               f"`{str(s3.get('measured_at_sha', '?'))[:8]}`, under the pinned "
               f"image `{o3.get('image', '?')}` ({o3.get('arch', '?')}, "
@@ -459,8 +484,8 @@ def build(repo: Path) -> str:
         if rr:
             L.append(conf_row("sample 1 (tuned)", rr["counts"]))
         if s2_path.is_file():
-            L.append(conf_row("sample 2 (design-seen)",
-                              json.loads(s2_path.read_text())["counts"]))
+            L.append(conf_row("sample 2 (design-seen)", cell_counts(
+                json.loads(s2_path.read_text())["docs"])))
         L.append(conf_row(SAMPLE3_LABEL, s3["counts"]))
         rest = [d for d in s3["docs"] if d["arxiv_id"] not in SAMPLE3_NAMED_IDS]
         named = [d for d in s3["docs"] if d["arxiv_id"] in SAMPLE3_NAMED_IDS]

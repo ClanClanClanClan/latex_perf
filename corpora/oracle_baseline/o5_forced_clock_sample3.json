@@ -1,26 +1,44 @@
 {
- "artefact": "corpora/real_roots/results.json",
- "oracle_after": {
+ "artefact": "corpora/real_roots/results_sample3.json",
+ "experiment": "re-grade of every row with clock 'forced' ({'FORCE_SOURCE_DATE': '1'}); the artefact itself is NOT written",
+ "measured_at_sha": "b9652c318582e8bf1198e0b538c7110cfb301e28",
+ "oracle": {
   "engine": "pdflatex",
   "distribution": "TeX Live 2026",
   "version": "pdfTeX 3.141592653-2.6-1.40.29",
-  "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)",
+  "protocol": "-interaction=nonstopmode -halt-on-error, restricted shell-escape (the pdflatex default, OPEN-053), up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint), PDF recorded (compiles = rc 0 AND a PDF)",
   "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
   "arch": "aarch64",
   "tlpdb_sha256": "541f1efbfba579ff2db5db5781e9bbd6511dcebfe883cbac82d2f8c9ff272dfe",
   "macro_layer_sha256": "27089de69500214440bb78910236f788be89a4692c989bdc217ca93e5ba91c10",
   "fmt_sha256": "a476533c0d6e64f08b47de9c109cc4e9a04874f5bc7a897ad5b622ef9faa54d3",
-  "backend": "container"
+  "backend": "container",
+  "clock": "forced",
+  "grading_code": {
+   "files": {
+    "scripts/tools/_oracle.py": "b7be411e515e24194f45d5b3e4da74add0a5f443",
+    "scripts/tools/diff_real_roots.py": "23bb9655a4cb95bbd924f3455332f4475d13bf0a"
+   },
+   "sha256": "3cb3a156473083a533769f929c33ae2a53979015ea1e4a569cc26abd34cd7d19"
+  }
+ },
+ "counts": {
+  "true-READY": 178,
+  "false-NOT-READY": 8,
+  "true-NOT-READY": 10,
+  "FALSE-READY": 4
  },
  "rows": [
   {
-   "arxiv_id": "2506.23664v2",
-   "toplevel": "imvip_Formatting_Instructions.tex",
+   "arxiv_id": "2507.10104v1",
+   "toplevel": "SCPMA.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -28,19 +46,47 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.10174v1",
+   "arxiv_id": "2507.09721v1",
+   "toplevel": "AAS_I.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11424v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -48,19 +94,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.08181v1",
-   "toplevel": "susyAndDoubling.tex",
+   "arxiv_id": "2507.05689v1",
+   "toplevel": "nptree.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -68,19 +118,47 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.09749v1",
+   "arxiv_id": "2507.09271v1",
+   "toplevel": "Char_DivPoly-Shift.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11136v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -88,19 +166,47 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.10676v1",
+   "arxiv_id": "2507.05393v1",
+   "toplevel": "article.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11005v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -108,39 +214,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.17634v2",
-   "toplevel": "main.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.03478v1",
+   "arxiv_id": "2507.09767v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -148,899 +238,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.09313v2",
-   "toplevel": "acl_latex.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.01712v1",
-   "toplevel": "arxiv_main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09942v1",
-   "toplevel": "LLM_Letter.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20361v1",
-   "toplevel": "template.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.12904v1",
-   "toplevel": "GhostsI-arXiv.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08462v1",
-   "toplevel": "PP_sharp_tail_estimage_GW.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.23638v2",
-   "toplevel": "main_WAOA.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.07949v1",
-   "toplevel": "sample-sigconf-authordraft.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.02739v1",
-   "toplevel": "somme_des_inverses_v12.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "false-NOT-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "false-NOT-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11001v1",
-   "toplevel": "bare_jrnl_new_sample4.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.17361v1",
-   "toplevel": "cas-sc-template.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l."
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l."
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09373v1",
-   "toplevel": "main.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10983v1",
-   "toplevel": "main1.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.19663v1",
-   "toplevel": "G24.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11476v1",
-   "toplevel": "Main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.16809v1",
-   "toplevel": "GAUSS4_CONSIM.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.06130v1",
-   "toplevel": "D4_Arxiv_Submission.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11152v1",
-   "toplevel": "sample-sigconf-authordraft.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.01076v2",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10386v1",
-   "toplevel": "Gaussian_pulse_V2.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20191v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10726v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08096v1",
-   "toplevel": "template.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": "! Package pdftex.def Error: File `Definitions/logo-mdpi-eps-converted-to.pdf' not found: using draft setting.See the pdftex.def package documentation for explan"
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10710v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21104v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10303v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11478v1",
-   "toplevel": "Chow_Ring_Moduli_Hyperelliptic_Prym_Pairs_II_Cela_Landi.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.02852v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08996v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09118v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20407v2",
-   "toplevel": "MICCAI2025_paper_template.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10419v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style."
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09848v1",
-   "toplevel": "gHDre.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08741v1",
-   "toplevel": "HieraRS.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08867v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08102v1",
-   "toplevel": "Main_PhysReports.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10065v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style."
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08554v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.22963v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09875v1",
-   "toplevel": "neurips_2025.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09558v1",
-   "toplevel": "InteriorMass-Exp-Stability-post-revision-FINAL.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10130v1",
-   "toplevel": "D21a1906.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.14935v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.04257v1",
-   "toplevel": "main2.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.02360v1",
+   "arxiv_id": "2507.07779v1",
    "toplevel": "arxiv.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -1048,879 +262,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.01405v1",
-   "toplevel": "involutions-final.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09168v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21166v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10161v1",
-   "toplevel": "ijuc.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09772v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08795v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08995v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20293v1",
-   "toplevel": "bare_jrnl.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.19821v1",
-   "toplevel": "heatmaps_arxiv.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.19591v1",
-   "toplevel": "IGARSS2025LaTeXTemplate.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.22666v1",
-   "toplevel": "neurips_2025.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.13995v2",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.15258v2",
-   "toplevel": "cam_ready.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.02031v1",
-   "toplevel": "bp3-arXiv.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08721v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.18484v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21227v1",
-   "toplevel": "0_main_ContResDim.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.07839v1",
-   "toplevel": "sn-article.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20038v1",
-   "toplevel": "ms.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.06428v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21699v1",
-   "toplevel": "paper_Phase.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.13749v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.01459v1",
-   "toplevel": "CFImain.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.23223v2",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09556v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.23970v1",
-   "toplevel": "Itai-Zehavi-arxiv.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.17992v1",
-   "toplevel": "Q-manuscript.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.16556v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.19144v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09925v1",
-   "toplevel": "eacl2023.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.02526v1",
-   "toplevel": "Orientable_tuple_construction_250703_w_bbl.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.00278v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10855v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09934v1",
-   "toplevel": "document.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.15876v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09026v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10143v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.01542v1",
-   "toplevel": "sn-article.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10797v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.07990v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.06158v1",
-   "toplevel": "Addition_automata_and_attractors_of_Digit_Systems_Corresponding_to_Expanding_Rational_Matrices.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.00983v1",
-   "toplevel": "template.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10604v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10490v1",
+   "arxiv_id": "2507.04008v1",
    "toplevel": "cas-dc-sample.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -1928,39 +286,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.07038v1",
-   "toplevel": "a4b.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10623v1",
+   "arxiv_id": "2507.02003v2",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -1968,119 +310,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.01552v1",
-   "toplevel": "Herrmann2025.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21765v1",
-   "toplevel": "elsarticle-template-num.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.04488v1",
-   "toplevel": "CycleSpaceGnd6.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11439v1",
-   "toplevel": "elsarticle-template-num.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.15344v1",
-   "toplevel": "0_Singular_intersection.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.00720v1",
+   "arxiv_id": "2506.19796v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2088,19 +334,47 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.02435v1",
+   "arxiv_id": "2507.10538v1",
+   "toplevel": "PoroSplitPaper.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09590v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2108,19 +382,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.08906v1",
-   "toplevel": "main.tex",
+   "arxiv_id": "2507.00660v2",
+   "toplevel": "Paper-3656.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2128,19 +406,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.15360v1",
-   "toplevel": "diag_zero.tex",
+   "arxiv_id": "2507.10335v1",
+   "toplevel": "GSI25-110.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2148,619 +430,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.18007v1",
-   "toplevel": "sn-article.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.03872v1",
-   "toplevel": "paper.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.04898v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11171v1",
-   "toplevel": "Main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.05987v1",
-   "toplevel": "main.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.07981v1",
-   "toplevel": "ex_vs_im_rm_main.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! Argument of \\caption@ydblarg has an extra }.<inserted text>                 \\par l.515 \t}"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! Argument of \\caption@ydblarg has an extra }.<inserted text>                 \\par l.515 \t}"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.00313v1",
-   "toplevel": "main.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.19362v2",
-   "toplevel": "SturmianLattice.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.04012v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09748v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11541v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10318v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21082v2",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.22536v1",
-   "toplevel": "arxiv_new.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style."
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.17898v2",
-   "toplevel": "cotorsion_pair.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20942v1",
-   "toplevel": "Rankin-Selberg.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20457v1",
-   "toplevel": "Main-HPSTM-Jalili.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09915v1",
-   "toplevel": "bare_jrnl_new_sample4.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.01395v1",
-   "toplevel": "ATC-ramified-2025-0702-arxiv.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09846v1",
-   "toplevel": "main.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\theHalgorithm already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\theHalgorithm already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.04570v1",
-   "toplevel": "Jac-Fin-Tame__Final_.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.05592v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.23487v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10873v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08889v1",
-   "toplevel": "paper.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.04190v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.05732v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.15660v1",
-   "toplevel": "main_la.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10809v1",
-   "toplevel": "icann2025.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l."
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l."
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09278v1",
-   "toplevel": "Discrete_Convergence_FAFDVDMSU.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.16970v2",
-   "toplevel": "arxiv30June25.tex",
+   "arxiv_id": "2507.08676v1",
+   "toplevel": "main_magicNHqubit.tex",
    "cli_rc": 1,
    "before": {
     "cell": "false-NOT-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2768,19 +454,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.06325v1",
+   "arxiv_id": "2507.10425v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2788,19 +478,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.07778v1",
+   "arxiv_id": "2507.05005v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2808,19 +502,47 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.11155v1",
+   "arxiv_id": "2507.00633v1",
+   "toplevel": "nc-resolution_v1.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.00736v2",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2828,19 +550,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.10552v1",
+   "arxiv_id": "2507.08136v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -2848,79 +574,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.08781v1",
-   "toplevel": "QCQCs_as_RQCs_arXiv_v1.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@definition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@definition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.16763v1",
-   "toplevel": "Manuscriptv2.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09420v1",
-   "toplevel": "paper_template.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10779v1",
+   "arxiv_id": "2507.01761v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
     "first_error": ""
    },
    "after": {
@@ -2928,139 +598,95 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10932v1",
-   "toplevel": "main_v4__1_.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10709v1",
-   "toplevel": "inequalities.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.15348v2",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10545v1",
-   "toplevel": "kpz-gl-infinite-volume-final.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.24003v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.17405v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style."
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
     "first_error": ""
    },
    "passes": 3,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.08930v1",
+   "arxiv_id": "2507.10707v1",
+   "toplevel": "absence-of-BJ-arXiv1.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": "![]\\OMS/cmsy/m/n/10.95 g[]$ \\OT1/cmr/m/it/10.95 are sam-pled from a prob-a-bil-ity space $\\OT1/cmr/m/n/10.95 (\\OML/cmm/m/it/10.95 ; \\OMS/cmsy/m/n/10.95 F\\OML/cm"
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": "![]\\OMS/cmsy/m/n/10.95 g[]$ \\OT1/cmr/m/it/10.95 are sam-pled from a prob-a-bil-ity space $\\OT1/cmr/m/n/10.95 (\\OML/cmm/m/it/10.95 ; \\OMS/cmsy/m/n/10.95 F\\OML/cm"
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.20935v1",
+   "toplevel": "ATD2023JASA2025.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.00451v1",
+   "toplevel": "sample.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.06865v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3068,19 +694,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.11202v1",
-   "toplevel": "MM-PASSION-4.tex",
+   "arxiv_id": "2507.09991v1",
+   "toplevel": "transform.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3088,299 +718,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.14558v1",
-   "toplevel": "gcv.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.03932v1",
-   "toplevel": "Homogeneous_Legendrian.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10661v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11469v1",
-   "toplevel": "Klein_ppdim.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.22192v1",
-   "toplevel": "MVT-Smooth.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21268v1",
-   "toplevel": "report.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.00812v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09072v1",
-   "toplevel": "main_final.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.11321v1",
-   "toplevel": "bare_jrnl_new_sample4.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.02481v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.06407v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21525v1",
-   "toplevel": "The_spectrum_of_global_representations.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10325v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09227v1",
-   "toplevel": "ecai-sample-and-instructions.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21894v1",
+   "arxiv_id": "2506.18508v1",
    "toplevel": "paper.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3388,19 +742,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.09867v1",
-   "toplevel": "manuscript_revised.tex",
+   "arxiv_id": "2506.17464v1",
+   "toplevel": "paper_variational.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3408,19 +766,119 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.10078v1",
+   "arxiv_id": "2506.22578v1",
+   "toplevel": "neurips_2025.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11538v1",
+   "toplevel": "paper.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23099v1",
+   "toplevel": "sesquilinear.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.12342v1",
+   "toplevel": "dedekind.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09524v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3428,19 +886,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.19742v1",
-   "toplevel": "Main.tex",
+   "arxiv_id": "2507.05815v1",
+   "toplevel": "MICCAI2025_paper_template.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3448,19 +910,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.19422v1",
-   "toplevel": "hardy-ignat-zuazua.tex",
+   "arxiv_id": "2507.08287v1",
+   "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3468,19 +934,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.06861v1",
-   "toplevel": "paper_ddpgd_stokesDarcy_arxiv.tex",
+   "arxiv_id": "2507.10549v1",
+   "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3488,19 +958,1079 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.15748v1",
+   "arxiv_id": "2506.23619v1",
+   "toplevel": "main_short.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11138v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05647v1",
+   "toplevel": "Template.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.06120v2",
+   "toplevel": "Characterizing_Spheres_Submitted.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04103v1",
+   "toplevel": "neurips_2025.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10926v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.12918v1",
+   "toplevel": "char.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01473v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05656v2",
+   "toplevel": "elsarticle-template-harv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.11459v4",
+   "toplevel": "Equations_defining_Jacobians_.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09560v1",
+   "toplevel": "sample-sigconf.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09880v1",
+   "toplevel": "bmvc_final.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04973v1",
+   "toplevel": "SSX2025final.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.03453v1",
+   "toplevel": "arXiv_coadjoint_250704.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.19274v1",
+   "toplevel": "VBSurrogate_arxiv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09674v1",
+   "toplevel": "aa53104-24.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.20928v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.20350v1",
+   "toplevel": "bare_jrnl.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04441v1",
+   "toplevel": "main.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Undefined control sequence.\\trivlist ->\\let \\enit@type                             \\tw@ \\parsep \\parskip \\csname @list\\romannumeral...l.210 \\thispagestyle"
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Undefined control sequence.\\trivlist ->\\let \\enit@type                             \\tw@ \\parsep \\parskip \\csname @list\\romannumeral...l.210 \\thispagestyle"
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.03784v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.20406v1",
+   "toplevel": "JASA-template.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.07994v2",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23184v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05428v1",
+   "toplevel": "main.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@example already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for ex"
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@example already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for ex"
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.18249v1",
+   "toplevel": "PCA-based_Quantile_Sampling_arXiv_20250620.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.03772v2",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01353v1",
+   "toplevel": "radon_partitions.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.07516v1",
+   "toplevel": "arXiv_v1.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09865v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11153v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01291v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04179v1",
+   "toplevel": "binomial-convolution-sequences-20250704.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.00398v1",
+   "toplevel": "fetal_weight_estimation.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.02999v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08262v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23533v1",
+   "toplevel": "lift-high-dim-5_2.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.03121v1",
+   "toplevel": "ChustCoelhoRiedtmannFunctors.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11023v1",
+   "toplevel": "ojaqso.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11032v1",
+   "toplevel": "aa54775-25.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.03207v1",
+   "toplevel": "main.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23790v1",
+   "toplevel": "main.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.12999v2",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.07022v1",
+   "toplevel": "07_07_VectorSpreadBorel.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.02437v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01831v1",
    "toplevel": "arxiv.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3508,39 +2038,47 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.04247v1",
-   "toplevel": "jmlr.tex",
-   "cli_rc": 0,
+   "arxiv_id": "2506.22918v2",
+   "toplevel": "markov.tex",
+   "cli_rc": 1,
    "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
    },
    "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
    },
-   "passes": 2,
-   "cell_changed": false
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.09001v1",
+   "arxiv_id": "2506.13633v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3548,39 +2086,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.07220v1",
-   "toplevel": "linearizing.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.08416v1",
+   "arxiv_id": "2506.16961v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3588,19 +2110,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.10512v1",
-   "toplevel": "abelian_BFW_for_arxiv.tex",
+   "arxiv_id": "2506.15747v1",
+   "toplevel": "root.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3608,19 +2134,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.00894v1",
+   "arxiv_id": "2506.20173v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3628,19 +2158,71 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.16376v1",
+   "arxiv_id": "2506.19234v1",
+   "toplevel": "bare_conf.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23892v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\orcidlogo already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for ex"
+   },
+   "after": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\orcidlogo already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for ex"
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10203v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3648,59 +2230,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.10271v1",
-   "toplevel": "DissipativeFloquetMajarona.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09980v1",
-   "toplevel": "bare_jrnl_new.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21314v1",
+   "arxiv_id": "2507.00871v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3708,19 +2254,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.14350v1",
-   "toplevel": "copy_arxiv.tex",
+   "arxiv_id": "2507.02769v1",
+   "toplevel": "epall_1_arXiv.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3728,19 +2278,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.23794v1",
+   "arxiv_id": "2507.03379v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3748,19 +2302,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.10189v1",
-   "toplevel": "twins.tex",
+   "arxiv_id": "2507.11415v1",
+   "toplevel": "Paper2891.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3768,19 +2326,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.09950v1",
+   "arxiv_id": "2507.11441v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3788,19 +2350,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.01044v1",
-   "toplevel": "ShallowAndWideConf.tex",
+   "arxiv_id": "2507.09773v1",
+   "toplevel": "2_jacquet.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3808,19 +2374,23 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.06961v1",
+   "arxiv_id": "2507.07940v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3828,19 +2398,119 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2506.21802v1",
+   "arxiv_id": "2507.10048v1",
+   "toplevel": "draft.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09122v1",
+   "toplevel": "neurips_2025.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08520v1",
+   "toplevel": "bare_jrnl_new_sample4.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01295v1",
+   "toplevel": "LRD_adv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10904v1",
    "toplevel": "main.tex",
    "cli_rc": 0,
    "before": {
     "cell": "true-READY",
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "after": {
@@ -3848,19 +2518,2303 @@
     "pdflatex_rc": 0,
     "pdflatex_verdict": "COMPILES",
     "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
     "first_error": ""
    },
    "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   },
   {
-   "arxiv_id": "2507.09437v1",
+   "arxiv_id": "2507.03264v1",
+   "toplevel": "Minimum_degree_and_sparse_connected_spanning_subgraphs.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08574v1",
+   "toplevel": "templateArxiv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.13733v1",
+   "toplevel": "main.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01806v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09944v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09511v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01565v1",
+   "toplevel": "ictcs_hypercube.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.15064v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.00426v1",
+   "toplevel": "List-square-subcubic-No-C4C5-Final.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.17471v1",
+   "toplevel": "main_strip.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08271v1",
+   "toplevel": "ph2.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05034v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.20940v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Use of \\cref@override@label@type doesn't match its definition.\\refstepcounter@optarg ...cref@currentlabel \\@nil                                               "
+   },
+   "after": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Use of \\cref@override@label@type doesn't match its definition.\\refstepcounter@optarg ...cref@currentlabel \\@nil                                               "
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01608v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09131v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04361v1",
+   "toplevel": "ECKansa.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.07828v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.02377v1",
+   "toplevel": "neurips_2025.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23950v3",
+   "toplevel": "HigherDimv3A.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.12451v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.07860v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05905v2",
+   "toplevel": "Congruence_Siegel_5.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09181v1",
+   "toplevel": "ABL-I-062625-ArXiv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23354v1",
+   "toplevel": "partitiondiamonds.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10544v1",
+   "toplevel": "paper.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10913v1",
+   "toplevel": "main-camera-ready.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.16457v1",
    "toplevel": "main.tex",
    "cli_rc": 1,
    "before": {
     "cell": "true-NOT-READY",
     "pdflatex_rc": 1,
     "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Unicode character \u0308 (U+0308)               not set up for use with LaTeX.See the LaTeX manual or LaTeX Companion for explanation."
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Unicode character \u0308 (U+0308)               not set up for use with LaTeX.See the LaTeX manual or LaTeX Companion for explanation."
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.00073v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.06390v2",
+   "toplevel": "DMcompletepartiteSubmitted.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08757v1",
+   "toplevel": "StrongExistence.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04402v1",
+   "toplevel": "On_Minimal_Excludant_over_Overpartitions.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08347v1",
+   "toplevel": "PCFquadsPrePer07.02.25.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08150v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.22826v1",
+   "toplevel": "arXiv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05725v1",
+   "toplevel": "2025_04_final-v2.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08692v1",
+   "toplevel": "Higher-Order-Survey.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09480v1",
+   "toplevel": "sn-article.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10088v1",
+   "toplevel": "sample-sigconf.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08114v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.06268v1",
+   "toplevel": "collectivist-ai.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.17796v1",
+   "toplevel": "00_main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.14152v1",
+   "toplevel": "manuscript.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.18356v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Use of \\cref@override@label@type doesn't match its definition.\\refstepcounter@optarg ...cref@currentlabel \\@nil                                               "
+   },
+   "after": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Use of \\cref@override@label@type doesn't match its definition.\\refstepcounter@optarg ...cref@currentlabel \\@nil                                               "
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.19726v1",
+   "toplevel": "main_v2.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10626v1",
+   "toplevel": "soccer.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05037v1",
+   "toplevel": "Rev_Blockings.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.03828v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08956v1",
+   "toplevel": "arxiv_main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05806v2",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09881v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09873v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08441v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.21851v1",
+   "toplevel": "root.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11207v1",
+   "toplevel": "max.curves.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08309v1",
+   "toplevel": "acl_latex.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l."
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l."
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.17549v1",
+   "toplevel": "arxive.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11228v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.18332v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.22615v2",
+   "toplevel": "ex_article.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05027v1",
+   "toplevel": "growth_ggcd.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.06169v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.17874v2",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 3,
+    "first_error": ""
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09304v1",
+   "toplevel": "paper.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10714v1",
+   "toplevel": "ml_param.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09034v1",
+   "toplevel": "apssamp.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04572v1",
+   "toplevel": "KG.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.22292v1",
+   "toplevel": "cas_sc_template.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09851v1",
+   "toplevel": "Manuscript.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.15165v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Use of \\cref@override@label@type doesn't match its definition.\\refstepcounter@optarg ...cref@currentlabel \\@nil                                               "
+   },
+   "after": {
+    "cell": "FALSE-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! Use of \\cref@override@label@type doesn't match its definition.\\refstepcounter@optarg ...cref@currentlabel \\@nil                                               "
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.07812v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.16750v1",
+   "toplevel": "autoconv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.05441v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.18187v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08913v1",
+   "toplevel": "icml_2025.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\theHalgorithm already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\theHalgorithm already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo"
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.02248v1",
+   "toplevel": "version4.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09093v1",
+   "toplevel": "arxiv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.04254v1",
+   "toplevel": "main.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
+   },
+   "after": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
+    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl"
+   },
+   "passes": 3,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10752v1",
+   "toplevel": "bec-scalar-arxiv-v5.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08494v1",
+   "toplevel": "top.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.13554v1",
+   "toplevel": "preprint.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10805v1",
+   "toplevel": "main_apj.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.07222v1",
+   "toplevel": "neurips_2025.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.20206v2",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.11262v1",
+   "toplevel": "LyAm.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10037v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.08205v1",
+   "toplevel": "KenTMI2025_arxiv.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.09514v1",
+   "toplevel": "example_paper.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.18058v1",
+   "toplevel": "paper_corrosion.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.14455v1",
+   "toplevel": "nry_unified.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.17092v1",
+   "toplevel": "paper.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.16045v1",
+   "toplevel": "arxiv_sgn_article.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10778v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.01891v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2506.23033v1",
+   "toplevel": "main.tex",
+   "cli_rc": 0,
+   "before": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "true-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.10050v1",
+   "toplevel": "APS-arXiv.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "after": {
+    "cell": "false-NOT-READY",
+    "pdflatex_rc": 0,
+    "pdflatex_verdict": "COMPILES",
+    "pdflatex_pdf": true,
+    "pdflatex_passes": 2,
+    "first_error": ""
+   },
+   "passes": 2,
+   "cell_changed": false,
+   "outcome_changed": false
+  },
+  {
+   "arxiv_id": "2507.03163v1",
+   "toplevel": "planar3colouring.tex",
+   "cli_rc": 1,
+   "before": {
+    "cell": "true-NOT-READY",
+    "pdflatex_rc": 1,
+    "pdflatex_verdict": "FAILS",
+    "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
     "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan"
    },
    "after": {
@@ -3868,160 +4822,12 @@
     "pdflatex_rc": 1,
     "pdflatex_verdict": "FAILS",
     "pdflatex_pdf": false,
+    "pdflatex_passes": 3,
     "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan"
    },
    "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.20956v1",
-   "toplevel": "Regular-sequences-and-k-coprimality.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10095v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.10471v1",
-   "toplevel": "SciPostPhys.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.07602v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.09128v1",
-   "toplevel": "main_arxiv.tex",
-   "cli_rc": 1,
-   "before": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "first_error": "! LaTeX Error: Command \\c@assumption already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for"
-   },
-   "after": {
-    "cell": "true-NOT-READY",
-    "pdflatex_rc": 1,
-    "pdflatex_verdict": "FAILS",
-    "pdflatex_pdf": false,
-    "first_error": "! LaTeX Error: Command \\c@assumption already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for"
-   },
-   "passes": 3,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2506.21301v1",
-   "toplevel": "UpperBoundsOnClassNumbersOfRealQuadraticFields.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
-  },
-  {
-   "arxiv_id": "2507.04980v1",
-   "toplevel": "main.tex",
-   "cli_rc": 0,
-   "before": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "first_error": ""
-   },
-   "after": {
-    "cell": "true-READY",
-    "pdflatex_rc": 0,
-    "pdflatex_verdict": "COMPILES",
-    "pdflatex_pdf": true,
-    "first_error": ""
-   },
-   "passes": 2,
-   "cell_changed": false
+   "cell_changed": false,
+   "outcome_changed": false
   }
- ],
- "summary": {
-  "rows": 200,
-  "cell_changed": 0,
-  "rc_changed": 0,
-  "rc_unrecorded_before": 0,
-  "verdict_changed": 0,
-  "rc0_without_pdf": 0,
-  "first_error_text_changed": 5,
-  "first_error_note": "All 5 COMPILE (rc 0) on both oracles but carried a stale pass-1 error string: the earlier `--repass --repass-scope failures` updated rc and passes but never first_error (4 natbib papers that compile on pass 2, and 2507.08096v1 after OPEN-053). A recording defect of the old repass, not an oracle difference; the new repass rewrites first_error."
- }
+ ]
 }

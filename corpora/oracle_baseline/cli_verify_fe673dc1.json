@@ -1,0 +1,223 @@
+{
+ "what": "OPEN-126: the recorded CLI verdicts of samples 1-3 re-run with the CLI built at main commit ca7c4809 (engine tree fe673dc1), BEFORE sample 2's CLI side was re-measured. A row differs when cli_rc or the scrape_reasons token set differs.",
+ "cli_built_at": "ca7c48093ec0c289e6345d66230c216f0dadd192",
+ "src_tree_sha": "fe673dc1608eac5528314f23bea1bb50bcd5e433",
+ "cli_sha256": "6ffb739137683ba0ce391015f28a28f0bd48871705cd664c03ea04ed34e5b786",
+ "cli_platform": "Darwin-arm64",
+ "measured": "2026-10-02",
+ "samples": {
+  "results.json": {
+   "rows": 200,
+   "differ": 0,
+   "rc_differs": 0,
+   "diffs": []
+  },
+  "results_sample2.json": {
+   "rows": 200,
+   "differ": 15,
+   "rc_differs": 2,
+   "diffs": [
+    {
+     "id": "2506.16210v2",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T0 parse fails in <corpus>/2506.16210v2/main/New_IEEEtran_how-to.tex: Expected \\end{table*} but got \\end{tabular} (line 464, offset 47610)",
+      "T5 rule violations: [PRT-001]"
+     ],
+     "reasons": [
+      "PRT-001",
+      "T0",
+      "T5"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2506.16708v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T0 parse fails in <corpus>/2506.16708v1/HBps.tex: LP-Foreign construct(s): \\catcode direct mutation detected; LP-Foreign (line 22)"
+     ],
+     "reasons": [
+      "T0"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2506.17768v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T5 rule violations: [DELIM-003; DELIM-004]"
+     ],
+     "reasons": [
+      "DELIM-003",
+      "DELIM-004",
+      "T5"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2506.17983v2",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T3 body-required feature(s) [japanese_cjk] not admitted by engine pdflatex"
+     ],
+     "reasons": [
+      "T3"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2506.21275v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T0 parse fails in <corpus>/2506.21275v1/BIFFLUID.tex: Expected \\end{document} but got \\end{tikzpicture} (line 225, offset 30963)",
+      "T5 rule violations: [PRT-001]"
+     ],
+     "reasons": [
+      "PRT-001",
+      "T0",
+      "T5"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2506.22204v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T2 project not closed: missing file <corpus>/2506.22204v1/arXiv/math_commands.tex"
+     ],
+     "reasons": [
+      "T2"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2506.23550v2",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T0 parse fails in <corpus>/2506.23550v2/main.tex: LP-Foreign construct(s): \\catcode direct mutation detected; LP-Foreign (line 1790); \\catcode direct mutation detected; LP-Foreign (line 1790); \\catcode direct mutation detected; LP-Foreign (line 1790); \\catcode direct mutation detected; LP-Foreign (line 1791); \\catcode direct mutation detected; LP-Foreign (line 1791); \\catcode direct mutation detected; LP-Foreign (line 1791); \\catcode direct mutation detected; LP-Foreign (line 1791)"
+     ],
+     "reasons": [
+      "T0"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2507.00349v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T0 parse fails in <corpus>/2507.00349v1/twisted-20240624.tex: Expected \\end{document} but got \\end{thebibliography} (line 1310, offset 103672)",
+      "T5 rule violations: [PRT-001]"
+     ],
+     "reasons": [
+      "PRT-001",
+      "T0",
+      "T5"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2507.00730v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T2 project not closed: missing file <corpus>/2507.00730v1/pictex",
+      "T5 rule violations: [DELIM-003]"
+     ],
+     "reasons": [
+      "DELIM-003",
+      "T2",
+      "T5"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2507.03521v2",
+     "rec_rc": 1,
+     "rc": 0,
+     "rec_reasons": [
+      "T3 body-required feature(s) [opentype_fonts] not admitted by engine pdflatex",
+      "T2 project not closed: missing file <corpus>/2507.03521v2/gray"
+     ],
+     "reasons": [],
+     "kind": "rc differs"
+    },
+    {
+     "id": "2507.06417v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T5 rule violations: [DELIM-001]"
+     ],
+     "reasons": [
+      "DELIM-001",
+      "T5"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2507.09165v1",
+     "rec_rc": 1,
+     "rc": 0,
+     "rec_reasons": [
+      "T2 project_closed_b failed (build graph not closed/acyclic)",
+      "T2 project not closed: missing file <corpus>/2507.09165v1/sections/experiments.tex"
+     ],
+     "reasons": [],
+     "kind": "rc differs"
+    },
+    {
+     "id": "2507.10358v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T3 body-required feature(s) [japanese_cjk] not admitted by engine pdflatex"
+     ],
+     "reasons": [
+      "T3"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2507.10449v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T3 body-required feature(s) [japanese_cjk] not admitted by engine pdflatex"
+     ],
+     "reasons": [
+      "T3"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    },
+    {
+     "id": "2507.11492v1",
+     "rec_rc": 1,
+     "rc": 1,
+     "rec_reasons": [
+      "T5 rule violations: [DELIM-003]"
+     ],
+     "reasons": [
+      "DELIM-003",
+      "T5"
+     ],
+     "kind": "reason format only (recorded as full lines by an older producer)"
+    }
+   ]
+  },
+  "results_sample3.json": {
+   "rows": 200,
+   "differ": 0,
+   "rc_differs": 0,
+   "diffs": []
+  }
+ }
+}

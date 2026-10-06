@@ -71,6 +71,11 @@ Usage as a tool:
                                   shell graders: refuse (INFRA_RC) a run when
                                   D is short of space or F shows pdfTeX failing
                                   to write its own output; exit 0 otherwise
+  _oracle.py check-recorded FILE KEY
+                                  exit 0 iff the oracle block at KEY (dotted)
+                                  of the JSON FILE is this oracle: same image,
+                                  architecture and tree (ADR-015 E2); else
+                                  INFRA_RC. The shell graders' comparison guard
   _oracle.py rm FILES...          delete work files through the oracle (see
                                   ContainerOracle.remove); exit 0, or 2
   _oracle.py stop                 remove the long-lived container
@@ -130,7 +135,57 @@ MAX_PASSES = 3
 # twice 1 s apart and compared no identities. A left-behind process is
 # still there after 10 s by definition; a sibling's zombie is not.
 PIDS_LIMIT = 4096
-CONTAINER_CONFIG_TAG = f"-init-p{PIDS_LIMIT}"
+CONTAINER_CONFIG_TAG = f"-init-p{PIDS_LIMIT}-ro"
+
+# THE TeX TREE IS READ-ONLY, AND NO GRADED RUN IS ROOT (OPEN-126; stock-take
+# 2026-09-30 §3f). Until this block the long-lived container ran as root over
+# a writable image filesystem, and spike H.1 SAW a crashed mktex helper write
+# into texmf-dist and rewrite its ls-R inside a live oracle container. The
+# only guard was ContainerOracle.check_state, a whole-filesystem scan that
+# DETECTS a change once per session, after the fact. Now prevention: the
+# container is started with `--read-only` (its root filesystem, the TeX tree
+# included, cannot be written), `--tmpfs /tmp` (HOME=/tmp; nothing a graded
+# run uses lives there since C-93, which moved every run's TMPDIR and TEXMF*
+# trees into its own work directory), and `--user` = the host user, so the
+# engine is not root either (the bind-mounted work root stays writable to
+# it: on colima's virtiofs a container uid equal to the host's owns the
+# host's files). The native backend (CI's in-image runs) is started the same
+# way by tex-oracle.yml and VERIFIES it (check_readonly): a writable TeX tree
+# or a root engine is refused, never graded. MEASURED before adoption: every
+# evidence document grades identically (OPEN-126 lists the sets and counts).
+# check_state stays as defence in depth: it is the one observer of a write
+# that a read-only root filesystem does not stop (a `docker exec -u 0` of
+# one's own into /tmp's tmpfs is out of its reach, -xdev; the per-run
+# check_texmf_trees covers the TeX trees there).
+TMPFS_OPTIONS = "rw,nosuid,nodev,noexec,size=256m"
+_READONLY_PROBE = (
+    "import json, os, subprocess\n"
+    "r = subprocess.run(['kpsewhich', '-var-value', 'TEXMFROOT'], "
+    "capture_output=True, text=True).stdout.strip()\n"
+    "def ro(p):\n"
+    "    try:\n"
+    "        return bool(os.statvfs(p).f_flag & os.ST_RDONLY)\n"
+    "    except OSError:\n"
+    "        return None\n"
+    "print(json.dumps({'euid': os.geteuid(), 'texmfroot': r, "
+    "'root_ro': ro('/'), 'tree_ro': ro(r) if r else None}))\n")
+
+
+def check_readonly(probe: dict, where: str) -> None:
+    """Refuse (OracleError) an oracle whose TeX tree is writable or whose
+    engine would run as root (see the block above)."""
+    if probe.get("tree_ro") is not True or probe.get("root_ro") is not True:
+        raise OracleError(
+            f"{where}: the TeX tree ({probe.get('texmfroot')!r}) or the root "
+            f"filesystem is writable (read-only: tree {probe.get('tree_ro')}, "
+            f"root {probe.get('root_ro')}); the oracle's tree must be "
+            f"read-only (docker run --read-only, OPEN-126). Native backend: "
+            f"start the image with --read-only --tmpfs /tmp --user UID:GID; "
+            f"container backend: `_oracle.py stop` so a correct one starts.")
+    if probe.get("euid") in (0, None):
+        raise OracleError(
+            f"{where}: the engine would run as root (euid {probe.get('euid')}); "
+            f"the oracle runs as an unprivileged user (--user, OPEN-126)")
 LEAK_CONFIRM_S = 10
 LEAK_CHECK_SH = (
     'lp_leak_list() { ps -eo pid=,ppid=,stat=,etimes=,args= | '
@@ -175,6 +230,25 @@ TREE_FINGERPRINTS = {
         "fmt_sha256": "5a9dfc4e27b5c67c737d9bb2bd7d623c6470a4fd9740ff0376d4b871e3a9afc2",
     },
 }
+# THE ARCHITECTURE IS PART OF THE ORACLE'S IDENTITY (ADR-015 decision E2,
+# C-103, OPEN-126). The digest above names an INDEX of two images, and the
+# pinned pdfTeX gives DIFFERENT VERDICTS on them for some documents: C-103
+# MEASURED `\pdfsnapy 0pt` exiting 0 on aarch64 and 136 (SIGFPE) on x86_64, a
+# valid 40000x8 px JPEG with no resolution rc 1 vs rc 0, and `\divide` of
+# INT_MIN by INT_MIN -1 vs 1 -- C constructs the two ISAs and compilers
+# resolve differently. So a grade is a grade FOR ONE ARCHITECTURE, and the
+# owner decided (E2) that graders must not compare grades across
+# architectures. The project grades on ONE: ARCH_OF_RECORD. Every published
+# artefact was graded on it (check_oracle_pin.py refuses one that was not),
+# and the oracle refuses to grade on any other (_check_fingerprint), so a
+# live grade and a recorded one are of the same architecture by
+# construction; the comparers check it again on the recorded side
+# (require_same_oracle). CI's tex-oracle job runs on a native arm64 runner
+# for the same reason. The x86_64 fingerprints stay recorded: they are
+# measured facts about the pinned index (the macro layers agree), and the
+# native-amd64 confirmation of E3 needs them; they do not make x86_64 an
+# oracle.
+ARCH_OF_RECORD = "aarch64"
 # fmt_sha256 is per-architecture (a dumped format is a memory image), MEASURED
 # 2026-09-27 as `sha256sum $(kpsewhich -engine=pdftex pdflatex.fmt)` in
 # `docker run --platform linux/{arm64,amd64}` of the pinned digest. It is
@@ -214,6 +288,17 @@ _SEARCH_PATHS = ("TEXINPUTS", "BIBINPUTS", "BSTINPUTS")
 #                              graders do not set (gen_contract.py sets it on
 #                              its name-set runs, as a documented override).
 ORACLE_TEX_VARS = {"openin_any": "p", "openout_any": "p", "SOURCE_DATE_EPOCH": "0"}
+
+# THE CLOCK OF A GRADED RUN (ADR-014 draft O-5, left OPEN by the owner in
+# ADR-015). The protocol's clock is "real": \year/\month/\day/\time follow
+# the grading machine's clock (SOURCE_DATE_EPOCH=0 fixes only the PDF's
+# dates and /ID). "forced" adds FORCE_SOURCE_DATE=1, so they read the epoch
+# too. It exists so the question can be MEASURED (diff_real_roots.py
+# --clock forced, which never writes a recorded artefact); the protocol
+# stays "real" until the owner decides O-5. A run's clock is recorded in its
+# provenance.
+CLOCKS = {"real": {}, "forced": {"FORCE_SOURCE_DATE": "1"}}
+PROTOCOL_CLOCK = "real"
 
 
 def private_texmf_vars(td) -> dict:
@@ -355,7 +440,7 @@ def oracle_tex_env(td) -> dict:
 _GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG")
 
 
-def graded_env(env: dict | None) -> dict:
+def graded_env(env: dict | None, clock: str = PROTOCOL_CLOCK) -> dict:
     """The TeX variables of a GRADED pdflatex run built from `env`: its
     private TEXMFHOME/TEXMFVAR/TEXMFCONFIG (required), its private TMPDIR
     beside them (required; TMP/TEMP/JAVA_TOOL_OPTIONS derived from it, C-93),
@@ -388,6 +473,9 @@ def graded_env(env: dict | None) -> dict:
     if tmp:  # always, unless the check above is gone
         out.update(private_tmp_vars(Path(tmp).parent))
     out.update(ORACLE_TEX_VARS)
+    if clock not in CLOCKS:
+        raise OracleError(f"unknown clock {clock!r}; one of {sorted(CLOCKS)}")
+    out.update(CLOCKS[clock])
     return out
 
 
@@ -1203,6 +1291,14 @@ def _check_fingerprint(fp: dict, where: str) -> None:
     want = TREE_FINGERPRINTS.get(fp["arch"])
     if want is None:
         raise OracleError(f"{where}: no recorded fingerprint for arch {fp['arch']!r}")
+    if fp["arch"] != ARCH_OF_RECORD:
+        raise OracleError(
+            f"{where}: this oracle runs on {fp['arch']}, but the oracle's "
+            f"architecture of record is {ARCH_OF_RECORD} (ADR-015 E2). The "
+            f"pinned pdfTeX gives different verdicts on the two architectures "
+            f"for some documents (C-103: `\\pdfsnapy 0pt` exits 0 on aarch64 "
+            f"and 136 on x86_64), so a grade taken here is not comparable to "
+            f"any recorded one; refusing to grade.")
     if EXPECT_VERSION not in fp["banner"]:
         raise OracleError(f"{where}: banner {fp['banner']!r} is not the pin "
                           f"{EXPECT_VERSION!r}")
@@ -1211,6 +1307,186 @@ def _check_fingerprint(fp: dict, where: str) -> None:
             raise OracleError(
                 f"{where}: {k} = {fp[k]} but the pinned image's {fp['arch']} tree "
                 f"is {want[k]}. This TeX tree is NOT the oracle; refusing to grade.")
+
+
+# THE ORACLE'S IDENTITY, AND THE ONE COMPARISON OF TWO ORACLE BLOCKS (ADR-015
+# E2, OPEN-126). Two grades are comparable only when they were taken by the
+# same image, on the same architecture, over the same TeX tree. The backend
+# is NOT part of it (container and native agree, check_oracle_equivalence:
+# 97/97), and neither is the grading code, which require_same_grading_code
+# checks separately because its remedy differs (re-grade, not re-pin).
+IDENTITY_KEYS = ("image", "arch", "tlpdb_sha256", "macro_layer_sha256",
+                 "fmt_sha256")
+
+
+def identity_mismatch(a: dict | None, b: dict | None) -> list[str]:
+    """The IDENTITY_KEYS on which two oracle blocks differ (a missing key
+    differs from everything, including another missing key)."""
+    a, b = a or {}, b or {}
+    return [k for k in IDENTITY_KEYS
+            if a.get(k) is None or b.get(k) is None or a.get(k) != b.get(k)]
+
+
+def require_same_oracle(recorded: dict | None, live: dict | None,
+                        what: str) -> None:
+    """Refuse (OracleError) to compare a grade recorded under `recorded` with
+    one taken under `live` unless they are the same oracle. A block that
+    names no architecture is refused too: it cannot be shown comparable."""
+    bad = identity_mismatch(recorded, live)
+    if not bad:
+        return
+    r, l = recorded or {}, live or {}
+    if "arch" in bad:
+        raise OracleError(
+            f"{what}: the recorded grades were taken on "
+            f"{r.get('arch') or 'an unrecorded architecture'} and this "
+            f"oracle runs on {l.get('arch') or 'an unrecorded architecture'}. "
+            f"Grades are not compared across architectures (ADR-015 E2, "
+            f"C-103: the same image gives different exit codes on aarch64 "
+            f"and x86_64); re-grade on {ARCH_OF_RECORD}.")
+    raise OracleError(
+        f"{what}: the recorded grades are of another oracle ({', '.join(bad)} "
+        f"differ: recorded {[r.get(k) for k in bad]}, live "
+        f"{[l.get(k) for k in bad]}); a grade is compared only with one of "
+        f"the same image and tree.")
+
+
+# THE GRADING CODE IS PART OF A GRADE'S PROVENANCE (OPEN-126, stock-take
+# 2026-09-30 §3b). The image pins the engine and its tree; what the oracle
+# DOES with them -- the pass protocol, the PDF verdict, the evidence
+# supervisor, the environment -- is this module and the grader that calls it,
+# and they changed under the recorded grades five times in review rounds of
+# #626 while the artefacts kept naming only the image. So every artefact a
+# grader writes records the git blob id of each file of its grading code
+# (`grading_code(grader)`), and a comparison of a recorded grade with a live
+# one, and the pure gate, refuse a grade whose code is not the current code
+# (`grading_code_drift`). A blob id, not a hash of our own: it is
+# content-addressed, so a squash merge keeps it, and the gate can fetch the
+# RECORDED version from git to tell a comment-only edit (the same Python AST
+# without docstrings, compared by ONE interpreter, so independent of its
+# version) from a change of behaviour. The CLI's version is not here: it is
+# `src_tree_sha` (C-64), and a re-grade of the oracle side never moves it.
+GRADING_CODE_CORE = ("scripts/tools/_oracle.py",)
+
+
+def _git_out(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "--no-optional-locks", *args], cwd=repo,
+                          capture_output=True)
+
+
+def grading_code(graders, repo: Path = REPO) -> dict:
+    """{"files": {path: git blob id at HEAD}, "sha256": ...} of the grading
+    code: GRADING_CODE_CORE plus `graders` (repo-relative paths). Refuses
+    (OracleError) a file that is untracked or differs from HEAD: a grade must
+    name code that exists in the history, or nothing can check it later."""
+    files = sorted(set(GRADING_CODE_CORE) | set(graders))
+    blobs = {}
+    for f in files:
+        if _git_out(repo, "diff", "--quiet", "HEAD", "--", f).returncode != 0:
+            raise OracleError(f"grading code {f} differs from HEAD (or HEAD "
+                              f"does not have it): commit it before grading, "
+                              f"so the artefact can name it (OPEN-126)")
+        p = _git_out(repo, "rev-parse", f"HEAD:{f}")
+        if p.returncode != 0:
+            raise OracleError(f"grading code {f} is not tracked at HEAD")
+        blobs[f] = p.stdout.decode().strip()
+    return {"files": blobs, "sha256": grading_code_sha256(blobs)}
+
+
+def grading_code_sha256(blobs: dict) -> str:
+    return hashlib.sha256(json.dumps(blobs, sort_keys=True).encode()).hexdigest()
+
+
+def _py_behaviour(src: bytes) -> str | None:
+    """The Python AST of `src` without docstrings, dumped without positions:
+    two sources with the same value differ only in comments, docstrings and
+    layout. None when `src` does not parse."""
+    import ast
+    try:
+        tree = ast.parse(src)
+    except (SyntaxError, ValueError):
+        return None
+    for node in ast.walk(tree):
+        body = getattr(node, "body", None)
+        if (isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                              ast.AsyncFunctionDef))
+                and body and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)):
+            node.body = body[1:] or [ast.Pass()]
+    return ast.dump(tree, include_attributes=False)
+
+
+def grading_code_drift(recorded: dict | None, repo: Path = REPO,
+                       current: dict | None = None) -> tuple[list, list]:
+    """(findings, notes) comparing a recorded grading_code block with the
+    code in `repo`'s working tree (or with `current`, another block). A
+    finding is a reason the recorded grade is NOT a grade of this code:
+    the block is missing or incoherent, a recorded blob is not in the
+    repository, the file set differs, or a file changed in behaviour. A
+    comment/docstring-only change is a note."""
+    if not isinstance(recorded, dict) or not isinstance(recorded.get("files"), dict):
+        return ["records no grading_code (the git blob ids of the oracle and "
+                "grader sources that produced it, OPEN-126)"], []
+    rf = recorded["files"]
+    if recorded.get("sha256") != grading_code_sha256(rf):
+        return ["grading_code.sha256 is not the hash of its own files map "
+                "(edited by hand?)"], []
+    findings, notes = [], []
+    missing_core = sorted(set(GRADING_CODE_CORE) - set(rf))
+    if missing_core:
+        findings.append(f"grading_code omits the oracle core {missing_core}")
+    if current is not None:
+        cf = current.get("files") or {}
+        if set(cf) != set(rf):
+            findings.append(f"grading_code covers {sorted(rf)} but the "
+                            f"current grader's is {sorted(cf)}")
+    for path, blob in sorted(rf.items()):
+        if not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", str(blob)):
+            findings.append(f"grading_code[{path}] = {blob!r} is not a git blob id")
+            continue
+        old = _git_out(repo, "cat-file", "blob", blob)
+        if old.returncode != 0:
+            findings.append(
+                f"grading_code[{path}] names blob {blob[:12]} which is not "
+                f"in this repository (a shallow clone needs fetch-depth: 0; "
+                f"otherwise the grade names code that never existed here)")
+            continue
+        if current is not None:
+            now_blob = (current.get("files") or {}).get(path)
+            if now_blob is None:
+                continue
+            now = _git_out(repo, "cat-file", "blob", now_blob)
+            now_src = now.stdout if now.returncode == 0 else None
+        else:
+            f = repo / path
+            now_src = f.read_bytes() if f.is_file() else None
+            now_blob = (_git_out(repo, "hash-object", "--", path).stdout
+                        .decode().strip() if now_src is not None else None)
+        if now_src is None:
+            findings.append(f"grading code {path} no longer exists")
+            continue
+        if now_blob == blob:
+            continue
+        if (path.endswith(".py") and _py_behaviour(old.stdout) is not None
+                and _py_behaviour(old.stdout) == _py_behaviour(now_src)):
+            notes.append(f"{path}: changed since the grade in comments, "
+                         f"docstrings or layout only (same AST)")
+            continue
+        findings.append(
+            f"{path} changed in behaviour since the grade (blob "
+            f"{blob[:12]} -> {str(now_blob)[:12]}): the recorded grades are "
+            f"not grades of the current grading code")
+    return findings, notes
+
+
+def require_same_grading_code(recorded: dict | None, current: dict,
+                              what: str) -> None:
+    """Refuse (OracleError) to carry forward or compare recorded grades whose
+    grading code is not `current` (comment-only drift is accepted)."""
+    findings, _ = grading_code_drift(recorded, REPO, current=current)
+    if findings:
+        raise OracleError(f"{what}: " + "; ".join(findings))
 
 
 @dataclass
@@ -1251,6 +1527,7 @@ class _Base:
             "fmt_sha256": fp["fmt_sha256"],
             "backend": self.backend,
             "protocol": PROTOCOL,
+            "clock": PROTOCOL_CLOCK,
         }
 
     @property
@@ -1279,7 +1556,7 @@ class _Base:
 
     # -- running ----------------------------------------------------------
     def run_pdflatex(self, cwd: Path, args: list[str], env: dict | None,
-                     timeout: int) -> tuple[int, bytes, bool]:
+                     timeout: int, clock: str = PROTOCOL_CLOCK) -> tuple[int, bytes, bool]:
         """ONE graded pdflatex run, in the protocol's environment
         (`graded_env(env)`: ORACLE_TEX_VARS imposed, `env`'s private
         TEXMFHOME/TEXMFVAR/TEXMFCONFIG required, no other TeX variable) and
@@ -1287,7 +1564,7 @@ class _Base:
         round 5). Returns (rc, combined output, timed_out)."""
         args = list(args)
         check_engine_argv(args, cwd, graded=True)
-        env = graded_env(env)
+        env = graded_env(env, clock)
         self.clear_outputs(Path(cwd), args)
         return self._exec(Path(cwd), ENGINE_PDFLATEX, args, env, timeout)
 
@@ -1383,18 +1660,19 @@ class _Base:
         return r.rc, r.timed_out
 
     def run_pass(self, work: Path, toplevel: str, env: dict | None, timeout: int,
-                 halt: bool = True) -> OracleRun:
+                 halt: bool = True, clock: str = PROTOCOL_CLOCK) -> OracleRun:
         """ONE graded pass, with its PDF verdict (pdf_written, from this
         pass's own terminal output and log)."""
         args = ["-interaction=nonstopmode"] + (["-halt-on-error"] if halt else []) + [toplevel]
-        r = self.run_pdflatex(Path(work), args, env, timeout)
+        r = self.run_pdflatex(Path(work), args, env, timeout, clock)
         rc, _, to = r
         if to:
             return OracleRun(-1, 1, False, True)
         return OracleRun(rc, 1, pdf_written(Path(work), toplevel, r.stdout), False)
 
     def run_to_fixpoint(self, work: Path, toplevel: str, env: dict | None,
-                        timeout: int, max_passes: int = MAX_PASSES) -> OracleRun:
+                        timeout: int, max_passes: int = MAX_PASSES,
+                        clock: str = PROTOCOL_CLOCK) -> OracleRun:
         """The recorded protocol; see diff_real_roots.run_to_fixpoint's
         docstring for why each step exists."""
         work = Path(work)
@@ -1406,7 +1684,7 @@ class _Base:
         passes = 0
         r = None
         for _ in range(max_passes):
-            r = self.run_pass(work, toplevel, env, timeout)
+            r = self.run_pass(work, toplevel, env, timeout, clock=clock)
             passes += 1
             if r.timed_out:
                 return OracleRun(-1, passes, False, True)
@@ -1414,7 +1692,7 @@ class _Base:
                 break
         if r.rc != 0:
             return OracleRun(r.rc, passes, r.pdf, False)
-        r = self.run_pass(work, toplevel, env, timeout)
+        r = self.run_pass(work, toplevel, env, timeout, clock=clock)
         passes += 1
         if r.timed_out:
             return OracleRun(-1, passes, False, True)
@@ -1449,6 +1727,13 @@ class NativeOracle(_Base):
                                   + p.stderr.decode(errors="replace")[:400])
             fp = json.loads(p.stdout)
             _check_fingerprint(fp, "LP_ORACLE_IN_IMAGE is set, but")
+            ro = subprocess.run([sys.executable, "-c", _READONLY_PROBE],
+                                env=engine_env({}, self.engine_base),
+                                capture_output=True, timeout=60)
+            if ro.returncode != 0:
+                raise OracleError("native read-only probe failed: "
+                                  + ro.stderr.decode(errors="replace")[:400])
+            check_readonly(json.loads(ro.stdout), "LP_ORACLE_IN_IMAGE is set, but")
             self._fp = fp
         return self._fp
 
@@ -1574,6 +1859,12 @@ class ContainerOracle(_Base):
             raise OracleError(f"oracle work root {wr} is inside a synced folder; "
                               "the container must never write there")
         self.workroot.mkdir(parents=True, exist_ok=True)
+        # The engine's user: the host's, so the bind-mounted work root is
+        # its own (OPEN-126); never root.
+        self.user = f"{os.getuid()}:{os.getgid()}"
+        if os.getuid() == 0:
+            raise OracleError("the container oracle is not started from a root "
+                              "host process: its engine would run as root")
         # The container CONFIGURATION is part of the name (C-97, review round
         # 2): an older oracle's container (no --init, no pids limit) keeps
         # its own name and is never replaced under a grader still running
@@ -1614,16 +1905,20 @@ class ContainerOracle(_Base):
                                     f"`docker pull {IMAGE}`")
         ins = self._dk("inspect", "--format",
                        "{{.State.Running}} {{.Config.Image}} {{.HostConfig.Init}} "
-                       "{{.HostConfig.PidsLimit}}", self.name)
+                       "{{.HostConfig.PidsLimit}} {{.HostConfig.ReadonlyRootfs}} "
+                       "{{.Config.User}}", self.name)
         if ins.returncode == 0:
-            running, img, init, pids = (ins.stdout.decode().split() + ["", "", ""])[:4]
-            if img != IMAGE or init != "true" or pids != str(PIDS_LIMIT):
+            running, img, init, pids, ro, user = (
+                ins.stdout.decode().split() + [""] * 6)[:6]
+            if (img != IMAGE or init != "true" or pids != str(PIDS_LIMIT)
+                    or ro != "true" or user != self.user):
                 # A container of an older oracle (no reaping PID 1, no pids
                 # limit, C-97) or of another image: replaced, never graded in.
                 print(f"[oracle] replacing container {self.name} (image "
-                      f"{img == IMAGE}, init {init}, pids-limit {pids}): the "
-                      f"oracle needs --init --pids-limit {PIDS_LIMIT} (C-97)",
-                      file=sys.stderr)
+                      f"{img == IMAGE}, init {init}, pids-limit {pids}, "
+                      f"read-only {ro}, user {user!r}): the oracle needs "
+                      f"--init --pids-limit {PIDS_LIMIT} (C-97) --read-only "
+                      f"--user {self.user} (OPEN-126)", file=sys.stderr)
                 self._dk("rm", "-f", self.name)
             elif running != "true":
                 self._dk("start", self.name, check=True)
@@ -1631,6 +1926,8 @@ class ContainerOracle(_Base):
             p = self._dk("run", "-d", "--name", self.name,
                          "--label", "lp-oracle=1", "--init",
                          "--pids-limit", str(PIDS_LIMIT),
+                         "--read-only", "--tmpfs", f"/tmp:{TMPFS_OPTIONS}",
+                         "--user", self.user,
                          "-v", f"{self.workroot}:{self.workroot}",
                          "-e", "HOME=/tmp", "--entrypoint", "sleep",
                          IMAGE, "infinity", timeout=300)
@@ -1643,13 +1940,17 @@ class ContainerOracle(_Base):
                     break
                 time.sleep(0.2)
         ins = self._dk("inspect", "--format", "{{.HostConfig.Init}} "
-                       "{{.HostConfig.PidsLimit}}", self.name)
-        if ins.stdout.decode().split() != ["true", str(PIDS_LIMIT)]:
+                       "{{.HostConfig.PidsLimit}} {{.HostConfig.ReadonlyRootfs}} "
+                       "{{.Config.User}}", self.name)
+        if ins.stdout.decode().split() != ["true", str(PIDS_LIMIT), "true", self.user]:
             raise OracleError(
                 f"container {self.name} runs without --init/--pids-limit "
-                f"{PIDS_LIMIT} ({ins.stdout.decode().strip()!r}): its PID 1 would "
-                f"reap nothing, and leaked processes can make a \\write18 fork "
-                f"fail silently, i.e. change a grade (C-97). `_oracle.py stop`.")
+                f"{PIDS_LIMIT}/--read-only/--user {self.user} "
+                f"({ins.stdout.decode().strip()!r}): its PID 1 would reap "
+                f"nothing, and leaked processes can make a \\write18 fork fail "
+                f"silently, i.e. change a grade (C-97); a writable or root "
+                f"container can change its own TeX tree (OPEN-126). "
+                f"`_oracle.py stop`.")
         # Positive proof the work root is the SAME directory inside: a nonce
         # written on the host must be read back through the container.
         nonce = uuid.uuid4().hex
@@ -1671,6 +1972,9 @@ class ContainerOracle(_Base):
                          _FINGERPRINT_SNIPPET, timeout=120, check=True)
             fp = json.loads(p.stdout)
             _check_fingerprint(fp, f"container {self.name}")
+            ro = self._dk("exec", self.name, "python3", "-c", _READONLY_PROBE,
+                          timeout=60, check=True)
+            check_readonly(json.loads(ro.stdout), f"container {self.name}")
             e = self._dk("exec", self.name, "env", "-0", timeout=60, check=True)
             check_container_env(dict(x.split("=", 1) for x in
                                      e.stdout.decode(errors="replace").split("\0")
@@ -1748,7 +2052,9 @@ class ContainerOracle(_Base):
                     .replace(tzinfo=datetime.timezone.utc).timestamp())
         except ValueError:
             raise OracleError(f"container {self.name}: unreadable Created {created!r}")
-        p = self._dk("exec", self.name, "find", "/", "-xdev", "-newerct", f"@{t}",
+        # As root: an unprivileged find cannot read every directory, and
+        # root cannot write the read-only filesystem it scans.
+        p = self._dk("exec", "-u", "0", self.name, "find", "/", "-xdev", "-newerct", f"@{t}",
                      "-printf", "%y %p\n", timeout=600)
         if p.returncode != 0:
             raise OracleError(f"container {self.name}: the state scan failed "
@@ -2067,12 +2373,29 @@ def main(argv: list[str]) -> int:
         # The per-run commands (the shim, rm) skip the full state scan; the
         # session commands (`version`, which oracle_setup runs once per shell
         # grader, and `info`) run it.
-        o = get_oracle(full_state=cmd not in (SHIM_COMMAND, "rm"))
+        o = get_oracle(full_state=cmd not in (SHIM_COMMAND, "rm", "check-recorded"))
         if cmd == "info":
             print(json.dumps(o.provenance(), indent=1))
             return 0
         if cmd == "version":
             print(o.banner)
+            return 0
+        if cmd == "check-recorded":
+            # check-recorded FILE KEY[.KEY...]: the shell graders' form of
+            # require_same_oracle (ADR-015 E2): the oracle block recorded at
+            # KEY in the JSON FILE they grade against must be THIS oracle --
+            # same image, ARCHITECTURE and tree. Exit 0, or INFRA_RC.
+            if len(rest) != 2:
+                print("[oracle] check-recorded FILE KEY[.KEY...]", file=sys.stderr)
+                return INFRA_RC
+            try:
+                block = json.loads(Path(rest[0]).read_text())
+                for k in rest[1].split("."):
+                    block = block.get(k) if isinstance(block, dict) else None
+                require_same_oracle(block, o.provenance(), rest[0])
+            except (OracleError, OSError, ValueError) as e:
+                print(f"[oracle] NOT GRADED: {e}", file=sys.stderr)
+                return INFRA_RC
             return 0
         if cmd == "rm":
             o.remove([Path.cwd() / a for a in rest])

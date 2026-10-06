@@ -1252,9 +1252,9 @@ let () =
          It can be wrong in the\n\
         \               dangerous direction (the standing battery \
          corpora/strict_battery: READY on 17\n\
-        \               of 22 documents pdflatex rejects; certified papers \
-         pdflatex rejects: 14/197 on\n\
-        \               sample 2, see docs/v27/PROJECT_STATE.md section 1).\n\
+        \               of 22 documents pdflatex rejects; the rate on \
+         certified real papers is\n\
+        \               generated in docs/v27/PROJECT_STATE.md section 1).\n\
         \               Uses the FAST kernel by default (parse once, run only \
          the 36\n\
         \               compile-blocking rules, of which 12 can actually \

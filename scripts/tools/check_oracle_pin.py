@@ -23,7 +23,17 @@ and checks four things:
      architecture. The image string alone is not evidence: two of these
      blocks were stamped by hand, and a hand edit of `image` satisfied the
      old check. An artefact still carrying a host-graded block fails, unless
-     it is in PRE_BASELINE with the ledger row that removes it.
+     it is in PRE_BASELINE with the ledger row that removes it. EVERY
+     tracked JSON file is CLASSIFIED (C-128): GRADED, ORACLE_RECORDS,
+     PRE_BASELINE or NO_ORACLE; an unclassified file fails. The block at
+     every GRADED and ORACLE_RECORDS LOCATION is checked whatever it
+     records (a block stripped of its identity fails, it is not skipped),
+     and names the pinned image, the architecture of record and that
+     architecture's fingerprints. A broad discovery (any IDENTITY_KEYS key)
+     is the second net: a block at any other path fails unless pinned in
+     NOT_THE_ORACLE or NOT_A_BLOCK. A GRADED block records the protocol
+     clock, and its grading_code names EXACTLY the oracle core and its
+     producer's grader (GRADERS), each at its current behaviour.
   3. PRE_BASELINE is pinned to its exact contents: widening it silently fails,
      and an entry whose artefact has since been re-graded fails too.
   4. No tracked code starts a TeX engine or passes a FORMAT SELECTOR outside
@@ -143,6 +153,7 @@ Run: python3 scripts/tools/check_oracle_pin.py --repo .
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import re
 import sys
@@ -171,7 +182,155 @@ GRADED = (
     ("corpora/contracts/strict/article-s0-signatures.json", ("oracle",)),
     ("corpora/strict_s0/rule_probes.json", ("oracle",)),
     ("corpora/strict_s0/differential_v2.json", ("oracle",)),
+    # The L_S0 bytes evidence check_strict_bytes holds the FaithfulBytes/PROVEN
+    # corollaries against, and the lexical reading it is checked with. They
+    # were outside this list until review round 2 of OPEN-126 (C-127): an
+    # x86_64 block in either passed every gate.
+    ("corpora/strict_s0/bytes_probes.json", ("oracle",)),
+    ("corpora/strict_s0/bytes_differential.json", ("oracle",)),
+    ("corpora/contracts/strict/article-s0-lexical.json", ("oracle",)),
 )
+
+# EVERY OTHER RECORDED ORACLE IDENTITY (C-127). GRADED was a hand list, and
+# nothing tied it to the artefacts that actually record an oracle: review
+# round 2 set `arch` to x86_64 (with the x86_64 fingerprints) in two L_S0
+# evidence files outside it and 36 workflow gates passed. So this gate now
+# DISCOVERS every oracle block in every tracked JSON file (`oracle_blocks`:
+# a dict holding a tree fingerprint key, an `arch`, or an image named by
+# digest), and every block must be EITHER a GRADED entry, OR matched by one
+# row below, OR pinned in NOT_THE_ORACLE. An unregistered block fails, and
+# so does a row below that matches nothing. Every GRADED block and every
+# block matched below must name the pinned image, the architecture of
+# record and that architecture's fingerprints (`identity_findings`); GRADED
+# adds its version, backend, clock and grading-code checks. A row's `*`
+# matches within one path segment. Each row may pin the CLOCK its blocks
+# were graded with (None: not checked; contracts record none), and the
+# GRADER files its producer must name in `grading_code` beside the oracle
+# core (None: the block predates grading_code and must not claim one).
+#
+# CLASSIFIED BY LOCATION, NOT BY CONTENT (C-128, review round 3). Until then
+# a row was only a filter over the blocks the discovery had found, and the
+# discovery recognised a block by the very identity fields being checked: a
+# contract pin or an O-5 block with its arch and fingerprints deleted was no
+# longer a "block", so it was checked by nothing, and the row still matched
+# the other files. Now EVERY tracked file a row's glob matches must hold a
+# dict at the row's key path, and that dict is checked whatever it records;
+# every tracked data file must be classified (NO_ORACLE below, C-129);
+# and the discovery is only a second net for blocks at unregistered paths.
+ORACLE_RECORDS = (
+    ("corpora/contracts/*.json", ("pin",), None, None,
+     "an M1 contract's generation pin (gen_contract.py)"),
+    ("corpora/contracts/kernel/*.json", ("pin",), None, None,
+     "the kernel name-set a contract's pin refers to (gen_contract.py)"),
+    ("corpora/contracts/probes/*.json", ("pin",), None, None,
+     "a contract's signature probes (gen_contract.py probes)"),
+    ("corpora/oracle_baseline/diff_apply_fixes_real_*.json", ("after_oracle",),
+     None, None, "OPEN-118 re-grade diff: the oracle of its re-graded side"),
+    ("corpora/oracle_baseline/diff_real_roots_sample*.json", ("oracle_after",),
+     None, None, "OPEN-118 re-grade diff: the oracle of its re-graded side"),
+    ("corpora/oracle_baseline/regrade_open126_sample*.json", ("oracle_before",),
+     None, None, "OPEN-126 re-grade diff: the oracle of the grades it re-graded"),
+    ("corpora/oracle_baseline/regrade_open126_sample*.json", ("oracle_after",),
+     "real", ("scripts/tools/diff_real_roots.py",),
+     "OPEN-126 re-grade diff: the protocol re-grade (real clock)"),
+    ("corpora/oracle_baseline/o5_forced_clock_sample*.json", ("oracle",),
+     "forced", ("scripts/tools/diff_real_roots.py",),
+     "OPEN-126 (d): the O-5 experiment, graded with the clock FORCED"),
+    ("corpora/oracle_baseline/summary.json", ("oracle",), None, None,
+     "OPEN-118: the oracle-baseline change's summary"),
+)
+
+# THE GRADER of every GRADED artefact that records grading_code (C-128,
+# review round 3): `grading_code.files` must be EXACTLY the oracle core
+# (_oracle.GRADING_CODE_CORE) plus these files. Until then the gate required
+# only the core, so a block whose `files` map dropped the grader (sha256
+# recomputed) named "its current grading code" while the grader had changed.
+# Every GRADED artefact outside GRADING_CODE_PENDING must have an entry.
+GRADERS = {
+    "corpora/real_roots/results.json": ("scripts/tools/diff_real_roots.py",),
+    "corpora/real_roots/manifest.json": ("scripts/tools/diff_real_roots.py",),
+    "corpora/real_roots/results_sample2.json": ("scripts/tools/diff_real_roots.py",),
+    "corpora/real_roots/results_sample3.json": ("scripts/tools/diff_real_roots.py",),
+    "corpora/real_roots/manifest_sample3.json": ("scripts/tools/diff_real_roots.py",),
+}
+
+# EVERY TRACKED DATA FILE IS CLASSIFIED (C-128; data files, not only JSON,
+# since C-129: see is_data_file). A file is a GRADED artefact,
+# matches an ORACLE_RECORDS row, is PRE_BASELINE, or is listed here as
+# recording NO oracle block, with the reason; an unclassified file fails, and
+# so does a file in two classes. Under corpora/ each file is named exactly
+# (a new artefact there must be classified before it lands); elsewhere a row
+# may name a directory (`**` crosses `/`). In a NO_ORACLE file the discovery
+# must find nothing outside NOT_A_BLOCK.
+NO_ORACLE = (
+    ("corpora/apply_fixes_real/fix_meaning_review.json",
+     "OPEN-112: a human review of the meaning audit; it grades nothing"),
+    ("corpora/contracts/parser_fixtures/kernel_meanings_excerpt.json",
+     "a parser fixture for check_gen_contract_parsers.py"),
+    ("corpora/contracts/parser_fixtures/review_missing_names.json",
+     "a parser fixture for check_gen_contract_parsers.py"),
+    ("corpora/oracle_baseline/cli_verify_fe673dc1.json",
+     "OPEN-126/C-120: a CLI re-verification; it runs no TeX engine"),
+    ("corpora/oracle_baseline/diff_strict_battery.json",
+     "OPEN-118: its before/after oracles are recorded as banner STRINGS "
+     "(the before side a host TeX Live); it is a cell diff, checked by "
+     "_results_summary, and the battery it diffs is GRADED"),
+    ("corpora/perf/keystroke_budget.json", "a timing record; no TeX engine"),
+    ("corpora/real_roots/proven_coverage_sample1.json",
+     "CLI certificates joined to results.json's rows; no TeX engine"),
+    ("corpora/real_roots/proven_coverage_sample2.json",
+     "CLI certificates joined to results_sample2.json's rows; no TeX engine"),
+    ("corpora/real_roots/proven_coverage_sample3.json",
+     "CLI certificates joined to results_sample3.json's rows; no TeX engine"),
+    ("corpora/real_roots/strict_boundary_sample2.json",
+     "strict-tier boundary of sample 2 (CLI only); no TeX engine"),
+    ("corpora/real_roots/strict_boundary_sample3.json",
+     "strict-tier boundary of sample 3 (CLI only); no TeX engine"),
+    (".github/*.json", "CI configuration"),
+    # Non-JSON data files (C-129): configuration and specifications.
+    (".github/actions/**", "CI composite actions"),
+    (".github/workflows/*", "CI workflows (their engine starts are "
+     "checked by the engine-start scan below)"),
+    (".pre-commit-config.yaml", "pre-commit configuration"),
+    ("docs/SUPPORT_MATRIX.yaml", "the support matrix"),
+    ("governance/**", "governance facts"),
+    ("mkdocs.yml", "documentation site configuration"),
+    ("core/**", "engine source data (catalogues, baselines)"),
+    ("data/**", "ML data"),
+    ("generated/**", "generated project facts"),
+    ("generator/**", "rule-generator batches"),
+    ("infra/**", "dashboards"),
+    ("keystroke_budget_measured.json", "a timing record; no TeX engine"),
+    ("latex-parse/data/**", "engine source data (catalogues)"),
+    ("ml/**", "ML evaluation results"),
+    ("proofs/**", "proof-side data"),
+    ("scripts/sandbox/**", "sandbox configuration"),
+    ("scripts/tools/fixtures/**", "gate fixtures"),
+    ("specs/**", "specifications"),
+)
+
+# Dicts the (broad) discovery finds that are NOT oracle blocks, each pinned
+# to its exact key set: a per-package revision pair whose `image` is a TeX
+# Live revision number, not an image.
+NOT_A_BLOCK = {
+    ("corpora/oracle_baseline/summary.json",
+     ("tree_comparison", "host_newer_revision", "[]")):
+        frozenset({"package", "host", "image"}),
+    ("corpora/oracle_baseline/diff_real_roots_sample2.json",
+     ("rows", "[]", "packages_with_revision_drift", "[]")):
+        frozenset({"package", "host", "image"}),
+}
+# Oracle-shaped blocks that are NOT a grade, each with its reason. Pinned to
+# its exact contents; an entry must declare itself (no image, a backend
+# outside BACKENDS), so a real grade cannot be filed here to escape the
+# architecture rule.
+NOT_THE_ORACLE = {
+    ("corpora/oracle_baseline/diff_real_roots_sample2.json",
+     ("classification_inputs", "host_diagnostic")):
+        "OPEN-118 (i): the host TeX Live's own fingerprint, recorded to "
+        "CLASSIFY the one moved row; it grades nothing",
+}
+NOT_THE_ORACLE_SIZE = 1
 
 # Graded artefacts NOT re-graded in the oracle-baseline change, each with the
 # reason and the ledger row that removes it. Exact contents are pinned.
@@ -191,6 +350,69 @@ PRE_BASELINE = {
         "rc columns were graded by the host TeX Live.",
 }
 PRE_BASELINE_SIZE = 4
+
+# GRADED artefacts that do not yet name their GRADING CODE (OPEN-126): graded
+# before the oracle recorded it, and not re-graded since. Each still names its
+# image, ARCHITECTURE and tree (checked above); what it cannot show is which
+# version of _oracle.py and its grader produced it. Pinned to its exact
+# contents and size: an entry is removed by re-grading the artefact with a
+# producer that records `grading_code` (_oracle.grading_code), and an entry
+# whose artefact has gained the block fails until it is removed here.
+GRADING_CODE_PENDING = {
+    "corpora/apply_fixes_real/results.json":
+        "OPEN-126: apply_fixes_real window 2000; producer "
+        "gen_apply_fixes_real_differential.py does not record it yet",
+    "corpora/apply_fixes_real/results_virgin.json":
+        "OPEN-126: apply_fixes_real window 2100; as results.json",
+    "corpora/apply_fixes_real/results_fresh.json":
+        "OPEN-126: apply_fixes_real window 2300; as results.json",
+    "corpora/strict_battery/manifest.json":
+        "OPEN-126: producer gen_strict_battery.py does not record it yet",
+    "corpora/false_ready/manifest.json":
+        "OPEN-126: producer false_ready_oracle.sh (STRICT_GRADE re-record) "
+        "does not record it yet",
+    "corpora/apply_fixes/manifest.json":
+        "OPEN-126: a hand-maintained baseline confirmed by CI's property-(b) "
+        "run; no producer writes its oracle block",
+    "corpora/oracle_baseline/equivalence.json":
+        "OPEN-126: producer check_oracle_equivalence.py does not record it yet",
+    "corpora/contracts/strict/article-s0-signatures.json":
+        "OPEN-126: producer gen_strict_signatures.py does not record it yet",
+    "corpora/strict_s0/rule_probes.json":
+        "OPEN-126: producer gen_strict_lexical.py/_strict_s0.py does not "
+        "record it yet",
+    "corpora/strict_s0/differential_v2.json":
+        "OPEN-126: producer strict_differential.py does not record it yet",
+    "corpora/strict_s0/bytes_probes.json":
+        "OPEN-126/C-127: producer strict_differential.py (bytes probes) does "
+        "not record it yet",
+    "corpora/strict_s0/bytes_differential.json":
+        "OPEN-126/C-127: producer strict_differential.py (bytes differential) "
+        "does not record it yet",
+    "corpora/contracts/strict/article-s0-lexical.json":
+        "OPEN-126/C-127: producer gen_strict_lexical.py does not record it yet",
+}
+GRADING_CODE_PENDING_SIZE = 13
+
+# The CI job that grades in the pinned image must run on the architecture of
+# record (ADR-015 E2): GitHub's native arm64 runner. And every in-image run
+# must be started read-only, with a tmpfs /tmp, as a non-root user (OPEN-126;
+# the native backend verifies it, this catches the workflow before a run).
+TEX_ORACLE_WORKFLOW = ".github/workflows/tex-oracle.yml"
+ARCH_RUNNERS = {"aarch64": ("ubuntu-24.04-arm", "ubuntu-22.04-arm")}
+INIMAGE_RUN_FLAGS = ("--read-only", "--tmpfs /tmp", "--user ")
+# The OPTIONS of that tmpfs, exactly (C-127; review round 2 found the gate
+# checked only the substring `--tmpfs /tmp`). They are NOT the container
+# backend's _oracle.TMPFS_OPTIONS, deliberately: there /tmp holds nothing of a
+# grade (the work root is the bind mount), while the native backend's work
+# directories ARE under /tmp (tempfile.mkdtemp, HOME=/tmp), so it needs room
+# for a whole fixture run. Every option other than size must equal the
+# container backend's; `noexec` is the one that does not (NOT_IN_NATIVE),
+# because no native run has been measured with it, and adding it is a change
+# to the required CI job's environment, made only with a CI run that shows it
+# grades identically (OPEN-126 (c)).
+NATIVE_TMPFS_SIZE = "4g"
+NOT_IN_NATIVE = frozenset({"noexec"})
 
 # Files allowed to start pdflatex: the oracle itself. And files not scanned
 # because they NAME engines as data about this scan: this gate (its ENGINES
@@ -1359,12 +1581,37 @@ def scan_ocaml(text: str) -> list[tuple[int, str]]:
 
 
 def tracked_files(repo: Path) -> list[str]:
+    """Every tracked path, VERBATIM. `-z` (C-129): without it git C-quotes a
+    path holding a non-ASCII byte (`"corpora/r\\303\\251sultats.json"`), and
+    a quoted name neither ends in `.json` nor names a real file, so it escaped
+    the classification, the discovery and the engine-start scan alike."""
     import subprocess
-    r = subprocess.run(["git", "-C", str(repo), "ls-files"], capture_output=True,
-                       text=True)
+    r = subprocess.run(["git", "-C", str(repo), "ls-files", "-z"],
+                       capture_output=True, encoding="utf-8",
+                       errors="surrogateescape")
     if r.returncode != 0:
         raise RuntimeError(f"git ls-files failed: {r.stderr.strip()}")
-    return r.stdout.split("\n")
+    return [f for f in r.stdout.split("\0") if f]
+
+
+#: THE DATA FILES (C-129). A tracked file is a data file when its name,
+#: LOWERCASED, ends in one of these. Every data file must be classified
+#: (GRADED, ORACLE_RECORDS, PRE_BASELINE or NO_ORACLE); an unclassified one
+#: fails. The JSON family is parsed (`.json.gz` decompressed) and searched for
+#: oracle blocks. The others are not an oracle-record format (every producer
+#: writes JSON through _oracle.py), so they may only be NO_ORACLE, and a text
+#: that names a tree-fingerprint key fails. The match was case-sensitive and
+#: JSON-only until review round 4: `results.JSON` escaped everything.
+JSON_DATA_EXT = (".json", ".jsonl", ".json.gz")
+OTHER_DATA_EXT = (".yaml", ".yml", ".csv", ".tsv")
+
+
+def is_data_file(rel: str) -> bool:
+    return rel.lower().endswith(JSON_DATA_EXT + OTHER_DATA_EXT)
+
+
+def is_json_data(rel: str) -> bool:
+    return rel.lower().endswith(JSON_DATA_EXT)
 
 
 def dig(d, path):
@@ -1375,7 +1622,134 @@ def dig(d, path):
     return d
 
 
-SHEBANG = re.compile(rb"^#!\s*(\S+)(?:\s+(\S+))?")
+#: A dict holding ANY of these keys is discovered as a possible oracle block.
+#: Broad on purpose (C-128, review round 3): the discovery used to need a
+#: fingerprint, an `arch` or an image named by DIGEST, so a block naming its
+#: image by tag (`texlive/texlive:latest`) and its architecture under another
+#: key was not found. The known non-oracle hits are pinned in NOT_A_BLOCK or
+#: sit in a PRE_BASELINE file. MEASURED 2026-10-06 over every tracked JSON
+#: file: 149 hits; 39 at GRADED and ORACLE_RECORDS locations, 1 in
+#: NOT_THE_ORACLE, 94 in NOT_A_BLOCK, 15 host provenance blocks in
+#: PRE_BASELINE files, 0 elsewhere.
+IDENTITY_KEYS = frozenset(FINGERPRINT_KEYS) | {
+    "arch", "image", "engine", "engine_banner", "backend", "clock", "machine"}
+
+
+def is_oracle_block(d) -> bool:
+    """A dict that may record an oracle identity (any IDENTITY_KEYS key).
+    This is the SECOND net: what is checked is decided by location
+    (GRADED, ORACLE_RECORDS), and this finds a block at any other path."""
+    return isinstance(d, dict) and not IDENTITY_KEYS.isdisjoint(d)
+
+
+def oracle_blocks(doc, path=()):
+    """Every (key path, block) in a parsed JSON document, list indices as
+    "[]". A block's own fields are not searched further."""
+    if is_oracle_block(doc):
+        yield path, doc
+        return
+    if isinstance(doc, dict):
+        for k, v in doc.items():
+            yield from oracle_blocks(v, path + (k,))
+    elif isinstance(doc, list):
+        for v in doc:
+            yield from oracle_blocks(v, path + ("[]",))
+
+
+def _seg_glob(pattern: str, rel: str) -> bool:
+    """`*` matches within one path segment (fnmatch's `*` crosses `/`);
+    `**` matches across segments."""
+    rx = "".join(".*" if t == "**" else "[^/]*" if t == "*" else re.escape(t)
+                 for t in re.findall(r"\*\*|\*|[^*]+", pattern))
+    return re.fullmatch(rx, rel) is not None
+
+
+def identity_findings(rel: str, path: tuple, block: dict, image: str,
+                      version: str, record: str, fps: dict) -> list[str]:
+    """The rule every recorded oracle block obeys, GRADED or not (C-127): it
+    names the pinned image and the architecture of record, and every tree
+    fingerprint it records is that architecture's. A recorded version or
+    engine banner names the pin; a recorded backend and clock are known
+    ones."""
+    where = f"{rel} [{'.'.join(path) or '<root>'}]"
+    out = []
+    if block.get("image") != image:
+        out.append(f"{where}: graded by "
+                   f"{block.get('image') or 'a host TeX Live (no image recorded)'}"
+                   f", not the pinned image {image}. Re-grade it through "
+                   f"scripts/tools/_oracle.py (ADR-012 decision 7).")
+    if block.get("arch") != record:
+        out.append(f"{where}: graded on {block.get('arch')!r}, not the "
+                   f"oracle's architecture of record {record!r}. Grades are not "
+                   f"compared across architectures (ADR-015 E2, C-103); "
+                   f"re-grade it on {record}.")
+    if "fmt_sha256" not in block:
+        out.append(f"{where}: records no fmt_sha256 (the per-architecture "
+                   f"format), so its tree cannot be shown to be the oracle's")
+    want = fps.get(record, {})
+    for k in FINGERPRINT_KEYS:
+        if k in block and block[k] != want.get(k):
+            out.append(f"{where}: {k} {block[k]!r} is not the pinned image's "
+                       f"{record} tree fingerprint {want.get(k)!r}")
+    for k in ("version", "engine_banner"):
+        if k in block and version not in str(block[k]):
+            out.append(f"{where}: {k} {block[k]!r} is not the pin {version!r}")
+    if "backend" in block and block["backend"] not in BACKENDS:
+        out.append(f"{where}: backend {block['backend']!r} is not one of "
+                   f"{sorted(BACKENDS)}")
+    if "clock" in block and block["clock"] not in _oracle.CLOCKS:
+        out.append(f"{where}: clock {block['clock']!r} is not one of "
+                   f"{sorted(_oracle.CLOCKS)}")
+    return out
+
+
+def tracked_json_blocks(repo: Path) -> tuple[list, list[str], dict]:
+    """(rel, key path, block) for every oracle block in every tracked .json
+    and .jsonl file, the findings for a tracked JSON file that cannot be
+    parsed (an unparsed file could hide a block), and {rel: parsed doc}."""
+    found, bad, docs = [], [], {}
+    for rel in sorted(tracked_files(repo)):
+        if not is_json_data(rel):
+            continue
+        p = repo / rel
+        if not p.is_file():
+            continue
+        low = rel.lower()
+        try:
+            raw = p.read_bytes()
+            if low.endswith(".gz"):
+                raw = gzip.decompress(raw)
+            text = raw.decode("utf-8")
+            doc = ([json.loads(ln) for ln in text.split("\n") if ln.strip()]
+                   if low.endswith(".jsonl") else json.loads(text))
+        except (OSError, EOFError, gzip.BadGzipFile, UnicodeDecodeError,
+                json.JSONDecodeError) as e:
+            bad.append(f"{rel}: a tracked JSON file this gate cannot parse "
+                       f"({e}); it could hide an oracle block")
+            continue
+        docs[rel] = doc
+        found.extend((rel, path, block) for path, block in oracle_blocks(doc))
+    return found, bad, docs
+
+
+def grading_code_set_findings(where: str, block: dict, graders) -> list[str]:
+    """`grading_code.files` must be EXACTLY the oracle core plus the
+    producer's graders (C-128): a set check alone, the blob ids are checked
+    by _oracle.grading_code_drift."""
+    gc = block.get("grading_code")
+    files = gc.get("files") if isinstance(gc, dict) else None
+    if not isinstance(files, dict):
+        return [f"{where}: records no grading_code, but its producer records "
+                f"one naming {sorted(set(_oracle.GRADING_CODE_CORE) | set(graders))}"]
+    want = set(_oracle.GRADING_CODE_CORE) | set(graders)
+    if set(files) != want:
+        return [f"{where}: grading_code names {sorted(files)}, not exactly the "
+                f"oracle core and its grader {sorted(want)} (C-128): a grade "
+                f"must name the grader that produced it"]
+    return []
+
+
+SHEBANG =re.compile(rb"^#!\s*(\S+)(?:\s+(\S+))?")
 _SHEBANG_SHELLS = {"sh", "bash", "dash", "zsh", "ksh", "mksh", "busybox"}
 
 
@@ -1473,9 +1847,15 @@ def main() -> int:
                         f"{_oracle.FINGERPRINTED_IMAGE}; re-measure both "
                         f"platform images in the re-pin PR")
     fps = _oracle.TREE_FINGERPRINTS
+    record = _oracle.ARCH_OF_RECORD
+    if record not in fps or record not in ARCH_RUNNERS:
+        findings.append(f"_oracle.ARCH_OF_RECORD = {record!r} has no recorded "
+                        f"tree fingerprint or no CI runner in ARCH_RUNNERS")
     if set(fps) != {"aarch64", "x86_64"}:
         findings.append(f"_oracle.TREE_FINGERPRINTS covers {sorted(fps)}, "
-                        f"expected both aarch64 (local) and x86_64 (CI)")
+                        f"expected both aarch64 (the architecture of record, "
+                        f"local and CI) and x86_64 (measured, not an oracle: "
+                        f"ADR-015 E2/E3)")
     elif fps["aarch64"]["macro_layer_sha256"] != fps["x86_64"]["macro_layer_sha256"]:
         findings.append("the arm64 and amd64 images of the pinned digest have "
                         "DIFFERENT macro layers: a local grade would not be the "
@@ -1486,7 +1866,49 @@ def main() -> int:
                 findings.append(f"_oracle.TREE_FINGERPRINTS[{arch}][{k}] is not a sha256")
 
     # 2./3. every graded artefact names the pinned image
+    notes: list[str] = []
     graded_paths = {p for p, _ in GRADED}
+    if len(GRADING_CODE_PENDING) != GRADING_CODE_PENDING_SIZE:
+        findings.append(f"GRADING_CODE_PENDING holds {len(GRADING_CODE_PENDING)} "
+                        f"entries, pinned at {GRADING_CODE_PENDING_SIZE}; "
+                        f"changing it needs a ledger row and a deliberate edit")
+    for rel in sorted(set(GRADING_CODE_PENDING) - graded_paths):
+        findings.append(f"{rel} is in GRADING_CODE_PENDING but not in GRADED")
+    for rel in sorted(set(GRADERS) - (graded_paths - set(GRADING_CODE_PENDING))):
+        findings.append(f"{rel} is in GRADERS but is not a GRADED artefact "
+                        f"outside GRADING_CODE_PENDING")
+    # E2 in CI: the in-image job runs on the architecture of record, and
+    # every in-image docker run is read-only, tmpfs /tmp, non-root.
+    wf = repo / TEX_ORACLE_WORKFLOW
+    wtext = wf.read_text() if wf.is_file() else ""
+    runners = re.findall(r"^\s*runs-on:\s*(\S+)\s*$", wtext, re.M)
+    if not runners or any(r not in ARCH_RUNNERS.get(record, ()) for r in runners):
+        findings.append(f"{TEX_ORACLE_WORKFLOW}: runs-on {runners} is not a "
+                        f"native {record} runner {ARCH_RUNNERS.get(record)}; "
+                        f"CI would grade on another architecture (ADR-015 E2)")
+    for cmd in re.findall(r"docker run\b(?:[^\n]*\\\n)*[^\n]*", wtext):
+        if "LP_ORACLE_IN_IMAGE" in cmd:
+            flat = re.sub(r"\\\n\s*", " ", cmd)
+            miss = [f.strip() for f in INIMAGE_RUN_FLAGS if f not in flat]
+            if miss:
+                findings.append(f"{TEX_ORACLE_WORKFLOW}: an in-image `docker "
+                                f"run` lacks {miss} (OPEN-126: the oracle's "
+                                f"tree is read-only and no engine runs as "
+                                f"root): {flat[:120]!r}")
+            # The tmpfs OPTIONS, exactly (C-127): the container backend's,
+            # minus NOT_IN_NATIVE, with NATIVE_TMPFS_SIZE.
+            want_opts = sorted(
+                [o for o in _oracle.TMPFS_OPTIONS.split(",")
+                 if not o.startswith("size=") and o not in NOT_IN_NATIVE]
+                + [f"size={NATIVE_TMPFS_SIZE}"])
+            got = re.findall(r"--tmpfs[ =]/tmp(?::(\S+))?", flat)
+            if not got or any(sorted(g.split(",")) != want_opts for g in got):
+                findings.append(
+                    f"{TEX_ORACLE_WORKFLOW}: an in-image `docker run` mounts "
+                    f"/tmp with options {got}, not {','.join(want_opts)} (the "
+                    f"container backend's _oracle.TMPFS_OPTIONS without "
+                    f"{sorted(NOT_IN_NATIVE)}, size {NATIVE_TMPFS_SIZE}; C-127): "
+                    f"{flat[:120]!r}")
     if len(PRE_BASELINE) != PRE_BASELINE_SIZE:
         findings.append(f"PRE_BASELINE holds {len(PRE_BASELINE)} entries, pinned at "
                         f"{PRE_BASELINE_SIZE}; widening it needs a ledger row and a "
@@ -1506,34 +1928,217 @@ def main() -> int:
         if not isinstance(block, dict):
             findings.append(f"{rel}: no oracle block at {'.'.join(path)}")
             continue
-        if block.get("image") != image:
-            findings.append(
-                f"{rel}: graded by {block.get('image') or 'a host TeX Live (no image recorded)'}"
-                f", not the pinned image {image}. Re-grade it through "
-                f"scripts/tools/_oracle.py (ADR-012 decision 7).")
         if version not in str(block.get("version", "")):
             findings.append(f"{rel}: oracle version {block.get('version')!r} is not "
                             f"the pin {version!r}")
         if block.get("backend") not in BACKENDS:
             findings.append(f"{rel}: oracle backend {block.get('backend')!r} is not "
                             f"one of {sorted(BACKENDS)}")
-        want = fps.get(block.get("arch"))
-        if want is None:
-            findings.append(f"{rel}: oracle arch {block.get('arch')!r} has no "
-                            f"recorded tree fingerprint")
+        # The image, architecture and fingerprint rule is the one every
+        # recorded oracle block obeys (identity_findings, C-127).
+        findings.extend(identity_findings(rel, path, block, image, version,
+                                          record, fps))
+        # THE CLOCK (C-127, review round 2): require_same_oracle compares
+        # image, arch and tree, not the clock, so a forced-clock grade would
+        # be compared as if it were a protocol grade. A published grade is a
+        # PROTOCOL grade: its recorded clock is PROTOCOL_CLOCK. A block with
+        # no clock predates OPEN-126 and is accepted only while it is pinned
+        # in GRADING_CODE_PENDING AND the protocol clock is the real one (no
+        # grader ever forced it; before #622 a host-exported
+        # FORCE_SOURCE_DATE could reach the engine, the residual OPEN-126
+        # records). When E10 makes the protocol clock fixed, every block
+        # that does not record that clock fails here until it is re-graded.
+        clk = block.get("clock")
+        if clk is None:
+            if rel not in GRADING_CODE_PENDING or _oracle.PROTOCOL_CLOCK != "real":
+                findings.append(
+                    f"{rel}: records no clock; a grade outside "
+                    f"GRADING_CODE_PENDING must record it, and an unrecorded "
+                    f"clock is read as the real one only while the protocol "
+                    f"clock is real (now {_oracle.PROTOCOL_CLOCK!r}). Re-grade it.")
+        elif clk != _oracle.PROTOCOL_CLOCK:
+            findings.append(f"{rel}: graded with clock {clk!r}, not the protocol "
+                            f"clock {_oracle.PROTOCOL_CLOCK!r}; a published grade "
+                            f"is a protocol grade (re-grade it)")
+        if rel in GRADING_CODE_PENDING:
+            if "grading_code" in block:
+                findings.append(f"{rel} now records its grading_code but is "
+                                f"still in GRADING_CODE_PENDING; remove it there")
         else:
-            for k in FINGERPRINT_KEYS:
-                if block.get(k) != want.get(k):
-                    findings.append(
-                        f"{rel}: oracle {k} {block.get(k)!r} is not the pinned "
-                        f"image's {block.get('arch')} tree fingerprint "
-                        f"{want.get(k)!r}")
+            if rel not in GRADERS:
+                findings.append(f"{rel}: records grading_code, but GRADERS "
+                                f"does not name its grader (C-128)")
+            findings.extend(grading_code_set_findings(
+                rel, block, GRADERS.get(rel, ())))
+            gc_find, gc_notes = _oracle.grading_code_drift(
+                block.get("grading_code"), repo)
+            findings.extend(
+                f"{rel}: {f}. Re-grade it under the current code (for "
+                f"real_roots: diff_real_roots.py --repass --repass-scope all "
+                f"--rebaseline-oracle)" for f in gc_find)
+            notes.extend(f"{rel}: {n}" for n in gc_notes)
+
+    # EVERY tracked JSON file is CLASSIFIED BY LOCATION, every ORACLE_RECORDS
+    # location is checked whatever its block records, and every block the
+    # (broad) discovery finds is at a registered location (C-127, C-128).
+    blocks, unparsed, docs = tracked_json_blocks(repo)
+    findings.extend(unparsed)
+    if len(NOT_THE_ORACLE) != NOT_THE_ORACLE_SIZE:
+        findings.append(f"NOT_THE_ORACLE holds {len(NOT_THE_ORACLE)} entries, "
+                        f"pinned at {NOT_THE_ORACLE_SIZE}; a new one needs a "
+                        f"ledger row and a deliberate edit here")
+    graded_keys = {(p, tuple(k)) for p, k in GRADED}
+    # (1) classification of every tracked DATA file (is_data_file, C-129)
+    data_files = sorted(r for r in tracked_files(repo)
+                        if is_data_file(r) and (repo / r).is_file())
+    for rel in data_files:
+        classes = []
+        if rel in graded_paths:
+            classes.append("GRADED")
+        if any(_seg_glob(r[0], rel) for r in ORACLE_RECORDS):
+            classes.append("ORACLE_RECORDS")
+        if rel in PRE_BASELINE:
+            classes.append("PRE_BASELINE")
+        if any(_seg_glob(pat, rel) for pat, _ in NO_ORACLE):
+            classes.append("NO_ORACLE")
+        if not classes:
+            findings.append(
+                f"{rel}: a tracked data file this gate does not classify. "
+                f"Register it in GRADED (a grade), ORACLE_RECORDS (a record "
+                f"of one), PRE_BASELINE or NO_ORACLE, with its reason (C-128, "
+                f"C-129)")
+        elif len(classes) > 1:
+            findings.append(f"{rel}: classified twice ({classes}); a file has "
+                            f"exactly one class (C-128)")
+        if not is_json_data(rel):
+            if classes and classes != ["NO_ORACLE"]:
+                findings.append(
+                    f"{rel}: classified {classes}, but an oracle record is "
+                    f"JSON; a non-JSON data file may only be NO_ORACLE (C-129)")
+            try:
+                text = (repo / rel).read_text(encoding="utf-8",
+                                              errors="replace")
+            except OSError as e:
+                findings.append(f"{rel}: unreadable ({e}) (C-129)")
+                continue
+            named = [k for k in FINGERPRINT_KEYS if k in text]
+            if named:
+                findings.append(
+                    f"{rel}: a non-JSON data file that names the tree "
+                    f"fingerprint key(s) {named}; an oracle record must be "
+                    f"JSON, where this gate can check it (C-129)")
+    # (2) every ORACLE_RECORDS location, by location
+    record_hits = [0] * len(ORACLE_RECORDS)
+    record_keys = set()
+    for i, (pat, kp, want_clock, graders, why) in enumerate(ORACLE_RECORDS):
+        for rel in sorted(docs):
+            if not _seg_glob(pat, rel):
+                continue
+            record_hits[i] += 1
+            record_keys.add((rel, kp))
+            where = f"{rel} [{'.'.join(kp)}]"
+            block = dig(docs[rel], kp)
+            if not isinstance(block, dict):
+                findings.append(f"{where}: no oracle block at this location, "
+                                f"but every file matching {pat} holds "
+                                f"{why} there (C-128)")
+                continue
+            findings.extend(identity_findings(rel, kp, block, image, version,
+                                              record, fps))
+            if want_clock is not None and block.get("clock") != want_clock:
+                findings.append(f"{where}: clock {block.get('clock')!r}, but "
+                                f"{why} was graded with clock {want_clock!r}")
+            if graders is None:
+                if "grading_code" in block:
+                    findings.append(f"{where}: records grading_code, but the "
+                                    f"row for {why} expects none; register "
+                                    f"its grader (C-128)")
+                continue
+            findings.extend(grading_code_set_findings(where, block, graders))
+            # A record names the code of a PAST run: its blobs must exist and
+            # agree with its own hash, not equal today's code.
+            gc_find, _ = _oracle.grading_code_drift(
+                block.get("grading_code"), repo,
+                current=block.get("grading_code"))
+            findings.extend(f"{where}: {f}" for f in gc_find)
+    # (3) every discovered block is at a registered location
+    seen_graded, seen_exempt, seen_nab = set(), set(), set()
+    n_records = 0
+    for rel, path, block in blocks:
+        key = (rel, path)
+        if key in graded_keys:
+            seen_graded.add(key)
+            continue
+        if key in record_keys:
+            n_records += 1
+            continue
+        if key in NOT_THE_ORACLE:
+            seen_exempt.add(key)
+            if block.get("image") is not None or block.get("backend") in BACKENDS:
+                findings.append(
+                    f"{rel} [{'.'.join(path)}]: pinned in NOT_THE_ORACLE but "
+                    f"it records image {block.get('image')!r} and backend "
+                    f"{block.get('backend')!r}; only a block that declares "
+                    f"itself no grade (no image, a backend outside "
+                    f"{sorted(BACKENDS)}) may be exempted")
+            continue
+        if key in NOT_A_BLOCK:
+            seen_nab.add(key)
+            if set(block) != NOT_A_BLOCK[key]:
+                findings.append(
+                    f"{rel} [{'.'.join(path)}]: pinned in NOT_A_BLOCK with "
+                    f"keys {sorted(NOT_A_BLOCK[key])}, but one holds "
+                    f"{sorted(block)} (C-128)")
+            continue
+        if rel in PRE_BASELINE:
+            continue
+        findings.append(
+            f"{rel} [{'.'.join(path) or '<root>'}]: may record an oracle "
+            f"(keys {sorted(IDENTITY_KEYS & set(block))}) at a location this "
+            f"gate does not know. Register the location in GRADED (a grade), "
+            f"ORACLE_RECORDS (a record of one), NOT_THE_ORACLE (not a grade) "
+            f"or NOT_A_BLOCK (not an oracle), with its reason (C-127, C-128)")
+    for key in sorted(set(NOT_A_BLOCK) - seen_nab):
+        findings.append(f"{key[0]} [{'.'.join(key[1])}]: pinned in NOT_A_BLOCK "
+                        f"but no such dict exists; prune it")
+    for (rel, path) in sorted(graded_keys - seen_graded):
+        if (repo / rel).is_file():
+            findings.append(f"{rel}: GRADED names an oracle block at "
+                            f"{'.'.join(path)} that the discovery did not find")
+    for key in sorted(set(NOT_THE_ORACLE) - seen_exempt):
+        findings.append(f"{key[0]} [{'.'.join(key[1])}]: pinned in "
+                        f"NOT_THE_ORACLE but no such block exists; prune it")
+    for (pat, kp, _, _, why), n in zip(ORACLE_RECORDS, record_hits):
+        if n == 0:
+            findings.append(f"ORACLE_RECORDS row {pat} [{'.'.join(kp)}] "
+                            f"({why}) matches no file; prune it")
+    for pat, why in NO_ORACLE:
+        if not any(_seg_glob(pat, rel) for rel in data_files):
+            findings.append(f"NO_ORACLE row {pat} ({why}) matches no tracked "
+                            f"data file; prune it")
     for rel in sorted(PRE_BASELINE):
         f = repo / rel
         if not f.is_file():
             findings.append(f"{rel}: listed in PRE_BASELINE but missing")
             continue
-        if f'"image": "{image}"' in f.read_text():
+        # PARSED, not a JSON literal (C-129): `"image":"<pin>"` with other
+        # spacing, or the image in any nested block, is found too.
+        pdoc = docs.get(rel)
+        if pdoc is None:
+            findings.append(f"{rel}: listed in PRE_BASELINE but not a parsed "
+                            f"tracked JSON file")
+            continue
+
+        def _images(d):
+            if isinstance(d, dict):
+                for k, v in d.items():
+                    if k == "image" and isinstance(v, str):
+                        yield v
+                    yield from _images(v)
+            elif isinstance(d, list):
+                for v in d:
+                    yield from _images(v)
+        if image in set(_images(pdoc)):
             findings.append(f"{rel} now records the pinned image but is still in "
                             f"PRE_BASELINE; move it to GRADED")
 
@@ -1544,17 +2149,19 @@ def main() -> int:
             continue
         p = repo / rel
         name = p.name
-        if rel.endswith(".py"):
+        # Extensions are matched LOWERCASED (C-129): `x.SH` runs as well.
+        low = rel.lower()
+        if low.endswith(".py"):
             scan = scan_python
-        elif rel.endswith(".mk") or name in ("Makefile", "GNUmakefile", "makefile"):
+        elif low.endswith(".mk") or name in ("Makefile", "GNUmakefile", "makefile"):
             scan = (lambda t: scan_shell(t, make=True))
-        elif rel.endswith((".sh", ".bash", ".zsh", ".ksh", ".command")):
+        elif low.endswith((".sh", ".bash", ".zsh", ".ksh", ".command")):
             scan = scan_shell
-        elif rel.endswith(OTHER_CODE_EXT):
+        elif low.endswith(OTHER_CODE_EXT):
             scan = scan_other
-        elif rel.endswith(".ml"):
+        elif low.endswith(".ml"):
             scan = scan_ocaml
-        elif rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")):
+        elif rel.startswith(".github/workflows/") and low.endswith((".yml", ".yaml")):
             allow = WORKFLOW_ALLOW.get(rel, ())
             scan = (lambda t, a=allow: scan_shell(t, a, yaml=True))
         elif _command_file_kind(rel) is not None:
@@ -1582,13 +2189,23 @@ def main() -> int:
                 findings.append(f"{rel}: allow-listed in-image line no longer "
                                 f"present, prune WORKFLOW_ALLOW: {ln[:60]!r}")
 
+    for n in notes:
+        print(f"[oracle-pin] NOTE: {n}", file=sys.stderr)
     if findings:
         print("[oracle-pin] FAIL:", file=sys.stderr)
         for f in findings:
             print(f"  - {f}", file=sys.stderr)
         return 1
-    print(f"[oracle-pin] OK: {len(GRADED)} graded artefacts name {image} with "
-          f"its tree fingerprints; {len(PRE_BASELINE)} pre-baseline artefacts "
+    print(f"[oracle-pin] OK: {len(blocks)} oracle blocks in tracked JSON "
+          f"files, every one at a registered location ({len(seen_graded)} "
+          f"GRADED, {n_records} ORACLE_RECORDS, {len(seen_exempt)} not the "
+          f"oracle, {len(blocks) - len(seen_graded) - n_records - len(seen_exempt)} "
+          f"not oracle blocks); {len(data_files)} tracked data files classified ({len(docs)} JSON); "
+          f"{sum(record_hits)} ORACLE_RECORDS locations checked by location; {len(GRADED)} graded artefacts name {image} with "
+          f"its tree fingerprints, all on {record}; "
+          f"{len(GRADED) - len(GRADING_CODE_PENDING)} name their current "
+          f"grading code, {len(GRADING_CODE_PENDING)} pending (OPEN-126); "
+          f"{len(PRE_BASELINE)} pre-baseline artefacts "
           f"pinned; {scanned} tracked code files start no TeX engine directly")
     return 0
 

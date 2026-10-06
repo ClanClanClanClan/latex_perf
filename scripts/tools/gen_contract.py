@@ -2644,8 +2644,15 @@ def cmd_probes(a) -> int:
     report = {}
     with Tex(image, Path(a.work).expanduser() if a.work else None) as tex:
         pin = get_pin(tex, image)
-        if pin["fmt_sha256"] != contract["pin"]["fmt_sha256"]:
-            raise SystemExit("gen_contract: the image's format differs from the contract's")
+        # Probes are compared with the contract only under the SAME oracle:
+        # image, architecture (ADR-015 E2) and format, the identity a contract
+        # pin records (C-127; this compared the format alone).
+        bad = [k for k in ("image", "arch", "fmt_sha256")
+               if pin.get(k) is None or pin.get(k) != contract["pin"].get(k)]
+        if bad:
+            raise SystemExit("gen_contract: this oracle differs from the contract's "
+                             "pin in %s (ADR-015 E2: no comparison across them)"
+                             % ", ".join(bad))
         kernel = load_kernel(tex, pin, Path(a.cache).expanduser(), False, report)
         out = run_probes(tex, contract, sorted(names), a.workers, report,
                          pin["texmf_root"], kernel)

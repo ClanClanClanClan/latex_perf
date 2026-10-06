@@ -200,7 +200,9 @@ def main() -> int:
         ("corpora/real_roots/results.json", ("measured_at_sha",),
          "python3 scripts/tools/diff_real_roots.py --repo . --refresh-cli"),
         ("corpora/real_roots/results_sample2.json", ("measured_at_sha",),
-         "OPEN-081: this artefact has no producer in-repo"),
+         "python3 scripts/tools/diff_real_roots.py --repo . --refresh-cli "
+         "--results results_sample2.json --sample-offset 200 (OPEN-126 gave it "
+         "a producer; add --cli-checkout DIR to measure with another engine)"),
         ("corpora/real_roots/proven_coverage_sample1.json",
          ("provenance", "measured_at_sha"),
          "python3 scripts/tools/gen_proven_coverage.py --results "
@@ -231,17 +233,15 @@ def main() -> int:
     # removes it. Pinned to its exact size: adding a new unwatched artefact, or
     # quietly widening this set, fails the gate. Removing an entry here without
     # the artefact gaining a sha also fails, in the loop below.
-    NO_PROVENANCE_YET = {
-        "corpora/real_roots/results_sample2.json":
-            "OPEN-081 — measured_at_sha is null and NO script in the repo "
-            "writes this file; the sha cannot be stamped honestly until the "
-            "producer exists. Do not hand-stamp it: a guessed provenance is "
-            "worse than a declared absence.",
-    }
-    if len(NO_PROVENANCE_YET) != 1:
+    # Was {results_sample2.json: OPEN-081, "no producer"}. OPEN-126 gave it
+    # one (diff_real_roots.py --refresh-cli --sample-offset 200) and measured
+    # its CLI side with it, so the set is empty and pinned at 0: an artefact
+    # owning a published number is staleness-checked, no exceptions.
+    NO_PROVENANCE_YET: dict = {}
+    if len(NO_PROVENANCE_YET) != 0:
         findings.append(
             f"NO_PROVENANCE_YET holds {len(NO_PROVENANCE_YET)} entries, expected "
-            f"exactly 1. Every artefact owning a published number must be "
+            f"exactly 0. Every artefact owning a published number must be "
             f"staleness-checked; widening this set needs a ledger row and a "
             f"deliberate edit here (C-47).")
 
@@ -370,6 +370,133 @@ def main() -> int:
                 findings.append(
                     f"{name}: {rid} has cell '{cell}' but cli_rc={row.get('cli_rc')} "
                     f"with compiles={comp} implies '{want}'.")
+
+    # ── SUMMARY CONSISTENCY (OPEN-126): a proven_coverage artefact's summary
+    # must be the function of its own rows that gen_proven_coverage.summarize
+    # defines. Sample 3's said LP-Core 89 while its in-tier rows give 88 (one
+    # FOREIGN row counted as certified), and nothing compared the two: the
+    # published block recomputed from the rows, the stored summary went
+    # unread. Recompute from the PRIMARY data, never trust a stored total.
+    from gen_proven_coverage import summarize  # noqa: E402
+    for s_ in (1, 2, 3):
+        f = repo / f"corpora/real_roots/proven_coverage_sample{s_}.json"
+        if not f.is_file():
+            continue
+        try:
+            doc = json.loads(f.read_text())
+            want = summarize(doc["rows"])
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
+            findings.append(f"{f.name} is unreadable or malformed: {exc}")
+            continue
+        # The rows JOIN a results artefact: each row's cell must be the
+        # results row's cell, and its CLI readiness the results row's cli_rc.
+        # MEASURED 2026-10-02 (OPEN-126): proven_coverage_sample2 said READY
+        # for 2507.03521v2 and 2507.09165v1 (the fe673dc1 CLI it ran) while
+        # results_sample2 recorded cli_rc 1 for both (an older CLI), and the
+        # rows carried the cell false-NOT-READY -- a READY, compiling row
+        # published as an over-rejection. Nothing compared the two files.
+        src = (doc.get("provenance") or {}).get("results_source")
+        rp = repo / src if src else None
+        if rp is None or not rp.is_file():
+            findings.append(f"{f.name}: provenance.results_source {src!r} is "
+                            f"not a file in the repository")
+        else:
+            rrows = {d["arxiv_id"]: d for d in json.loads(rp.read_text())["docs"]}
+            if set(rrows) != {r["id"] for r in doc["rows"]}:
+                findings.append(f"{f.name}: its rows and {src}'s are different "
+                                f"documents")
+            for r in doc["rows"]:
+                d = rrows.get(r["id"])
+                if d is None:
+                    continue
+                if r.get("cell") != d.get("cell"):
+                    findings.append(f"{f.name}: {r['id']} has cell "
+                                    f"{r.get('cell')!r} but {src} says "
+                                    f"{d.get('cell')!r}; rejoin it")
+                if bool(r.get("ready")) != (d.get("cli_rc") == 0):
+                    findings.append(
+                        f"{f.name}: {r['id']} records ready={r.get('ready')} but "
+                        f"{src} records cli_rc={d.get('cli_rc')}: the two "
+                        f"artefacts were measured with different CLIs")
+        if doc.get("summary") != want:
+            findings.append(
+                f"{f.name}: its summary {doc.get('summary')} is not the one its "
+                f"rows give {want} (gen_proven_coverage.summarize). Recompute: "
+                f"gen_proven_coverage.py --rejoin --results <its results> "
+                f"--out {f.relative_to(repo)}")
+
+    # ── STORED TOTALS (C-126): every total a real-paper artefact stores must
+    # be what its rows give. The proven-coverage summaries above were the
+    # only ones recomputed; results_sample2.json kept "correct": 179 while
+    # its rows gave 181 (no writer maintained it: `--refresh-cli` rewrites
+    # `counts` alone), and an edited `counts` passed every gate because
+    # gen_project_state published FROM it. The generator now counts rows
+    # itself; this refuses a stale total and any results key no writer
+    # maintains, in the results artefacts and in the re-grade diffs that
+    # OPEN-126 cites as evidence ("0 of 600 moved").
+    from _results_summary import (  # noqa: E402
+        BASELINE_SUMMARY, CLI_VERIFY, OPEN118_CELL_DIFFS, OPEN118_ROOT_DIFFS,
+        REGRADE_DIFFS, baseline_summary_findings, cell_diff_findings,
+        cli_verify_findings, diff_summary_findings, evidence_value_findings,
+        field_moves,
+        id_set_findings, real_roots_diff_findings, results_summary_findings)
+    for name in ("results.json", "results_sample2.json", "results_sample3.json"):
+        f = repo / "corpora/real_roots" / name
+        if not f.is_file():
+            continue
+        try:
+            findings.extend(results_summary_findings(
+                json.loads(f.read_text()), name))
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
+            findings.append(f"{name} is unreadable or malformed: {exc}")
+    # C-127 (review round 2): the six diffs OPEN-126 (d)/(e) cite are named,
+    # not globbed (a deleted one was unseen); each covers its results
+    # artefact's rows exactly (a dropped row with re-derived totals passed);
+    # and the claim "0 cells, 0 rc, 0 PDF verdicts, 0 pass counts, 0
+    # first-error lines moved" is checked over EVERY before/after field, not
+    # only the outcome flags (a changed first_error passed).
+    _cache: dict = {}
+
+    def _load(rel):
+        if rel not in _cache:
+            _cache[rel] = json.loads((repo / rel).read_text())
+        return _cache[rel]
+    for rel, res in REGRADE_DIFFS.items():
+        name = Path(rel).name
+        try:
+            doc = _load(rel)
+            findings.extend(diff_summary_findings(doc, name))
+            findings.extend(id_set_findings(doc.get("rows") or [],
+                                            _load(res).get("docs") or [],
+                                            name, Path(res).name))
+            moved = field_moves(doc.get("rows") or [])
+            if moved:
+                findings.append(
+                    f"{name}: before/after differ in {moved}; OPEN-126 (d)/(e) "
+                    f"say no field of any row moved (C-127)")
+        except FileNotFoundError:
+            findings.append(f"{rel} is missing: OPEN-126 (d)/(e) cite it")
+        except (json.JSONDecodeError, OSError, KeyError, TypeError) as exc:
+            findings.append(f"{name} is unreadable or malformed: {exc}")
+    # C-127: the OPEN-118 evidence's stored totals (round 2 changed them and
+    # every gate passed).
+    try:
+        for rel, res in OPEN118_ROOT_DIFFS.items():
+            findings.extend(real_roots_diff_findings(
+                _load(rel), _load(res), Path(rel).name, Path(res).name))
+        for rel, (art, key) in OPEN118_CELL_DIFFS.items():
+            findings.extend(cell_diff_findings(
+                _load(rel), _load(art), Path(rel).name, art, key))
+        findings.extend(baseline_summary_findings(_load(BASELINE_SUMMARY), _load))
+        findings.extend(cli_verify_findings(_load(CLI_VERIFY), _load))
+        # C-128: and by VALUE, not only by ids and totals.
+        findings.extend(evidence_value_findings(_load))
+    except FileNotFoundError as exc:
+        findings.append(f"an OPEN-118/OPEN-126 evidence artefact is missing: {exc}")
+    except (json.JSONDecodeError, OSError, KeyError, TypeError,
+            AttributeError) as exc:
+        findings.append(f"an OPEN-118/OPEN-126 evidence artefact is malformed: "
+                        f"{exc!r}")
 
     if findings:
         print(f"[project-state] FAIL: {len(findings)} problem(s)", file=sys.stderr)

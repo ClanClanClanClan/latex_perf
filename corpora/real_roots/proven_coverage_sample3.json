@@ -19,8 +19,8 @@
  },
  "summary": {
   "n": 200,
-  "premise_certified_and_compiles": 178,
-  "lp_core_certified_and_compiles": 89,
+  "premise_certified_and_compiles": 177,
+  "lp_core_certified_and_compiles": 88,
   "strict_tier_matches_oracle": 0,
   "strict_wrong": 0
  },

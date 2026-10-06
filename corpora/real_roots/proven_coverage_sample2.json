@@ -19,7 +19,7 @@
  },
  "summary": {
   "n": 200,
-  "premise_certified_and_compiles": 171,
+  "premise_certified_and_compiles": 173,
   "lp_core_certified_and_compiles": 88,
   "strict_tier_matches_oracle": 0,
   "strict_wrong": 0
@@ -675,7 +675,7 @@
   },
   {
    "id": "2507.03521v2",
-   "cell": "false-NOT-READY",
+   "cell": "true-READY",
    "ready": true,
    "model": "certified",
    "profile": "lp-extended",
@@ -1215,7 +1215,7 @@
   },
   {
    "id": "2507.09165v1",
-   "cell": "false-NOT-READY",
+   "cell": "true-READY",
    "ready": true,
    "model": "certified",
    "profile": "lp-extended",

@@ -75,7 +75,15 @@ env:
 jobs:
   tex-oracle:
     name: tex-oracle
-    runs-on: ubuntu-latest
+    # THE ARCHITECTURE OF RECORD (ADR-015 E2, OPEN-126). The pinned digest is
+    # a multi-arch index, and the pinned pdfTeX gives different VERDICTS on
+    # its arm64 and amd64 images for some documents (C-103: `\pdfsnapy 0pt`
+    # exits 0 on aarch64, 136 on x86_64). Every recorded grade this job
+    # compares against was taken on aarch64, so the job runs on GitHub's
+    # NATIVE arm64 runner (free for public repositories) and the image
+    # resolves to its arm64 member; `_oracle.py` refuses to grade on any
+    # other architecture, and check_oracle_pin.py refuses this line changing.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -117,12 +125,17 @@ jobs:
           # ADR-012 decision 7: the banner pins the engine BINARY, never the
           # macro layer. The ONE oracle entry point, scripts/tools/_oracle.py,
           # records the TeX tree fingerprint of each platform image of this
-          # digest (the digest is a multi-arch INDEX: CI grades amd64, a Mac
-          # grades arm64). Verify the tree this job will grade with IS that tree.
+          # digest (the digest is a multi-arch INDEX). Both CI and a Mac grade
+          # on arm64, the architecture of record (ADR-015 E2, OPEN-126).
+          # Verify the tree this job will grade with IS that tree.
           # Every grader below runs with LP_ORACLE_IN_IMAGE set, which is what
           # selects _oracle.py's native backend; outside the image that variable
           # makes the oracle fail loudly rather than grade with a host TeX.
-          docker run --rm -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \
+          # Read-only image filesystem, a tmpfs /tmp, and the runner's own
+          # unprivileged user (OPEN-126): the oracle's TeX tree cannot be
+          # written by any run, and `assert-native` refuses otherwise.
+          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
+            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \
             -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
             "$TEX_IMAGE" python3 scripts/tools/_oracle.py assert-native
 
@@ -213,7 +226,8 @@ jobs:
       - name: False-READY oracle (real pdflatex, all fixtures)
         run: |
           set -euo pipefail
-          docker run --rm \
+          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD:$PWD" -w "$PWD" \
             -v /tmp/fixtures.tsv:/tmp/fixtures.tsv:ro \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 -e FR_FIXTURE_TSV=/tmp/fixtures.tsv \
@@ -229,7 +243,8 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          docker run --rm \
+          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD:$PWD" -w "$PWD" \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
             -e EXPECT_TEX_VERSION="$TEX_EXPECT_VERSION" \
@@ -253,7 +268,8 @@ jobs:
       - name: Oracle forgery kill-tests (real pdfTeX, real supervisor)
         run: |
           set -euo pipefail
-          docker run --rm \
+          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD:$PWD" -w "$PWD" \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
             -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
@@ -293,7 +309,8 @@ jobs:
       - name: Apply-fixes round-trip, property (b)
         run: |
           set -euo pipefail
-          docker run --rm \
+          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD:$PWD" -w "$PWD" \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
             -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \

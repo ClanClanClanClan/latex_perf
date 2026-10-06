@@ -48,7 +48,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _oracle import (  # noqa: E402
-    IMAGE as ORACLE_IMAGE, OracleError, first_error_block, get_oracle, job_output)
+    CLOCKS, IMAGE as ORACLE_IMAGE, PROTOCOL_CLOCK, OracleError,
+    first_error_block, get_oracle, grading_code, job_output,
+    require_same_grading_code, require_same_oracle)
+
+# This grader's own source is part of every grade it records (OPEN-126): the
+# oracle core (_oracle.GRADING_CODE_CORE) plus this file.
+GRADER_FILES = ("scripts/tools/diff_real_roots.py",)
 
 PIN = "pdfTeX 3.141592653-2.6-1.40.29"
 ORACLE = {
@@ -64,24 +70,55 @@ ORACLE = {
 }
 
 
-def oracle_record() -> dict:
+def oracle_record(clock: str = PROTOCOL_CLOCK) -> dict:
     """ORACLE plus the pinned image's identity, as every artefact records it
     since the oracle-baseline change (ADR-012 decision 7): the image digest,
     the architecture the grade ran on, the TeX tree fingerprints and the
-    backend. The banner alone pins the engine binary, never the macro layer."""
+    backend. The banner alone pins the engine binary, never the macro layer.
+    Since OPEN-126 also the run's clock and the grading code (the git blob ids
+    of _oracle.py and this file): a grade is a grade of that code."""
     prov = get_oracle().provenance()
     return dict(ORACLE, **{k: prov[k] for k in (
         "image", "arch", "tlpdb_sha256", "macro_layer_sha256", "fmt_sha256",
-        "backend")})
+        "backend")}, clock=clock, grading_code=grading_code(GRADER_FILES))
 
 
-def same_oracle(recorded: dict | None) -> bool:
-    """True iff a recorded oracle block names the pinned image. A block with
-    no `image` was graded before the oracle-baseline change, by whatever TeX
-    Live the grading machine had, and is never carried forward."""
+def oracle_skew(recorded: dict | None) -> str | None:
+    """Why grades recorded under the `recorded` oracle block cannot be carried
+    forward or compared with this oracle's, or None when they can: they must
+    name the pinned image and engine, be of the SAME oracle -- image,
+    ARCHITECTURE (ADR-015 E2) and TeX tree -- and of the same grading code
+    (OPEN-126; a comment-only edit is accepted). A block with no `image` was
+    graded before the oracle-baseline change, by whatever TeX Live the
+    grading machine had, and is never carried forward."""
     recorded = recorded or {}
-    return (recorded.get("image") == ORACLE_IMAGE
-            and PIN in str(recorded.get("version", "")))
+    if not (recorded.get("image") == ORACLE_IMAGE
+            and PIN in str(recorded.get("version", ""))):
+        return (f"graded by {recorded.get('image') or 'a host TeX Live (no image recorded)'}, "
+                f"not the pinned image {ORACLE_IMAGE}")
+    try:
+        require_same_oracle(recorded, get_oracle().provenance(), "the recorded grades")
+        require_same_grading_code(recorded.get("grading_code"),
+                                  grading_code(GRADER_FILES), "the recorded grades")
+    except OracleError as e:
+        return str(e)
+    if recorded.get("clock", PROTOCOL_CLOCK) != PROTOCOL_CLOCK:
+        return (f"graded with clock {recorded.get('clock')!r}, the protocol's "
+                f"is {PROTOCOL_CLOCK!r}")
+    return None
+
+
+def cross_arch(recorded: dict | None) -> str | None:
+    """The one skew no re-grade may cross either (ADR-015 E2): a recorded
+    architecture other than the oracle's. A re-baseline diff across it would
+    be the cross-architecture comparison E2 forbids."""
+    arch = (recorded or {}).get("arch")
+    live = get_oracle().provenance()["arch"]
+    if arch is not None and arch != live:
+        return (f"the recorded grades were taken on {arch}, this oracle runs on "
+                f"{live}; grades are never compared across architectures "
+                f"(ADR-015 E2, C-103)")
+    return None
 
 # NO CELL IS DECIDED FROM ERROR TEXT (C-99, OPEN-118 review round 3 (c)).
 # Until 2026-09-30 a failing row whose first `!` line matched an "infra"
@@ -289,9 +326,11 @@ def run_to_fixpoint(work: Path, toplevel: str, env: dict, timeout: int,
 
 
 def run_to_fixpoint_full(work: Path, toplevel: str, env: dict, timeout: int,
-                         max_passes: int = MAX_PASSES):
+                         max_passes: int = MAX_PASSES,
+                         clock: str = PROTOCOL_CLOCK):
     """As run_to_fixpoint, returning the `_oracle.OracleRun` (rc, passes, pdf)."""
-    return get_oracle().run_to_fixpoint(work, toplevel, env, timeout, max_passes)
+    return get_oracle().run_to_fixpoint(work, toplevel, env, timeout, max_passes,
+                                        clock=clock)
 
 
 def row_compiles(d: dict) -> bool:
@@ -355,7 +394,9 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
 
 
 def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
-                     timeout: int, results_name: str = "results.json") -> int:
+                     timeout: int, results_name: str = "results.json",
+                     sample_offset: int | None = None,
+                     cli_checkout: Path | None = None) -> int:
     """Recompute ONLY the CLI verdict, reusing the recorded pdflatex results.
 
     A full run recompiles 200 papers with pdflatex and takes ~20 minutes. That
@@ -381,24 +422,61 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
     manifest_sample3.json). Sample 3 is the sealed VIRGIN sample (OPEN-119):
     refreshing its CLI side is a re-measurement, taken only after a change
     was validated on other documents.
+
+    SAMPLE 2 (OPEN-126, closing OPEN-081's "no producer"). It has no hash
+    manifest: `sample_offset` names its window in the frame, the ids are
+    asserted equal to that window, and each row's own `sha256_tree` (recorded
+    by --repass) is asserted against the corpus.
+
+    WHICH CLI (OPEN-126). `cli_checkout` runs the CLI built in ANOTHER
+    checkout (its `_build`), and the artefact then names THAT checkout's HEAD
+    and engine tree: measured_at_sha/src_tree_sha are the provenance of the
+    CLI that produced the verdicts, never of the tool that ran it. The
+    checkout's latex-parse/src must be clean. This is how sample 2 was brought
+    to the engine tree samples 1 and 3 were measured with, fe673dc1: its
+    recorded CLI verdicts were NOT that tree's (2 of 200 rows differ in rc,
+    MEASURED 2026-10-02), although its measured_at_note said they were.
     """
     results_path = outdir / results_name
     manifest_path = outdir / (
         "manifest.json" if results_name == "results.json"
         else results_name.replace("results", "manifest", 1))
-    if not results_path.is_file() or not manifest_path.is_file():
+    if not results_path.is_file():
         return die(2, "no recorded results to refresh — run a full sweep first")
     res = json.loads(results_path.read_text())
-    man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+    if sample_offset is None:
+        if not manifest_path.is_file():
+            return die(2, f"no {manifest_path.name}: a sample without a hash "
+                          f"manifest needs --sample-offset")
+        man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+    else:
+        frame = build_frame(root)
+        window = select(frame, len(frame))[sample_offset:sample_offset + len(res["docs"])]
+        if {d["arxiv_id"] for d in window} != {d["arxiv_id"] for d in res["docs"]}:
+            return die(2, f"{results_name}: its ids are not ranks {sample_offset}.."
+                          f"{sample_offset + len(res['docs']) - 1} of the frame")
+        if not all(d.get("sha256_tree") for d in res["docs"]):
+            return die(2, f"{results_name}: a row has no sha256_tree; re-grade it "
+                          f"with --repass --sample-offset first")
+        man = {d["arxiv_id"]: {"sha256_tree": d["sha256_tree"]} for d in res["docs"]}
+    checkout = Path(cli_checkout).resolve() if cli_checkout else repo
+    if cli_checkout:
+        st = subprocess.run(["git", "--no-optional-locks", "status", "--porcelain",
+                             "--", "latex-parse/src"], cwd=checkout,
+                            capture_output=True, text=True)
+        if st.returncode != 0 or st.stdout.strip():
+            return die(2, f"--cli-checkout {checkout}: latex-parse/src is not a "
+                          f"clean checkout of its HEAD ({st.stdout.strip()[:200] or st.stderr.strip()[:200]})")
 
-    if not same_oracle(res.get("oracle")):
-        return die(3, f"oracle skew: the recorded pdflatex grades were taken by "
-                      f"{res.get('oracle', {}).get('image') or 'a host TeX Live (no image recorded)'}, "
-                      f"not the pinned image {ORACLE_IMAGE}. A CLI-only refresh "
-                      f"cannot carry them forward; re-grade with --repass "
-                      f"--repass-scope all --rebaseline-oracle.")
+    skew = oracle_skew(res.get("oracle"))
+    if skew:
+        return die(3, f"oracle skew: {skew}. A CLI-only refresh cannot carry "
+                      f"the recorded pdflatex grades forward; re-grade with "
+                      f"--repass --repass-scope all --rebaseline-oracle.")
 
-    cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
+    cli = checkout / "_build/default/latex-parse/src/validators_cli.exe"
+    if not cli.is_file():
+        return die(2, f"{cli} not built")
     env = dict(os.environ, L0_VALIDATORS="pilot")
     changed = []
     for i, d in enumerate(res["docs"], 1):
@@ -438,9 +516,14 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
               flush=True)
 
     res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
-    res["measured_at_sha"] = git_head(repo)
-    res["src_tree_sha"] = engine_tree(repo)
-    res["measured_at"] = "cli-only refresh; pdflatex verdicts carried forward"
+    res["measured_at_sha"] = git_head(checkout)
+    res["src_tree_sha"] = engine_tree(checkout)
+    res["measured_at"] = ("cli-only refresh with the CLI built at "
+                          f"{res['measured_at_sha'][:12]} (engine tree "
+                          f"{res['src_tree_sha'][:12]}), run by "
+                          f"diff_real_roots.py at {git_head(repo)[:12]}; "
+                          "pdflatex verdicts carried forward (oracle side: "
+                          "oracle_regraded_at_sha)")
     results_path.write_text(json.dumps(res, indent=1) + "\n")
     print(f"\n[real-roots] refreshed: {len(changed)} cell change(s)")
     for a, b, c in changed:
@@ -475,7 +558,8 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                     results_name: str = "results.json",
                     sample_offset: int | None = None,
                     rebaseline: bool = False, diff_out: str | None = None,
-                    jobs: int = 1) -> int:
+                    jobs: int = 1, clock: str = PROTOCOL_CLOCK,
+                    experiment_out: str | None = None) -> int:
     """Re-grade recorded rows under the multi-pass oracle. `scope` picks which.
 
     ⚠ THE DEFAULT SCOPE IS THE ONE DIRECTION THAT CANNOT FIND A FALSE-READY,
@@ -513,7 +597,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     baseline in place, and it says so in `results.json`.
 
     ORACLE-BASELINE CHANGE (ADR-012 decision 7). A recorded grade is carried or
-    re-used only when it was taken by the pinned image (`same_oracle`). Grades
+    re-used only when it was taken by the same oracle (`oracle_skew`). Grades
     from before the change name no image: they came from the grading machine's
     own TeX Live. `rebaseline=True` is the one sanctioned way across that line:
     it requires scope `all` (every row re-graded, nothing carried), keeps the
@@ -528,15 +612,38 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
 
     Asserts the corpus (per-paper `sha256_tree`) and the oracle first: a
     verdict carried forward from a different corpus or oracle is not evidence.
+
+    WHAT A RE-GRADE STAMPS (OPEN-126). The CLI verdicts are carried forward,
+    so the CLI's provenance (`measured_at_sha`, `src_tree_sha`) is NOT
+    touched: it names the engine tree that produced them. Until OPEN-126 a
+    sample-1 re-grade stamped both with HEAD, which is a false claim as soon
+    as latex-parse/src has moved since the CLI was run (on 2026-10-02 it had:
+    fe673dc1 -> 82e92949). The oracle side is stamped `oracle_regraded_at_sha`
+    on every sample, and the oracle block names the grading code.
+
+    THE CLOCK EXPERIMENT (O-5). `clock` other than the protocol's runs the
+    re-grade with that clock and writes ONLY `experiment_out` (rows and cells
+    under that clock), never the artefact or its manifest.
     """
+    if clock != PROTOCOL_CLOCK and not experiment_out:
+        return die(2, f"--clock {clock} is an experiment: it needs "
+                      f"--experiment-out and never writes the artefact")
+    if experiment_out and (rebaseline or diff_out):
+        return die(2, "--experiment-out writes nothing else; drop "
+                      "--rebaseline-oracle/--diff-out")
     results_path = outdir / results_name
-    manifest_path = outdir / "manifest.json"
+    # The sample's OWN manifest (results_sample3.json -> manifest_sample3.json),
+    # named the way --record names it. This read manifest.json -- sample 1's --
+    # for every artefact, so sample 3 could not be re-graded at all.
+    manifest_path = outdir / (
+        "manifest.json" if results_name == "results.json"
+        else results_name.replace("results", "manifest", 1))
     if not results_path.is_file():
         return die(2, "no recorded results to re-pass — run a full sweep first")
     res = json.loads(results_path.read_text())
     if sample_offset is None:
         if not manifest_path.is_file():
-            return die(2, "no manifest.json to verify the corpus against")
+            return die(2, f"no {manifest_path.name} to verify the corpus against")
         man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
     else:
         frame = build_frame(root)
@@ -550,13 +657,18 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                           f"of the frame ({len(want_ids ^ have_ids)} differ)")
         man = {d["arxiv_id"]: dict(d, sha256_tree=d.get("sha256_tree")) for d in window}
 
-    if not same_oracle(res.get("oracle")) and not rebaseline:
-        return die(3, f"oracle skew: {results_name} was graded by "
-                      f"{(res.get('oracle') or {}).get('image') or 'a host TeX Live (no image recorded)'}, "
-                      f"not the pinned image {ORACLE_IMAGE}. Re-grading under a "
-                      f"different oracle is not a correction, it is a new "
-                      f"measurement: pass --rebaseline-oracle with "
+    xa = cross_arch(res.get("oracle"))
+    if xa:
+        return die(3, f"{results_name}: {xa}. Not even --rebaseline-oracle "
+                      f"crosses this: re-grade on the architecture of record.")
+    skew = oracle_skew(res.get("oracle"))
+    if skew and not rebaseline and not experiment_out:
+        return die(3, f"oracle skew: {results_name}: {skew}. Re-grading under "
+                      f"a different oracle or grading code is not a correction, "
+                      f"it is a new measurement: pass --rebaseline-oracle with "
                       f"--repass-scope all.")
+    if experiment_out and scope != "all":
+        return die(2, "--experiment-out re-grades EVERY row; use --repass-scope all")
     if rebaseline and scope != "all":
         return die(2, "--rebaseline-oracle re-grades EVERY row; use --repass-scope all")
 
@@ -595,7 +707,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
             work = Path(td) / "w"
             shutil.copytree(root / d["arxiv_id"], work)
             run = run_to_fixpoint_full(work, d["toplevel"], oracle.tex_env(td),
-                                       timeout)
+                                       timeout, clock=clock)
             # a DIAGNOSTIC (see cell_of): the oracle's one first-error reader
             first = first_error_block(job_output(work, d["toplevel"], ".log"))
         return run, first
@@ -608,6 +720,8 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
         rc, passes = run.rc, run.passes
         before = {"cell": d["cell"], "pdflatex_rc": d.get("pdflatex_rc"),
                   "pdflatex_verdict": d.get("pdflatex_verdict"),
+                  "pdflatex_pdf": d.get("pdflatex_pdf"),
+                  "pdflatex_passes": d.get("pdflatex_passes"),
                   "first_error": d.get("first_error", "")}
         tree = d.pop("_tree")
         if sample_offset is not None:
@@ -629,11 +743,15 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
             d["cell"] = cell_of(compiles, d["cli_rc"] == 0)
         after = {"cell": d["cell"], "pdflatex_rc": rc,
                  "pdflatex_verdict": d.get("pdflatex_verdict"),
-                 "pdflatex_pdf": run.pdf, "first_error": d["first_error"]}
+                 "pdflatex_pdf": run.pdf, "pdflatex_passes": passes,
+                 "first_error": d["first_error"]}
         diff_rows.append({"arxiv_id": d["arxiv_id"], "toplevel": d["toplevel"],
                           "cli_rc": d.get("cli_rc"), "before": before,
                           "after": after, "passes": passes,
-                          "cell_changed": d["cell"] != cell_before})
+                          "cell_changed": d["cell"] != cell_before,
+                          "outcome_changed": any(
+                              before[k] != after[k] for k in
+                              ("pdflatex_rc", "pdflatex_pdf", "pdflatex_passes"))})
         if d["cell"] != cell_before:
             changed.append((d["arxiv_id"], cell_before, d["cell"], passes))
         print(f"  [{i}/{len(failures)}] {d['arxiv_id']:16s} "
@@ -645,6 +763,21 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                       "manufacture a false-READY.")
 
     res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
+    if experiment_out:
+        Path(experiment_out).parent.mkdir(parents=True, exist_ok=True)
+        Path(experiment_out).write_text(json.dumps({
+            "artefact": str(results_path.relative_to(repo)),
+            "experiment": f"re-grade of every row with clock {clock!r} "
+                          f"({CLOCKS[clock] or 'no extra variable'}); the "
+                          f"artefact itself is NOT written",
+            "measured_at_sha": git_head(repo),
+            "oracle": oracle_record(clock),
+            "counts": res["counts"],
+            "rows": diff_rows}, indent=1) + "\n")
+        print(f"[real-roots] EXPERIMENT (clock {clock}) written to "
+              f"{experiment_out}; {len(changed)} cell(s) differ from the "
+              f"artefact; the artefact is unchanged")
+        return 0
 
     # ⚠ DO NOT PUBLISH A PROTOCOL THAT WAS NOT APPLIED TO EVERY ROW. This used
     # to assign `res["oracle"] = ORACLE` wholesale, so results.json advertised
@@ -661,19 +794,17 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     # block by gen_project_state.py, so it would have become the next
     # corrections-log entry. State the full-coverage case as its own sentence.
     _n = len(res["docs"])
+    before_oracle = res.get("oracle")
     rec_oracle = oracle_record()
     res["oracle"] = dict(rec_oracle, protocol=(
         f"{ORACLE['protocol']} — APPLIED TO ALL {_n}/{_n} rows"
         if remeasured == _n else
         f"{ORACLE['protocol']} — APPLIED TO {remeasured}/{_n} rows; "
         f"the remainder carry a single-pass grade from an earlier run"))
-    if sample_offset is None:
-        res["measured_at_sha"] = git_head(repo)
-        res["src_tree_sha"] = engine_tree(repo)
-    else:
-        # Sample 2's CLI verdicts still have no in-repo producer (OPEN-081), so
-        # its measured_at_sha stays as it was; only the oracle side is stamped.
-        res["oracle_regraded_at_sha"] = git_head(repo)
+    # The CLI verdicts are carried forward, so the CLI's provenance
+    # (measured_at_sha, src_tree_sha) stays as it was (see the docstring);
+    # only the oracle side is stamped.
+    res["oracle_regraded_at_sha"] = git_head(repo)
     _scope_note = {
         "failures": ("recorded FAILURES only; documents already recorded "
                      "pdflatex_rc 0 were NOT revisited, so this pass cannot "
@@ -689,24 +820,39 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                 f"rows now carry a pdflatex_passes count); CLI verdicts "
                 f"carried forward from the prior run")
     if rebaseline:
-        measured = ("ORACLE-BASELINE CHANGE (ADR-012 decision 7): every row "
-                    "re-graded under the pinned TeX Live image "
+        # Say WHY the recorded grades could not be carried: the skew is the
+        # finding (a host TeX Live in ADR-012 decision 7's change; another
+        # grading code or tree since OPEN-126).
+        measured = ("RE-BASELINE (--rebaseline-oracle): every row re-graded "
+                    "under the pinned TeX Live image "
                     f"{ORACLE_IMAGE} ({rec_oracle['arch']}, "
-                    f"{rec_oracle['backend']} backend); " + measured)
+                    f"{rec_oracle['backend']} backend, grading code "
+                    f"{rec_oracle['grading_code']['sha256'][:12]}) because the "
+                    f"recorded grades were not this oracle's: "
+                    f"{(skew or 'no skew')[:300]}; " + measured)
     res["measured_at"] = measured
     results_path.write_text(json.dumps(res, indent=1) + "\n")
     if rebaseline and sample_offset is None:
         # The frame manifest carries the same oracle block; it names who
-        # graded the sample, so it moves with the re-grade.
+        # graded the sample, so it moves with the re-grade. (Its indent is
+        # the one --record writes, 1; this wrote 2, re-flowing the file.)
         mdoc = json.loads(manifest_path.read_text())
         mdoc["oracle"] = dict(rec_oracle, protocol=mdoc["oracle"].get(
             "protocol", rec_oracle["protocol"]))
-        manifest_path.write_text(json.dumps(mdoc, indent=2) + "\n")
+        manifest_path.write_text(json.dumps(mdoc, indent=1) + "\n")
     if diff_out:
         Path(diff_out).parent.mkdir(parents=True, exist_ok=True)
         Path(diff_out).write_text(json.dumps({
             "artefact": str(results_path.relative_to(repo)),
-            "oracle_after": rec_oracle,
+            "oracle_before": before_oracle,
+            "oracle_after": res["oracle"],
+            "regraded_at_sha": res["oracle_regraded_at_sha"],
+            "summary": {
+                "rows": len(diff_rows),
+                "cells_moved": sum(1 for r in diff_rows if r["cell_changed"]),
+                "outcomes_moved": sum(1 for r in diff_rows
+                                      if r["outcome_changed"]),
+                "counts_after": res["counts"]},
             "rows": diff_rows}, indent=1) + "\n")
         print(f"[real-roots] per-row before/after diff written to {diff_out}")
     print(f"\n[real-roots] {len(changed)} cell(s) changed:")
@@ -808,8 +954,9 @@ def main() -> int:  # noqa: C901
                     help="the results artefact under --out that --repass "
                          "re-grades (results_sample2.json for sample 2)")
     ap.add_argument("--sample-offset", type=int, default=None,
-                    help="with --repass on an artefact that has no hash "
-                         "manifest (sample 2): its first frame rank (200)")
+                    help="with --repass or --refresh-cli on an artefact that "
+                         "has no hash manifest (sample 2): its first frame "
+                         "rank (200)")
     ap.add_argument("--rebaseline-oracle", action="store_true",
                     help="the one-time ORACLE-BASELINE CHANGE (ADR-012 "
                          "decision 7): re-grade every row of an artefact graded "
@@ -817,6 +964,17 @@ def main() -> int:  # noqa: C901
                          "--repass --repass-scope all")
     ap.add_argument("--diff-out", default=None,
                     help="with --repass: write the per-row before/after diff here")
+    ap.add_argument("--cli-checkout", default=None,
+                    help="with --refresh-cli: run the CLI built in this "
+                         "checkout and stamp ITS HEAD and engine tree (its "
+                         "latex-parse/src must be clean)")
+    ap.add_argument("--clock", default=PROTOCOL_CLOCK, choices=sorted(CLOCKS),
+                    help="with --repass --experiment-out: re-grade under this "
+                         "clock (O-5 measurement; 'forced' sets "
+                         "FORCE_SOURCE_DATE=1). Never writes the artefact.")
+    ap.add_argument("--experiment-out", default=None,
+                    help="with --repass: write the re-grade's rows here and "
+                         "leave the artefact untouched")
     ap.add_argument("--jobs", type=int, default=1,
                     help="parallel pdflatex gradings for --repass")
     ap.add_argument("--refresh-metadata", action="store_true",
@@ -857,13 +1015,16 @@ def main() -> int:  # noqa: C901
                                scope=ns.repass_scope, results_name=ns.results,
                                sample_offset=ns.sample_offset,
                                rebaseline=ns.rebaseline_oracle,
-                               diff_out=ns.diff_out, jobs=ns.jobs)
+                               diff_out=ns.diff_out, jobs=ns.jobs,
+                               clock=ns.clock, experiment_out=ns.experiment_out)
     if ns.rebaseline_oracle:
         return die(2, "--rebaseline-oracle needs --repass --repass-scope all")
 
     if ns.refresh_cli:
         return refresh_cli_only(repo, root, outdir, banner, ns.timeout,
-                                results_name=ns.results)
+                                results_name=ns.results,
+                                sample_offset=ns.sample_offset,
+                                cli_checkout=ns.cli_checkout)
 
     frame = build_frame(root)
     if len(frame) < ns.offset + ns.n:

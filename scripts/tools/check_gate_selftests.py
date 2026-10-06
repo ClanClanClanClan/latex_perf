@@ -386,6 +386,331 @@ def prov_stale_engine_tree(text: str) -> str:
     return _json.dumps(d, indent=2)
 
 
+def gc_old_grader(text: str) -> str:
+    """OPEN-126: point the virgin sample's grading code at the grader as it
+    was on main before OPEN-126 (a real blob, so the "not in this repository"
+    arm is NOT what fires) and re-hash the files map (so the hand-edit arm is
+    not either): only the behaviour arm can catch it."""
+    import _oracle
+    import json as _json
+    d = _json.loads(text)
+    files = d["oracle"]["grading_code"]["files"]
+    files["scripts/tools/diff_real_roots.py"] = (
+        "7ebb303994844731529c55f021528cdb8ebc4598")
+    d["oracle"]["grading_code"]["sha256"] = _oracle.grading_code_sha256(files)
+    return _json.dumps(d, indent=1)
+
+
+def gc_hand_edit(text: str) -> str:
+    """OPEN-126: a grading_code block whose hash is not its files map's."""
+    import json as _json
+    d = _json.loads(text)
+    d["oracle"]["grading_code"]["sha256"] = "0" * 64
+    return _json.dumps(d, indent=1)
+
+
+def gc_dropped(text: str) -> str:
+    """OPEN-126: a re-graded artefact that stops naming its grading code."""
+    import json as _json
+    d = _json.loads(text)
+    del d["oracle"]["grading_code"]
+    return _json.dumps(d, indent=1)
+
+
+def _block_to_x86(text: str, path: tuple) -> str:
+    """C-127: the block at `path` re-stamped as an x86_64 grade, with the
+    x86_64 tree fingerprints (a CONSISTENT forgery: only the architecture
+    rule can catch it)."""
+    import _oracle
+    import json as _json
+    d = _json.loads(text)
+    b = d
+    for k in path:
+        b = b[k]
+    b["arch"] = "x86_64"
+    for k in ("tlpdb_sha256", "macro_layer_sha256", "fmt_sha256"):
+        if k in b:
+            b[k] = _oracle.TREE_FINGERPRINTS["x86_64"][k]
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def bytes_probes_x86(text: str) -> str:
+    """C-127 (review round 2): the L_S0 bytes evidence, outside GRADED,
+    re-stamped x86_64; 36 workflow gates passed it."""
+    return _block_to_x86(text, ("oracle",))
+
+
+def kernel_pin_x86(text: str) -> str:
+    """C-127: a contract kernel's pin re-stamped x86_64."""
+    return _block_to_x86(text, ("pin",))
+
+
+def unregistered_oracle_block(text: str) -> str:
+    """C-127: an oracle block at a key path no registry names."""
+    import json as _json
+    d = _json.loads(text)
+    d["second_grade"] = dict(d["oracle"], arch="x86_64")
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def host_diag_relabelled(text: str) -> str:
+    """C-127: the NOT_THE_ORACLE host block relabelled as a container grade
+    (filing a grade there must not escape the architecture rule)."""
+    import json as _json
+    d = _json.loads(text)
+    d["classification_inputs"]["host_diagnostic"]["backend"] = "container"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def o5_clock_relabelled(text: str) -> str:
+    """C-127: the O-5 experiment's forced clock relabelled real."""
+    import json as _json
+    d = _json.loads(text)
+    d["oracle"]["clock"] = "real"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def graded_clock_forced(text: str) -> str:
+    """C-127: a published grade recorded under the forced clock."""
+    import json as _json
+    d = _json.loads(text)
+    d["oracle"]["clock"] = "forced"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def o5_row_dropped(text: str) -> str:
+    """C-127: an O-5 diff with one row dropped and `counts` re-derived from
+    the rest, so every stored total still agrees with the rows."""
+    import collections as _c
+    import json as _json
+    d = _json.loads(text)
+    d["rows"] = d["rows"][1:]
+    d["counts"] = dict(_c.Counter(r["after"]["cell"] for r in d["rows"]))
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def o5_first_error_moved(text: str) -> str:
+    """C-127: a first-error line moved under unchanged outcome flags (OPEN-126
+    says 0 first-error lines moved; OUTCOME_KEYS do not include it)."""
+    import json as _json
+    d = _json.loads(text)
+    d["rows"][0]["after"]["first_error"] = "! Undefined control sequence."
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def open118_summary_moved(text: str) -> str:
+    """C-127: an OPEN-118 re-grade diff claiming moved cells and rc."""
+    import json as _json
+    d = _json.loads(text)
+    d["summary"]["cell_changed"] = 3
+    d["summary"]["rc_changed"] = 2
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def cli_verify_rc_off(text: str) -> str:
+    """C-127: the CLI re-verification's rc total edited."""
+    import json as _json
+    d = _json.loads(text)
+    d["samples"]["results_sample2.json"]["rc_differs"] -= 1
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def _strip_identity(block: dict) -> None:
+    """C-128: an oracle block with its identity removed (no arch, no tree
+    fingerprints) and its image named by TAG: the discovery of C-127 no
+    longer recognised it as a block, so nothing checked it."""
+    for k in ("arch", "tlpdb_sha256", "macro_layer_sha256", "fmt_sha256"):
+        block.pop(k, None)
+    block["image"] = "texlive/texlive:latest"
+
+
+def contract_pin_stripped(text: str) -> str:
+    """C-128 (review round 3): a contract pin with its identity removed."""
+    import json as _json
+    d = _json.loads(text)
+    _strip_identity(d["pin"])
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def o5_identity_stripped(text: str) -> str:
+    """C-128 (review round 3): an O-5 block with its identity removed AND
+    its clock relabelled real (both passed every gate)."""
+    import json as _json
+    d = _json.loads(text)
+    _strip_identity(d["oracle"])
+    d["oracle"]["clock"] = "real"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def contract_pin_deleted(text: str) -> str:
+    """C-128: a contract with no pin at all (its location is registered)."""
+    import json as _json
+    d = _json.loads(text)
+    del d["pin"]
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def _gc_without_grader(block: dict) -> None:
+    import _oracle
+    files = block["grading_code"]["files"]
+    del files["scripts/tools/diff_real_roots.py"]
+    block["grading_code"]["sha256"] = _oracle.grading_code_sha256(files)
+
+
+def gc_grader_dropped(text: str) -> str:
+    """C-128 (review round 3): grading_code drops the grader, sha256
+    recomputed, so it is self-consistent and names only current blobs."""
+    import json as _json
+    d = _json.loads(text)
+    _gc_without_grader(d["oracle"])
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def tag_named_block(text: str) -> str:
+    """C-128 (review round 3 LOW): an oracle naming its image by TAG and its
+    architecture under another key, in a file that records no oracle."""
+    import json as _json
+    d = _json.loads(text)
+    d["oracle"] = {"engine": "pdflatex", "image": "texlive/texlive:latest",
+                   "backend": "container", "clock": "real",
+                   "machine": "x86_64"}
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def not_a_block_widened(text: str) -> str:
+    """C-128: a pinned per-package revision pair that gains an `arch`."""
+    import json as _json
+    d = _json.loads(text)
+    d["tree_comparison"]["host_newer_revision"][0]["arch"] = "x86_64"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def results_row_forged(text: str) -> str:
+    """C-128 (review round 3 LOW, m4): a results row whose grade is changed,
+    while the re-grade and O-5 diffs that cite it still say it compiled."""
+    import json as _json
+    d = _json.loads(text)
+    doc = next(x for x in d["docs"] if x["arxiv_id"] == "2507.03478v1")
+    doc.update(pdflatex_rc=1, pdflatex_pdf=False, pdflatex_verdict="FAILS")
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def o5_both_sides_forged(text: str) -> str:
+    """C-128 (m5): both sides of an O-5 row given one forged first error, so
+    before == after and no field 'moved'."""
+    import json as _json
+    d = _json.loads(text)
+    r = d["rows"][3]
+    r["before"]["first_error"] = r["after"]["first_error"] = "! fake"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def regrade_moved_row_cells_forged(text: str) -> str:
+    """C-129 (review round 4, M2): both sides' cell of a MOVED row (CLI
+    refreshed, so it used to be checked on cli_rc alone) forged to
+    FALSE-READY, with the summary re-derived from the rows."""
+    import json as _json
+    sys.path.insert(0, str(REPO / "scripts" / "tools"))
+    from _results_summary import diff_summary
+    d = _json.loads(text)
+    rows = [r for r in d["rows"] if r["arxiv_id"] == "2507.03521v2"]
+    assert len(rows) == 1, rows
+    rows[0]["before"]["cell"] = rows[0]["after"]["cell"] = "FALSE-READY"
+    d["summary"].update(diff_summary(d["rows"]))
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def fixture_records_x86_oracle(text: str) -> str:
+    """C-129 (review round 4, M1): a tracked fixture JSON given an x86_64
+    oracle block (the pinned image, x86_64's tree fingerprints)."""
+    import json as _json
+    sys.path.insert(0, str(REPO / "scripts" / "tools"))
+    import _oracle
+    d = _json.loads(text)
+    d["oracle"] = {"image": _oracle.workflow_pin()[0], "arch": "x86_64",
+                   "backend": "container", "clock": "real",
+                   **_oracle.TREE_FINGERPRINTS["x86_64"]}
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def cli_verify_rc_forged(text: str) -> str:
+    """C-128 (m16): a 'reason format only' row given a differing rc, with
+    rc_differs re-derived, so every total agrees."""
+    import json as _json
+    d = _json.loads(text)
+    s = d["samples"]["results_sample2.json"]
+    x = next(x for x in s["diffs"] if x["rec_rc"] == x["rc"])
+    x["rc"] = 0 if x["rc"] else 1
+    s["rc_differs"] = sum(y["rec_rc"] != y["rc"] for y in s["diffs"])
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def baseline_broken_off(text: str) -> str:
+    """C-127: the oracle-baseline summary's broken rate edited."""
+    import json as _json
+    d = _json.loads(text)
+    d["artefacts"]["corpora/apply_fixes_real/results_fresh.json (offset 2300)"][
+        "broken"] = "5/38"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def pc_summary_off_by_one(text: str) -> str:
+    """OPEN-126: a stored summary that its rows do not give (the 89-vs-88
+    shape of sample 3, one FOREIGN row counted as certified)."""
+    import json as _json
+    d = _json.loads(text)
+    d["summary"]["lp_core_certified_and_compiles"] += 1
+    return _json.dumps(d, indent=1)
+
+
+def rr_unmaintained_total(text: str) -> str:
+    """C-126: put back the stored total no writer maintained, exactly as it
+    stood (sample 2 said "correct": 179 while its rows gave 181)."""
+    import json as _json
+    d = _json.loads(text)
+    assert "correct" not in d, "results_sample2 regained 'correct'; update registry"
+    d["correct"] = 179
+    return _json.dumps(d, indent=1) + "\n"
+
+
+def rr_counts_shifted(text: str) -> str:
+    """C-126: stored `counts` moved one true-READY to false-NOT-READY with the
+    rows untouched. The generator used to publish FROM `counts`, so after a
+    --write the block agreed and every gate passed."""
+    import json as _json
+    d = _json.loads(text)
+    d["counts"]["true-READY"] -= 1
+    d["counts"]["false-NOT-READY"] += 1
+    return _json.dumps(d, indent=1) + "\n"
+
+
+def diff_summary_moved(text: str) -> str:
+    """C-126: a re-grade diff whose stored summary claims a moved cell that
+    its before/after rows do not show."""
+    import json as _json
+    d = _json.loads(text)
+    d["summary"]["cells_moved"] += 1
+    return _json.dumps(d, indent=1) + "\n"
+
+
+def diff_row_flag_flipped(text: str) -> str:
+    """C-126: a re-grade diff row whose outcome_changed flag its own
+    before/after pair contradicts (the flag the summary counts)."""
+    import json as _json
+    d = _json.loads(text)
+    d["rows"][0]["outcome_changed"] = not d["rows"][0]["outcome_changed"]
+    return _json.dumps(d, indent=1) + "\n"
+
+
+def pc_ready_flip(text: str) -> str:
+    """OPEN-126: a proven-coverage row whose CLI readiness is not its results
+    row's (two artefacts measured with different CLIs)."""
+    import json as _json
+    d = _json.loads(text)
+    d["rows"][0]["ready"] = not d["rows"][0]["ready"]
+    return _json.dumps(d, indent=1)
+
+
 def prov_unresolvable_sha(text: str) -> str:
     """Point an artefact's provenance at a sha no clone can resolve.
 
@@ -507,8 +832,18 @@ def drop_one_passes_count(text: str) -> str:
     whose protocol claims the multi-pass protocol wholesale (no APPLIED-TO
     clause). The claim-provenance check (C-28) must see that the published
     protocol no longer describes every row. It was written for results.json
-    alone; this proves the sample-3 arm of the loop is reached."""
+    alone; this proves the sample-3 arm of the loop is reached.
+
+    OPEN-126's full re-grade gave every results artefact an "APPLIED TO ALL
+    200/200 rows" clause, which routes a missing pass count to the APPLIED-TO
+    arm instead (killed by its own mutation above). So the clause is removed
+    first: without it the WHOLESALE arm stays reachable by a mutation, though
+    no artefact exercises it today."""
     d = json.loads(text)
+    proto = d["oracle"]["protocol"]
+    stripped = re.sub(r" — APPLIED TO (?:ALL )?\d+/\d+ rows$", "", proto)
+    assert stripped != proto or "APPLIED TO" not in proto, proto
+    d["oracle"]["protocol"] = stripped
     row = next(r for r in d["docs"] if r.get("pdflatex_passes"))
     del row["pdflatex_passes"]
     return json.dumps(d, indent=1) + "\n"
@@ -583,6 +918,15 @@ def drift_second_setup_ocaml(text: str) -> str:
     needle = "ocaml-compiler: 5.1.1"
     i = text.rindex(needle)
     return text[:i] + "ocaml-compiler: 5.2.0" + text[i + len(needle):]
+
+
+def drift_v3_pair_compiler(text: str) -> str:
+    """OPEN-126: BOTH attempts of the non-X64 (setup-ocaml@v3) pair given
+    another compiler, so each pair is internally byte-identical."""
+    head, sep, tail = text.partition("uses: ocaml/setup-ocaml@v3")
+    assert sep and tail.count("ocaml-compiler: 5.1.1") == 2, "v3 pair drifted"
+    return head + sep + tail.replace("ocaml-compiler: 5.1.1",
+                                     "ocaml-compiler: 5.2.0")
 
 
 def flip_polyglossia(text: str) -> str:
@@ -1449,6 +1793,31 @@ REGISTRY = [
                      r"starts a TeX engine directly",
                      old="        rc, timed_out = get_oracle().run_once(pathlib.Path(work), top, env, 180)\n",
                      new="        rc, timed_out = subprocess.run([\"pdflatex\", top]).returncode, False\n"),
+            # C-129 (review round 4, M1): `git ls-files` without -z C-quotes
+            # a non-ASCII path, which then escaped classification, discovery
+            # and the engine scan; extensions were matched case-sensitively.
+            Mutation("an x86_64 oracle in a non-ASCII-named tracked JSON",
+                     "scripts/tools/fixtures/oracle_pin/\u00f8rakel.json",
+                     r"fixtures/oracle_pin/\u00f8rakel\.json \[oracle\]: may "
+                     r"record an oracle",
+                     transform=fixture_records_x86_oracle),
+            Mutation("an x86_64 oracle in an uppercase-extension tracked JSON",
+                     "scripts/tools/fixtures/oracle_pin/RECORD.JSON",
+                     r"fixtures/oracle_pin/RECORD\.JSON \[oracle\]: may "
+                     r"record an oracle",
+                     transform=fixture_records_x86_oracle),
+            Mutation("a non-ASCII-named tracked shell file starts pdflatex",
+                     "scripts/tools/fixtures/oracle_pin/gr\u00f8de.sh",
+                     r"fixtures/oracle_pin/gr\u00f8de\.sh:\d+: starts a TeX "
+                     r"engine directly",
+                     old='echo "fixture"\n',
+                     new='pdflatex -interaction=nonstopmode doc.tex\n'),
+            Mutation("a non-JSON data file names a tree-fingerprint key",
+                     "scripts/tools/fixtures/oracle_pin/notes.yaml",
+                     r"notes\.yaml: a non-JSON data file that names the tree "
+                     r"fingerprint key",
+                     old="note: fixture\n",
+                     new="note: fixture\nfmt_sha256: 00\n"),
             # A graded artefact whose oracle block loses the image is a
             # host-graded artefact again.
             Mutation("a graded artefact stops naming the pinned image",
@@ -1516,7 +1885,7 @@ REGISTRY = [
             # its frame manifest losing the image is a host grade again.
             Mutation("the virgin sample's manifest stops naming the pinned image",
                      "corpora/real_roots/manifest_sample3.json",
-                     r"manifest_sample3\.json: graded by .*not the pinned image",
+                     r"manifest_sample3\.json \[oracle\]: graded by .*not the pinned image",
                      old='"image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b"',
                      new='"image": null'),
             Mutation("an engine split by implicit string concatenation",
@@ -1795,6 +2164,121 @@ REGISTRY = [
                      'span_extractor_training\\.ipynb:\\d+: starts a TeX engine directly',
                      old='"!nvidia-smi\\n",',
                      new='"!nvidia-smi\\n",\n    "!pdflatex main.tex\\n",'),
+            # ADR-015 E2 / OPEN-126: the architecture is part of the oracle's
+            # identity. One kill per arm.
+            Mutation("a graded artefact recorded on another architecture",
+                     "corpora/strict_battery/manifest.json",
+                     r"strict_battery/manifest\.json \[provenance\.oracle_provenance\]: "
+                     r"graded on 'x86_64', not "
+                     r"the oracle's architecture of record 'aarch64'",
+                     old='"arch": "aarch64"', new='"arch": "x86_64"'),
+            Mutation("the architecture of record itself changed",
+                     "scripts/tools/_oracle.py",
+                     r"results_sample3\.json \[oracle\]: graded on 'aarch64', not the "
+                     r"oracle's architecture of record 'x86_64'",
+                     old='ARCH_OF_RECORD = "aarch64"\n',
+                     new='ARCH_OF_RECORD = "x86_64"\n'),
+            Mutation("CI's tex-oracle job back on an amd64 runner",
+                     ".github/workflows/tex-oracle.yml",
+                     r"runs-on \['ubuntu-latest'\] is not a native aarch64 runner",
+                     old="    runs-on: ubuntu-24.04-arm\n",
+                     new="    runs-on: ubuntu-latest\n"),
+            # C-127 (review round 2): EVERY recorded oracle block, not only
+            # GRADED's, obeys the architecture rule and is registered.
+            Mutation("the L_S0 bytes evidence re-stamped x86_64",
+                     "corpora/strict_s0/bytes_probes.json",
+                     r"bytes_probes\.json \[oracle\]: graded on 'x86_64', not the "
+                     r"oracle's architecture of record 'aarch64'",
+                     transform=bytes_probes_x86),
+            Mutation("a contract kernel pin re-stamped x86_64",
+                     "corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json",
+                     r"kernel/aarch64-a476533c0d6e64f0\.json \[pin\]: graded on "
+                     r"'x86_64'",
+                     transform=kernel_pin_x86),
+            Mutation("an oracle block no registry names",
+                     "corpora/real_roots/manifest.json",
+                     r"manifest\.json \[second_grade\]: may record an oracle "
+                     r"\(keys \[.*'arch'.*\]\) at a location this gate does "
+                     r"not know",
+                     transform=unregistered_oracle_block),
+            Mutation("the host diagnostic relabelled as a container grade",
+                     "corpora/oracle_baseline/diff_real_roots_sample2.json",
+                     r"host_diagnostic\]: pinned in NOT_THE_ORACLE but it records",
+                     transform=host_diag_relabelled),
+            Mutation("the O-5 experiment's clock relabelled real",
+                     "corpora/oracle_baseline/o5_forced_clock_sample1.json",
+                     r"o5_forced_clock_sample1\.json \[oracle\]: clock 'real', but",
+                     transform=o5_clock_relabelled),
+            Mutation("a published grade under the forced clock",
+                     "corpora/real_roots/results_sample3.json",
+                     r"results_sample3\.json: graded with clock 'forced', not the "
+                     r"protocol clock 'real'",
+                     transform=graded_clock_forced),
+            Mutation("CI's in-image tmpfs options drift",
+                     ".github/workflows/tex-oracle.yml",
+                     r"an in-image `docker run` mounts /tmp with options "
+                     r"\['rw,nosuid,nodev,size=8g'\]",
+                     old='          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
+                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n',
+                     new='          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=8g \\\n'
+                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n'),
+            Mutation("an in-image docker run without --read-only",
+                     ".github/workflows/tex-oracle.yml",
+                     r"an in-image `docker run` lacks \['--read-only'\]",
+                     old='          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
+                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n',
+                     new='          docker run --rm --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
+                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n'),
+            # OPEN-126: the grading code is part of a grade's provenance.
+            Mutation("a re-graded artefact graded by older grader code",
+                     "corpora/real_roots/results_sample3.json",
+                     r"results_sample3\.json: scripts/tools/diff_real_roots\.py "
+                     r"changed in behaviour since the grade",
+                     transform=gc_old_grader),
+            Mutation("a grading_code block edited by hand",
+                     "corpora/real_roots/results.json",
+                     r"results\.json: grading_code\.sha256 is not the hash of "
+                     r"its own files map",
+                     transform=gc_hand_edit),
+            Mutation("a re-graded artefact stops naming its grading code",
+                     "corpora/real_roots/results_sample2.json",
+                     r"results_sample2\.json: records no grading_code",
+                     transform=gc_dropped),
+            # C-128 (review round 3): classification by LOCATION, so a block
+            # stripped of the identity being checked is still checked; the
+            # grading code names the producer's grader exactly.
+            Mutation("a contract pin with its identity stripped",
+                     "corpora/contracts/amsart.json",
+                     r"amsart\.json \[pin\]: graded on None",
+                     transform=contract_pin_stripped),
+            Mutation("an O-5 block stripped of identity, clock relabelled",
+                     "corpora/oracle_baseline/o5_forced_clock_sample1.json",
+                     r"o5_forced_clock_sample1\.json \[oracle\]: graded on None",
+                     transform=o5_identity_stripped),
+            Mutation("a contract with its pin deleted",
+                     "corpora/contracts/article.json",
+                     r"article\.json \[pin\]: no oracle block at this location",
+                     transform=contract_pin_deleted),
+            Mutation("a GRADED grading_code that drops the grader",
+                     "corpora/real_roots/results.json",
+                     r"results\.json: grading_code names "
+                     r"\['scripts/tools/_oracle\.py'\], not exactly",
+                     transform=gc_grader_dropped),
+            Mutation("an O-5 grading_code that drops the grader",
+                     "corpora/oracle_baseline/o5_forced_clock_sample3.json",
+                     r"o5_forced_clock_sample3\.json \[oracle\]: grading_code "
+                     r"names \['scripts/tools/_oracle\.py'\], not exactly",
+                     transform=gc_grader_dropped),
+            Mutation("an oracle named by tag in a NO_ORACLE file",
+                     "corpora/real_roots/proven_coverage_sample1.json",
+                     r"proven_coverage_sample1\.json \[oracle\]: may record an "
+                     r"oracle",
+                     transform=tag_named_block),
+            Mutation("a NOT_A_BLOCK revision pair gains an arch",
+                     "corpora/oracle_baseline/summary.json",
+                     r"pinned in NOT_A_BLOCK with keys \['host', 'image', "
+                     r"'package'\], but one holds \['arch'",
+                     transform=not_a_block_widened),
         ]),
     GateTest(
         # OPEN-118 review round 2: a run with no proof that pdfTeX ran (the
@@ -1804,6 +2288,34 @@ REGISTRY = [
         [PY, f"{TOOLS}/check_oracle_infra_grading.py"],
         "pure",
         [
+            # OPEN-126 / ADR-015 E2: the oracle refuses another architecture,
+            # a writable TeX tree, a root engine; and a container not started
+            # read-only is replaced.
+            Mutation("the oracle grades on any architecture again",
+                     "scripts/tools/_oracle.py",
+                     r"_check_fingerprint accepted an oracle on x86_64",
+                     old='    if fp["arch"] != ARCH_OF_RECORD:\n',
+                     new='    if False:\n'),
+            Mutation("the oracle lets its engine run as root",
+                     "scripts/tools/_oracle.py",
+                     r"check_readonly accepted a root engine",
+                     old='    if probe.get("euid") in (0, None):\n',
+                     new='    if probe.get("euid") is None:\n'),
+            Mutation("the oracle accepts a writable TeX tree",
+                     "scripts/tools/_oracle.py",
+                     r"check_readonly accepted a writable tree",
+                     old='    if probe.get("tree_ro") is not True or probe.get("root_ro") is not True:\n',
+                     new='    if probe.get("root_ro") is not True:\n'),
+            Mutation("a non-read-only container is kept",
+                     "scripts/tools/_oracle.py",
+                     r"_ensure_container on a container with a writable root filesystem",
+                     old='                    or ro != "true" or user != self.user):\n',
+                     new='                    or user != self.user):\n'),
+            Mutation("require_same_oracle ignores the architecture",
+                     "scripts/tools/_oracle.py",
+                     r"require_same_oracle accepted another architecture",
+                     old='IDENTITY_KEYS = ("image", "arch", "tlpdb_sha256", "macro_layer_sha256",\n',
+                     new='IDENTITY_KEYS = ("image", "tlpdb_sha256", "macro_layer_sha256",\n'),
             # The contract generator is an oracle client (run_engine): the
             # engine it names must be the one that runs, and on the native
             # backend no host TeX variable may cross into its jobs.
@@ -1917,13 +2429,13 @@ REGISTRY = [
             Mutation("run_pdflatex stops imposing the grading environment",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*run_pdflatex forwards a caller's TeX variables",
-                     old="        env = graded_env(env)\n        self.clear_outputs(Path(cwd), args)\n",
+                     old="        env = graded_env(env, clock)\n        self.clear_outputs(Path(cwd), args)\n",
                      new="        self.clear_outputs(Path(cwd), args)\n"),
             Mutation("graded_env stops imposing ORACLE_TEX_VARS",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*SOURCE_DATE_EPOCH=None \(protocol '0'\)",
-                     old="    out.update(ORACLE_TEX_VARS)\n    return out\n",
-                     new="    return out\n"),
+                     old="    out.update(ORACLE_TEX_VARS)\n    if clock not in CLOCKS:\n",
+                     new="    if clock not in CLOCKS:\n"),
             Mutation("graded_env forwards the host's other TeX variables",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*host FORCE_SOURCE_DATE='1' reached the engine",
@@ -2029,8 +2541,8 @@ REGISTRY = [
             Mutation("run_pdflatex stops clearing the previous run's outputs",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*pdflatex shim left an earlier run's",
-                     old="        env = graded_env(env)\n        self.clear_outputs(Path(cwd), args)\n",
-                     new="        env = graded_env(env)\n"),
+                     old="        env = graded_env(env, clock)\n        self.clear_outputs(Path(cwd), args)\n",
+                     new="        env = graded_env(env, clock)\n"),
             Mutation("run_engine stops clearing the previous run's outputs",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*run_engine left an earlier run's",
@@ -2041,8 +2553,8 @@ REGISTRY = [
             Mutation("a container without --init is no longer replaced",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*container with no --init: replaced=False",
-                     old='            if img != IMAGE or init != "true" or pids != str(PIDS_LIMIT):\n',
-                     new='            if img != IMAGE:\n'),
+                     old='            if (img != IMAGE or init != "true" or pids != str(PIDS_LIMIT)\n',
+                     new='            if (img != IMAGE\n'),
             Mutation("the oracle starts its container without --init",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*new container flags ok=False",
@@ -2051,7 +2563,7 @@ REGISTRY = [
             Mutation("a container still without --init after creation is accepted",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*docker ignoring --init: replaced=True \(want True\), accepted=True",
-                     old='        if ins.stdout.decode().split() != ["true", str(PIDS_LIMIT)]:\n',
+                     old='        if ins.stdout.decode().split() != ["true", str(PIDS_LIMIT), "true", self.user]:\n',
                      new='        if False:\n'),
             Mutation("the per-run leak check is skipped",
                      "scripts/tools/_oracle.py",
@@ -2394,6 +2906,92 @@ REGISTRY = [
         "check_project_state", [PY, f"{TOOLS}/check_project_state.py"],
         "pure",
         [
+            # OPEN-126: a stored proven-coverage summary its rows do not give.
+            Mutation("a proven-coverage summary its rows do not give",
+                     "corpora/real_roots/proven_coverage_sample3.json",
+                     r"proven_coverage_sample3\.json: its summary .* is not the "
+                     r"one its rows give",
+                     transform=pc_summary_off_by_one),
+            Mutation("a proven-coverage row measured with another CLI",
+                     "corpora/real_roots/proven_coverage_sample1.json",
+                     r"proven_coverage_sample1\.json: \S+ records ready=\w+ but "
+                     r"corpora/real_roots/results\.json records cli_rc=",
+                     transform=pc_ready_flip),
+            # C-126: stored totals of the results artefacts and of the
+            # re-grade diffs must be what their rows give. Each regex names
+            # the artefact, so the (now impossible) stale-block finding
+            # cannot supply a false kill.
+            Mutation("a results artefact's total that no writer maintains",
+                     "corpora/real_roots/results_sample2.json",
+                     r"results_sample2\.json: top-level key\(s\) \['correct'\] "
+                     r"that no writer maintains",
+                     transform=rr_unmaintained_total),
+            Mutation("a results artefact's stored counts its rows contradict",
+                     "corpora/real_roots/results_sample2.json",
+                     r"results_sample2\.json: stored counts .* is not what its "
+                     r"rows give",
+                     transform=rr_counts_shifted),
+            Mutation("a re-grade diff summary its rows contradict",
+                     "corpora/oracle_baseline/regrade_open126_sample3.json",
+                     r"regrade_open126_sample3\.json: its summary .* is not "
+                     r"what its rows give",
+                     transform=diff_summary_moved),
+            Mutation("an O-5 experiment row flag its before/after contradict",
+                     "corpora/oracle_baseline/o5_forced_clock_sample2.json",
+                     r"o5_forced_clock_sample2\.json: \S+ records "
+                     r"outcome_changed=\w+ but its before/after give",
+                     transform=diff_row_flag_flipped),
+            # C-127 (review round 2): completeness, every field, and the
+            # OPEN-118 evidence's totals.
+            Mutation("an O-5 diff with a row dropped and counts re-derived",
+                     "corpora/oracle_baseline/o5_forced_clock_sample2.json",
+                     r"o5_forced_clock_sample2\.json: its rows are not "
+                     r"results_sample2\.json's",
+                     transform=o5_row_dropped),
+            Mutation("an O-5 diff whose first error moved",
+                     "corpora/oracle_baseline/o5_forced_clock_sample1.json",
+                     r"o5_forced_clock_sample1\.json: before/after differ in "
+                     r"\{'first_error': 1\}",
+                     transform=o5_first_error_moved),
+            Mutation("an OPEN-118 re-grade diff summary its rows contradict",
+                     "corpora/oracle_baseline/diff_real_roots_sample1.json",
+                     r"diff_real_roots_sample1\.json: its summary .* is not what "
+                     r"its rows give",
+                     transform=open118_summary_moved),
+            Mutation("the CLI re-verification's rc total edited",
+                     "corpora/oracle_baseline/cli_verify_fe673dc1.json",
+                     r"cli_verify_fe673dc1\.json \[results_sample2\.json\]: .* is "
+                     r"not what its diffs",
+                     transform=cli_verify_rc_off),
+            # C-128 (review round 3): the evidence joined by VALUE.
+            Mutation("a results grade forged under its citing diffs",
+                     "corpora/real_roots/results.json",
+                     r"o5_forced_clock_sample1\.json: row 2507\.03478v1 records "
+                     r"\[.*'after\.pdflatex_rc'.*\] unlike results\.json's row",
+                     transform=results_row_forged),
+            Mutation("both sides of an O-5 row forged alike",
+                     "corpora/oracle_baseline/o5_forced_clock_sample1.json",
+                     r"o5_forced_clock_sample1\.json: row \S+ records "
+                     r"\['before\.first_error', 'after\.first_error'\]",
+                     transform=o5_both_sides_forged),
+            # C-129 (review round 4, M2): every cell re-derived from its own
+            # side's values, on the moved rows too.
+            Mutation("a moved row's both cells forged, summary re-derived",
+                     "corpora/oracle_baseline/regrade_open126_sample2.json",
+                     r"regrade_open126_sample2\.json: row 2507\.03521v2 records "
+                     r"\['before\.cell \(vs its own oracle values and cli_rc\)', "
+                     r"'after\.cell",
+                     transform=regrade_moved_row_cells_forged),
+            Mutation("a CLI re-verification rc forged, totals re-derived",
+                     "corpora/oracle_baseline/cli_verify_fe673dc1.json",
+                     r"cli_verify_fe673dc1\.json \[results_sample2\.json\]: \S+ "
+                     r"rc \d is not results_sample2\.json's cli_rc",
+                     transform=cli_verify_rc_forged),
+            Mutation("the oracle-baseline summary's broken rate edited",
+                     "corpora/oracle_baseline/summary.json",
+                     r"summary\.json \[corpora/apply_fixes_real/results_fresh\.json "
+                     r"\(offset 2300\)\]: .* is not what",
+                     transform=baseline_broken_off),
             # A hand-edited digit inside the generated block must be caught.
             Mutation("generated-block digit edited",
                      "docs/v27/PROJECT_STATE.md",
@@ -2752,6 +3350,12 @@ REGISTRY = [
                      ".github/actions/setup-ocaml-env/action.yml",
                      r"attempts have DRIFTED",
                      transform=drift_second_setup_ocaml),
+            # OPEN-126: the X64 (v2) and non-X64 (v3) pairs, both drifted
+            # alike, so only the cross-pair compiler check can see it.
+            Mutation("the non-X64 setup-ocaml pair builds another compiler",
+                     ".github/actions/setup-ocaml-env/action.yml",
+                     r"setup-ocaml steps install DIFFERENT compilers",
+                     transform=drift_v3_pair_compiler),
         ]),
     GateTest(
         "check_project_state (binary arm)",

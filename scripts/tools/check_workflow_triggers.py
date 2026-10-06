@@ -237,6 +237,22 @@ def drifted_retry_pairs(doc: dict, rel: str) -> list[str]:
                 f"('{twin.get('name', '?')}') pass different `with:` blocks, so "
                 f"a retry would build a different toolchain than the attempt it "
                 f"replaces. Keep them byte-identical.")
+    # One file may hold several toolchain pairs, selected by runner
+    # architecture (setup-ocaml-env: v2 on X64, v3 elsewhere, OPEN-126).
+    # They must install the SAME compiler, or an arm64 job would build with a
+    # different OCaml than every x64 job.
+    compilers = {}
+    for step in steps:
+        if (isinstance(step, dict)
+                and str(step.get("uses", "")).startswith("ocaml/setup-ocaml@")):
+            compilers.setdefault(
+                str((step.get("with") or {}).get("ocaml-compiler")),
+                []).append(step.get("name", step.get("uses")))
+    if len(compilers) > 1:
+        out.append(
+            f"{rel}: its setup-ocaml steps install DIFFERENT compilers "
+            f"{sorted(compilers)}; every runner architecture must build with "
+            f"the same OCaml (OPEN-126)")
     return out
 
 

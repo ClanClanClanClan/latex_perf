@@ -93,6 +93,10 @@ def main() -> int:
     iowner, irev = tlpdb_files(Path(ns.image_tlpdb))
     host = _oracle.host_diagnostic()
     oracle = _oracle.get_oracle()
+    # The "after" grades and this run's image re-run must be of the same
+    # oracle: same image, ARCHITECTURE and tree (ADR-015 E2, C-103).
+    _oracle.require_same_oracle(diff.get("oracle_after"), oracle.provenance(),
+                                dpath.name)
     moved = [r for r in diff["rows"] if compiles(r["before"]) != compiles(r["after"])
              or r["arxiv_id"] in ns.also]
     print(f"[classify] {len(moved)} row(s) to attribute in {dpath.name}")

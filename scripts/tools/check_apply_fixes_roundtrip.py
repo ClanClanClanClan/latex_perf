@@ -89,6 +89,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _oracle import (OracleError, availability, get_oracle,  # noqa: E402
+                     require_same_oracle,
                      host_has_pdflatex, job_output)
 
 CORPORA = ["corpora/compile_check", "corpora/apply_fixes"]
@@ -214,6 +215,16 @@ def main() -> int:
                         for e in json.loads(manifest_path.read_text())["known_broken"]}
         except Exception as exc:  # noqa: BLE001
             return die(f"cannot parse {MANIFEST}: {exc}")
+        # The baseline's grades are compared with this run's (property (b)):
+        # they must be of the SAME oracle -- image, ARCHITECTURE and tree
+        # (ADR-015 E2, C-103). A re-record replaces them, so it may cross.
+        if have_tex and not args.record:
+            try:
+                require_same_oracle(
+                    json.loads(manifest_path.read_text()).get("oracle"),
+                    get_oracle().provenance(), MANIFEST)
+            except OracleError as exc:
+                return die(str(exc))
     elif not args.record:
         return die(f"{MANIFEST} missing — run with --record to create the baseline")
 

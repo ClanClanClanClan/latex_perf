@@ -45,7 +45,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from diff_real_roots import PIN, run_to_fixpoint_full  # noqa: E402
-from _oracle import OracleError, get_oracle, job_output  # noqa: E402
+from _oracle import (OracleError, get_oracle, job_output,  # noqa: E402
+                     require_same_oracle)
 
 BATTERY = Path("corpora/strict_battery")
 CLI = Path("_build/default/latex-parse/src/validators_cli.exe")
@@ -174,11 +175,16 @@ def main() -> int:
     man = repo / BATTERY / "manifest.json"
     if ns.check:
         old = json.loads(man.read_text())
-        rec_img = (old["provenance"].get("oracle_provenance") or {}).get("image")
-        if rec_img != out["provenance"]["oracle_provenance"]["image"]:
-            print(f"[strict-battery] FAIL: the manifest was graded by "
-                  f"{rec_img or 'a host TeX Live (no image recorded)'}, not the "
-                  f"pinned image; re-grade it (ADR-012 decision 7)")
+        # The recorded grades are compared with live ones only when they are
+        # of the SAME oracle -- image, ARCHITECTURE and tree (ADR-015 E2):
+        # _oracle's one comparison, not an image-only one of this file's own
+        # (C-127, review round 2 of OPEN-126).
+        try:
+            require_same_oracle(old["provenance"].get("oracle_provenance"),
+                                out["provenance"]["oracle_provenance"],
+                                "corpora/strict_battery/manifest.json")
+        except OracleError as e:
+            print(f"[strict-battery] FAIL: {e} Re-grade it (ADR-012 decision 7).")
             return 1
         a = [(r["file"], r["pdflatex"]["compiles"], r["cli_m0"]["rc"],
               r["cli_m0"]["tier"]) for r in old["rows"]]

@@ -839,6 +839,67 @@ def bytes_explain_mismatch(text: str) -> str:
     return json.dumps(d, indent=1) + "\n"
 
 
+def _debt_case(text: str, name: str, edit) -> str:
+    """Apply `edit` to the ONE case called `name` of the release-debt fixture;
+    registry rot (the case or its expected shape is gone) is exit 2."""
+    d = json.loads(text)
+    hits = [c for c in d["cases"] if c.get("name") == name]
+    if len(hits) != 1 or not edit(hits[0]):
+        print(f"[gate-selftests] REGISTRY ROT: release-debt fixture case "
+              f"{name!r} is missing or no longer has the shape this "
+              f"mutation edits. Update the registry deliberately.")
+        sys.exit(2)
+    return json.dumps(d, indent=2) + "\n"
+
+
+def _set_if(case: dict, key: str, old, new) -> bool:
+    if case.get(key) != old:
+        return False
+    case[key] = new
+    return True
+
+
+def debt_merge_max0(text: str) -> str:
+    return _debt_case(text, "merge-shape",
+                      lambda c: _set_if(c, "max", 1, 0))
+
+
+def debt_merge_no_tags(text: str) -> str:
+    return _debt_case(text, "merge-shape",
+                      lambda c: _set_if(c, "clone", "full", "no-tags"))
+
+
+def debt_merge_shallow(text: str) -> str:
+    return _debt_case(text, "merge-shape",
+                      lambda c: _set_if(c, "clone", "full", "shallow"))
+
+
+def debt_merge_version_behind(text: str) -> str:
+    def edit(c):
+        c["ops"].append({"op": "version", "v": "0.9.0"})
+        return True
+    return _debt_case(text, "merge-shape", edit)
+
+
+def debt_release_prep_unbumped(text: str) -> str:
+    def edit(c):
+        if c["ops"][-1] != {"op": "version", "v": "1.0.1"}:
+            return False
+        c["ops"].pop()
+        return True
+    return _debt_case(text, "release-prep", edit)
+
+
+def debt_side_tag_max35(text: str) -> str:
+    return _debt_case(text, "side-branch-tag",
+                      lambda c: _set_if(c, "max", 36, 35))
+
+
+def debt_numeric_order_max2(text: str) -> str:
+    return _debt_case(text, "numeric-order",
+                      lambda c: _set_if(c, "max", 3, 2))
+
+
 def lexical_catcode_changed(text: str) -> str:
     """The lexical contract no longer what the evidence ran (~ made other)."""
     d = json.loads(text)
@@ -2267,37 +2328,67 @@ REGISTRY = [
     # clone depth, merge shape), which a file edit in a worktree copy cannot
     # vary portably — a copy of a TAGGED HEAD has debt 0, and a release-prep
     # HEAD is exempt, so mutating the live threshold would not reliably kill.
-    # The gate therefore runs its SAME `evaluate` on a throwaway repo built
-    # from this JSON, and each mutation changes one field of it. The clean
-    # fixture passes at max 1 ONLY under first-parent counting (one merge of
-    # a 2-commit branch: 1 first-parent commit, 3 in all), so a regression to
-    # all-commit counting turns the clean run red.
+    # The gate therefore runs its SAME `evaluate` on throwaway repos built
+    # from the cases of this JSON, and each mutation changes one case. The
+    # clean cases kill code mutants on their own: merge-shape passes at max 1
+    # ONLY under first-parent counting; release-prep passes ONLY through the
+    # exemption, on a PATCH bump; non-release-tags passes ONLY if pre-release,
+    # annotation, spike and leading-zero v-tags are ignored. And every run
+    # cross-checks MAX_FIRST_PARENT_DEBT against the N in ADR-011 §6.
     GateTest(
         "check_release_debt",
         [PY, f"{TOOLS}/check_release_debt.py", "--selftest-fixture",
          "scripts/tools/fixtures/release_debt_selftest.json"],
         "pure",
         [
-            Mutation("--max 0 on an untagged HEAD (debt 1)",
-                     "scripts/tools/fixtures/release_debt_selftest.json",
-                     r"FAIL: release debt is 1 first-parent commit\(s\) past "
-                     r"v1\.0\.0, limit 0",
-                     old='"max": 1', new='"max": 0'),
+            Mutation("--max 0 on an untagged HEAD (debt 1)", 'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[merge-shape\] FAIL: release debt is 1 first-parent "
+                     r"commit\(s\) past v1\.0\.0, limit 0",
+                     transform=debt_merge_max0),
             # C-55 / OPEN-101: a clone without tags must be exit 2, never a
             # pass. The INFRA line is printed only on the exit-2 path.
-            Mutation("clone without tags",
-                     "scripts/tools/fixtures/release_debt_selftest.json",
-                     r"INFRA \(exit 2, never a pass\): no tag matching",
-                     old='"clone": "full"', new='"clone": "no-tags"'),
-            Mutation("shallow clone (actions/checkout default depth)",
-                     "scripts/tools/fixtures/release_debt_selftest.json",
-                     r"INFRA \(exit 2, never a pass\): shallow clone",
-                     old='"clone": "full"', new='"clone": "shallow"'),
-            Mutation("dune-project version behind the reachable tag",
-                     "scripts/tools/fixtures/release_debt_selftest.json",
-                     r"FAIL: dune-project version 0\.9\.0 is BEHIND",
-                     old='"dune_version_at_head": "1.0.0"',
-                     new='"dune_version_at_head": "0.9.0"'),
+            Mutation("clone without tags", 'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[merge-shape\] INFRA \(exit 2, never a pass\): no "
+                     r"release tag",
+                     transform=debt_merge_no_tags),
+            Mutation("shallow clone (actions/checkout default depth)", 'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[merge-shape\] INFRA \(exit 2, never a pass\): "
+                     r"shallow clone",
+                     transform=debt_merge_shallow),
+            Mutation("dune-project version behind the reachable tag", 'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[merge-shape\] FAIL: dune-project version 0\.9\.0 is "
+                     r"BEHIND",
+                     transform=debt_merge_version_behind),
+            # The exemption must be exactly 'dune-project newer than T':
+            # without the bump the same 31 commits are debt.
+            Mutation("release-prep history without the version bump", 'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[release-prep\] FAIL: release debt is 30 first-parent "
+                     r"commit\(s\) past v1\.0\.0, limit 1",
+                     transform=debt_release_prep_unbumped),
+            # C-116: T must be the highest release tag reachable from HEAD,
+            # not `git describe`'s nearest (an older hotfix tag on a merged
+            # branch), or the exemption passes any amount of debt.
+            Mutation("debt past v2.0.0 with an older tag on a merged branch",
+                     'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[side-branch-tag\] FAIL: release debt is 36 "
+                     r"first-parent commit\(s\) past v2\.0\.0, limit 35",
+                     transform=debt_side_tag_max35),
+            # T is ordered as a version, not as a name: by name v1.9.0 sorts
+            # above v1.10.0 (on this repo v27.1.9 above v27.1.64), and the
+            # exemption would then pass any debt.
+            Mutation("debt past v1.10.0 with v1.9.0 sorting higher by name",
+                     'scripts/tools/fixtures/release_debt_selftest.json',
+                     r"\[numeric-order\] FAIL: release debt is 3 "
+                     r"first-parent commit\(s\) past v1\.10\.0, limit 2",
+                     transform=debt_numeric_order_max2),
+            # The constant is the owner's ADR-011 §6 decision: raising it in
+            # one place without the other must not pass.
+            Mutation("ADR-011 §6 N edited without the constant",
+                     "docs/v27/adr/ADR-011-fund-track-R-and-demote-apply-fixes.md",
+                     r"INFRA \(exit 2, never a pass\): ADR-011 §6 states "
+                     r"N = 26 but MAX_FIRST_PARENT_DEBT is 25",
+                     old="**Decision.** N = 25 counts",
+                     new="**Decision.** N = 26 counts"),
         ]),
     GateTest(
         "check_project_state", [PY, f"{TOOLS}/check_project_state.py"],

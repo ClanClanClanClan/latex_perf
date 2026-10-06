@@ -380,10 +380,13 @@ PDF_VERDICT_SOURCE = {
 
 def _tracked(repo: Path) -> list[str]:
     try:
-        out = subprocess.run(["git", "-C", str(repo), "ls-files"], capture_output=True,
-                             text=True, timeout=60)
-        if out.returncode == 0 and out.stdout.strip():
-            return out.stdout.split("\n")
+        # -z (C-129): without it git C-quotes a non-ASCII path, which then
+        # names no file and escapes every check.
+        out = subprocess.run(["git", "-C", str(repo), "ls-files", "-z"],
+                             capture_output=True, encoding="utf-8",
+                             errors="surrogateescape", timeout=60)
+        if out.returncode == 0 and out.stdout.strip("\0"):
+            return [f for f in out.stdout.split("\0") if f]
     except (OSError, subprocess.TimeoutExpired):
         pass
     return [str(q.relative_to(repo)) for q in repo.rglob("*")

@@ -80,9 +80,11 @@ def version_is_current(token: str, canon: tuple[int, ...]) -> bool:
 def tracked_md_files(repo: Path) -> list[Path]:
     try:
         out = subprocess.run(
-            ["git", "ls-files", "*.md"], cwd=repo, capture_output=True, text=True, check=True
+            ["git", "ls-files", "-z", "*.md"], cwd=repo, capture_output=True,
+            encoding="utf-8", errors="surrogateescape", check=True
         ).stdout
-        rels = [r for r in out.splitlines() if r]
+        # -z (C-129): git C-quotes a non-ASCII path otherwise.
+        rels = [r for r in out.split("\0") if r]
     except (subprocess.CalledProcessError, OSError) as exc:
         # The old fallback rglob'd the worktree, which scans a DIFFERENT set:
         # untracked files, _build artefacts and archives that git ls-files

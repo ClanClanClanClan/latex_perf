@@ -339,11 +339,26 @@ CLI_REFRESH_AFTER = {
     "corpora/oracle_baseline/regrade_open126_sample2.json": "results_sample2.json"}
 
 
+def graded_cell(side: dict, cli_rc) -> str:
+    """The cell a side's OWN values give (C-129): the grader's own cell_of
+    and row_compiles (diff_real_roots.py), never a recorded cell."""
+    from diff_real_roots import cell_of, row_compiles  # noqa: E402
+    if side.get("pdflatex_rc") == -1 or cli_rc == -1:
+        return "ungraded-timeout"
+    return cell_of(row_compiles(side), cli_rc == 0)
+
+
 def evidence_value_findings(load) -> list[str]:
     """Each OPEN-126 diff row agrees with its results doc in every value it
     records (toplevel, cli_rc, cell, passes, both sides' oracle fields), and
     the CLI re-verification's rc for every listed row is the results doc's
-    cli_rc (its recorded rc, where no refresh happened, too)."""
+    cli_rc (its recorded rc, where no refresh happened, too).
+
+    EVERY CELL IS RE-DERIVED (C-129, review round 4): on every side of every
+    row, and on the results doc's row, the recorded cell must be the cell the
+    side's own oracle values and CLI rc give (graded_cell). The moved rows
+    (CLI refreshed) used to be checked on cli_rc alone, so both sides' cells
+    forged to FALSE-READY on 2507.03521v2 passed."""
     out = []
     cv = load(CLI_VERIFY).get("samples") or {}
     refreshed = {}
@@ -361,6 +376,14 @@ def evidence_value_findings(load) -> list[str]:
             if doc is None:
                 continue        # id_set_findings reports it
             bad = []
+            for side in ("before", "after"):
+                sd = r.get(side) or {}
+                if sd.get("cell") != graded_cell(sd, r.get("cli_rc")):
+                    bad.append(f"{side}.cell (vs its own oracle values and "
+                               f"cli_rc)")
+            if doc.get("cell") != graded_cell(doc, doc.get("cli_rc")):
+                bad.append(f"{res_name}'s cell (vs its own oracle values and "
+                           f"cli_rc)")
             if r.get("toplevel") != doc.get("toplevel"):
                 bad.append("toplevel")
             if r.get("passes") != doc.get("pdflatex_passes"):

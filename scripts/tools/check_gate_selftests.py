@@ -605,6 +605,34 @@ def o5_both_sides_forged(text: str) -> str:
     return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
 
 
+def regrade_moved_row_cells_forged(text: str) -> str:
+    """C-129 (review round 4, M2): both sides' cell of a MOVED row (CLI
+    refreshed, so it used to be checked on cli_rc alone) forged to
+    FALSE-READY, with the summary re-derived from the rows."""
+    import json as _json
+    sys.path.insert(0, str(REPO / "scripts" / "tools"))
+    from _results_summary import diff_summary
+    d = _json.loads(text)
+    rows = [r for r in d["rows"] if r["arxiv_id"] == "2507.03521v2"]
+    assert len(rows) == 1, rows
+    rows[0]["before"]["cell"] = rows[0]["after"]["cell"] = "FALSE-READY"
+    d["summary"].update(diff_summary(d["rows"]))
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def fixture_records_x86_oracle(text: str) -> str:
+    """C-129 (review round 4, M1): a tracked fixture JSON given an x86_64
+    oracle block (the pinned image, x86_64's tree fingerprints)."""
+    import json as _json
+    sys.path.insert(0, str(REPO / "scripts" / "tools"))
+    import _oracle
+    d = _json.loads(text)
+    d["oracle"] = {"image": _oracle.workflow_pin()[0], "arch": "x86_64",
+                   "backend": "container", "clock": "real",
+                   **_oracle.TREE_FINGERPRINTS["x86_64"]}
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
 def cli_verify_rc_forged(text: str) -> str:
     """C-128 (m16): a 'reason format only' row given a differing rc, with
     rc_differs re-derived, so every total agrees."""
@@ -1704,6 +1732,31 @@ REGISTRY = [
                      r"starts a TeX engine directly",
                      old="        rc, timed_out = get_oracle().run_once(pathlib.Path(work), top, env, 180)\n",
                      new="        rc, timed_out = subprocess.run([\"pdflatex\", top]).returncode, False\n"),
+            # C-129 (review round 4, M1): `git ls-files` without -z C-quotes
+            # a non-ASCII path, which then escaped classification, discovery
+            # and the engine scan; extensions were matched case-sensitively.
+            Mutation("an x86_64 oracle in a non-ASCII-named tracked JSON",
+                     "scripts/tools/fixtures/oracle_pin/\u00f8rakel.json",
+                     r"fixtures/oracle_pin/\u00f8rakel\.json \[oracle\]: may "
+                     r"record an oracle",
+                     transform=fixture_records_x86_oracle),
+            Mutation("an x86_64 oracle in an uppercase-extension tracked JSON",
+                     "scripts/tools/fixtures/oracle_pin/RECORD.JSON",
+                     r"fixtures/oracle_pin/RECORD\.JSON \[oracle\]: may "
+                     r"record an oracle",
+                     transform=fixture_records_x86_oracle),
+            Mutation("a non-ASCII-named tracked shell file starts pdflatex",
+                     "scripts/tools/fixtures/oracle_pin/gr\u00f8de.sh",
+                     r"fixtures/oracle_pin/gr\u00f8de\.sh:\d+: starts a TeX "
+                     r"engine directly",
+                     old='echo "fixture"\n',
+                     new='pdflatex -interaction=nonstopmode doc.tex\n'),
+            Mutation("a non-JSON data file names a tree-fingerprint key",
+                     "scripts/tools/fixtures/oracle_pin/notes.yaml",
+                     r"notes\.yaml: a non-JSON data file that names the tree "
+                     r"fingerprint key",
+                     old="note: fixture\n",
+                     new="note: fixture\nfmt_sha256: 00\n"),
             # A graded artefact whose oracle block loses the image is a
             # host-graded artefact again.
             Mutation("a graded artefact stops naming the pinned image",
@@ -2830,6 +2883,14 @@ REGISTRY = [
                      r"o5_forced_clock_sample1\.json: row \S+ records "
                      r"\['before\.first_error', 'after\.first_error'\]",
                      transform=o5_both_sides_forged),
+            # C-129 (review round 4, M2): every cell re-derived from its own
+            # side's values, on the moved rows too.
+            Mutation("a moved row's both cells forged, summary re-derived",
+                     "corpora/oracle_baseline/regrade_open126_sample2.json",
+                     r"regrade_open126_sample2\.json: row 2507\.03521v2 records "
+                     r"\['before\.cell \(vs its own oracle values and cli_rc\)', "
+                     r"'after\.cell",
+                     transform=regrade_moved_row_cells_forged),
             Mutation("a CLI re-verification rc forged, totals re-derived",
                      "corpora/oracle_baseline/cli_verify_fe673dc1.json",
                      r"cli_verify_fe673dc1\.json \[results_sample2\.json\]: \S+ "

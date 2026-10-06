@@ -239,34 +239,13 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
   adopting `FORCE_SOURCE_DATE` alone now would be one oracle-baseline change, and fixing the rest
   of the run-dependent inputs later a second; and the H.1 pass criterion was met only with the
   clock fixed (§ H.1 result).
-  *What this means for the implementation (derived, not separate decisions):*
-  - The change is ONE oracle-baseline change. It is made by a **follow-up track** (E7's
-    measurement entry point plus the fixed clock), not by OPEN-126's branch. Until it lands,
-    `_oracle.PROTOCOL_CLOCK` stays `real`, and nothing on `main` fixes the clock in grading.
-  - "Every run-dependent input" is a class, not a list. The follow-up must enumerate the class
-    from the engine (C-102/C-103: a census of one member is not a census of the class), and not
-    stop at the names R-CLOCK lists today.
-  - `gen_contract.py` today finds the kernel's date-dependent names by comparing a real-clock run
-    with a forced-date run (review defect R1.3), and `check_gen_contract_parsers.py` asserts that
-    the grading environment does not force the date. Under E10 both are replaced: the names are
-    found by running under two or more DIFFERENT fixed clocks. Every contract and the L_S0
-    signature file are regenerated.
-  - Every graded artefact and fixture set is re-graded under the fixed clock: the set is
-    `check_oracle_pin.GRADED` (18 artefacts on 2026-10-05, among them the L_S0 signature file and
-    bytes evidence) plus the contracts (the `corpora/contracts` rows of
-    `check_oracle_pin.ORACLE_RECORDS`). The gate classifies every tracked JSON file and checks
-    every registered location whatever its block records, and discovers blocks elsewhere, so a
-    block left out of both lists fails it (C-127, C-128); and once `PROTOCOL_CLOCK` changes, it fails
-    every GRADED block that does not record the new clock. Contracts record no clock, so the
-    gate cannot see whether one was regenerated under it. Only the 600 sample rows have been measured under a forced date so far.
-  - *Author's note, not an owner decision:* that change edits `_oracle.py`, which is grading code
-    (a behavioural edit voids every recorded grade until it is re-graded, OPEN-126 (b)), so it
-    also carries the two `_oracle.py` fixes that review round 2 of OPEN-126 found and that this
-    branch deliberately did not make: `require_same_oracle` compares image, architecture and
-    tree but not the CLOCK, and `diff_real_roots.oracle_skew` reads a block with no clock as
-    `PROTOCOL_CLOCK`. Until then `check_oracle_pin` keeps both unreachable for published grades:
-    a GRADED block must record the protocol clock, or record none only while it is in
-    `GRADING_CODE_PENDING` and the protocol clock is the real one.
+  *What this means for the implementation (derived, not separate decisions):* the change is ONE
+  oracle-baseline change, made by a follow-up track, not by OPEN-126's branch; until it lands
+  `_oracle.PROTOCOL_CLOCK` stays `real` and nothing on `main` fixes the clock in grading. Its
+  whole scope (the class census, E7's measurement entry point, the clock in the oracle's identity,
+  run-start stamping, the `_oracle.py` comments, varying the fixed clock in `gen_contract.py`, the
+  re-grade and regeneration, the `GRADING_CODE_PENDING` producers, CI's tmpfs) is ONE ledger row,
+  **OPEN-128** in `docs/v27/PROJECT_STATE.md`, and is not restated here.
 
 ## Consequences
 

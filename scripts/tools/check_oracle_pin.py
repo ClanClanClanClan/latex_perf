@@ -153,6 +153,7 @@ Run: python3 scripts/tools/check_oracle_pin.py --repo .
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import re
 import sys
@@ -214,7 +215,7 @@ GRADED = (
 # longer a "block", so it was checked by nothing, and the row still matched
 # the other files. Now EVERY tracked file a row's glob matches must hold a
 # dict at the row's key path, and that dict is checked whatever it records;
-# every tracked JSON file must be classified by TRACKED_JSON_CLASSES below;
+# every tracked data file must be classified (NO_ORACLE below, C-129);
 # and the discovery is only a second net for blocks at unregistered paths.
 ORACLE_RECORDS = (
     ("corpora/contracts/*.json", ("pin",), None, None,
@@ -253,7 +254,8 @@ GRADERS = {
     "corpora/real_roots/manifest_sample3.json": ("scripts/tools/diff_real_roots.py",),
 }
 
-# EVERY TRACKED JSON FILE IS CLASSIFIED (C-128). A file is a GRADED artefact,
+# EVERY TRACKED DATA FILE IS CLASSIFIED (C-128; data files, not only JSON,
+# since C-129: see is_data_file). A file is a GRADED artefact,
 # matches an ORACLE_RECORDS row, is PRE_BASELINE, or is listed here as
 # recording NO oracle block, with the reason; an unclassified file fails, and
 # so does a file in two classes. Under corpora/ each file is named exactly
@@ -285,6 +287,14 @@ NO_ORACLE = (
     ("corpora/real_roots/strict_boundary_sample3.json",
      "strict-tier boundary of sample 3 (CLI only); no TeX engine"),
     (".github/*.json", "CI configuration"),
+    # Non-JSON data files (C-129): configuration and specifications.
+    (".github/actions/**", "CI composite actions"),
+    (".github/workflows/*", "CI workflows (their engine starts are "
+     "checked by the engine-start scan below)"),
+    (".pre-commit-config.yaml", "pre-commit configuration"),
+    ("docs/SUPPORT_MATRIX.yaml", "the support matrix"),
+    ("governance/**", "governance facts"),
+    ("mkdocs.yml", "documentation site configuration"),
     ("core/**", "engine source data (catalogues, baselines)"),
     ("data/**", "ML data"),
     ("generated/**", "generated project facts"),
@@ -1571,12 +1581,37 @@ def scan_ocaml(text: str) -> list[tuple[int, str]]:
 
 
 def tracked_files(repo: Path) -> list[str]:
+    """Every tracked path, VERBATIM. `-z` (C-129): without it git C-quotes a
+    path holding a non-ASCII byte (`"corpora/r\\303\\251sultats.json"`), and
+    a quoted name neither ends in `.json` nor names a real file, so it escaped
+    the classification, the discovery and the engine-start scan alike."""
     import subprocess
-    r = subprocess.run(["git", "-C", str(repo), "ls-files"], capture_output=True,
-                       text=True)
+    r = subprocess.run(["git", "-C", str(repo), "ls-files", "-z"],
+                       capture_output=True, encoding="utf-8",
+                       errors="surrogateescape")
     if r.returncode != 0:
         raise RuntimeError(f"git ls-files failed: {r.stderr.strip()}")
-    return r.stdout.split("\n")
+    return [f for f in r.stdout.split("\0") if f]
+
+
+#: THE DATA FILES (C-129). A tracked file is a data file when its name,
+#: LOWERCASED, ends in one of these. Every data file must be classified
+#: (GRADED, ORACLE_RECORDS, PRE_BASELINE or NO_ORACLE); an unclassified one
+#: fails. The JSON family is parsed (`.json.gz` decompressed) and searched for
+#: oracle blocks. The others are not an oracle-record format (every producer
+#: writes JSON through _oracle.py), so they may only be NO_ORACLE, and a text
+#: that names a tree-fingerprint key fails. The match was case-sensitive and
+#: JSON-only until review round 4: `results.JSON` escaped everything.
+JSON_DATA_EXT = (".json", ".jsonl", ".json.gz")
+OTHER_DATA_EXT = (".yaml", ".yml", ".csv", ".tsv")
+
+
+def is_data_file(rel: str) -> bool:
+    return rel.lower().endswith(JSON_DATA_EXT + OTHER_DATA_EXT)
+
+
+def is_json_data(rel: str) -> bool:
+    return rel.lower().endswith(JSON_DATA_EXT)
 
 
 def dig(d, path):
@@ -1674,16 +1709,21 @@ def tracked_json_blocks(repo: Path) -> tuple[list, list[str], dict]:
     parsed (an unparsed file could hide a block), and {rel: parsed doc}."""
     found, bad, docs = [], [], {}
     for rel in sorted(tracked_files(repo)):
-        if not rel.endswith((".json", ".jsonl")):
+        if not is_json_data(rel):
             continue
         p = repo / rel
         if not p.is_file():
             continue
+        low = rel.lower()
         try:
-            text = p.read_text(encoding="utf-8")
+            raw = p.read_bytes()
+            if low.endswith(".gz"):
+                raw = gzip.decompress(raw)
+            text = raw.decode("utf-8")
             doc = ([json.loads(ln) for ln in text.split("\n") if ln.strip()]
-                   if rel.endswith(".jsonl") else json.loads(text))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+                   if low.endswith(".jsonl") else json.loads(text))
+        except (OSError, EOFError, gzip.BadGzipFile, UnicodeDecodeError,
+                json.JSONDecodeError) as e:
             bad.append(f"{rel}: a tracked JSON file this gate cannot parse "
                        f"({e}); it could hide an oracle block")
             continue
@@ -1948,8 +1988,10 @@ def main() -> int:
                         f"pinned at {NOT_THE_ORACLE_SIZE}; a new one needs a "
                         f"ledger row and a deliberate edit here")
     graded_keys = {(p, tuple(k)) for p, k in GRADED}
-    # (1) classification of every tracked JSON file
-    for rel in sorted(set(docs) | {u.split(":", 1)[0] for u in unparsed}):
+    # (1) classification of every tracked DATA file (is_data_file, C-129)
+    data_files = sorted(r for r in tracked_files(repo)
+                        if is_data_file(r) and (repo / r).is_file())
+    for rel in data_files:
         classes = []
         if rel in graded_paths:
             classes.append("GRADED")
@@ -1961,12 +2003,30 @@ def main() -> int:
             classes.append("NO_ORACLE")
         if not classes:
             findings.append(
-                f"{rel}: a tracked JSON file this gate does not classify. "
+                f"{rel}: a tracked data file this gate does not classify. "
                 f"Register it in GRADED (a grade), ORACLE_RECORDS (a record "
-                f"of one), PRE_BASELINE or NO_ORACLE, with its reason (C-128)")
+                f"of one), PRE_BASELINE or NO_ORACLE, with its reason (C-128, "
+                f"C-129)")
         elif len(classes) > 1:
             findings.append(f"{rel}: classified twice ({classes}); a file has "
                             f"exactly one class (C-128)")
+        if not is_json_data(rel):
+            if classes and classes != ["NO_ORACLE"]:
+                findings.append(
+                    f"{rel}: classified {classes}, but an oracle record is "
+                    f"JSON; a non-JSON data file may only be NO_ORACLE (C-129)")
+            try:
+                text = (repo / rel).read_text(encoding="utf-8",
+                                              errors="replace")
+            except OSError as e:
+                findings.append(f"{rel}: unreadable ({e}) (C-129)")
+                continue
+            named = [k for k in FINGERPRINT_KEYS if k in text]
+            if named:
+                findings.append(
+                    f"{rel}: a non-JSON data file that names the tree "
+                    f"fingerprint key(s) {named}; an oracle record must be "
+                    f"JSON, where this gate can check it (C-129)")
     # (2) every ORACLE_RECORDS location, by location
     record_hits = [0] * len(ORACLE_RECORDS)
     record_keys = set()
@@ -2053,15 +2113,32 @@ def main() -> int:
             findings.append(f"ORACLE_RECORDS row {pat} [{'.'.join(kp)}] "
                             f"({why}) matches no file; prune it")
     for pat, why in NO_ORACLE:
-        if not any(_seg_glob(pat, rel) for rel in docs):
+        if not any(_seg_glob(pat, rel) for rel in data_files):
             findings.append(f"NO_ORACLE row {pat} ({why}) matches no tracked "
-                            f"JSON file; prune it")
+                            f"data file; prune it")
     for rel in sorted(PRE_BASELINE):
         f = repo / rel
         if not f.is_file():
             findings.append(f"{rel}: listed in PRE_BASELINE but missing")
             continue
-        if f'"image": "{image}"' in f.read_text():
+        # PARSED, not a JSON literal (C-129): `"image":"<pin>"` with other
+        # spacing, or the image in any nested block, is found too.
+        pdoc = docs.get(rel)
+        if pdoc is None:
+            findings.append(f"{rel}: listed in PRE_BASELINE but not a parsed "
+                            f"tracked JSON file")
+            continue
+
+        def _images(d):
+            if isinstance(d, dict):
+                for k, v in d.items():
+                    if k == "image" and isinstance(v, str):
+                        yield v
+                    yield from _images(v)
+            elif isinstance(d, list):
+                for v in d:
+                    yield from _images(v)
+        if image in set(_images(pdoc)):
             findings.append(f"{rel} now records the pinned image but is still in "
                             f"PRE_BASELINE; move it to GRADED")
 
@@ -2072,17 +2149,19 @@ def main() -> int:
             continue
         p = repo / rel
         name = p.name
-        if rel.endswith(".py"):
+        # Extensions are matched LOWERCASED (C-129): `x.SH` runs as well.
+        low = rel.lower()
+        if low.endswith(".py"):
             scan = scan_python
-        elif rel.endswith(".mk") or name in ("Makefile", "GNUmakefile", "makefile"):
+        elif low.endswith(".mk") or name in ("Makefile", "GNUmakefile", "makefile"):
             scan = (lambda t: scan_shell(t, make=True))
-        elif rel.endswith((".sh", ".bash", ".zsh", ".ksh", ".command")):
+        elif low.endswith((".sh", ".bash", ".zsh", ".ksh", ".command")):
             scan = scan_shell
-        elif rel.endswith(OTHER_CODE_EXT):
+        elif low.endswith(OTHER_CODE_EXT):
             scan = scan_other
-        elif rel.endswith(".ml"):
+        elif low.endswith(".ml"):
             scan = scan_ocaml
-        elif rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")):
+        elif rel.startswith(".github/workflows/") and low.endswith((".yml", ".yaml")):
             allow = WORKFLOW_ALLOW.get(rel, ())
             scan = (lambda t, a=allow: scan_shell(t, a, yaml=True))
         elif _command_file_kind(rel) is not None:
@@ -2121,7 +2200,7 @@ def main() -> int:
           f"files, every one at a registered location ({len(seen_graded)} "
           f"GRADED, {n_records} ORACLE_RECORDS, {len(seen_exempt)} not the "
           f"oracle, {len(blocks) - len(seen_graded) - n_records - len(seen_exempt)} "
-          f"not oracle blocks); {len(docs)} tracked JSON files classified; "
+          f"not oracle blocks); {len(data_files)} tracked data files classified ({len(docs)} JSON); "
           f"{sum(record_hits)} ORACLE_RECORDS locations checked by location; {len(GRADED)} graded artefacts name {image} with "
           f"its tree fingerprints, all on {record}; "
           f"{len(GRADED) - len(GRADING_CODE_PENDING)} name their current "

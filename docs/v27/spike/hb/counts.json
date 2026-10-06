@@ -1,0 +1,246 @@
+{
+ "avlfindobj": [
+  1,
+  0
+ ],
+ "avlputobj": [
+  3,
+  10
+ ],
+ "checkimageb": [
+  0,
+  1
+ ],
+ "checkimagec": [
+  0,
+  1
+ ],
+ "checkimagei": [
+  0,
+  1
+ ],
+ "close_file_or_pipe": [
+  3,
+  5
+ ],
+ "colorstackskippagestart": [
+  0,
+  1
+ ],
+ "colorstackused": [
+  0,
+  1
+ ],
+ "do_undump": [
+  41461,
+  0
+ ],
+ "dopdffont": [
+  0,
+  1
+ ],
+ "flushjbig2page0objects": [
+  0,
+  1
+ ],
+ "get_date_and_time": [
+  1,
+  0
+ ],
+ "get_seconds_and_micros": [
+  1,
+  0
+ ],
+ "getcreationdate": [
+  1,
+  0
+ ],
+ "getfilesize": [
+  6,
+  0
+ ],
+ "getjobname": [
+  1,
+  0
+ ],
+ "gzclose": [
+  1,
+  0
+ ],
+ "gzdopen": [
+  1,
+  0
+ ],
+ "hasspacechar": [
+  0,
+  1
+ ],
+ "initstarttime": [
+  2,
+  3
+ ],
+ "input_line": [
+  1829,
+  3
+ ],
+ "isscalable": [
+  0,
+  9
+ ],
+ "kpse_in_name_ok": [
+  10,
+  1
+ ],
+ "kpse_init_prog": [
+  1,
+  0
+ ],
+ "kpse_out_name_ok": [
+  1,
+  0
+ ],
+ "libpdffinish": [
+  0,
+  1
+ ],
+ "makefullnamestring": [
+  4,
+  1
+ ],
+ "makepdftexbanner": [
+  1,
+  0
+ ],
+ "makepdftime": [
+  1,
+  0
+ ],
+ "open_in_or_pipe": [
+  4,
+  1
+ ],
+ "open_input": [
+  5,
+  3
+ ],
+ "open_out_or_pipe": [
+  2,
+  0
+ ],
+ "pdfinitmapfile": [
+  1,
+  0
+ ],
+ "pdfshipoutbegin": [
+  0,
+  1
+ ],
+ "pdfshipoutend": [
+  0,
+  1
+ ],
+ "printID": [
+  0,
+  1
+ ],
+ "printcreationdate": [
+  0,
+  1
+ ],
+ "printmoddate": [
+  0,
+  1
+ ],
+ "recorder_change_filename": [
+  1,
+  0
+ ],
+ "setjobid": [
+  1,
+  0
+ ],
+ "setupboundvariable": [
+  26,
+  0
+ ],
+ "synctexcurrent": [
+  0,
+  2
+ ],
+ "synctexhlist": [
+  0,
+  4
+ ],
+ "synctexhorizontalruleorglue": [
+  0,
+  4
+ ],
+ "synctexsheet": [
+  1,
+  0
+ ],
+ "synctexstartinput": [
+  4,
+  1
+ ],
+ "synctexteehs": [
+  0,
+  1
+ ],
+ "synctexterminate": [
+  0,
+  1
+ ],
+ "synctextsilh": [
+  0,
+  4
+ ],
+ "synctextsilv": [
+  0,
+  4
+ ],
+ "synctexvlist": [
+  0,
+  4
+ ],
+ "synctexvoidhlist": [
+  0,
+  2
+ ],
+ "texmf_yesno": [
+  3,
+  0
+ ],
+ "topenin": [
+  1,
+  0
+ ],
+ "uexit": [
+  0,
+  1
+ ],
+ "undumpimagemeta": [
+  1,
+  0
+ ],
+ "undumptounicode": [
+  1,
+  0
+ ],
+ "writefontstuff": [
+  0,
+  1
+ ],
+ "writestreamlength": [
+  0,
+  5
+ ],
+ "writezip": [
+  0,
+  5
+ ],
+ "zround": [
+  0,
+  13
+ ]
+}

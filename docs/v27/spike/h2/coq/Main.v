@@ -71,8 +71,9 @@ Definition initial_heap (u : unit) : array block * Z :=
 
 Definition initial_state (x : io) : state :=
   let (h, next) := initial_heap tt in
-  (* C main's writes, measured (CMain.v) *)
-  cmain (mkst h next frame_base frame_base x).
+  (* C main's writes: measured for `pdftex -ini` (CMain.v), then those that depend on the
+     command line, modelled (Boundary.cmain_model) *)
+  cmain_model (cmain (mkst h next frame_base frame_base x)).
 
 Definition run (fuel : nat) (x : io) : eres :=
   callp procs_array nglobals ext fuel P_mainbody [] (initial_state x).

@@ -1,5 +1,6 @@
 # The run identity every differential input shares (diff.py, driver.ml SPEC).
 # The command line C main was measured with (evidence/cmain/).
+argv0 pdftex
 argv -ini
 # The environment variables the modelled externals read (Boundary.v environment audit).
 env SOURCE_DATE_EPOCH=1788076260

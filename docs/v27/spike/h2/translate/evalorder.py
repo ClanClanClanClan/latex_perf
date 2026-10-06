@@ -79,6 +79,11 @@ EXT_EFFECTS = {
     # cpascal.h: a string literal; printcstring calls printchar on each byte of its argument
     "promptfilenamehelpmsg": ((), (), (), (), ()),
     "printcstring": ((), (), ("*",), (), ("printchar",)),
+    # checkpoint 3: getfilesize reads its string (strstart, strpool) and nameoffile is not
+    # touched (it searches by a C string); it appends to the pool
+    "removepdffile": (("outputfilename", "fixedpdfdraftmode"), (), (), (), ()),
+    "synctexabort": ((), (), (), (), ()),
+    "getfilesize": (("strstart", "strpool", "poolptr", "poolsize"), ("poolptr",), ("strstart", "strpool"), ("strpool",), ()),
 }
 
 

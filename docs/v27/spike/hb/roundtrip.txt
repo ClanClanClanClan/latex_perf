@@ -1,0 +1,9 @@
+# H.3 round trip (pdftex -ini, terminal '&pdflatex \dump') re-run on the boundary step's final build
+ps.exe 735450994e4bf5eb4ef1c6c08c2f1d05b19c490ff384566c8f238801d2cfc48b
+spec sha256 fd49b187b691cf45df1f2742ac801ebcfe62f57dbd1451c642facddf449c6788 (h3/evidence/roundtrip/model.spec.template converted: kpsefind removed; base.spec's kpse, kfmt, TeX-tree snapshot, argv0, cwd /w with an empty listing, the format's fsexists)
+capped.sh 4000 MB: finished rc 0 peak 2196MB in 717s
+--- clock readings used: 2 of 8
+RESULT: exit 0
+stdout 52a3069d258eeab7c3bcf7b6bd2f493505046e9e19ae8864bd2a0d83def728e2  (binary ref-arm64.stdout: 52a3069d258eeab7c3bcf7b6bd2f493505046e9e19ae8864bd2a0d83def728e2)
+texput.log ff8088c16d99d4cc131da19e370ca73a84b88328400de075d91bb927cf811d45  (binary: ff8088c16d99d4cc131da19e370ca73a84b88328400de075d91bb927cf811d45)
+texput.fmt stream 55629ae0caf61d68710bf29b91fe8729de2a846823c30c4667f86cc2d0f46db8,  11621681 bytes (binary gunzipped: 55629ae0caf61d68710bf29b91fe8729de2a846823c30c4667f86cc2d0f46db8)

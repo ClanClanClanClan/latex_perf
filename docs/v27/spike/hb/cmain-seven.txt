@@ -1,0 +1,43 @@
+# gdb at mainbody (dump3.py, cmain-run.sh): what differs from `pdftex -ini`, per command line
+== graded /tmp/b/pdflatex -interaction=nonstopmode -halt-on-error doc.tex
+   TEXformatdefault ' pdftex.fmt' -> ' pdflatex.fmt'
+   formatdefaultlength 10 -> 12
+   haltonerrorp 0 -> 1
+   iniversion 1 -> 0
+   interactionoption 4 -> 1
+  static 'texmfmp.c'::argc 2 -> 4
+  static dump_name 'pdftex' -> 'pdflatex'
+  static kpse_def->invocation_name '/tmp/b/pdftex' -> '/tmp/b/pdflatex'
+  static kpse_def->program_name 'pdftex' -> 'pdflatex'
+  static optind 2 -> 3
+== graded2 /tmp/b/pdflatex -interaction=batchmode -file-line-error -draftmode doc.tex
+   TEXformatdefault ' pdftex.fmt' -> ' pdflatex.fmt'
+   filelineerrorstylep 0 -> 1
+   formatdefaultlength 10 -> 12
+   iniversion 1 -> 0
+   interactionoption 4 -> 0
+   pdfdraftmodeoption 0 -> 1
+   pdfdraftmodevalue 0 -> 1
+  static 'texmfmp.c'::argc 2 -> 5
+  static dump_name 'pdftex' -> 'pdflatex'
+  static kpse_def->invocation_name '/tmp/b/pdftex' -> '/tmp/b/pdflatex'
+  static kpse_def->program_name 'pdftex' -> 'pdflatex'
+  static optind 2 -> 4
+== jobname /tmp/b/pdftex -ini -jobname=foo
+  static 'texmfmp.c'::argc 2 -> 3
+  static 'texmfmp.c'::c_job_name '0000000000000000' -> 'foo'
+  static optind 2 -> 3
+== etex /tmp/b/pdftex -ini -etex
+   etexp 0 -> 1
+  static 'texmfmp.c'::argc 2 -> 3
+  static optind 2 -> 3
+== iniamp /tmp/b/pdftex -ini &pdflatex doc.tex
+  static 'texmfmp.c'::argc 2 -> 4
+== progname /tmp/b/pdftex -ini -progname=pdflatex
+   TEXformatdefault ' pdftex.fmt' -> ' pdflatex.fmt'
+   formatdefaultlength 10 -> 12
+  static 'texmfmp.c'::argc 2 -> 3
+  static 'texmfmp.c'::user_progname '0000000000000000' -> '99eef8f1ffff0000'
+  static dump_name 'pdftex' -> 'pdflatex'
+  static kpse_def->program_name 'pdftex' -> 'pdflatex'
+  static optind 2 -> 3

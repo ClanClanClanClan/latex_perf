@@ -159,6 +159,7 @@ Definition frame_base : Z := 524288.
 Record io : Type := mkio {
   io_out : list (Z * list Z);            (* per file handle: bytes written, most recent first *)
   io_stdin : list Z;                     (* the bytes of stdin not yet read *)
+  io_argv0 : list Z;                     (* argv[0], the program name as invoked *)
   io_argv : list (list Z);               (* the command line after the program name *)
   io_char_signed : bool;                 (* plain char: signed (x86_64) or unsigned (aarch64) *)
   io_files : list (Z * list Z);          (* files this run opened for writing: handle, the name
@@ -193,21 +194,21 @@ Record io : Type := mkio {
 
 (* functional updates of one field of io (positional mkio calls are error-prone) *)
 Definition io_set_out (x : io) (o : list (Z * list Z)) : io :=
-  mkio o (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio o (io_stdin x) (io_argv0 x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_stdin (x : io) (b : list Z) : io :=
-  mkio (io_out x) b (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) b (io_argv0 x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_files (x : io) (fs : list (Z * list Z)) (nh : Z) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) fs nh (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv0 x) (io_argv x) (io_char_signed x) fs nh (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_in (x : io) (i : list (Z * list Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) i (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv0 x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) i (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_eof (x : io) (e : list Z) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) e (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv0 x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) e (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_clock (x : io) (c : list (Z * Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) c (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv0 x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) c (io_cstate x).
 Definition io_set_cstate (x : io) (c : list (Z * Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) c.
+  mkio (io_out x) (io_stdin x) (io_argv0 x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) c.
 Definition io_set_kp (x : io) (k : kpst) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) k (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv0 x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) k (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 
 Record state : Type := mkst {
   heap : array block; hp : Z; fp : Z; fsp : Z; st_io : io }.

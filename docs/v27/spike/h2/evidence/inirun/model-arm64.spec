@@ -1,3 +1,4 @@
+argv0 pdftex
 argv -ini
 env SOURCE_DATE_EPOCH=1788076260
 env FORCE_SOURCE_DATE=1

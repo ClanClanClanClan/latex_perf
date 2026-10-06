@@ -77,7 +77,16 @@ ARCH = [None]     # the architecture being prepared
 
 def resolve_blob(k, r, work):
     """fsfile PATH=@sha256:HEX: the bytes measured in the image (snapshot.py), kept in
-    WORK/blobs/HEX; fetched from the image again (and checked) when missing"""
+    WORK/blobs/HEX; fetched from the image again (and checked) when missing. gzfile
+    PATH=@sha256:HEX: the decompressed stream of the image's PATH (decompression is outside
+    the model, TB-7), which must already be in WORK/blobs/HEX (h3/README.md: gunzip of the
+    file kpsewhich names)"""
+    if k == "gzfile" and "=@sha256:" in r:
+        pth, h = r.split("=@sha256:", 1)
+        b = work / "blobs" / h
+        if not b.exists() or sha(b.read_bytes()) != h:
+            sys.exit(f"{b}: the decompressed stream of {pth} is missing or not the recorded bytes")
+        return (k, f"{pth}={b}")
     if k != "fsfile" or "=@sha256:" not in r:
         return (k, r)
     pth, h = r.split("=@sha256:", 1)
@@ -109,6 +118,10 @@ def prepare(arch, work):
             ex = parse_spec(extra.read_text())
             if any(k == "clock" for k, _ in ex):
                 spec = [(k, r) for k, r in spec if k != "clock"]
+            # checkpoint 3: a command line of its own (argv0 and every argv line replace base's)
+            for key in ("argv0", "argv"):
+                if any(k == key for k, _ in ex):
+                    spec = [(k, r) for k, r in spec if k != key]
             for k, r in ex:
                 if k in ("env", "kpse"):
                     nm = r.split("=", 1)[0]
@@ -119,7 +132,11 @@ def prepare(arch, work):
                     spec.append((k, r))
                 elif k == "unenv":
                     spec = [(k2, r2) for k2, r2 in spec if not (k2 == "env" and r2.split("=", 1)[0] == r)]
-                elif k == "clock":
+                elif k in ("clock", "argv0", "argv", "gzfile"):
+                    spec.append((k, r))
+                elif k == "kfmt":
+                    f = r.split(" ", 1)[0]
+                    spec = [(k2, r2) for k2, r2 in spec if not (k2 == "kfmt" and r2.split(" ", 1)[0] == f)]
                     spec.append((k, r))
                 elif k in FS_KEYS:
                     pth = r.split("=", 1)[0]
@@ -140,6 +157,10 @@ def prepare(arch, work):
             (d0 / f).write_bytes((fdir / f).read_bytes())
             spec.append(("fsfile", f"{cwd}/{f}={d0 / f}"))
         spec = [resolve_blob(k, r, work) for k, r in spec]
+        # the command line for the binary side (run_bin_argv.zsh): argv0, then each argument
+        (work / n).mkdir(parents=True, exist_ok=True)
+        (work / n / "argv.txt").write_text("".join(r + "\n" for k, r in spec if k == "argv0")
+                                           + "".join(r + "\n" for k, r in spec if k == "argv"))
         spec.append(("charsigned", "1" if arch == "amd64" else "0"))
         d = work / n
         d.mkdir(exist_ok=True)

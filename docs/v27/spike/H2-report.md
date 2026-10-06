@@ -432,7 +432,7 @@ on it:
 - **the translation**: 603 of 603 procedures, 185,086 IR nodes, 188 distinct externals
   (unchanged). 45,756 unsequenced pairs checked, 19 of them Stuck (B2: 25): the noreturn
   refinement removes 7, and the new externals add 1;
-- **the boundary**: 58 of the 188 externals are modelled, so 130 of 188 externals are Stuck;
+- **the boundary**: 61 of the 188 externals are modelled, so 127 of 188 externals are Stuck;
 - **the build** (load LOADS): BUILDLINES;
 - **the INITEX run** (`evidence/inirun/`): the spec gains the working directory (`cwd /w`,
   an empty listing). The model's terminal output, standard error and `texput.log` are

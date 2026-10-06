@@ -49,7 +49,7 @@
    setlocale, so C's applies). *)
 
 From Coq Require Import ZArith List Bool String Ascii PArray Uint63 Sint63 Floats.
-From PS Require Import Syntax Values Interp ProgGlobals PoolData Kpse.
+From PS Require Import Syntax KTypes Values Interp ProgGlobals PoolData Kpse.
 Import ListNotations.
 Local Open Scope Z_scope.
 
@@ -286,16 +286,14 @@ Definition put_int_at (st : state) (a : xarg) (z : Z) : option state :=
 (* the first heap block id after the globals and the string literals *)
 Definition nglobals_strings_end : Z := Z.of_nat (List.length globals + List.length strings).
 
-(* The command line C main was measured with (CMain.v, evidence/cmain/): `pdftex -ini`.
-   C main's writes, and the externals below that consult the parsed options (topenin's
-   optind, getjobname's c_job_name, recorderchangefilename's recorder_enabled,
-   open_output's output_directory, synctex's option), are modelled for that command line
-   only; any other command line is Stuck at the first of them. *)
-Definition argv_measured (st : state) : bool :=
-  match io_argv (st_io st) with
-  | [a] => if list_eq_dec Z.eq_dec a (bytes_of_string "-ini") then true else false
-  | _ => false
-  end.
+(* C main is modelled for the run's command line (checkpoint 3, cmain_model below; H.2
+   measured `pdftex -ini` only, CMain.v): the externals that consult C main's parsed options
+   (topenin's arguments, getjobname's c_job_name, the recorder, open_input's and
+   open_output's output directory, kpse_out_name_ok's invocation name) are modelled for every
+   command line cmain_model accepts; on any other, C main itself is not modelled and every
+   external is Stuck (ext, first test) *)
+Definition CS_cmain : Z := 15.          (* 0: C main is modelled for this run; else a block holding why not *)
+Definition argv_measured (st : state) : bool := cstate st CS_cmain =? 0.
 
 (* texmfmp.c init_start_time: once (start_time_set). SOURCE_DATE_EPOCH set: strtoull,
    FATAL (an error message, exit 1) when *endptr != '\0' or errno != 0 (not modelled:
@@ -708,6 +706,7 @@ Definition xfile (st : state) (a : xarg) : option val :=
    (zeqtb[synctexoffset].cint) = 0 it returns NULL and nothing happens; non-zero opens the
    .synctex file: Stuck *)
 Definition CS_synctex_tag_counter : Z := 13.
+Definition CS_synctex_off : Z := 18.      (* synctex.c synctex_ctxt.flags.off (SYNCTEX_IS_OFF) *)
 Definition curinput_synctextag : loc := mkloc G_curinput 6 None.
 Definition synctex_value (st : state) : option Z :=
   match gint st G_synctexoffset, gptr st G_zeqtb with
@@ -818,8 +817,231 @@ Fixpoint print_bytes (callp : Z -> list cell -> state -> eres) (bs : list Z) (st
 
 Definition CS_promptmsg : Z := 14.   (* the block holding cpascal.h's promptfilenamehelpmsg *)
 
+(* ================================================================ boundary step, checkpoint 3: C main
+
+   What TeX Live's C main (texmfmp.c main, maininit, parse_options, get_input_file_name,
+   parse_first_line, init_shell_escape) writes before mainbody that depends on the command
+   line, modelled for the options of the oracle's allow-lists (_oracle.py: a graded run's
+   -interaction=MODE, -halt-on-error, -file-line-error, -draftmode and one file; run_engine's
+   -ini, -etex, -jobname=NAME, -progname=pdflatex). The rest of C main's writes are the gdb
+   measurement (CMain.v, `pdftex -ini`), which does not depend on the command line within this
+   class: checked by measuring seven command lines (H-boundary-report.md, checkpoint 3), whose
+   differences from `pdftex -ini` are exactly the globals written here.
+
+   Not modelled (C main Stuck: the first external call of mainbody, setupboundvariable,
+   reports it, and nothing observable happens before that call): any other option or an
+   option form getopt_long_only would accept besides -NAME, --NAME, -NAME=VALUE,
+   --NAME=VALUE (abbreviations, "--", the value in the next word); -recorder (a .fls file);
+   -translate-file (a TCX file); a program name other than pdftex or pdflatex (iniversion and
+   virtex by name); a warning C main writes on stderr (an unknown -interaction value, -etex
+   without -ini, an unbalanced quote); a main input file name with a space or a quote
+   (normalize_quotes); a main input file whose first line starts with "%&" (parse_first_line
+   would read a format name or a TCX file); output_comment set. *)
+
+Definition CS_jobname : Z := 16.        (* texmfmp.c c_job_name: 0 NULL, else a block (the bytes, NUL) *)
+Definition CS_topenin_done : Z := 17.   (* topenin's `argc = 0`: the arguments were copied once *)
+
+Record copts : Type := mkcopts {
+  co_ini : bool; co_etex : bool; co_inter : Z; co_halt : bool; co_fle : bool; co_draft : bool;
+  co_job : option (list Z); co_prog : option (list Z); co_rest : list (list Z) }.
+
+Definition copts0 : copts := mkcopts false false 4 false false false None None [].
+
+Fixpoint split_eq (l acc : list Z) : list Z * option (list Z) :=
+  match l with
+  | [] => (rev' acc, None)
+  | c :: r => if c =? 61 then (rev' acc, Some r) else split_eq r (c :: acc)
+  end.
+
+Definition is_none {A} (o : option A) : bool := match o with None => true | Some _ => false end.
+
+(* parse_options: getopt_long_only with "+" (stop at the first non-option) *)
+Fixpoint parse_opts (args : list (list Z)) (o : copts) : kr copts :=
+  match args with
+  | [] => KOk o
+  | a :: r =>
+    if negb (hdq C_MINUS a) || beq a [C_MINUS] then
+      KOk (mkcopts (co_ini o) (co_etex o) (co_inter o) (co_halt o) (co_fle o) (co_draft o) (co_job o) (co_prog o) args)
+    else
+    let body := if hdq C_MINUS (tl a) then tl (tl a) else tl a in
+    let '(nm, v) := split_eq body [] in
+    let flag := is_none v in
+    if beq nm (zs "ini") && flag then
+      parse_opts r (mkcopts true (co_etex o) (co_inter o) (co_halt o) (co_fle o) (co_draft o) (co_job o) (co_prog o) [])
+    else if beq nm (zs "etex") && flag then
+      parse_opts r (mkcopts (co_ini o) true (co_inter o) (co_halt o) (co_fle o) (co_draft o) (co_job o) (co_prog o) [])
+    else if beq nm (zs "halt-on-error") && flag then
+      parse_opts r (mkcopts (co_ini o) (co_etex o) (co_inter o) true (co_fle o) (co_draft o) (co_job o) (co_prog o) [])
+    else if beq nm (zs "file-line-error") && flag then
+      parse_opts r (mkcopts (co_ini o) (co_etex o) (co_inter o) (co_halt o) true (co_draft o) (co_job o) (co_prog o) [])
+    else if beq nm (zs "draftmode") && flag then
+      parse_opts r (mkcopts (co_ini o) (co_etex o) (co_inter o) (co_halt o) (co_fle o) true (co_job o) (co_prog o) [])
+    else if beq nm (zs "interaction") then
+      match v with
+      | Some m =>
+        let mode := if beq m (zs "batchmode") then 0 else if beq m (zs "nonstopmode") then 1
+                    else if beq m (zs "scrollmode") then 2 else if beq m (zs "errorstopmode") then 3 else -1 in
+        if mode <? 0 then KStk "C main: an unknown -interaction value (a warning on stderr)"
+        else parse_opts r (mkcopts (co_ini o) (co_etex o) mode (co_halt o) (co_fle o) (co_draft o) (co_job o) (co_prog o) [])
+      | None => KStk "C main: -interaction with its value in the next word"
+      end
+    else if beq nm (zs "jobname") then
+      match v with
+      | Some j => if has_byte C_SP j || has_byte 34 j then KStk "C main: a -jobname with a space or a quote (normalize_quotes)"
+                  else parse_opts r (mkcopts (co_ini o) (co_etex o) (co_inter o) (co_halt o) (co_fle o) (co_draft o) (Some j) (co_prog o) [])
+      | None => KStk "C main: -jobname with its value in the next word"
+      end
+    else if beq nm (zs "progname") then
+      match v with
+      | Some p => if beq p (zs "pdflatex")
+                  then parse_opts r (mkcopts (co_ini o) (co_etex o) (co_inter o) (co_halt o) (co_fle o) (co_draft o) (co_job o) (Some p) [])
+                  else KStk "C main: a -progname other than pdflatex"
+      | None => KStk "C main: -progname with its value in the next word"
+      end
+    else KStk "C main: a command-line option outside the modelled allow-list"
+  end.
+
+Definition var_yes (x : io) (name : string) : bool :=
+  match lookup_bytes (bytes_of_string name) (io_kpse x) with
+  | Some (c :: _) => (c =? 116) || (c =? 121) || (c =? 49)
+  | _ => false
+  end.
+
+(* what C main computes from the command line: the parsed options, the program name, the
+   main input file kpathsea found (get_input_file_name, at C main: kpathsea's state after it),
+   the dump name *)
+Definition cmain_compute (x : io) : kr (copts * list Z * kpst * list Z) :=
+  match parse_opts (io_argv x) copts0 with
+  | KStk m => KStk m
+  | KOk o =>
+    let base := xbasename (io_argv0 x) in
+    let prog := match co_prog o with Some p => p | None => base end in
+    if negb (beq base (zs "pdftex") || beq base (zs "pdflatex")) then KStk "C main: a program name other than pdftex or pdflatex"
+    else if co_etex o && negb (co_ini o) then KStk "C main: -etex without -ini (a warning on stderr)"
+    else if negb (is_none (lookup_bytes (bytes_of_string "output_comment") (io_kpse x))) then KStk "C main: output_comment is set"
+    else
+    let env := mkkenv (io_cwd x) (io_fs x) [] (io_kpse x) (io_kfmt x) in
+    let sought := match co_rest o with f :: _ => if hdq 38 f || hdq 92 f then None else Some f | [] => None end in
+    let found :=
+      match sought with
+      | None => KOk (io_kp x, None)
+      | Some f => if has_byte C_SP f || has_byte 34 f then KStk "C main: a main input file name with a space or a quote (normalize_quotes)"
+                  else find_file env (io_kp x) f 26 false
+      end in
+    match found with
+    | KStk m => KStk (String.append "C main: " m)
+    | KOk (kp1, mf) =>
+      (* parse_first_line, when parse_first_line is yes (dump_name and translate_filename are
+         still NULL here) *)
+      let pfl := match mf with
+                 | Some path => if negb (var_yes x "parse_first_line") then KOk tt else
+                                match file_bytes env path with
+                                | KStk m => KStk (String.append "C main: parse_first_line: " m)
+                                | KOk bs => match read_lines bs [] [] with
+                                            | first :: _ => if hdq 37 first && hdq 38 (tl first)
+                                                            then KStk "C main: a %& first line (parse_first_line)" else KOk tt
+                                            | [] => KOk tt
+                                            end
+                                end
+                 | None => KOk tt
+                 end in
+      match pfl with
+      | KStk m => KStk m
+      | KOk _ =>
+        let dump := match mf, io_argv x with
+                    | None, a1 :: _ => if hdq 38 a1 then tl a1 else prog
+                    | _, _ => prog
+                    end in
+        KOk (o, prog, kp1, dump)
+      end
+    end
+  end.
+
+Definition put_global (g : Z) (k : cell) (st : state) : state :=
+  match put_cell st g 0 k with Some s => s | None => st end.
+
+Definition alloc_bytes (bs : list Z) (st : state) : state * Z :=
+  match alloc_cells (map KInt (bs ++ [0])) st with Some (st1, b) => (st1, b) | None => (st, 0) end.
+
+(* the globals C main writes that depend on the command line (they overwrite CMain.v's
+   values for `pdftex -ini`, to which they are equal on that command line) *)
+Definition cmain_model (st0 : state) : state :=
+  let x := st_io st0 in
+  match cmain_compute x with
+  | KStk m => let (st1, b) := alloc_bytes (bytes_of_string m) st0 in set_cstate st1 CS_cmain (Z.max b 1)
+  | KOk (o, prog, kp1, dump) =>
+    let st1 := set_io st0 (io_set_kp x kp1) in
+    let fdef := [C_SP] ++ dump ++ (if (4 <? Z.of_nat (List.length dump)) && ends_with (zs ".fmt") dump then [] else zs ".fmt") in
+    let (st2, bd) := alloc_bytes dump st1 in
+    let (st3, bf) := alloc_bytes fdef st2 in
+    let '(sh, rs) := match lookup_bytes (bytes_of_string "shell_escape") (io_kpse x) with
+                     | Some (c :: _) => if (c =? 116) || (c =? 121) || (c =? 49) then (1, 0) else if c =? 112 then (1, 1) else (0, 0)
+                     | _ => (0, 0) end in
+    let st4 := match co_job o with
+               | Some j => let (s, bj) := alloc_bytes j st3 in set_cstate s CS_jobname bj
+               | None => st3 end in
+    let b2z (b : bool) : Z := if b then 1 else 0 in
+    put_global G_iniversion (KInt (b2z (co_ini o)))
+    (put_global G_etexp (KInt (b2z (co_etex o)))
+    (put_global G_interactionoption (KInt (co_inter o))
+    (put_global G_haltonerrorp (KInt (b2z (co_halt o)))
+    (put_global G_filelineerrorstylep (KInt (if co_fle o then 1 else b2z (var_yes x "file_line_error_style")))
+    (put_global G_parsefirstlinep (KInt (b2z (var_yes x "parse_first_line")))
+    (put_global G_pdfdraftmodeoption (KInt (b2z (co_draft o)))
+    (put_global G_pdfdraftmodevalue (KInt (b2z (co_draft o)))
+    (put_global G_dumpname (KPtr bd 0)
+    (put_global G_TEXformatdefault (KPtr bf 0)
+    (put_global G_formatdefaultlength (KInt (Z.of_nat (List.length fdef) - 1))
+    (put_global G_shellenabledp (KInt sh)
+    (put_global G_restrictedshell (KInt rs) st4))))))))))))
+  end.
+
+Definition cmain_ok (st : state) : bool := cstate st CS_cmain =? 0.
+
+(* the bytes of TeX string s: strpool[strstart[s] .. strstart[s+1]-1] *)
+Definition tex_string (st : state) (s : Z) : option (list Z) :=
+  match gptr st G_strstart, gptr st G_strpool with
+  | Some (sb, so), Some (pb, po) =>
+    match cell_at st sb (so + s), cell_at st sb (so + s + 1) with
+    | Some (KInt a), Some (KInt b) =>
+      if b <? a then None else
+      match read_cells (Z.to_nat (b - a)) pb (po + a) st with
+      | Some ks => fold_right (fun k acc => match k, acc with KInt v, Some r => Some (v :: r) | _, _ => None end) (Some []) ks
+      | None => None
+      end
+    | _, _ => None
+    end
+  | _, _ => None
+  end.
+
+(* texmfmp.c: memcpy of bytes onto the top of the string pool, unless (unsigned)(poolptr +
+   len) >= (unsigned) poolsize, which sets poolptr = poolsize instead (getcreationdate,
+   getfilesize, getfilemoddate) *)
+Definition pool_append (st : state) (bs : list Z) : eres :=
+  match gptr st G_strpool, gint st G_poolptr, gint st G_poolsize with
+  | Some (pb, po), Some pp, Some ps =>
+    let len := Z.of_nat (List.length bs) in
+    if (pp <? 0) || (ps <? 0) then EStk (StConv "string pool: unsigned comparison of a negative value") st else
+    if ps <=? pp + len then
+      match gput st G_poolptr (KInt ps) with Some st1 => ok st1 | None => EStk (StBounds "poolptr") st end
+    else
+      match put_cells (map KInt bs) pb (po + pp) st with
+      | Some st1 => match gput st1 G_poolptr (KInt (pp + len)) with Some st2 => ok st2 | None => EStk (StBounds "poolptr") st1 end
+      | None => EStk (StBounds "strpool") st
+      end
+  | _, _, _ => EStk (StType "string pool globals") st
+  end.
+
 (* the model; callp calls back into the translated program *)
+Definition string_of_bytes (bs : list Z) : string :=
+  string_of_list_ascii (map (fun z => Ascii.ascii_of_nat (Z.to_nat z)) bs).
+
 Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xarg) (st : state) : eres :=
+  (* C main not modelled for this command line: the first external (setupboundvariable, the
+     first statement of mainbody that is not an assignment) reports why *)
+  let cm := cstate st CS_cmain in
+  if negb (cm =? 0) then EStk (StExternal (match cstring 100000 cm 0 st with
+                                            | Some bs => string_of_bytes bs | None => "C main" end)) st else
   (* lib/setupvar.c setupboundvariable (integer *var, const_string var_name, integer dflt):
      *var = dflt; if kpse_var_value(var_name) is set: atoi; if (conf_val < 0 ||
      (conf_val == 0 && dflt > 0)) warn on stderr and keep dflt, else *var = conf_val *)
@@ -860,19 +1082,32 @@ Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xa
                 end
     | _ => EStk (StType "inputln arity") st
     end
-  (* texmfmp.c topenin: buffer[first] = 0; with no arguments after the options
-     (optind = argc on the measured command line) the copy loop does not run; then
-     `for (last = first; buffer[last]; ++last)` stops at once, the trailing-space loop
-     leaves last = first, and the xord loop over [first, last) is empty: last = first *)
+  (* texmfmp.c topenin (not XeTeX): buffer[first] = 0; when arguments remain after the
+     options (optind < argc), each one's bytes and a space go to buffer[k++] from k = first,
+     then buffer[k] = 0, and argc = 0 (a second call copies nothing); last runs to the first
+     NUL (argument bytes are never NUL), then back over trailing IS_SPC_OR_EOL bytes (space,
+     CR, LF); buffer[first..last-1] go through xord. A copy beyond the buffer is undefined
+     behaviour: Stuck (put_cells) *)
   else if x =? X_topenin then
-    if negb (argv_measured st) then EStk (StExternal "topenin: a command line other than the measured one") st else
     match gint st G_first, gptr st G_buffer with
     | Some first, Some (bb, bo) =>
-      match put_cell st bb (bo + first) (KInt 0) with
-      | Some st1 => match gput st1 G_last (KInt first) with
-                    | Some st2 => ok st2
-                    | None => EStk (StBounds "topenin last") st1 end
+      let rest := if cstate st CS_topenin_done =? 1 then [] else
+                  match parse_opts (io_argv (st_io st)) copts0 with KOk o => co_rest o | KStk _ => [] end in
+      let bytes := flat_map (fun a => a ++ [32]) rest in
+      match put_cells (map KInt (bytes ++ [0])) bb (bo + first) st with
       | None => EStk (StBounds "topenin") st
+      | Some st1 =>
+        let st2 := match rest with [] => st1 | _ => set_cstate st1 CS_topenin_done 1 end in
+        let fix trim (l : list Z) : list Z :=
+          match l with c :: r => if (c =? 32) || (c =? 13) || (c =? 10) then trim r else l | [] => [] end in
+        let kept := rev' (trim (rev' bytes)) in
+        let last := first + Z.of_nat (List.length kept) in
+        match map_xord (List.length kept) bb bo first G_xord st2 with
+        | None => EStk (StBounds "topenin xord") st2
+        | Some st3 => match gput st3 G_last (KInt last) with
+                      | Some st4 => ok st4
+                      | None => EStk (StBounds "topenin last") st3 end
+        end
       end
     | _, _ => EStk (StType "topenin globals") st
     end
@@ -953,12 +1188,18 @@ Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xa
       end
     | None => EStk (StType "versionstring") st
     end
-  (* texmfmp.c getjobname (strnumber name): c_job_name (-jobname) is NULL for this command
-     line, so the argument is returned *)
+  (* texmfmp.c getjobname (strnumber name): with c_job_name (-jobname), maketexstring of it
+     (a new string at every call); else the argument *)
   else if x =? X_getjobname then
-    if negb (argv_measured st) then EStk (StExternal "getjobname: a command line other than the measured one") st else
     match args with
-    | [a] => match xint st a with Some n => EOk (VI TI32 n) st | None => EStk (StType "getjobname") st end
+    | [a] => match xint st a with
+             | Some n => let jb := cstate st CS_jobname in
+                         if jb =? 0 then EOk (VI TI32 n) st else
+                         match cstring 100000 jb 0 st with
+                         | Some bs => maketexstring callp bs st
+                         | None => EStk (StType "c_job_name") st
+                         end
+             | None => EStk (StType "getjobname") st end
     | _ => EStk (StType "getjobname arity") st
     end
   (* openclose.c recorder_change_filename: returns at once, the recorder being off
@@ -1305,6 +1546,7 @@ Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xa
     match st0 with
     | KStk m => EStk (StExternal m) st
     | KOk st1 =>
+      if cstate st1 CS_synctex_off =? 1 then ok st1 else
       let n := cstate st1 CS_synctex_tag_counter in
       if n =? 4294967295 then EStk (StExternal "synctex_tag_counter at UINT_MAX") st1 else
       let st2 := set_cstate st1 CS_synctex_tag_counter (n + 1) in
@@ -1356,8 +1598,8 @@ Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xa
     end
   (* tex-file.c kpse_out_name_ok = kpathsea_name_ok (fname, "openout_any", "p",
      ok_writing, false, false) (Kpse.out_name_ok); when it fails, C writes "\n%s: Not %s %s
-     (%s = %s; %sextended check).\n" with kpse->invocation_name (argv[0] as given: pdftex on
-     the measured command line), "writing to", the name, "openout_any", its value, "no " *)
+     (%s = %s; %sextended check).\n" with kpse->invocation_name (argv[0] as given, io_argv0),
+     "writing to", the name, "openout_any", its value, "no " *)
   else if x =? X_kpseoutnameok then
     if negb (argv_measured st) then EStk (StExternal "kpseoutnameok: a command line other than the measured one (invocation name)") st else
     match args with
@@ -1368,7 +1610,7 @@ Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xa
                | KOk true => EOk (VI TI32 1) st
                | KOk false =>
                  let choice := match lookup_bytes (bytes_of_string "openout_any") (io_kpse (st_io st)) with Some v => v | None => [112] end in
-                 EOk (VI TI32 0) (emit_handle H_stderr ([10] ++ bytes_of_string "pdftex: Not writing to " ++ fname
+                 EOk (VI TI32 0) (emit_handle H_stderr ([10] ++ io_argv0 (st_io st) ++ bytes_of_string ": Not writing to " ++ fname
                                    ++ bytes_of_string " (openout_any = " ++ choice ++ bytes_of_string "; no extended check)." ++ [10]) st)
                end
              | None => EStk (StType "kpseoutnameok argument") st
@@ -1406,6 +1648,49 @@ Definition ext (callp : Z -> list cell -> state -> eres) (x : Z) (args : list xa
              end
     | _ => EStk (StType "printcstring arity") st
     end
+  (* texmfmp.c getfilesize (s): find_input_file (s): makecfilename (s) (makecstring: the
+     string's bytes, check_buf (l + 1, 1 MB) else pdftex_fail; then every double quote removed); no
+     -output-directory; kpse_in_name_ok (true); kpse_find_tex = kpse_find_file (name,
+     kpse_tex_format, true). Not found: nothing. Found: recorder off; stat: st_size, the
+     length of the file's bytes in the snapshot (a file this run wrote, or one whose bytes the
+     snapshot does not hold: Stuck), printed "%lu" and appended to the pool (pool_append) *)
+  else if x =? X_getfilesize then
+    match args with
+    | [a] => match xint st a with
+             | Some s =>
+               match tex_string st s with
+               | None => EStk (StType "getfilesize: string") st
+               | Some name0 =>
+                 if (1048576 <? Z.of_nat (List.length name0) + 1) then EStk (StExternal "makecstring: pdftex_fail on a string over 1 MB") st else
+                 let name := filter (fun c => negb (c =? 34)) name0 in
+                 match st_find_file st name kpse_tex_format true with
+                 | Err e => EStk e st
+                 | Ok (st1, None) => ok st1
+                 | Ok (st1, Some fname) =>
+                   match fs_stat (kenv_of st1) true fname with
+                   | KOk (SFile (Some c) false) => pool_append st1 (dec_digits 30 (Z.of_nat (List.length c)) [])
+                   | KOk (SFile _ _) => EStk (StExternal "getfilesize: st_size of a file this run wrote or whose bytes the snapshot does not hold") st1
+                   | KOk _ => ok st1
+                   | KStk m => EStk (StExternal m) st1
+                   end
+                 end
+               end
+             | None => EStk (StType "getfilesize argument") st
+             end
+    | _ => EStk (StType "getfilesize arity") st
+    end
+  (* utils.c removepdffile: if !kpathsea_debug (no -kpathsea-debug: 0) && outputfilename (a
+     string number, 0 until the PDF file is opened) && !fixedpdfdraftmode: close the PDF file
+     and remove it (not modelled: Stuck); otherwise nothing *)
+  else if x =? X_removepdffile then
+    match gint st G_outputfilename, gint st G_fixedpdfdraftmode with
+    | Some o, Some d => if (o =? 0) || negb (d =? 0) then ok st
+                        else EStk (StExternal "removepdffile: closing and removing the PDF file (not modelled)") st
+    | _, _ => EStk (StType "removepdffile globals") st
+    end
+  (* synctex.c synctexabort: SYNCTEX_FILE is NULL (the model never opens one); root_name
+     freed; SYNCTEX_IS_OFF = yes *)
+  else if x =? X_synctexabort then ok (set_cstate st CS_synctex_off 1)
   (* pdftex.h: #define pdfassert assert. The pinned build does not define NDEBUG (the
      binary calls __assert_fail), so the condition is evaluated once (here: as the argument)
      and a false one prints glibc's message and abort()s (SIGABRT): Stuck *)

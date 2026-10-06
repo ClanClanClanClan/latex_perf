@@ -217,7 +217,54 @@ CM3RESULTS
 
 ### A one-line `\documentclass{article}` document, up to PDF output
 
-DOCRESULTS
+The document is `hb/article/doc.tex`:
+`\documentclass{article}\begin{document}Hello.\end{document}`. It runs with the graded
+command line `pdflatex -interaction=nonstopmode -halt-on-error doc.tex` (`argv0 pdflatex`).
+
+**The run's identity** (`hb/article/spec.base`):
+- base.spec's kpathsea values;
+- the format table measured for program name `pdflatex` (`hb/kpse-pdflatex.txt`);
+- the TeX-tree snapshot;
+- the working directory with `doc.tex`;
+- `pdflatex.fmt` found by the modelled search, its decompressed stream given (TB-7, as H.3).
+
+The rest of the snapshot was grown from the model's own questions by `h2/diff/snapgrow.py`. Each
+time the model is Stuck on a path the snapshot does not decide, the tool measures that one path
+in the image and runs again. It took three iterations, one per file the preamble reads:
+`article.cls`, `size10.clo`, `l3backend-pdftex.def` (`hb/article/snapgrow.log`,
+`hb/article/snapshot.grown`). The binary's own `-recorder` list names the same three
+(`hb/article/fls.txt`). Two earlier iterations, on an intermediate build, were Stuck on
+`getfilesize` (LaTeX's `\pdffilesize` of the class), now modelled from texmfmp.c (below).
+
+**Result [M].** The model, under `h3/tools/capped.sh` at 4,000 MB (finished rc 0 peak 2490MB in 2036s), loads the format and runs
+the preamble and `\begin{document}`:
+- it reads the three files and finds no `doc.aux` (`No file doc.aux.`);
+- it opens `doc.aux` for writing and typesets the page;
+- it reaches the first `\shipout`: `shipout > pdfshipout > checkpdfversion > ensurepdfopen`;
+- there it is Stuck on **`bopenout`**, which opens `doc.pdf`.
+
+Up to that point its terminal output (503 bytes), `doc.log` (1,849 bytes) and `doc.aux`
+(8 bytes, `\relax`) are each an exact byte prefix of the binary's (749, 2,764 and 32 bytes;
+`hb/article/`). It used 1 clock reading, and its standard input was empty and fully read.
+
+**The externals hit next.** These are the PDF back end. They are listed from the binary's run of
+the same command line (checkpoint 4, `hb/counts.json`), with the number of calls after the first
+`pdfshipoutbegin`. They come after `bopenout`, which `ensurepdfopen` calls once [R]:
+`zround` 13, `avlputobj` 10, `isscalable` 9, `close_file_or_pipe` 5, `writestreamlength` 5, `writezip` 5, `synctexhlist` 4, `synctexhorizontalruleorglue` 4, `synctextsilh` 4, `synctextsilv` 4, `synctexvlist` 4, `initstarttime` 3, `input_line` 3, `open_input` 3, `synctexcurrent` 2, `synctexvoidhlist` 2, `checkimageb` 1, `checkimagec` 1, `checkimagei` 1, `colorstackskippagestart` 1, `colorstackused` 1, `dopdffont` 1, `flushjbig2page0objects` 1, `hasspacechar` 1, `kpse_in_name_ok` 1, `libpdffinish` 1, `makefullnamestring` 1, `open_in_or_pipe` 1, `pdfshipoutbegin` 1, `pdfshipoutend` 1, `printID` 1, `printcreationdate` 1, `printmoddate` 1, `synctexstartinput` 1, `synctexteehs` 1, `synctexterminate` 1, `uexit` 1, `writefontstuff` 1.
+
+Of these, 28 are unmodelled and would each be Stuck, after `bopenout`: `zround`, `avlputobj`, `isscalable`, `writestreamlength`, `writezip`, `synctexhlist`, `synctexhorizontalruleorglue`, `synctextsilh`, `synctextsilv`, `synctexvlist`, `synctexcurrent`, `synctexvoidhlist`, `checkimageb`, `checkimagec`, `checkimagei`, `colorstackskippagestart`, `colorstackused`, `dopdffont`, `flushjbig2page0objects`, `hasspacechar`, `libpdffinish`, `pdfshipoutbegin`, `pdfshipoutend`, `printID`, `printcreationdate`, `printmoddate`, `synctexteehs`, `writefontstuff`. The others are the file-input externals of checkpoint 1 and the `\\end{document}` re-reading of `doc.aux`. That re-read is Stuck too: it reads a file this run wrote, which the model does not hold yet.
+
+Externals newly modelled at checkpoint 3, each from its C source:
+- `getfilesize` (texmfmp.c: `find_input_file`, then `kpse_find_file (name, kpse_tex_format,
+  true)` and `stat`'s `st_size` printed `%lu` onto the pool; `makecfilename` removes the double
+  quotes);
+- `removepdffile` (utils.c: nothing until the PDF file is opened, or in draft mode; otherwise
+  Stuck);
+- `synctexabort` (synctex.c: with no SyncTeX file, it only turns SyncTeX off, which
+  `synctexstartinput` then respects).
+
+These three bring the modelled externals to 61 of 188.
+
 
 ## Checkpoint 4: the PDF back end, scope only [M]
 
@@ -226,7 +273,7 @@ arm64 binary) ran under gdb as `pdflatex -interaction=nonstopmode -halt-on-error
 pinned image plus gdb. `doc.tex` is the one-line article
 `\documentclass{article}\begin{document}Hello.\end{document}`. The run had a temporary
 breakpoint on each of the binary's 4,168 text symbols (`nm -S`), which records every function that
-runs, in the order it first runs (`hb/funcs2.py`, `hb/funcs2.json`). A second run counted the
+runs, in the order it first runs (`hb/funcs2.py`, `hb/funcs2.json.gz`). A second run counted the
 calls of each C function the translated program calls directly, before and after the first
 `pdfshipoutbegin` (`hb/counts.py`, `hb/counts.json`). The run wrote a 1-page, 11,928-byte PDF.
 
@@ -310,4 +357,10 @@ None beyond modelling:
   and every question it does not decide is Stuck. The format table `io_kfmt` is measured like
   `io_kpse`.
 
-There is no new realizer and no new primitive.
+- TB-5 (C main): H.2's gdb measurement for `pdftex -ini` stays. What depends on the command line
+  is now modelled (`cmain_model`), and seven measured command lines show that this is all of
+  it, within the class. The program name (`argv0`) becomes an explicit input: kpathsea reads it,
+  and `kpse_out_name_ok` prints it.
+
+There is no new realizer and no new primitive. `Extract.v` gains only `Extraction NoInline`
+directives for named byte constants.

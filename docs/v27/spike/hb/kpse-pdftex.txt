@@ -1,0 +1,44 @@
+PROGNAME pdftex
+INVOCATION /tmp/b/pdftex
+kpse buf_size=200000
+kpse command_line_encoding=utf-8
+kpse dvi_buf_size=16384
+kpse error_line=79
+kpse extra_mem_bot=0
+kpse extra_mem_top=0
+kpse file_line_error_style=f
+kpse font_max=9000
+kpse font_mem_size=8000000
+kpse half_error_line=50
+kpse hash_extra=600000
+kpse hyph_size=8191
+kpse log_openout=t
+kpse main_memory=5000000
+kpse max_in_open=15
+kpse max_print_line=79
+kpse max_strings=500000
+kpse nest_size=1000
+kpse openin_any=a
+kpse openout_any=p
+# output_comment is NULL
+kpse param_size=20000
+kpse parse_first_line=t
+kpse pool_free=47500
+kpse pool_size=6250000
+kpse save_size=200000
+kpse shell_escape=p
+kpse shell_escape_commands=bibtex,bibtex8,extractbb,gregorio,kpsewhich,l3sys-query,latexminted,makeindex,memoize-extract.pl,memoize-extract.py,repstopdf,r-mpost,texosquery-jre8,
+kpse stack_size=10000
+kpse string_vacancies=90000
+kpse strings_free=100
+kpse texmf_casefold_search=1
+# TEXMFLOG is NULL
+# TEXMFOUTPUT is NULL
+kpse trie_size=1100000
+kpse try_std_extension_first=t
+kfmt 3 1 1 .tfm - .:/root/.texlive2026/texmf-config/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//:/root/texmf/fonts/tfm//:!!/usr/local/texlive/texmf-local/fonts/tfm//:!!/usr/local/texlive/2026/texmf-config/fonts/tfm//:!!/usr/local/texlive/2026/texmf-var/fonts/tfm//:!!/usr/local/texlive/2026/texmf-dist/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//
+kfmt 9 0 0 ls-R,ls-r - /usr/local/texlive/texmf-local:/usr/local/texlive/2026/texmf-config:/usr/local/texlive/2026/texmf-var:/usr/local/texlive/2026/texmf-dist
+kfmt 10 0 1 .fmt - .:/root/.texlive2026/texmf-config/web2c/pdftex:/root/.texlive2026/texmf-var/web2c/pdftex:/root/texmf/web2c/pdftex:!!/usr/local/texlive/texmf-local/web2c/pdftex:!!/usr/local/texlive/2026/texmf-config/web2c/pdftex:!!/usr/local/texlive/2026/texmf-var/web2c/pdftex:!!/usr/local/texlive/2026/texmf-dist/web2c/pdftex:/root/.texlive2026/texmf-config/web2c:/root/.texlive2026/texmf-var/web2c:/root/texmf/web2c:!!/usr/local/texlive/texmf-local/web2c:!!/usr/local/texlive/2026/texmf-config/web2c:!!/usr/local/texlive/2026/texmf-var/web2c:!!/usr/local/texlive/2026/texmf-dist/web2c
+kfmt 11 0 0 .map - .:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/dvips//:/root/.texlive2026/texmf-var/fonts/map/dvips//:/root/texmf/fonts/map/dvips//:!!/usr/local/texlive/texmf-local/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-config/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-var/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/dvips//:/root/.texlive2026/texmf-config/fonts/map///:/root/.texlive2026/texmf-var/fonts/map///:/root/texmf/fonts/map///:!!/usr/local/texlive/texmf-local/fonts/map///:!!/usr/local/texlive/2026/texmf-config/fonts/map///:!!/usr/local/texlive/2026/texmf-var/fonts/map///:!!/usr/local/texlive/2026/texmf-dist/fonts/map///
+kfmt 26 0 0 .tex .sty,.cls,.fd,.aux,.bbl,.def,.clo,.ldf .:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+kfmt 33 1 0 .vf - .:/root/.texlive2026/texmf-config/fonts/vf//:/root/.texlive2026/texmf-var/fonts/vf//:/root/texmf/fonts/vf//:!!/usr/local/texlive/texmf-local/fonts/vf//:!!/usr/local/texlive/2026/texmf-config/fonts/vf//:!!/usr/local/texlive/2026/texmf-var/fonts/vf//:!!/usr/local/texlive/2026/texmf-dist/fonts/vf//

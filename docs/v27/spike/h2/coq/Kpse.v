@@ -82,6 +82,7 @@ Fixpoint bmem (x : list Z) (l : list (list Z)) : bool :=
 Fixpoint zs_of (l : list Ascii.ascii) : list Z :=
   match l with [] => [] | c :: r => Z.of_nat (Ascii.nat_of_ascii c) :: zs_of r end.
 Definition zs (s : string) : list Z := zs_of (list_ascii_of_string s).
+Definition zstr (l : list Z) : string := string_of_list_ascii (map (fun z => Ascii.ascii_of_nat (Z.to_nat z)) l).
 
 Fixpoint is_prefix (p l : list Z) : bool :=
   match p, l with
@@ -218,7 +219,7 @@ Definition fs_stat_cs (env : kenv) (written : bool) (cs : list (list Z)) : kr fs
   | Some (FsDir l) => KOk (SDir (match l with Some l' => Some (dir_names env written (key cs) l') | None => None end))
   | Some FsAbsent => KOk SNone
   | None => if ancestor_absent env written [] cs then KOk SNone
-            else KStk (String.append "the file-system snapshot does not decide " (string_of_list_ascii (map (fun z => Ascii.ascii_of_nat (Z.to_nat z)) (key cs))))
+            else KStk (String.append "the file-system snapshot does not decide " (zstr (key cs)))
   end.
 
 (* stat(2) of a path as C passes it; "" fails (ENOENT); a trailing slash on a file fails
@@ -253,7 +254,7 @@ Definition dir_p (env : kenv) (written : bool) (name : list Z) : kr bool :=
 Definition read_dir (env : kenv) (written : bool) (name : list Z) : kr (option (list (list Z))) :=
   match fs_stat env written name with
   | KOk (SDir (Some l)) => KOk (Some l)
-  | KOk (SDir None) => KStk "a directory listing the file-system snapshot does not hold"
+  | KOk (SDir None) => KStk (String.append "the file-system snapshot does not hold the listing of " (zstr name))
   | KOk _ => KOk None
   | KStk m => KStk m
   end.
@@ -263,7 +264,7 @@ Definition file_bytes (env : kenv) (name : list Z) : kr (list Z) :=
   match fs_stat env true name with
   | KOk (SFile (Some c) false) => KOk c
   | KOk (SFile _ true) => KStk "reading a file this run wrote (not modelled)"
-  | KOk (SFile None _) => KStk "a file whose bytes the file-system snapshot does not hold"
+  | KOk (SFile None _) => KStk (String.append "the file-system snapshot does not hold the bytes of " (zstr name))
   | KOk _ => KStk "fopen of a file that is not readable (xfopen FATAL: not modelled)"
   | KStk m => KStk m
   end.

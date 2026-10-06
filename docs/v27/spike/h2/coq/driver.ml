@@ -3,6 +3,7 @@
    usage: ps.exe FUEL SPEC STDIN
 
    SPEC is the run's identity besides the program: one item per line,
+     argv0 NAME          argv[0], the program name as invoked (required)
      argv ARG            the command line after the program name, in order
      env NAME=VALUE      the process environment as getenv(3) sees it
      kpse NAME=VALUE     what kpse_var_value(NAME) returns in the pinned image for this
@@ -36,7 +37,7 @@ let dec s = (* a decimal integer, optionally negative; nothing else *)
 let () =
   if Stdlib.Array.length Sys.argv <> 4 then die "usage: ps.exe FUEL SPEC STDIN";
   let fuel = match int_of_string_opt Sys.argv.(1) with Some f when f > 0 -> f | _ -> die "FUEL" in
-  let argv = ref [] and env = ref [] and kpse = ref [] and clock = ref [] and signed = ref None in
+  let argv0 = ref None and argv = ref [] and env = ref [] and kpse = ref [] and clock = ref [] and signed = ref None in
   let gz = ref [] and cwd = ref None and fs = ref [] and kfmt = ref [] in
   let canonical p = (* "/" or "/a/b": no empty, ".", ".." component, no trailing slash, no '=' *)
     p = "/" || (Stdlib.String.length p > 1 && Stdlib.String.get p 0 = '/'
@@ -63,6 +64,7 @@ let () =
      | Some i ->
        let key = Stdlib.String.sub l 0 i and rest = Stdlib.String.sub l (i + 1) (Stdlib.String.length l - i - 1) in
        (match key with
+        | "argv0" -> if !argv0 <> None then die "two argv0 lines"; argv0 := Some (bytes_of rest)
         | "argv" -> argv := bytes_of rest :: !argv
         | "env" -> env := kv rest :: !env
         | "kpse" -> kpse := kv rest :: !kpse
@@ -98,7 +100,9 @@ let () =
    done with End_of_file -> close_in ic);
   let signed = match !signed with Some b -> b | None -> die "the spec must say charsigned 0 or 1" in
   let stdin_bytes = In_channel.with_open_bin Sys.argv.(3) In_channel.input_all in
-  let io = { Values.io_out = []; io_stdin = bytes_of stdin_bytes; io_argv = Stdlib.List.rev !argv;
+  let io = { Values.io_out = []; io_stdin = bytes_of stdin_bytes;
+             io_argv0 = (match !argv0 with Some a -> a | None -> die "the spec must give argv0");
+             io_argv = Stdlib.List.rev !argv;
              io_char_signed = signed; io_files = []; io_next_handle = z 3;
              io_fs = Stdlib.List.rev_map (fun (p, e) -> (bytes_of p, e)) !fs;
              io_env = Stdlib.List.rev !env; io_kpse = Stdlib.List.rev !kpse;

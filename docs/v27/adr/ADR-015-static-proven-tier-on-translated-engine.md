@@ -8,6 +8,7 @@ admission of OPEN-116/OPEN-122 is stopped.
 [`drafts/ADR-013-draft-R-EFFECT.md`](drafts/ADR-013-draft-R-EFFECT.md) and
 [`drafts/ADR-014-draft-interpreter.md`](drafts/ADR-014-draft-interpreter.md).
 **Tracking:** OPEN-123 (the foundation spike). **First result:** [`docs/v27/spike/H1-report.md`](../spike/H1-report.md).
+**Results of record:** § "H.1 result" and § "H.2 and H.3 results" below; H.5 per E12.
 
 Evidence tags as elsewhere: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 
@@ -247,6 +248,123 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
   re-grade and regeneration, the `GRADING_CODE_PENDING` producers, CI's tmpfs) is ONE ledger row,
   **OPEN-128** in `docs/v27/PROJECT_STATE.md`, and is not restated here.
 
+## Owner decisions of 2026-10-06
+
+Same rule as above: this is the one place of record. E11 was decided on 2026-10-05 and its
+outcome is recorded here. E12–E15 were approved by the owner on 2026-10-06 ("ok, go") after an
+audited recommendation: the assistant's re-audit of its own first recommendation (a working
+note, not committed; its errors are C-130). The spike's code and evidence are on branch
+`spike/v27165-engine-translation`; a file cited as `67ca47df:path` is on that commit (the
+branch tip when this was written), not on `main`.
+
+- **E11. A time-boxed heap-representation fix was funded (decided 2026-10-05; outcome recorded
+  now).** This is the "profile-guided fix" that H.5's kill criterion allows for (D3). Its terms, as
+  recorded at `67ca47df:docs/v27/spike/H5-heap-design.md` (lines 4–9): stage 1, profile and
+  design, by the end of 2026-10-06; stage 2, implement and measure, by the end of 2026-10-10;
+  "if at the end of the box no representation gives memory that does not grow with the work done
+  and a speed at or below 200× pdfTeX on H.5's documents, H.5's kill criterion fires". E8's "no new
+  heap representation is funded yet" is superseded by this line. *Outcome* (stage 1: spike commits
+  `b9ea746c`, `ee148dcc`; stage 2: `b330a029`, `b3c05b38`, `284ef72c`; E8's runner measurement:
+  `67ca47df`; the details are at `67ca47df:docs/v27/spike/H5-heap-design.md` §8 and
+  `67ca47df:docs/v27/spike/H3-report.md` § "H.5 stage 2"):
+  - **B2 is the model build.** The ten members of the interpreter's fuelled mutual block in
+    `67ca47df:docs/v27/spike/h2/coq/Interp.v` were restructured at the source, so that no
+    extracted closure holds a state across a call. Each member, and `Main.run`, is proved equal
+    to its pre-B2 definition (`67ca47df:docs/v27/spike/h2/coq/RefInterp.v`) by `reflexivity`, in
+    `67ca47df:docs/v27/spike/h2/coq/B2Equiv.v`, with no axiom. `Extract.v` (the realizers),
+    `driver.ml`, `Boundary.v`, `Values.v`, `Main.v` and the translator are unchanged: **the
+    trusted base is unchanged**. B2 adds no realizer; T1, T2 and candidate A's in-place array are
+    not in it.
+  - **Memory is flat**, apart from the I/O residual [M]. Before B2 the full meaning dump grew by
+    ≈ 3.1 MB per name and was killed at ≈ 14.5 GB at 4,000 names on a 16 GB GitHub runner. On B2
+    the full 23,519-name dump peaks at 2.46 GB locally and 2.47 GB on the runner; what still
+    grows is the I/O lists (≈ 15 kB per name locally, ≈ 43 kB per name between 2,000 and 4,000
+    names on the runner). B2's memory property is tested, not proved: a standing retention check,
+    whose static half is required because its dynamic half catches only 5 of 10 single-member
+    reverts (C-150 on the spike branch).
+  - **The full 23,519-name meaning dump on the B2 model build is IDENTICAL to the pinned binary**
+    [M], `meanings_sha256` `4879fa65…` (the contract's digest): locally (macOS arm64, 2,673 s CPU,
+    `67ca47df:docs/v27/spike/h5/evidence/stage2/fulldump/compare.json`) and on GitHub run
+    37397064131 (x86_64, OCaml without flambda, 2,475 s CPU,
+    `67ca47df:docs/v27/spike/h3/evidence/meanings/run3-37397064131/`). H.2's INITEX evidence, the
+    178-input differential and the round trip (`55629ae0…`) are unchanged on the B2 build.
+  - **Speed was NOT fixed.** B2 removes retention, not the cost of the integer conversions, and
+    the measured and estimated profile-guided changes do not reach the kill line (E12).
+- **E12. H.5: the meaning-dump proxy counts as H.5's evidence** (H5-heap-design §6, owner
+  question 1, option (a)). H.5 is therefore recorded as **killed on the proxy by owner ruling
+  (H5 Q1(a))**. The re-audit's corrected wording, which this records: *"The only legitimate form
+  is 'killed on the proxy by owner ruling (H5 Q1(a)), A+T1+T2 build'."* Every figure is labelled
+  by its build (D3's lines: pass at ≤ 60× pdfTeX per pass, kill above 200× with no profile-guided
+  fix in sight):
+  - *A+T1+T2 profiling build* (in-place arrays plus the conversion realizers; not a model build,
+    and not admissible as evidence under E14): **818×** on the whole dump, **≈ 1,540×** marginal
+    per name, **59×** on the format load, **122×** at 1,000 names
+    (`67ca47df:docs/v27/spike/h5/evidence/fair/fairtable.txt`, interleaved medians). On this build
+    the format load and the 1,000-name run are under the kill line; the marginal cost and the
+    whole dump exceed it.
+  - *B2 model build*: **≈ 11,700×** on the whole dump (2,673 s CPU against the binary's 0.229 s
+    median; one run, under a load average of up to 283, not interleaved rounds), and **≈ 315×**
+    on the format load (≈ 35.3 s CPU at the end of the load in a retention-probe run of the B2
+    build, `67ca47df:docs/v27/spike/h5/evidence/stage2/retprobe/B2-p50/probes.txt`, against the
+    binary's 0.112 s median; this ratio is computed by the re-audit and not committed on the spike
+    branch).
+  - *No profile-guided fix in sight*: H5-heap-design §3.4 estimates every further change together
+    at ≈ 370× central and ≈ 150× generous, relative to A+T1+T2 [I, from measured profile shares];
+    only the generous case crosses 200×, and only with all four changes at once, which is the
+    fallback project (E13).
+
+  What this is **NOT**:
+  - it is **not** a measurement on H.5's three documents (the one-line document, the 12-page
+    synthetic paper, a 40-page corpus paper), which cannot run in the model yet: a pass reaches
+    externals that are Stuck (43 of 188 are modelled), so they wait on the C boundary model
+    (OPEN-123). On A+T1+T2 the proxy predicts the one-line document near 60× [I];
+  - E4's re-measurement "on a quiet machine with a real document" was **not done**;
+  - the ruling **replaces waiting for E11's box** to end on 2026-10-10. It does not apply H.5's
+    criterion on its own conditions.
+- **E13. The fallback is NOT funded now.** D3's fallback for H.5, "a verified-refinement fast
+  interpreter becomes its own project", is a **new funding decision**, not a continuation of the
+  spike. It is costed on record at verified-compilation scale: H5-heap-design §3.4 puts the model
+  at ≈ 370× central and ≈ 150× generous after every profile-guided change, so ≤ 60× is reachable
+  only by code generated from the IR with a verified compilation, "a research project of its own"
+  (and the ADR-014 draft §10.2(4) called a proved-equivalent fast interpreter "a CompCert-sized
+  proof effort"). It is **deferred until the abstract interpreter is scoped**. Its criteria are
+  then pre-registered from the needs measured by that scoping: the cost and turnaround of the
+  evidence, and the first-verdict latency on a new configuration. The model stays the
+  specification.
+- **E14. Realizer policy: evidence builds add NO new unverified realizer rows.**
+  - T1 and T2 (the conversion and `Z` realizers) are allowed **only in profiling builds that are
+    tagged as such in their provenance**. A gate must refuse evidence from such a build. That gate
+    is **not yet implemented**; it is to be implemented later on the spike branch.
+  - Zero-trust steps are allowed, e.g. emitting the IR's integer literals as `Z`
+    (`67ca47df:docs/v27/spike/H5-heap-design.md` lines 639–642; it repeats H.2's size
+    measurement).
+  - A PrimInt63 re-expression is **scoped to i32 arithmetic**. TI64, 64-bit words and double bit
+    patterns are out of its scope. Its stdlib spec Axioms would join `Print Assumptions`, and
+    zarith stays, so the trusted base does not shrink. It is **deferred**.
+- **E15. CI grading uses ONE launch definition**: the `ContainerOracle` invocation
+  (`scripts/tools/_oracle.py`), run from the arm64 runner host, which already runs Docker
+  (`tex-oracle.yml` runs `docker run` on the host; it is not a job container).
+  - The in-image grading `docker run` steps of `tex-oracle.yml` and the native grading branch of
+    `scripts/tools/_oracle.sh` are **retired**. `NativeOracle` is kept **only as a non-grading
+    class** (`HostDiagnostic`'s base and a comparator).
+  - The claim is **"one configuration by construction"**, NOT "identical platform". The platform
+    residuals are enumerated and measured: the work-root file system (case- and
+    Unicode-insensitive locally, virtiofs over APFS, against case-sensitive Linux in CI; the
+    local insensitivity is measured, `_oracle.py`'s "ONE FILE, MANY NAMES"), the kernel, CPU speed
+    against the wall-clock timeout, memory, and disk.
+  - **OPEN, pending that measurement:** O3.2 (grades of record come only from CI) or O3.3 (a
+    VM-local Linux work root for local grading).
+  - E15 **supersedes OPEN-128 item (9)** ("match the container's options"): native work
+    directories are on the in-image `/tmp` tmpfs and the container's are on the bind mount, so
+    matching mount flags cannot make the two configurations equal.
+  - Per the approved recommendation it is implemented inside OPEN-128's single re-grade (it
+    changes grading code, so it needs a full re-grade, which that row already carries). Nothing on
+    `main` implements E15 yet.
+- **Open, not decided: O1.2**, a per-configuration preamble snapshot, dumped offline by the
+  pinned binary and loaded through the format-load path whose exactness H.3 established. It needs
+  an owner ruling on the clause "works where TeX isn't installed" of the owner's 2026-09-29
+  answer (Decision, item 2), to be informed by the abstract-interpreter scoping.
+
 ## Consequences
 
 - Nothing about TeX's behaviour is written by hand any more; what remains hand-modelled is the
@@ -311,3 +429,48 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
 - **All amd64 evidence is emulated** (qemu-user on an arm64 host): the rebuild, the behaviour runs
   and the format run. A confirmation on a native amd64 host, the CI runner of `tex-oracle.yml`, is
   open (OPEN-123).
+
+## H.2 and H.3 results (recorded on `main` 2026-10-06; full text on the spike branch)
+
+The spike branch's copy of this ADR
+(`67ca47df:docs/v27/adr/ADR-015-static-proven-tier-on-translated-engine.md`) has diverged from
+this one: it has an H.2 result section and later corrections of the H.1 text, and it lacks
+E1–E15. **This copy is the record.** What only the spike copy had is summarised below, with
+pointers; the spike branch must merge `main` to take the record (OPEN-123).
+
+- **H.1 (unchanged above): passed only with the clock fixed** [M]. The spike copy's H.1 section
+  also carries corrections from later spike review rounds (round 3, C-106; round 4) that this
+  copy's H.1 text predates. As that copy states them: a plain `\xleaders` over a glue of 2³¹−2 sp
+  wraps `rule_wd + 10` and then divides by 0 (rc 0 on aarch64, SIGFPE on x86_64); of the 316
+  division and conversion sites, 15 diverge, 4 are machine-checked unreachable, 77 are translated
+  sites the Stuck rule covers and 220 are boundary sites with no evidence either way; and the
+  native amd64 run of 2026-10-02 confirmed the behaviour runs and the format run, while the
+  rebuild, the corpus comparisons and the gdb traces remain emulated only.
+- **H.2: passed; the kill criterion did not fire** [M] (2026-09-30, review round 1 closed
+  2026-10-01; `67ca47df:docs/v27/spike/H2-report.md`). 603 of 603 procedures of the tangled
+  `pdftex.p` are translated into a Coq deep embedding; Coq accepts the program with its semantics
+  `PS` (a fuelled interpreter) and extracts it to OCaml in minutes, under 0.6 GB per file; the
+  extracted program runs INITEX through the `*` prompt with terminal output, log file and exit
+  status byte-identical to the pinned binary's (the x86_64 `char` configuration against the amd64
+  binary under qemu, and a hybrid aarch64 configuration against the arm64 binary). `PS`
+  implements E1's Stuck rule, except at 13 pointer-arithmetic sites where it follows the binary.
+  The C boundary is the open part: 23 of 189 externals were modelled at H.2, 43 of 188 at H.3's
+  checkpoint 2, and the rest are Stuck. The 178-input differential, in both configurations: 134
+  identical, 43 Stuck, 1 without a result (`romn`, killed by a 5,000 MB cap), 0 divergent; no row
+  changed on the B2 build (E11). Its native amd64 confirmation is in "E3 status" above.
+- **H.3: no "H.3 PASSED" is recorded.** Clause by clause (`67ca47df:docs/v27/spike/H3-report.md`):
+  - *"round trip byte-exact"*: **met in E6's reading** (model = binary: exit status, terminal
+    output, log and the dumped format stream `55629ae0…`), on the B2 build too, **on arm64
+    only**; the amd64 configuration of the round trip is open. The difference between the
+    re-dumped and the shipped format is accounted for byte by byte, as E6 requires.
+  - *"meanings byte-identical to the contract generator's"*: **MET on the B2 model build** (E11:
+    `4879fa65…`, locally and on GitHub run 37397064131). It was not met before B2: the model's
+    full dump ran out of memory on 16 GB runners (E8's runs 37302258127 and 37306038862).
+  - *"F7 explained"*: **explained by H.1** (C-100: the only run-dependent bytes of the shipped
+    format are the INITEX run's clock), not re-derived by the model. This meets the literal
+    clause, since D3's H.3 work column asks only to "locate F7's byte difference".
+  - Kill criterion ("the load cannot be made exact within the spike"): **not fired**; the load is
+    exact.
+- **H.4 and H.6: not started. H.5: killed on the proxy by owner ruling (E12).** H.4, H.5's
+  documents and H.6 share one blocker: the **C boundary model** (kpathsea file input, TFM loading,
+  the general C-main command line, the PDF back end), which is unmodelled today.

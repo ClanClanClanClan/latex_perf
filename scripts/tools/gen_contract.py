@@ -29,8 +29,8 @@ Nothing in a contract is hand-listed. Every field comes from a TeX run:
                   (run_to_fixpoint: to the first rc 0 in at most 3 runs, then a
                   confirming run), -halt-on-error: ok, or the first `!` error
                   of the last run, the pass count and the load segment. The
-                  same run under the forced date must agree.
-  files_read      the .fls (-recorder) of the forced run's first pass, minus the
+                  same run under a second fixed clock must agree.
+  files_read      the .fls (-recorder) of the load run's first pass, minus the
                   files an empty format-state job reads, minus job-local files;
                   with sha256.
   defined_names   pass 1 traces every assignment from before \\documentclass
@@ -40,9 +40,10 @@ Nothing in a contract is hand-listed. Every field comes from a TeX run:
                   histories '', F, S, FF, FS, FFS of completed (S) and failed
                   (F) passes, i.e. passes 1 to MAX_PASSES+1; a pass after
                   history h runs on the files the passes of h wrote), in
-                  three environments: forced date / job name `job` (the
-                  reference), the graders' real clock / `job`, and the real
-                  clock / a second job name. On each pass of each: a trace
+                  three environments: the graders' own (the protocol's fixed
+                  clock) / job name `job` (the reference), a SECOND fixed
+                  clock / `job`, and the protocol clock / a second job name.
+                  On each pass of each: a trace
                   (every name it assigns joins the UNIVERSE, with every name
                   token of the files read, of the definers and of the files
                   the jobs wrote, and the kernel's candidates), a guarded
@@ -88,10 +89,11 @@ the oracle's pass protocol with a timeout, classified by error class (never by
 rc), and a batched run whose polarity is compared with the solo one.
 
 Determinism: every job runs in a fresh directory under the oracle's work root.
-The TeX environment is the graders' own (`_oracle.oracle_tex_vars`, one
-definition) plus explicit overrides (see LOG_WIDTH): name-set runs add
-FORCE_SOURCE_DATE=1; the load outcome is attested without it (the graders'
-environment) and must agree. Output JSON is sorted; no timing is written into a contract.
+The TeX environment is the graders' own (the oracle imposes it, with the
+protocol's fixed clock, OPEN-128) plus one explicit override (LOG_WIDTH); the
+date-dependent names and the date-independence of the load outcome are found
+by VARYING the fixed clock (SECOND_CLOCK), never by the real clock (ADR-015
+E10). Output JSON is sorted; no timing is written into a contract.
 `check_contracts_reproducible.py` regenerates a committed contract and diffs it
 byte for byte.
 
@@ -141,29 +143,35 @@ GENERATOR_VERSION = "4"
 REPO = Path(__file__).resolve().parent.parent.parent
 WORKFLOW = Path(".github/workflows/tex-oracle.yml")
 CONTRACT_DIR = Path("corpora/contracts")
-# THE TeX ENVIRONMENT. Every job runs through the oracle (`_oracle.run_engine`)
-# under EXACTLY the variables `tex_vars(env, td)` returns, built on the ONE
-# definition of the graders' environment, `_oracle.oracle_tex_vars(td)`
-# (openin_any/openout_any=p, SOURCE_DATE_EPOCH=0, a private TEXMFHOME/TEXMFVAR
-# below td), which this file never restates. The overrides, each explicit:
+# THE TeX ENVIRONMENT. Every job runs through the oracle (`_oracle.run_engine`),
+# which imposes the ONE definition of the graders' environment (ORACLE_TEX_VARS,
+# the fixed run variables, the clock: OPEN-128) and which this file never
+# restates; `tex_vars(env)` passes it the protocol's own values plus ONE
+# explicit override, and `CLOCKS[env]` is the run's clock:
 #   LOG_WIDTH           every job: no log line wrapping, so a trace record or a
 #                       dumped meaning is one line (changes no outcome);
-#   FORCE_DATE          "forced" and "second_date": FORCE_SOURCE_DATE=1, which
-#                       the graders do NOT set: it pins \\year, \\month, \\day
-#                       and \\time to SOURCE_DATE_EPOCH, so name-set runs are
-#                       byte-reproducible;
-#   SECOND_EPOCH        "second_date" only: another forced date, which finds
-#                       the kernel's date-dependent names.
-# "grading" is the base plus LOG_WIDTH only: the oracle's own environment (real
-# clock), under which the load outcome is attested. Every contract checks that
-# the forced date changed nothing (review defect R1.3: `\\ifnum\\year>2000`
-# loaded under one and failed under the other). check_gen_contract_parsers.py
-# asserts each environment is exactly base + these overrides.
+#   "grading"           the protocol's fixed clock (_oracle.PROTOCOL_CLOCK): the
+#                       graders' own environment, under which the load outcome
+#                       is attested and the contract's state is taken;
+#   "second_date"       a SECOND fixed clock, every field of which differs from
+#                       the protocol's (year, month, day, weekday, hour,
+#                       minute, second; and so the seed): it finds the
+#                       kernel's date-dependent names, and every contract
+#                       checks the load outcome and the body-start state do
+#                       not change with it (review defect R1.3:
+#                       `\\ifnum\\year>2000` loaded under one date and failed
+#                       under the other).
+# Until OPEN-128 the graders ran under the REAL clock and the name-set runs
+# under a forced one (FORCE_SOURCE_DATE=1, SOURCE_DATE_EPOCH=0). E10 fixes the
+# graders' clock, and the date-dependence is found by VARYING the fixed clock
+# (OPEN-128 (6)), never by the real one. check_gen_contract_parsers.py asserts
+# each environment is exactly this.
 LOG_WIDTH = {"max_print_line": "1000000", "error_line": "254",
              "half_error_line": "238"}
-FORCE_DATE = {"FORCE_SOURCE_DATE": "1"}
-SECOND_EPOCH = "1790000000"
-ENVS = ("forced", "grading", "second_date")
+SECOND_EPOCH = 1801662449       # Wednesday 2027-02-03 13:47:29 UTC
+SECOND_CLOCK = f"{_oracle.CLOCK_PREFIX}{SECOND_EPOCH}"
+CLOCKS = {"grading": _oracle.PROTOCOL_CLOCK, "second_date": SECOND_CLOCK}
+ENVS = ("grading", "second_date")
 PRIVATE_TEXMF = "<private-texmf>"
 # Every job's name. Some meanings hold it (l3's \\c_sys_jobname_str, the file
 # currently read, ...), so a contract is exact under this job name only; the
@@ -171,6 +179,11 @@ PRIVATE_TEXMF = "<private-texmf>"
 # (review LOW item b) and listed, so a consumer compares meanings under `job`.
 JOBNAME = "job"
 SECOND_JOBNAME = "lpotherjob"
+# The three environments the body-start state is taken in (R2/R3): the
+# reference (the protocol clock, `job`), the second fixed clock, and the
+# second job name.
+STATE_ENVS = (("grading", JOBNAME), ("second_date", JOBNAME),
+              ("grading", SECOND_JOBNAME))
 # diff_real_roots.MAX_PASSES (the oracle's pass protocol, B.4); the parser
 # self-test asserts the two agree.
 MAX_PASSES = 3
@@ -1027,18 +1040,14 @@ def read_image(repo: Path) -> str:
     return m.group(1)
 
 
-def tex_vars(env: str, td) -> dict:
-    """The exact TeX variables of one of the three environments (see
-    LOG_WIDTH): the oracle's shared base for work directory `td`, plus the
-    documented overrides."""
-    out = dict(_oracle.oracle_tex_vars(td), **LOG_WIDTH)
-    if env == "grading":
-        return out
-    if env == "forced":
-        return dict(out, **FORCE_DATE)
-    if env == "second_date":
-        return dict(out, **FORCE_DATE, SOURCE_DATE_EPOCH=SECOND_EPOCH)
-    raise ValueError(env)
+def tex_vars(env: str, td=None) -> dict:
+    """The TeX variables a job of environment `env` passes run_engine: the
+    oracle's own (`oracle_tex_vars`; `td` is ignored since OPEN-128) plus
+    LOG_WIDTH. The environment's clock is CLOCKS[env], a run_engine
+    parameter."""
+    if env not in CLOCKS:
+        raise ValueError(env)
+    return dict(_oracle.oracle_tex_vars(), **LOG_WIDTH)
 
 
 class Tex:
@@ -1052,11 +1061,11 @@ class Tex:
     write failures refused. The image's own files (the shipped format, the
     files a configuration read) are read through `_oracle.image_command`.
 
-    Work directories lie under the oracle's work root, which the container
-    sees at the same absolute path (colima mounts only $HOME). One invocation
-    gets one run directory: `jobs/` holds a fresh directory per job and
-    `texmf/` the private TEXMFHOME/TEXMFVAR every job of the invocation
-    shares (`_oracle.private_texmf_vars`)."""
+    Work directories lie under the oracle's work root, which the oracle
+    mounts into each job's container (at the fixed RUN_DIR, OPEN-128). One
+    invocation gets one run directory: `jobs/` holds a fresh directory per
+    job. Each job's private TEXMFHOME/TEXMFVAR/TEXMFCONFIG are its own
+    container's (fixed paths under _oracle.PRIVATE_ROOT, fresh per run)."""
 
     def __init__(self, image: str, work: Path | None = None, oracle=None):
         try:
@@ -1096,18 +1105,19 @@ class Tex:
         return rc, out.decode("utf-8", "surrogateescape"), err.decode("utf-8", "replace")
 
     def is_job_path(self, path: str) -> bool:
-        """A file of this invocation's own jobs (job.tex, .aux, ...)."""
-        return path.startswith(str(self.host) + "/")
+        """A file of this invocation's own jobs (job.tex, .aux, ...): inside a
+        job's container the job directory is the fixed RUN_DIR (OPEN-128)."""
+        return (path.startswith(_oracle.RUN_DIR + "/")
+                or path.startswith(str(self.host) + "/"))
 
     def stable_path(self, path: str) -> str:
-        """`path` with this invocation's private TEXMFHOME/TEXMFVAR directory
-        replaced by the fixed token PRIVATE_TEXMF, so that a file read from
-        there (a font mktexpk made) is named the same in every invocation and
-        the kernel's cached baseline still subtracts it. (Before the generator
-        became an oracle client these trees were the fixed container paths
-        /tmp/lp-texmfhome and /tmp/lp-texmfvar; no committed contract reads a
-        file from either.)"""
-        root = str(self.texmf) + "/"
+        """`path` with the job's private trees (the container's fixed
+        _oracle.PRIVATE_ROOT since OPEN-128) replaced by the fixed token
+        PRIVATE_TEXMF, so that a file read from there (a font mktexpk made)
+        is named the same in every invocation and the kernel's cached
+        baseline still subtracts it. (No committed contract reads a file
+        from there.)"""
+        root = _oracle.PRIVATE_ROOT + "/"
         return PRIVATE_TEXMF + "/" + path[len(root):] if path.startswith(root) else path
 
     def job(self, name: str) -> Path:
@@ -1123,7 +1133,7 @@ class Tex:
         return d
 
     def run_engine(self, jobdir: Path, engine: str, args: list, timeout: int,
-            env: str = "forced") -> tuple:
+            env: str = "grading") -> tuple:
         """One `engine` run with `args` in jobdir through the oracle, under
         the TeX variables of `env` (tex_vars). Returns (rc, seconds); rc
         TIMEOUT_RC = timed out. An oracle failure is never a TeX outcome: it
@@ -1139,7 +1149,7 @@ class Tex:
         t0 = time.monotonic()
         try:
             r = self.oracle.run_engine(
-                jobdir, engine, args, tex_vars(env, self.texmf), timeout)
+                jobdir, engine, args, tex_vars(env), timeout, clock=CLOCKS[env])
             rc, _, timed_out = r
         except _oracle.OracleError as e:
             raise SystemExit("gen_contract: INFRASTRUCTURE - %s (job %s)"
@@ -1148,7 +1158,7 @@ class Tex:
 
     def pdflatex(self, jobdir: Path, tex: bytes, *, halt: bool = True,
                  recorder: bool = False, timeout: int = LONG_TIMEOUT,
-                 env: str = "forced", jobname: str = JOBNAME) -> dict:
+                 env: str = "grading", jobname: str = JOBNAME) -> dict:
         """One pdflatex run of `tex` (written as job.tex) in jobdir. The job
         name is `job` unless `jobname` says otherwise (the jobname-dependence
         check); every output file is named after it."""
@@ -1382,7 +1392,7 @@ def engine_primitives(tex: Tex) -> dict:
 
 
 def hash_coverage(tex: Tex, jobname: str, prefix: bytes, universe, *,
-                  env: str = "forced", seed_dir: Path | None = None,
+                  env: str = "grading", seed_dir: Path | None = None,
                   tex_jobname: str = JOBNAME) -> dict:
     """Does `universe` hold every multiletter name in TeX's hash table at the
     point `prefix` leaves a job in? Answered by TeX's own counter, so the
@@ -1466,7 +1476,10 @@ def get_pin(tex: Tex, image: str) -> dict:
         raise SystemExit("gen_contract: cannot read the pin: %s %s" % (out, err))
     return {"image": image, "arch": fp["arch"], "engine_banner": fp["banner"],
             "fmt_path": fmt_path, "fmt_sha256": fp["fmt_sha256"],
-            "texmf_root": fp["texmfroot"], "tlpdb_sha256": fp["tlpdb_sha256"]}
+            "texmf_root": fp["texmfroot"], "tlpdb_sha256": fp["tlpdb_sha256"],
+            # OPEN-128 (7): a contract records the clock it was generated
+            # under (the protocol's), so a gate can see whether it was.
+            "clock": _oracle.PROTOCOL_CLOCK}
 
 
 def format_banners(log: bytes) -> dict:
@@ -1484,7 +1497,7 @@ FMT_STOP = b"\\csname @@end\\endcsname\n"
 
 
 def fmt_state_dump(tex: Tex, jobname: str, names: list, *, actives=False,
-                   u8_sweep=False, recorder=False, env="forced",
+                   u8_sweep=False, recorder=False, env="grading",
                    tex_jobname: str = JOBNAME) -> tuple:
     block, unw = dump_block(names, actives=actives, u8_sweep=u8_sweep)
     res = tex.pdflatex(tex.job(jobname), block + FMT_STOP, recorder=recorder, env=env,
@@ -1603,7 +1616,8 @@ def build_kernel(tex: Tex, pin: dict, report: dict, *, drop=()) -> dict:
                        "kernel's candidates" % cov["uncovered"])
 
     # Names whose format-state meaning depends on the date (\everyjob's
-    # c_sys_* constants): dumped again under a second forced date.
+    # c_sys_* constants): dumped again under the second fixed clock, every
+    # field of which differs from the protocol's (OPEN-128 (6)).
     d2, _, _ = fmt_state_dump(tex, "kernel_date2", universe, env="second_date")
     date_dep = sorted(nm for i, nm in enumerate(universe)
                       if d2["meanings"].get(i) != meanings.get(nm))
@@ -1689,7 +1703,8 @@ def kernel_public(kernel: dict, pin: dict) -> dict:
     digest = sha256_bytes("\n".join("%s\t%s" % (n, kernel["names"][n])
                                     for n in sorted(kernel["names"])).encode("utf-8"))
     return {"schema": KERNEL_SCHEMA, "generator_version": GENERATOR_VERSION,
-            "pin": {k: pin[k] for k in ("image", "arch", "engine_banner", "fmt_sha256")},
+            "pin": {k: pin[k] for k in ("image", "arch", "engine_banner", "fmt_sha256",
+                                        "clock")},
             "banners": kernel["banners"],
             "method": "candidates = every string of the shipped pdflatex.fmt's string "
                       "pool, every engine primitive (virgin INITEX), every name the "
@@ -1845,7 +1860,7 @@ def hist_label(h: str) -> str:
 
 
 def run_history_tree(tex: Tex, label: str, doc: bytes, histories: list, *,
-                     env: str = "forced", jobname: str = JOBNAME,
+                     env: str = "grading", jobname: str = JOBNAME,
                      count_prefix: bytes | None = None, universe=None) -> dict:
     """Run `doc` on every pass of the protocol's pass histories, as a tree:
     the pass after history h runs in a fresh directory holding the files the
@@ -1903,14 +1918,16 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     report["r1_secs"] = round(r1["secs"], 2)
     provenance["load_tex_sha256"] = r1["tex_sha256"]
     err1 = first_error(r1["log"])
-    # R1f: the same under the forced date; it must agree, and its first pass
-    # supplies files_read (deterministic).
-    r1f = tex.fixpoint(tex.job("r1f_load"), load_doc, env="forced")
+    # R1f: the same under the SECOND fixed clock; it must agree (OPEN-128 (6):
+    # the date-dependence is found by varying the fixed clock). files_read
+    # comes from r1's first pass (the protocol clock: deterministic).
+    r1f = tex.fixpoint(tex.job("r1f_load"), load_doc, env="second_date")
     errf = first_error(r1f["log"])
     ok1 = r1["rc"] == 0 and err1 is None
     if (ok1, err1, r1["passes"]) != (r1f["rc"] == 0 and errf is None, errf, r1f["passes"]):
-        reasons.append("date_dependent_load: the grading environment (real clock) gives "
-                       "rc=%d %r in %d passes, the forced date rc=%d %r in %d passes"
+        reasons.append("date_dependent_load: the grading environment (the protocol "
+                       "clock) gives rc=%d %r in %d passes, the second fixed clock "
+                       "rc=%d %r in %d passes"
                        % (r1["rc"], err1, r1["passes"], r1f["rc"], errf, r1f["passes"]))
 
     # R2: pass 1, the trace, with load-boundary markers.
@@ -1925,9 +1942,9 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     # checked in (R3 below): a name that exists only under the real clock or
     # only under another job name (l3's \csname lookups of
     # `__file_seen_<jobname>.aux:`) must be in the universe too. The
-    # contract's pass 1 is the S run of the empty history, forced, `job`.
+    # contract's pass 1 is the S run of the empty history, protocol clock, `job`.
     histories = protocol_histories()
-    envs = [("forced", JOBNAME), ("grading", JOBNAME), ("grading", SECOND_JOBNAME)]
+    envs = list(STATE_ENVS)
     with ThreadPoolExecutor(max_workers=len(envs)) as ex:
         futs = [ex.submit(run_history_tree, tex, "r2_trace_%s_%s" % (e, j), trace_tex,
                           histories, env=e, jobname=j) for e, j in envs]
@@ -1961,9 +1978,9 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         if r2["rc"] != 0 or tr["first_error"] is not None:
             reasons.append("trace run failed where the load run succeeded")
 
-    # files_read: the forced run's first-pass .fls minus the empty-job
+    # files_read: the load run's first-pass .fls minus the empty-job
     # baseline minus job-local files.
-    _, inputs = parse_fls(r1f["first_fls"])
+    _, inputs = parse_fls(r1["first_fls"])
     base = set(kernel["baseline_inputs"])
     reads = sorted(p for p in inputs if p.startswith("/") and tex.stable_path(p) not in base
                    and not tex.is_job_path(p))
@@ -1983,8 +2000,8 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
         "configuration": cfg,
         "config_key": config_key,
         "pin": {k: pin[k] for k in ("image", "arch", "engine_banner", "fmt_sha256",
-                                     "tlpdb_sha256")},
-        "banners": format_banners(r1f["log"]),
+                                     "tlpdb_sha256", "clock")},
+        "banners": format_banners(r1["log"]),
         "load_outcome": load,
         "files_read": files_read,
         "complete_scope": COMPLETE_SCOPE,
@@ -2092,9 +2109,10 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     # defects 1 to 3: membership and the count covered passes 1 and 2 only,
     # the count on pass 3 was labelled pass 2, and the date and job-name
     # checks covered pass 1 only):
-    #   forced/job     the reference: the contract's state is pass 1 of it;
-    #   grading/job    the graders' environment (real clock), compared with
-    #                  forced/job pass by pass: any difference outside the
+    #   grading/job    the reference (the graders' environment, the protocol's
+    #                  fixed clock): the contract's state is pass 1 of it;
+    #   second_date/job  the second fixed clock (OPEN-128 (6)), compared with
+    #                  grading/job pass by pass: any difference outside the
     #                  kernel's date-dependent names is date_dependent_state;
     #   grading/<2nd>  the graders' environment under a second job name,
     #                  compared with grading/job pass by pass: a membership
@@ -2154,7 +2172,7 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
                 rec.update({k: cv[k] for k in ("uncovered", "error") if k in cv})
             coverage_passes.append(rec)
         states.append(st)
-    forced, grading, second = states
+    ref, date2, second = states
     cov = dict(trees[0][""]["coverage"])
     # A name whose MEANING differs between passes while it stays defined (an
     # .aux checksum such as rerunfilecheck's \\ReFiCh@1) is recorded as
@@ -2164,18 +2182,18 @@ def generate(cfg: dict, tex: Tex, pin: dict, kernel: dict, use_names: list,
     for h in histories:
         n = len(h) + 1
         if h:
-            member, meaning = _state_diff(forced[""], forced[h])
+            member, meaning = _state_diff(ref[""], ref[h])
             pass_dep.update(meaning)
             if member:
                 reasons.append("pass_dependent_state: the body-start name set on pass %d "
                                "after history %s differs from pass 1: %s"
                                % (n, hist_label(h), member[:5]))
-        member, meaning = _state_diff(forced[h], grading[h], date_dep)
+        member, meaning = _state_diff(ref[h], date2[h], date_dep)
         if member or meaning:
             reasons.append("date_dependent_state: the body-start state on pass %d after "
-                           "history %s under the real clock differs from the forced "
-                           "date: %s" % (n, hist_label(h), (member + meaning)[:5]))
-        member, meaning = _state_diff(grading[h], second[h], date_dep | job_dep_k)
+                           "history %s under the second fixed clock differs from the "
+                           "protocol clock's: %s" % (n, hist_label(h), (member + meaning)[:5]))
+        member, meaning = _state_diff(ref[h], second[h], date_dep | job_dep_k)
         job_dep.update(meaning)
         if member:
             reasons.append("jobname_dependent_state: the body-start name set on pass %d "
@@ -2645,9 +2663,10 @@ def cmd_probes(a) -> int:
     with Tex(image, Path(a.work).expanduser() if a.work else None) as tex:
         pin = get_pin(tex, image)
         # Probes are compared with the contract only under the SAME oracle:
-        # image, architecture (ADR-015 E2) and format, the identity a contract
-        # pin records (C-127; this compared the format alone).
-        bad = [k for k in ("image", "arch", "fmt_sha256")
+        # image, architecture (ADR-015 E2), format and clock (E10), the
+        # identity a contract pin records (C-127; this compared the format
+        # alone; OPEN-128 added the clock).
+        bad = [k for k in ("image", "arch", "fmt_sha256", "clock")
                if pin.get(k) is None or pin.get(k) != contract["pin"].get(k)]
         if bad:
             raise SystemExit("gen_contract: this oracle differs from the contract's "

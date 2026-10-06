@@ -9,12 +9,12 @@ inside it, rebuilding the kernel from INITEX (unless --cached-kernel), and
 compares both the contract and the committed kernel-names file.
 
 LOCAL / NIGHTLY ONLY. It needs the oracle (_oracle.py: docker and the pinned
-image), and the committed contracts record the image's architecture (arm64): CI's tex-oracle
-job runs the same multi-arch digest on amd64, a separately built image whose
-pdflatex.fmt has not been compared with the arm64 one. It is therefore not
-wired into any workflow, and it refuses (exit 2) on an architecture other than
-the contract's; wiring it needs that comparison first (an open item under
-OPEN-116).
+image), and the committed contracts record the image's architecture (arm64)
+and the clock they were generated under (the protocol's fixed clock,
+OPEN-128). It refuses (exit 2) on an architecture other than the contract's.
+It is not wired into any workflow: a full regeneration takes far longer than
+a CI job's budget (an open item under OPEN-116). (Until OPEN-126 CI's
+tex-oracle job ran on amd64; since ADR-015 E9 it runs on arm64.)
 
 It also runs `adversarial`: kill-tests of every completeness guard (the
 tracing-toggle and untraced-change checks, the closure self-check, and TeX's
@@ -182,10 +182,14 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
                        lo["status"] == "fatal" and lo["first_pass_rc"] == 0 and
                        lo["error_class"] == "undefined_cs" and lo["passes"] == 2))
 
+        # OPEN-128 (6): the graders' clock is the protocol's fixed one (2026),
+        # the second fixed clock is in 2027: a load that depends on the year
+        # is attested under the first and flagged by the second.
         c = gc.generate({"class": "article", "preamble": [
-            {"definer": "\\ifnum\\year>2000 \\lpundefinedyy\\fi"}]},
+            {"definer": "\\ifnum\\year<2027 \\lpundefinedyy\\fi"}]},
             tex, pin, kernel, [], {})
-        checks.append(("date: attested under the real clock, flagged date-dependent",
+        checks.append(("date: attested under the protocol clock, flagged date-dependent "
+                       "by the second fixed clock",
                        c["load_outcome"]["status"] == "fatal" and
                        any(x.startswith("date_dependent_load")
                            for x in c["incomplete_reasons"])))
@@ -198,7 +202,7 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
             "\\makeatletter\\AtEndDocument{\\immediate\\write\\@auxout{\\string"
             "\\expandafter\\string\\gdef\\string\\csname\\space lpq\\number7 "
             "\\string\\endcsname{}}}\\makeatother"}]}
-        def cov_at(c, hist, env="forced", jobname="job"):
+        def cov_at(c, hist, env="grading", jobname="job"):
             hit = [x for x in c.get("coverage_passes", []) if x["history"] == hist and
                    x["env"] == env and x["jobname"] == jobname]
             return hit[0].get("uncovered") if len(hit) == 1 else None
@@ -263,7 +267,7 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
         # dateC: the date reaches the state through the .aux, on pass 2: the
         # date check used to run on pass 1 only.
         date_c = {"class": "article", "preamble": [{"definer":
-            "\\makeatletter\\def\\lpyr#1{\\ifnum#1>2000 \\gdef\\lpgrade{}\\fi}"
+            "\\makeatletter\\def\\lpyr#1{\\ifnum#1>2026 \\gdef\\lpgrade{}\\fi}"
             "\\AtBeginDocument{\\immediate\\write\\@auxout{\\string\\lpyr{\\the\\year}}}"
             "\\makeatother"}]}
         c = gc.generate(date_c, tex, pin, kernel, [], {})
@@ -272,8 +276,9 @@ def adversarial(image: str, work: Path, cache: Path) -> int:
                        "named, and pass 1 shows none",
                        c["complete"] is False and
                        "date_dependent_state: the body-start state on pass 2 after history "
-                       "S under the real clock differs from the forced date: ['lpgrade']"
-                       in r and "pass 1 after history none under the real clock" not in r))
+                       "S under the second fixed clock differs from the protocol clock's: "
+                       "['lpgrade']" in r
+                       and "pass 1 after history none under the second fixed clock" not in r))
         # jobD: the job name reaches the state through the .aux, on pass 2.
         job_d = {"class": "article", "preamble": [{"definer":
             "\\makeatletter\\def\\lpjn#1{\\def\\lpa{#1}\\def\\lpb{job}\\ifx\\lpa\\lpb"

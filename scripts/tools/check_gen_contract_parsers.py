@@ -393,42 +393,55 @@ with tempfile.TemporaryDirectory() as td:
           all(node["pass"] == len(h) + 1 for h, node in tree.items()), got)
 
 # --- review defect R1.3: the grading environment is the graders' ----------------------
-# There is ONE definition of the oracle's TeX environment, _oracle.ORACLE_TEX_VARS
-# (with the private TEXMFHOME/TEXMFVAR of oracle_tex_vars). The graders get it
-# through _oracle's tex_env/oracle_tex_env and the generator through
-# oracle_tex_vars; each check below reads that single source, never a copy.
-# (The previous form compared gen_contract.TEX_ENV with the graders' SOURCE
-# TEXT, and failed three checks the day #617 moved the graders' copy into
-# _oracle.py although no environment had changed.)
+# There is ONE definition of the oracle's TeX environment, in _oracle.py:
+# ORACLE_TEX_VARS, the fixed run variables and the clock (OPEN-128), which
+# run_engine imposes. The generator passes the protocol's own values plus the
+# log width, and chooses a CLOCK per environment; each check below reads that
+# single source, never a copy. (The previous form compared gen_contract.TEX_ENV
+# with the graders' SOURCE TEXT, and failed three checks the day #617 moved
+# the graders' copy into _oracle.py although no environment had changed.)
 import re  # noqa: E402
 import _oracle  # noqa: E402
-W = "/lp-work-root/run"
-base = _oracle.oracle_tex_vars(W)
+base = _oracle.oracle_tex_vars()
 check("env: the oracle's one TeX environment is the recorded protocol "
-      "(openin_any=p, openout_any=p, SOURCE_DATE_EPOCH=0, no forced date)",
-      _oracle.ORACLE_TEX_VARS == {"openin_any": "p", "openout_any": "p",
-                                  "SOURCE_DATE_EPOCH": "0"}, _oracle.ORACLE_TEX_VARS)
-check("env: a private TEXMFHOME/TEXMFVAR below the work directory",
-      {k: base.get(k) for k in ("TEXMFHOME", "TEXMFVAR")} ==
-      {"TEXMFHOME": W + "/th", "TEXMFVAR": W + "/tv"}, base)
-grader_env = _oracle._Base.tex_env(None, W)
+      "(openin_any=p, openout_any=p; the clock is the clock's)",
+      _oracle.ORACLE_TEX_VARS == {"openin_any": "p", "openout_any": "p"},
+      _oracle.ORACLE_TEX_VARS)
+check("env: the private TEXMFHOME/TEXMFVAR/TEXMFCONFIG are the run container's, "
+      "at fixed paths (OPEN-128)",
+      {k: base.get(k) for k in ("TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG")}
+      == _oracle.FIXED_TREES, base)
+grader_env = _oracle._Base.tex_env(None)
 check("env: the graders' tex_env carries the one environment",
       all(grader_env.get(k) == v for k, v in base.items()), base)
-want_over = {"grading": dict(gc.LOG_WIDTH),
-             "forced": dict(gc.LOG_WIDTH, **gc.FORCE_DATE),
-             "second_date": dict(gc.LOG_WIDTH, **gc.FORCE_DATE,
-                                 SOURCE_DATE_EPOCH=gc.SECOND_EPOCH)}
 for env in gc.ENVS:
-    v = gc.tex_vars(env, W)
+    v = gc.tex_vars(env)
     over = {k: x for k, x in v.items() if base.get(k) != x}
-    check("env %s: exactly the oracle's environment plus its documented overrides"
-          % env, set(base) <= set(v) and over == want_over[env], over)
-check("env: the grading environment does not force the date",
-      "FORCE_SOURCE_DATE" not in gc.tex_vars("grading", W) and "FORCE_SOURCE_DATE" not in base)
+    check("env %s: exactly the oracle's environment plus the log width"
+          % env, set(base) <= set(v) and over == dict(gc.LOG_WIDTH), over)
+check("env: the grading environment runs under the protocol's FIXED clock "
+      "(ADR-015 E10), never the real one",
+      gc.CLOCKS["grading"] == _oracle.PROTOCOL_CLOCK
+      and base.get("FORCE_SOURCE_DATE") == "1"
+      and base.get("LP_CLOCK_EPOCH") == str(_oracle.PROTOCOL_EPOCH)
+      and base.get("SOURCE_DATE_EPOCH") == str(_oracle.PROTOCOL_EPOCH), gc.CLOCKS)
+# The date-dependent names are found by VARYING the fixed clock (OPEN-128 (6)):
+# the second clock is a fixed clock every calendar field of which differs from
+# the protocol's, so a name that depends on any one field (l3's
+# \c_sys_year_int, \c_sys_minute_int, ...) differs between the two.
+import datetime as _dt  # noqa: E402
+_a = _dt.datetime.fromtimestamp(_oracle.clock_epoch(gc.CLOCKS["grading"]), _dt.timezone.utc)
+_b = _dt.datetime.fromtimestamp(_oracle.clock_epoch(gc.CLOCKS["second_date"]), _dt.timezone.utc)
+_same = [f for f in ("year", "month", "day", "hour", "minute", "second")
+         if getattr(_a, f) == getattr(_b, f)] + (
+    ["weekday"] if _a.weekday() == _b.weekday() else [])
+check("env: the second clock is a FIXED clock differing from the protocol's in every "
+      "calendar field (year, month, day, weekday, hour, minute, second)",
+      gc.CLOCKS["second_date"].startswith(_oracle.CLOCK_PREFIX) and not _same, _same)
 check("env: the log-width overrides change no graded variable",
       not set(gc.LOG_WIDTH) & set(base) and not set(gc.LOG_WIDTH) & {"FORCE_SOURCE_DATE"})
 check("env: every generator variable is one the oracle forwards",
-      all(_oracle._ENV_FORWARD.match(k) for e in gc.ENVS for k in gc.tex_vars(e, W)))
+      all(_oracle._ENV_FORWARD.match(k) for e in gc.ENVS for k in gc.tex_vars(e)))
 # No tool restates the environment: an assignment of one of these variables to
 # a literal anywhere under scripts/ but _oracle.py is a second definition that
 # can drift. (Explicit overrides by NAME, like gen_contract's
@@ -551,17 +564,17 @@ if not ARGS.kernel:
         check("contract %s: TeX's hash count at body start finds nothing undumped"
               % cf.name, cov.get("uncovered") == 0 and cov.get("unwritable") == 0, cov)
         # Re-review 2: TeX's count on EVERY pass the protocol can grade, in
-        # the forced, grading and second-job-name environments.
+        # the three state environments (OPEN-128: the protocol clock, the
+        # second fixed clock, the second job name).
         cps = c.get("coverage_passes") or []
-        want = {(e, j, gc.hist_label(h)) for e, j in
-                [("forced", "job"), ("grading", "job"), ("grading", gc.SECOND_JOBNAME)]
+        want = {(e, j, gc.hist_label(h)) for e, j in gc.STATE_ENVS
                 for h in gc.protocol_histories()}
         have = {(x.get("env"), x.get("jobname"), x.get("history")) for x in cps}
         check("contract %s: TeX's hash count on every pass of every pass history, in "
               "all three environments" % cf.name, have == want and len(cps) == len(want),
               sorted(want - have))
         bad_cp = [x for x in cps if x.get("uncovered") != 0 or "error" in x or
-                  (x.get("env") == "forced" and x.get("jobname") == "job" and
+                  ((x.get("env"), x.get("jobname")) == gc.STATE_ENVS[0] and
                    (x.get("unwritable") != 0 or not isinstance(x.get("hash_entries"), int)))]
         check("contract %s: ... and it finds nothing undumped on any of them" % cf.name,
               not bad_cp, bad_cp[:2])

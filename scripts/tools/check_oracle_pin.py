@@ -256,6 +256,15 @@ ORACLE_RECORDS = (
     ("corpora/oracle_baseline/regrade_open128_sample*.json", ("oracle_after",),
      _oracle.PROTOCOL_CLOCK, ("scripts/tools/diff_real_roots.py",),
      "OPEN-128 re-grade diff: the protocol re-grade (fixed clock)"),
+    ("corpora/oracle_baseline/regrade_open128_apply_fixes_real_*.json",
+     ("oracle_before",), None, None,
+     "OPEN-128 re-grade diff of an apply_fixes_real window: the oracle of the "
+     "grades it re-graded (OPEN-118, no clock or grading code recorded)"),
+    ("corpora/oracle_baseline/regrade_open128_apply_fixes_real_*.json",
+     ("oracle_after",), _oracle.PROTOCOL_CLOCK,
+     ("scripts/tools/gen_apply_fixes_real_differential.py",
+      "scripts/tools/diff_real_roots.py"),
+     "OPEN-128 re-grade diff of an apply_fixes_real window: the protocol re-grade"),
 )
 
 # THE GRADER of every GRADED artefact that records grading_code (C-128,
@@ -272,18 +281,22 @@ GRADERS = {
     "corpora/real_roots/manifest_sample3.json": ("scripts/tools/diff_real_roots.py",),
     # OPEN-128 (8): the 13 producers that were GRADING_CODE_PENDING.
     "corpora/apply_fixes_real/results.json":
-        ("scripts/tools/gen_apply_fixes_real_differential.py",),
+        ("scripts/tools/gen_apply_fixes_real_differential.py",
+         "scripts/tools/diff_real_roots.py"),
     "corpora/apply_fixes_real/results_virgin.json":
-        ("scripts/tools/gen_apply_fixes_real_differential.py",),
+        ("scripts/tools/gen_apply_fixes_real_differential.py",
+         "scripts/tools/diff_real_roots.py"),
     "corpora/apply_fixes_real/results_fresh.json":
-        ("scripts/tools/gen_apply_fixes_real_differential.py",),
-    "corpora/strict_battery/manifest.json": ("scripts/tools/gen_strict_battery.py",),
+        ("scripts/tools/gen_apply_fixes_real_differential.py",
+         "scripts/tools/diff_real_roots.py"),
+    "corpora/strict_battery/manifest.json":
+        ("scripts/tools/gen_strict_battery.py", "scripts/tools/diff_real_roots.py"),
     "corpora/false_ready/manifest.json":
         ("scripts/tools/false_ready_oracle.sh", "scripts/tools/_oracle.sh"),
     "corpora/apply_fixes/manifest.json":
         ("scripts/tools/check_apply_fixes_roundtrip.py",),
     "corpora/contracts/strict/article-s0-signatures.json":
-        ("scripts/tools/gen_strict_signatures.py", "scripts/tools/gen_contract.py"),
+        ("scripts/tools/gen_strict_signatures.py", "scripts/tools/_strict_s0.py"),
     "corpora/strict_s0/rule_probes.json":
         ("scripts/tools/strict_differential.py", "scripts/tools/_strict_s0.py"),
     "corpora/strict_s0/differential_v2.json":

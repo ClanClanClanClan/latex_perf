@@ -208,21 +208,28 @@ jobs:
           REQUIRE_PDFLATEX: "1"
         run: python3 scripts/tools/check_apply_fixes_roundtrip.py --repo .
 
-      # OPEN-128 (8): ONE CONFIGURATION, TWO PLATFORMS. Every document of the
-      # platform set is graded here and compared, per document, with the
-      # grades of record in corpora/oracle_baseline/platform_residuals.json
-      # (taken at one commit on both sides: the laptop's colima VM and this
-      # runner). A document whose grade differs from the recorded grade FOR
-      # THIS PLATFORM fails the step; the recorded per-platform grades, and
-      # the documents whose grades differ between the platforms, are the
-      # residuals the owner chooses O3.2/O3.3 on. The grades are uploaded.
-      - name: Platform residuals (per-document grades on this runner)
+  # OPEN-128 (8): ONE CONFIGURATION, TWO PLATFORMS. A job of its own (it does
+  # not need the CLI, and it must not slow the required tex-oracle job): every
+  # document of the platform set is graded on this runner through the same
+  # launch definition and compared, per document, with the grades of record in
+  # corpora/oracle_baseline/platform_residuals.json, which were taken at one
+  # commit on both sides (the laptop's colima VM and this runner). A document
+  # graded differently from the recorded grade FOR THIS PLATFORM fails the
+  # step; the recorded per-platform grades and the documents whose grades differ
+  # between the platforms are the residuals the owner chooses O3.2/O3.3 on.
+  oracle-platform:
+    name: oracle-platform
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull pinned TeX Live image
+        run: docker pull "$TEX_IMAGE"
+      - name: Grade the platform set on this runner
         run: |
           set -euo pipefail
           python3 scripts/tools/check_oracle_platforms.py --grade --platform ci \
             --out /tmp/platform_ci.json
-          python3 scripts/tools/check_oracle_platforms.py --check /tmp/platform_ci.json
-
       - name: Upload the platform grades
         if: always()
         uses: actions/upload-artifact@v4
@@ -230,3 +237,5 @@ jobs:
           name: platform-grades-ci
           path: /tmp/platform_ci.json
           if-no-files-found: warn
+      - name: Compare with the recorded CI grades
+        run: python3 scripts/tools/check_oracle_platforms.py --check /tmp/platform_ci.json

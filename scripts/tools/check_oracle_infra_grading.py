@@ -380,15 +380,15 @@ OUTPUT_NAME_ALLOW = {
         "extensions EXCLUDED from the job-written set, not a name read",
     ("scripts/tools/gen_contract.py", '"lazy_files": "first-run .fls INPUT files minus those of the same "'):
         "prose in a recorded field",
-    ("scripts/tools/check_oracle_equivalence.py", "INNER = r\'\'\'"):
-        "the in-image driver's source, which itself calls job_output",
 }
 PDF_VERDICT_SOURCE = {
     "scripts/tools/diff_real_roots.py": r"\brun\.pdf\b",
     "scripts/tools/gen_apply_fixes_real_differential.py": r"\brun1\.compiles\b",
     "scripts/tools/gen_strict_battery.py": r"\brun\.pdf\b",
     "scripts/tools/_strict_s0.py": r"\br\.pdf\b",
-    "scripts/tools/check_oracle_equivalence.py": r"\bra\.pdf\b",
+    "scripts/tools/check_oracle_platforms.py": r"\br\.pdf\b",
+    "scripts/tools/oracle_clock_census.py": r"\br\.pdf\b",
+    "scripts/tools/oracle_canary.py": r"\br\.compiles\b",
     "scripts/tools/oracle_baseline_classify.py": r"\brun\.pdf\b",
     "scripts/tools/regrade_sample.py": r"\br\.pdf\b",
     "scripts/tools/audit_fix_meaning.py": r"\brun\.compiles\b",
@@ -796,30 +796,36 @@ class Checker:
         wr = self.workroot
         # (1) the supervisor saw the document write pdfTeX's own log/pdf twice,
         # or could not watch, or the shim's proof is missing or wrong
-        for ev, what in ((evid(cw={"t.log": 2}), "its own log"),
-                         (evid(cw={"t.pdf": 2}), "its own pdf"),
-                         (evid(err="OSError(38)"), "no inotify"),
-                         (evid(overflow=1), "a queue overflow"),
-                         (evid(alias=[["T.LOG", "t.log"]], cw={"t.log": 1}),
-                          "an alias of its own log (case-insensitive root)"),
-                         (evid(alias=OMIT), "no alias list"),
-                         ("OMIT", "no evidence line at all"),
-                         ("NOT-JSON", "an unreadable evidence line"),
-                         # OPEN-128: the shim's proof
-                         (evid(shim_sha256="0" * 64), "another shim than the pinned one"),
-                         (evid(shim_sha256=OMIT), "no shim hash"),
-                         (evid(shim_mode=None), "no shim mark on the engine "
-                          "(the preload was ignored: the real clock)"),
-                         (evid(shim_mode="free"), "a shim without the TeX "
-                          "file-system view on the engine")):
+        # Each refusal must be for ITS reason (the message), not for another
+        # layer's: the evidence line has several, and a kill of one layer
+        # must not be masked by the next.
+        for ev, what, why in (
+                (evid(cw={"t.log": 2}), "its own log", "opened pdfTeX's own"),
+                (evid(cw={"t.pdf": 2}), "its own pdf", "opened pdfTeX's own"),
+                (evid(err="OSError(38)"), "no inotify", "could not watch"),
+                (evid(overflow=1), "a queue overflow", "could not watch"),
+                (evid(alias=[["T.LOG", "t.log"]], cw={"t.log": 1}),
+                 "an alias of its own log (case-insensitive root)", "under another name"),
+                (evid(alias=OMIT), "no alias list", "has no alias"),
+                ("OMIT", "no evidence line at all", "reported no evidence"),
+                ("NOT-JSON", "an unreadable evidence line", "unreadable evidence line"),
+                # OPEN-128: the shim's proof
+                (evid(shim_sha256="0" * 64), "another shim than the pinned one",
+                 "not the pinned"),
+                (evid(shim_sha256=OMIT), "no shim hash", "not the pinned"),
+                (evid(shim_mode=None), "no shim mark on the engine (the preload "
+                 "was ignored: the real clock)", "carries no mark"),
+                (evid(shim_mode="free"), "a shim without the TeX file-system view "
+                 "on the engine", "carries no mark")):
             os.environ["FAKE_EVID"] = ev
             try:
                 got, err = self.run_pdflatex("okpdf")
             finally:
                 os.environ.pop("FAKE_EVID", None)
             self.expect(f"run_pdflatex graded a run whose supervisor reported "
-                        f"{what} (C-99/OPEN-128: the evidence is not the oracle's)",
-                        err is not None, f"returned {got!r}")
+                        f"{what} (C-99/OPEN-128: the evidence is not the oracle's), "
+                        f"or refused it for another reason than {why!r}",
+                        err is not None and why in str(err), f"returned {got!r} {err!r}"[:300])
         for f in ("t.pdf", "t.log"):
             (wr / f).unlink(missing_ok=True)
         os.environ["FAKE_EVID"] = evid()

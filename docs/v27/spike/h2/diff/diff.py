@@ -18,7 +18,7 @@ usage:
       limit (LIMIT), like the time-out
   (the binary side is the recipe in README.md: it starts the engine, which this
    repository's check_oracle_pin.py allows only inside _oracle.py)
-  diff.py compare --arch A --work DIR [--write]
+  diff.py compare --arch A --work DIR [--write | --only NAME...]
       classifies every input, prints the totals, and with --write records
       results-A.tsv beside this file (the committed per-input results)
 
@@ -44,6 +44,7 @@ import subprocess
 import sys
 import time
 import re
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -70,12 +71,34 @@ def parse_spec(text: str):
     return items
 
 
+FS_KEYS = ("fsfile", "fsexists", "fslist", "fsdir", "fsabsent")
+ARCH = [None]     # the architecture being prepared
+
+
+def resolve_blob(k, r, work):
+    """fsfile PATH=@sha256:HEX: the bytes measured in the image (snapshot.py), kept in
+    WORK/blobs/HEX; fetched from the image again (and checked) when missing"""
+    if k != "fsfile" or "=@sha256:" not in r:
+        return (k, r)
+    pth, h = r.split("=@sha256:", 1)
+    b = work / "blobs" / h
+    if not b.exists():
+        subprocess.run([sys.executable, str(H / "snapshot.py"), "fetch", "--blobs", str(work / "blobs"),
+                        "--arch", ARCH[0], f"{pth}={h}"], check=True)
+    if sha(b.read_bytes()) != h:
+        sys.exit(f"{b}: not the bytes the snapshot recorded")
+    return (k, f"{pth}={b}")
+
+
 def names():
     return sorted(p.stem for p in INPUTS.glob("*.tex"))
 
 
 def prepare(arch, work):
-    base = parse_spec((H / "base.spec").read_text())
+    # a line "ARCH:key rest" applies to that architecture's runs only (the two images' file
+    # systems differ: texmf-var/ls-R lists the same names in another order)
+    base = [(k.split(":", 1)[1], r) if ":" in k else (k, r) for k, r in parse_spec((H / "base.spec").read_text())
+            if ":" not in k or k.split(":", 1)[0] == arch]
     kpse_names = {r.split("=", 1)[0] for k, r in base if k == "kpse"} | \
         {l.split("=", 1)[0] for l in (H.parent / "evidence/inirun/kpsevars.txt").read_text().splitlines()}
     work.mkdir(parents=True, exist_ok=True)
@@ -98,8 +121,25 @@ def prepare(arch, work):
                     spec = [(k2, r2) for k2, r2 in spec if not (k2 == "env" and r2.split("=", 1)[0] == r)]
                 elif k == "clock":
                     spec.append((k, r))
+                elif k in FS_KEYS:
+                    pth = r.split("=", 1)[0]
+                    spec = [(k2, r2) for k2, r2 in spec if not (k2 in FS_KEYS and r2.split("=", 1)[0] == pth)]
+                    spec.append((k, r))
                 else:
                     sys.exit(f"{n}.spec: unknown key {k}")
+        # the working directory's files: inputs/NAME.files/ (none: an empty directory)
+        cwd = next(r for k, r in spec if k == "cwd")
+        fdir = INPUTS / f"{n}.files"
+        files = sorted(f.name for f in fdir.iterdir() if f.is_file()) if fdir.is_dir() else []
+        spec.append(("fslist", f"{cwd}=" + "/".join(files)))
+        d0 = work / n / "cwd"
+        if d0.exists():
+            shutil.rmtree(d0)
+        d0.mkdir(parents=True)
+        for f in files:
+            (d0 / f).write_bytes((fdir / f).read_bytes())
+            spec.append(("fsfile", f"{cwd}/{f}={d0 / f}"))
+        spec = [resolve_blob(k, r, work) for k, r in spec]
         spec.append(("charsigned", "1" if arch == "amd64" else "0"))
         d = work / n
         d.mkdir(exist_ok=True)
@@ -192,16 +232,19 @@ def result_line(drv: str) -> str:
     return rs[-1][len("RESULT: "):] if rs else "no result (driver failed)"
 
 
-def compare(arch, work, write):
+def compare(arch, work, write, only=None):
     rows = []
-    for n in (work / "inputs.txt").read_text().split():
+    for n in only or (work / "inputs.txt").read_text().split():
         d = work / n
         m, b = d / "model", d / "bin"
         drv = (m / "driver.out").read_bytes().decode("latin-1")
         res = result_line(drv)
         ps_sha = json.loads((m / "run.json").read_text())["ps_sha256"]
         brc = int((b / "rc").read_text().strip())
-        bfiles = {p.name: p.read_bytes() for p in (b / "w").iterdir() if p.is_file() and p.name != "clock.log"}
+        # the binary's working directory after the run, less the input files it did not change
+        cwdf = {p.name: p.read_bytes() for p in (d / "cwd").iterdir()} if (d / "cwd").is_dir() else {}
+        bfiles = {p.name: p.read_bytes() for p in (b / "w").iterdir() if p.is_file() and p.name != "clock.log"
+                  and not (p.name in cwdf and cwdf[p.name] == p.read_bytes())}
         bclock = len((b / "w" / "clock.log").read_text().splitlines()) if (b / "w" / "clock.log").exists() else 0
         bout, berr = (b / "out").read_bytes(), (b / "err").read_bytes()
         # the model's handles: 1 stdout, 2 stderr, >= 3 files named in driver.out
@@ -251,6 +294,7 @@ def main():
     if arch not in ("arm64", "amd64") or not str(work):
         sys.exit(__doc__)
     if cmd == "prepare":
+        ARCH[0] = arch
         prepare(arch, work)
     elif cmd == "model":
         only = sys.argv[sys.argv.index("--only") + 1:] if "--only" in sys.argv else None
@@ -258,7 +302,10 @@ def main():
         run_model(arch, work, opt("--ps"), int(opt("--jobs", "4")), int(opt("--timeout", "900")), only,
                   int(cap) if cap else None)
     elif cmd == "compare":
-        compare(arch, work, "--write" in sys.argv)
+        only = sys.argv[sys.argv.index("--only") + 1:] if "--only" in sys.argv else None
+        if only and "--write" in sys.argv:
+            sys.exit("--write records every input: no --only with it")
+        compare(arch, work, "--write" in sys.argv, only)
     else:
         sys.exit(__doc__)
 

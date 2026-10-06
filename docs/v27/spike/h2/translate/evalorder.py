@@ -39,7 +39,7 @@ EXT_EFFECTS = {
                          ("strpool",), ("makestring", "getnullstr")),
     # spike H.3, the format file (Boundary.v): the (un)dump macros use the global fmtfile;
     # their base argument is a variable, counted read and written below
-    "wopenin": (("nameoffile",), ("nameoffile", "namelength"), ("nameoffile",), ("nameoffile",), ()),
+    "wopenin": (("nameoffile", "texinputtype"), ("nameoffile", "namelength"), ("nameoffile",), ("nameoffile",), ()),
     "wopenout": (("nameoffile",), (), ("nameoffile",), (), ()),
     "wclose": ((), (), (), (), ()),
     "undumpthings": (("fmtfile",), (), (), (), ()), "undumpint": (("fmtfile",), (), (), (), ()),
@@ -56,16 +56,88 @@ EXT_EFFECTS = {
     "strlen": ((), (), ("*",), (), ()),
     # strcpy writes the block its first argument points to: any heap block
     "strcpy": ((), (), ("*",), ("*",), ()),
+    # boundary step, file input (Boundary.v open_input, Kpse.v): open_input reads
+    # nameoffile (and its block), texinputtype and (open_in_or_pipe) shellenabledp, and
+    # replaces nameoffile and namelength; bopenin also sets tfmtemp (the first getc);
+    # kpathsea's own state and the streams are the I/O state
+    "kpseinnameok": ((), (), ("*",), (), ()),
+    "kpsetexformat": ((), (), (), (), ()),
+    "aopenin": (("nameoffile", "shellenabledp", "texinputtype"), ("nameoffile", "namelength"),
+                ("nameoffile",), ("nameoffile",), ()),
+    "bopenin": (("nameoffile", "texinputtype"), ("nameoffile", "namelength", "tfmtemp"),
+                ("nameoffile",), ("nameoffile",), ()),
+    "makefullnamestring": (("strpool", "poolptr", "poolsize"), ("poolptr",), (), ("strpool",),
+                           ("makestring", "getnullstr")),
+    "synctexstartinput": (("synctexoption", "synctexoffset", "zeqtb", "curinput"), ("curinput",),
+                          ("zeqtb",), ("zeqtb",), ()),
+    "getc": ((), (), (), (), ()), "feof": ((), (), (), (), ()), "eof": ((), (), (), (), ()),
+    "bclose": ((), (), (), (), ()),
+    "kpseoutnameok": ((), (), ("*",), (), ()),
+    "texmfyesno": ((), (), ("*",), (), ()),
+    # pdftex.h pdfassert = assert: reads its condition (a value); a false one aborts (Stuck)
+    "pdfassert": ((), (), (), (), ()),
+    # cpascal.h: a string literal; printcstring calls printchar on each byte of its argument
+    "promptfilenamehelpmsg": ((), (), (), (), ()),
+    "printcstring": ((), (), ("*",), (), ("printchar",)),
 }
 
 
 # Externals with no effect on the I/O state: a handle constant, a cast, a string read
 # (spike H.3; before, every modelled external counted as writing the I/O state, which made
 # `write(stdout, ..., stringcast(nameoffile+1))` an unsequenced conflict)
-PURE_EXTS = {"stdout", "stderr", "stdin", "stringcast", "ucharcast", "ISDIRSEP", "strcmp", "strlen"}
+PURE_EXTS = {"stdout", "stderr", "stdin", "stringcast", "ucharcast", "ISDIRSEP", "strcmp", "strlen",
+             "kpseinnameok", "kpsetexformat", "pdfassert"}
 # Externals that are C functions (or macros) reading their arguments' values only: a variable
 # argument is read, not written (undumpimagemeta(integer, integer, integer) is a function)
-VALUE_ARG_EXTS = {"undumpimagemeta", "strcmp", "strlen", "stringcast", "ucharcast", "ISDIRSEP", "dumpint"}
+VALUE_ARG_EXTS = {"undumpimagemeta", "strcmp", "strlen", "stringcast", "ucharcast", "ISDIRSEP", "dumpint",
+                  "kpseinnameok", "kpseoutnameok", "texmfyesno", "getc", "feof", "eof", "pdfassert", "printcstring"}
+
+
+# Procedures that never return (boundary step, H-boundary-report.md): the four the source
+# declares `noreturn` (tex.ch; web2c gives them C's noreturn attribute), each VERIFIED here:
+# its body has no return, goto or label, and cannot complete normally (it ends in uexit, or
+# in a call to one of these, on every branch). Effects on paths that end in such a call never
+# return to an unsequenced neighbour; `check` uses that (rule (b) there).
+NORETURN_DECLARED = ("jumpout", "overflow", "fatalerror", "confusion")
+
+
+def _jumps(s):
+    if not isinstance(s, tuple) or not s:
+        return False
+    if s[0] in ("return", "goto", "label"):
+        return True
+    return any(_jumps(x) for x in s[1:] if isinstance(x, tuple)) or \
+        any(_jumps(y) for x in s[1:] if isinstance(x, list) for y in x if isinstance(y, tuple))
+
+
+def _cannot_complete(s, nr):
+    k = s[0]
+    if k == "pcall":
+        return s[1] in nr
+    if k == "ext":
+        return s[1] == "uexit"
+    if k == "seq":
+        return any(_cannot_complete(x, nr) for x in s[1])
+    if k == "if":
+        return _cannot_complete(s[2], nr) and _cannot_complete(s[3], nr)
+    return False
+
+
+def noreturn_procs(L, procs):
+    byname = {p["name"]: p for p in procs}
+    nr = set()
+    changed = True
+    while changed:
+        changed = False
+        for n in NORETURN_DECLARED:
+            pid = byname[n]["id"]
+            if pid not in nr and not _jumps(byname[n]["body"]) and _cannot_complete(byname[n]["body"], nr):
+                nr.add(pid)
+                changed = True
+    if len(nr) != len(NORETURN_DECLARED):
+        raise SystemExit(f"a declared noreturn procedure is not shown to never return: "
+                         f"{sorted(set(NORETURN_DECLARED) - {p['name'] for p in procs if p['id'] in nr})}")
+    return frozenset(nr)
 
 
 def modelled(boundary_v_text):
@@ -74,8 +146,11 @@ def modelled(boundary_v_text):
 
 
 class Effects:
-    def __init__(self, L, procs):
+    def __init__(self, L, procs, nr=None):
+        """nr = None: every path; nr = the noreturn procedures: the effects on the paths that
+        return (a call to one of nr, and uexit, contribute nothing: they never return)"""
         self.L = L
+        self.nr = nr
         self.procs = {p["id"]: p for p in procs}
         self.gname = {gid: n for n, (gid, _) in L.globals.items()}
         self.mem_loc = {}   # proc id -> {local offset: region} for mem/eqtb register copies
@@ -167,6 +242,8 @@ class Effects:
 
     def call_eff(self, pid, args, r, w):
         sr, sw = self.summ.get(pid, (set(), set()))
+        if self.nr is not None and pid in self.nr:
+            sr, sw = set(), set()
         offs = self.param_offsets[pid]
         amap = {}
         for off, a in zip(offs, args):
@@ -185,6 +262,8 @@ class Effects:
         eff = EXT_EFFECTS.get(name)
         if eff is None:
             return                    # unmodelled: the run is Stuck here
+        if self.nr is not None and name == "uexit":
+            return                    # it never returns
         gr, gw, hr, hw, calls = eff
         g = self.L.globals
         r.update(("g", g[n][0]) for n in gr)
@@ -296,35 +375,53 @@ def conflict(e1, e2):
     return meets(w1, r2 | w2) or meets(w2, r1)
 
 
+def conflict2(x1, x2):
+    """x = (effects on every path, effects on the paths that return). Rule (a): the parts do
+    not interfere. Rule (b) (boundary step): a part that writes nothing commutes with a part
+    whose returning paths write nothing it reads: if the other part returns, the two orders
+    reach the same state and values; if it never returns, the part that writes nothing left
+    no trace either way."""
+    (f1, ret1), (f2, ret2) = x1, x2
+    if not conflict(f1, f2):
+        return False
+    if not f1[1] and not meets(ret2[1], f1[0]):
+        return False
+    if not f2[1] and not meets(ret1[1], f2[0]):
+        return False
+    return True
+
+
 def check(L, procs):
     E = Effects(L, procs)
+    ER = Effects(L, procs, noreturn_procs(L, procs))
     conflicts, pairs = [], [0]
 
+    def both(f):
+        out = []
+        for X in (E, ER):
+            r, w = set(), set()
+            f(X, r, w)
+            out.append((r, w))
+        return tuple(out)
+
     def eff_e(e):
-        r, w = set(), set()
-        E.expr_eff(e, r, w)
-        return r, w
+        return both(lambda X, r, w: X.expr_eff(e, r, w))
 
     def eff_l(l):
-        r, w = set(), set()
-        E.lval_eff(l, r, w)
-        return r, w
+        return both(lambda X, r, w: X.lval_eff(l, r, w))
 
     def eff_arg(a, xt, ro=False):
-        r, w = set(), set()
         if xt:
-            E.xarg_eff(a, r, w, ro)
-        else:
-            E.arg_eff(a, r, w)
-        return r, w
+            return both(lambda X, r, w: X.xarg_eff(a, r, w, ro))
+        return both(lambda X, r, w: X.arg_eff(a, r, w))
 
     def group(kind, effs, where, node=None):
         # every pair of unsequenced parts
         for i in range(len(effs)):
             for j in range(i + 1, len(effs)):
                 pairs[0] += 1
-                if conflict(effs[i], effs[j]):
-                    conflicts.append((where, kind, node, effs[i], effs[j]))
+                if conflict2(effs[i], effs[j]):
+                    conflicts.append((where, kind, node, effs[i][0], effs[j][0]))
                     return
 
     def ve(e, where):
@@ -399,6 +496,6 @@ def check(L, procs):
         elif k == "write":
             group("write", [eff_e(s[1])] + [eff_e(x) for _, x in s[2]], where, s)
     for p in procs:
-        E.cur = p["id"]
+        E.cur = ER.cur = p["id"]
         vs(p["body"], p["name"])
     return conflicts, pairs[0]

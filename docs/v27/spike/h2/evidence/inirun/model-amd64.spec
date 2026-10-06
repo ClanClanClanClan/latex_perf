@@ -40,3 +40,5 @@ clock 1788076265 373456
 clock 1788076266 623456
 clock 1788076267 873456
 charsigned 1
+cwd /w
+fslist /w=

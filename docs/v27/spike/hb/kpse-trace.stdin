@@ -1,0 +1,2 @@
+\catcode`\{=1 \catcode`\}=2 \catcode`\#=6 \input foo \openin1=bar \read1 to\x \message{[\meaning\x]}\closein1 \font\f=cmr10 \input nofile 
+\relax

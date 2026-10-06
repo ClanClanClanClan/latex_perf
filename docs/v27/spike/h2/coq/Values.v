@@ -7,7 +7,7 @@
 
 From Coq Require Import ZArith List Bool String PArray Uint63 Sint63 Floats.
 Local Open Scope string_scope.
-From PS Require Import Syntax.
+From PS Require Import Syntax KTypes.
 Import ListNotations.
 Local Open Scope Z_scope.
 
@@ -161,9 +161,11 @@ Record io : Type := mkio {
   io_stdin : list Z;                     (* the bytes of stdin not yet read *)
   io_argv : list (list Z);               (* the command line after the program name *)
   io_char_signed : bool;                 (* plain char: signed (x86_64) or unsigned (aarch64) *)
-  io_files : list (Z * list Z);          (* open input files: handle, remaining bytes *)
+  io_files : list (Z * list Z);          (* files this run opened for writing: handle, the name
+                                            given to fopen (one new component of the working
+                                            directory); read streams are in io_in only *)
   io_next_handle : Z;
-  io_fs : list (list Z * list Z);        (* the file-system snapshot: name, contents *)
+  io_fs : list (list Z * fsent);         (* the file-system snapshot (above) *)
   io_env : list (list Z * list Z);       (* the process environment, as getenv(3) sees it:
                                             name, value bytes (no parsing here; Boundary.v
                                             applies C's own parsing: STREQ, strtoull, atoi) *)
@@ -171,12 +173,12 @@ Record io : Type := mkio {
                                             image for this run's environment (kpathsea looks at
                                             the environment first, then texmf.cnf, then expands
                                             the value): name, value bytes; absent = NULL *)
-  io_kpsefind : list (Z * Z * list Z * list Z);
-                                         (* kpse_find_file(name, format, must_exist) in the
-                                            pinned image for this run: (format number,
-                                            must_exist 0/1, name, result path; an empty path
-                                            is NULL). A query not in the table is Stuck *)
+  io_cwd : list Z;                       (* the working directory, a canonical absolute path *)
+  io_kfmt : list (Z * kfmt);             (* kpse_format_info per format number (above); a
+                                            format not listed is Stuck where it is searched *)
+  io_kp : kpst;                          (* kpathsea's C-internal state (above) *)
   io_in : list (Z * list Z);             (* an open input stream: handle, the bytes not yet read *)
+  io_eof : list Z;                       (* the handles whose stdio end-of-file indicator is set *)
   io_gz : list (list Z * list Z);        (* for a file opened through zlib (gzdopen: the
                                             format file), the bytes gzread returns: path, the
                                             decompressed stream. Decompression is outside the
@@ -191,17 +193,21 @@ Record io : Type := mkio {
 
 (* functional updates of one field of io (positional mkio calls are error-prone) *)
 Definition io_set_out (x : io) (o : list (Z * list Z)) : io :=
-  mkio o (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio o (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_stdin (x : io) (b : list Z) : io :=
-  mkio (io_out x) b (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) b (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_files (x : io) (fs : list (Z * list Z)) (nh : Z) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) fs nh (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) fs nh (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_in (x : io) (i : list (Z * list Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) i (io_gz x) (io_clock x) (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) i (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
+Definition io_set_eof (x : io) (e : list Z) : io :=
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) e (io_gz x) (io_clock x) (io_cstate x).
 Definition io_set_clock (x : io) (c : list (Z * Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) c (io_cstate x).
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) c (io_cstate x).
 Definition io_set_cstate (x : io) (c : list (Z * Z)) : io :=
-  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_kpsefind x) (io_in x) (io_gz x) (io_clock x) c.
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) (io_kp x) (io_in x) (io_eof x) (io_gz x) (io_clock x) c.
+Definition io_set_kp (x : io) (k : kpst) : io :=
+  mkio (io_out x) (io_stdin x) (io_argv x) (io_char_signed x) (io_files x) (io_next_handle x) (io_fs x) (io_env x) (io_kpse x) (io_cwd x) (io_kfmt x) k (io_in x) (io_eof x) (io_gz x) (io_clock x) (io_cstate x).
 
 Record state : Type := mkst {
   heap : array block; hp : Z; fp : Z; fsp : Z; st_io : io }.

@@ -7,29 +7,29 @@
   "amd64": {
    "binary": "amd64 under qemu-user on an arm64 host",
    "charsigned": 1,
-   "load1": null,
-   "model_wall_s": 10.43,
-   "note": "H.5 stage 2 (B2) re-run, 2026-10-06: load not recorded; outputs byte-identical to the previous run, only the TIME line changed"
+   "load1": 264.6,
+   "model_wall_s": 58.69,
+   "note": "boundary step checkpoints 1-2 re-run, 2026-10-06 (the spec gained cwd and an empty working-directory listing); outputs byte-identical to H.5's, only the TIME line changed"
   },
   "arm64": {
    "binary": "native arm64",
    "charsigned": 0,
-   "load1": null,
-   "model_wall_s": 11.38,
-   "note": "H.5 stage 2 (B2) re-run, 2026-10-06: load not recorded; outputs byte-identical to the previous run, only the TIME line changed"
+   "load1": 292.4,
+   "model_wall_s": 46.17,
+   "note": "boundary step checkpoints 1-2 re-run, 2026-10-06 (the spec gained cwd and an empty working-directory listing); outputs byte-identical to H.5's, only the TIME line changed"
   }
  },
  "image": "texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b",
  "input": "diff/inputs/t0.tex",
- "ps_sha256": "cae7a953b5a3822fa9787c6861ebb01b8710108c53113a33ba92872eb04af64b",
+ "ps_sha256": "5faee43003276ee0e8b1b933c2d3d01ced8c4c71c9f64c1c57cd02f2b672a56d",
  "sha256": {
-  "model-amd64.driver.out": "f8e1d8198281096956407f918007f2c6bf46782aac7c56f293ff622253330618",
-  "model-amd64.spec": "147e802460f11a0ffd08e8988f033c70b038f1424e08440c9067897577eed36e",
+  "model-amd64.driver.out": "acd3856b59f5ea8c81618bf8d9a12ae236bebea70180768e847c95c99bc49dd6",
+  "model-amd64.spec": "d2d2929bb4bdddf8990ff9f9591ee1bc370bd29f337ed8ca487583a8ee5c3130",
   "model-amd64.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "model-amd64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
   "model-amd64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",
-  "model-arm64.driver.out": "d9199fde0cc76155b7c37877d83298c8022cc1f0ec143a7bcee8ccb6c0a665ea",
-  "model-arm64.spec": "0a4e05d4f0d28486a4cce48bc18067305cf4486bf84ac7cdbe2c20082e3ce3b2",
+  "model-arm64.driver.out": "b99fa7cdd5a1986883ec4d6215c8194f3adfce7dfc41af63965ca7748c52794e",
+  "model-arm64.spec": "1defce178821ee47eb0b80158bb72997deef298dd744ac4e4c1c009bfa9f8930",
   "model-arm64.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "model-arm64.stdout": "2ed94b5af7fe1021f99225ba427868f69337763abb810412ab3747bfcd563d7b",
   "model-arm64.texput.log": "15dd324659248ec0df547835aa0d5d01c2ea5ea7add58cfb94858939cd7fb102",

@@ -9,8 +9,16 @@
                          environment (measured; see evidence/inirun/kpsevars.txt)
      clock SEC USEC      one gettimeofday(2) reading, in call order
      charsigned 0|1      plain char: 0 = unsigned (aarch64), 1 = signed (x86_64)
-     kpsefind F M NAME=PATH   kpse_find_file(NAME, format F, must_exist M) returns PATH
-                         (an empty PATH is NULL), measured in the pinned image
+     cwd PATH            the working directory (a canonical absolute path)
+     fsfile PATH=LOCAL   the file-system snapshot (Values.fsent; PATH canonical, without
+                         '='): a readable non-directory whose bytes are LOCAL's
+     fsexists PATH       a readable non-directory whose bytes the snapshot does not hold
+     fslist PATH=N1/N2/...   a directory and its complete listing (without . and ..)
+     fsdir PATH          a directory whose listing the snapshot does not hold
+     fsabsent PATH       stat fails (ENOENT)
+     kfmt F SSO MK SUF ALT PATH   kpse_format_info[F] (Values.kfmt): suffix_search_only
+                         SSO and "make_tex would run a program" MK (0/1), the suffix and
+                         alt_suffix lists (comma-separated, or - for none), the search path
      gzfile PATH=LOCAL   the file PATH of the run's file system, read through zlib: LOCAL
                          holds the bytes gzread returns (decompressed outside the model, TB-7)
    Values are passed to the model as raw bytes: every C parsing of them (STREQ, strtoull,
@@ -29,7 +37,20 @@ let () =
   if Stdlib.Array.length Sys.argv <> 4 then die "usage: ps.exe FUEL SPEC STDIN";
   let fuel = match int_of_string_opt Sys.argv.(1) with Some f when f > 0 -> f | _ -> die "FUEL" in
   let argv = ref [] and env = ref [] and kpse = ref [] and clock = ref [] and signed = ref None in
-  let kfind = ref [] and gz = ref [] in
+  let gz = ref [] and cwd = ref None and fs = ref [] and kfmt = ref [] in
+  let canonical p = (* "/" or "/a/b": no empty, ".", ".." component, no trailing slash, no '=' *)
+    p = "/" || (Stdlib.String.length p > 1 && Stdlib.String.get p 0 = '/'
+                && not (Stdlib.String.contains p '=')
+                && Stdlib.List.for_all (fun c -> c <> "" && c <> "." && c <> "..")
+                     (Stdlib.List.tl (Stdlib.String.split_on_char '/' p))) in
+  let addfs path e =
+    if not (canonical path) then die ("not a canonical path: " ^ path);
+    if Stdlib.List.mem_assoc path !fs then die ("two snapshot entries for " ^ path);
+    fs := (path, e) :: !fs in
+  let pathval rest = match Stdlib.String.index_opt rest '=' with
+    | Some i -> (Stdlib.String.sub rest 0 i, Stdlib.String.sub rest (i + 1) (Stdlib.String.length rest - i - 1))
+    | None -> die ("no '=' in " ^ rest) in
+  let lst s = if s = "-" then [] else Stdlib.List.map bytes_of (Stdlib.String.split_on_char ',' s) in
   let ic = open_in_bin Sys.argv.(2) in
   let kv rest = match Stdlib.String.index_opt rest '=' with
     | Some i -> (bytes_of (Stdlib.String.sub rest 0 i),
@@ -48,15 +69,24 @@ let () =
         | "clock" -> (match Stdlib.String.split_on_char ' ' rest with
                       | [s; u] -> clock := (dec s, dec u) :: !clock
                       | _ -> die ("bad clock line: " ^ l))
-        | "kpsefind" -> (match Stdlib.String.index_opt rest ' ' with
-                         | Some i1 -> (match Stdlib.String.index_from_opt rest (i1 + 1) ' ' with
-                                       | Some i2 ->
-                                         let f = dec (Stdlib.String.sub rest 0 i1)
-                                         and m = dec (Stdlib.String.sub rest (i1 + 1) (i2 - i1 - 1)) in
-                                         let (n, p) = kv (Stdlib.String.sub rest (i2 + 1) (Stdlib.String.length rest - i2 - 1)) in
-                                         kfind := (((f, m), n), p) :: !kfind
-                                       | None -> die ("bad kpsefind line: " ^ l))
-                         | None -> die ("bad kpsefind line: " ^ l))
+        | "cwd" -> if not (canonical rest) then die ("cwd is not canonical: " ^ rest); cwd := Some rest
+        | "fsfile" -> let (pth, local) = pathval rest in
+                      addfs pth (KTypes.FsFile (Some (bytes_of (In_channel.with_open_bin local In_channel.input_all))))
+        | "fsexists" -> addfs rest (KTypes.FsFile None)
+        | "fsdir" -> addfs rest (KTypes.FsDir None)
+        | "fslist" -> let (pth, names) = pathval rest in
+                      let ns = Stdlib.List.filter (fun n -> n <> "") (Stdlib.String.split_on_char '/' names) in
+                      if Stdlib.List.exists (fun n -> n = "." || n = "..") ns then die ("fslist with . or ..: " ^ l);
+                      addfs pth (KTypes.FsDir (Some (Stdlib.List.map bytes_of ns)))
+        | "fsabsent" -> addfs rest KTypes.FsAbsent
+        | "kfmt" -> (match Stdlib.String.split_on_char ' ' rest with
+                     | [f; sso; mk; suf; alt; path] ->
+                       let b01 x = match x with "0" -> false | "1" -> true | _ -> die ("kfmt: 0 or 1: " ^ l) in
+                       let f = dec f in
+                       if Stdlib.List.exists (fun (g, _) -> Big_int_Z.eq_big_int g f) !kfmt then die ("two kfmt lines for one format: " ^ l);
+                       kfmt := (f, { KTypes.kf_path = bytes_of path; kf_suffix = lst suf; kf_alt = lst alt;
+                                     kf_sso = b01 sso; kf_mktex = b01 mk }) :: !kfmt
+                     | _ -> die ("bad kfmt line: " ^ l))
         | "gzfile" -> (match Stdlib.String.index_opt rest '=' with
                        | Some i -> let path = Stdlib.String.sub rest 0 i
                                    and local = Stdlib.String.sub rest (i + 1) (Stdlib.String.length rest - i - 1) in
@@ -69,9 +99,12 @@ let () =
   let signed = match !signed with Some b -> b | None -> die "the spec must say charsigned 0 or 1" in
   let stdin_bytes = In_channel.with_open_bin Sys.argv.(3) In_channel.input_all in
   let io = { Values.io_out = []; io_stdin = bytes_of stdin_bytes; io_argv = Stdlib.List.rev !argv;
-             io_char_signed = signed; io_files = []; io_next_handle = z 3; io_fs = [];
+             io_char_signed = signed; io_files = []; io_next_handle = z 3;
+             io_fs = Stdlib.List.rev_map (fun (p, e) -> (bytes_of p, e)) !fs;
              io_env = Stdlib.List.rev !env; io_kpse = Stdlib.List.rev !kpse;
-             io_kpsefind = Stdlib.List.rev !kfind; io_in = []; io_gz = Stdlib.List.rev !gz;
+             io_cwd = (match !cwd with Some c -> bytes_of c | None -> die "the spec must give cwd");
+             io_kfmt = Stdlib.List.rev !kfmt; io_kp = { KTypes.kp_db = None; kp_map = None };
+             io_in = []; io_eof = []; io_gz = Stdlib.List.rev !gz;
              io_clock = Stdlib.List.rev !clock; io_cstate = [] } in
   let nclock = Stdlib.List.length !clock in
   (match Sys.getenv_opt "PS_COMPACT" with

@@ -144,11 +144,12 @@ def pure():
         fails.append(f"manifest: {len(m['c_vs_pascal_grouping'])} grouping sites")
     for q in (f"{npairs:,} unsequenced pairs", f"{nun} of them", "8 places"):
         quote(q)
+    # the boundary step (H-boundary-report.md, checkpoints 1-2): 15 externals more than H.3's 43
     modelled = set(re.findall(r"x =\? X_(\w+)", (H / "coq" / "Boundary.v").read_text()))
-    if len(modelled) != 43:
+    if len(modelled) != 58:
         fails.append(f"Boundary.v models {len(modelled)} externals")
-    quote("43 of the 188 externals")
-    quote("145 of 188 externals are Stuck")
+    quote("58 of the 188 externals")
+    quote("130 of 188 externals are Stuck")
     cm = json.loads((E / "cmain" / "cmain_globals.json").read_text())
     nz = sorted(k for k, v in cm.items() if v.get("nonzero"))
     want = sorted(["iniversion", "parsefirstlinep", "interactionoption", "formatdefaultlength", "TEXformatdefault",

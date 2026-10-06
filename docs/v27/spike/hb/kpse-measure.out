@@ -1,0 +1,53 @@
+
+ARGV0 /usr/local/texlive/2026/bin/ref/pdftex
+PROGNAME pdftex
+VAR texmf_casefold_search=1
+VAR try_std_extension_first=t
+VARNULL TEXMFLOG
+VARNULL TEXMFOUTPUT
+VAR openout_any=p
+VAR openin_any=a
+VAR log_openout=t
+VAR texmf_nlink_for_leaf=0
+VAR shell_escape=p
+$1 = 0xb250cc921b60 ".:/root/.texlive2026/texmf-config/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//:/root/texmf/fonts/tfm//:!!/usr/local/texlive/texmf-local/fonts/tfm//:!!/usr/local/texlive/2026/texmf-config/fonts/tfm//:!!/usr/local/texlive/2026/texmf-var/fonts/tfm//:!!/usr/local/texlive/2026/texmf-dist/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//"
+KFMT 3 sso=1 enabled=1 program=mktextfm
+  PATH .:/root/.texlive2026/texmf-config/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//:/root/texmf/fonts/tfm//:!!/usr/local/texlive/texmf-local/fonts/tfm//:!!/usr/local/texlive/2026/texmf-config/fonts/tfm//:!!/usr/local/texlive/2026/texmf-var/fonts/tfm//:!!/usr/local/texlive/2026/texmf-dist/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//
+  SUFFIX .tfm
+$2 = 0xb250cbaaf640 "/usr/local/texlive/texmf-local:/usr/local/texlive/2026/texmf-config:/usr/local/texlive/2026/texmf-var:/usr/local/texlive/2026/texmf-dist"
+KFMT 9 sso=0 enabled=0 program=(null)
+  PATH /usr/local/texlive/texmf-local:/usr/local/texlive/2026/texmf-config:/usr/local/texlive/2026/texmf-var:/usr/local/texlive/2026/texmf-dist
+  SUFFIX ls-R
+  SUFFIX ls-r
+$3 = 0xb250cc9231e0 ".:/root/.texlive2026/texmf-config/web2c/pdftex:/root/.texlive2026/texmf-var/web2c/pdftex:/root/texmf/web2c/pdftex:!!/usr/local/texlive/texmf-local/web2c/pdftex:!!/usr/local/texlive/2026/texmf-config/web2c/pdftex:!!/usr/local/texlive/2026/texmf-var/web2c/pdftex:!!/usr/local/texlive/2026/texmf-dist/web2c/pdftex:/root/.texlive2026/texmf-config/web2c:/root/.texlive2026/texmf-var/web2c:/root/texmf/web2c:!!/usr/local/texlive/texmf-local/web2c:!!/usr/local/texlive/2026/texmf-config/web2c:!!/usr/local/texlive/2026/texmf-var/web2c:!!/usr/local/texlive/2026/texmf-dist/web2c"
+KFMT 10 sso=0 enabled=1 program=mktexfmt
+  PATH .:/root/.texlive2026/texmf-config/web2c/pdftex:/root/.texlive2026/texmf-var/web2c/pdftex:/root/texmf/web2c/pdftex:!!/usr/local/texlive/texmf-local/web2c/pdftex:!!/usr/local/texlive/2026/texmf-config/web2c/pdftex:!!/usr/local/texlive/2026/texmf-var/web2c/pdftex:!!/usr/local/texlive/2026/texmf-dist/web2c/pdftex:/root/.texlive2026/texmf-config/web2c:/root/.texlive2026/texmf-var/web2c:/root/texmf/web2c:!!/usr/local/texlive/texmf-local/web2c:!!/usr/local/texlive/2026/texmf-config/web2c:!!/usr/local/texlive/2026/texmf-var/web2c:!!/usr/local/texlive/2026/texmf-dist/web2c
+  SUFFIX .fmt
+$4 = 0xb250cc925b50 ".:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/dvips//:/root/.texlive2026/texmf-var/fonts/map/dvips//:/root/texmf/fonts/map/dvips//:!!/usr/local/texlive/texmf-local/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-config/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-var/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/dvips//:/root/.texlive2026/texmf-config/fonts/map///:/root/.texlive2026/texmf-var/fonts/map///:/root/texmf/fonts/map///:!!/usr/local/texlive/texmf-local/fonts/map///:!!/usr/local/texlive/2026/texmf-config/fonts/map///:!!/usr/local/texlive/2026/texmf-var/fonts/map///:!!/usr/local/texlive/2026/texmf-dist/fonts/map///"
+KFMT 11 sso=0 enabled=0 program=(null)
+  PATH .:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/dvips//:/root/.texlive2026/texmf-var/fonts/map/dvips//:/root/texmf/fonts/map/dvips//:!!/usr/local/texlive/texmf-local/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-config/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-var/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/dvips//:/root/.texlive2026/texmf-config/fonts/map///:/root/.texlive2026/texmf-var/fonts/map///:/root/texmf/fonts/map///:!!/usr/local/texlive/texmf-local/fonts/map///:!!/usr/local/texlive/2026/texmf-config/fonts/map///:!!/usr/local/texlive/2026/texmf-var/fonts/map///:!!/usr/local/texlive/2026/texmf-dist/fonts/map///
+  SUFFIX .map
+$5 = 0xb250cc927600 ".:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///"
+KFMT 26 sso=0 enabled=0 program=mktextex
+  PATH .:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  SUFFIX .tex
+  ALTSUFFIX .sty
+  ALTSUFFIX .cls
+  ALTSUFFIX .fd
+  ALTSUFFIX .aux
+  ALTSUFFIX .bbl
+  ALTSUFFIX .def
+  ALTSUFFIX .clo
+  ALTSUFFIX .ldf
+$6 = 0xb250cc9241f0 ".:/root/.texlive2026/texmf-config/fonts/vf//:/root/.texlive2026/texmf-var/fonts/vf//:/root/texmf/fonts/vf//:!!/usr/local/texlive/texmf-local/fonts/vf//:!!/usr/local/texlive/2026/texmf-config/fonts/vf//:!!/usr/local/texlive/2026/texmf-var/fonts/vf//:!!/usr/local/texlive/2026/texmf-dist/fonts/vf//"
+KFMT 33 sso=1 enabled=0 program=(null)
+  PATH .:/root/.texlive2026/texmf-config/fonts/vf//:/root/.texlive2026/texmf-var/fonts/vf//:/root/texmf/fonts/vf//:!!/usr/local/texlive/texmf-local/fonts/vf//:!!/usr/local/texlive/2026/texmf-config/fonts/vf//:!!/usr/local/texlive/2026/texmf-var/fonts/vf//:!!/usr/local/texlive/2026/texmf-dist/fonts/vf//
+  SUFFIX .vf
+DBDIRS 3
+  DBDIR /usr/local/texlive/2026/texmf-config/
+  DBDIR /usr/local/texlive/2026/texmf-var/
+  DBDIR /usr/local/texlive/2026/texmf-dist/
+ALIASDB (nil)
+FOLLOWUP 1
+Kill the program being debugged? (y or n) [answered Y; input not from terminal]
+[Inferior 1 (process 14) killed]

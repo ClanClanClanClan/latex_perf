@@ -1,0 +1,308 @@
+Breakpoint 1 at 0x1d4e34: file ../../../texk/kpathsea/tex-file.c, line 1029.
+Breakpoint 2 at 0x1d9db0: file ../../../texk/kpathsea/../kpathsea/str-list.h, line 63.
+Breakpoint 3 at 0x1db190: file ../../../texk/kpathsea/readable.c, line 143.
+Breakpoint 4 at 0x1d7690: kpathsea_dir_p. (2 locations)
+Breakpoint 5 at 0x636c0
+Breakpoint 6 at 0x1d70d0: file ../../../texk/kpathsea/db.c, line 669.
+Breakpoint 7 at 0x77850: file pdftexini.c, line 4964.
+Breakpoint 8 at 0x1d19a0: file ../../../../texk/web2c/lib/uexit.c, line 19.
+DIR_P /usr/local/texlive/2026/bin/ref
+READABLE /usr/local/texlive/2026/bin/ref/texmf.cnf
+DIR_P /usr/local/texlive/2026/bin/ref/share/texmf-local/web2c
+DIR_P /usr/local/texlive/2026/bin/ref/share/texmf-dist/web2c
+DIR_P /usr/local/texlive/2026/bin/ref/share/texmf/web2c
+DIR_P /usr/local/texlive/2026/bin/ref/texmf-local/web2c
+DIR_P /usr/local/texlive/2026/bin/ref/texmf-dist/web2c
+DIR_P /usr/local/texlive/2026/bin/ref/texmf/web2c
+DIR_P /usr/local/texlive/2026/bin
+READABLE /usr/local/texlive/2026/bin/texmf.cnf
+DIR_P /usr/local/texlive/2026/bin/share/texmf-local/web2c
+DIR_P /usr/local/texlive/2026/bin/share/texmf-dist/web2c
+DIR_P /usr/local/texlive/2026/bin/share/texmf/web2c
+DIR_P /usr/local/texlive/2026/bin/texmf-local/web2c
+DIR_P /usr/local/texlive/2026/bin/texmf-dist/web2c
+DIR_P /usr/local/texlive/2026/bin/texmf/web2c
+DIR_P /usr/local/texlive/texmf-local/web2c
+READABLE /usr/local/texlive/texmf-local/web2c/texmf.cnf
+DIR_P /usr/local/texlive/2026
+READABLE /usr/local/texlive/2026/texmf.cnf
+DIR_P /usr/local/texlive/2026/share/texmf-local/web2c
+DIR_P /usr/local/texlive/2026/share/texmf-dist/web2c
+DIR_P /usr/local/texlive/2026/share/texmf/web2c
+DIR_P /usr/local/texlive/2026/texmf-local/web2c
+DIR_P /usr/local/texlive/2026/texmf-dist/web2c
+READABLE /usr/local/texlive/2026/texmf-dist/web2c/texmf.cnf
+DIR_P /usr/local/texlive/2026/texmf/web2c
+SEARCH must_exist=1 all=1 path=/usr/local/texlive/texmf-local:/usr/local/texlive/2026/texmf-config:/usr/local/texlive/2026/texmf-var:/usr/local/texlive/2026/texmf-dist
+  NAME ls-r
+  NAME ls-R
+DBSEARCH elt=/usr/local/texlive/texmf-local
+DIR_P /usr/local/texlive/texmf-local
+READABLE /usr/local/texlive/texmf-local/ls-r
+READABLE /usr/local/texlive/texmf-local/ls-R
+OPENDIR /usr/local/texlive/texmf-local
+OPENDIR /usr/local/texlive/texmf-local
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config
+DIR_P /usr/local/texlive/2026/texmf-config
+READABLE /usr/local/texlive/2026/texmf-config/ls-r
+READABLE /usr/local/texlive/2026/texmf-config/ls-R
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var
+DIR_P /usr/local/texlive/2026/texmf-var
+READABLE /usr/local/texlive/2026/texmf-var/ls-r
+READABLE /usr/local/texlive/2026/texmf-var/ls-R
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist
+DIR_P /usr/local/texlive/2026/texmf-dist
+READABLE /usr/local/texlive/2026/texmf-dist/ls-r
+READABLE /usr/local/texlive/2026/texmf-dist/ls-R
+READABLE /usr/local/texlive/texmf-local/aliases
+OPENDIR /usr/local/texlive/texmf-local
+READABLE /usr/local/texlive/2026/texmf-config/aliases
+OPENDIR /usr/local/texlive/2026/texmf-config
+READABLE /usr/local/texlive/2026/texmf-var/aliases
+OPENDIR /usr/local/texlive/2026/texmf-var
+READABLE /usr/local/texlive/2026/texmf-dist/aliases
+OPENDIR /usr/local/texlive/2026/texmf-dist
+MAINBODY
+DBDIRS 3
+  DBDIR /usr/local/texlive/2026/texmf-config/
+  DBDIR /usr/local/texlive/2026/texmf-var/
+  DBDIR /usr/local/texlive/2026/texmf-dist/
+ALIASDB (nil)
+DBBUCKETS 0xabf964577480 size 64007
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)
+ restricted \write18 enabled.
+**FIND name=foo format=26 must_exist=1 all=0
+SEARCH must_exist=0 all=0 path=.:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  NAME foo.tex
+  NAME foo
+DBSEARCH elt=.
+DIR_P .
+READABLE ./foo.tex
+(./foo.tex FOO)FIND name=bar format=26 must_exist=0 all=0
+SEARCH must_exist=0 all=0 path=.:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  NAME bar.tex
+  NAME bar
+DBSEARCH elt=.
+READABLE ./bar.tex
+ [macro:->bar line one ]FIND name=cmr10 format=3 must_exist=1 all=0
+READABLE ./texfonts.map
+OPENDIR .
+OPENDIR /root/.texlive2026/texmf-config/fonts/map/pdftex/
+OPENDIR /root/.texlive2026/texmf-var/fonts/map/pdftex/
+OPENDIR /root/texmf/fonts/map/pdftex/
+OPENDIR /root/.texlive2026/texmf-config/fonts/map/dvips/
+OPENDIR /root/.texlive2026/texmf-var/fonts/map/dvips/
+OPENDIR /root/texmf/fonts/map/dvips/
+OPENDIR /root/.texlive2026/texmf-config/fonts/map/
+OPENDIR /root/.texlive2026/texmf-var/fonts/map/
+OPENDIR /root/texmf/fonts/map/
+READABLE /usr/local/texlive/2026/texmf-dist/fonts/map/fontname/texfonts.map
+SEARCH must_exist=0 all=0 path=.:/root/.texlive2026/texmf-config/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//:/root/texmf/fonts/tfm//:!!/usr/local/texlive/texmf-local/fonts/tfm//:!!/usr/local/texlive/2026/texmf-config/fonts/tfm//:!!/usr/local/texlive/2026/texmf-var/fonts/tfm//:!!/usr/local/texlive/2026/texmf-dist/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//
+  NAME cmr10.tfm
+DBSEARCH elt=.
+READABLE ./cmr10.tfm
+OPENDIR .
+DBSEARCH elt=/root/.texlive2026/texmf-config/fonts/tfm//
+OPENDIR /root/.texlive2026/texmf-config/fonts/tfm/
+DBSEARCH elt=/root/.texlive2026/texmf-var/fonts/tfm//
+OPENDIR /root/.texlive2026/texmf-var/fonts/tfm/
+DBSEARCH elt=/root/texmf/fonts/tfm//
+OPENDIR /root/texmf/fonts/tfm/
+DBSEARCH elt=/usr/local/texlive/texmf-local/fonts/tfm//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/fonts/tfm//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/fonts/tfm//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/fonts/tfm//
+READABLE /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmr10.tfm
+FIND name=nofile format=26 must_exist=1 all=0
+SEARCH must_exist=0 all=0 path=.:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  NAME nofile.tex
+  NAME nofile
+DBSEARCH elt=.
+READABLE ./nofile.tex
+READABLE ./nofile
+OPENDIR .
+OPENDIR .
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/plain//
+OPENDIR /root/.texlive2026/texmf-config/tex/plain/
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/plain//
+OPENDIR /root/.texlive2026/texmf-var/tex/plain/
+DBSEARCH elt=/root/texmf/tex/plain//
+OPENDIR /root/texmf/tex/plain/
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/plain//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/generic//
+OPENDIR /root/.texlive2026/texmf-config/tex/generic/
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/generic//
+OPENDIR /root/.texlive2026/texmf-var/tex/generic/
+DBSEARCH elt=/root/texmf/tex/generic//
+OPENDIR /root/texmf/tex/generic/
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/generic//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/latex//
+OPENDIR /root/.texlive2026/texmf-config/tex/latex/
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/latex//
+OPENDIR /root/.texlive2026/texmf-var/tex/latex/
+DBSEARCH elt=/root/texmf/tex/latex//
+OPENDIR /root/texmf/tex/latex/
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/latex//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex///
+OPENDIR /root/.texlive2026/texmf-config/tex/
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex///
+OPENDIR /root/.texlive2026/texmf-var/tex/
+DBSEARCH elt=/root/texmf/tex///
+OPENDIR /root/texmf/tex/
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex///
+SEARCH must_exist=1 all=0 path=.:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  NAME nofile
+DBSEARCH elt=.
+READABLE ./nofile
+OPENDIR .
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/plain//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/plain//
+DBSEARCH elt=/root/texmf/tex/plain//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/plain//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/generic//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/generic//
+DBSEARCH elt=/root/texmf/tex/generic//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/generic//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/latex//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/latex//
+DBSEARCH elt=/root/texmf/tex/latex//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/latex//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex///
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex///
+DBSEARCH elt=/root/texmf/tex///
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex///
+
+! I can't find file `nofile'.
+<*> ...ng\x]}\closein1 \font\f=cmr10 \input nofile
+                                                  
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: FIND name=\relax format=26 must_exist=1 all=0
+SEARCH must_exist=0 all=0 path=.:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  NAME \relax.tex
+  NAME \relax
+DBSEARCH elt=.
+READABLE ./\relax.tex
+READABLE ./\relax
+OPENDIR .
+OPENDIR .
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/plain//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/plain//
+DBSEARCH elt=/root/texmf/tex/plain//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/plain//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/generic//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/generic//
+DBSEARCH elt=/root/texmf/tex/generic//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/generic//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/latex//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/latex//
+DBSEARCH elt=/root/texmf/tex/latex//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/latex//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex///
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex///
+DBSEARCH elt=/root/texmf/tex///
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex///
+SEARCH must_exist=1 all=0 path=.:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  NAME \relax
+DBSEARCH elt=.
+READABLE ./\relax
+OPENDIR .
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/plain//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/plain//
+DBSEARCH elt=/root/texmf/tex/plain//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/plain//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/plain//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/generic//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/generic//
+DBSEARCH elt=/root/texmf/tex/generic//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/generic//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/generic//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex/latex//
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex/latex//
+DBSEARCH elt=/root/texmf/tex/latex//
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex/latex//
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex/latex//
+DBSEARCH elt=/root/.texlive2026/texmf-config/tex///
+DBSEARCH elt=/root/.texlive2026/texmf-var/tex///
+DBSEARCH elt=/root/texmf/tex///
+DBSEARCH elt=/usr/local/texlive/texmf-local/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-config/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-var/tex///
+DBSEARCH elt=/usr/local/texlive/2026/texmf-dist/tex///
+! I can't find file `\relax'.
+<*> ...ng\x]}\closein1 \font\f=cmr10 \input nofile
+                                                  
+(Press Enter to retry, or Control-D to exit)
+Please type another input file name: 
+! Emergency stop.
+<*> 
+    
+No pages of output.
+Transcript written on foo.log.
+UEXIT
+FMT 3 type=tfm path=.:/root/.texlive2026/texmf-config/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//:/root/texmf/fonts/tfm//:!!/usr/local/texlive/texmf-local/fonts/tfm//:!!/usr/local/texlive/2026/texmf-config/fonts/tfm//:!!/usr/local/texlive/2026/texmf-var/fonts/tfm//:!!/usr/local/texlive/2026/texmf-dist/fonts/tfm//:/root/.texlive2026/texmf-var/fonts/tfm//
+  source=texmf.cnf sso=1 enabled=1 binmode=1 program=mktextfm
+  SUFFIX .tfm
+FMT 8 type=cnf path=/usr/local/texlive/2026/bin/ref:/usr/local/texlive/2026/bin/ref/share/texmf-local/web2c:/usr/local/texlive/2026/bin/ref/share/texmf-dist/web2c:/usr/local/texlive/2026/bin/ref/share/texmf/web2c:/usr/local/texlive/2026/bin/ref/texmf-local/web2c:/usr/local/texlive/2026/bin/ref/texmf-dist/web2c:/usr/local/texlive/2026/bin/ref/texmf/web2c:/usr/local/texlive/2026/bin:/usr/local/texlive/2026/bin/share/texmf-local/web2c:/usr/local/texlive/2026/bin/share/texmf-dist/web2c:/usr/local/texlive/2026/bin/share/texmf/web2c:/usr/local/texlive/2026/bin/texmf-local/web2c:/usr/local/texlive/2026/bin/texmf-dist/web2c:/usr/local/texlive/2026/bin/texmf/web2c:/usr/local/texlive/texmf-local/web2c:/usr/local/texlive/2026:/usr/local/texlive/2026/share/texmf-local/web2c:/usr/local/texlive/2026/share/texmf-dist/web2c:/usr/local/texlive/2026/share/texmf/web2c:/usr/local/texlive/2026/texmf-local/web2c:/usr/local/texlive/2026/texmf-dist/web2c:/usr/local/texlive/2026/texmf/web2c
+  source=compile-time paths.h sso=0 enabled=0 binmode=0 program=(null)
+  SUFFIX .cnf
+FMT 9 type=ls-R path=/usr/local/texlive/texmf-local:/usr/local/texlive/2026/texmf-config:/usr/local/texlive/2026/texmf-var:/usr/local/texlive/2026/texmf-dist
+  source=texmf.cnf sso=0 enabled=0 binmode=0 program=(null)
+  SUFFIX ls-R
+  SUFFIX ls-r
+FMT 11 type=map path=.:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/pdftex//:/root/.texlive2026/texmf-var/fonts/map/pdftex//:/root/texmf/fonts/map/pdftex//:!!/usr/local/texlive/texmf-local/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-config/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-var/fonts/map/pdftex//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/pdftex//:/root/.texlive2026/texmf-config/fonts/map/dvips//:/root/.texlive2026/texmf-var/fonts/map/dvips//:/root/texmf/fonts/map/dvips//:!!/usr/local/texlive/texmf-local/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-config/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-var/fonts/map/dvips//:!!/usr/local/texlive/2026/texmf-dist/fonts/map/dvips//:/root/.texlive2026/texmf-config/fonts/map///:/root/.texlive2026/texmf-var/fonts/map///:/root/texmf/fonts/map///:!!/usr/local/texlive/texmf-local/fonts/map///:!!/usr/local/texlive/2026/texmf-config/fonts/map///:!!/usr/local/texlive/2026/texmf-var/fonts/map///:!!/usr/local/texlive/2026/texmf-dist/fonts/map///
+  source=texmf.cnf sso=0 enabled=0 binmode=0 program=(null)
+  SUFFIX .map
+FMT 26 type=tex path=.:/root/.texlive2026/texmf-config/tex/plain//:/root/.texlive2026/texmf-var/tex/plain//:/root/texmf/tex/plain//:!!/usr/local/texlive/texmf-local/tex/plain//:!!/usr/local/texlive/2026/texmf-config/tex/plain//:!!/usr/local/texlive/2026/texmf-var/tex/plain//:!!/usr/local/texlive/2026/texmf-dist/tex/plain//:/root/.texlive2026/texmf-config/tex/generic//:/root/.texlive2026/texmf-var/tex/generic//:/root/texmf/tex/generic//:!!/usr/local/texlive/texmf-local/tex/generic//:!!/usr/local/texlive/2026/texmf-config/tex/generic//:!!/usr/local/texlive/2026/texmf-var/tex/generic//:!!/usr/local/texlive/2026/texmf-dist/tex/generic//:/root/.texlive2026/texmf-config/tex/latex//:/root/.texlive2026/texmf-var/tex/latex//:/root/texmf/tex/latex//:!!/usr/local/texlive/texmf-local/tex/latex//:!!/usr/local/texlive/2026/texmf-config/tex/latex//:!!/usr/local/texlive/2026/texmf-var/tex/latex//:!!/usr/local/texlive/2026/texmf-dist/tex/latex//:/root/.texlive2026/texmf-config/tex///:/root/.texlive2026/texmf-var/tex///:/root/texmf/tex///:!!/usr/local/texlive/texmf-local/tex///:!!/usr/local/texlive/2026/texmf-config/tex///:!!/usr/local/texlive/2026/texmf-var/tex///:!!/usr/local/texlive/2026/texmf-dist/tex///
+  source=texmf.cnf sso=0 enabled=0 binmode=0 program=mktextex
+  SUFFIX .tex
+  ALTSUFFIX .sty
+  ALTSUFFIX .cls
+  ALTSUFFIX .fd
+  ALTSUFFIX .aux
+  ALTSUFFIX .bbl
+  ALTSUFFIX .def
+  ALTSUFFIX .clo
+  ALTSUFFIX .ldf
+MAPSIZE 4001

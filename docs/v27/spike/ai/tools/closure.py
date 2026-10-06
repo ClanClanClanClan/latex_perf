@@ -19,14 +19,15 @@ import json, os, re, sys
 
 
 def block(names):
-    lines = ["&pdflatex", "\\makeatletter\\catcode`\\_=11 \\catcode`\\:=11 "]
+    # terminal input, as h3/tools/meanblock.py writes it: the format line, then the dump
+    lines = ["\\makeatletter\\catcode`\\_=11 \\catcode`\\:=11 "]
     for n in names:
         h = n.encode().hex()
         lines.append("\\ifcsname %s\\endcsname\\immediate\\write16{@@M %s \\expandafter\\meaning"
                      "\\csname %s\\endcsname}\\else\\immediate\\write16{@@M %s UNDEFINED}\\fi"
                      % (n, h, n, h))
     lines.append("\\csname @@end\\endcsname")
-    return "\n".join(lines) + "\n"
+    return b"&pdflatex\n" + ("\n".join(lines) + "\n").encode("latin-1")
 
 
 def refs(m):
@@ -60,7 +61,7 @@ def main(argv):
         return 0
     json.dump(st, open(path, "w"), indent=0, sort_keys=True)
     if st["pending"]:
-        open("in.tex", "w").write(block(st["pending"]))
+        open("in.tex", "wb").write(block(st["pending"]))
     print("recorded", len(st["seen"]), "pending", len(st["pending"]))
     return 0
 

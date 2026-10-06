@@ -87,9 +87,10 @@ REQUIRE="${REQUIRE_PDFLATEX:-0}"
 TEX_TIMEOUT="${TEX_TIMEOUT:-60}"
 die_infra() { echo "[diff-compile-check] FATAL: $*" >&2; exit 2; }
 
-# The ONE oracle (ADR-012 decision 7): the pinned TeX Live image, natively when
-# this runs inside it (tex-oracle.yml sets LP_ORACLE_IN_IMAGE), through the
-# container otherwise. A host pdflatex never grades; see _oracle.sh.
+# The ONE oracle (ADR-012 decision 7): the pinned TeX Live image, run in a
+# fresh container per run by _oracle.py's one launch definition, locally and
+# in CI (from the runner host; the in-image native branch is retired, ADR-015
+# E15, OPEN-128). A host pdflatex never grades; see _oracle.sh.
 # shellcheck source=scripts/tools/_oracle.sh
 . "$ROOT/scripts/tools/_oracle.sh"
 oracle_setup diff-compile-check "$REQUIRE"

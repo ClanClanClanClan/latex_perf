@@ -82,9 +82,10 @@ if [ "${1:-}" = "--emit-fixtures" ]; then
 fi
 
 # ── preconditions ────────────────────────────────────────────────────────────
-# The ONE oracle (ADR-012 decision 7): the pinned TeX Live image, natively when
-# this runs inside it (tex-oracle.yml sets LP_ORACLE_IN_IMAGE), through the
-# container otherwise. A host pdflatex never grades; see _oracle.sh.
+# The ONE oracle (ADR-012 decision 7): the pinned TeX Live image, run in a
+# fresh container per run by _oracle.py's one launch definition, locally and
+# in CI (from the runner host; the in-image native branch is retired, ADR-015
+# E15, OPEN-128). A host pdflatex never grades; see _oracle.sh.
 # shellcheck source=scripts/tools/_oracle.sh
 . "$ROOT/scripts/tools/_oracle.sh"
 oracle_setup fr-oracle "$REQUIRE"
@@ -140,7 +141,8 @@ fi
 # the manifest with python3. The TeX image this ran in when that was written had
 # no python3, so relying on the parse alone made the pin FAIL OPEN exactly where
 # it ships; the pinned image of ADR-012 decision 7 does have /usr/bin/python3
-# (the native oracle backend needs it), but the workflow still passes the pin in.
+# (since OPEN-128 this script runs on the CI runner host), and the workflow
+# still passes the pin in.
 MAN_ENGINE="${FR_EXPECT_ENGINE:-}"
 if [ -z "$MAN_ENGINE" ]; then
   MAN_ENGINE="$(python3 -c "

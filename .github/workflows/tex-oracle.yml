@@ -75,23 +75,36 @@ env:
 jobs:
   tex-oracle:
     name: tex-oracle
-    # THE ARCHITECTURE OF RECORD (ADR-015 E2, OPEN-126). The pinned digest is
-    # a multi-arch index, and the pinned pdfTeX gives different VERDICTS on
+    # THE ARCHITECTURE OF RECORD (ADR-015 E2, E9; OPEN-126). The pinned digest
+    # is a multi-arch index, and the pinned pdfTeX gives different VERDICTS on
     # its arm64 and amd64 images for some documents (C-103: `\pdfsnapy 0pt`
     # exits 0 on aarch64, 136 on x86_64). Every recorded grade this job
     # compares against was taken on aarch64, so the job runs on GitHub's
     # NATIVE arm64 runner (free for public repositories) and the image
     # resolves to its arm64 member; `_oracle.py` refuses to grade on any
     # other architecture, and check_oracle_pin.py refuses this line changing.
+    #
+    # ONE LAUNCH DEFINITION (ADR-015 E15, owner 2026-10-06; OPEN-128 (4)).
+    # Every step below runs the project's graders ON THE RUNNER HOST, which
+    # has docker, and they reach the engine only through
+    # scripts/tools/_oracle.py, which starts one fresh container of the pinned
+    # image per run (ContainerOracle.launch_argv) -- exactly as on a laptop.
+    # Until OPEN-128 this job started the image itself (`docker run ...
+    # LP_ORACLE_IN_IMAGE=...`) and graded inside it with a launch
+    # configuration of its own (a 4g /tmp without noexec, its work
+    # directories on that /tmp), the "native backend": two launch definitions
+    # kept in step by hand. That backend is retired, `_oracle.py` refuses
+    # LP_ORACLE_IN_IMAGE, and check_oracle_pin.py refuses any workflow step
+    # that starts the image (`docker run`/`exec`/`create`/`start` naming it).
+    # The claim is one CONFIGURATION by construction, not one PLATFORM: what
+    # still differs between this runner and a laptop's VM is measured in
+    # corpora/oracle_baseline/platform_residuals.json (OPEN-128 (8)).
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
-      # OCaml is set up on the RUNNER, not in the TeX container: setup-ocaml-env
-      # needs sudo/apt (absent in the Debian TeX image, which runs as root without
-      # sudo) and leaves opam's bubblewrap sandbox on, which fails in an
-      # unprivileged container. So we build here and mount the result in.
+      # OCaml is set up on the RUNNER (setup-ocaml-env needs sudo/apt).
       - uses: ./.github/actions/setup-ocaml-env
 
       - name: Build validators CLI
@@ -103,105 +116,43 @@ jobs:
       - name: Assert engine pin (a MISMATCH here is not oracle drift)
         run: |
           set -euo pipefail
-          got=$(docker run --rm "$TEX_IMAGE" pdflatex --version | head -1)
+          # `_oracle.py version` starts the oracle: its session probe checks,
+          # in a container of the one launch definition, the TeX tree's
+          # fingerprints for aarch64 (ADR-012 decision 7: the banner pins the
+          # engine BINARY, never the macro layer), the read-only root, the
+          # non-root user, the image's environment and the pinned shim.
+          got=$(python3 scripts/tools/_oracle.py version | tail -1)
           man=$(python3 -c "import json;print(json.load(open('corpora/false_ready/manifest.json'))['oracle']['version'])")
           echo "image    : $got"
           echo "manifest : $man"
           case "$got" in *"$TEX_EXPECT_VERSION"*) ;; *)
-            echo "::error::PIN MISMATCH: image reports '$got', workflow pins '$TEX_EXPECT_VERSION'. This is NOT a soundness regression and NOT oracle drift — re-pin TEX_IMAGE or re-record the manifest. Do not disable this gate."
+            echo "::error::PIN MISMATCH: the oracle reports '$got', workflow pins '$TEX_EXPECT_VERSION'. This is NOT a soundness regression and NOT oracle drift — re-pin TEX_IMAGE or re-record the manifest. Do not disable this gate."
             exit 1 ;; esac
           case "$man" in *"$TEX_EXPECT_VERSION"*) ;; *)
             echo "::error::PIN MISMATCH: manifest oracle.version '$man' != pinned '$TEX_EXPECT_VERSION'."
             exit 1 ;; esac
           # Same assertion for the apply-fixes corpus, which property (b) grades.
-          # It previously recorded only `pdflatex_graded: true` — no engine, no
-          # version — so an image bump would have silently redefined what its
-          # five known_broken rows mean.
           amn=$(python3 -c "import json;print(json.load(open('corpora/apply_fixes/manifest.json'))['oracle']['version'])")
           echo "apply_fixes manifest : $amn"
           case "$amn" in *"$TEX_EXPECT_VERSION"*) ;; *)
             echo "::error::PIN MISMATCH: corpora/apply_fixes/manifest.json oracle.version '$amn' != pinned '$TEX_EXPECT_VERSION'. Re-record property (b) against the pinned image."
             exit 1 ;; esac
-          # ADR-012 decision 7: the banner pins the engine BINARY, never the
-          # macro layer. The ONE oracle entry point, scripts/tools/_oracle.py,
-          # records the TeX tree fingerprint of each platform image of this
-          # digest (the digest is a multi-arch INDEX). Both CI and a Mac grade
-          # on arm64, the architecture of record (ADR-015 E2, OPEN-126).
-          # Verify the tree this job will grade with IS that tree.
-          # Every grader below runs with LP_ORACLE_IN_IMAGE set, which is what
-          # selects _oracle.py's native backend; outside the image that variable
-          # makes the oracle fail loudly rather than grade with a host TeX.
-          # Read-only image filesystem, a tmpfs /tmp, and the runner's own
-          # unprivileged user (OPEN-126): the oracle's TeX tree cannot be
-          # written by any run, and `assert-native` refuses otherwise.
-          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
-            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \
-            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
-            "$TEX_IMAGE" python3 scripts/tools/_oracle.py assert-native
+          python3 scripts/tools/_oracle.py info
 
       # The anti-silent-green measure. A missing .sty grades identically to the
       # intended fatal (strong-fatal), so an under-provisioned image would let
       # fixtures report `ok` while testing nothing. Prove the install can compile
-      # the corpus feature set BEFORE grading anything.
+      # the corpus feature set BEFORE grading anything -- through the oracle
+      # (scripts/tools/oracle_canary.py), not by starting the image here.
       - name: TeX install canary
         run: |
           set -euo pipefail
-          # `-i` is REQUIRED: without it the container's stdin is not connected and
-          # `bash -s` reads EOF, so the canary body never runs, the step exits 0,
-          # and an under-provisioned image sails straight through into grading —
-          # precisely the silent-green this canary exists to prevent.
-          # The `grep -q` is the second half of that lesson: assert the body
-          # actually produced its completion marker, so a no-op can never be green.
-          docker run --rm -i -e HOME=/tmp "$TEX_IMAGE" bash -s <<'EOS' | tee /tmp/canary.log
-          set -eu
-          d=$(mktemp -d); cd "$d"
-          cat > canary.tex <<'TEX'
-          \documentclass{article}
-          \usepackage[utf8]{inputenc}
-          \usepackage[T1]{fontenc}
-          \usepackage{amsmath,amssymb,graphicx,hyperref,listings,tikz}
-          \begin{document}
-          Caf\'e \`a \c{c} $\alpha^2$
-          \begin{tikzpicture}\draw (0,0)--(1,1);\end{tikzpicture}
-          \end{document}
-          TEX
-          # NOT canary.out: hyperref writes \jobname.out, so redirecting stdout
-          # there makes TeX read its own transcript back as the .out file and die
-          # with "! Missing { inserted." on a perfectly good install.
-          if ! pdflatex -interaction=nonstopmode -halt-on-error canary.tex >canary.stdout 2>&1 \
-             || [ ! -f canary.pdf ]; then
-            echo "CANARY FAILED — the pinned image cannot compile the corpus feature set:"
-            tail -40 canary.stdout; exit 1
-          fi
-          # fontspec/polyglossia matter: six fixtures ARE package-loading tricks,
-          # and a missing .sty grades strong-fatal — identical to the intended
-          # fatal — so without these they would pass while testing nothing.
-          for f in tikz.sty hyperref.sty amsmath.sty listings.sty inputenc.sty \
-                   fontspec.sty polyglossia.sty pdftex.map; do
-            kpsewhich "$f" >/dev/null || { echo "MISSING: $f"; exit 1; }
-          done
-          # OPEN-040/C-38: the TREE is part of the oracle pin. Every
-          # Texmf_tree_allowlist name must COMPILE via a preamble \input with
-          # no local copy — a scheme-partial image made the tree fixture grade
-          # strong-fatal (and \include-of-missing silently compile) while the
-          # ground truth was recorded against a full tree. One doc per name:
-          # the pictex family interacts, so they are not combined.
-          for n in xy xypic amssym.def epsf epsf.sty colordvi pictexwd.tex \
-                   prepictex postpictex pdf-trans; do
-            dd=$(mktemp -d); ( cd "$dd" \
-              && printf '\\documentclass{article}\n\\input %s\n\\begin{document}\nx\n\\end{document}\n' "$n" > t.tex \
-              && pdflatex -interaction=nonstopmode -halt-on-error t.tex >t.log 2>&1 \
-              && [ -f t.pdf ] ) || { echo "TREE MISSING/BROKEN: $n"; tail -20 "$dd/t.log"; exit 1; }
-          done
-          echo "canary OK"
-          EOS
+          python3 scripts/tools/oracle_canary.py | tee /tmp/canary.log
           grep -q 'canary OK' /tmp/canary.log || {
-            echo "::error::The canary produced no completion marker. Either the image cannot compile the corpus feature set, or the canary body did not execute at all (check that 'docker run' still has -i). Refusing to grade fixtures against an unproven TeX install."
+            echo "::error::The canary produced no completion marker. Refusing to grade fixtures against an unproven TeX install."
             exit 1; }
 
-      # Parse the manifest on the RUNNER and hand the TSV in. This is what keeps
-      # the container dependency-free — no apt-get against a Debian sid base whose
-      # indices rot as the pinned digest ages.
+      # Parse the manifest on the RUNNER and hand the TSV in.
       - name: Emit fixture list
         run: |
           set -euo pipefail
@@ -210,108 +161,72 @@ jobs:
           want=$(python3 -c "import json;print(len(json.load(open('corpora/false_ready/manifest.json'))['fixtures']))")
           echo "fixtures: $got (manifest: $want)"
           # The oracle derives its own expected count FROM this file, so a short
-          # TSV would silently shrink the check rather than fail it. The count is
-          # cross-checked here, on the runner, against the manifest, before the
-          # graded run. (The pinned image DOES have python3, and since C-91 every
-          # native pdflatex run goes through the `_oracle.py pdflatex` shim, so
-          # the preflight step asserts python3 in the image.)
+          # TSV would silently shrink the check rather than fail it.
           [ "$got" -eq "$want" ] || {
             echo "::error::fixture TSV has $got rows but the manifest lists $want — refusing to grade a partial corpus."
             exit 1; }
 
-      # THE BLOCKING CHECK (within this advisory workflow): every fixture must
-      # still be rejected by real pdflatex. HARD drift only — a strong-fatal <->
-      # error-halt reclassification is reported but does not fail, because that
+      # THE BLOCKING CHECK: every fixture must still be rejected by real
+      # pdflatex. HARD drift only — a strong-fatal <-> error-halt
+      # reclassification is reported but does not fail, because that
       # distinction moves with the font install rather than with soundness.
       - name: False-READY oracle (real pdflatex, all fixtures)
+        env:
+          REQUIRE_PDFLATEX: "1"
+          FR_FIXTURE_TSV: /tmp/fixtures.tsv
         run: |
           set -euo pipefail
-          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
-            --user "$(id -u):$(id -g)" \
-            -v "$PWD:$PWD" -w "$PWD" \
-            -v /tmp/fixtures.tsv:/tmp/fixtures.tsv:ro \
-            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 -e FR_FIXTURE_TSV=/tmp/fixtures.tsv \
-            -e FR_EXPECT_ENGINE="$TEX_EXPECT_VERSION" \
-            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
-            "$TEX_IMAGE" bash scripts/tools/false_ready_oracle.sh
+          FR_EXPECT_ENGINE="$TEX_EXPECT_VERSION" bash scripts/tools/false_ready_oracle.sh
 
       # ADVISORY: a measurement of the soundness residual, not a regression gate.
-      # It needs the large correctness-critical install, an incomplete one
-      # manufactures spurious FALSE-READY(NEW!) rows, and it is blind to a CLI
-      # broken in the over-rejection direction. Never make this one required.
       - name: Differential vs pdflatex (65-doc corpus) — advisory
         continue-on-error: true
+        env:
+          REQUIRE_PDFLATEX: "1"
         run: |
           set -euo pipefail
-          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
-            --user "$(id -u):$(id -g)" \
-            -v "$PWD:$PWD" -w "$PWD" \
-            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
-            -e EXPECT_TEX_VERSION="$TEX_EXPECT_VERSION" \
-            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
-            "$TEX_IMAGE" bash scripts/tools/diff_compile_check.sh
+          EXPECT_TEX_VERSION="$TEX_EXPECT_VERSION" bash scripts/tools/diff_compile_check.sh
+
+      # C-99 (OPEN-118 review rounds 3-4): real documents that forge the
+      # oracle's evidence must be REFUSED by the real pdfTeX run through the
+      # real supervisor, and genuine shapes must still grade. On this runner
+      # the work root is case-sensitive ext4; on a Mac it is virtiofs over
+      # APFS (case- and Unicode-insensitive): the forgery set covers both.
+      - name: Oracle forgery kill-tests (real pdfTeX, real supervisor)
+        env:
+          REQUIRE_PDFLATEX: "1"
+        run: python3 scripts/tools/check_oracle_forgery.py
 
       # R7-INFRA-4 property (b): "a document that compiled must still compile
-      # after --apply-fixes". It is the ONLY check anywhere that can observe the
-      # fixer turning a compiling document into a non-compiling one — the
-      # project's second-worst failure mode — and until now it ran in NO
-      # automated path. ci.yml runs the script but has no TeX, so `have_tex` is
-      # false and (b) is skipped; its only --require-pdflatex caller sits in
-      # pre_release_check.py's BUILD_CHECKS list, which release.sh skips via
-      # --skip-build. The script's own docstring claimed it "rides the
-      # pinned-image tex-oracle workflow". It did not. Now it does.
-      # C-99 (OPEN-118 review rounds 3-4): real documents that forge the
-      # oracle's evidence (their own log/PDF, through a symlink, under a case
-      # variant, a forged terminal report) must be REFUSED by the real pdfTeX
-      # run through the real supervisor, and genuine shapes (incl. \synctex=1)
-      # must still grade. The pure gate's supervisor is a fake; this is not.
-      - name: Oracle forgery kill-tests (real pdfTeX, real supervisor)
-        run: |
-          set -euo pipefail
-          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
-            --user "$(id -u):$(id -g)" \
-            -v "$PWD:$PWD" -w "$PWD" \
-            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
-            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
-            "$TEX_IMAGE" python3 scripts/tools/check_oracle_forgery.py
-
-      - name: Preflight the image for property (b)
-        run: |
-          set -euo pipefail
-          # BOTH are load-bearing, and the second is easy to miss:
-          # check_apply_fixes_roundtrip.py hard-exits 2 under REQUIRE_PDFLATEX=1
-          # when neither gtimeout nor timeout is on PATH, because an unbounded
-          # pdflatex hang would otherwise be scored as a compile failure.
-          docker run --rm "$TEX_IMAGE" bash -c 'python3 --version && command -v timeout' \
-            || { echo "::error::pinned TeX image lacks python3 and/or coreutils timeout; property (b) cannot run here"; exit 2; }
-
-      # BLOCKING as of v27.1.63. This step was advisory, and the comment here used
-      # to give the reason: corpora/apply_fixes/manifest.json recorded
-      # pdflatex_graded=true but carried NO oracle.version pin, so its baseline
-      # rows had been measured on some local engine rather than this pinned TL2026
-      # image, and any disagreement would have been a provenance artefact rather
-      # than a real defect.
-      #
-      # That precondition is now satisfied on both counts, so the reason to mask
-      # it is gone:
-      #   * #528 added `oracle.version` to corpora/apply_fixes/manifest.json, and
-      #     the "Assert engine pin" step above now HARD-ASSERTS it against
-      #     TEX_EXPECT_VERSION — a mismatch fails before anything is graded.
-      #   * #527's first run reproduced the baseline exactly against this image:
-      #     "73 documents x 4 cells; fixer rewrote 94; pdflatex=yes;
-      #     known-broken 7 ... PASS — no new fixer damage", and every run since
-      #     has agreed.
-      #
-      # Leaving it masked now would be strictly worse than not running it: this is
-      # the ONLY check anywhere that can observe --apply-fixes turning a compiling
-      # document into a non-compiling one, and a masked step that silently starts
-      # failing is indistinguishable from one that passes.
+      # after --apply-fixes". BLOCKING since v27.1.63: the ONLY check anywhere
+      # that can observe --apply-fixes turning a compiling document into a
+      # non-compiling one. Its baseline is graded under the same oracle
+      # (corpora/apply_fixes/manifest.json, whose oracle block names the
+      # architecture and the clock).
       - name: Apply-fixes round-trip, property (b)
+        env:
+          REQUIRE_PDFLATEX: "1"
+        run: python3 scripts/tools/check_apply_fixes_roundtrip.py --repo .
+
+      # OPEN-128 (8): ONE CONFIGURATION, TWO PLATFORMS. Every document of the
+      # platform set is graded here and compared, per document, with the
+      # grades of record in corpora/oracle_baseline/platform_residuals.json
+      # (taken at one commit on both sides: the laptop's colima VM and this
+      # runner). A document whose grade differs from the recorded grade FOR
+      # THIS PLATFORM fails the step; the recorded per-platform grades, and
+      # the documents whose grades differ between the platforms, are the
+      # residuals the owner chooses O3.2/O3.3 on. The grades are uploaded.
+      - name: Platform residuals (per-document grades on this runner)
         run: |
           set -euo pipefail
-          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \
-            --user "$(id -u):$(id -g)" \
-            -v "$PWD:$PWD" -w "$PWD" \
-            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
-            -e LP_ORACLE_IN_IMAGE="$TEX_IMAGE" \
-            "$TEX_IMAGE" python3 scripts/tools/check_apply_fixes_roundtrip.py --repo .
+          python3 scripts/tools/check_oracle_platforms.py --grade --platform ci \
+            --out /tmp/platform_ci.json
+          python3 scripts/tools/check_oracle_platforms.py --check /tmp/platform_ci.json
+
+      - name: Upload the platform grades
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-grades-ci
+          path: /tmp/platform_ci.json
+          if-no-files-found: warn

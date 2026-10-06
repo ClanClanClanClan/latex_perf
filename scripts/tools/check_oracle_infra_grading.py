@@ -29,11 +29,11 @@ could not write its own output; a document's own \\openout refusal is still
 graded. Known residuals are listed in OPEN-118 (OOM-as-timeout, clock, VM disk).
 
 C-91 (2026-09-28): ONE grading environment. `grading_env` drives every entry
-point (run_pdflatex, the shim on the container and native backends,
-check_apply_fixes_roundtrip.pdflatex_ok) under a HOSTILE host environment and
-reads back what reached the engine: exactly ORACLE_TEX_VARS, a private
-TEXMFHOME/TEXMFVAR, no other TeX variable; `_oracle.sh` must route both
-backends through the shim; image_command must start no engine by any route.
+point (run_pdflatex, the shim, check_apply_fixes_roundtrip.pdflatex_ok)
+under a HOSTILE host environment and reads back what reached the engine:
+EXACTLY the image's environment, ORACLE_TEX_VARS, the fixed run variables
+and the protocol clock (OPEN-128), nothing else; `_oracle.sh` must route
+every run through the shim; image_command must start no engine by any route.
 Review round 4: those checks named the variables that must NOT reach the
 engine, and a host `openout_any_pdflatex=a` (a kpathsea form nobody listed)
 flipped a grade on the native backend. They now assert what MAY reach it --
@@ -41,15 +41,11 @@ the image's own environment (`_oracle.IMAGE_ENV`) plus the run's TeX
 variables -- and the container backend must refuse a container whose own
 environment is not the image's.
 
-C-93 (2026-09-29): a PRIVATE TMPDIR per run. MEASURED: a restricted-\\write18
-repstopdf -> Ghostscript conversion killed by the protocol's timeout left
-/tmp/gs_* in the long-lived container, and check_state then refused every
-later session (java under texosquery-jre8 touched /tmp/hsperfdata_root on
-every run). Every run now gets TMPDIR=TMP=TEMP=<run dir>/lp-tmp and a
-JAVA_TOOL_OPTIONS naming it; the checks read back that the engine got them,
-that the directory existed before it started, that a TMPDIR which is not the
-run's own is refused, and that the container backend refuses one outside the
-work root.
+C-93 (2026-09-29): a PRIVATE TMPDIR per run (repstopdf -> gs left /tmp/gs_*
+in the long-lived container when a timeout killed it). Since OPEN-128 every
+run is its own container, and its TMPDIR and TeX trees live at fixed paths on
+its own fresh tmpfs; the checks read back that the engine got them and that
+the supervisor creates them before the engine starts.
 
 C-95 (2026-09-29): each run's evidence is its own. A stale PDF (or log, .fls,
 .fmt) from an earlier pass or run was read as the current one's by three
@@ -57,11 +53,15 @@ copies of the pass loop (run_to_fixpoint, false_ready_oracle.sh through the
 shim, gen_contract.py through run_engine). The per-run primitive now clears
 them; the checks drive each entry point with stale outputs present.
 
-C-97 (2026-09-29): the long-lived container reaps (--init), is bounded
-(--pids-limit), is replaced when an older oracle started it without them,
-and no run starts beside a leaked process (a zombie or an orphan of PID 1):
-MEASURED, leaked processes made a fork inside \\write18 fail silently and a
-compiling document grade rc 1.
+C-97 (2026-09-29): a container reaps (--init) and is bounded (--pids-limit).
+OPEN-128 (ADR-015 E15): ONE LAUNCH DEFINITION. Every container the oracle
+starts -- an engine run, the session probe, an image command, a removal --
+is `_oracle.launch_argv`'s, with exactly its flags (read back from the fake
+docker); the session probe refuses a container whose tree, read-only facts,
+environment, work-root view or shim is not the pinned one; every engine
+run must carry the shim's proof (sha256 and the engine's mark); the native
+backend is refused; a measurement (`measure`) is tagged and never compared
+with a grade; the clock is part of the oracle's identity.
 
 This gate is PURE (no docker, no TeX): it drives the real grading code with
 FAKE docker/engine executables that reproduce each failure shape, including the
@@ -74,8 +74,10 @@ Run: python3 scripts/tools/check_oracle_infra_grading.py --repo .
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -88,9 +90,13 @@ DEAD_MSG = ("failed to connect to the docker API at unix:///nonexistent.sock; "
             "check if the path is correct and if the daemon is running: dial "
             "unix /nonexistent.sock: connect: no such file or directory")
 
-# A fake `docker`. It answers `exec ... rm ...` with success and every run
-# `exec ... sh -c SCRIPT sh NONCE TIMEOUT ARGS...` according to FAKE_MODE (one
-# mode per call, consumed from a comma-separated FAKE_PLAN via FAKE_COUNT):
+# A fake `docker` for the ONE launch definition (OPEN-128: every engine run is
+# `docker run --rm ... -v RUNDIR:/lp/run ... --entrypoint sh IMAGE -c SCRIPT
+# sh NONCE TIMEOUT SUPERVISOR CONFIG ENGINE ARGS...`). Container paths are
+# mapped back to the host through the run's -v mounts. Engine runs are
+# answered according to FAKE_MODE (one mode per call, consumed from a
+# comma-separated FAKE_PLAN via FAKE_COUNT); like the real supervisor it first
+# deletes the config's `remove` files in the run directory:
 #   ok        banner on stdout, nonce line rc=0
 #   fail      banner + a TeX error on stdout, nonce line rc=1 (a REAL failure)
 #   dead      nothing on stdout, DEAD_MSG on stderr, exit 1 (the measured shape)
@@ -104,67 +110,73 @@ DEAD_MSG = ("failed to connect to the docker API at unix:///nonexistent.sock; "
 #   openout   banner, then the DOCUMENT's own \openout refused under
 #             openout_any=p ("I can't write on file `../x.tex'"), nonce rc=1:
 #             a real document failure, must still be graded
+# The session probe (`--entrypoint python3 ... -c PROBE`) answers FAKE_FP,
+# FAKE_RO, FAKE_CENV (a NUL-separated environment file), the nonce the host
+# wrote into the probe's run directory, and FAKE_SHIM (default: the pinned
+# sha256). `--entrypoint rm` deletes its (host = container) paths.
 # The fake container's user (OPEN-126: --user, never root).
 FAKE_USER = "501:20"
 FAKE_DOCKER = r'''#!/usr/bin/env python3
-import os, sys
+import json, os, sys
 a = sys.argv[1:]
 if os.environ.get("FAKE_STDIN"):   # what the docker client got on stdin
     open(os.environ["FAKE_STDIN"], "wb").write(sys.stdin.buffer.read())
-if os.environ.get("FAKE_ARGV"):
-    open(os.environ["FAKE_ARGV"], "w").write("\0".join(a))
-    # C-93: did the run's private TMPDIR exist when the engine would start?
-    t = [x[7:] for x in a if x.startswith("TMPDIR=")]
-    open(os.environ["FAKE_ARGV"] + ".tmpdir", "w").write(
-        "1" if t and os.path.isdir(t[0]) else "0")
-if os.environ.get("FAKE_CALLS"):        # _ensure_container's docker calls
-    open(os.environ["FAKE_CALLS"], "a").write(" ".join(a) + "\n")
-st = os.environ.get("FAKE_STATE")
+if os.environ.get("FAKE_CALLS"):        # every docker call, one per line
+    open(os.environ["FAKE_CALLS"], "a").write("\0".join(a) + "\n")
 if a[:1] == ["version"]:
     print("27.0"); sys.exit(0)
-if a[:2] == ["image", "inspect"] or a[:1] == ["start"]:
+if a[:2] == ["image", "inspect"]:
     sys.exit(0)
-if a[:2] == ["rm", "-f"]:
-    if st: open(st, "w").write("absent")
+if a[:2] == ["rm", "-f"] or a[:1] == ["ps"]:
     sys.exit(0)
-if a[:2] == ["run", "-d"]:
-    if st: open(st, "w").write("present")
+if a[:1] != ["run"]:
     sys.exit(0)
-if a[:1] == ["inspect"] and "--format" in a and st:
-    present = open(st).read() == "present"
-    f = a[a.index("--format") + 1]
-    if not present:
-        sys.exit(1)
-    if f.startswith("{{.State.Running}} {{.Config.Image}}"):
-        print(os.environ["FAKE_INSPECT"]); sys.exit(0)
-    if f == "{{.State.Running}}":
-        print("true"); sys.exit(0)
-    if f.startswith("{{.HostConfig.Init}}"):
-        print(os.environ.get("FAKE_HOSTCFG", "true 4096")); sys.exit(0)
-if a[:1] == ["inspect"] and len(a) == 2 and st:
-    sys.exit(0 if open(st).read() == "present" else 1)
-if a[:1] == ["exec"] and "cat" in a and st:   # the mount probe
-    sys.stdout.write(open(a[-1]).read()); sys.exit(0)
-if a[-2:] == ["env", "-0"]:            # the container's own environment
-    sys.stdout.write(open(os.environ["FAKE_CENV"]).read()); sys.exit(0)
-if a[:1] == ["inspect"] and "{{.Created}}" in a:   # check_state's reference
-    print("2026-09-27T06:39:58.151938648Z"); sys.exit(0)
-if a[:1] == ["exec"] and "find" in a and "-newerct" in a:  # check_state's scan
-    sys.stdout.write(os.environ.get("FAKE_FIND", "d /tmp\n")); sys.exit(0)
-if a[:1] == ["exec"] and "python3" not in a and "-c" in a \
-        and "kpsewhich -var-value" in a[a.index("-c") + 1]:
-    sys.stdout.write(os.environ.get(      # check_texmf_trees
-        "FAKE_TREES", "D /tmp/texmf\nD /tmp/.texlive2026/texmf-var\n"
-        "D /tmp/.texlive2026/texmf-config\n")); sys.exit(0)
-if a[:1] == ["exec"] and "python3" in a and "-c" in a \
-        and "ST_RDONLY" in a[a.index("-c") + 1]:   # the read-only probe (OPEN-126)
-    sys.stdout.write(os.environ.get("FAKE_RO", '{"euid": 501, "texmfroot": '
-        '"/usr/local/texlive/2026", "root_ro": true, "tree_ro": true}'))
+mounts, workdir, entry, rest = [], "/", None, []
+k = 1
+while k < len(a):
+    if a[k] == "-v":
+        spec = a[k + 1].split(":")
+        mounts.append((spec[0], spec[1])); k += 2; continue
+    if a[k] == "-w":
+        workdir = a[k + 1]; k += 2; continue
+    if a[k] == "--entrypoint":
+        entry = a[k + 1]
+        rest = a[k + 3:]          # after the image
+        break
+    k += 1
+def host_of(cpath):
+    for h, c in sorted(mounts, key=lambda m: -len(m[1])):
+        if cpath == c or cpath.startswith(c.rstrip("/") + "/"):
+            return h + cpath[len(c):]
+    return None
+if os.environ.get("FAKE_ARGV") and entry == "sh":
+    open(os.environ["FAKE_ARGV"], "w").write("\0".join(a))
+if entry == "python3":                   # the session probe
+    probe_dir = host_of("/lp/run")
+    nonce = open(os.path.join(probe_dir, "nonce")).read() if probe_dir else ""
+    if os.environ.get("FAKE_CENV"):
+        cenv = dict(x.split("=", 1) for x in open(os.environ["FAKE_CENV"]).read().split("\0") if "=" in x)
+    else:
+        cenv = json.loads(os.environ["FAKE_DEFAULT_CENV"])
+    print(json.dumps({"fp": json.loads(os.environ["FAKE_FP"]),
+                      "ro": json.loads(os.environ.get("FAKE_RO", '{"euid": 501, "texmfroot": '
+                            '"/usr/local/texlive/2026", "root_ro": true, "tree_ro": true}')),
+                      "env": cenv, "nonce": nonce,
+                      "shim": os.environ.get("FAKE_SHIM", json.loads(os.environ["FAKE_SHIM_MAP"])[
+                          {"linux/arm64": "aarch64", "linux/amd64": "x86_64"}[
+                              a[a.index("--platform") + 1]]])}))
+    sys.exit(int(os.environ.get("FAKE_PROBE_RC", "0")))
+if entry == "rm":
+    for q in rest:
+        if q.startswith("-"):
+            continue
+        try:
+            os.unlink(q)
+        except FileNotFoundError:
+            pass
     sys.exit(0)
-if a[:1] == ["exec"] and "python3" in a:  # the tree fingerprint snippet
-    sys.stdout.write(os.environ.get("FAKE_FP", "{}")); sys.exit(0)
-if a[:1] == ["exec"] and "-c" not in a:
-    sys.exit(0)                       # `exec NAME rm -f -- ...`
+if entry != "sh":
+    sys.exit(0)                          # image commands
 plan = os.environ["FAKE_PLAN"].split(",")
 cf = os.environ["FAKE_COUNT"]
 n = int(open(cf).read()) if os.path.exists(cf) else 0
@@ -172,10 +184,23 @@ open(cf, "w").write(str(n + 1))
 mode = plan[min(n, len(plan) - 1)]
 i = a.index("-c")
 nonce = a[i + 3]
+cfg = json.loads(a[i + 6])
+cwd = host_of(workdir)
+for f in cfg.get("remove", []):         # the supervisor clears stale evidence
+    try:
+        os.unlink(os.path.join(cwd, f))
+    except FileNotFoundError:
+        pass
+if os.environ.get("FAKE_CFG"):
+    open(os.environ["FAKE_CFG"], "w").write(a[i + 6])
 banner = "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026)\n"
 def rcline(rc):
-    # the run supervisor's evidence line (C-99), then the in-container rc line
-    evid = os.environ.get("FAKE_EVID", '{"alias": [], "cw": {}, "err": "", "overflow": 0}')
+    # the run supervisor's evidence line (C-99, OPEN-128), then the rc line
+    evid = os.environ.get("FAKE_EVID") or json.dumps({
+        "alias": [], "cw": {}, "err": "", "overflow": 0, "engine_pid": 10,
+        "shim_sha256": json.loads(os.environ["FAKE_SHIM_MAP"])[
+            cfg["shim"].rsplit("lpshim-", 1)[1][:-3]], "shim_mode": "restricted",
+        "fs_denied": [0]})
     if evid != "OMIT":   # OMIT: a supervisor that died before reporting
         sys.stderr.write("\n%s_EVID=%s\n" % (nonce, evid))
     sys.stderr.write("\n%s=%d\n" % (nonce, rc))
@@ -210,7 +235,6 @@ elif mode in ("batchforge", "termtail", "batchok", "errforge", "termonly", "sync
     # termonly: the terminal reports a page, the log carries no report at
     # all; synctex: a page shipped with \\synctex=1 (pdfTeX's own SyncTeX
     # line on the terminal between its report and the transcript line).
-    cwd = a[a.index("-w") + 1]
     job = a[-1].rsplit("/", 1)[-1].rpartition(".")[0]
     real = ("No pages of output." if mode == "batchforge"
             else "Output written on %s.pdf (1 page, 999 bytes)." % job)
@@ -234,7 +258,6 @@ elif mode == "infraforge":
     # C-99 review round 3 (c): the document \message'd a lookalike of an
     # "infrastructure" error, then failed genuinely (halt, no PDF). Its
     # forged line is the log's FIRST "!" line, on the terminal too.
-    cwd = a[a.index("-w") + 1]
     job = a[-1].rsplit("/", 1)[-1].rpartition(".")[0]
     body = (banner + "! Package pdftex.def Error: File `x-eps-converted-to.pdf' "
             "not found: using draft setting.\n! Undefined control sequence.\n"
@@ -248,7 +271,6 @@ elif mode in ("okpdf", "nopages", "forge"):
     # forge: the DOCUMENT wrote <job>.pdf itself (\openout), pdfTeX shipped
     # no page (C-97 review round 2). The job name as pdfTeX forms it:
     # quotes removed, directory dropped, the LAST extension stripped.
-    cwd = a[a.index("-w") + 1]
     name = a[-1].replace('"', "").rsplit("/", 1)[-1]
     job = name.rpartition(".")[0] if "." in name else name
     final = ("Output written on %s.pdf (1 page, 999 bytes)." % job
@@ -481,6 +503,33 @@ def not_allowed(got: dict, tex_keys) -> list[str]:
     return sorted(bad)
 
 
+def evid(**over) -> str:
+    """A supervisor evidence line (C-99, OPEN-128) with the protocol's shim
+    proof unless a field is overridden: a refusal test must fail for ITS
+    defect, not for a missing shim mark."""
+    e = {"alias": [], "cw": {}, "err": "", "overflow": 0, "engine_pid": 10,
+         "shim_sha256": _oracle.SHIM_SHA256[_oracle.ARCH_OF_RECORD],
+         "shim_mode": "restricted", "fs_denied": [0]}
+    e.update(over)
+    return json.dumps({k: v for k, v in e.items() if v is not OMIT})
+
+
+OMIT = object()
+
+
+def record_fp(arch: str | None = None) -> dict:
+    arch = arch or _oracle.ARCH_OF_RECORD
+    return dict(_oracle.TREE_FINGERPRINTS[arch], arch=arch,
+                banner="pdfTeX " + _oracle.EXPECT_VERSION,
+                texmfroot="/usr/local/texlive/2026")
+
+
+# The protocol's complete engine environment (what graded_env + engine_env
+# give a graded run): read back from the run's configuration.
+def protocol_env() -> dict:
+    return _oracle.engine_env(_oracle.graded_env({}))
+
+
 class Checker:
     def __init__(self, repo: Path, td: Path):
         self.repo, self.td = repo, td
@@ -492,6 +541,8 @@ class Checker:
         self.count = td / "count"
         self.workroot = (td / "work").resolve()
         self.workroot.mkdir()
+        self.shim_dir = self.workroot / ".lp-shim" / "fake"
+        self.shim_dir.mkdir(parents=True)
         # The file arguments the fakes run must exist (check_file_argument, M1).
         # (t.TEX and t.Tex too: CI's file system is case-SENSITIVE, a Mac's
         # is not, so on a Mac they are t.tex itself.)
@@ -499,31 +550,42 @@ class Checker:
             (self.workroot / f).write_text("\\relax\n")
         os.environ["DEAD_MSG"] = DEAD_MSG
         os.environ["FAKE_COUNT"] = str(self.count)
+        os.environ["FAKE_SHIM_MAP"] = json.dumps(_oracle.SHIM_SHA256)
+        os.environ["FAKE_DEFAULT_CENV"] = json.dumps(
+            dict(_oracle.IMAGE_ENV, HOSTNAME=_oracle.ORACLE_HOSTNAME))
+        os.environ["FAKE_FP"] = json.dumps(record_fp())
 
     def expect(self, label: str, ok: bool, detail: str = "") -> None:
         self.n += 1
         if not ok:
             self.failures.append(f"{label}{': ' + detail if detail else ''}")
 
-    def oracle(self, plan: str):
-        """A ContainerOracle wired to the fake docker, without the docker
-        handshake of __init__ (nothing here may need a daemon)."""
-        self.count.unlink(missing_ok=True)
-        os.environ["FAKE_PLAN"] = plan
+    def bare(self):
+        """A ContainerOracle wired to the fake docker, without __init__'s
+        docker handshake and with NO session probe taken yet."""
         o = _oracle.ContainerOracle.__new__(_oracle.ContainerOracle)
         _oracle._Base.__init__(o)
         o.docker, o.workroot, o.name = str(self.fake), self.workroot, "lp-oracle-fake"
         o.user = FAKE_USER
+        o.shim_dir = self.shim_dir
+        o._fps = {}
+        return o
+
+    def oracle(self, plan: str):
+        """A ContainerOracle wired to the fake docker, its session probe
+        already taken (the fake fingerprint of the architecture of record)."""
+        self.count.unlink(missing_ok=True)
+        os.environ["FAKE_PLAN"] = plan
+        o = self.bare()
+        rec = _oracle.ARCH_OF_RECORD
+        o._fps = {rec: record_fp(rec), "x86_64": record_fp("x86_64")}
+        o._fp = o._fps[rec]
         _oracle._ORACLE = o
-        # The session's full state scan is tested on its own (argv_and_state);
-        # here the fake stands for a container already scanned.
-        _oracle._STATE_CHECKED = True
         return o
 
     def tv(self) -> dict:
-        """A graded run's private TEXMFHOME/TEXMFVAR (required since C-91)
-        with the protocol's variables: what tex_env gives a grader."""
-        return _oracle.oracle_tex_vars(self.workroot / "tx")
+        """What tex_env gives a grader (graded_env imposes the rest)."""
+        return _oracle.oracle_tex_vars()
 
     def run_pdflatex(self, plan: str):
         o = self.oracle(plan)
@@ -533,9 +595,12 @@ class Checker:
         except _oracle.OracleError as e:
             return None, e
 
+    def cfg(self, path: Path) -> dict:
+        return json.loads(path.read_text())
+
     # ---------------------------------------------------------------- python
     def python_graders(self) -> None:
-        for mode in ("dead", "daemonerr", "cut", "nobanner", "leak"):
+        for mode in ("dead", "daemonerr", "cut", "nobanner"):
             got, err = self.run_pdflatex(mode)
             self.expect(f"ContainerOracle.run_pdflatex grades a '{mode}' run "
                         f"(no proof pdfTeX ran) instead of raising OracleError",
@@ -602,14 +667,7 @@ class Checker:
             except _oracle.OracleError:
                 self.expect("-", True)
 
-        # C-95: each pass's evidence is its own. Pass 1 ships a page, the
-        # confirming pass exits 0 with "No pages of output." -- the PDF on
-        # disk is pass 1's, and must not make the run `compiles`. Also a PDF
-        # left in the work directory by an EARLIER run (gen_apply_fixes_real's
-        # run1 reuses run0's directory) must not count for a later one.
-        # C-97 review round 2: pdfTeX's job name is the ONE name for clearing
-        # and reading, whatever the extension (doc.TEX -> doc.pdf), and the
-        # PDF verdict is pdfTeX's own report: a document-written .pdf is not.
+        # C-95: each pass's evidence is its own (see the older notes in git).
         for top in ("t.TEX", "t.ltx", "a.b.tex", "t.Tex"):
             for plan, want in (("okpdf", True), ("okpdf,nopages", False),
                                ("forge", False), ("okpdf,forge", False)):
@@ -623,10 +681,8 @@ class Checker:
                             f"compiles={got}, expected {want} (pdfTeX's job name / "
                             f"its own PDF report, C-95/C-97)", got is want)
                 for f in self.workroot.iterdir():
-                    if f.suffix in (".pdf", ".log") :
+                    if f.suffix in (".pdf", ".log"):
                         f.unlink()
-        # MEASURED in the pinned image, for every argument shape the oracle
-        # ACCEPTS (check_file_argument refuses the rest, below).
         measured = {"a.b.tex": "a.b", "doc.ltx": "doc", "doc.TEX": "doc",
                     "Doc.TeX": "Doc", "d/in.tex": "in", "sub.dir.x.tex": "sub.dir.x",
                     "doc.tex.tex": "doc.tex", "doc.pdf.tex": "doc.pdf"}
@@ -649,11 +705,13 @@ class Checker:
             except _oracle.OracleError as e:
                 self.expect(f"run_to_fixpoint refused plan '{plan}'", False, str(e))
             stale.unlink(missing_ok=True)
-        # The same defect in the pass loops OUTSIDE run_to_fixpoint (review of
-        # C-95): false_ready_oracle.sh runs its passes through the shim, and
-        # gen_contract.py through run_engine. Each is one call of the shared
-        # primitive, which must clear the job's .pdf/.log/.fls/.fmt first.
+        # The same defect in the pass loops OUTSIDE run_to_fixpoint (C-95): the
+        # shim (false_ready_oracle.sh) and run_engine (gen_contract.py) each
+        # take the one primitive, whose run deletes the job's evidence files
+        # INSIDE its container (the supervisor's `remove`) before the engine.
         outs = [self.workroot / ("t" + e) for e in (".pdf", ".log", ".fls", ".fmt")]
+        cfgf = self.td / "cfg-stale"
+        os.environ["FAKE_CFG"] = str(cfgf)
         cwd = os.getcwd()
         os.chdir(self.workroot)
         try:
@@ -663,10 +721,13 @@ class Checker:
             rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
                                           "-interaction=nonstopmode", "t.tex"])
             left = [f.name for f in outs if f.exists() and f.read_text() == "stale\n"]
+            rm = self.cfg(cfgf).get("remove") if cfgf.exists() else None
             self.expect(f"the _oracle.py pdflatex shim left an earlier run's "
                         f"{left} in place for a run that wrote none (a stale PDF "
-                        f"read as this pass's, C-95; false_ready_oracle.sh)",
-                        rc == 0 and not left, f"rc {rc}")
+                        f"read as this pass's, C-95; false_ready_oracle.sh); the "
+                        f"run's supervisor was told to remove {rm}",
+                        rc == 0 and not left
+                        and sorted(rm or []) == sorted(f.name for f in outs), f"rc {rc}")
         finally:
             os.chdir(cwd)
         for f in outs:
@@ -681,6 +742,8 @@ class Checker:
                         not left)
         except _oracle.OracleError as e:
             self.expect("run_engine refused a protocol run", False, str(e))
+        finally:
+            os.environ.pop("FAKE_CFG", None)
         for f in outs:
             f.unlink(missing_ok=True)
         _oracle._ORACLE = None
@@ -728,26 +791,46 @@ class Checker:
         evidence (the supervisor's close-write counts), and the PDF verdict
         needs pdfTeX's own final report in the terminal AND the log, which
         must agree. M1: the file argument is one the oracle can name exactly.
-        stdin: no engine run inherits the grader's stdin."""
+        stdin: no engine run inherits the grader's stdin. OPEN-128: a run
+        whose engine did not run under the pinned shim is refused."""
         wr = self.workroot
-        # (1) the supervisor saw the document write pdfTeX's own log/pdf twice
-        for evid, what in (('{"alias": [], "cw": {"t.log": 2}, "err": "", "overflow": 0}', "its own log"),
-                           ('{"alias": [], "cw": {"t.pdf": 2}, "err": "", "overflow": 0}', "its own pdf"),
-                           ('{"alias": [], "cw": {}, "err": "OSError(38)", "overflow": 0}', "no inotify"),
-                           ('{"alias": [], "cw": {}, "err": "", "overflow": 1}', "a queue overflow"),
-                           ('{"alias": [["T.LOG", "t.log"]], "cw": {"t.log": 1}, "err": "", '
-                            '"overflow": 0}', "an alias of its own log (case-insensitive root)"),
-                           ('{"cw": {}, "err": "", "overflow": 0}', "no alias list"),
-                           ("OMIT", "no evidence line at all"),
-                           ("NOT-JSON", "an unreadable evidence line")):
-            os.environ["FAKE_EVID"] = evid
+        # (1) the supervisor saw the document write pdfTeX's own log/pdf twice,
+        # or could not watch, or the shim's proof is missing or wrong
+        for ev, what in ((evid(cw={"t.log": 2}), "its own log"),
+                         (evid(cw={"t.pdf": 2}), "its own pdf"),
+                         (evid(err="OSError(38)"), "no inotify"),
+                         (evid(overflow=1), "a queue overflow"),
+                         (evid(alias=[["T.LOG", "t.log"]], cw={"t.log": 1}),
+                          "an alias of its own log (case-insensitive root)"),
+                         (evid(alias=OMIT), "no alias list"),
+                         ("OMIT", "no evidence line at all"),
+                         ("NOT-JSON", "an unreadable evidence line"),
+                         # OPEN-128: the shim's proof
+                         (evid(shim_sha256="0" * 64), "another shim than the pinned one"),
+                         (evid(shim_sha256=OMIT), "no shim hash"),
+                         (evid(shim_mode=None), "no shim mark on the engine "
+                          "(the preload was ignored: the real clock)"),
+                         (evid(shim_mode="free"), "a shim without the TeX "
+                          "file-system view on the engine")):
+            os.environ["FAKE_EVID"] = ev
             try:
                 got, err = self.run_pdflatex("okpdf")
             finally:
                 os.environ.pop("FAKE_EVID", None)
             self.expect(f"run_pdflatex graded a run whose supervisor reported "
-                        f"{what} (C-99: the evidence is the document's)",
+                        f"{what} (C-99/OPEN-128: the evidence is not the oracle's)",
                         err is not None, f"returned {got!r}")
+        for f in ("t.pdf", "t.log"):
+            (wr / f).unlink(missing_ok=True)
+        os.environ["FAKE_EVID"] = evid()
+        try:
+            got, err = self.run_pdflatex("okpdf")
+            self.expect("a run with the protocol's evidence (the pinned shim, its "
+                        "mark on the engine) is refused", err is None, str(err)[:200])
+        finally:
+            os.environ.pop("FAKE_EVID", None)
+        for f in ("t.pdf", "t.log"):
+            (wr / f).unlink(missing_ok=True)
         # (2) the terminal and the log must agree; text after the report
         for plan, what in (("batchforge", "a forged terminal report and a "
                                           "silenced real one (\\batchmode)"),
@@ -761,7 +844,6 @@ class Checker:
                 self.expect("-", True)
         for f in ("t.pdf", "t.log"):
             (wr / f).unlink(missing_ok=True)
-        # \synctex=1: pdfTeX's own SyncTeX line follows its terminal report
         o = self.oracle("synctex")
         try:
             r = o.run_to_fixpoint(wr, "t.tex", self.tv(), 60)
@@ -772,22 +854,16 @@ class Checker:
                         "(review round 4: 9 frame papers)", False, str(e)[:200])
         for f in ("t.pdf", "t.log"):
             (wr / f).unlink(missing_ok=True)
-        # a batchmode document: no terminal report, the (supervised) log decides
         o = self.oracle("batchok")
         r = o.run_to_fixpoint(wr, "t.tex", self.tv(), 60)
         self.expect(f"a \\batchmode document that ships a page no longer grades "
                     f"compiles (the log alone decides): {r!r}", r.compiles)
-        # a forged first-error line changes no verdict (the reason field is
-        # document-influenceable; nothing that decides compiles reads it)
         o = self.oracle("errforge")
         r = o.run_to_fixpoint(wr, "t.tex", self.tv(), 60)
         self.expect(f"a document printing a forged '! ...' error line changed "
                     f"the verdict: {r!r}", r.compiles and r.rc == 0)
         for f in ("t.pdf", "t.log"):
             (wr / f).unlink(missing_ok=True)
-        # ... nor a CELL (review round 3 (c)): a READY document that fails
-        # after printing an "infrastructure" lookalike is FALSE-READY, not
-        # ungraded (the real grader, diff_real_roots.run_one, end to end).
         import diff_real_roots
         corp = self.td / "corpus-infraforge"
         (corp / "p").mkdir(parents=True, exist_ok=True)
@@ -808,7 +884,7 @@ class Checker:
         finally:
             _oracle._ORACLE = None
         # (3) the report parser: TeX's 79-byte wrap is ambiguous
-        pre = b"x" * 79 + b"\n"   # a line of exactly 79 bytes, then print_nl
+        pre = b"x" * 79 + b"\n"
         long_job = "a" * 70
         long_line = b"Output written on " + long_job.encode() + b".pdf (1 page, 9 bytes)."
         for label, job, log, want in (
@@ -835,11 +911,10 @@ class Checker:
                             str(got).startswith("OracleError"))
             else:
                 self.expect(f"final_report on {label} = {got!r}, want {want!r}", got == want)
-        # the terminal channel: pdfTeX's own post-report lines, and nothing else
         rep = b"Output written on t.pdf (1 page, 9 bytes)."
         syn = b"SyncTeX written on t.synctex.gz."
         tr = b"Transcript written on t.log."
-        j48 = "a" * 48   # the SyncTeX line is then exactly 79 bytes (unwrapped)
+        j48 = "a" * 48
         s48 = b"SyncTeX written on " + j48.encode() + b".synctex.gz."
         for label, job, term, ok in (
                 ("the transcript line", "t", rep + b"\n" + tr + b"\n", True),
@@ -883,7 +958,6 @@ class Checker:
                 self.expect("-", True)
             except _oracle.OracleError as e:
                 self.expect(f"check_file_argument refused {arg!r}", False, str(e))
-        # ... and on the RUN path (check_engine_argv), not only as a callable
         for arg in ("a%b.tex", "u.ltx", "missing.tex", "lnk.tex"):
             o = self.oracle("okpdf")
             try:
@@ -897,9 +971,9 @@ class Checker:
         (wr / "dir.tex").rmdir()
         self.supervisor_checks()
         self.host_diagnostic_checks()
-        self.leak_check_checks()
-        # (5) no engine run inherits the grader's stdin: the container's docker
-        # client and the native supervisor both get /dev/null
+        # (5) no engine run inherits the grader's stdin: the docker client
+        # gets /dev/null (the supervisor gives the engine /dev/null, or a
+        # measurement's own input file: supervisor_checks)
         rfd, wfd = os.pipe()
         os.write(wfd, b"SECRET-STDIN\n")
         os.close(wfd)
@@ -915,21 +989,6 @@ class Checker:
                         "stdin (stdin=DEVNULL)", got_stdin.exists()
                         and got_stdin.read_bytes() == b"", repr(
                             got_stdin.read_bytes()[:40] if got_stdin.exists() else None))
-            bindir = self.td / "nbin-stdin"
-            bindir.mkdir(exist_ok=True)
-            dump = self.td / "native-stdin"
-            eng = bindir / _oracle.ENGINE_PDFLATEX
-            eng.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
-                           f"cat > '{dump}'\nexit 0\n")
-            eng.chmod(0o755)
-            fake_supervisor(bindir)
-            n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
-            _oracle._Base.__init__(n)
-            n.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
-            n.run_pdflatex(wr, ["-interaction=nonstopmode", "t.tex"], self.tv(), 60)
-            self.expect("the native engine run read the grader's stdin "
-                        "(stdin=DEVNULL)", dump.exists() and dump.read_bytes() == b"",
-                        repr(dump.read_bytes()[:40] if dump.exists() else None))
         finally:
             os.environ.pop("FAKE_STDIN", None)
             os.dup2(saved0, 0)
@@ -937,24 +996,36 @@ class Checker:
             _oracle._ORACLE = None
 
     def supervisor_checks(self) -> None:
-        """THE REAL SUPERVISOR (_SUPERVISOR_SRC), not the fake python3 the
-        other checks use: on Linux (CI; the pinned image) it must count the
-        evidence files' close-writes -- one is pdfTeX's, a second (directly
-        or through a symlink) is the document's -- and give its child
-        /dev/null; where inotify is missing (macOS) it must report that, and
-        check_evidence must refuse the run (fail closed)."""
+        """THE REAL SUPERVISOR (_SUPERVISOR_SRC): on Linux (CI) it must count
+        the evidence files' close-writes -- one is pdfTeX's, a second
+        (directly or through a symlink) is the document's -- give its child
+        /dev/null (or a measurement's input file), delete the stale evidence
+        and create the run's directories BEFORE the engine starts, and pass
+        the engine EXACTLY the configured environment; where inotify is
+        missing (macOS) it must report that, and check_evidence must refuse
+        the run (fail closed)."""
         d = self.td / "sup"
         d.mkdir(exist_ok=True)
         args = ["-interaction=nonstopmode", "t.tex"]
 
-        def run(script: str):
+        def run(script: str, stdin_file=None, extra=None):
             for f in d.iterdir():
-                f.unlink()
+                if f.is_dir():
+                    shutil.rmtree(f)
+                else:
+                    f.unlink()
             eng = d / "eng.sh"
             eng.write_text("#!/bin/sh\n" + script)
             eng.chmod(0o755)
+            cfg = {"names": _oracle.evidence_names(args),
+                   "remove": _oracle.evidence_names(args),
+                   "env": {"PATH": "/usr/bin:/bin", "LPTEST": "only-this"},
+                   "mkdirs": [str(d / "mk" / "a")]}
+            if stdin_file:
+                cfg["stdin"] = str(stdin_file)
+            cfg.update(extra or {})
             p = subprocess.run([sys.executable, "-I", "-c", _oracle._SUPERVISOR_SRC,
-                                "NONCE", _oracle.evidence_names(args), str(eng)],
+                                "NONCE", json.dumps(cfg), str(eng)],
                                cwd=d, capture_output=True, input=b"SECRET-STDIN\n",
                                timeout=60)
             try:
@@ -972,10 +1043,6 @@ class Checker:
                     ("the document writes the log through a symlink",
                      "echo x > t.log\nln -s t.log evil.txt\necho y > evil.txt\n",
                      "refused"),
-                    # pdfTeX holds its log open (fd 3) while the document
-                    # opens it twice writing nothing: the kernel MERGES the
-                    # document's two adjacent close-writes, but pdfTeX's own
-                    # (after its final report, an IN_MODIFY) stays apart.
                     ("the document opens the held-open log twice, writing nothing",
                      "exec 3>t.log\necho x >&3\n: >> t.log\n: >> t.log\n"
                      "echo z >&3\nexec 3>&-\n", "refused"),
@@ -983,10 +1050,6 @@ class Checker:
                      "echo x >&3\necho z >&3\nexec 3>&-\n", "graded"),
                     ("the document writes other files freely",
                      "echo x > t.log\necho a > t.aux\necho b > t.aux\n", "graded"),
-                    # ONE FILE, MANY NAMES (review round 4): the same inode
-                    # under another name, and a case/Unicode variant (on a
-                    # case-insensitive root, virtiofs over APFS, the SAME
-                    # file; here a different one, refused all the same)
                     ("the document writes the log through a hard link",
                      "echo x > t.log\nln t.log hard.txt\necho y > hard.txt\n", "refused"),
                     ("the document writes a case variant of the log",
@@ -996,8 +1059,6 @@ class Checker:
                     ("the document renames a file onto the PDF",
                      "echo x > t.log\necho y > z.txt\nmv z.txt t.pdf\necho w > t.pdf\n",
                      "refused"),
-                    # pdfTeX's -recorder writes pdflatex<pid>.fls and renames
-                    # it, still open, to <job>.fls: ONE write of t.fls
                     ("pdfTeX's recorder renames its open .fls",
                      "exec 3>pdflatex99.fls\necho a >&3\nmv pdflatex99.fls t.fls\n"
                      "echo x > t.log\necho b >&3\nexec 3>&-\n", "graded")):
@@ -1008,64 +1069,39 @@ class Checker:
             got = (d / "stdin.got").read_bytes() if (d / "stdin.got").exists() else None
             self.expect("the real supervisor gave the engine the grader's stdin, not "
                         "/dev/null", got == b"", repr(got))
+            inp = self.td / "measure-stdin"
+            inp.write_bytes(b"\\relax\n")
+            run("cat > stdin.got\necho x > t.log\n", stdin_file=inp)
+            got = (d / "stdin.got").read_bytes() if (d / "stdin.got").exists() else None
+            self.expect("the real supervisor did not give a measurement's engine "
+                        "its terminal input file (ADR-015 E7)", got == b"\\relax\n",
+                        repr(got))
+            run("env > env.got\nls -d mk/a > mk.got\necho x > t.log\n")
+            env = (d / "env.got").read_text() if (d / "env.got").exists() else ""
+            got = sorted(ln.split("=", 1)[0] for ln in env.splitlines() if "=" in ln)
+            self.expect("the real supervisor passed the engine an environment other "
+                        "than EXACTLY its configuration (OPEN-128: not even docker's "
+                        "HOSTNAME)", set(got) <= {"PATH", "LPTEST", "PWD", "SHLVL", "_",
+                                                  "OLDPWD"} and "LPTEST" in got, repr(got))
+            self.expect("the real supervisor did not create the run's directories "
+                        "before the engine started (C-93's TMPDIR)",
+                        (d / "mk.got").exists())
+            (d / "t.pdf").write_text("stale")
+            run("ls t.pdf > seen.got 2>/dev/null; echo x > t.log\n")
+            self.expect("the real supervisor did not delete the job's stale evidence "
+                        "inside the run before the engine started (C-95)",
+                        (d / "seen.got").exists() and (d / "seen.got").read_text() == "")
         else:
             got = run("echo x > t.log\n")
             self.expect(f"the real supervisor without inotify ({sys.platform}) was "
                         f"not refused: {got!r} (fail closed, C-99)",
                         got.startswith("refused"))
 
-    def leak_check_checks(self) -> None:
-        """THE IN-CONTAINER LEAK CHECK (C-97) runs as shell, here with a fake
-        `ps` (one scripted listing per call) and an instant `sleep`: a leak
-        is the SAME process (the same pid) still listed after
-        LEAK_CONFIRM_S re-samples. A concurrent run's zombie that its
-        supervisor reaps late is not a leak (review round 4 re-measure: it
-        refused check_contracts_reproducible); a persistent zombie or orphan
-        is, even when its command name is a glob pattern that matches a file
-        in the working directory."""
-        d = self.td / "leak"
-        d.mkdir(exist_ok=True)
-        (d / "ps").write_text('#!/bin/sh\nn=$(cat cnt 2>/dev/null || echo 0); '
-                              'echo $((n+1)) > cnt\nsed -n "$((n+1))p" plan | tr "|" "\\n"\n')
-        (d / "sleep").write_text("#!/bin/sh\nexit 0\n")
-        for f in ("ps", "sleep"):
-            (d / f).chmod(0o755)
-        (d / "3096:p:Z").write_text("")   # `[pdflatex]` would glob to this
-        z, o = " 3096 7 Z 5 [pdflatex]", " 55 1 S 9 gs -q"
-        k = _oracle.LEAK_CONFIRM_S + 2
-        for label, plan, leak in (
-                ("a sibling's zombie reaped after 2 samples", [z, z] + [""] * k, False),
-                ("a different zombie each sample", [" 1 7 Z 5 [pdflatex]",
-                                                    " 2 7 Z 5 [pdflatex]", ""], False),
-                ("a persistent zombie", [z] * k, True),
-                ("a persistent orphan", [o] * k, True),
-                ("a persistent orphan whose state letter alternates",
-                 [" 777 1 R 9 gs -dBATCH", " 777 1 S 9 gs -dBATCH"] * k, True),
-                ("an orphan that becomes a zombie of the same pid",
-                 [" 55 1 S 9 gs -q"] + [" 55 1 Z 9 [gs]"] * k, True),
-                ("nothing", [""], False)):
-            (d / "plan").write_text("\n".join(plan) + "\n")
-            (d / "cnt").unlink(missing_ok=True)
-            p = subprocess.run(["sh", "-c", _oracle.LEAK_CHECK_SH + ' lp_leak N; echo "rc=$?"'],
-                               cwd=d, capture_output=True, text=True, timeout=60,
-                               env={**os.environ, "PATH": f"{d}:{os.environ['PATH']}"})
-            got = "N_LEAK=" in p.stderr and "rc=1" in p.stdout
-            self.expect(f"the container leak check on {label}: leak={got}, want "
-                        f"{leak} (C-97)", got == leak, (p.stdout + p.stderr)[:200])
-            if label == "a persistent zombie":
-                # The pid alone is the identity, so a glob-expanded token
-                # would still be detected; what globbing breaks is the
-                # diagnostic, which must name the process ps listed.
-                self.expect("the container leak check on a persistent zombie named "
-                            "a glob-expanded process, not '3096:[pdflatex]:Z' (C-97)",
-                            "N_LEAK=3096:[pdflatex]:Z" in p.stderr, p.stderr[:200])
-
     def host_diagnostic_checks(self) -> None:
         """HostDiagnostic (oracle_baseline_classify's host arm, never a
-        grade) runs WITHOUT the evidence supervisor: the Mac hosting that TeX
-        Live has no inotify, so supervising it refused every host run (review
-        round 4). It still gives the engine /dev/null. And get_oracle() never
-        hands out an unsupervised backend."""
+        grade) runs WITHOUT the evidence supervisor, gives the engine
+        /dev/null, and get_oracle() never hands out an unsupervised backend.
+        The retired native backend cannot be constructed (ADR-015 E15)."""
         bindir = self.td / "hbin"
         bindir.mkdir(exist_ok=True)
         wr = self.td / "hwork"
@@ -1093,8 +1129,7 @@ class Checker:
         os.dup2(rfd, 0)
         os.close(rfd)
         try:
-            with tempfile.TemporaryDirectory(prefix="hd-") as td:
-                r = h.run_to_fixpoint(wr, "t.tex", _oracle.oracle_tex_env(Path(td)), 60)
+            r = h.run_to_fixpoint(wr, "t.tex", _oracle.oracle_tex_env(), 60)
             self.expect(f"HostDiagnostic graded a compiling fake run as {r!r}",
                         r.compiles)
         except _oracle.OracleError as e:
@@ -1110,25 +1145,30 @@ class Checker:
         saved = _oracle._ORACLE
         _oracle._ORACLE = h
         try:
-            _oracle.get_oracle(full_state=False)
+            _oracle.get_oracle()
             self.expect("get_oracle() handed out an unsupervised backend (C-99)", False)
         except _oracle.OracleError:
             self.expect("-", True)
         finally:
             _oracle._ORACLE = saved
         self.expect("a grading backend is unsupervised",
-                    getattr(_oracle.NativeOracle, "supervised", False) is True
-                    and getattr(_oracle.ContainerOracle, "supervised", False) is True)
+                    getattr(_oracle.ContainerOracle, "supervised", False) is True)
+        try:
+            _oracle.NativeOracle()
+            self.expect("the retired native backend can be constructed (ADR-015 "
+                        "E15: it grades nothing)", False)
+        except _oracle.OracleError:
+            self.expect("-", True)
 
     # ------------------------------------------------ the contract generator
     def generator_client(self) -> None:
-        """gen_contract.py is a CLIENT of the oracle (run_engine), not a runner
-        of its own: its jobs get the same proof-of-run refusals, the engine it
-        names reaches the container, exactly the TeX variables it passes cross
-        (on the native backend too: no host TeX variable leaks in), and an
-        oracle failure stops the generator instead of reading as a TeX
-        outcome."""
-        tv = _oracle.oracle_tex_vars(self.workroot / "tx")
+        """gen_contract.py and the L_S0 generators are CLIENTS of the oracle
+        (run_engine): their jobs get the same proof-of-run refusals, the
+        engine they name reaches the container, the environment is the
+        protocol's with only the documented overrides (the log width; the
+        clock as a parameter), and an oracle failure stops the generator
+        instead of reading as a TeX outcome."""
+        tv = _oracle.oracle_tex_vars()
         for mode in ("dead", "daemonerr", "cut", "nobanner", "fwrite"):
             o = self.oracle(mode)
             try:
@@ -1138,25 +1178,37 @@ class Checker:
                             f"instead of raising OracleError", False)
             except _oracle.OracleError:
                 self.expect("-", True)
-        argv_file = self.td / "argv"
+        argv_file, cfgf = self.td / "argv", self.td / "cfg-gen"
         os.environ["FAKE_ARGV"] = str(argv_file)
+        os.environ["FAKE_CFG"] = str(cfgf)
         try:
             o = self.oracle("fail")
+            lw = {"max_print_line": "1000000"}
             got = o.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini", "t.tex"],
-                               dict(tv, FORCE_SOURCE_DATE="1"), 60)
+                               dict(tv, **lw), 60)
             a = argv_file.read_text().split("\0")
             i = a.index("-c")
-            fwd = sorted(a[j + 1] for j in range(len(a) - 1)
-                         if a[j] == "-e" and j < i)
-            want = sorted(["HOME=/tmp"] + [f"{k}={v}" for k, v in
-                                           dict(tv, FORCE_SOURCE_DATE="1").items()])
+            env = self.cfg(cfgf)["env"]
+            want = _oracle.engine_env(dict(_oracle.oracle_tex_vars(), **lw))
             self.expect("run_engine: a genuine failure is rc 1, the engine reaches "
-                        "the container after the nonce and timeout, and exactly "
-                        "the caller's TeX variables are forwarded",
+                        "the container after the nonce, timeout, supervisor and "
+                        "configuration, and the engine's environment is exactly "
+                        "the protocol's plus the caller's log width",
                         got[0] == 1 and a[i + 7] == _oracle.ENGINE_PDFTEX
                         and a[i + 5] == _oracle._SUPERVISOR_SRC
-                        and a[i + 8:] == ["-ini", "t.tex"] and fwd == want,
-                        f"{got!r} {a[i + 3:]} {fwd}")
+                        and a[i + 8:] == ["-ini", "t.tex"] and env == want,
+                        f"{got!r} {a[i + 7:]} {sorted(set(env) ^ set(want))}")
+            # the clock is a PARAMETER (gen_contract's second date, OPEN-128 (6))
+            o = self.oracle("fail")
+            o.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini", "t.tex"],
+                         tv, 60, clock="fixed:1790000000")
+            env = self.cfg(cfgf)["env"]
+            self.expect("run_engine(clock=fixed:1790000000) did not run under that "
+                        "clock (SOURCE_DATE_EPOCH, FORCE_SOURCE_DATE, the shim's "
+                        "LP_CLOCK_EPOCH)", env.get("SOURCE_DATE_EPOCH") == "1790000000"
+                        and env.get("LP_CLOCK_EPOCH") == "1790000000"
+                        and env.get("FORCE_SOURCE_DATE") == "1", repr(
+                            {k: env.get(k) for k in ("SOURCE_DATE_EPOCH", "LP_CLOCK_EPOCH")}))
             # Run the in-container script itself (a fake `timeout` that drops
             # its options, an engine path that proves it ran): the script must
             # start the engine it was GIVEN, not a name of its own.
@@ -1164,57 +1216,39 @@ class Checker:
             tb.mkdir(exist_ok=True)
             (tb / "timeout").write_text('#!/bin/sh\nshift 3\nexec "$@"\n')
             (tb / "timeout").chmod(0o755)
-            # python3 -I -c SUPERVISOR NONCE NAMES ENGINE ARGS: run the engine
+            # python3 -I -c SUPERVISOR NONCE CONFIG ENGINE ARGS: run the engine
             (tb / "python3").write_text('#!/bin/sh\nshift 5\nexec "$@"\n')
             (tb / "python3").chmod(0o755)
             probe = tb / "given-engine"
             probe.write_text("#!/bin/sh\necho GIVEN-ENGINE-RAN \"$@\"\n")
             probe.chmod(0o755)
-            # A fake `ps` (the container's procps columns): FAKE_PS lines.
-            (tb / "ps").write_text('#!/bin/sh\nprintf "%b" "$FAKE_PS"\n')
-            (tb / "ps").chmod(0o755)
-            (tb / "sleep").write_text("#!/bin/sh\nexit 0\n")
-            (tb / "sleep").chmod(0o755)
-            clean_ps = ("    1     0 Ss     900 docker-init\\n"
-                        "    7     1 S      900 sleep infinity\\n"
-                        "   40     0 Ss       0 sh\\n")
-
-            def script(ps_out):
-                return subprocess.run(
-                    ["sh", "-c", a[i + 1], "sh", "N", "60", "SUP", "x.log",
-                     str(probe), "x.tex"],
-                    capture_output=True, text=True,
-                    env=dict(os.environ, PATH=f"{tb}:/usr/bin:/bin", FAKE_PS=ps_out))
-            r = script(clean_ps)
+            r = subprocess.run(
+                ["sh", "-c", a[i + 1], "sh", "N", "60", "SUP", "{}", str(probe), "x.tex"],
+                capture_output=True, text=True,
+                env=dict(os.environ, PATH=f"{tb}:/usr/bin:/bin"))
             self.expect("the in-container script runs the engine run_engine names",
                         "GIVEN-ENGINE-RAN x.tex" in r.stdout and "N=0" in r.stderr,
                         f"{r.stdout!r} {r.stderr!r}")
-            # C-97: a process left behind by an earlier run -- a zombie, or
-            # an orphan reparented to PID 1 -- stops the run BEFORE the
-            # engine starts; a young one (< 2 s, being reaped) does not.
-            for label, extra, want_leak in (
-                    ("a zombie", "  301   290 Z       40 gs\\n", True),
-                    ("an orphan of PID 1", "  302     1 S       40 gs\\n", True),
-                    ("an orphaned sleep", "  305     1 S       40 sleep 30\\n", True),
-                    ("a zombie orphan", "  303     1 Z      600 perl\\n", True),
-                    ("a process being reaped (<2 s)", "  304     1 Z        1 sh\\n", False)):
-                r = script(clean_ps + extra)
-                leaked = "N_LEAK=" in r.stderr and "GIVEN-ENGINE-RAN" not in r.stdout
-                self.expect(f"the in-container script {'ran the engine despite' if want_leak else 'refused'} "
-                            f"{label} left in the container (C-97)", leaked == want_leak,
-                            f"{r.stdout!r} {r.stderr!r}")
         finally:
             os.environ.pop("FAKE_ARGV", None)
+            os.environ.pop("FAKE_CFG", None)
         # An engine the oracle does not run (named through _oracle's table,
-        # not spelled here: check_oracle_pin scans this file).
+        # not spelled here: check_oracle_pin scans this file); a variable
+        # that is not TeX-shaping; a TeX-shaping one that differs from the
+        # protocol's (only the log width and the clock may differ).
         not_run = sorted(_oracle.TEX_ENGINE_BINARIES - set(_oracle.ENGINES))[0]
-        for bad_engine, bad_vars in ((not_run, tv), (_oracle.ENGINE_PDFTEX,
-                                                   dict(tv, PATH="/host/bin"))):
+        for bad_engine, bad_vars in ((not_run, tv),
+                                     (_oracle.ENGINE_PDFTEX, dict(tv, PATH="/host/bin")),
+                                     (_oracle.ENGINE_PDFTEX, dict(tv, openin_any="a")),
+                                     (_oracle.ENGINE_PDFTEX, dict(tv, TMPDIR="/tmp")),
+                                     (_oracle.ENGINE_PDFTEX,
+                                      dict(tv, TEXMFVAR=str(self.workroot / "tv")))):
             o = self.oracle("ok")
             try:
                 o.run_engine(self.workroot, bad_engine, ["t.tex"], bad_vars, 60)
                 self.expect(f"run_engine accepted engine {bad_engine!r} with "
-                            f"variables {sorted(bad_vars)}", False)
+                            f"variables {sorted(set(bad_vars.items()) - set(tv.items()))}",
+                            False)
             except _oracle.OracleError:
                 self.expect("-", True)
         try:
@@ -1222,41 +1256,6 @@ class Checker:
             self.expect("image_command started a TeX engine", False)
         except _oracle.OracleError:
             self.expect("-", True)
-        # Native backend: the host's TeX variables never cross into a
-        # run_engine job; only the caller's do. A fake engine on PATH dumps
-        # the environment it received.
-        bindir = self.td / "bin"
-        bindir.mkdir(exist_ok=True)
-        fake = bindir / _oracle.ENGINE_PDFTEX
-        envdump = self.td / "envdump"
-        fake.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
-                        f"env > '{envdump}'\nexit 0\n")
-        fake.chmod(0o755)
-        hostile = dict(KPATHSEA_HOSTILE, openin_any="a", max_print_line="79")
-        saved = {k: os.environ.get(k) for k in hostile}
-        os.environ.update(hostile)
-        try:
-            n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
-            _oracle._Base.__init__(n)
-            # The image's PATH, with the fake engine's directory in front
-            # (the host's PATH never reaches an engine).
-            n.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
-            fake_supervisor(bindir)
-            rc, _, _ = n.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["t.tex"], tv, 60)
-            got = dict(x.split("=", 1) for x in envdump.read_text().splitlines()
-                       if "=" in x)
-            leak = not_allowed(got, tv)
-            self.expect("native run_engine: the caller's TeX variables and no host "
-                        "TeX variable", rc == 0 and got.get("openin_any") == "p"
-                        and not leak
-                        and all(got.get(k) == v for k, v in tv.items()),
-                        f"leaked {leak}")
-        finally:
-            for k, v in saved.items():
-                if v is None:
-                    os.environ.pop(k, None)
-                else:
-                    os.environ[k] = v
         # The generator itself: an oracle failure is never a TeX outcome.
         import gen_contract as gc
         o = self.oracle("dead")
@@ -1274,129 +1273,61 @@ class Checker:
 
     # ------------------------------------------- the ONE grading environment
     def grading_env(self) -> None:
-        """C-91 (OPEN-118 known limit (b)): every GRADED run gets exactly the
-        protocol's TeX environment, whoever calls the oracle and whatever the
-        host exports -- ORACLE_TEX_VARS imposed, a private TEXMFHOME/TEXMFVAR
-        required, every other TeX-shaping variable dropped. Before, the shim
-        forwarded the host's values (or none: no SOURCE_DATE_EPOCH, no
-        openin_any/openout_any), the native shell path ran a bare pdflatex,
-        and check_apply_fixes_roundtrip passed the host environment. Each
-        entry point is driven here with a HOSTILE host environment and the
-        variables that reach the engine are read back: from the fake docker's
-        argv (container) and from a fake engine's environment (native)."""
+        """C-91 (OPEN-118 known limit (b)), OPEN-128: every GRADED run gets
+        EXACTLY the protocol's environment, whoever calls the oracle and
+        whatever the host or the caller exports: the image's environment,
+        ORACLE_TEX_VARS, the fixed run variables (the private trees and
+        TMPDIR at fixed paths on the run's own tmpfs, the hash seeds, the
+        shim's view) and the protocol clock -- read back from the run's
+        configuration (the env the supervisor passes verbatim)."""
         hostile = {"SOURCE_DATE_EPOCH": "1700000000", "openin_any": "a",
-                   "openout_any": "a", "FORCE_SOURCE_DATE": "1",
+                   "openout_any": "a", "FORCE_SOURCE_DATE": "0",
                    "max_print_line": "1000", "TEXINPUTS": f"{self.workroot}/inp:",
-                   # C-93: a caller's/host's temporary directories never reach
-                   # the engine (TMPDIR itself: see host_tmp below)
-                   "TMP": "/tmp", "TEMP": "/tmp",
+                   "TMP": "/tmp", "TEMP": "/tmp", "LP_CLOCK_EPOCH": "1",
+                   "LP_FS_ROOTS": "/", "LD_PRELOAD": "/x.so", "PYTHONHASHSEED": "7",
                    "JAVA_TOOL_OPTIONS": "-XX:+UsePerfData",
+                   "TEXMFVAR": str(self.workroot / "host-tv"),
                    **KPATHSEA_HOSTILE}
-        host_tmp = {"TMPDIR": "/tmp"}
-        want_fixed = dict(_oracle.ORACLE_TEX_VARS)
-        argv_file = self.td / "argv-env"
+        want = protocol_env()
+        cfgf = self.td / "cfg-env"
 
-        def forwarded() -> dict:
-            a = argv_file.read_text().split("\0")
-            i = a.index("-c")
-            return dict(a[j + 1].split("=", 1) for j in range(len(a) - 1)
-                        if a[j] == "-e" and j < i)
+        def check(label: str) -> None:
+            if not cfgf.exists():
+                self.expect(f"{label}: no run reached the container", False)
+                return
+            c = self.cfg(cfgf)
+            got = c["env"]
+            diff = sorted(k for k in set(got) | set(want) if got.get(k) != want.get(k))
+            self.expect(f"{label}: the engine's environment is not EXACTLY the "
+                        f"protocol's (C-91, OPEN-128)", not diff,
+                        repr({k: (got.get(k), want.get(k)) for k in diff[:6]}))
+            self.expect(f"{label}: the supervisor does not create the run's private "
+                        f"trees and TMPDIR before the engine starts (C-93)",
+                        set(_oracle.FIXED_RUN_DIRS) <= set(c.get("mkdirs", [])),
+                        repr(c.get("mkdirs")))
+            self.expect(f"{label}: the engine runs without the pinned shim "
+                        f"preloaded (OPEN-128)",
+                        c.get("shim") == f"{_oracle.SHIM_DIR}/"
+                        f"{_oracle.shim_name(_oracle.ARCH_OF_RECORD)}"
+                        and c.get("mark") == _oracle.SHIM_MARK_DIR, repr(c.get("shim")))
+            cfgf.unlink()
 
-        def tmp_created() -> bool:
-            f = Path(str(argv_file) + ".tmpdir")
-            return f.exists() and f.read_text() == "1"
-
-        def exactly_protocol(got: dict, texmf_host: str | None,
-                             tmp_existed: bool) -> str:
-            """'' when `got` is the protocol's environment, else what is wrong."""
-            bad = []
-            for k, v in want_fixed.items():
-                if got.get(k) != v:
-                    bad.append(f"{k}={got.get(k)!r} (protocol {v!r})")
-            for k in ("FORCE_SOURCE_DATE", "max_print_line", "TEXINPUTS"):
-                if k in got:
-                    bad.append(f"host {k}={got[k]!r} reached the engine")
-            for k in _oracle._GRADING_TEXMF:
-                if not got.get(k) or got.get(k) == texmf_host:
-                    bad.append(f"{k}={got.get(k)!r} is not a private per-run one")
-            # C-93: the private temporary directory, beside the private
-            # trees, created before the run; TMP/TEMP/java's derived from it.
-            tv_dir = got.get("TEXMFVAR")
-            want_tmp = (str(Path(tv_dir).parent / _oracle.PRIVATE_TMP_NAME)
-                        if tv_dir else None)
-            if not want_tmp or got.get("TMPDIR") != want_tmp:
-                bad.append(f"TMPDIR={got.get('TMPDIR')!r} is not the run's private "
-                           f"temporary directory {want_tmp!r}")
-            elif not tmp_existed:
-                bad.append(f"the run's private TMPDIR {want_tmp} was not created "
-                           f"before the engine started")
-            for k in ("TMP", "TEMP"):
-                if got.get(k) != got.get("TMPDIR"):
-                    bad.append(f"{k}={got.get(k)!r} is not the private TMPDIR")
-            jto = got.get("JAVA_TOOL_OPTIONS", "")
-            if ("-XX:-UsePerfData" not in jto.split()
-                    or f"-Djava.io.tmpdir={got.get('TMPDIR')}" not in jto.split()
-                    or "-XX:+UsePerfData" in jto):
-                bad.append(f"JAVA_TOOL_OPTIONS={jto!r} does not keep java out of "
-                           f"/tmp (-XX:-UsePerfData, java.io.tmpdir=TMPDIR)")
-            leak = not_allowed(got, set(want_fixed) | set(_oracle._GRADING_TEXMF)
-                               | {"TMPDIR", "TMP", "TEMP", "JAVA_TOOL_OPTIONS"})
-            if leak:
-                bad.append(f"not on the allow-list (image env + protocol): {leak}")
-            return "; ".join(bad)
-
-        saved = {k: os.environ.get(k) for k in list(hostile) + ["FAKE_ARGV",
-                                                                  "TEXMFHOME", "TMPDIR"]}
-        os.environ["FAKE_ARGV"] = str(argv_file)
-        host_th = str(self.workroot / "host-th")
+        saved = {k: os.environ.get(k) for k in list(hostile) + ["FAKE_CFG", "TMPDIR",
+                                                                  "TEXMFHOME"]}
+        os.environ["FAKE_CFG"] = str(cfgf)
         try:
             # (1) the Python API: a caller dict carrying the hostile values.
             o = self.oracle("ok")
-            try:
-                o.run_pdflatex(self.workroot, ["-interaction=nonstopmode", "t.tex"],
-                               dict(self.tv(), **hostile), 60)
-                why = exactly_protocol(forwarded(), None, tmp_created())
-            except _oracle.OracleError as e:
-                why = f"the protocol's own run was refused: {e}"
-            self.expect("ContainerOracle.run_pdflatex forwards a caller's TeX "
-                        "variables instead of imposing the protocol's", not why, why)
-            # (2) no private TEXMF: refused, not run in the shared TEXMFVAR.
+            o.run_pdflatex(self.workroot, ["-interaction=nonstopmode", "t.tex"],
+                           dict(self.tv(), **hostile), 60)
+            check("ContainerOracle.run_pdflatex with a hostile caller dict")
+            # (2) a caller with no TeX variable at all: the oracle supplies them.
             o = self.oracle("ok")
-            try:
-                o.run_pdflatex(self.workroot, ["t.tex"], dict(
-                    want_fixed, **_oracle.private_tmp_vars(self.workroot / "tx")), 60)
-                self.expect("run_pdflatex graded a run with no private "
-                            "TEXMFHOME/TEXMFVAR (the container's persistent "
-                            "TEXMFVAR would carry state)", False)
-            except _oracle.OracleError:
-                self.expect("-", True)
-            # (2b) C-93: a caller's TMPDIR that is not the run's private one
-            # (the host's /tmp: the long-lived container's shared /tmp, where
-            # a killed repstopdf -> gs left /tmp/gs_*) is refused, not run.
-            for bad_tmp in ("/tmp", None, str(self.workroot / "elsewhere")):
-                env = dict(self.tv())
-                if bad_tmp is None:
-                    env.pop("TMPDIR", None)
-                else:
-                    env["TMPDIR"] = bad_tmp
-                o = self.oracle("ok")
-                try:
-                    o.run_pdflatex(self.workroot, ["t.tex"], env, 60)
-                    self.expect(f"run_pdflatex graded a run whose TMPDIR is "
-                                f"{bad_tmp!r}, not its private one (C-93)", False)
-                except _oracle.OracleError:
-                    self.expect("-", True)
-            # (2c) the per-run environment itself carries the private TMPDIR.
-            self.expect("oracle_tex_vars carries no private TMPDIR/TMP/TEMP/"
-                        "JAVA_TOOL_OPTIONS (C-93)",
-                        {k: self.tv().get(k) for k in ("TMPDIR", "TMP", "TEMP")}
-                        == dict.fromkeys(("TMPDIR", "TMP", "TEMP"),
-                                         str(self.workroot / "tx"
-                                             / _oracle.PRIVATE_TMP_NAME))
-                        and "-XX:-UsePerfData" in self.tv().get("JAVA_TOOL_OPTIONS", ""),
-                        repr({k: self.tv().get(k) for k in _oracle._GRADING_TMP}))
+            o.run_pdflatex(self.workroot, ["t.tex"], {}, 60)
+            check("ContainerOracle.run_pdflatex with an empty caller dict")
             # (3) the shim, under a hostile HOST environment.
-            os.environ.update(hostile, TEXMFHOME=host_th, **host_tmp)
+            os.environ.update(hostile, TEXMFHOME=str(self.workroot / "host-th"),
+                              TMPDIR="/tmp")
             cwd = os.getcwd()
             os.chdir(self.workroot)
             try:
@@ -1405,52 +1336,36 @@ class Checker:
                                               "-interaction=nonstopmode", "t.tex"])
             finally:
                 os.chdir(cwd)
-            why = exactly_protocol(forwarded(), host_th, tmp_created()) if rc == 0 else f"rc {rc}"
-            self.expect("the _oracle.py pdflatex shim (the shell graders' path) "
-                        "does not give its run the protocol's environment", not why,
-                        why)
-            # (4) the shim on the NATIVE backend (CI's tex-oracle job): a fake
-            # engine on PATH dumps the environment it was started with.
-            bindir = self.td / "nbin"
-            bindir.mkdir(exist_ok=True)
-            dump = self.td / "native-env"
-            eng = bindir / _oracle.ENGINE_PDFLATEX
-            eng.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
-                           f"env > '{dump}'\n"
-                           f"if [ -d \"$TMPDIR\" ]; then echo 1; else echo 0; fi "
-                           f"> '{dump}.tmpdir'\nexit 0\n")
-            eng.chmod(0o755)
-            n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
-            _oracle._Base.__init__(n)
-            n.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
-            fake_supervisor(bindir)
-            _oracle._ORACLE = n
+            self.expect(f"the shim under a hostile host environment exited {rc}", rc == 0)
+            check("the _oracle.py pdflatex shim (the shell graders' path)")
+            for k in list(hostile) + ["TEXMFHOME", "TMPDIR"]:
+                os.environ.pop(k, None)
+            # (4) the retired native backend: LP_ORACLE_IN_IMAGE is refused by
+            # get_oracle and by the shim (INFRA_RC), never graded inside.
+            os.environ["LP_ORACLE_IN_IMAGE"] = _oracle.IMAGE
+            _oracle._ORACLE = None
+            try:
+                _oracle.get_oracle()
+                self.expect("get_oracle() graded with LP_ORACLE_IN_IMAGE set (the "
+                            "retired native backend, ADR-015 E15)", False)
+            except _oracle.OracleError:
+                self.expect("-", True)
             os.chdir(self.workroot)
             try:
                 rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
                                               "-interaction=nonstopmode", "t.tex"])
             finally:
                 os.chdir(cwd)
-            got = (dict(x.split("=", 1) for x in dump.read_text().splitlines()
-                        if "=" in x) if dump.exists() else {})
-            made = Path(f"{dump}.tmpdir")
-            why = (exactly_protocol(got, host_th, made.exists()
-                                    and made.read_text().strip() == "1")
-                   if rc == 0 else f"rc {rc}")
-            self.expect("the shim on the native backend does not give its run the "
-                        "protocol's environment", not why, why)
-            for k in hostile:
-                os.environ.pop(k, None)
-            os.environ.pop("TEXMFHOME", None)
-            os.environ.pop("TMPDIR", None)
+                os.environ.pop("LP_ORACLE_IN_IMAGE", None)
+            self.expect(f"the shim with LP_ORACLE_IN_IMAGE set exited {rc}, not "
+                        f"INFRA_RC (ADR-015 E15)", rc == _oracle.INFRA_RC)
             # (5) check_apply_fixes_roundtrip.pdflatex_ok, a grader that
             # passed `dict(os.environ)` until C-91.
             import check_apply_fixes_roundtrip as rt
             self.oracle("ok")
             got = _silenced(rt.pdflatex_ok, self.workroot, "t.tex", None)
-            why = exactly_protocol(forwarded(), None, tmp_created()) if got is not None else "not graded"
-            self.expect("check_apply_fixes_roundtrip.pdflatex_ok does not grade "
-                        "in the protocol's environment", not why, why)
+            self.expect(f"pdflatex_ok did not grade ({got!r})", got is not None)
+            check("check_apply_fixes_roundtrip.pdflatex_ok")
         finally:
             _oracle._ORACLE = None
             for k, v in saved.items():
@@ -1458,55 +1373,52 @@ class Checker:
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = v
-        # (6a) the container backend's own environment is the image's: a
-        # container started with an extra `-e` (under the oracle's name) would
-        # give every exec that variable, so fingerprint() refuses it.
-        import json as _json
-        arch = sorted(_oracle.TREE_FINGERPRINTS)[0]
-        fp = dict(_oracle.TREE_FINGERPRINTS[arch], arch=arch,
-                  banner="pdfTeX " + _oracle.EXPECT_VERSION)
-        for extra, want_ok in (({"HOSTNAME": "abc"}, True),
-                               ({"HOSTNAME": "abc", "shell_escape": "t"}, False),
-                               ({"TEXMFCNF": "/x"}, False)):
-            os.environ["FAKE_FP"] = _json.dumps(fp)
-            cenv = self.td / "container-env"
-            cenv.write_text("\0".join(
-                f"{k}={v}" for k, v in dict(_oracle.IMAGE_ENV, **extra).items()))
-            os.environ["FAKE_CENV"] = str(cenv)
-            o = self.oracle("ok")
-            try:
-                o.fingerprint()
-                ok = True
-            except _oracle.OracleError:
-                ok = False
-            self.expect(f"ContainerOracle.fingerprint {'refused' if want_ok else 'accepted'} "
-                        f"a container whose environment is the image's plus "
-                        f"{sorted(extra)}", ok == want_ok)
-        for k in ("FAKE_FP", "FAKE_CENV"):
-            os.environ.pop(k, None)
-        _oracle._ORACLE = None
-        # (6) the shell side: on BOTH backends oracle_setup must route every
-        # run through the shim (a bare engine ran on the native one).
+        # (6) the oracle's own values: the fixed paths are the container's
+        # (never a host path) and every writable kpathsea tree is private
+        self.expect("the fixed run variables no longer make every writable "
+                    "kpathsea tree (TEXMFHOME/TEXMFVAR/TEXMFCONFIG) private to the "
+                    "run's tmpfs, or TMPDIR/TMP/TEMP/java's derived from one "
+                    "directory there (C-91, C-93, OPEN-128)",
+                    set(_oracle.FIXED_TREES) == {"TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG"}
+                    and all(v.startswith(_oracle.PRIVATE_ROOT + "/")
+                            for v in _oracle.FIXED_TREES.values())
+                    and all(_oracle.FIXED_RUN_VARS[k] == _oracle.FIXED_TMP
+                            for k in ("TMPDIR", "TMP", "TEMP"))
+                    and _oracle.FIXED_RUN_VARS["JAVA_TOOL_OPTIONS"]
+                    == _oracle.java_tool_options(_oracle.FIXED_TMP)
+                    and _oracle.PRIVATE_ROOT.startswith("/tmp/"))
+        self.expect("the protocol's clock is not a fixed one, or graded_env does "
+                    "not impose it (ADR-015 E10)",
+                    _oracle.PROTOCOL_CLOCK.startswith(_oracle.CLOCK_PREFIX)
+                    and protocol_env().get("LP_CLOCK_EPOCH") == str(_oracle.PROTOCOL_EPOCH)
+                    and protocol_env().get("SOURCE_DATE_EPOCH") == str(_oracle.PROTOCOL_EPOCH)
+                    and protocol_env().get("FORCE_SOURCE_DATE") == "1")
+        # (7) the shell side: oracle_setup routes every run through the shim,
+        # and refuses the retired native backend
         osh = self.repo / "scripts/tools/_oracle.sh"
         py = str(self.repo / "scripts/tools/_oracle.py")
-        stub = ('python3() { case "$2" in assert-native) return 0 ;; '
+        stub = ('python3() { case "$2" in '
                 'version) echo "pdfTeX 3.141592653-2.6-1.40.29" ;; '
                 f'workroot) echo "{self.td}/wr" ;; esac; }}; ')
-        for backend, envset in (("native", {"LP_ORACLE_IN_IMAGE": "x"}),
-                                ("container", {})):
-            env = {k: v for k, v in os.environ.items() if k != "LP_ORACLE_IN_IMAGE"}
-            env.update(envset, ROOT=str(self.repo), TEX_TIMEOUT="30")
-            p = subprocess.run(
-                ["bash", "-c", stub + f'source "{osh}"; oracle_setup t 1; '
-                 'printf "%s\\n" "$ORACLE_BACKEND" "$ORACLE_TIMEOUT_INSIDE" '
-                 '"${PDFLATEX[@]}"'], capture_output=True, text=True, env=env)
-            got = p.stdout.split("\n")
-            self.expect(f"_oracle.sh ({backend}) does not run every grader's "
-                        f"pdflatex through the _oracle.py shim",
-                        got[:6] == [backend, "1", "python3", py,
-                                    _oracle.SHIM_COMMAND, "--timeout"],
-                        repr(got[:6]) + p.stderr[-200:])
-        # (7) image_command (gen_contract.py's non-TeX commands) starts no
+        env = {k: v for k, v in os.environ.items() if k != "LP_ORACLE_IN_IMAGE"}
+        env.update(ROOT=str(self.repo), TEX_TIMEOUT="30")
+        p = subprocess.run(
+            ["bash", "-c", stub + f'source "{osh}"; oracle_setup t 1; '
+             'printf "%s\\n" "$ORACLE_BACKEND" "$ORACLE_TIMEOUT_INSIDE" '
+             '"${PDFLATEX[@]}"'], capture_output=True, text=True, env=env)
+        got = p.stdout.split("\n")
+        self.expect("_oracle.sh does not run every grader's pdflatex through the "
+                    "_oracle.py shim", got[:6] == ["container", "1", "python3", py,
+                                                   _oracle.SHIM_COMMAND, "--timeout"],
+                    repr(got[:6]) + p.stderr[-200:])
+        p = subprocess.run(
+            ["bash", "-c", stub + f'source "{osh}"; oracle_setup t 1; echo GRADING'],
+            capture_output=True, text=True, env=dict(env, LP_ORACLE_IN_IMAGE="x"))
+        self.expect("_oracle.sh with LP_ORACLE_IN_IMAGE set still grades (the "
+                    "retired native branch, ADR-015 E15)",
+                    p.returncode == 2 and "GRADING" not in p.stdout,
+                    f"rc {p.returncode} {p.stdout[-80:]!r}")
+        # (8) image_command (gen_contract.py's non-TeX commands) starts no
         # engine by any route: an engine as an argument another program runs,
         # a format selector, a shell that could run anything.
         eng = sorted(_oracle.TEX_ENGINE_BINARIES)
@@ -1522,23 +1434,136 @@ class Checker:
                 self.expect("-", True)
         _oracle._ORACLE = None
 
-    # ------------------------------------ argv allow-list and container state
-    def container_init(self) -> None:
-        """C-97: the long-lived container reaps (--init) and is bounded
-        (--pids-limit). A container started without them (an older oracle's)
-        is replaced, never graded in; one that still lacks them after
-        creation is refused. Drives the real _ensure_container against the
-        fake docker, reading back its docker calls."""
-        # Review round 2 (LOW-4): the configuration is part of the container's
-        # NAME, so an older oracle's container is never replaced under a
-        # grader still running it.
-        import inspect
-        src = inspect.getsource(_oracle.ContainerOracle.__init__)
-        tag = _oracle.CONTAINER_CONFIG_TAG
-        self.expect("the oracle's container name no longer carries its "
-                    "configuration (--init, the pids limit)",
-                    "+ CONTAINER_CONFIG_TAG" in src and "init" in tag
-                    and str(_oracle.PIDS_LIMIT) in tag)
+    # --------------------------------------------- the ONE launch definition
+    def launch_definition(self) -> None:
+        """ADR-015 E15, OPEN-128 (4): every container the oracle starts is
+        launch_argv's, with exactly its flags, and mounts only the work root's
+        paths; the session probe checks the container it describes. Read back
+        from the fake docker's calls."""
+        calls = self.td / "calls"
+        calls.write_text("")
+        os.environ["FAKE_CALLS"] = str(calls)
+        try:
+            o = self.oracle("okpdf")
+            o.run_to_fixpoint(self.workroot, "t.tex", self.tv(), 60)
+            o.image_command(["kpsewhich", "article.cls"], cwd=self.workroot)
+            (self.workroot / "rmme.txt").write_text("x")
+            o.remove([self.workroot / "rmme.txt"])
+            p = self.bare()
+            os.environ["FAKE_PLAN"] = "ok"
+            p.fingerprint()
+        except _oracle.OracleError as e:
+            self.expect("the oracle refused a protocol run in launch_definition",
+                        False, str(e)[:200])
+        finally:
+            os.environ.pop("FAKE_CALLS", None)
+        runs = [c.split("\0") for c in calls.read_text().splitlines()
+                if c.split("\0")[:1] == ["run"]]
+        kinds = sorted({r[r.index("--entrypoint") + 1] for r in runs if "--entrypoint" in r})
+        self.expect(f"the oracle's containers are not one launch definition: saw "
+                    f"entry points {kinds}, want sh (engine), python3 (probe), "
+                    f"kpsewhich (image command), rm (removal)",
+                    kinds == ["kpsewhich", "python3", "rm", "sh"], repr(kinds))
+        lim, mem = str(_oracle.PIDS_LIMIT), _oracle.MEMORY_LIMIT
+        want_pairs = [("--pull", "never"), ("--pids-limit", lim), ("--memory", mem),
+                      ("--memory-swap", mem), ("--tmpfs", f"/tmp:{_oracle.TMPFS_OPTIONS}"),
+                      ("--network", "none"), ("--hostname", _oracle.ORACLE_HOSTNAME),
+                      ("--user", FAKE_USER),
+                      ("--platform", _oracle.PLATFORMS[_oracle.ARCH_OF_RECORD]),
+                      ("-e", "HOME=/tmp")]
+        for r in runs:
+            head = r[:r.index("--entrypoint")] if "--entrypoint" in r else r
+            pairs = list(zip(head, head[1:]))
+            miss = [pp for pp in want_pairs if pp not in pairs]
+            flags = [f for f in ("--rm", "--init", "--read-only") if f not in head]
+            mounts = [head[k + 1] for k in range(len(head) - 1) if head[k] == "-v"]
+            outside = [m for m in mounts
+                       if not str(Path(m.split(":")[0]).resolve()).startswith(
+                           str(self.workroot))]
+            self.expect(f"a container of the oracle lacks {miss + flags} or mounts "
+                        f"{outside} from outside the work root (ADR-015 E15: one "
+                        f"launch definition, OPEN-126: read-only, non-root)",
+                        not miss and not flags and not outside, " ".join(head)[:300])
+        eng = [r for r in runs if "--entrypoint" in r and r[r.index("--entrypoint") + 1] == "sh"]
+        ok = bool(eng) and all(
+            any(m.endswith(":" + _oracle.RUN_DIR) for m in r)
+            and any(m.endswith(":" + _oracle.SHIM_DIR + ":ro") for m in r)
+            and r[r.index("-w") + 1] == _oracle.RUN_DIR for r in eng)
+        self.expect("an engine run's directory is not mounted at the fixed RUN_DIR "
+                    "(with -w RUN_DIR), or the shim not read-only at SHIM_DIR "
+                    "(OPEN-128 (1): the cwd a document reads is fixed)", ok)
+        # The session probe refuses each defect of the container it describes.
+        good_cenv = self.td / "cenv-good"
+        good_cenv.write_text("\0".join(f"{k}={v}" for k, v in dict(
+            _oracle.IMAGE_ENV, HOSTNAME=_oracle.ORACLE_HOSTNAME).items()))
+        for label, envs, want_ok in (
+                ("the protocol's container", {}, True),
+                ("another HOSTNAME", {"FAKE_CENV": ("HOSTNAME", "abc")}, False),
+                ("an extra variable", {"FAKE_CENV": ("shell_escape", "t")}, False),
+                ("another shim", {"FAKE_SHIM": "0" * 64}, False),
+                ("a writable tree", {"FAKE_RO": json.dumps(
+                    {"euid": 501, "texmfroot": "/t", "root_ro": True, "tree_ro": False})},
+                 False),
+                ("a root engine", {"FAKE_RO": json.dumps(
+                    {"euid": 0, "texmfroot": "/t", "root_ro": True, "tree_ro": True})},
+                 False),
+                ("an x86_64 tree", {"FAKE_FP": json.dumps(record_fp("x86_64"))}, False),
+                ("another fmt", {"FAKE_FP": json.dumps(dict(record_fp(), fmt_sha256="0" * 64))},
+                 False),
+                ("a failing probe", {"FAKE_PROBE_RC": "3"}, False)):
+            saved = {k: os.environ.get(k) for k in ("FAKE_CENV", "FAKE_SHIM", "FAKE_RO",
+                                                     "FAKE_FP", "FAKE_PROBE_RC")}
+            try:
+                for k, v in envs.items():
+                    if k == "FAKE_CENV":
+                        f = self.td / "cenv-bad"
+                        f.write_text(good_cenv.read_text() + "\0" + f"{v[0]}={v[1]}")
+                        os.environ[k] = str(f)
+                    else:
+                        os.environ[k] = v
+                try:
+                    self.bare().session_probe()
+                    ok = True
+                except _oracle.OracleError:
+                    ok = False
+            finally:
+                for k, v in saved.items():
+                    if v is None:
+                        os.environ.pop(k, None)
+                    else:
+                        os.environ[k] = v
+            self.expect(f"the session probe {'refused' if want_ok else 'accepted'} "
+                        f"{label}", ok == want_ok)
+        # A work root the container does not see (the nonce does not round-trip).
+        o = self.bare()
+        o.workroot = self.td / "elsewhere"
+        o.workroot.mkdir(exist_ok=True)
+        real = _oracle.launch_argv
+        _oracle.launch_argv = lambda *a, **k: [x.replace(str(o.workroot), "/nowhere")
+                                               for x in real(*a, **k)]
+        try:
+            o.session_probe()
+            self.expect("the session probe accepted a work root the container does "
+                        "not see (the nonce did not round-trip)", False)
+        except (_oracle.OracleError, OSError, TypeError):
+            self.expect("-", True)
+        finally:
+            _oracle.launch_argv = real
+        # The repository's shim must be the pinned one before it is installed.
+        real_dir = _oracle.SHIM_SRC_DIR
+        bad = self.td / "bad-shim"
+        bad.mkdir(exist_ok=True)
+        for arch in _oracle.SHIM_SHA256:
+            (bad / _oracle.shim_name(arch)).write_bytes(b"not the pinned shim")
+        _oracle.SHIM_SRC_DIR = bad
+        try:
+            self.bare()._install_shim()
+            self.expect("_install_shim installed a shim whose sha256 is not "
+                        "SHIM_SHA256", False)
+        except _oracle.OracleError:
+            self.expect("-", True)
+        finally:
+            _oracle.SHIM_SRC_DIR = real_dir
         # Review round 2 (LOW-2): clearing an output never follows a symlink.
         link, target = self.workroot / "t.pdf", self.workroot / "fig.pdf"
         for f in (link, target):
@@ -1554,8 +1579,6 @@ class Checker:
                     "t.pdf -> fig.pdf deleted the figure) or kept the link", ok)
         for f in (link, target):
             f.unlink(missing_ok=True)
-        # ... and a document shipping its own output name as a symlink is not
-        # graded at all (pdfTeX would write through it into the target).
         target.write_text("figure\n")
         link.symlink_to(target.name)
         try:
@@ -1569,92 +1592,37 @@ class Checker:
         for f in (link, target, self.workroot / "t.log"):
             f.unlink(missing_ok=True)
         _oracle._ORACLE = None
-        calls, state = self.td / "calls", self.td / "cstate"
-        img = _oracle.IMAGE
-        lim = str(_oracle.PIDS_LIMIT)
-        u = FAKE_USER
-        good = f"true {lim} true {u}"
-        # (label, inspect: running image init pids read-only user,
-        #  hostcfg after (re)creation: init pids read-only user,
-        #  want replaced, want accepted)
-        cases = (("no --init", f"true {img} false {lim} true {u}", good, True, True),
-                 ("no --pids-limit", f"true {img} true 0 true {u}", good, True, True),
-                 ("the oracle's own", f"true {img} true {lim} true {u}", good, False, True),
-                 ("docker ignoring --init", f"true {img} false {lim} true {u}",
-                  f"false {lim} true {u}", True, False),
-                 # OPEN-126: a writable root filesystem or a root engine is
-                 # replaced, and a docker that ignores the flags is refused.
-                 ("a writable root filesystem", f"true {img} true {lim} false {u}",
-                  good, True, True),
-                 ("a root user", f"true {img} true {lim} true 0:0", good, True, True),
-                 ("no user at all", f"true {img} true {lim} true", good, True, True),
-                 ("docker ignoring --read-only", f"true {img} true {lim} false {u}",
-                  f"true {lim} false {u}", True, False),
-                 ("docker ignoring --user", f"true {img} true {lim} true 0:0",
-                  f"true {lim} true 0:0", True, False))
-        saved = {k: os.environ.get(k) for k in
-                 ("FAKE_CALLS", "FAKE_STATE", "FAKE_INSPECT", "FAKE_HOSTCFG")}
-        try:
-            for label, insp, hostcfg, want_replace, want_ok in cases:
-                calls.write_text("")
-                state.write_text("present")
-                os.environ.update(FAKE_CALLS=str(calls), FAKE_STATE=str(state),
-                                  FAKE_INSPECT=insp, FAKE_HOSTCFG=hostcfg)
-                o = _oracle.ContainerOracle.__new__(_oracle.ContainerOracle)
-                _oracle._Base.__init__(o)
-                o.docker, o.workroot, o.name = str(self.fake), self.workroot, "lp-oracle-fake"
-                o.user = FAKE_USER
+
+    def identity_and_readonly(self) -> None:
+        """OPEN-126, OPEN-128 (3). (a) ADR-015 E2: an oracle on another
+        architecture than ARCH_OF_RECORD refuses to grade (a measurement may
+        run there, tagged); two oracle blocks that differ in architecture,
+        tree or CLOCK are refused as incomparable, and so is a measurement
+        block. (b) A writable TeX tree or a root engine is refused."""
+        rec = _oracle.ARCH_OF_RECORD
+        for arch in sorted(_oracle.TREE_FINGERPRINTS):
+            fp = record_fp(arch)
+            for meas in (False, True):
                 try:
-                    _silenced(o._ensure_container)
+                    _oracle._check_fingerprint(fp, "test", measurement=meas)
                     ok = True
                 except _oracle.OracleError:
                     ok = False
-                log = calls.read_text().splitlines()
-                runs = [c for c in log if c.startswith("run -d")]
-                replaced = any(c.startswith("rm -f") for c in log) and bool(runs)
-                flags_ok = all("--init" in r.split() and f"--pids-limit {lim}" in r
-                               and "--read-only" in r.split()
-                               and f"--user {FAKE_USER}" in r
-                               and "--tmpfs" in r.split()
-                               for r in runs)
-                self.expect(f"_ensure_container on a container with {label}: "
-                            f"replaced={replaced} (want {want_replace}), accepted="
-                            f"{ok} (want {want_ok}), new container flags ok="
-                            f"{flags_ok} (C-97)",
-                            replaced == want_replace and ok == want_ok and flags_ok,
-                            "; ".join(log)[:300])
-        finally:
-            for k, v in saved.items():
-                if v is None:
-                    os.environ.pop(k, None)
-                else:
-                    os.environ[k] = v
-
-    def identity_and_readonly(self) -> None:
-        """OPEN-126. (a) ADR-015 E2: an oracle on another architecture than
-        ARCH_OF_RECORD refuses to grade, and two oracle blocks that differ in
-        architecture are refused as incomparable. (b) A writable TeX tree or a
-        root engine is refused (check_readonly), on the container backend's
-        construction too."""
-        import json as _json
-        rec = _oracle.ARCH_OF_RECORD
-        for arch in sorted(_oracle.TREE_FINGERPRINTS):
-            fp = dict(_oracle.TREE_FINGERPRINTS[arch], arch=arch,
-                      banner="pdfTeX " + _oracle.EXPECT_VERSION)
-            try:
-                _oracle._check_fingerprint(fp, "test")
-                ok = True
-            except _oracle.OracleError:
-                ok = False
-            self.expect(f"_check_fingerprint {'refused' if arch == rec else 'accepted'} "
-                        f"an oracle on {arch} (architecture of record {rec})",
-                        ok == (arch == rec))
-        a = dict(_oracle.TREE_FINGERPRINTS[rec], arch=rec, image=_oracle.IMAGE)
+                self.expect(f"_check_fingerprint {'refused' if (arch == rec or meas) else 'accepted'} "
+                            f"an oracle on {arch} (architecture of record {rec}, "
+                            f"measurement {meas})", ok == (arch == rec or meas))
+        a = dict(_oracle.TREE_FINGERPRINTS[rec], arch=rec, image=_oracle.IMAGE,
+                 clock=_oracle.PROTOCOL_CLOCK)
         for label, b, want in (
                 ("the same oracle", dict(a), True),
                 ("another architecture", dict(a, arch="x86_64"), False),
                 ("no architecture", {k: v for k, v in a.items() if k != "arch"}, False),
-                ("another format", dict(a, fmt_sha256="0" * 64), False)):
+                ("another format", dict(a, fmt_sha256="0" * 64), False),
+                ("another fixed clock", dict(a, clock="fixed:1790000000"), False),
+                ("the legacy real clock", dict(a, clock="real"), False),
+                ("no clock", {k: v for k, v in a.items() if k != "clock"}, False),
+                ("a measurement", dict(a, entry="measure"), False),
+                ("a measurement-only block", dict(a, measurement_only=True), False)):
             try:
                 _oracle.require_same_oracle(b, a, "test")
                 ok = True
@@ -1676,46 +1644,23 @@ class Checker:
                 ok = False
             self.expect(f"check_readonly {'refused' if want else 'accepted'} {label}",
                         ok == want)
-        fp = dict(_oracle.TREE_FINGERPRINTS[rec], arch=rec,
-                  banner="pdfTeX " + _oracle.EXPECT_VERSION)
-        cenv = self.td / "container-env-ro"
-        cenv.write_text("\0".join(f"{k}={v}" for k, v in _oracle.IMAGE_ENV.items()))
-        saved = {k: os.environ.get(k) for k in ("FAKE_FP", "FAKE_CENV", "FAKE_RO")}
-        try:
-            os.environ.update(FAKE_FP=_json.dumps(fp), FAKE_CENV=str(cenv))
-            for ro, want in ((None, True), (_json.dumps(dict(base, tree_ro=False)), False),
-                             (_json.dumps(dict(base, euid=0)), False)):
-                if ro is None:
-                    os.environ.pop("FAKE_RO", None)
-                else:
-                    os.environ["FAKE_RO"] = ro
-                try:
-                    self.oracle("ok").fingerprint()
-                    ok = True
-                except _oracle.OracleError:
-                    ok = False
-                self.expect(f"ContainerOracle.fingerprint {'refused' if want else 'accepted'} "
-                            f"a container whose read-only probe is {ro or 'clean'}",
-                            ok == want)
-        finally:
-            _oracle._ORACLE = None
-            for k, v in saved.items():
-                if v is None:
-                    os.environ.pop(k, None)
-                else:
-                    os.environ[k] = v
+        for c, want in ((_oracle.PROTOCOL_CLOCK, True), ("fixed:0", True),
+                        ("real", False), ("forced", False), ("fixed:", False),
+                        ("fixed:-1", False), ("fixed:1e9", False)):
+            try:
+                _oracle.clock_vars(c)
+                ok = True
+            except _oracle.OracleError:
+                ok = False
+            self.expect(f"clock_vars {'refused' if want else 'accepted'} {c!r} "
+                        f"(only a fixed clock is a run's clock, OPEN-128)", ok == want)
 
-    def argv_and_state(self) -> None:
-        """C-91 review round 5. (a) A graded run's ARGV is an allow-list, on
+    def argv_checks(self) -> None:
+        """C-91 review round 5. A graded run's ARGV is an allow-list, on
         every entry point: the round-5 review MEASURED `-cnf-line=openout_any=a`
         (an \\openout to /tmp written, rc 0) and `-shell-escape` /
         `-cnf-line=shell_escape=t` (\\pdfshellescape=1) passing through the
-        shim and run_pdflatex on both backends. (b) Every writable kpathsea
-        tree is private per run (TEXMFCONFIG was not: a .sty planted there
-        flipped a clean graded run from rc 1 to rc 0). (c) The long-lived
-        container is refused when its persistent TeX trees hold a file
-        (check_texmf_trees, every construction) or any path of its root
-        filesystem changed since creation (check_state, once per session)."""
+        shim and run_pdflatex."""
         hostile = [["-cnf-line=openout_any=a", "t.tex"],
                    ["-cnf-line=shell_escape=t", "t.tex"],
                    ["-shell-escape", "t.tex"], ["--shell-escape", "t.tex"],
@@ -1745,39 +1690,16 @@ class Checker:
                                               "-interaction=nonstopmode", *argv])
                 self.expect(f"the _oracle.py pdflatex shim exited {rc} for the argv "
                             f"{argv!r}, expected INFRA_RC", rc == _oracle.INFRA_RC)
-            # the native backend's shim: a fake engine that would grade rc 0
-            bindir = self.td / "nbin-argv"
-            bindir.mkdir(exist_ok=True)
-            eng = bindir / _oracle.ENGINE_PDFLATEX
-            eng.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\nexit 0\n")
-            eng.chmod(0o755)
-            n = _oracle.NativeOracle.__new__(_oracle.NativeOracle)
-            _oracle._Base.__init__(n)
-            n.engine_base["PATH"] = f"{bindir}:/usr/bin:/bin"
-            fake_supervisor(bindir)
-            _oracle._ORACLE = n
-            rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
-                                          "-cnf-line=openout_any=a",
-                                          "-interaction=nonstopmode", "t.tex"])
-            self.expect(f"the native shim exited {rc} for -cnf-line, expected "
-                        f"INFRA_RC", rc == _oracle.INFRA_RC)
-            rc = _silenced(_oracle.main, [_oracle.SHIM_COMMAND, "--timeout", "60",
-                                          "-interaction=nonstopmode", "-halt-on-error",
-                                          "t.tex"])
-            self.expect(f"the native shim refused the graders' own argv (rc {rc})",
-                        rc == 0)
         finally:
             os.chdir(cwd)
             _oracle._ORACLE = None
-        # the graders' own argv still runs (run_once, run_to_fixpoint)
         o = self.oracle("ok")
         try:
             r = o.run_to_fixpoint(self.workroot, "t.tex", self.tv(), 60)
             self.expect("run_to_fixpoint no longer runs the protocol's argv", r.rc == 0)
         except _oracle.OracleError as e:
             self.expect("run_to_fixpoint refused the protocol's own argv", False, str(e))
-        # run_engine: gen_contract.py's INITEX argv passes, an override does not
-        tv = _oracle.oracle_tex_vars(self.workroot / "tx")
+        tv = _oracle.oracle_tex_vars()
         for argv, want in ((["-ini", "-etex", "-interaction=nonstopmode",
                              "-translate-file=cp227.tcx", "-jobname=lpvirgin",
                              "\\dump"], True),
@@ -1792,96 +1714,91 @@ class Checker:
                 ok = False
             self.expect(f"run_engine {'refused' if want else 'ran'} {argv!r}",
                         ok == want)
-        # (b) every writable kpathsea tree is private and required
-        self.expect("private_texmf_vars no longer makes TEXMFCONFIG private",
-                    set(_oracle.private_texmf_vars("/w")) >= {"TEXMFHOME", "TEXMFVAR",
-                                                              "TEXMFCONFIG"}
-                    and set(_oracle._GRADING_TEXMF) >= {"TEXMFHOME", "TEXMFVAR",
-                                                        "TEXMFCONFIG"})
-        try:
-            env = dict(self.tv())
-            env.pop("TEXMFCONFIG")
-            _oracle.graded_env(env)
-            self.expect("graded_env accepted a run without a private TEXMFCONFIG "
-                        "(the container's persistent one is searched first)", False)
-        except _oracle.OracleError:
-            self.expect("-", True)
-        # (b2) C-93: the container backend itself refuses a temporary
-        # directory outside the work root, or TMP/TEMP/java's not derived from
-        # it, on EVERY engine run (run_engine does not pass graded_env).
-        outside = "/tmp/lp-c93-outside"
-        for label, override in (
-                ("a TMPDIR outside the work root",
-                 _oracle.private_tmp_vars("/tmp/lp-c93-outside-td")),
-                ("a TMPDIR that is not one plain path",
-                 _oracle.private_tmp_vars(str(self.workroot) + "/a b")),
-                ("a TMP not derived from TMPDIR", {"TMP": outside}),
-                ("a JAVA_TOOL_OPTIONS not derived from TMPDIR",
-                 {"JAVA_TOOL_OPTIONS": "-XX:+UsePerfData"})):
-            o = self.oracle("ok")
-            try:
-                o.run_engine(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini", "\\dump"],
-                             dict(tv, **override), 60)
-                self.expect(f"the container backend ran an engine with {label} "
-                            f"(C-93)", False)
-            except _oracle.OracleError:
-                self.expect("-", True)
-        # (c) the container's state
-        import json as _json
-        arch = sorted(_oracle.TREE_FINGERPRINTS)[0]
-        os.environ["FAKE_FP"] = _json.dumps(dict(
-            _oracle.TREE_FINGERPRINTS[arch], arch=arch,
-            banner="pdfTeX " + _oracle.EXPECT_VERSION))
-        cenv = self.td / "container-env-state"
-        cenv.write_text("\0".join(f"{k}={v}" for k, v in _oracle.IMAGE_ENV.items()))
-        os.environ["FAKE_CENV"] = str(cenv)
-        for trees, want_ok in (
-                (None, True),
-                ("D /tmp/texmf\nD /tmp/.texlive2026/texmf-var\nD /tmp/.texlive2026/"
-                 "texmf-config\n/tmp/.texlive2026/texmf-config/tex/latex/p.sty\n", False),
-                ("D /tmp/texmf\n", False)):
-            if trees is None:
-                os.environ.pop("FAKE_TREES", None)
-            else:
-                os.environ["FAKE_TREES"] = trees
-            try:
-                self.oracle("ok").fingerprint()  # every construction runs it
-                ok = True
-            except _oracle.OracleError:
-                ok = False
-            self.expect(f"ContainerOracle.fingerprint (check_texmf_trees) "
-                        f"{'refused' if want_ok else 'accepted'} the trees "
-                        f"{trees!r}", ok == want_ok)
-        for k in ("FAKE_TREES", "FAKE_FP", "FAKE_CENV"):
-            os.environ.pop(k, None)
-        wr = str(self.workroot)
-        clean = ("d /\nd /tmp\nd /tmp/.texlive2026\nd /tmp/.texlive2026/texmf-var\n"
-                 "f /var/cache/fontconfig/0123456789abcdef0123456789abcdef-le64.cache-9\n"
-                 f"f /etc/hostname\nd {wr}\nd {self.workroot.parent}\n")
-        for find, want_ok in ((clean, True),
-                              (clean + "f /usr/local/texlive/texmf-local/tex/latex/p.sty\n", False),
-                              (clean + "f /tmp/.texlive2026/texmf-config/p.sty\n", False),
-                              (clean + "f /tmp/x.txt\n", False),
-                              (clean + "f /usr/local/texlive/2026/texmf.cnf\n", False),
-                              # C-97: --init touches these two DIRECTORIES only
-                              (clean + "d /usr\nd /usr/sbin\n", True),
-                              (clean + "d /usr\nd /usr/sbin\nf /usr/sbin/x\n", False),
-                              (clean + "f /usr\n", False)):
-            os.environ["FAKE_FIND"] = find
-            _oracle._STATE_CHECKED = False
-            o = self.oracle("ok")
-            _oracle._STATE_CHECKED = False
-            try:
-                _oracle.get_oracle()
-                ok = True
-            except _oracle.OracleError:
-                ok = False
-            self.expect(f"get_oracle's session state scan "
-                        f"{'refused' if want_ok else 'accepted'} a container whose "
-                        f"changed paths are {find.split()[-1]!r}", ok == want_ok)
-        os.environ.pop("FAKE_FIND", None)
         _oracle._ORACLE = None
-        _oracle._STATE_CHECKED = False
+
+    # ------------------------------------------ the measurement entry point
+    def measurement(self) -> None:
+        """ADR-015 E7, OPEN-128 (2): `measure` runs the pinned engine through
+        the same launch definition with terminal input, an explicit
+        architecture and an explicit clock; its result is tagged (entry
+        measure; measurement_only off the architecture of record) and never
+        compared with a grade; its environment is an allow-list too."""
+        cfgf = self.td / "cfg-measure"
+        argv_file = self.td / "argv-measure"
+        os.environ["FAKE_CFG"] = str(cfgf)
+        os.environ["FAKE_ARGV"] = str(argv_file)
+        try:
+            for arch in (_oracle.ARCH_OF_RECORD, "x86_64"):
+                o = self.oracle("nobanner")   # a measurement needs no banner
+                try:
+                    r = o.measure(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini"],
+                                  stdin=b"\\relax\n", env={"SOURCE_DATE_EPOCH": "1788076260"},
+                                  arch=arch, readings=[(1788076260, 123456)])
+                    c = self.cfg(cfgf)
+                    a = argv_file.read_text().split("\0")
+                    pv = r.provenance
+                    ok = (r[0] == 1 and pv.get("entry") == "measure"
+                          and pv.get("measurement_only") is (arch != _oracle.ARCH_OF_RECORD)
+                          and pv.get("arch") == arch
+                          and c["env"].get("LP_CLOCK") == "1788076260.123456"
+                          and c["env"].get("SOURCE_DATE_EPOCH") == "1788076260"
+                          and c.get("stdin") == _oracle.IN_DIR + "/stdin"
+                          and ("--platform", _oracle.PLATFORMS[arch]) in list(zip(a, a[1:]))
+                          and c["shim"].endswith(_oracle.shim_name(arch)))
+                    self.expect(f"measure on {arch}: the run, its tag, its clock "
+                                f"readings, its terminal input or its platform are "
+                                f"wrong", ok, f"{r[0]} {pv} {c.get('stdin')}")
+                    try:
+                        _oracle.require_same_oracle(pv, _oracle.ContainerOracle.provenance(o),
+                                                    "test")
+                        self.expect(f"require_same_oracle accepted a measurement on "
+                                    f"{arch} as a grade", False)
+                    except _oracle.OracleError:
+                        self.expect("-", True)
+                except _oracle.OracleError as e:
+                    self.expect(f"measure on {arch} was refused", False, str(e)[:200])
+            # clock "real" (a control run): no fixed clock reaches the engine
+            o = self.oracle("ok")
+            o.measure(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini"], clock="real",
+                      unset=("SOURCE_DATE_EPOCH", "FORCE_SOURCE_DATE"))
+            env = self.cfg(cfgf)["env"]
+            self.expect("measure(clock='real') still fixed the clock",
+                        not {"LP_CLOCK_EPOCH", "SOURCE_DATE_EPOCH",
+                             "FORCE_SOURCE_DATE"} & set(env), repr(sorted(env)))
+            # its allow-lists
+            for kw, what in (({"env": {"shell_escape": "t"}}, "shell_escape"),
+                             ({"env": {"TEXMFVAR": "/x"}}, "a TEXMF tree"),
+                             ({"env": {"LD_PRELOAD": "/x"}}, "LD_PRELOAD"),
+                             ({"unset": ("openin_any",)}, "an unset of openin_any"),
+                             ({"arch": "riscv64"}, "an unknown architecture"),
+                             ({"clock": "forced"}, "a legacy clock")):
+                o = self.oracle("ok")
+                try:
+                    o.measure(self.workroot, _oracle.ENGINE_PDFTEX, ["-ini"], **kw)
+                    self.expect(f"measure accepted {what} (ADR-015 E7: the same "
+                                f"env discipline as grading)", False)
+                except _oracle.OracleError:
+                    self.expect("-", True)
+            # the CLI form (the migration of the spike's recipe)
+            os.chdir(self.workroot)
+            try:
+                self.oracle("ok")
+                rec = self.td / "measure.json"
+                rc = _silenced(_oracle.main, ["measure", "--arch", "arm64", "--work",
+                                              str(self.workroot), "--clock-readings",
+                                              "1788076260.123456", "--record", str(rec),
+                                              "--", _oracle.ENGINE_PDFTEX, "-ini"])
+                got = json.loads(rec.read_text()) if rec.exists() else {}
+                self.expect(f"`_oracle.py measure` exited {rc} or recorded no "
+                            f"measurement provenance",
+                            rc == 0 and got.get("provenance", {}).get("entry") == "measure",
+                            repr(got)[:200])
+            finally:
+                os.chdir(self.repo)
+        finally:
+            os.environ.pop("FAKE_CFG", None)
+            os.environ.pop("FAKE_ARGV", None)
+            _oracle._ORACLE = None
 
     # ----------------------------------------------------------------- shell
     def shell_grader(self) -> None:
@@ -2046,8 +1963,8 @@ def main() -> int:
         # section (the oracle refused a run the protocol makes), reported
         # with its message, never a crash that hides the other sections.
         for section in (c.python_graders, c.generator_client, c.grading_env,
-                        c.argv_and_state, c.container_init,
-                        c.identity_and_readonly, c.shell_grader):
+                        c.argv_checks, c.launch_definition,
+                        c.identity_and_readonly, c.measurement, c.shell_grader):
             try:
                 section()
             except _oracle.OracleError as e:

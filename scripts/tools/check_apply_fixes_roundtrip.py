@@ -132,8 +132,8 @@ def pdflatex_ok(workdir: Path, base: str, timeout_bin: str | None, secs: int = 6
     """True=compiles, False=fails, None=could not be graded (timeout/not run).
 
     One pass under `-halt-on-error`, as this gate has always graded, run by the
-    ONE oracle (ADR-012 decision 7): natively inside CI's pinned image, through
-    the container elsewhere. `timeout_bin` is kept for the precondition check;
+    ONE oracle (ADR-012 decision 7): a fresh container of the pinned image per
+    run, locally and in CI (OPEN-128). `timeout_bin` is kept for the precondition check;
     the oracle enforces the timeout itself (inside the container, so a hung
     pdflatex is killed where it runs)."""
     # COMPILES is the §B.4 predicate (STRICT_TIER_DESIGN.md, E0): rc 0 AND a

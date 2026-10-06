@@ -8,9 +8,10 @@ and its real-supervisor checks run on Linux only. Neither can see the
 backend where review round 4's gap lived: the container oracle on a Mac,
 whose work root is virtiofs over a case- and Unicode-insensitive APFS, so
 DOC.log IS doc.log. This gate runs real documents through the real oracle
-(`get_oracle()`: the native backend inside the pinned image in CI, the
-container backend on a developer's Mac), so each forgery below is refused
-on the backend it targets:
+(`get_oracle()`: the container oracle, the one backend since OPEN-128, on
+a developer's Mac and on CI's arm64 runner host), so each forgery below is
+refused on the work root it targets (virtiofs over APFS locally, the
+runner's case-sensitive ext4 in CI):
 
   forge_log      \\openout of its own \\jobname.log while pdfTeX holds it, a
                  forged "Output written" line past the real log's end, a
@@ -26,7 +27,7 @@ and the genuine shapes still grade exactly:
   batchok        \\batchmode, a page ships             -> compiles
 
 A refusal is an OracleError (ungradable, never graded). Needs the oracle
-(docker + the pinned image, or LP_ORACLE_IN_IMAGE); without it the gate
+(docker + the pinned image); without it the gate
 exits 0 with a SKIP line unless REQUIRE_PDFLATEX=1.
 """
 from __future__ import annotations

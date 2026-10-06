@@ -23,27 +23,58 @@ WHAT THIS MODULE GUARANTEES.
 * One entry point. Every grading tool calls `get_oracle()` and runs pdflatex
   through it; nothing else in the repo may shell out to `pdflatex` directly
   (`check_oracle_pin.py` enforces that).
-* Two backends, chosen POSITIVELY, never by fallback:
-    - `container`: a long-lived container of the pinned image, reached with
-      `docker exec`. The work directory must lie under the oracle work root,
-      which is mounted into the container at the SAME absolute path (colima
-      mounts only the user's home, so `/private/tmp` is invisible inside it;
-      this is checked by a nonce round-trip, not assumed).
-    - `native`: used ONLY when this process already runs inside the pinned
-      image (CI's tex-oracle job). It is selected by `LP_ORACLE_IN_IMAGE`,
-      which tex-oracle.yml sets to the image reference, AND it is then
-      verified: the TeX tree's fingerprint must equal the one recorded below
-      for this architecture. Setting the variable on a laptop fails loudly.
-  If neither is available the oracle raises `OracleUnavailable`. There is no
-  path on which a laptop pdflatex grades anything.
+* ONE LAUNCH DEFINITION (ADR-015 E15, owner 2026-10-06; OPEN-128 (4)). Every
+  engine run, locally and in CI, is a FRESH container of the pinned image
+  started by `ContainerOracle.launch_argv` and nothing else: `docker run --rm
+  --init --read-only --tmpfs /tmp --network none --hostname lp-oracle
+  --memory ... --user <uid:gid> --platform linux/<arch>`, the run directory
+  bind-mounted at the fixed path RUN_DIR (/lp/run). CI runs the same Python
+  graders on its arm64 runner host, which has docker; it no longer starts the
+  image itself to grade inside it (check_oracle_pin refuses a workflow step
+  that does). The claim is ONE CONFIGURATION BY CONSTRUCTION, not one
+  platform: what still differs between a laptop's VM and the CI runner (the
+  work root's file system, the kernel, CPU speed against the timeout) is
+  enumerated and measured in OPEN-128 (8),
+  corpora/oracle_baseline/platform_residuals.json.
+  The native backend (grading inside the image, selected by
+  LP_ORACLE_IN_IMAGE) is RETIRED: `get_oracle()` refuses that variable, and
+  NativeOracle survives only as the base of HostDiagnostic, which grades
+  nothing. If docker or the image is unavailable the oracle raises
+  `OracleUnavailable`. There is no path on which a laptop pdflatex grades
+  anything.
+* EVERY RUN-DEPENDENT INPUT IS FIXED (ADR-015 E10; OPEN-128 (1)-(3); the
+  census is corpora/oracle_baseline/clock_census.json). A graded run sees:
+  the CLOCK fixed at PROTOCOL_EPOCH (SOURCE_DATE_EPOCH + FORCE_SOURCE_DATE
+  for \\year/\\month/\\day/\\time and the PDF dates, and the LD_PRELOAD shim
+  scripts/tools/oracle_shim/lpshim.c for gettimeofday -- \\pdfrandomseed,
+  \\pdfelapsedtime -- time(2), clock_gettime(REALTIME) and every file time
+  -- \\pdffilemoddate); the same PATHS (its directory at /lp/run, its private
+  TeX trees and TMPDIR on a fresh tmpfs at /tmp/lp); the same host name, no
+  network, a fresh pid namespace; an environment that is an exact
+  allow-list; and, for every TeX Live program, a FILE-SYSTEM VIEW limited to
+  the run directory, the fresh /tmp and the TeX tree (the shim refuses
+  /proc, /sys, /dev and docker's per-container files, which a document read
+  before: /proc/uptime is the real clock). The clock is part of the
+  oracle's identity (IDENTITY_KEYS).
+* THE MEASUREMENT ENTRY POINT (ADR-015 E7; `measure`, `_oracle.py measure`):
+  terminal input, an explicit architecture and an explicit clock (the
+  spike's gettimeofday readings, or a fixed epoch), through the same launch
+  definition, pin, argv and environment discipline. Its result is never a
+  grade: its provenance says `"entry": "measure"`, a run on an architecture
+  other than ARCH_OF_RECORD is tagged `measurement_only`, and every grading
+  and carry-forward path (require_same_oracle, check_oracle_pin) refuses
+  both.
 * The digest pins an INDEX, not an image: it names one arm64 and one amd64
-  image. CI grades on amd64; a Mac grades on arm64. Their TeX trees are
-  compared by `macro_layer_sha256` (every non-binary TeX Live package with its
-  revision), recorded below for both architectures; `tlpdb_sha256` differs by
-  construction because the tlpdb lists the architecture's binary packages.
+  image. The project grades on arm64 only (ADR-015 E2/E9): CI's tex-oracle
+  job runs on GitHub's native arm64 runner and a Mac grades on arm64. The
+  amd64 image's fingerprints stay recorded for measurement (E3) only.
+  Their TeX trees are compared by `macro_layer_sha256` (every non-binary
+  TeX Live package with its revision), recorded below for both
+  architectures; `tlpdb_sha256` differs by construction because the tlpdb
+  lists the architecture's binary packages.
 * Every artefact records `provenance()`: image, architecture, banner, the tree
-  fingerprints and the backend. `check_oracle_pin.py` refuses a graded artefact
-  whose recorded image is not the workflow's.
+  fingerprints, the backend and the clock. `check_oracle_pin.py` refuses a
+  graded artefact whose recorded image is not the workflow's.
 
 THE PROTOCOL (unchanged from the recorded one; STRICT_TIER_DESIGN.md §B.4).
 
@@ -55,18 +86,23 @@ authoritative (the `fr_toc_second_pass` lesson). The result also records
 whether a PDF was produced; `compiles` requires rc 0 AND a PDF (§B.4 E0).
 
 Usage as a tool:
-  _oracle.py info                 print the oracle's provenance (starts it;
-                                  runs the container's full state scan)
+  _oracle.py info                 print the oracle's provenance (starts one
+                                  probe container)
   _oracle.py fingerprint          fingerprint the TeX tree this process sees
-  _oracle.py assert-native        inside the image: verify, exit 0/2
   _oracle.py workroot             print the work root (for shell callers)
   _oracle.py pdflatex [--timeout S] ARGS...
                                   run ONE pdflatex in the current directory
                                   through the oracle; exit with its rc (124 on
                                   timeout, INFRA_RC=125 when the oracle itself
-                                  failed). The shim the shell graders use, on
-                                  both backends; its run gets the protocol's
-                                  environment (graded_env), never the host's.
+                                  failed). The shim the shell graders use; its
+                                  run gets the protocol's environment
+                                  (graded_env), never the host's.
+  _oracle.py measure [OPTIONS] --work DIR -- ENGINE ARGS...
+                                  the measurement entry point (ADR-015 E7); see
+                                  measure_main. Never a grade.
+  _oracle.py grading-code FILE... print the grading_code block (the git blob
+                                  ids of _oracle.py and FILE...) as JSON, for
+                                  a shell producer to record (OPEN-128 (8))
   _oracle.py vet --dir D [--output F -- ARGS...]
                                   shell graders: refuse (INFRA_RC) a run when
                                   D is short of space or F shows pdfTeX failing
@@ -74,11 +110,13 @@ Usage as a tool:
   _oracle.py check-recorded FILE KEY
                                   exit 0 iff the oracle block at KEY (dotted)
                                   of the JSON FILE is this oracle: same image,
-                                  architecture and tree (ADR-015 E2); else
-                                  INFRA_RC. The shell graders' comparison guard
+                                  architecture, tree and clock (ADR-015 E2,
+                                  E10); else INFRA_RC. The shell graders'
+                                  comparison guard
   _oracle.py rm FILES...          delete work files through the oracle (see
                                   ContainerOracle.remove); exit 0, or 2
-  _oracle.py stop                 remove the long-lived container
+  _oracle.py stop                 remove leftover run containers of this
+                                  oracle (label lp-oracle-run)
 """
 from __future__ import annotations
 
@@ -91,7 +129,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,58 +142,68 @@ PROTOCOL = ("-interaction=nonstopmode -halt-on-error, restricted shell-escape "
             "recorded (compiles = rc 0 AND a PDF, STRICT_TIER_DESIGN.md B.4 E0)")
 MAX_PASSES = 3
 
-# THE LONG-LIVED CONTAINER REAPS AND IS BOUNDED (C-97). Its PID 1 was
-# `sleep infinity`, which reaps nothing: every run killed by the protocol's
-# timeout left its orphans as zombies (3 per killed EPS conversion: sh, perl,
-# gs; 106 in the shared container after two days), and the reviewer MEASURED
-# (with a stand-in --pids-limit 14) a compiling EPS document graded rc 1 with
-# no OracleError once they filled the limit: the fork inside restricted
-# \write18 failed silently. Now: `--init` (PID 1 = docker-init, which reaps),
-# a pids limit far above measured need so one runaway job cannot exhaust the
-# VM that every oracle container shares, and a per-run check, in the same
-# exec as the run, that no process was left behind: an orphan of PID 1 other
-# than the container's own `sleep infinity`, or a zombie, older than 2 s and
-# the SAME process (the same pid) still there after LEAK_CONFIRM_S
-# seconds. Refused (OracleError), never graded.
-# WHY THE PID ALONE IS THE IDENTITY (review round 4, second reviewer,
-# REPRODUCED with a fake ps): keying on pid:command:state lost a persistent
-# orphan whose state letter alternates R/S between samples (the intersection
-# emptied), and a process's args change when it becomes a zombie
-# (`gs -q` -> `[gs]`). A pid names one process until it is reaped; reuse
-# within LEAK_CONFIRM_S would need the namespace's pid counter to wrap
-# pid_max, which is not a case this check claims to handle. The printed
-# token keeps command and state for the diagnostic.
-# WHY THE SAME PROCESS, FOR THAT LONG (review round 4 re-measure): runs share
-# the container (gen_contract's threads, a grader's --jobs), and a CONCURRENT
-# run's pdflatex is a zombie from its exit until its supervisor reaps it.
-# Under load that took over a second: MEASURED at load average ~110 on the
-# 4-CPU VM, `check_contracts_reproducible --all` was refused on
-# "3096:[pdflatex]:Z", a sibling job's engine, because the check sampled
-# twice 1 s apart and compared no identities. A left-behind process is
-# still there after 10 s by definition; a sibling's zombie is not.
+# EVERY RUN IS A FRESH CONTAINER (OPEN-128 (1), (4); ADR-015 E15). Until
+# OPEN-128 every engine run was a `docker exec` into ONE long-lived container
+# per work root, and that design could not fix the run-dependent inputs: the
+# run directory was a random temporary path under the work root, which a
+# document reads back (`l3sys-query pwd`, `kpsewhich -var-value=TMPDIR` in
+# restricted \write18, the absolute paths of a .synctex), the container's
+# pids grew from run to run, its /tmp and process table were shared by every
+# run (C-97's zombies, C-93's /tmp/gs_*, C-91's planted .sty, each guarded
+# after the fact by check_state, check_texmf_trees and a per-run leak scan).
+# Now `ContainerOracle.launch_argv` starts a FRESH container per run: the run
+# directory is mounted at the fixed RUN_DIR, the private TeX trees and TMPDIR
+# live on the run's own fresh tmpfs at fixed paths (FIXED_RUN_VARS), its pid
+# namespace, /tmp and process table are its own and die with it (`--rm`), and
+# the image's root file system is read-only. MEASURED 2026-10-06 on colima:
+# `docker run --rm` of the pinned image costs 0.14-0.19 s, `docker exec`
+# 0.04-0.05 s, per pass. The guards of the shared container are therefore
+# gone, not weakened: nothing outlives a run to be scanned.
+# `--init` (PID 1 = docker-init, which reaps) and the pids limit stay: one
+# runaway \write18 job cannot exhaust the VM that every run shares (C-97).
 PIDS_LIMIT = 4096
-CONTAINER_CONFIG_TAG = f"-init-p{PIDS_LIMIT}-ro"
+# THE FIXED LAYOUT OF A RUN (OPEN-128 (1)). The run directory (the grader's
+# work directory, bind-mounted read-write), the oracle's LD_PRELOAD shim
+# (read-only), a measurement's terminal input (read-only).
+RUN_DIR = "/lp/run"
+SHIM_DIR = "/lp/shim"
+IN_DIR = "/lp/in"
+# The run's private trees, TMPDIR and the shim's bookkeeping, on the run's
+# own tmpfs /tmp (fresh per run, so no state crosses from one run to the
+# next: C-91, C-93).
+PRIVATE_ROOT = "/tmp/lp"
+SHIM_MARK_DIR = PRIVATE_ROOT + "/.shim"
+FS_LOG = PRIVATE_ROOT + "/.fs-denied"
+CLOCK_LOG = PRIVATE_ROOT + "/.clock"
+# The container's host name (docker writes it to /etc/hostname, which the
+# shim refuses to TeX programs, and children may still ask the kernel).
+ORACLE_HOSTNAME = "lp-oracle"
+# A memory ceiling equal on every platform (OPEN-128 (8)): the laptop's VM
+# and the CI runner have different memory, so without it a run that
+# exhausts memory could be killed on one and not on the other. A kill reads
+# as rc 137, a timeout: never a grade.
+MEMORY_LIMIT = "2g"
+# The architectures the pinned index holds, as docker names them.
+PLATFORMS = {"aarch64": "linux/arm64", "x86_64": "linux/amd64"}
 
-# THE TeX TREE IS READ-ONLY, AND NO GRADED RUN IS ROOT (OPEN-126; stock-take
-# 2026-09-30 §3f). Until this block the long-lived container ran as root over
-# a writable image filesystem, and spike H.1 SAW a crashed mktex helper write
-# into texmf-dist and rewrite its ls-R inside a live oracle container. The
-# only guard was ContainerOracle.check_state, a whole-filesystem scan that
-# DETECTS a change once per session, after the fact. Now prevention: the
-# container is started with `--read-only` (its root filesystem, the TeX tree
-# included, cannot be written), `--tmpfs /tmp` (HOME=/tmp; nothing a graded
-# run uses lives there since C-93, which moved every run's TMPDIR and TEXMF*
-# trees into its own work directory), and `--user` = the host user, so the
-# engine is not root either (the bind-mounted work root stays writable to
-# it: on colima's virtiofs a container uid equal to the host's owns the
-# host's files). The native backend (CI's in-image runs) is started the same
-# way by tex-oracle.yml and VERIFIES it (check_readonly): a writable TeX tree
-# or a root engine is refused, never graded. MEASURED before adoption: every
-# evidence document grades identically (OPEN-126 lists the sets and counts).
-# check_state stays as defence in depth: it is the one observer of a write
-# that a read-only root filesystem does not stop (a `docker exec -u 0` of
-# one's own into /tmp's tmpfs is out of its reach, -xdev; the per-run
-# check_texmf_trees covers the TeX trees there).
+# THE TeX TREE IS READ-ONLY, AND NO RUN IS ROOT (OPEN-126; stock-take
+# 2026-09-30 §3f). Spike H.1 SAW a crashed mktex helper write into
+# texmf-dist and rewrite its ls-R inside a live oracle container that ran as
+# root over a writable image filesystem. Every run's container is started
+# with `--read-only` (its root filesystem, the TeX tree included, cannot be
+# written), `--tmpfs /tmp:TMPFS_OPTIONS` (HOME=/tmp; the run's private trees
+# and TMPDIR live there), and `--user` = the host user, so the engine is not
+# root either (the bind-mounted run directory stays writable to it: on
+# colima's virtiofs a container uid equal to the host's owns the host's
+# files). The session probe (ContainerOracle.session_probe) VERIFIES it in a
+# container started by the same launch definition (check_readonly): a
+# writable TeX tree or a root engine is refused, never graded.
+# CORRECTION (C-121, OPEN-128 (5)): this block used to say that CI's
+# in-image runs were "started the same way" -- they were not (tex-oracle.yml
+# mounted /tmp as rw,nosuid,nodev,size=4g, without noexec) -- and that the
+# read-only container was "MEASURED before adoption" -- it was measured
+# AFTER fde1bf2b adopted it (OPEN-126 (c)). Since OPEN-128 there is one launch
+# definition, so CI's runs ARE started the same way, by construction.
 TMPFS_OPTIONS = "rw,nosuid,nodev,noexec,size=256m"
 _READONLY_PROBE = (
     "import json, os, subprocess\n"
@@ -179,25 +226,12 @@ def check_readonly(probe: dict, where: str) -> None:
             f"{where}: the TeX tree ({probe.get('texmfroot')!r}) or the root "
             f"filesystem is writable (read-only: tree {probe.get('tree_ro')}, "
             f"root {probe.get('root_ro')}); the oracle's tree must be "
-            f"read-only (docker run --read-only, OPEN-126). Native backend: "
-            f"start the image with --read-only --tmpfs /tmp --user UID:GID; "
-            f"container backend: `_oracle.py stop` so a correct one starts.")
+            f"read-only (docker run --read-only, OPEN-126).")
     if probe.get("euid") in (0, None):
         raise OracleError(
             f"{where}: the engine would run as root (euid {probe.get('euid')}); "
             f"the oracle runs as an unprivileged user (--user, OPEN-126)")
-LEAK_CONFIRM_S = 10
-LEAK_CHECK_SH = (
-    'lp_leak_list() { ps -eo pid=,ppid=,stat=,etimes=,args= | '
-    'awk \'($2 == 1 && !($5 == "sleep" && $6 == "infinity" && NF == 6) && $4 >= 2) '
-    '|| ($3 ~ /^Z/ && $4 >= 2) '
-    '{print $1 ":" $5 ":" $3}\' | tr "\\n" " "; }; '
-    'lp_leak() { set -f; l=$(lp_leak_list); i=0; '
-    f'while [ -n "$l" ] && [ $i -lt {LEAK_CONFIRM_S} ]; do sleep 1; '
-    'm=" $(lp_leak_list) "; k=""; for x in $l; do case "$m" in *" ${x%%:*}:"*) '
-    'k="$k$x ";; esac; done; l=$k; i=$((i+1)); done; '
-    'set +f; [ -z "$l" ] && return 0; '
-    'printf "\\n%s_LEAK=%s\\n" "$1" "$(set -f; echo $l | cut -d" " -f1-5)" >&2; return 1; }; ')
+
 
 # The shim's exit code when the ORACLE failed (docker unreachable, container
 # gone, a refused environment), as opposed to pdflatex failing. It used to be 2,
@@ -256,227 +290,194 @@ ARCH_OF_RECORD = "aarch64"
 # cannot keep grading: the base image is pinned by digest, a live container is
 # not.
 
-# Environment variables that shape a pdflatex run and are forwarded into the
-# container. Nothing else from the host crosses: in particular not PATH, HOME
-# or any TEXMF* tree pointing at the host's TeX Live.
+# The environment variables an engine run may receive (on top of the image's
+# own, IMAGE_ENV). Nothing else from the host or the caller crosses: in
+# particular not PATH, HOME or any TEXMF* tree pointing at the host's TeX
+# Live. The oracle sets every one of them itself (FIXED_RUN_VARS, the clock,
+# ORACLE_TEX_VARS); a caller may add only RUN_ENGINE_OVERRIDES (run_engine)
+# or MEASURE_ENV (measure).
 _ENV_FORWARD = re.compile(
     r"^(TEXMFHOME|TEXMFVAR|TEXMFCONFIG|openin_any|openout_any|"
     r"SOURCE_DATE_EPOCH|FORCE_SOURCE_DATE|max_print_line|error_line|"
-    r"half_error_line|TEXINPUTS|BIBINPUTS|BSTINPUTS|L0_VALIDATORS|"
-    r"TMPDIR|TMP|TEMP|JAVA_TOOL_OPTIONS)$")
-# Search-path variables. A host value would change a grade silently: without an
-# empty component it REPLACES the image's own search path (every document then
-# fails), and an absolute component outside the work root points at a
-# directory the container cannot see or, worse, one it can. So each absolute
-# component must lie inside the work root, and the value must keep an empty
-# component (`:` at either end, or `::`) so the image's default path stays.
-_SEARCH_PATHS = ("TEXINPUTS", "BIBINPUTS", "BSTINPUTS")
+    r"half_error_line|TMPDIR|TMP|TEMP|JAVA_TOOL_OPTIONS|PYTHONHASHSEED|"
+    r"PERL_HASH_SEED|PERL_PERTURB_KEYS|LP_CLOCK_EPOCH|LP_CLOCK|LP_CLOCK_LOG|"
+    r"LP_FS_ROOTS|LP_FS_EXE|LP_FS_LOG|LP_SHIM_MARK)$")
 
 # THE ORACLE'S TeX ENVIRONMENT: the ONE definition. Every grader (through
-# `tex_env()` / `oracle_tex_env()`) and the contract generator
-# (gen_contract.py, through `oracle_tex_vars()`) import it; nobody restates it.
-# Before this existed the values were spelled out in eight graders and, a
-# third time, in gen_contract.py, whose parser gate then checked the copy
-# against the graders' SOURCE TEXT -- and broke (three false FAILs) the day
-# #617 moved the graders' copy here, without anything having changed.
+# `graded_env`) and the contract generator (gen_contract.py, through
+# `run_engine`) get it from here; nobody restates it.
 # check_gen_contract_parsers.py asserts that no other tool restates it.
 #   openin_any/openout_any=p   paranoid file access (no parent or absolute
-#                              writes, no dot files)
-#   SOURCE_DATE_EPOCH=0        a fixed \pdfcreationdate/ID. It does NOT fix
-#                              \year/\month/\day/\time: those follow the real
-#                              clock unless FORCE_SOURCE_DATE=1, which the
-#                              graders do not set (gen_contract.py sets it on
-#                              its name-set runs, as a documented override).
-ORACLE_TEX_VARS = {"openin_any": "p", "openout_any": "p", "SOURCE_DATE_EPOCH": "0"}
+#                              writes, no dot files). It does NOT stop a READ
+#                              of an absolute path (MEASURED 2026-10-06:
+#                              \openin of /etc/hostname opened); the shim's
+#                              file-system view does (FIXED_RUN_VARS).
+# The clock variables (SOURCE_DATE_EPOCH, FORCE_SOURCE_DATE) are the CLOCK's
+# (clock_vars), not this table's: until OPEN-128 this table held
+# SOURCE_DATE_EPOCH=0, which fixed \pdfcreationdate and the PDF /ID only.
+ORACLE_TEX_VARS = {"openin_any": "p", "openout_any": "p"}
 
-# THE CLOCK OF A GRADED RUN (ADR-014 draft O-5, left OPEN by the owner in
-# ADR-015). The protocol's clock is "real": \year/\month/\day/\time follow
-# the grading machine's clock (SOURCE_DATE_EPOCH=0 fixes only the PDF's
-# dates and /ID). "forced" adds FORCE_SOURCE_DATE=1, so they read the epoch
-# too. It exists so the question can be MEASURED (diff_real_roots.py
-# --clock forced, which never writes a recorded artefact); the protocol
-# stays "real" until the owner decides O-5. A run's clock is recorded in its
-# provenance.
-CLOCKS = {"real": {}, "forced": {"FORCE_SOURCE_DATE": "1"}}
-PROTOCOL_CLOCK = "real"
-
-
-def private_texmf_vars(td) -> dict:
-    """A private TEXMFHOME/TEXMFVAR/TEXMFCONFIG below the work directory `td`,
-    so no state (fonts made by mktexpk, caches, configuration) crosses from
-    one run to the next. These are EVERY writable tree of kpathsea's TEXMF in
-    the pinned image (MEASURED 2026-09-28, `kpsewhich -var-value=TEXMF` with
-    HOME=/tmp: {TEXMFCONFIG,TEXMFVAR,TEXMFHOME,!!TEXMFLOCAL,!!TEXMFSYSCONFIG,
-    !!TEXMFSYSVAR,!!TEXMFDIST}; the four `!!` trees belong to the image and
-    are checked by ContainerOracle.check_state). TEXMFCONFIG was missing
-    until review round 5: kpathsea searches it FIRST, it defaulted to the
-    long-lived container's /tmp/.texlive2026/texmf-config, and a .sty
-    written there by one run (through a shell escape the argv then allowed)
-    turned another document's grade from rc 1 to rc 0 (MEASURED, C-91)."""
-    td = Path(td)
-    return {"TEXMFHOME": str(td / "th"), "TEXMFVAR": str(td / "tv"),
-            "TEXMFCONFIG": str(td / "tc")}
+# THE CLOCK OF A RUN (ADR-015 E10, OPEN-128 (2)/(3)). A clock is a string:
+#   "fixed:E"   every wall-clock input the run can observe is fixed at the
+#               epoch E: SOURCE_DATE_EPOCH=E with FORCE_SOURCE_DATE=1
+#               (\year, \month, \day, \time, \pdfcreationdate, the PDF /ID:
+#               texmfmp.c reads them), and LP_CLOCK_EPOCH=E for the shim
+#               (gettimeofday: \pdfrandomseed's seed, \pdfelapsedtime;
+#               time(2), clock_gettime(REALTIME) and every file time:
+#               \pdffilemoddate and any date a \write18 child prints).
+# The PROTOCOL's clock is fixed at PROTOCOL_EPOCH = 1785024000 =
+# 2026-07-26T00:00:00Z, the date of the pinned TeX Live image (tex-oracle.yml:
+# "texlive/texlive:latest-medium as of 2026-07-26"): a date the image's own
+# packages were current at. gen_contract.py finds date-dependent names by
+# running under a SECOND fixed clock (OPEN-128 (6)), never the real one.
+# LEGACY_CLOCKS are the values recorded before OPEN-128 ("real": the grading
+# machine's clock; "forced": FORCE_SOURCE_DATE=1 with SOURCE_DATE_EPOCH=0, the
+# O-5 experiment): they are known to the gates as historical record, and no
+# run can use them.
+PROTOCOL_EPOCH = 1785024000
+CLOCK_PREFIX = "fixed:"
+PROTOCOL_CLOCK = f"{CLOCK_PREFIX}{PROTOCOL_EPOCH}"
+LEGACY_CLOCKS = ("real", "forced")
 
 
-# A PRIVATE TEMPORARY DIRECTORY PER RUN (C-93, OPEN-118 known limit (i)).
-# Restricted \write18 (the protocol's default) runs the programs of the
-# image's shell_escape_commands, and kpathsea runs mktex* for a missing font;
-# those write temporary files, and with the image's defaults they wrote them
-# in the LONG-LIVED container's /tmp. MEASURED 2026-09-29 in a fresh container
-# of the pinned digest, each command driven from a document and the
-# container's root filesystem diffed (find / -xdev -newerct) around the run:
-#   repstopdf -> gs      /tmp/gs_XXXXXX scratch files: removed on a normal
-#                        exit, LEFT (3 per conversion, 0 bytes) when the
-#                        protocol's timeout kills the run. That is how the
-#                        shared container got its six /tmp/gs_* (two timed-out
-#                        EPS conversions, 2026-09-28 21:48) and #622's
-#                        check_state then refused every later session.
-#                        gs honours TMPDIR (measured: the files land in it).
-#   mktextfm/mktexpk/    /tmp/mt$$.tmp, or $TMPDIR/mt$$.tmp (mktex.opt);
-#   mktexmf              removed by its trap on TERM, left on KILL.
-#   texosquery-jre8      java: /tmp/hsperfdata_root/<pid>, a FIXED path that
-#                        ignores TMPDIR and java.io.tmpdir; the directory's
-#                        ctime moves on EVERY run, which check_state refuses.
-#                        -XX:-UsePerfData (JAVA_TOOL_OPTIONS) stops it
-#                        (measured: nothing under /tmp changes).
-#   latexminted, memoize-extract.py/.pl, bibtex, bibtex8, makeindex,
-#   extractbb, gregorio, l3sys-query, kpsewhich, r-mpost: no path outside the
-#                        run directory changed (measured). Python's tempfile
-#                        reads TMPDIR/TEMP/TMP, Perl's File::Temp TMPDIR.
-# So every graded run gets TMPDIR=TMP=TEMP=<td>/lp-tmp and a JAVA_TOOL_OPTIONS
-# naming it, and the oracle creates the directory before the run (a missing
-# TMPDIR makes gs and mktex.opt fail, which WOULD change a grade). Same rc and
-# byte-identical PDF with and without, for every command above (measured).
-# The state check stays strict: a /tmp file is never a graded run's now.
-PRIVATE_TMP_NAME = "lp-tmp"
-# What a TMPDIR may not hold: whitespace (JAVA_TOOL_OPTIONS is split on it),
-# control characters, and what kpathsea or a shell would expand.
-_PLAIN_PATH_BAD = re.compile(r"[\s\x00-\x1f\x7f~$!{}:,;'\"\\`*?]")
-_GRADING_TMP =("TMPDIR", "TMP", "TEMP", "JAVA_TOOL_OPTIONS")
+def clock_epoch(clock: str) -> int:
+    """The epoch of a fixed clock "fixed:E"; OracleError for anything else
+    (the real clock is not a clock any run may use since OPEN-128)."""
+    if not isinstance(clock, str) or not clock.startswith(CLOCK_PREFIX):
+        raise OracleError(f"unknown clock {clock!r}: a run's clock is "
+                          f"'{CLOCK_PREFIX}<epoch>' (protocol {PROTOCOL_CLOCK!r})")
+    e = clock[len(CLOCK_PREFIX):]
+    if not re.fullmatch(r"[0-9]{1,11}", e):
+        raise OracleError(f"clock {clock!r}: the epoch is not a non-negative integer")
+    return int(e)
+
+
+def is_clock(clock) -> bool:
+    """A clock a recorded block may name: a fixed clock, or a legacy value."""
+    if clock in LEGACY_CLOCKS:
+        return True
+    try:
+        clock_epoch(clock)
+        return True
+    except OracleError:
+        return False
+
+
+def clock_vars(clock: str) -> dict:
+    """The environment that fixes the run's clock at `clock` (see above)."""
+    e = str(clock_epoch(clock))
+    return {"SOURCE_DATE_EPOCH": e, "FORCE_SOURCE_DATE": "1", "LP_CLOCK_EPOCH": e}
+
+
+# THE FIXED RUN VARIABLES (OPEN-128 (1)): the same values in every run, on
+# every platform, because the paths are the container's, not the host's.
+#   TEXMFHOME/TEXMFVAR/TEXMFCONFIG  EVERY writable tree of kpathsea's TEXMF
+#       in the pinned image (MEASURED 2026-09-28, `kpsewhich -var-value=TEXMF`
+#       with HOME=/tmp: {TEXMFCONFIG,TEXMFVAR,TEXMFHOME,!!TEXMFLOCAL,
+#       !!TEXMFSYSCONFIG,!!TEXMFSYSVAR,!!TEXMFDIST}; the four `!!` trees are
+#       the image's and read-only), private to the run on its fresh tmpfs.
+#       TEXMFCONFIG was missing until review round 5: kpathsea searches it
+#       FIRST, and a .sty written there by one run turned another document's
+#       grade from rc 1 to rc 0 (MEASURED, C-91).
+#   TMPDIR/TMP/TEMP and java's tmpdir  (C-93): restricted \write18 runs the
+#       image's shell_escape_commands and kpathsea runs mktex* for a missing
+#       font; they write temporary files (gs under repstopdf: /tmp/gs_*,
+#       LEFT when a timeout kills the run; mktex*: $TMPDIR/mt$$.tmp;
+#       texosquery-jre8: /tmp/hsperfdata_<user>, which -XX:-UsePerfData stops;
+#       MEASURED 2026-09-29 command by command). Python's tempfile reads
+#       TMPDIR/TEMP/TMP, Perl's File::Temp TMPDIR.
+#   PYTHONHASHSEED/PERL_HASH_SEED/PERL_PERTURB_KEYS  the hash randomisation
+#       of the Python (latexminted, memoize-extract.py) and Perl (repstopdf,
+#       memoize-extract.pl) programs a restricted \write18 starts: a run-
+#       dependent input of their output order (OPEN-128 (1), census row
+#       "hash seeds").
+#   LP_FS_ROOTS/LP_FS_EXE  the shim's file-system view: a TeX Live program
+#       (its executable under LP_FS_EXE) reads, writes and lists only the run
+#       directory, the run's /tmp and the TeX tree (and /dev/null); see
+#       lpshim.c. LP_SHIM_MARK: proof the shim loaded (the supervisor's
+#       check). LP_FS_LOG: the paths it refused, reported per run.
+TEXMF_ROOT = "/usr/local/texlive"
+FIXED_TREES = {"TEXMFHOME": PRIVATE_ROOT + "/texmf-home",
+               "TEXMFVAR": PRIVATE_ROOT + "/texmf-var",
+               "TEXMFCONFIG": PRIVATE_ROOT + "/texmf-config"}
+FIXED_TMP = PRIVATE_ROOT + "/tmp"
+FS_ROOTS = (RUN_DIR, "/tmp", TEXMF_ROOT)
 
 
 def java_tool_options(tmpdir: str) -> str:
     return f"-XX:-UsePerfData -Djava.io.tmpdir={tmpdir}"
 
 
-def private_tmp_vars(td) -> dict:
-    """TMPDIR/TMP/TEMP (and java's) in a private directory below `td`."""
-    t = str(Path(td) / PRIVATE_TMP_NAME)
-    return {"TMPDIR": t, "TMP": t, "TEMP": t,
-            "JAVA_TOOL_OPTIONS": java_tool_options(t)}
+FIXED_RUN_VARS = {
+    **FIXED_TREES,
+    "TMPDIR": FIXED_TMP, "TMP": FIXED_TMP, "TEMP": FIXED_TMP,
+    "JAVA_TOOL_OPTIONS": java_tool_options(FIXED_TMP),
+    "PYTHONHASHSEED": "0", "PERL_HASH_SEED": "0", "PERL_PERTURB_KEYS": "0",
+    "LP_FS_ROOTS": ":".join(FS_ROOTS), "LP_FS_EXE": TEXMF_ROOT + "/",
+    "LP_SHIM_MARK": SHIM_MARK_DIR, "LP_FS_LOG": FS_LOG,
+}
+# The directories a run's supervisor creates on the fresh tmpfs before the
+# engine starts (a missing TMPDIR makes gs and mktex.opt fail, which WOULD
+# change a grade: C-93).
+FIXED_RUN_DIRS = (*FIXED_TREES.values(), FIXED_TMP, SHIM_MARK_DIR)
+# What a TMPDIR may not hold: whitespace (JAVA_TOOL_OPTIONS is split on it),
+# control characters, and what kpathsea or a shell would expand.
+_PLAIN_PATH_BAD = re.compile(r"[\s\x00-\x1f\x7f~$!{}:,;'\"\\`*?]")
 
 
-def check_private_tmp(env: dict, inside=None) -> str | None:
-    """Refuse (OracleError) temporary-directory variables that are not ONE
-    plain absolute path (inside the work root when `inside` is given), with
-    TMP/TEMP/JAVA_TOOL_OPTIONS exactly derived from TMPDIR. Returns TMPDIR
-    (None when the run has none: run_engine may, a graded run may not)."""
-    tmp = env.get("TMPDIR")
-    if tmp is None:
-        extra = [k for k in _GRADING_TMP if k in env]
-        if extra:
-            raise OracleError(f"{extra} without TMPDIR")
-        return None
-    if (not os.path.isabs(tmp) or _PLAIN_PATH_BAD.search(tmp)
-            or ".." in Path(tmp).parts or (inside is not None and not inside(Path(tmp)))):
-        raise OracleError(f"TMPDIR={tmp} is not one plain absolute path"
-                          + (" inside the oracle work root" if inside else ""))
-    want = {"TMP": tmp, "TEMP": tmp, "JAVA_TOOL_OPTIONS": java_tool_options(tmp)}
-    bad = [k for k, v in want.items() if env.get(k) != v]
-    if bad:
-        raise OracleError(f"{bad} are not derived from TMPDIR={tmp}")
-    return tmp
+def oracle_tex_vars(td=None) -> dict:
+    """The TeX-shaping variables of a graded run under the protocol clock:
+    ORACLE_TEX_VARS, the fixed run variables and the clock. `td` is accepted
+    for the callers written before OPEN-128 and IGNORED: the private trees
+    are the run container's, at fixed paths, not the caller's."""
+    return {**FIXED_RUN_VARS, **ORACLE_TEX_VARS, **clock_vars(PROTOCOL_CLOCK)}
 
 
-def make_private_tmp(env: dict, inside=None) -> None:
-    """Create the run's TMPDIR (checked first) before the engine starts."""
-    tmp = check_private_tmp(env, inside)
-    if tmp is not None:
-        Path(tmp).mkdir(parents=True, exist_ok=True)
-
-
-def oracle_tex_vars(td) -> dict:
-    """ONLY the variables that shape a graded run (no host environment)."""
-    return {**private_texmf_vars(td), **private_tmp_vars(td), **ORACLE_TEX_VARS}
-
-
-def oracle_tex_env(td) -> dict:
+def oracle_tex_env(td=None) -> dict:
     """The per-run environment a Python grader passes: the host environment
-    with `oracle_tex_vars(td)` on top. Only its `_ENV_FORWARD` variables reach
-    an engine, on either backend (engine_env); the rest is ignored."""
+    with `oracle_tex_vars()` on top. Only `_ENV_FORWARD` variables ever reach
+    an engine (engine_env), and graded_env imposes every one of them."""
     return dict(os.environ, **oracle_tex_vars(td))
 
 
 # ONE GRADING PROTOCOL, IMPOSED BY THE ORACLE, NOT CHOSEN BY THE CALLER
 # (OPEN-118 known limit (b), C-91). Until 2026-09-28 ORACLE_TEX_VARS reached a
-# graded run only when the CALLER put it there: the Python graders did (through
-# tex_env), but the `_oracle.py pdflatex` shim passed the host environment, so
-# false_ready_oracle.sh and diff_compile_check.sh graded with pdfTeX's defaults
-# (openin_any/openout_any unset, no SOURCE_DATE_EPOCH) or with whatever the
-# host exported; on the native backend (CI) they ran `pdflatex` bare; and
-# check_apply_fixes_roundtrip passed `dict(os.environ)`, with neither the
-# variables nor a private TEXMFVAR. So `graded_env` is applied INSIDE
-# run_pdflatex, the one path every graded run takes (run_once,
-# run_to_fixpoint, the shim), and a graded run's TeX-shaping variables are
-# exactly:
-#   * ORACLE_TEX_VARS, imposed over any value the caller's dict held (a host
-#     `SOURCE_DATE_EPOCH=1700000000` or `openout_any=a` is overridden, not
-#     forwarded);
-#   * the private TEXMFHOME/TEXMFVAR the caller names, which are REQUIRED (a
-#     run without them would share the container's persistent TEXMFVAR);
-#   * the private TMPDIR beside them, REQUIRED (C-93), with TMP, TEMP and
-#     JAVA_TOOL_OPTIONS derived from it (see private_tmp_vars);
-#   * nothing else: every other `_ENV_FORWARD` variable (FORCE_SOURCE_DATE,
-#     max_print_line, error_line, half_error_line, TEXINPUTS, BIBINPUTS,
-#     BSTINPUTS) is DROPPED. No grader sets one, so one in the dict came from
-#     the host, and it would change a grade (FORCE_SOURCE_DATE=1 makes \today
-#     follow SOURCE_DATE_EPOCH) or the log's line breaks.
+# graded run only when the CALLER put it there: the Python graders did, but
+# the `_oracle.py pdflatex` shim passed the host environment, so
+# false_ready_oracle.sh and diff_compile_check.sh graded with pdfTeX's
+# defaults; and check_apply_fixes_roundtrip passed `dict(os.environ)`. So
+# `graded_env` is applied INSIDE run_pdflatex, the one path every graded run
+# takes (run_once, run_to_fixpoint, the shim), and a graded run's TeX-shaping
+# variables are EXACTLY: ORACLE_TEX_VARS, FIXED_RUN_VARS and the clock's,
+# imposed over anything the caller's dict held. Every other `_ENV_FORWARD`
+# variable of the caller (a host SOURCE_DATE_EPOCH, FORCE_SOURCE_DATE,
+# max_print_line, a TEXMFVAR or TMPDIR of its own) is DROPPED. Since OPEN-128
+# a caller no longer supplies the private trees: they are the run
+# container's, at fixed paths (before, graded_env REQUIRED the caller's
+# private TEXMFHOME/TEXMFVAR/TEXMFCONFIG and TMPDIR, which is what the paths
+# a document could read back were).
 # Override, not refuse: the shell graders discard the shim's stderr, so a
 # refusal would reach the user as an unexplained "not graded" for an
-# environment variable they may not know they export (SOURCE_DATE_EPOCH is
-# common in reproducible-build shells). The shim reports what it overrode on
-# stderr. run_engine (gen_contract.py, not a grader) is unaffected: its
-# environment is EXACTLY what the caller passes, with documented overrides.
-_GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG")
+# environment variable they may not know they export. The shim reports what
+# it overrode on stderr.
 
 
 def graded_env(env: dict | None, clock: str = PROTOCOL_CLOCK) -> dict:
-    """The TeX variables of a GRADED pdflatex run built from `env`: its
-    private TEXMFHOME/TEXMFVAR/TEXMFCONFIG (required), its private TMPDIR
-    beside them (required; TMP/TEMP/JAVA_TOOL_OPTIONS derived from it, C-93),
-    ORACLE_TEX_VARS imposed, every other
-    `_ENV_FORWARD` variable dropped. See the block above. Non-TeX keys of `env`
-    are kept here but never reach the engine: each backend passes only
-    `engine_env` (the image's environment plus `_ENV_FORWARD` variables)."""
-    env = dict(env or {})
-    missing = [k for k in _GRADING_TEXMF if not env.get(k)]
-    if missing:
-        raise OracleError(
-            f"a graded run needs a private {'/'.join(missing)} (oracle_tex_vars "
-            f"or tex_env): without one the container's persistent TEXMFVAR "
-            f"carries state from run to run")
-    # C-93: the run's temporary files live with its private trees. TMPDIR is
-    # REQUIRED and must be the private one beside TEXMFVAR (a host TMPDIR --
-    # /tmp, /var/folders/... -- is refused, not forwarded); TMP, TEMP and
-    # JAVA_TOOL_OPTIONS are derived from it, never taken from `env`.
-    tmp = env.get("TMPDIR")
-    want_tmp = (private_tmp_vars(Path(env["TEXMFVAR"]).parent)["TMPDIR"]
-                if env.get("TEXMFVAR") else tmp)  # TEXMFVAR: required above
-    if not tmp or tmp != want_tmp:
-        raise OracleError(
-            f"a graded run needs its private TMPDIR={want_tmp} (oracle_tex_vars "
-            f"or tex_env), got {tmp!r}: without it restricted \\write18 "
-            f"(repstopdf -> gs, mktex*) leaves temporary files in the "
-            f"long-lived container's /tmp (C-93)")
-    out = {k: v for k, v in env.items() if not _ENV_FORWARD.match(k)}
-    out.update({k: env[k] for k in _GRADING_TEXMF if k in env})
-    if tmp:  # always, unless the check above is gone
-        out.update(private_tmp_vars(Path(tmp).parent))
+    """The variables of a GRADED pdflatex run built from `env`: every
+    `_ENV_FORWARD` variable of `env` dropped, then ORACLE_TEX_VARS, the fixed
+    run variables and `clock`'s imposed. Non-TeX keys of `env` are kept here
+    but never reach the engine (engine_env)."""
+    out = {k: v for k, v in (env or {}).items() if not _ENV_FORWARD.match(k)}
+    out.update(FIXED_RUN_VARS)
     out.update(ORACLE_TEX_VARS)
-    if clock not in CLOCKS:
-        raise OracleError(f"unknown clock {clock!r}; one of {sorted(CLOCKS)}")
-    out.update(CLOCKS[clock])
+    out.update(clock_vars(clock))
     return out
+
+
+# run_engine's callers (gen_contract.py, the L_S0 generators) may change
+# only the log's line width; every other TeX-shaping variable they pass must
+# be the protocol's own value (oracle_tex_vars), and the clock is a parameter.
+RUN_ENGINE_OVERRIDES = frozenset(("max_print_line", "error_line", "half_error_line"))
 
 
 # THE ENGINE'S WHOLE ENVIRONMENT IS AN ALLOW-LIST, ON BOTH BACKENDS (C-91,
@@ -491,14 +492,14 @@ def graded_env(env: dict | None, clock: str = PROTOCOL_CLOCK) -> dict:
 # to /tmp written) while the engine's own `openout_any` still read `p`, and a
 # host `shell_escape=t` turned unrestricted \write18 on (\pdfshellescape 2 ->
 # 1); the container backend, which forwards `_ENV_FORWARD` names only, was
-# unaffected. So an engine now sees EXACTLY what `docker exec` gives it in the
-# container: the image's own environment (below) plus the forwarded
-# `_ENV_FORWARD` variables, and nothing of the host. The container backend
-# checks that its container really has this environment (a container started
-# with an extra `-e` under the oracle's name would otherwise leak one).
+# unaffected. So an engine sees EXACTLY the image's own environment (below)
+# plus the `_ENV_FORWARD` variables the oracle chose, and nothing of the host:
+# since OPEN-128 the run supervisor starts the engine with that dictionary,
+# passed to it verbatim (not inherited from docker or the shell, so not even
+# docker's HOSTNAME reaches the engine), and the session probe checks that a
+# container of the launch definition has the image's environment.
 # IMAGE_ENV is `docker inspect --format '{{json .Config.Env}}'` of the pinned
-# digest (MEASURED 2026-09-28, identical inside the running oracle container
-# apart from HOSTNAME) with HOME=/tmp, which the container is started with.
+# digest (MEASURED 2026-09-28) with HOME=/tmp, which every run is started with.
 IMAGE_ENV = {
     "HOME": "/tmp",
     "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
@@ -508,31 +509,39 @@ IMAGE_ENV = {
     "NOPERLDOC": "1",
     "DEBIAN_FRONTEND": "noninteractive",
 }
-# Variables of the container's environment that are not the image's and do
-# not reach TeX's configuration: docker sets HOSTNAME per container.
-_CONTAINER_ONLY_ENV = frozenset(("HOSTNAME",))
+# Variables of a container's environment that are not the image's: docker
+# sets HOSTNAME (the launch definition fixes it to ORACLE_HOSTNAME). The
+# engine does not get it (the supervisor passes engine_env verbatim).
+_CONTAINER_ONLY_ENV = {"HOSTNAME": ORACLE_HOSTNAME}
 
 
-def engine_env(tex_vars: dict | None, base: dict = IMAGE_ENV) -> dict:
+def engine_env(tex_vars: dict | None, base: dict = IMAGE_ENV,
+               extra=frozenset()) -> dict:
     """The COMPLETE environment of an engine run: `base` (the image's) plus the
-    `_ENV_FORWARD` variables of `tex_vars`. Every other key of `tex_vars` (a
-    caller's copy of the host environment) is dropped, whatever its name."""
+    `_ENV_FORWARD` variables of `tex_vars` (and, for a measurement, its
+    MEASURE_ENV names, `extra`). Every other key of `tex_vars` (a caller's
+    copy of the host environment) is dropped, whatever its name."""
     out = dict(base)
-    out.update({k: v for k, v in (tex_vars or {}).items() if _ENV_FORWARD.match(k)})
+    out.update({k: v for k, v in (tex_vars or {}).items()
+                if _ENV_FORWARD.match(k) or k in extra})
     return out
 
 
 def check_container_env(env: dict, where: str) -> None:
-    """The container's own environment must be IMAGE_ENV (plus HOSTNAME)."""
+    """A container's own environment must be IMAGE_ENV plus docker's HOSTNAME,
+    which the launch definition fixes."""
+    if env.get("HOSTNAME") != ORACLE_HOSTNAME:
+        raise OracleError(f"{where}: the container's HOSTNAME is "
+                          f"{env.get('HOSTNAME')!r}, not {ORACLE_HOSTNAME!r} "
+                          f"(--hostname of the launch definition)")
     got = {k: v for k, v in env.items() if k not in _CONTAINER_ONLY_ENV}
     if got != IMAGE_ENV:
         extra = sorted(set(got) - set(IMAGE_ENV))
         diff = sorted(k for k in IMAGE_ENV if got.get(k) != IMAGE_ENV[k])
         raise OracleError(
             f"{where}: the container's environment is not the pinned image's "
-            f"(extra {extra[:6]}, different {diff[:6]}); every exec would give "
-            f"pdflatex those variables. Remove the container (`_oracle.py stop`) "
-            f"so the oracle starts a clean one.")
+            f"(extra {extra[:6]}, different {diff[:6]}): the image or the "
+            f"launch definition is not the pinned one")
 
 
 # The host variables the shim names in its note: every name kpathsea or TeX
@@ -560,6 +569,7 @@ def host_tex_overrides(environ=None) -> list[str]:
                   # grade; the run's own private one replaces it (C-93)
                   and k not in ("TMPDIR", "TMP", "TEMP")
                   and not (k in ORACLE_TEX_VARS and v == ORACLE_TEX_VARS[k])
+                  and not (k in FIXED_RUN_VARS and v == FIXED_RUN_VARS[k])
                   and not (k in IMAGE_ENV and v == IMAGE_ENV[k]))
 
 
@@ -674,13 +684,17 @@ def _option(a: str):
     return name, (value if eq else None)
 
 
-def check_engine_argv(args, cwd, *, graded: bool) -> None:
-    """Refuse (OracleError) any argv that is not on the allow-list above."""
+def check_engine_argv(args, cwd, *, graded: bool, measure: bool = False) -> None:
+    """Refuse (OracleError) any argv that is not on the allow-list above.
+    `measure` (the measurement entry point, never a grade): run_engine's
+    allow-list, and the file argument may be absent (the run reads its
+    terminal input, as spike H.2's `pdftex -ini` does)."""
     if not isinstance(args, (list, tuple)) or not all(isinstance(a, str) for a in args):
         raise OracleError(f"engine argv must be a list of str, got {args!r:.200}")
     flags = GRADED_FLAGS if graded else RUN_ENGINE_FLAGS
     valued = {} if graded else RUN_ENGINE_VALUED
-    what = "a graded pdflatex run" if graded else "run_engine"
+    what = ("a graded pdflatex run" if graded
+            else "measure" if measure else "run_engine")
     positional = []
     for a in args:
         opt = _option(a)
@@ -700,6 +714,8 @@ def check_engine_argv(args, cwd, *, graded: bool) -> None:
             + (f", {', '.join('-' + k + '=' for k in sorted(valued))}" if valued else "")
             + "); anything else could change the protocol (e.g. -cnf-line, "
               "-shell-escape, -output-directory, a format selector)")
+    if measure and not graded and not positional:
+        return
     if len(positional) != 1:
         raise OracleError(f"{what} takes exactly one file argument, got {positional!r:.200}")
     p = positional[0]
@@ -933,13 +949,46 @@ class EngineRun(tuple):
 # watched, a document's close-write of the log cannot sit next to pdfTeX's
 # own: pdfTeX writes its final report to the log (an IN_MODIFY) after
 # closing the document's \write streams and before closing the log.
+# THE SUPERVISOR ALSO STARTS THE RUN (OPEN-128). Since every run is a fresh
+# container, the supervisor prepares it before the engine starts: it creates
+# the run's private trees and TMPDIR on the fresh tmpfs (FIXED_RUN_DIRS),
+# deletes the job's stale evidence files INSIDE the container (a host-side
+# delete leaves the VM's view of the directory stale for about a second, and
+# pdfTeX then cannot create its log: ContainerOracle.remove), and starts the
+# engine with EXACTLY the environment the oracle chose (`env`, verbatim, plus
+# LD_PRELOAD of the shim). After the run it reports, on its evidence line:
+# the sha256 of the shim file it preloaded, the shim's mark for the ENGINE
+# process ("restricted": loaded, with the TeX file-system view; absent: the
+# dynamic loader ignored the preload, and the run had the real clock), the
+# paths the shim refused (a diagnostic), and for a measurement the clock
+# readings the run used.
 _SUPERVISOR_SRC = r"""
-import ctypes, json, os, select, struct, subprocess, sys, unicodedata
-nonce, names, cmd = sys.argv[1], sys.argv[2].split("/"), sys.argv[3:]
+import ctypes, hashlib, json, os, select, struct, subprocess, sys, unicodedata
+nonce, cfg, cmd = sys.argv[1], json.loads(sys.argv[2]), sys.argv[3:]
+names = cfg["names"]
 def fold(n):
     n = unicodedata.normalize("NFD", n)
     return unicodedata.normalize("NFD", n.casefold())
 ev = {"cw": {}, "alias": [], "overflow": 0, "err": ""}
+try:
+    for d in cfg.get("mkdirs", []):
+        os.makedirs(d, exist_ok=True)
+    for f in cfg.get("remove", []):
+        try:
+            os.unlink(f)
+        except FileNotFoundError:
+            pass
+except OSError as e:
+    sys.stderr.write("lp-supervisor: cannot prepare the run: %r\n" % (e,)); sys.exit(127)
+env = dict(cfg["env"])
+shim = cfg.get("shim")
+if shim:
+    try:
+        with open(shim, "rb") as fh:
+            ev["shim_sha256"] = hashlib.sha256(fh.read()).hexdigest()
+    except OSError as e:
+        ev["shim_sha256"] = "unreadable: %r" % (e,)
+    env["LD_PRELOAD"] = shim
 seen, moves = {}, {}
 fd = -1
 try:
@@ -970,7 +1019,8 @@ def drain():
             if mask & 0x8 and name:
                 seen[name] = seen.get(name, 0) + 1
 try:
-    child = subprocess.Popen(cmd, stdin=subprocess.DEVNULL)
+    stdin = open(cfg["stdin"], "rb") if cfg.get("stdin") else subprocess.DEVNULL
+    child = subprocess.Popen(cmd, stdin=stdin, env=env)
 except OSError as e:
     sys.stderr.write("%s\n" % e); sys.exit(127)
 while child.poll() is None:
@@ -1002,6 +1052,26 @@ for n, c in seen.items():
         ev["alias"].append([s[:120], hit])
         ev["cw"][hit] = ev["cw"].get(hit, 0) + c
 ev["alias"] = ev["alias"][:20]
+ev["engine_pid"] = child.pid
+if cfg.get("mark"):
+    try:
+        with open(os.path.join(cfg["mark"], str(child.pid))) as fh:
+            ev["shim_mode"] = fh.read().strip()
+    except OSError:
+        ev["shim_mode"] = None
+if cfg.get("fs_log"):
+    try:
+        with open(cfg["fs_log"], errors="replace") as fh:
+            lines = sorted(set(fh.read().splitlines()))
+        ev["fs_denied"] = [len(lines)] + lines[:20]
+    except OSError:
+        ev["fs_denied"] = [0]
+if cfg.get("clock_log"):
+    try:
+        with open(cfg["clock_log"], errors="replace") as fh:
+            ev["clock_log"] = fh.read()[:1000000]
+    except OSError:
+        ev["clock_log"] = ""
 sys.stderr.write("\n%s_EVID=%s\n" % (nonce, json.dumps(ev, sort_keys=True)))
 sys.stderr.flush()
 rc = child.returncode
@@ -1009,15 +1079,18 @@ sys.exit(rc if rc >= 0 else 128 - rc)
 """
 
 
-def evidence_names(args) -> str:
-    """The evidence files of a run, as the supervisor's '/'-joined argument."""
+def evidence_names(args) -> list[str]:
+    """The evidence files of a run (the supervisor's `names`)."""
     job = pdftex_jobname(args)
-    return "/".join(job + e for e in _Base.RUN_OUTPUTS)
+    return [job + e for e in _Base.RUN_OUTPUTS]
 
 
-def check_evidence(stderr: bytes, nonce: str, args, what: str) -> bytes:
+def check_evidence(stderr: bytes, nonce: str, args, what: str,
+                   shim_sha256: str | None = None) -> tuple[bytes, dict]:
     """Refuse a run whose supervisor saw the document write an evidence file
-    (or saw nothing). Returns stderr without the evidence line."""
+    (or saw nothing), or, when `shim_sha256` is given, whose engine did not
+    run under that shim with the TeX file-system view (OPEN-128). Returns
+    stderr without the evidence line, and the evidence record."""
     m = re.search(rb"^" + re.escape(nonce.encode()) + rb"_EVID=(.*)$", stderr, re.M)
     if m is None:
         raise OracleError(f"{what}: the run's supervisor reported no evidence "
@@ -1049,7 +1122,20 @@ def check_evidence(stderr: bytes, nonce: str, args, what: str) -> bytes:
             f"(written {[ev['cw'][n] for n in twice]} times; pdfTeX writes each "
             f"once): the evidence of the run is the document's, so it is "
             f"ungradable -- refused, never graded (C-99)")
-    return stderr[:m.start()] + stderr[m.end():]
+    if shim_sha256 is not None:
+        if ev.get("shim_sha256") != shim_sha256:
+            raise OracleError(
+                f"{what}: the run preloaded a shim with sha256 "
+                f"{ev.get('shim_sha256')!r}, not the pinned {shim_sha256} "
+                f"(SHIM_SHA256); its clock and file-system view are not the "
+                f"protocol's; not a grade (OPEN-128)")
+        if ev.get("shim_mode") != "restricted":
+            raise OracleError(
+                f"{what}: the engine process carries no mark of the shim "
+                f"({ev.get('shim_mode')!r}): the dynamic loader did not "
+                f"preload it, so the run read the real clock and the whole "
+                f"file system; not a grade (OPEN-128)")
+    return stderr[:m.start()] + stderr[m.end():], ev
 
 
 def job_output(cwd, args, ext: str) -> Path:
@@ -1281,7 +1367,10 @@ def _check_search_path(k: str, v: str, inside) -> None:
                               f"root; a host path must not shape a grade")
 
 
-def _check_fingerprint(fp: dict, where: str) -> None:
+def _check_fingerprint(fp: dict, where: str, measurement: bool = False) -> None:
+    """Refuse a TeX tree that is not the pinned image's for its architecture,
+    and (unless `measurement`: the measurement entry point, never a grade) an
+    architecture other than ARCH_OF_RECORD."""
     if IMAGE != FINGERPRINTED_IMAGE:
         raise OracleError(
             f"tex-oracle.yml pins {IMAGE} but the tree fingerprints in "
@@ -1291,7 +1380,7 @@ def _check_fingerprint(fp: dict, where: str) -> None:
     want = TREE_FINGERPRINTS.get(fp["arch"])
     if want is None:
         raise OracleError(f"{where}: no recorded fingerprint for arch {fp['arch']!r}")
-    if fp["arch"] != ARCH_OF_RECORD:
+    if fp["arch"] != ARCH_OF_RECORD and not measurement:
         raise OracleError(
             f"{where}: this oracle runs on {fp['arch']}, but the oracle's "
             f"architecture of record is {ARCH_OF_RECORD} (ADR-015 E2). The "
@@ -1310,13 +1399,16 @@ def _check_fingerprint(fp: dict, where: str) -> None:
 
 
 # THE ORACLE'S IDENTITY, AND THE ONE COMPARISON OF TWO ORACLE BLOCKS (ADR-015
-# E2, OPEN-126). Two grades are comparable only when they were taken by the
-# same image, on the same architecture, over the same TeX tree. The backend
-# is NOT part of it (container and native agree, check_oracle_equivalence:
-# 97/97), and neither is the grading code, which require_same_grading_code
-# checks separately because its remedy differs (re-grade, not re-pin).
+# E2, E10; OPEN-126, OPEN-128 (3)). Two grades are comparable only when they
+# were taken by the same image, on the same architecture, over the same TeX
+# tree, under the same CLOCK (a grade under another fixed clock, or one
+# recorded before the clock was fixed, may differ in any document that
+# reads it). The grading code is checked separately by
+# require_same_grading_code because its remedy differs (re-grade, not
+# re-pin). The backend is not part of it: since OPEN-128 there is one
+# (the container, ADR-015 E15).
 IDENTITY_KEYS = ("image", "arch", "tlpdb_sha256", "macro_layer_sha256",
-                 "fmt_sha256")
+                 "fmt_sha256", "clock")
 
 
 def identity_mismatch(a: dict | None, b: dict | None) -> list[str]:
@@ -1331,7 +1423,19 @@ def require_same_oracle(recorded: dict | None, live: dict | None,
                         what: str) -> None:
     """Refuse (OracleError) to compare a grade recorded under `recorded` with
     one taken under `live` unless they are the same oracle. A block that
-    names no architecture is refused too: it cannot be shown comparable."""
+    names no architecture or no clock is refused too: it cannot be shown
+    comparable. A MEASUREMENT block (`measure`: never a grade, and on a
+    non-record architecture tagged measurement_only) is refused on either
+    side (ADR-015 E7)."""
+    for side, blk in (("recorded", recorded), ("live", live)):
+        if isinstance(blk, dict) and (blk.get("entry") == "measure"
+                                      or blk.get("measurement_only")):
+            raise OracleError(
+                f"{what}: the {side} oracle block is a MEASUREMENT "
+                f"(entry {blk.get('entry')!r}, measurement_only "
+                f"{blk.get('measurement_only')!r}, arch {blk.get('arch')!r}); "
+                f"a measurement is never a grade and is never compared with "
+                f"one (ADR-015 E7)")
     bad = identity_mismatch(recorded, live)
     if not bad:
         return
@@ -1344,6 +1448,14 @@ def require_same_oracle(recorded: dict | None, live: dict | None,
             f"Grades are not compared across architectures (ADR-015 E2, "
             f"C-103: the same image gives different exit codes on aarch64 "
             f"and x86_64); re-grade on {ARCH_OF_RECORD}.")
+    if "clock" in bad:
+        raise OracleError(
+            f"{what}: the recorded grades were taken under clock "
+            f"{r.get('clock')!r} and this oracle grades under {l.get('clock')!r}. "
+            f"A document can read the clock (\\year, \\pdfrandomseed, "
+            f"\\pdffilemoddate, ...), so grades under two clocks are not "
+            f"compared (ADR-015 E10, OPEN-128); re-grade under "
+            f"{PROTOCOL_CLOCK!r}.")
     raise OracleError(
         f"{what}: the recorded grades are of another oracle ({', '.join(bad)} "
         f"differ: recorded {[r.get(k) for k in bad]}, live "
@@ -1480,6 +1592,53 @@ def grading_code_drift(recorded: dict | None, repo: Path = REPO,
     return findings, notes
 
 
+class RunStamp:
+    """A GRADE'S PROVENANCE IS TAKEN WHEN ITS RUN STARTS (OPEN-128 (4); OPEN-126
+    KNOWN LIMITS). Until OPEN-128 the producers read `grading_code` and the
+    commit they stamp (`measured_at_sha`, `oracle_regraded_at_sha`) from
+    HEAD when they WROTE the artefact, and two recorded runs spanned a commit
+    (OPEN-126's full re-grade started at 7020f7e7 and is stamped a652a675):
+    had the grading code changed between, the artefact would have named code
+    that did not grade it. Every producer now takes a RunStamp before its
+    first engine run -- the HEAD, and the grading code of the oracle core and
+    its `graders` (grading_code refuses a file that differs from HEAD) --
+    stamps THOSE, and calls `check` before writing: it refuses (a reason
+    string, or OracleError from `require`) when the grading code at the end
+    is not the one the run started with. HEAD itself may move during a long
+    run (a documentation commit); the stamp is the start's."""
+
+    def __init__(self, graders, repo: Path = REPO):
+        self.repo = Path(repo)
+        self.graders = tuple(graders)
+        p = _git_out(self.repo, "rev-parse", "HEAD")
+        if p.returncode != 0:
+            raise OracleError("cannot read HEAD to stamp the run")
+        self.head = p.stdout.decode().strip()
+        self.gc = grading_code(self.graders, self.repo)
+
+    def check(self) -> str | None:
+        """Why the run's result may not be written, or None."""
+        try:
+            now = grading_code(self.graders, self.repo)
+        except OracleError as e:
+            return f"the grading code is no longer committed and clean: {e}"
+        if now != self.gc:
+            return (f"the grading code changed during the run (started "
+                    f"{self.gc['sha256'][:12]} at {self.head[:12]}, now "
+                    f"{now['sha256'][:12]}); the grades are of the code at the "
+                    f"start, which is no longer the code. Re-run.")
+        return None
+
+    def require(self) -> None:
+        why = self.check()
+        if why:
+            raise OracleError(f"nothing written: {why}")
+
+    def oracle_block(self, oracle, clock: str = PROTOCOL_CLOCK) -> dict:
+        """The oracle's provenance with the run's clock and grading code."""
+        return dict(oracle.provenance(), clock=clock, grading_code=self.gc)
+
+
 def require_same_grading_code(recorded: dict | None, current: dict,
                               what: str) -> None:
     """Refuse (OracleError) to carry forward or compare recorded grades whose
@@ -1538,9 +1697,10 @@ class _Base:
     def tempdir(self, prefix: str = "lp-oracle-"):
         return tempfile.TemporaryDirectory(prefix=prefix)
 
-    def tex_env(self, td) -> dict:
-        """The recorded per-run environment: private TEXMFHOME/TEXMFVAR,
-        paranoid file access, a fixed SOURCE_DATE_EPOCH (ORACLE_TEX_VARS)."""
+    def tex_env(self, td=None) -> dict:
+        """The per-run environment a grader passes (oracle_tex_env). Since
+        OPEN-128 graded_env imposes every TeX-shaping variable itself, so
+        this is kept for the callers that pass it; `td` is ignored."""
         return oracle_tex_env(td)
 
     def remove(self, paths) -> None:
@@ -1558,10 +1718,10 @@ class _Base:
     def run_pdflatex(self, cwd: Path, args: list[str], env: dict | None,
                      timeout: int, clock: str = PROTOCOL_CLOCK) -> tuple[int, bytes, bool]:
         """ONE graded pdflatex run, in the protocol's environment
-        (`graded_env(env)`: ORACLE_TEX_VARS imposed, `env`'s private
-        TEXMFHOME/TEXMFVAR/TEXMFCONFIG required, no other TeX variable) and
-        with an argv on the graded allow-list (`check_engine_argv`, C-91
-        round 5). Returns (rc, combined output, timed_out)."""
+        (`graded_env(env, clock)`: ORACLE_TEX_VARS, the fixed run variables
+        and the clock imposed, no other TeX variable) and with an argv on the
+        graded allow-list (`check_engine_argv`, C-91 round 5). Returns (rc,
+        combined output, timed_out)."""
         args = list(args)
         check_engine_argv(args, cwd, graded=True)
         env = graded_env(env, clock)
@@ -1598,14 +1758,20 @@ class _Base:
                               f"through it into its target, so no grade (C-95)")
         stale = [q for q in stale if q.exists()]
         if stale:
-            self.remove(stale)
+            self._clear(stale)
+
+    def _clear(self, stale: list[Path]) -> None:
+        """Delete the stale outputs found by clear_outputs (host side). The
+        container backend deletes them INSIDE the run's container instead
+        (its supervisor), so this is a no-op there."""
+        self.remove(stale)
 
     def _exec(self, cwd: Path, engine: str, args: list[str], env: dict | None,
               timeout: int) -> tuple[int, bytes, bool]:
         raise NotImplementedError
 
     def run_engine(self, cwd: Path, engine: str, args: list[str], tex_vars: dict,
-                   timeout: int) -> tuple[int, bytes, bool]:
+                   timeout: int, clock: str = PROTOCOL_CLOCK) -> tuple[int, bytes, bool]:
         """ONE run of a TeX `engine` (one of ENGINES) with argv `args` in
         `cwd`, for a client that is not a document grader: gen_contract.py's
         pdflatex jobs and its INITEX (`pdftex -ini`) kernel jobs.
@@ -1614,13 +1780,13 @@ class _Base:
         the rc read inside the container, positive proof pdfTeX ran (its
         banner, which INITEX prints too), the free-space floor before and
         after, pdfTeX's own write failures refused (OracleError: not a
-        result) -- with ONE difference: the environment is EXACTLY
-        `tex_vars`, on both backends. No host variable shapes the run (the
-        native backend keeps the host's non-TeX variables, e.g. PATH, and
-        drops every `_ENV_FORWARD` one the caller did not pass), and a key
-        that is not a TeX-shaping variable is refused rather than ignored.
-        Start from `oracle_tex_vars(td)` and state any override explicitly.
-        Returns (rc, combined output, timed_out)."""
+        result) -- and the same environment, with two differences a caller
+        states explicitly: `clock` (gen_contract.py runs under a SECOND fixed
+        clock to find the kernel's date-dependent names, OPEN-128 (6)), and
+        the log's line width (RUN_ENGINE_OVERRIDES). Every other key of
+        `tex_vars` must be a TeX-shaping variable whose value is the
+        protocol's own (`oracle_tex_vars()`), or the call is refused rather
+        than silently overridden. Returns (rc, combined output, timed_out)."""
         if engine not in ENGINES:
             raise OracleError(f"engine {engine!r} is not one of {ENGINES}")
         check_engine_argv(list(args), cwd, graded=False)
@@ -1628,8 +1794,20 @@ class _Base:
         if bad:
             raise OracleError(f"run_engine: {bad} are not TeX-shaping variables "
                               f"the oracle forwards (_ENV_FORWARD)")
+        base = {**FIXED_RUN_VARS, **ORACLE_TEX_VARS, **clock_vars(clock)}
+        proto = oracle_tex_vars()
+        differ = sorted(k for k, v in tex_vars.items()
+                        if k not in RUN_ENGINE_OVERRIDES
+                        and v != base.get(k) and v != proto.get(k))
+        if differ:
+            raise OracleError(
+                f"run_engine: {differ} differ from the protocol's values; a "
+                f"caller may change only {sorted(RUN_ENGINE_OVERRIDES)} and the "
+                f"clock (the `clock` parameter), OPEN-128")
+        env = dict(base, **{k: v for k, v in tex_vars.items()
+                            if k in RUN_ENGINE_OVERRIDES})
         self.clear_outputs(Path(cwd), list(args))
-        return self._exec(Path(cwd), engine, list(args), dict(tex_vars), timeout,
+        return self._exec(Path(cwd), engine, list(args), env, timeout,
                           exact_env=True)
 
     def image_command(self, argv: list[str], cwd: Path | None = None,
@@ -1700,83 +1878,59 @@ class _Base:
 
 
 class NativeOracle(_Base):
-    """Only inside the pinned image. Verified, never assumed."""
+    """An engine run as a process of THIS host, not in a container.
+
+    RETIRED AS A GRADER (ADR-015 E15, owner 2026-10-06; OPEN-128 (4)). Until
+    OPEN-128 this was CI's backend: tex-oracle.yml started the pinned image
+    itself (`docker run ... LP_ORACLE_IN_IMAGE=...`) and graded inside it,
+    with a launch configuration of its own (a 4g /tmp without noexec, its
+    work directories under /tmp) that check_oracle_pin compared with the
+    container's flag by flag: two launch definitions, kept in step by hand.
+    Now CI grades through ContainerOracle from its runner host, and
+    get_oracle() refuses LP_ORACLE_IN_IMAGE. This class stays only as the
+    base of HostDiagnostic, which grades nothing: constructing it directly
+    is refused."""
     backend = "native"
-    # Only HostDiagnostic, which is never a grade, sets supervised = False.
+    grading = False
 
     def __init__(self):
-        super().__init__()
-        # The same equality check on EVERY native path (get_oracle() and the
-        # shell graders' `assert-native`), not only the Python one.
-        got = os.environ.get("LP_ORACLE_IN_IMAGE", "")
-        if got != IMAGE:
-            raise OracleError(f"LP_ORACLE_IN_IMAGE={got!r} but tex-oracle.yml "
-                              f"pins {IMAGE!r}")
-        self.fingerprint()  # verify eagerly: a wrong tree fails at construction
-
-    def fingerprint(self) -> dict:
-        if self._fp is None:
-            # In a child with the engine's environment, as the container
-            # backend does: kpsewhich in THIS process would read the host's
-            # TEXMFCNF/TEXMF* and could fingerprint a different tree.
-            p = subprocess.run([sys.executable, "-c", _FINGERPRINT_SNIPPET],
-                               env=engine_env({}, self.engine_base),
-                               capture_output=True, timeout=120)
-            if p.returncode != 0:
-                raise OracleError("native fingerprint failed: "
-                                  + p.stderr.decode(errors="replace")[:400])
-            fp = json.loads(p.stdout)
-            _check_fingerprint(fp, "LP_ORACLE_IN_IMAGE is set, but")
-            ro = subprocess.run([sys.executable, "-c", _READONLY_PROBE],
-                                env=engine_env({}, self.engine_base),
-                                capture_output=True, timeout=60)
-            if ro.returncode != 0:
-                raise OracleError("native read-only probe failed: "
-                                  + ro.stderr.decode(errors="replace")[:400])
-            check_readonly(json.loads(ro.stdout), "LP_ORACLE_IN_IMAGE is set, but")
-            self._fp = fp
-        return self._fp
+        raise OracleError(
+            "the native backend (grading inside the image, LP_ORACLE_IN_IMAGE) "
+            "is retired (ADR-015 E15, OPEN-128): every grade runs through "
+            "ContainerOracle's one launch definition, in CI from the runner "
+            "host")
 
     def _exec(self, cwd, engine, args, env, timeout, exact_env=False):
-        # An ALLOW-LIST, as the container backend's (see IMAGE_ENV): the
-        # image's environment plus the forwarded TeX variables of `env`, and
-        # nothing else of the caller's dict or the host's. graded_env and
-        # run_engine have already chosen those TeX variables.
-        make_private_tmp(env or {})  # C-93: checked, then created
-        env = engine_env(env, self.engine_base)
-        _require_free_space(cwd, "before")
-        # Supervised (C-99), stdin /dev/null (review round 3: the engine
-        # used to inherit the grader's stdin), in its own process group so a
-        # timeout kills the engine and everything it started.
-        nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
-        argv = ([engine, *args] if not self.supervised else
-                ["python3", "-I", "-c", _SUPERVISOR_SRC, nonce,
-                 evidence_names(args), engine, *args])
-        try:
-            p = subprocess.Popen(argv,
-                                 cwd=cwd, env=env, stdin=subprocess.DEVNULL,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                 start_new_session=True)
-        except OSError as e:  # no supervisor: infrastructure, not a grade
-            raise OracleError(f"cannot execute the run supervisor: {e}") from e
-        try:
-            out, err = p.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
+        # The run's private trees and TMPDIR: the fixed container paths
+        # (PRIVATE_ROOT) mapped to a fresh host directory, removed after.
+        with tempfile.TemporaryDirectory(prefix="lp-native-") as priv:
+            env = {k: (v.replace(PRIVATE_ROOT, priv) if isinstance(v, str) else v)
+                   for k, v in (env or {}).items()}
+            for d in FIXED_RUN_DIRS:
+                Path(d.replace(PRIVATE_ROOT, priv)).mkdir(parents=True, exist_ok=True)
+            env = engine_env(env, self.engine_base)
+            _require_free_space(cwd, "before")
             try:
-                os.killpg(p.pid, 9)
-            except OSError:
-                pass
-            p.communicate()
+                p = subprocess.Popen([engine, *args], cwd=cwd, env=env,
+                                     stdin=subprocess.DEVNULL,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     start_new_session=True)
+            except OSError as e:
+                raise OracleError(f"cannot execute {engine}: {e}") from e
+            try:
+                out, err = p.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(p.pid, 9)
+                except OSError:
+                    pass
+                p.communicate()
+                _require_free_space(cwd, "after")
+                return EngineRun(124, b"", True)
+            _require_pdftex_ran(p.returncode, out, f"host {engine}")
+            _require_output_written(out + err, args, f"host {engine}")
             _require_free_space(cwd, "after")
-            return EngineRun(124, b"", True)
-        if p.returncode == 127:
-            raise OracleError(f"cannot execute {engine}: {err.decode(errors='replace')[:300]}")
-        if self.supervised:
-            err = check_evidence(err, nonce, args, f"native {engine}")
-        _require_pdftex_ran(p.returncode, out, f"native {engine}")
-        _require_output_written(out + err, args, f"native {engine}")
-        _require_free_space(cwd, "after")
-        return EngineRun(p.returncode, out + err, False, out)
+            return EngineRun(p.returncode, out + err, False, out)
 
     def _image_command(self, argv, cwd, timeout):
         try:
@@ -1840,8 +1994,86 @@ def default_workroot() -> Path:
                 or Path.home() / ".cache" / "lp-oracle" / "work")
 
 
+# THE ORACLE'S LD_PRELOAD SHIM (OPEN-128 (1)-(3); scripts/tools/oracle_shim/).
+# Built by oracle_shim/build.sh in a digest-pinned ubuntu:22.04 (gcc 11.4.0);
+# these hashes pin the committed .so files, which the oracle copies into the
+# work root, mounts read-only at SHIM_DIR and verifies twice: on the host
+# before every session, and inside every run (the supervisor hashes the file
+# it preloads, and the engine process must carry the shim's mark).
+SHIM_SRC_DIR = REPO / "scripts" / "tools" / "oracle_shim"
+SHIM_SHA256 = {
+    "aarch64": "450f0ee7bc674d168f2709b9c8bed5555f35bed9b036269fe7f3ca4a98577d34",
+    "x86_64": "b60e047ba73bf82dba423bf1f41bb32a3edbb2c5cbd247b3f43a2c89c74556bf",
+}
+
+
+def shim_name(arch: str) -> str:
+    return f"lpshim-{arch}.so"
+
+
+# Characters a host path may not hold in a `docker run -v HOST:CONT` mount.
+_MOUNT_BAD = re.compile(r"[:,\x00-\x1f]")
+# The in-container shell of a run: the protocol's timeout INSIDE the
+# container (killing the docker client on the host would leave the engine
+# running), the supervisor, then the rc on a line tagged with the run's
+# nonce, which -- not the docker client's exit code -- is the rc (see
+# PDFTEX_BANNER for why).
+_RUN_SCRIPT = ('n=$1; t=$2; sup=$3; shift 3; '
+               'timeout -k 10 "$t" python3 -I -c "$sup" "$n" "$@"; '
+               'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
+
+
+def launch_argv(user: str, name: str, *, arch: str = ARCH_OF_RECORD,
+                mounts=(), workdir: str = RUN_DIR, entry=()) -> list[str]:
+    """THE ONE LAUNCH DEFINITION (ADR-015 E15, OPEN-128 (4)): the `docker`
+    argv of every container the oracle starts -- a graded run, a
+    run_engine job, a measurement, the session probe, an image command, a
+    removal -- locally and in CI. `mounts` is ((host, container, read_only),
+    ...); `entry` is the command (its first word becomes --entrypoint).
+    check_oracle_pin.py and check_oracle_infra_grading.py read the flags
+    from here; nothing else in the repository starts the image."""
+    if arch not in PLATFORMS:
+        raise OracleError(f"no platform for architecture {arch!r}")
+    if not entry:
+        raise OracleError("launch_argv needs a command")
+    argv = ["run", "--rm", "--pull", "never", "--name", name,
+            "--label", "lp-oracle-run=1", "--init",
+            "--pids-limit", str(PIDS_LIMIT),
+            "--memory", MEMORY_LIMIT, "--memory-swap", MEMORY_LIMIT,
+            "--read-only", "--tmpfs", f"/tmp:{TMPFS_OPTIONS}",
+            "--network", "none", "--hostname", ORACLE_HOSTNAME,
+            "--user", user, "--platform", PLATFORMS[arch]]
+    for host, cont, ro in mounts:
+        host = str(host)
+        if _MOUNT_BAD.search(host) or _MOUNT_BAD.search(cont):
+            raise OracleError(f"mount {host!r} -> {cont!r} holds ':' , ',' or a "
+                              f"control character")
+        argv += ["-v", f"{host}:{cont}" + (":ro" if ro else "")]
+    argv += ["-w", workdir, "-e", "HOME=/tmp", "--entrypoint", str(entry[0]),
+             IMAGE, *map(str, entry[1:])]
+    return argv
+
+
+# The session probe: one container of the launch definition reports the TeX
+# tree's fingerprint, the read-only/non-root facts, its own environment, the
+# nonce the host wrote into its run directory (positive proof the work root
+# is the same directory inside), and the sha256 of the shim it would preload.
+def _session_probe_source(arch: str) -> str:
+    import inspect
+    return ("import hashlib, json, os, platform, subprocess\nfrom pathlib import Path\n"
+            + inspect.getsource(tree_fingerprint)
+            + "\n_ro_info = {}\nexec(" + repr(_READONLY_PROBE.replace(
+                "print(json.dumps(", "_ro_info.update((")) + ")\n"
+            + "out = {'fp': tree_fingerprint(), 'ro': _ro_info, 'env': dict(os.environ),\n"
+            + f"       'nonce': open({RUN_DIR + '/nonce'!r}).read(),\n"
+            + f"       'shim': hashlib.sha256(open({SHIM_DIR + '/' + shim_name(arch)!r}, 'rb')"
+            + ".read()).hexdigest()}\n"
+            + "print(json.dumps(out))\n")
+
+
 class ContainerOracle(_Base):
-    """A long-lived container of the pinned image, reached by `docker exec`."""
+    """THE oracle: every engine run is a fresh container of the pinned image,
+    started by `launch_argv` (see the blocks above PIDS_LIMIT and RUN_DIR)."""
     backend = "container"
 
     def __init__(self, workroot: Path | None = None):
@@ -1858,25 +2090,22 @@ class ContainerOracle(_Base):
         if "Dropbox" in wr or "CloudStorage" in wr:
             raise OracleError(f"oracle work root {wr} is inside a synced folder; "
                               "the container must never write there")
+        if _MOUNT_BAD.search(wr):
+            raise OracleError(f"oracle work root {wr} holds ':' or ','")
         self.workroot.mkdir(parents=True, exist_ok=True)
-        # The engine's user: the host's, so the bind-mounted work root is
+        # The engine's user: the host's, so the bind-mounted run directory is
         # its own (OPEN-126); never root.
         self.user = f"{os.getuid()}:{os.getgid()}"
         if os.getuid() == 0:
             raise OracleError("the container oracle is not started from a root "
                               "host process: its engine would run as root")
-        # The container CONFIGURATION is part of the name (C-97, review round
-        # 2): an older oracle's container (no --init, no pids limit) keeps
-        # its own name and is never replaced under a grader still running
-        # it; stop it by hand once nothing uses it.
-        self.name = ("lp-oracle-" + IMAGE.split("sha256:")[-1][:12] + "-"
-                     + hashlib.sha256(wr.encode()).hexdigest()[:8]
-                     + CONTAINER_CONFIG_TAG)
-        self._ensure_container()
-        # Verify the tree EAGERLY, as NativeOracle does. Lazily (only when a
-        # caller asked for provenance) meant graders that never did --
-        # check_apply_fixes_roundtrip, ablate_fix_classes, regrade_sample --
-        # graded in a long-lived container whose tree was never checked.
+        # A label for messages; containers are per run and named per run.
+        self.name = "lp-oracle-" + IMAGE.split("sha256:")[-1][:12]
+        self._fps: dict = {}
+        self._check_daemon()
+        self.shim_dir = self._install_shim()
+        # Verify the tree EAGERLY (the session probe), as before: graders that
+        # never asked for provenance must not grade with an unchecked tree.
         self.fingerprint()
 
     def _dk(self, *args, timeout=120, check=False, input=None):
@@ -1892,7 +2121,7 @@ class ContainerOracle(_Base):
                               f"{p.stderr.decode(errors='replace').strip()[:400]}")
         return p
 
-    def _ensure_container(self):
+    def _check_daemon(self):
         v = self._dk("version", "--format", "{{.Server.Version}}", timeout=30)
         if v.returncode != 0:
             raise OracleUnavailable(
@@ -1903,197 +2132,99 @@ class ContainerOracle(_Base):
         if self._dk("image", "inspect", IMAGE, timeout=60).returncode != 0:
             raise OracleUnavailable(f"the pinned image is not present: run "
                                     f"`docker pull {IMAGE}`")
-        ins = self._dk("inspect", "--format",
-                       "{{.State.Running}} {{.Config.Image}} {{.HostConfig.Init}} "
-                       "{{.HostConfig.PidsLimit}} {{.HostConfig.ReadonlyRootfs}} "
-                       "{{.Config.User}}", self.name)
-        if ins.returncode == 0:
-            running, img, init, pids, ro, user = (
-                ins.stdout.decode().split() + [""] * 6)[:6]
-            if (img != IMAGE or init != "true" or pids != str(PIDS_LIMIT)
-                    or ro != "true" or user != self.user):
-                # A container of an older oracle (no reaping PID 1, no pids
-                # limit, C-97) or of another image: replaced, never graded in.
-                print(f"[oracle] replacing container {self.name} (image "
-                      f"{img == IMAGE}, init {init}, pids-limit {pids}, "
-                      f"read-only {ro}, user {user!r}): the oracle needs "
-                      f"--init --pids-limit {PIDS_LIMIT} (C-97) --read-only "
-                      f"--user {self.user} (OPEN-126)", file=sys.stderr)
-                self._dk("rm", "-f", self.name)
-            elif running != "true":
-                self._dk("start", self.name, check=True)
-        if self._dk("inspect", self.name).returncode != 0:
-            p = self._dk("run", "-d", "--name", self.name,
-                         "--label", "lp-oracle=1", "--init",
-                         "--pids-limit", str(PIDS_LIMIT),
-                         "--read-only", "--tmpfs", f"/tmp:{TMPFS_OPTIONS}",
-                         "--user", self.user,
-                         "-v", f"{self.workroot}:{self.workroot}",
-                         "-e", "HOME=/tmp", "--entrypoint", "sleep",
-                         IMAGE, "infinity", timeout=300)
-            if p.returncode != 0 and b"already in use" not in p.stderr:
-                raise OracleError("cannot start the oracle container: "
-                                  + p.stderr.decode(errors="replace")[:400])
-            for _ in range(50):
-                ins = self._dk("inspect", "--format", "{{.State.Running}}", self.name)
-                if ins.stdout.strip() == b"true":
-                    break
-                time.sleep(0.2)
-        ins = self._dk("inspect", "--format", "{{.HostConfig.Init}} "
-                       "{{.HostConfig.PidsLimit}} {{.HostConfig.ReadonlyRootfs}} "
-                       "{{.Config.User}}", self.name)
-        if ins.stdout.decode().split() != ["true", str(PIDS_LIMIT), "true", self.user]:
-            raise OracleError(
-                f"container {self.name} runs without --init/--pids-limit "
-                f"{PIDS_LIMIT}/--read-only/--user {self.user} "
-                f"({ins.stdout.decode().strip()!r}): its PID 1 would reap "
-                f"nothing, and leaked processes can make a \\write18 fork fail "
-                f"silently, i.e. change a grade (C-97); a writable or root "
-                f"container can change its own TeX tree (OPEN-126). "
-                f"`_oracle.py stop`.")
-        # Positive proof the work root is the SAME directory inside: a nonce
-        # written on the host must be read back through the container.
+
+    def _install_shim(self) -> Path:
+        """Copy the pinned shim files into the work root (the container can
+        mount only the work root on colima) and return their directory."""
+        tag = hashlib.sha256(json.dumps(SHIM_SHA256, sort_keys=True).encode()
+                             ).hexdigest()[:16]
+        d = self.workroot / ".lp-shim" / tag
+        d.mkdir(parents=True, exist_ok=True)
+        for arch, want in SHIM_SHA256.items():
+            src = SHIM_SRC_DIR / shim_name(arch)
+            try:
+                data = src.read_bytes()
+            except OSError as e:
+                raise OracleError(f"the oracle's shim {src} is unreadable: {e}")
+            if hashlib.sha256(data).hexdigest() != want:
+                raise OracleError(
+                    f"{src} has sha256 {hashlib.sha256(data).hexdigest()}, not "
+                    f"the pinned {want} (_oracle.SHIM_SHA256): rebuild it with "
+                    f"oracle_shim/build.sh or re-pin it in the same commit")
+            dst = d / shim_name(arch)
+            try:
+                ok = hashlib.sha256(dst.read_bytes()).hexdigest() == want
+            except OSError:
+                ok = False
+            if not ok:
+                tmp = d / f".{shim_name(arch)}.{os.getpid()}.{uuid.uuid4().hex[:8]}"
+                tmp.write_bytes(data)
+                os.replace(tmp, dst)
+        return d
+
+    def _launch(self, name: str, argv: list[str], timeout: int):
+        """Run one container (argv from launch_argv). An expired client
+        timeout removes the container (by its per-run name) and is an
+        OracleError, never an engine timeout."""
+        try:
+            return subprocess.run([self.docker, *argv], capture_output=True,
+                                  timeout=timeout, stdin=subprocess.DEVNULL)
+        except subprocess.TimeoutExpired:
+            self._dk("rm", "-f", name, timeout=60)
+            raise OracleError(f"docker run {name} did not return within {timeout}s")
+
+    @staticmethod
+    def _run_name() -> str:
+        return "lp-oracle-run-" + uuid.uuid4().hex[:16]
+
+    def session_probe(self, arch: str = ARCH_OF_RECORD) -> dict:
+        """One container of the launch definition, checked: its TeX tree is
+        the pinned image's for `arch`, read-only, its user is not root, its
+        environment is the image's (plus the fixed HOSTNAME), the host's run
+        directory is the same directory inside, and the shim it would
+        preload is the pinned one. Returns the fingerprint."""
+        where = f"container of {IMAGE} ({arch})"
+        probe_dir = Path(tempfile.mkdtemp(prefix="lp-oracle-probe-", dir=self.workroot))
         nonce = uuid.uuid4().hex
-        probe = self.workroot / f".mount-probe-{os.getpid()}-{nonce[:8]}"
-        probe.write_text(nonce)
         try:
-            got = self._dk("exec", self.name, "cat", str(probe), timeout=60)
+            (probe_dir / "nonce").write_text(nonce)
+            name = self._run_name()
+            p = self._launch(name, launch_argv(
+                self.user, name, arch=arch,
+                mounts=((probe_dir, RUN_DIR, True), (self.shim_dir, SHIM_DIR, True)),
+                entry=("python3", "-I", "-c", _session_probe_source(arch))), 300)
         finally:
-            probe.unlink(missing_ok=True)
-        if got.stdout.decode().strip() != nonce:
-            raise OracleError(
-                f"the work root {self.workroot} is not visible inside the "
-                f"container (colima mounts only $HOME by default). Choose a "
-                f"work root under $HOME via LP_ORACLE_WORKROOT.")
-
-    def fingerprint(self) -> dict:
-        if self._fp is None:
-            p = self._dk("exec", self.name, "python3", "-c",
-                         _FINGERPRINT_SNIPPET, timeout=120, check=True)
-            fp = json.loads(p.stdout)
-            _check_fingerprint(fp, f"container {self.name}")
-            ro = self._dk("exec", self.name, "python3", "-c", _READONLY_PROBE,
-                          timeout=60, check=True)
-            check_readonly(json.loads(ro.stdout), f"container {self.name}")
-            e = self._dk("exec", self.name, "env", "-0", timeout=60, check=True)
-            check_container_env(dict(x.split("=", 1) for x in
-                                     e.stdout.decode(errors="replace").split("\0")
-                                     if "=" in x), f"container {self.name}")
-            self.check_texmf_trees()
-            self._fp = fp
-        return self._fp
-
-    # THE LONG-LIVED CONTAINER MUST STILL BE THE IMAGE (C-91, review round 5).
-    # The base image is pinned by digest; a live container is not, and every
-    # grade of every grader runs in the same one for days. The round-5 review
-    # MEASURED a .sty planted in its /tmp/.texlive2026/texmf-config flipping a
-    # later CLEAN graded run (rc 1 -> rc 0) while `_oracle.py info` still
-    # passed: the fingerprint hashes the tlpdb and the format, not the trees
-    # kpathsea searches. Graded runs now search a private TEXMFHOME/TEXMFVAR/
-    # TEXMFCONFIG only (private_texmf_vars), and two checks refuse a container
-    # that has changed:
-    #   * check_texmf_trees, on EVERY construction (the shim's too): the
-    #     container's own default TEXMFHOME/TEXMFVAR/TEXMFCONFIG (as its
-    #     kpsewhich reports them) hold no file. Cheap (one exec).
-    #   * check_state, once per grading SESSION (get_oracle() for the Python
-    #     graders, `_oracle.py version`/`info` for the shell graders and a
-    #     user): no path of the container's root filesystem has a ctime
-    #     after the container was created, other than STATE_ALLOWED. ctime,
-    #     not mtime: a writer can set mtime back (touch -d), not ctime. About
-    #     6 s under load (a full `find / -xdev`), MEASURED; `docker diff` took
-    #     13-16 s, too slow even per session.
-    # RESIDUAL (OPEN-118 (h)): a change made AFTER the session's check, by
-    # something other than a graded run (a `docker exec` of one's own), is
-    # seen by the next session only.
-    STATE_ALLOWED = frozenset((
-        "/", "/etc", "/sys", "/proc", "/dev", "/tmp", "/var", "/var/cache",
-        "/var/cache/fontconfig", "/tmp/.texlive2026", "/.dockerenv",
-        "/etc/resolv.conf", "/etc/hostname", "/etc/hosts", "/etc/mtab"))
-    # fontconfig's caches (pdfTeX does not read them; written once, 682 files
-    # at 06:53:53 on 2026-09-27, 14 min after this container was created).
-    # `docker run --init` bind-mounts docker-init at /sbin/docker-init (=
-    # /usr/sbin on this merged-/usr image) about 0.35 s after Created, which
-    # touches these two DIRECTORIES' ctime. MEASURED 2026-09-29 in a fresh
-    # --init container: nothing else changes; the file itself is another
-    # filesystem (-xdev). Their contents are NOT allowed.
-    STATE_ALLOWED_DIRS = frozenset(("/usr", "/usr/sbin"))
-    _STATE_ALLOWED_RX = re.compile(
-        r"^/var/cache/fontconfig/([0-9a-f]{32}-le64\.cache-\d+|CACHEDIR\.TAG)$")
-    _TEXMF_TREES_SH = (
-        'for v in TEXMFHOME TEXMFVAR TEXMFCONFIG; do '
-        'd=$(kpsewhich -var-value="$v") && [ -n "$d" ] || exit 3; '
-        'echo "D $d"; if [ -e "$d" ]; then find "$d" ! -type d -print; fi; '
-        'done')
-
-    def check_texmf_trees(self) -> None:
-        p = self._dk("exec", "-e", "HOME=/tmp", self.name, "sh", "-c",
-                     self._TEXMF_TREES_SH, timeout=60)
-        out = p.stdout.decode(errors="replace").splitlines()
-        trees = [x[2:] for x in out if x.startswith("D ")]
-        files = [x for x in out if x and not x.startswith("D ")]
-        if p.returncode != 0 or len(trees) != 3:
-            raise OracleError(f"container {self.name}: cannot list its default "
-                              f"TEXMFHOME/TEXMFVAR/TEXMFCONFIG (rc {p.returncode}: "
-                              f"{p.stderr.decode(errors='replace')[:200]})")
-        if files:
-            raise OracleError(
-                f"container {self.name}: its persistent TeX trees {trees} hold "
-                f"{len(files)} file(s), e.g. {files[:5]}. kpathsea would search "
-                f"them for any run without private trees, and something wrote "
-                f"them; refusing to grade. Inspect them, then `_oracle.py stop`.")
-
-    def check_state(self) -> None:
-        ins = self._dk("inspect", "--format", "{{.Created}}", self.name,
-                       timeout=60, check=True)
-        created = ins.stdout.decode().strip()
-        import datetime
-        try:
-            t = int(datetime.datetime.strptime(created[:19], "%Y-%m-%dT%H:%M:%S")
-                    .replace(tzinfo=datetime.timezone.utc).timestamp())
-        except ValueError:
-            raise OracleError(f"container {self.name}: unreadable Created {created!r}")
-        # As root: an unprivileged find cannot read every directory, and
-        # root cannot write the read-only filesystem it scans.
-        p = self._dk("exec", "-u", "0", self.name, "find", "/", "-xdev", "-newerct", f"@{t}",
-                     "-printf", "%y %p\n", timeout=600)
+            shutil.rmtree(probe_dir, ignore_errors=True)
         if p.returncode != 0:
-            raise OracleError(f"container {self.name}: the state scan failed "
-                              f"(rc {p.returncode}): "
-                              f"{p.stderr.decode(errors='replace')[:300]}")
-        allowed = set(self.STATE_ALLOWED)
-        for a in [self.workroot, *self.workroot.parents]:
-            allowed.add(str(a))
-        bad = []
-        for line in p.stdout.decode(errors="replace").splitlines():
-            typ, _, path = line.partition(" ")
-            if path in allowed or self._STATE_ALLOWED_RX.match(path):
-                continue
-            if typ == "d" and path in self.STATE_ALLOWED_DIRS:
-                continue
-            if typ == "d" and path.startswith("/tmp/.texlive2026/"):
-                continue  # an empty tree's directories; files: check_texmf_trees
-            bad.append(path)
-        if bad:
-            # WHEN each changed (its ctime), so the run that left it can be
-            # found in a grader's log: a graded run's temporary files live in
-            # its own work directory since C-93, so a /tmp/gs_* or
-            # /tmp/mt*.tmp here was left by a run killed mid-conversion under
-            # an older oracle, or by an exec outside the protocol.
-            st = self._dk("exec", self.name, "stat", "--format=%z %n", "--",
-                          *bad[:6], timeout=60)
-            when = st.stdout.decode(errors="replace").strip().splitlines()
+            raise OracleError(f"{where}: the session probe failed (rc "
+                              f"{p.returncode}): "
+                              + p.stderr.decode(errors="replace")[:400])
+        try:
+            got = json.loads(p.stdout)
+        except ValueError:
+            raise OracleError(f"{where}: unreadable session probe {p.stdout[:200]!r}")
+        if got.get("nonce") != nonce:
             raise OracleError(
-                f"container {self.name}: {len(bad)} path(s) changed since it was "
-                f"created ({created}), e.g. {bad[:6]}"
-                + (f" (ctime: {'; '.join(when)})" if when else "")
-                + f". The container is no longer the pinned image; refusing to "
-                f"grade. Inspect them (`docker exec {self.name} ls -la "
-                f"--time-style=full-iso PATH`), then `_oracle.py stop` so the "
-                f"oracle starts a clean one. A graded run keeps its temporary "
-                f"files in its own work directory (TMPDIR, C-93): a leftover "
-                f"/tmp/gs_* (Ghostscript under repstopdf) or /tmp/mt*.tmp "
-                f"(mktex*) comes from a run killed mid-conversion by an older "
-                f"oracle or from something outside the protocol.")
+                f"{where}: the work root {self.workroot} is not visible inside "
+                f"the container (colima mounts only $HOME by default). Choose a "
+                f"work root under $HOME via LP_ORACLE_WORKROOT.")
+        _check_fingerprint(got["fp"], where, measurement=arch != ARCH_OF_RECORD)
+        if got["fp"].get("arch") != arch:
+            raise OracleError(f"{where}: the container runs on "
+                              f"{got['fp'].get('arch')!r}, not {arch!r}")
+        check_readonly(got["ro"], where)
+        check_container_env(got["env"], where)
+        if got.get("shim") != SHIM_SHA256[arch]:
+            raise OracleError(f"{where}: the mounted shim has sha256 "
+                              f"{got.get('shim')!r}, not {SHIM_SHA256[arch]}")
+        return got["fp"]
+
+    def fingerprint(self, arch: str = ARCH_OF_RECORD) -> dict:
+        if arch not in self._fps:
+            self._fps[arch] = self.session_probe(arch)
+        if arch == ARCH_OF_RECORD:
+            self._fp = self._fps[arch]
+        return self._fps[arch]
 
     def tempdir(self, prefix: str = "lp-oracle-"):
         return tempfile.TemporaryDirectory(prefix=prefix, dir=self.workroot)
@@ -2106,17 +2237,17 @@ class ContainerOracle(_Base):
             return False
 
     def remove(self, paths) -> None:
-        """Delete files INSIDE the container, then on the host.
+        """Delete files INSIDE a container, then on the host.
 
         MEASURED 2026-09-27 (colima 'default', docker runtime, virtiofs): a file
         the container created and the HOST then deleted cannot be re-created
-        by the container for about a second -- `echo two > f.log` fails with
-        "Directory nonexistent" -- because the guest's dentry cache is stale.
-        pdflatex then cannot open its log, exits 1 and leaves no log.
-        false_ready_oracle.sh deletes the halt run's .pdf/.log between its two
-        protocols, so it hit this on most fixtures (57 of 85 "no pdfTeX log
-        produced", reproduced with the pre-fix script too). A deletion made
-        through the container keeps the guest cache coherent (measured)."""
+        by a container for about a second -- `echo two > f.log` fails with
+        "Directory nonexistent" -- because the VM's dentry cache is stale.
+        pdflatex then cannot open its log, exits 1 and leaves no log. A
+        deletion made through a container keeps the VM's cache coherent
+        (measured). A graded run's own stale outputs are deleted by its
+        supervisor, inside its container (_clear is a no-op here); this is
+        for the shell graders (`_oracle.py rm`) and a grader's other files."""
         # The PARENT is resolved, never the name: resolving the name follows a
         # symlink, and clearing doc.pdf -> fig.pdf deleted the figure (review
         # round 2, LOW-2). `rm -f` on the link removes the link itself.
@@ -2125,110 +2256,198 @@ class ContainerOracle(_Base):
         if outside:
             raise OracleError(f"refusing to delete outside the work root: {outside[:3]}")
         for i in range(0, len(paths), 200):
-            self._dk("exec", self.name, "rm", "-f", "--",
-                     *[str(p) for p in paths[i:i + 200]], check=True)
+            name = self._run_name()
+            p = self._launch(name, launch_argv(
+                self.user, name, mounts=((self.workroot, str(self.workroot), False),),
+                workdir="/", entry=("rm", "-f", "--", *[str(q) for q in paths[i:i + 200]])),
+                120)
+            if p.returncode != 0:
+                raise OracleError(f"docker run rm failed rc={p.returncode}: "
+                                  + p.stderr.decode(errors="replace")[:300])
         for p in paths:
             p.unlink(missing_ok=True)
+
+    def _clear(self, stale) -> None:
+        return  # the run's supervisor deletes them inside its container
 
     def mkdtemp(self, prefix: str = "lp-oracle-") -> Path:
         return Path(tempfile.mkdtemp(prefix=prefix, dir=self.workroot))
 
     def _image_command(self, argv, cwd, timeout):
-        cmd = ["exec", "-e", "HOME=/tmp"]
-        if cwd is not None:
-            if not self._inside(Path(cwd)):
-                raise OracleError(f"{cwd} is outside the oracle work root")
-            cmd += ["-w", str(Path(cwd).resolve())]
-        try:
-            p = subprocess.run([self.docker, *cmd, self.name, *argv],
-                               capture_output=True, timeout=timeout,
-                               stdin=subprocess.DEVNULL)
-        except subprocess.TimeoutExpired as e:
-            raise OracleError(f"image command {argv[:1]} timed out") from e
+        # NOT a grade and not an engine run (image_command refuses engines):
+        # the work root is mounted at its own path so a caller's absolute
+        # paths (gen_contract.py: `cp <fmt> <job dir>/shipped.fmt`) mean the
+        # same inside.
+        if cwd is not None and not self._inside(Path(cwd)):
+            raise OracleError(f"{cwd} is outside the oracle work root")
+        name = self._run_name()
+        p = self._launch(name, launch_argv(
+            self.user, name, mounts=((self.workroot, str(self.workroot), False),),
+            workdir=str(Path(cwd).resolve()) if cwd is not None else "/",
+            entry=argv), timeout + 60)
         return p.returncode, p.stdout, p.stderr
 
-    def _exec(self, cwd, engine, args, env, timeout, exact_env=False):
-        # exact_env (run_engine) needs nothing more here: only _ENV_FORWARD
-        # variables ever cross into the container, and run_engine passes no
-        # others.
+    def _exec(self, cwd, engine, args, env, timeout, exact_env=False, *,
+              arch: str = ARCH_OF_RECORD, stdin: bytes | None = None,
+              clock_log: bool = False, extra_env=frozenset(),
+              require_banner: bool = True):
+        """ONE engine run in a fresh container (see launch_argv). `env` is
+        the run's TeX-shaping variables (graded_env / run_engine / measure);
+        the engine gets exactly engine_env(env)."""
         cwd = Path(cwd).resolve()
         if not self._inside(cwd):
             raise OracleError(
                 f"{cwd} is outside the oracle work root {self.workroot}, so the "
                 f"container cannot see it. Create work directories with "
                 f"oracle.tempdir().")
-        # C-93: the run's private TMPDIR, checked (one plain absolute path
-        # inside the work root, TMP/TEMP/JAVA_TOOL_OPTIONS derived from it)
-        # and created on the host, where the container sees it.
-        make_private_tmp(env or {}, self._inside)
+        if _MOUNT_BAD.search(str(cwd)):
+            raise OracleError(f"run directory {cwd} holds ':' or ','")
+        # The file argument as the container sees it: relative to RUN_DIR.
+        args = [os.path.relpath(Path(a).resolve(), cwd)
+                if os.path.isabs(a) and self._inside(Path(a)) else a for a in args]
+        self.fingerprint(arch)
         _require_free_space(cwd, "before")
-        cmd = ["exec", "-w", str(cwd), "-e", "HOME=/tmp"]
-        for k, v in sorted((env or {}).items()):
-            if _ENV_FORWARD.match(k):
-                if k.startswith("TEXMF") and (
-                        not os.path.isabs(v) or any(ch in v for ch in "~$!{:,")
-                        or not self._inside(Path(v))):
-                    # Absolute, a single plain path, inside the work root:
-                    # kpathsea would expand ~ (the container's persistent
-                    # HOME), $VAR, {a,b} and !! itself.
-                    raise OracleError(f"{k}={v} is not one plain absolute path "
-                                      f"inside the oracle work root")
-                if k in _SEARCH_PATHS:
-                    _check_search_path(k, v, self._inside)
-                cmd += ["-e", f"{k}={v}"]
-        # The timeout runs INSIDE the container: killing the docker client on
-        # the host would leave pdflatex running in the container. A shell
-        # inside the container reports pdflatex's rc on a line tagged with a
-        # per-run nonce; that line, not the docker CLI's exit code, is the rc
-        # (see PDFTEX_BANNER above for why).
         nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
-        # The engine runs under the evidence supervisor (C-99), with stdin
-        # /dev/null (docker exec without -i attaches none; the docker client
-        # itself gets /dev/null too).
-        script = LEAK_CHECK_SH + (
-            'n=$1; t=$2; sup=$3; names=$4; e=$5; shift 5; lp_leak "$n" || exit 0; '
-            'timeout -k 10 "$t" python3 -I -c "$sup" "$n" "$names" "$e" "$@"; '
-            'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
-        cmd += [self.name, "sh", "-c", script, "sh", nonce, str(int(timeout)),
-                _SUPERVISOR_SRC, evidence_names(args), engine, *args]
+        name = self._run_name()
+        cfg = {"names": evidence_names(args), "remove": evidence_names(args),
+               "env": engine_env(env, extra=extra_env), "mkdirs": list(FIXED_RUN_DIRS),
+               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": SHIM_MARK_DIR,
+               "fs_log": FS_LOG}
+        mounts = [(cwd, RUN_DIR, False), (self.shim_dir, SHIM_DIR, True)]
+        indir = None
+        if stdin is not None:
+            indir = Path(tempfile.mkdtemp(prefix="lp-oracle-in-", dir=self.workroot))
+            (indir / "stdin").write_bytes(stdin)
+            mounts.append((indir, IN_DIR, True))
+            cfg["stdin"] = IN_DIR + "/stdin"
+        if clock_log:
+            cfg["clock_log"] = CLOCK_LOG
         try:
-            p = subprocess.run([self.docker, *cmd], capture_output=True,
-                               timeout=timeout + 90, stdin=subprocess.DEVNULL)
-        except subprocess.TimeoutExpired:
-            # The docker client hung past the inner timeout's own kill: the
-            # oracle did not answer. Unmeasured, not a pdflatex timeout.
-            raise OracleError(f"docker exec did not return within {timeout + 90}s")
-        leak = re.search(rb"^" + nonce.encode() + rb"_LEAK=(.*)$", p.stderr, re.M)
-        if leak is not None:
-            raise OracleError(
-                f"container {self.name}: processes left by earlier runs "
-                f"({leak.group(1).decode(errors='replace')[:300]}); a leak can "
-                f"make a \\write18 fork fail silently and change a grade, so "
-                f"no run starts (C-97). Inspect (`docker exec {self.name} ps "
-                f"-ef`), then `_oracle.py stop`.")
+            p = self._launch(name, launch_argv(
+                self.user, name, arch=arch, mounts=mounts,
+                entry=("sh", "-c", _RUN_SCRIPT, "sh", nonce, str(int(timeout)),
+                       _SUPERVISOR_SRC, json.dumps(cfg, sort_keys=True),
+                       engine, *args)), timeout + 90)
+        finally:
+            if indir is not None:
+                shutil.rmtree(indir, ignore_errors=True)
+        what = f"container {self.name} ({arch})"
         m = re.search(rb"^" + nonce.encode() + rb"=(\d+)$", p.stderr, re.M)
         if m is None:
             raise OracleError(
-                f"docker exec exited {p.returncode} without the in-container rc "
+                f"docker run exited {p.returncode} without the in-container rc "
                 f"line, so pdflatex's exit status is unknown (daemon lost, VM "
-                f"gone, or exec never started); this is not a grade: "
+                f"gone, or the container never started); this is not a grade: "
                 + p.stderr.decode(errors="replace").strip()[:400])
         rc = int(m.group(1))
         err = p.stderr[:m.start()] + p.stderr[m.end():]
         if rc in (124, 137):
             _require_free_space(cwd, "after")
-            return EngineRun(rc, p.stdout + err, True, p.stdout)
+            r = EngineRun(rc, p.stdout + err, True, p.stdout)
+            r.evidence = {}
+            return r
         if rc in (125, 126, 127):  # timeout(1) itself failed / engine missing
             raise OracleError(f"in-container timeout/{engine} failed rc={rc}: "
                               + err.decode(errors="replace")[:400])
-        err = check_evidence(err, nonce, args, f"container {self.name}")
-        _require_pdftex_ran(rc, p.stdout, f"container {self.name}")
-        _require_output_written(p.stdout + err, args, f"container {self.name}")
+        err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch])
+        # A measurement may legitimately stop before pdfTeX's banner (spike
+        # H.2's env-sde-bad: texmfmp.c refuses SOURCE_DATE_EPOCH=1788076260x
+        # and exits 1 having printed nothing); the engine process's shim mark
+        # (check_evidence) is the proof it ran. A grade still needs the banner.
+        if require_banner:
+            _require_pdftex_ran(rc, p.stdout, what)
+        _require_output_written(p.stdout + err, args, what)
         _require_free_space(cwd, "after")
-        return EngineRun(rc, p.stdout + err, False, p.stdout)
+        r = EngineRun(rc, p.stdout + err, False, p.stdout)
+        r.evidence = ev
+        return r
+
+    # -- the measurement entry point (ADR-015 E7) -------------------------
+    def measure(self, cwd: Path, engine: str, args: list[str], *,
+                stdin: bytes | None = None, env: dict | None = None,
+                unset=(), arch: str = ARCH_OF_RECORD,
+                clock: str = PROTOCOL_CLOCK, readings=None,
+                timeout: int = 600) -> EngineRun:
+        """See measure_doc below. Returns an EngineRun with `.evidence`
+        (incl. the clock readings used) and `.provenance` (never a grade)."""
+        if engine not in ENGINES:
+            raise OracleError(f"engine {engine!r} is not one of {ENGINES}")
+        if arch not in PLATFORMS:
+            raise OracleError(f"architecture {arch!r} is not one of {sorted(PLATFORMS)}")
+        check_engine_argv(list(args), cwd, graded=False, measure=True)
+        run_env = dict(FIXED_RUN_VARS)
+        if clock == "real":
+            pass
+        else:
+            run_env.update(clock_vars(clock))
+        for k, v in (env or {}).items():
+            if k not in MEASURE_ENV:
+                raise OracleError(f"measure: {k!r} is not a variable a measurement "
+                                  f"may set ({sorted(MEASURE_ENV)[:8]}...)")
+            if not isinstance(v, str) or "\x00" in v:
+                raise OracleError(f"measure: {k}={v!r} is not a string")
+            run_env[k] = v
+        for k in unset:
+            if k not in MEASURE_UNSET:
+                raise OracleError(f"measure: {k!r} may not be unset ({sorted(MEASURE_UNSET)})")
+            run_env.pop(k, None)
+        if readings is not None:
+            rs = []
+            for sec, usec in readings:
+                if not (isinstance(sec, int) and isinstance(usec, int)):
+                    raise OracleError(f"measure: clock reading {(sec, usec)!r} is not two integers")
+                rs.append(f"{sec}.{usec}")
+            run_env["LP_CLOCK"] = ",".join(rs)
+            run_env["LP_CLOCK_LOG"] = CLOCK_LOG
+        self.clear_outputs(Path(cwd), list(args))
+        r = self._exec(Path(cwd), engine, list(args), run_env, timeout, True,
+                       arch=arch, stdin=stdin if stdin is not None else b"",
+                       clock_log=readings is not None, extra_env=MEASURE_ENV,
+                       require_banner=False)
+        prov = dict(_Base.provenance(self) if arch == ARCH_OF_RECORD
+                    else self._provenance_of(arch))
+        prov.update({"entry": "measure", "measurement_only": arch != ARCH_OF_RECORD,
+                     "clock": clock, "clock_readings": None if readings is None
+                     else len(readings),
+                     "env_set": sorted((env or {})), "env_unset": sorted(unset)})
+        r.provenance = prov
+        return r
+
+    def _provenance_of(self, arch: str) -> dict:
+        fp = self.fingerprint(arch)
+        return {"engine": "pdflatex", "distribution": "TeX Live 2026",
+                "version": fp["banner"], "image": IMAGE, "arch": fp["arch"],
+                "tlpdb_sha256": fp["tlpdb_sha256"],
+                "macro_layer_sha256": fp["macro_layer_sha256"],
+                "fmt_sha256": fp["fmt_sha256"], "backend": self.backend,
+                "protocol": PROTOCOL, "clock": PROTOCOL_CLOCK}
 
     def stop(self):
-        self._dk("rm", "-f", self.name)
+        """Remove leftover run containers of this oracle (a docker client
+        killed mid-run can leave one; `--rm` removes the rest)."""
+        ls = self._dk("ps", "-aq", "--filter", "label=lp-oracle-run=1", timeout=60)
+        ids = ls.stdout.decode().split()
+        if ids:
+            self._dk("rm", "-f", *ids, timeout=120)
+
+
+# THE MEASUREMENT ENTRY POINT'S ENVIRONMENT (ADR-015 E7). A measurement sees
+# the fixed run variables and its clock, and may set exactly these variables
+# (the spike's H.2 inputs vary them: `env SOURCE_DATE_EPOCH=...`,
+# `FORCE_SOURCE_DATE=01`, and kpathsea's capacity values such as
+# `main_memory=70abc`) and unset the two clock variables. It never gets
+# shell_escape*, TEXMF* or a search path from its caller. The protocol's
+# openin_any/openout_any are NOT imposed: spike H.2's model reads the image's
+# defaults (base.spec: kpse openin_any=a), so a measurement states them.
+MEASURE_ENV = frozenset((
+    "SOURCE_DATE_EPOCH", "FORCE_SOURCE_DATE", "openin_any", "openout_any",
+    "max_print_line", "error_line", "half_error_line", "main_memory",
+    "extra_mem_top", "extra_mem_bot", "pool_size", "string_vacancies",
+    "pool_free", "max_strings", "strings_free", "font_mem_size", "font_max",
+    "trie_size", "hyph_size", "buf_size", "nest_size", "max_in_open",
+    "param_size", "save_size", "stack_size", "dvi_buf_size", "hash_extra",
+    "file_line_error_style", "parse_first_line", "command_line_encoding"))
+MEASURE_UNSET = frozenset(("SOURCE_DATE_EPOCH", "FORCE_SOURCE_DATE"))
 
 
 def _fingerprint_source() -> str:
@@ -2243,7 +2462,6 @@ def _fingerprint_source() -> str:
 _FINGERPRINT_SNIPPET = _fingerprint_source()
 
 _ORACLE = None
-_STATE_CHECKED = False
 
 
 def in_image() -> bool:
@@ -2251,25 +2469,24 @@ def in_image() -> bool:
 
 
 def get_oracle(full_state: bool = True) -> _Base:
-    """The oracle for this process. Raises OracleUnavailable/OracleError; never
-    returns a host-pdflatex backend. `full_state` (the default: a grading
-    session) also runs the container's full state scan once per process
-    (ContainerOracle.check_state); the per-run shim passes False and relies on
-    the session's scan plus the per-construction check_texmf_trees."""
-    global _ORACLE, _STATE_CHECKED
+    """The oracle for this process: the container oracle, always (ADR-015
+    E15). Raises OracleUnavailable/OracleError; never returns a host-pdflatex
+    backend. LP_ORACLE_IN_IMAGE, which selected the retired native backend
+    (CI grading inside the image), is refused: a process started inside the
+    image with it is a launch the oracle did not define. `full_state` is
+    kept for the callers written before OPEN-128 and has no effect: every
+    run's container is fresh, so there is no long-lived state to scan."""
+    global _ORACLE
+    if in_image():
+        raise OracleError(
+            "LP_ORACLE_IN_IMAGE is set: grading inside the image (the native "
+            "backend) is retired (ADR-015 E15, OPEN-128). Grade from the host, "
+            "where the oracle starts each run's container itself "
+            "(ContainerOracle.launch_argv, the one launch definition).")
     if _ORACLE is None:
-        if in_image():
-            if os.environ["LP_ORACLE_IN_IMAGE"] != IMAGE:
-                raise OracleError(f"LP_ORACLE_IN_IMAGE={os.environ['LP_ORACLE_IN_IMAGE']!r} "
-                                  f"but tex-oracle.yml pins {IMAGE!r}")
-            _ORACLE = NativeOracle()
-        else:
-            _ORACLE = ContainerOracle()
+        _ORACLE = ContainerOracle()
     if not _ORACLE.supervised:  # never a grade without the evidence supervisor
         raise OracleError(f"{type(_ORACLE).__name__} runs unsupervised (C-99)")
-    if full_state and not _STATE_CHECKED and isinstance(_ORACLE, ContainerOracle):
-        _ORACLE.check_state()
-        _STATE_CHECKED = True
     return _ORACLE
 
 
@@ -2318,10 +2535,13 @@ def main(argv: list[str]) -> int:
         if cmd == "fingerprint":
             print(json.dumps(tree_fingerprint(), indent=1))
             return 0
-        if cmd == "assert-native":
-            NativeOracle()  # checks LP_ORACLE_IN_IMAGE == IMAGE, then the tree
-            print(f"[oracle] native backend verified: {IMAGE}")
+        if cmd == "grading-code":
+            # grading-code FILE...: the grading_code block of a SHELL producer
+            # (false_ready_oracle.sh's manifest re-record, OPEN-128 (8)).
+            print(json.dumps(grading_code(rest), sort_keys=True))
             return 0
+        if cmd == "measure":
+            return measure_main(rest)
         if cmd == "vet":
             # The shell graders' form of the checks run_pdflatex applies:
             #   vet --dir D                          free space only (BEFORE)
@@ -2370,10 +2590,7 @@ def main(argv: list[str]) -> int:
         if cmd == "stop":
             ContainerOracle().stop()
             return 0
-        # The per-run commands (the shim, rm) skip the full state scan; the
-        # session commands (`version`, which oracle_setup runs once per shell
-        # grader, and `info`) run it.
-        o = get_oracle(full_state=cmd not in (SHIM_COMMAND, "rm", "check-recorded"))
+        o = get_oracle()
         if cmd == "info":
             print(json.dumps(o.provenance(), indent=1))
             return 0
@@ -2382,9 +2599,9 @@ def main(argv: list[str]) -> int:
             return 0
         if cmd == "check-recorded":
             # check-recorded FILE KEY[.KEY...]: the shell graders' form of
-            # require_same_oracle (ADR-015 E2): the oracle block recorded at
-            # KEY in the JSON FILE they grade against must be THIS oracle --
-            # same image, ARCHITECTURE and tree. Exit 0, or INFRA_RC.
+            # require_same_oracle (ADR-015 E2, E10): the oracle block recorded
+            # at KEY in the JSON FILE they grade against must be THIS oracle --
+            # same image, ARCHITECTURE, tree and CLOCK. Exit 0, or INFRA_RC.
             if len(rest) != 2:
                 print("[oracle] check-recorded FILE KEY[.KEY...]", file=sys.stderr)
                 return INFRA_RC
@@ -2418,8 +2635,7 @@ def main(argv: list[str]) -> int:
                 print(f"[oracle] note: the graded run does not inherit the "
                       f"host's {', '.join(dropped)} (protocol: "
                       f"{ORACLE_TEX_VARS})", file=sys.stderr)
-            with o.tempdir(prefix="lp-oracle-shim-") as td:
-                r = o.run_pdflatex(Path.cwd(), rest, o.tex_env(td), timeout)
+            r = o.run_pdflatex(Path.cwd(), rest, o.tex_env(), timeout)
             rc, out, to = r
             # pdfTeX's terminal output on stdout, everything else (the engine's
             # stderr, write18 children's) on stderr: the shell graders read
@@ -2443,6 +2659,111 @@ def main(argv: list[str]) -> int:
         return INFRA_RC if cmd == SHIM_COMMAND else 2
     print(f"[oracle] unknown command {cmd!r}", file=sys.stderr)
     return 2
+
+
+def measure_main(rest: list[str]) -> int:
+    """`_oracle.py measure [OPTIONS] --work DIR -- ENGINE ARGS...` (ADR-015
+    E7): ONE run of the pinned engine through the oracle's launch definition,
+    for MEASUREMENT (spike H.2-H.6's binary side). Never a grade.
+
+      --work DIR            the run directory (inside the oracle work root,
+                            LP_ORACLE_WORKROOT); the files the run writes stay
+                            there
+      --arch A              aarch64 (default, the architecture of record) or
+                            x86_64 (emulated on an arm64 host; the result is
+                            tagged measurement_only)
+      --stdin FILE          the run's terminal input (default: empty)
+      --env N=V             set a MEASURE_ENV variable (repeatable)
+      --env-file F          N=V lines; a line LP_CLOCK=S.U,S.U,... gives the
+                            clock readings (the spike's docker.env format)
+      --unset N             unset SOURCE_DATE_EPOCH or FORCE_SOURCE_DATE
+      --clock C             fixed:E (default: the protocol clock) or real
+                            (an uncontrolled control run)
+      --clock-readings R    S.U,S.U,...: gettimeofday's readings in call
+                            order; when none is left the run exits 97
+      --timeout S           default 600
+      --record FILE         write {rc, timed_out, provenance, evidence} as JSON
+    The engine's terminal output goes to stdout, its standard error to
+    stderr; the exit status is the engine's (124 on timeout, INFRA_RC when
+    the oracle failed)."""
+    if "--" not in rest:
+        print(measure_main.__doc__, file=sys.stderr)
+        return 2
+    opts, cmdv = rest[:rest.index("--")], rest[rest.index("--") + 1:]
+    if not cmdv:
+        print("[oracle] measure: no engine given", file=sys.stderr)
+        return 2
+    work = None
+    arch, stdin, env, unset = ARCH_OF_RECORD, b"", {}, []
+    clock, readings, timeout, record = PROTOCOL_CLOCK, None, 600, None
+
+    def parse_readings(text):
+        out = []
+        for r in text.split(","):
+            m = re.fullmatch(r"(-?\d+)\.(\d+)", r.strip())
+            if not m:
+                raise OracleError(f"measure: bad clock reading {r!r}")
+            out.append((int(m.group(1)), int(m.group(2))))
+        return out
+    try:
+        it = iter(opts)
+        for o in it:
+            if o == "--work":
+                work = Path(next(it))
+            elif o == "--arch":
+                a = next(it)
+                arch = {"arm64": "aarch64", "amd64": "x86_64"}.get(a, a)
+            elif o == "--stdin":
+                stdin = Path(next(it)).read_bytes()
+            elif o == "--env":
+                k, _, v = next(it).partition("=")
+                env[k] = v
+            elif o == "--env-file":
+                for ln in Path(next(it)).read_text().splitlines():
+                    if not ln.strip():
+                        continue
+                    k, _, v = ln.partition("=")
+                    if k == "LP_CLOCK":
+                        readings = parse_readings(v)
+                    else:
+                        env[k] = v
+            elif o == "--unset":
+                unset.append(next(it))
+            elif o == "--clock":
+                clock = next(it)
+            elif o == "--clock-readings":
+                readings = parse_readings(next(it))
+            elif o == "--timeout":
+                timeout = int(next(it))
+            elif o == "--record":
+                record = Path(next(it))
+            else:
+                raise OracleError(f"measure: unknown option {o!r}")
+        if arch not in PLATFORMS:
+            raise OracleError("measure: --arch is aarch64/arm64 or x86_64/amd64")
+        if work is None:
+            raise OracleError("measure: --work DIR is required")
+        if clock != "real":
+            clock_epoch(clock)
+        work.mkdir(parents=True, exist_ok=True)
+        o = get_oracle()
+        r = o.measure(work, cmdv[0], cmdv[1:], stdin=stdin, env=env, unset=unset,
+                      arch=arch, clock=clock, readings=readings, timeout=timeout)
+    except (OracleError, OSError, StopIteration, ValueError) as e:
+        print(f"[oracle] measure FAILED (not a measurement): {e}", file=sys.stderr)
+        return INFRA_RC
+    sys.stdout.buffer.write(r.stdout)
+    sys.stdout.buffer.flush()
+    rest_err = r[1][len(r.stdout):] if r[1].startswith(r.stdout) else b""
+    if hasattr(sys.stderr, "buffer"):
+        sys.stderr.buffer.write(rest_err)
+    else:  # a text-only stderr (a test harness)
+        sys.stderr.write(rest_err.decode(errors="replace"))
+    if record is not None:
+        record.write_text(json.dumps({
+            "rc": r[0], "timed_out": r[2], "provenance": r.provenance,
+            "evidence": getattr(r, "evidence", {})}, indent=1, sort_keys=True) + "\n")
+    return 124 if r[2] else r[0]
 
 
 if __name__ == "__main__":

@@ -177,7 +177,14 @@ GRADED = (
     ("corpora/strict_battery/manifest.json", ("provenance", "oracle_provenance")),
     ("corpora/false_ready/manifest.json", ("oracle",)),
     ("corpora/apply_fixes/manifest.json", ("oracle",)),
-    ("corpora/oracle_baseline/equivalence.json", ("oracle",)),
+    # OPEN-128 (1): the class census, each run-dependent input observed by a
+    # document graded twice (two times, two run directories).
+    ("corpora/oracle_baseline/clock_census.json", ("oracle",)),
+    # OPEN-128 (8): the same documents graded at one commit on both platforms
+    # of the one launch definition (it replaces equivalence.json, the 97/97
+    # container-vs-native comparison of the retired native backend).
+    ("corpora/oracle_baseline/platform_residuals.json", ("oracle_local",)),
+    ("corpora/oracle_baseline/platform_residuals.json", ("oracle_ci",)),
     # The strict kernel L_S0's evidence (ADR-012 M2 phase 1, OPEN-121).
     ("corpora/contracts/strict/article-s0-signatures.json", ("oracle",)),
     ("corpora/strict_s0/rule_probes.json", ("oracle",)),
@@ -218,11 +225,13 @@ GRADED = (
 # every tracked data file must be classified (NO_ORACLE below, C-129);
 # and the discovery is only a second net for blocks at unregistered paths.
 ORACLE_RECORDS = (
-    ("corpora/contracts/*.json", ("pin",), None, None,
+    # Since OPEN-128 (7) a contract records the clock it was generated under
+    # (the protocol's): a contract regenerated under another clock fails.
+    ("corpora/contracts/*.json", ("pin",), _oracle.PROTOCOL_CLOCK, None,
      "an M1 contract's generation pin (gen_contract.py)"),
-    ("corpora/contracts/kernel/*.json", ("pin",), None, None,
+    ("corpora/contracts/kernel/*.json", ("pin",), _oracle.PROTOCOL_CLOCK, None,
      "the kernel name-set a contract's pin refers to (gen_contract.py)"),
-    ("corpora/contracts/probes/*.json", ("pin",), None, None,
+    ("corpora/contracts/probes/*.json", ("pin",), _oracle.PROTOCOL_CLOCK, None,
      "a contract's signature probes (gen_contract.py probes)"),
     ("corpora/oracle_baseline/diff_apply_fixes_real_*.json", ("after_oracle",),
      None, None, "OPEN-118 re-grade diff: the oracle of its re-graded side"),
@@ -238,6 +247,15 @@ ORACLE_RECORDS = (
      "OPEN-126 (d): the O-5 experiment, graded with the clock FORCED"),
     ("corpora/oracle_baseline/summary.json", ("oracle",), None, None,
      "OPEN-118: the oracle-baseline change's summary"),
+    # OPEN-128 (7): the full re-grade under the fixed clock and the one launch
+    # definition. Its BEFORE side is OPEN-126's grade (real clock, recorded
+    # grading code); its AFTER side the protocol re-grade.
+    ("corpora/oracle_baseline/regrade_open128_sample*.json", ("oracle_before",),
+     "real", ("scripts/tools/diff_real_roots.py",),
+     "OPEN-128 re-grade diff: the oracle of the grades it re-graded (OPEN-126)"),
+    ("corpora/oracle_baseline/regrade_open128_sample*.json", ("oracle_after",),
+     _oracle.PROTOCOL_CLOCK, ("scripts/tools/diff_real_roots.py",),
+     "OPEN-128 re-grade diff: the protocol re-grade (fixed clock)"),
 )
 
 # THE GRADER of every GRADED artefact that records grading_code (C-128,
@@ -252,6 +270,34 @@ GRADERS = {
     "corpora/real_roots/results_sample2.json": ("scripts/tools/diff_real_roots.py",),
     "corpora/real_roots/results_sample3.json": ("scripts/tools/diff_real_roots.py",),
     "corpora/real_roots/manifest_sample3.json": ("scripts/tools/diff_real_roots.py",),
+    # OPEN-128 (8): the 13 producers that were GRADING_CODE_PENDING.
+    "corpora/apply_fixes_real/results.json":
+        ("scripts/tools/gen_apply_fixes_real_differential.py",),
+    "corpora/apply_fixes_real/results_virgin.json":
+        ("scripts/tools/gen_apply_fixes_real_differential.py",),
+    "corpora/apply_fixes_real/results_fresh.json":
+        ("scripts/tools/gen_apply_fixes_real_differential.py",),
+    "corpora/strict_battery/manifest.json": ("scripts/tools/gen_strict_battery.py",),
+    "corpora/false_ready/manifest.json":
+        ("scripts/tools/false_ready_oracle.sh", "scripts/tools/_oracle.sh"),
+    "corpora/apply_fixes/manifest.json":
+        ("scripts/tools/check_apply_fixes_roundtrip.py",),
+    "corpora/contracts/strict/article-s0-signatures.json":
+        ("scripts/tools/gen_strict_signatures.py", "scripts/tools/gen_contract.py"),
+    "corpora/strict_s0/rule_probes.json":
+        ("scripts/tools/strict_differential.py", "scripts/tools/_strict_s0.py"),
+    "corpora/strict_s0/differential_v2.json":
+        ("scripts/tools/strict_differential.py", "scripts/tools/_strict_s0.py"),
+    "corpora/strict_s0/bytes_probes.json":
+        ("scripts/tools/strict_differential.py", "scripts/tools/_strict_s0.py"),
+    "corpora/strict_s0/bytes_differential.json":
+        ("scripts/tools/strict_differential.py", "scripts/tools/_strict_s0.py"),
+    "corpora/contracts/strict/article-s0-lexical.json":
+        ("scripts/tools/gen_strict_lexical.py", "scripts/tools/gen_contract.py"),
+    "corpora/oracle_baseline/clock_census.json":
+        ("scripts/tools/oracle_clock_census.py",),
+    "corpora/oracle_baseline/platform_residuals.json":
+        ("scripts/tools/check_oracle_platforms.py",),
 }
 
 # EVERY TRACKED DATA FILE IS CLASSIFIED (C-128; data files, not only JSON,
@@ -351,68 +397,71 @@ PRE_BASELINE = {
 }
 PRE_BASELINE_SIZE = 4
 
-# GRADED artefacts that do not yet name their GRADING CODE (OPEN-126): graded
-# before the oracle recorded it, and not re-graded since. Each still names its
-# image, ARCHITECTURE and tree (checked above); what it cannot show is which
-# version of _oracle.py and its grader produced it. Pinned to its exact
-# contents and size: an entry is removed by re-grading the artefact with a
-# producer that records `grading_code` (_oracle.grading_code), and an entry
-# whose artefact has gained the block fails until it is removed here.
-GRADING_CODE_PENDING = {
-    "corpora/apply_fixes_real/results.json":
-        "OPEN-126: apply_fixes_real window 2000; producer "
-        "gen_apply_fixes_real_differential.py does not record it yet",
-    "corpora/apply_fixes_real/results_virgin.json":
-        "OPEN-126: apply_fixes_real window 2100; as results.json",
-    "corpora/apply_fixes_real/results_fresh.json":
-        "OPEN-126: apply_fixes_real window 2300; as results.json",
-    "corpora/strict_battery/manifest.json":
-        "OPEN-126: producer gen_strict_battery.py does not record it yet",
-    "corpora/false_ready/manifest.json":
-        "OPEN-126: producer false_ready_oracle.sh (STRICT_GRADE re-record) "
-        "does not record it yet",
-    "corpora/apply_fixes/manifest.json":
-        "OPEN-126: a hand-maintained baseline confirmed by CI's property-(b) "
-        "run; no producer writes its oracle block",
-    "corpora/oracle_baseline/equivalence.json":
-        "OPEN-126: producer check_oracle_equivalence.py does not record it yet",
-    "corpora/contracts/strict/article-s0-signatures.json":
-        "OPEN-126: producer gen_strict_signatures.py does not record it yet",
-    "corpora/strict_s0/rule_probes.json":
-        "OPEN-126: producer gen_strict_lexical.py/_strict_s0.py does not "
-        "record it yet",
-    "corpora/strict_s0/differential_v2.json":
-        "OPEN-126: producer strict_differential.py does not record it yet",
-    "corpora/strict_s0/bytes_probes.json":
-        "OPEN-126/C-127: producer strict_differential.py (bytes probes) does "
-        "not record it yet",
-    "corpora/strict_s0/bytes_differential.json":
-        "OPEN-126/C-127: producer strict_differential.py (bytes differential) "
-        "does not record it yet",
-    "corpora/contracts/strict/article-s0-lexical.json":
-        "OPEN-126/C-127: producer gen_strict_lexical.py does not record it yet",
-}
-GRADING_CODE_PENDING_SIZE = 13
+# GRADED artefacts that do not yet name their GRADING CODE (OPEN-126). EMPTY
+# since OPEN-128 (8): every producer records `grading_code`, and every GRADED
+# artefact was re-graded under it. Pinned empty: an entry needs a ledger row.
+GRADING_CODE_PENDING: dict = {}
+GRADING_CODE_PENDING_SIZE = 0
 
-# The CI job that grades in the pinned image must run on the architecture of
-# record (ADR-015 E2): GitHub's native arm64 runner. And every in-image run
-# must be started read-only, with a tmpfs /tmp, as a non-root user (OPEN-126;
-# the native backend verifies it, this catches the workflow before a run).
+# The CI job that grades must run on the architecture of record (ADR-015 E2,
+# E9): GitHub's native arm64 runner.
 TEX_ORACLE_WORKFLOW = ".github/workflows/tex-oracle.yml"
 ARCH_RUNNERS = {"aarch64": ("ubuntu-24.04-arm", "ubuntu-22.04-arm")}
-INIMAGE_RUN_FLAGS = ("--read-only", "--tmpfs /tmp", "--user ")
-# The OPTIONS of that tmpfs, exactly (C-127; review round 2 found the gate
-# checked only the substring `--tmpfs /tmp`). They are NOT the container
-# backend's _oracle.TMPFS_OPTIONS, deliberately: there /tmp holds nothing of a
-# grade (the work root is the bind mount), while the native backend's work
-# directories ARE under /tmp (tempfile.mkdtemp, HOME=/tmp), so it needs room
-# for a whole fixture run. Every option other than size must equal the
-# container backend's; `noexec` is the one that does not (NOT_IN_NATIVE),
-# because no native run has been measured with it, and adding it is a change
-# to the required CI job's environment, made only with a CI run that shows it
-# grades identically (OPEN-126 (c)).
-NATIVE_TMPFS_SIZE = "4g"
-NOT_IN_NATIVE = frozenset({"noexec"})
+# ONE LAUNCH DEFINITION (ADR-015 E15, owner 2026-10-06; OPEN-128 (4)). The
+# graders reach the engine only through _oracle.py, which starts every
+# container itself (ContainerOracle.launch_argv). A workflow step that starts
+# a container of the TeX image -- `docker run`/`exec`/`create`/`start` (or
+# `docker container ...`) naming it, a job `container:` or a `services:`
+# image naming it -- is a second launch definition and FAILS this gate; so
+# does any `docker run/exec/create/start` at all in tex-oracle.yml (only
+# `docker pull` remains there), and any mention of LP_ORACLE_IN_IMAGE (the
+# retired native backend's selector) in a workflow. Until OPEN-128 this gate
+# instead compared the in-image `docker run` lines' flags with the
+# container's (INIMAGE_RUN_FLAGS, the tmpfs options): two definitions kept in
+# step by hand (C-127, re-audit premise 21).
+_DOCKER_START = re.compile(
+    r"\bdocker\s+(?:container\s+)?(?:run|exec|create|start)\b")
+_TEX_IMAGE_REF = re.compile(r"\$\{?\{?\s*(?:env\.)?TEX_IMAGE\b|texlive/texlive|TEX_IMAGE")
+
+
+def workflow_launch_findings(repo: Path) -> list[str]:
+    """See the block above: no workflow starts the TeX image itself."""
+    out = []
+    for rel in sorted(tracked_files(repo)):
+        if not rel.startswith(".github/") or not rel.lower().endswith((".yml", ".yaml")):
+            continue
+        p = repo / rel
+        if not p.is_file():
+            continue
+        lines = p.read_text(errors="replace").split("\n")
+        # a command continued with a trailing backslash is one command
+        joined, cur, start = [], "", 0
+        for n, ln in enumerate(lines, 1):
+            code = "" if ln.lstrip().startswith("#") else ln
+            if not cur:
+                start = n
+            cur += code.rstrip("\\") + " " if code.rstrip().endswith("\\") else code
+            if not code.rstrip().endswith("\\"):
+                joined.append((start, cur))
+                cur = ""
+        for n, code in joined:
+            if not code.strip():
+                continue
+            if "LP_ORACLE_IN_IMAGE" in code:
+                out.append(f"{rel}:{n}: names LP_ORACLE_IN_IMAGE, the selector of "
+                           f"the retired native backend (ADR-015 E15)")
+            starts = _DOCKER_START.search(code)
+            if starts and (rel == TEX_ORACLE_WORKFLOW or _TEX_IMAGE_REF.search(code)):
+                out.append(f"{rel}:{n}: starts a container itself "
+                           f"({code.strip()[:80]!r}); a grade's container is "
+                           f"started only by _oracle.py's launch definition "
+                           f"(ContainerOracle.launch_argv, ADR-015 E15)")
+            if re.match(r"^\s*(container|image):\s*\S", code) and _TEX_IMAGE_REF.search(code):
+                out.append(f"{rel}:{n}: a job container/service of the TeX image "
+                           f"({code.strip()[:80]!r}); grading inside the image is "
+                           f"retired (ADR-015 E15)")
+    return out
+
 
 # Files allowed to start pdflatex: the oracle itself. And files not scanned
 # because they NAME engines as data about this scan: this gate (its ENGINES
@@ -482,16 +531,14 @@ OTHER_CODE_EXT = (".c", ".h", ".rs", ".js", ".mjs", ".ts", ".rb", ".pl",
                   ".pm", ".go", ".lua", ".java")
 OTHER_LITERAL = re.compile(r"\"((?:[^\"\\\n]|\\.)*)\"|'((?:[^'\\\n]|\\.)*)'")
 COMPARE_OPS = {"==", "!=", "in"}
-# Workflow lines that run an engine INSIDE the pinned image (the oracle
-# itself). Exact stripped lines, pinned by count: a new one fails.
-WORKFLOW_ALLOW = {
-    ".github/workflows/tex-oracle.yml": (
-        'got=$(docker run --rm "$TEX_IMAGE" pdflatex --version | head -1)',
-        'if ! pdflatex -interaction=nonstopmode -halt-on-error canary.tex >canary.stdout 2>&1 \\',
-        '&& pdflatex -interaction=nonstopmode -halt-on-error t.tex >t.log 2>&1 \\',
-    ),
-}
+# Workflow lines that run an engine INSIDE the pinned image. EMPTY since
+# OPEN-128 (ADR-015 E15): the canary and the pin assertion go through the
+# oracle (oracle_canary.py, `_oracle.py version`), and no step starts the
+# image (workflow_launch_findings). Exact stripped lines; a new one fails.
+WORKFLOW_ALLOW: dict = {}
 FINGERPRINT_KEYS = ("tlpdb_sha256", "macro_layer_sha256", "fmt_sha256")
+# The backend a recorded block may name: "container" (the only one since
+# OPEN-128); "native" remains a known value of historical records.
 BACKENDS = {"container", "native"}
 
 
@@ -600,9 +647,16 @@ def scan_python(text: str) -> list[tuple[int, str]]:
 # The oracle's own engine API. Its ARGUMENTS name an engine and its flags
 # (`run_engine(jd, _oracle.ENGINE_PDFTEX, ["-ini", "-progname=pdflatex", ...])`
 # in gen_contract.py), which is the one legitimate place for them: the oracle
-# runs them in the pinned image. RESIDUAL: a function of one's own named
-# `run_engine` that spawns what it is given is exempt too.
-ORACLE_CALLS = {"run_engine"}
+# runs them in the pinned image. The measurement entry point (ADR-015 E7,
+# OPEN-128 (2)) is the same: `measure(dir, "pdftex", ["-ini"], ...)` names the
+# engine the ORACLE starts. RESIDUAL: a function of one's own named
+# `run_engine` or `measure` that spawns what it is given is exempt too.
+ORACLE_CALLS = {"run_engine", "measure"}
+# The shell form of the measurement entry point: `python3 .../_oracle.py
+# measure [OPTIONS] -- pdftex -ini` names the engine the oracle starts
+# (one command; a `;`/`&&`/`|` starts another, which is scanned).
+ORACLE_MEASURE_CMD = re.compile(
+    r"^\s*(?:\S*/)?python3?\s+(?:\S*/)?_oracle\.py\s+measure(\s|$)")
 
 
 def _oracle_call_spans(sig: list) -> set:
@@ -1168,6 +1222,8 @@ def scan_shell(text: str, allow: tuple = (), make: bool = False,
         segs = segs + [c for inner in subs for c in _sh_commands(inner)]
         for seg in segs:
             seg = SH_CASE_LABEL.sub(" ", seg, count=1)
+            if ORACLE_MEASURE_CMD.match(seg):
+                continue                       # the oracle's own measurement
             seg = SH_JQ_ARG.sub(" ", seg) if re.search(r"(^|[\s(`])jq\s", seg) else seg
             # A message stops being one when the pipeline runs it, when it
             # holds a command substitution, or when it is written to a FILE
@@ -1697,9 +1753,15 @@ def identity_findings(rel: str, path: tuple, block: dict, image: str,
     if "backend" in block and block["backend"] not in BACKENDS:
         out.append(f"{where}: backend {block['backend']!r} is not one of "
                    f"{sorted(BACKENDS)}")
-    if "clock" in block and block["clock"] not in _oracle.CLOCKS:
-        out.append(f"{where}: clock {block['clock']!r} is not one of "
-                   f"{sorted(_oracle.CLOCKS)}")
+    if "clock" in block and not _oracle.is_clock(block["clock"]):
+        out.append(f"{where}: clock {block['clock']!r} is neither a fixed clock "
+                   f"('{_oracle.CLOCK_PREFIX}<epoch>') nor a legacy value "
+                   f"{list(_oracle.LEGACY_CLOCKS)}")
+    # A MEASUREMENT is never a grade or a record of one (ADR-015 E7).
+    if block.get("entry") == "measure" or block.get("measurement_only"):
+        out.append(f"{where}: a measurement block (entry {block.get('entry')!r}, "
+                   f"measurement_only {block.get('measurement_only')!r}) at a "
+                   f"grade's location; _oracle.measure never grades (ADR-015 E7)")
     return out
 
 
@@ -1877,8 +1939,8 @@ def main() -> int:
     for rel in sorted(set(GRADERS) - (graded_paths - set(GRADING_CODE_PENDING))):
         findings.append(f"{rel} is in GRADERS but is not a GRADED artefact "
                         f"outside GRADING_CODE_PENDING")
-    # E2 in CI: the in-image job runs on the architecture of record, and
-    # every in-image docker run is read-only, tmpfs /tmp, non-root.
+    # E2/E9 in CI: the grading job runs on the architecture of record; E15:
+    # no workflow starts the TeX image itself.
     wf = repo / TEX_ORACLE_WORKFLOW
     wtext = wf.read_text() if wf.is_file() else ""
     runners = re.findall(r"^\s*runs-on:\s*(\S+)\s*$", wtext, re.M)
@@ -1886,29 +1948,7 @@ def main() -> int:
         findings.append(f"{TEX_ORACLE_WORKFLOW}: runs-on {runners} is not a "
                         f"native {record} runner {ARCH_RUNNERS.get(record)}; "
                         f"CI would grade on another architecture (ADR-015 E2)")
-    for cmd in re.findall(r"docker run\b(?:[^\n]*\\\n)*[^\n]*", wtext):
-        if "LP_ORACLE_IN_IMAGE" in cmd:
-            flat = re.sub(r"\\\n\s*", " ", cmd)
-            miss = [f.strip() for f in INIMAGE_RUN_FLAGS if f not in flat]
-            if miss:
-                findings.append(f"{TEX_ORACLE_WORKFLOW}: an in-image `docker "
-                                f"run` lacks {miss} (OPEN-126: the oracle's "
-                                f"tree is read-only and no engine runs as "
-                                f"root): {flat[:120]!r}")
-            # The tmpfs OPTIONS, exactly (C-127): the container backend's,
-            # minus NOT_IN_NATIVE, with NATIVE_TMPFS_SIZE.
-            want_opts = sorted(
-                [o for o in _oracle.TMPFS_OPTIONS.split(",")
-                 if not o.startswith("size=") and o not in NOT_IN_NATIVE]
-                + [f"size={NATIVE_TMPFS_SIZE}"])
-            got = re.findall(r"--tmpfs[ =]/tmp(?::(\S+))?", flat)
-            if not got or any(sorted(g.split(",")) != want_opts for g in got):
-                findings.append(
-                    f"{TEX_ORACLE_WORKFLOW}: an in-image `docker run` mounts "
-                    f"/tmp with options {got}, not {','.join(want_opts)} (the "
-                    f"container backend's _oracle.TMPFS_OPTIONS without "
-                    f"{sorted(NOT_IN_NATIVE)}, size {NATIVE_TMPFS_SIZE}; C-127): "
-                    f"{flat[:120]!r}")
+    findings.extend(workflow_launch_findings(repo))
     if len(PRE_BASELINE) != PRE_BASELINE_SIZE:
         findings.append(f"PRE_BASELINE holds {len(PRE_BASELINE)} entries, pinned at "
                         f"{PRE_BASELINE_SIZE}; widening it needs a ledger row and a "
@@ -1938,24 +1978,16 @@ def main() -> int:
         # recorded oracle block obeys (identity_findings, C-127).
         findings.extend(identity_findings(rel, path, block, image, version,
                                           record, fps))
-        # THE CLOCK (C-127, review round 2): require_same_oracle compares
-        # image, arch and tree, not the clock, so a forced-clock grade would
-        # be compared as if it were a protocol grade. A published grade is a
-        # PROTOCOL grade: its recorded clock is PROTOCOL_CLOCK. A block with
-        # no clock predates OPEN-126 and is accepted only while it is pinned
-        # in GRADING_CODE_PENDING AND the protocol clock is the real one (no
-        # grader ever forced it; before #622 a host-exported
-        # FORCE_SOURCE_DATE could reach the engine, the residual OPEN-126
-        # records). When E10 makes the protocol clock fixed, every block
-        # that does not record that clock fails here until it is re-graded.
+        # THE CLOCK (C-127; ADR-015 E10, OPEN-128 (3)). A published grade is
+        # a PROTOCOL grade: its recorded clock is PROTOCOL_CLOCK, the fixed
+        # clock; require_same_oracle compares it too. A block with no clock,
+        # or with a legacy one ("real", "forced"), was graded before the
+        # clock was fixed and fails until it is re-graded.
         clk = block.get("clock")
         if clk is None:
-            if rel not in GRADING_CODE_PENDING or _oracle.PROTOCOL_CLOCK != "real":
-                findings.append(
-                    f"{rel}: records no clock; a grade outside "
-                    f"GRADING_CODE_PENDING must record it, and an unrecorded "
-                    f"clock is read as the real one only while the protocol "
-                    f"clock is real (now {_oracle.PROTOCOL_CLOCK!r}). Re-grade it.")
+            findings.append(
+                f"{rel}: records no clock; a published grade records the "
+                f"protocol clock {_oracle.PROTOCOL_CLOCK!r} (OPEN-128). Re-grade it.")
         elif clk != _oracle.PROTOCOL_CLOCK:
             findings.append(f"{rel}: graded with clock {clk!r}, not the protocol "
                             f"clock {_oracle.PROTOCOL_CLOCK!r}; a published grade "

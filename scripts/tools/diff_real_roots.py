@@ -48,8 +48,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _oracle import (  # noqa: E402
-    CLOCKS, IMAGE as ORACLE_IMAGE, PROTOCOL_CLOCK, OracleError,
-    first_error_block, get_oracle, grading_code, job_output,
+    IMAGE as ORACLE_IMAGE, PROTOCOL_CLOCK, OracleError, RunStamp, clock_epoch,
+    clock_vars, first_error_block, get_oracle, grading_code, job_output,
     require_same_grading_code, require_same_oracle)
 
 # This grader's own source is part of every grade it records (OPEN-126): the
@@ -70,17 +70,19 @@ ORACLE = {
 }
 
 
-def oracle_record(clock: str = PROTOCOL_CLOCK) -> dict:
+def oracle_record(clock: str = PROTOCOL_CLOCK, gc: dict | None = None) -> dict:
     """ORACLE plus the pinned image's identity, as every artefact records it
     since the oracle-baseline change (ADR-012 decision 7): the image digest,
     the architecture the grade ran on, the TeX tree fingerprints and the
     backend. The banner alone pins the engine binary, never the macro layer.
     Since OPEN-126 also the run's clock and the grading code (the git blob ids
-    of _oracle.py and this file): a grade is a grade of that code."""
+    of _oracle.py and this file): a grade is a grade of that code. `gc` is the
+    grading code taken when the RUN STARTED (_oracle.RunStamp, OPEN-128 (4))."""
     prov = get_oracle().provenance()
     return dict(ORACLE, **{k: prov[k] for k in (
         "image", "arch", "tlpdb_sha256", "macro_layer_sha256", "fmt_sha256",
-        "backend")}, clock=clock, grading_code=grading_code(GRADER_FILES))
+        "backend")}, clock=clock,
+        grading_code=gc if gc is not None else grading_code(GRADER_FILES))
 
 
 def oracle_skew(recorded: dict | None) -> str | None:
@@ -102,7 +104,9 @@ def oracle_skew(recorded: dict | None) -> str | None:
                                   grading_code(GRADER_FILES), "the recorded grades")
     except OracleError as e:
         return str(e)
-    if recorded.get("clock", PROTOCOL_CLOCK) != PROTOCOL_CLOCK:
+    # No default (OPEN-128 (3), C-127 (2)): a block that records no clock
+    # was not shown to be graded under the protocol's, and is not carried.
+    if recorded.get("clock") != PROTOCOL_CLOCK:
         return (f"graded with clock {recorded.get('clock')!r}, the protocol's "
                 f"is {PROTOCOL_CLOCK!r}")
     return None
@@ -625,9 +629,17 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     re-grade with that clock and writes ONLY `experiment_out` (rows and cells
     under that clock), never the artefact or its manifest.
     """
+    try:
+        clock_epoch(clock)
+    except OracleError as e:
+        return die(2, str(e))
     if clock != PROTOCOL_CLOCK and not experiment_out:
         return die(2, f"--clock {clock} is an experiment: it needs "
                       f"--experiment-out and never writes the artefact")
+    try:
+        stamp = RunStamp(GRADER_FILES, repo)
+    except OracleError as e:
+        return die(2, f"cannot stamp the run's grading code: {e}")
     if experiment_out and (rebaseline or diff_out):
         return die(2, "--experiment-out writes nothing else; drop "
                       "--rebaseline-oracle/--diff-out")
@@ -763,15 +775,18 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
                       "manufacture a false-READY.")
 
     res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
+    why = stamp.check()
+    if why:
+        return die(2, f"nothing written: {why}")
     if experiment_out:
         Path(experiment_out).parent.mkdir(parents=True, exist_ok=True)
         Path(experiment_out).write_text(json.dumps({
             "artefact": str(results_path.relative_to(repo)),
             "experiment": f"re-grade of every row with clock {clock!r} "
-                          f"({CLOCKS[clock] or 'no extra variable'}); the "
+                          f"({clock_vars(clock)}); the "
                           f"artefact itself is NOT written",
-            "measured_at_sha": git_head(repo),
-            "oracle": oracle_record(clock),
+            "measured_at_sha": stamp.head,
+            "oracle": oracle_record(clock, stamp.gc),
             "counts": res["counts"],
             "rows": diff_rows}, indent=1) + "\n")
         print(f"[real-roots] EXPERIMENT (clock {clock}) written to "
@@ -795,7 +810,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     # corrections-log entry. State the full-coverage case as its own sentence.
     _n = len(res["docs"])
     before_oracle = res.get("oracle")
-    rec_oracle = oracle_record()
+    rec_oracle = oracle_record(PROTOCOL_CLOCK, stamp.gc)
     res["oracle"] = dict(rec_oracle, protocol=(
         f"{ORACLE['protocol']} — APPLIED TO ALL {_n}/{_n} rows"
         if remeasured == _n else
@@ -804,7 +819,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
     # The CLI verdicts are carried forward, so the CLI's provenance
     # (measured_at_sha, src_tree_sha) stays as it was (see the docstring);
     # only the oracle side is stamped.
-    res["oracle_regraded_at_sha"] = git_head(repo)
+    res["oracle_regraded_at_sha"] = stamp.head
     _scope_note = {
         "failures": ("recorded FAILURES only; documents already recorded "
                      "pdflatex_rc 0 were NOT revisited, so this pass cannot "
@@ -968,10 +983,10 @@ def main() -> int:  # noqa: C901
                     help="with --refresh-cli: run the CLI built in this "
                          "checkout and stamp ITS HEAD and engine tree (its "
                          "latex-parse/src must be clean)")
-    ap.add_argument("--clock", default=PROTOCOL_CLOCK, choices=sorted(CLOCKS),
+    ap.add_argument("--clock", default=PROTOCOL_CLOCK,
                     help="with --repass --experiment-out: re-grade under this "
-                         "clock (O-5 measurement; 'forced' sets "
-                         "FORCE_SOURCE_DATE=1). Never writes the artefact.")
+                         "fixed clock ('fixed:<epoch>'; the protocol's is "
+                         f"{PROTOCOL_CLOCK}). Never writes the artefact.")
     ap.add_argument("--experiment-out", default=None,
                     help="with --repass: write the re-grade's rows here and "
                          "leave the artefact untouched")
@@ -1047,6 +1062,10 @@ def main() -> int:  # noqa: C901
         manifest_path = outdir / "manifest.json"
     prior = json.loads(manifest_path.read_text()) if manifest_path.is_file() else None
 
+    try:
+        stamp = RunStamp(GRADER_FILES, repo)
+    except OracleError as e:
+        return die(2, f"cannot stamp the run's grading code: {e}")
     rows = []
     for i, rec in enumerate(sample, 1):
         rec["sha256_toplevel"] = sha256_file(root / rec["arxiv_id"] / rec["toplevel"])
@@ -1108,7 +1127,7 @@ def main() -> int:  # noqa: C901
     # the identity that matters for reproducibility is which corpus snapshot was
     # used, and the rest is one machine's home directory.
     corpus_tag = "/".join(root.parts[-3:])
-    rec_oracle = oracle_record()
+    rec_oracle = oracle_record(PROTOCOL_CLOCK, stamp.gc)
     result = {"oracle": rec_oracle,
               "frame": {"corpus": corpus_tag, "frame_size": len(frame),
                         "selection": "sha256(arxiv_id) ascending", "n": len(sample),
@@ -1116,8 +1135,11 @@ def main() -> int:  # noqa: C901
               "counts": dict(counts), "docs": rows}
 
     if ns.record:
+        why = stamp.check()
+        if why:
+            return die(2, f"nothing recorded: {why}")
         outdir.mkdir(parents=True, exist_ok=True)
-        result["measured_at_sha"] = git_head(repo)
+        result["measured_at_sha"] = stamp.head
         result["src_tree_sha"] = engine_tree(repo)
         (outdir / ns.results).write_text(json.dumps(result, indent=1) + "\n")
         manifest_path.write_text(json.dumps(

@@ -1058,7 +1058,8 @@ The pre-B2 figure is the same as stage 1's deep probe at the end of the format l
   configurations against the unchanged binary outputs: **no row changed**. Every column but the
   `ps.exe` prefix is the same as before, on all 178 rows in each configuration. The totals stay
   134 identical, 43 Stuck, 1 without a result and 0 divergent. The one without a result is
-  `romn`, still killed by the 5,000 MB cap, so its memory is not this retention.
+  `romn`, still killed by the 5,000 MB cap, so its memory is not this retention [I: the
+  retention check was not run on it].
 - **The round trip**: exit 0; terminal output and `texput.log` equal to the binary's; the format
   stream is `55629ae0…`, so model = binary (E6). 78.0 s user CPU, peak footprint 1,624 MB
   (checkpoint 2's build: 4,102 MB).
@@ -1067,8 +1068,8 @@ The pre-B2 figure is the same as stage 1's deep probe at the end of the format l
 
 ### 8.4 The full meaning dump on the model build: H.3's meanings clause MET [M]
 
-The task allowed a local run if its CPU time was acceptable (≲ 1 h). It ran locally, and also on
-E8's GitHub workflow, because the runner's OCaml has no flambda (§5 B(d)).
+It ran locally, because its CPU time was under an hour, and also on E8's GitHub workflow, because
+the runner's OCaml has no flambda (§5 B(d)).
 - **Local** (macOS arm64, `capped.sh` with a 4,000 MB cap; `h5/evidence/stage2/fulldump/`):
   - exit 0; 2,672.6 s of CPU (2,564.9 s user and 107.7 s sys), 3,623 s wall;
   - peak footprint 2,463 MB;
@@ -1088,8 +1089,9 @@ E8's GitHub workflow, because the runner's OCaml has no flambda (§5 B(d)).
 
   So B2's property does not depend on flambda. This answers the open point of §5 B(d): the
   simulation relied on a beta-reduction, while the real B2 relies on the successor closure
-  being dead once its single call starts. That holds whether or not the call is compiled as a
-  tail call, because nothing is read from the closure's environment after the call.
+  being dead once its single call starts. That should hold whether or not the call is compiled
+  as a tail call, because nothing is read from the closure's environment after the call [I]. The
+  runner's measurement is consistent with that; it does not show which way the call was compiled.
 
 **Speed, for the record** (not E11's criterion here). B2 alone is the model build without T1 and
 T2, so it keeps the cost of the integer conversions (§3.1).

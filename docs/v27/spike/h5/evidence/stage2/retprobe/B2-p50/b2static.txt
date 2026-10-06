@@ -1,0 +1,36 @@
+allow  BinInt.ml of_nat: Coq library, no state
+allow  BinPos.ml of_succ_nat: Coq library, no state
+allow  Boundary.ml c_strtoull10: no state (take_digits' result)
+allow  Boundary.ml c_atoi: no state (take_digits' result)
+allow  Boundary.ml read_into: tail-recursive: B's only call after put_cell is the tail call
+allow  Boundary.ml trim_spaces: tail-recursive, reads one state
+allow  Boundary.ml map_xord: tail-recursive: B's only call after put_cell is the tail call
+allow  Boundary.ml dec_digits: no state
+allow  Boundary.ml be_bytes: no state
+allow  Boundary.ml take: no state
+allow  Boundary.ml undump_cells: no state
+allow  Boundary.ml parse_tounicode: no state
+allow  Interp.ml copy_cells: tail-recursive: B's only call after put_cell is the tail call
+allow  Interp.ml read_cells: reads one state, writes none: the state held is the current one
+allow  Interp.ml digits_rev: no state
+allow  Interp.ml cstring: reads one state, writes none: the state held is the current one
+ok     Interp.ml evale: fun f -> evale_body procs strings_base ext evale evall evalargs evalx callp0 f e
+        st
+ok     Interp.ml evall: fun f -> evall_body evale evall f l st
+ok     Interp.ml evalargs: fun f -> evalargs_body evale evall evalargs f ks args st
+ok     Interp.ml evalx: fun f -> evalx_body evale evall evalx f args st
+ok     Interp.ml callp0: fun f -> callp_body procs exec f p cells st
+ok     Interp.ml exec: fun f -> exec_body procs ext evale evall evalargs evalx callp0 exec for_loop
+        exec_list writ
+ok     Interp.ml for_loop: fun f -> for_loop_body exec for_loop f lc c t up fe body st
+ok     Interp.ml exec_list: fun f -> exec_list_body exec exec_list goto_in f all rest st
+ok     Interp.ml goto_in: fun f -> goto_in_body exec exec_list goto_in f n all scan st
+ok     Interp.ml write_items: fun f -> write_items_body evale write_items f h items nl st
+allow  List.ml nth: Coq library, no state
+allow  Main0.ml fill_run: no state (builds one block, tail-recursive)
+allow  Nat.ml tail_add: Coq library, no state
+allow  Nat.ml tail_addmul: Coq library, no state
+allow  Uint0.ml to_Z_rec: Coq library, no state
+allow  Uint0.ml of_pos_rec: Coq library, no state
+allow  Values.ml fill_chunks: no state (builds one block, tail-recursive)
+b2static: 10 single-call sites, 23 allowed sites, 0 failing

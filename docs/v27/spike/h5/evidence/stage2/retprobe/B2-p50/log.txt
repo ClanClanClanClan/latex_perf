@@ -1,0 +1,8 @@
+static: b2static: 10 single-call sites, 23 allowed sites, 0 failing
+probe inserted: Main0.ml 1 line, driver.ml 2 lines
+RETPROBE run n 1 cpu 22.47 ext 256 live 57350118 reach_state 57337394 static 298780 other -286056 limit 1000000 top 165451634
+RETPROBE run n 2 cpu 30.51 ext 24320 live 73547758 reach_state 73529995 static 298780 other -281017 limit 1000000 top 166451058
+RETPROBE final n 2 cpu 37.16 ext 24809 live 73565098 reach_state 73547395 static 298780 other -281077 limit 1000000 top 166451058
+run: finished rc 0 peak 2337MB in 39s; 2 probes
+INCONCLUSIVE: only 2 probes
+RC=2

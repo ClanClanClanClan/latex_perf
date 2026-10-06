@@ -1,170 +1,13 @@
-(* PS as a fuelled interpreter (spike H.2, ADR-015).
-
-   One big-step machine for the IR of Syntax.v. It is parameterised by the program
-   (the procedure table, the string-literal base) and by the C boundary model `ext`,
-   which may call back into the program (`loadpoolstrings` calls `makestring`).
-   Fuel decreases at every node, so every run ends: in a result, a halt (the C exit
-   status), or Stuck (outside the tier), fuel exhaustion included.
-
-   Choices C leaves open and PS fixes, all recorded in the H.2 report:
-   - operands, arguments and the two sides of an assignment are evaluated left to right,
-     the target of an assignment first; C leaves this unspecified, so the translator must
-     show each such site order-independent (open at checkpoint 2);
-   - && and || short-circuit (C's rule).  *)
+(* The interpreter's mutual block as it was before B2 (spike H.5 stage 2): lines 169-707 of
+   git 9c3315be:docs/v27/spike/h2/coq/Interp.v (sha256 1ef36d75...), verbatim below this header.
+   It shares Interp.v's types and helpers (Interp.v keeps lines 1-178 of that file unchanged),
+   so B2Equiv.v can state each new member equal to its counterpart here. Not extracted: no
+   model code depends on this file. Checked by h5/tools/b2gen.py --check. *)
 
 From Coq Require Import ZArith List Bool String PArray Uint63 Sint63 Floats.
-From PS Require Import Syntax Values.
+From PS Require Import Syntax Values Interp.
 Import ListNotations.
 Local Open Scope Z_scope.
-
-Inductive eres : Type :=
-| EOk (v : val) (st : state) | EHalt (code : Z) (st : state) | EStk (s : stuck) (st : state).
-Inductive lres : Type :=
-| LOk (l : loc) (st : state) | LHalt (code : Z) (st : state) | LStk (s : stuck) (st : state).
-Inductive sres : Type :=
-| SNorm (st : state) | SGo (n : Z) (st : state) | SRet (st : state)
-| SHalt (code : Z) (st : state) | SStk (s : stuck) (st : state).
-(* an actual parameter as it lands in the callee's frame *)
-Inductive bres : Type :=
-| BOk (cells : list cell) (st : state) | BHalt (code : Z) (st : state) | BStk (s : stuck) (st : state).
-(* an external's argument *)
-Inductive xarg : Type := XLoc (l : loc) (c : ct) (n : Z) | XVal (v : val) | XType (tid : Z).
-Inductive xres : Type :=
-| XOk (xs : list xarg) (st : state) | XHalt (code : Z) (st : state) | XStk (s : stuck) (st : state).
-
-(* ---------------------------------------------------------------- memory access *)
-Definition read_loc (st : state) (t : ty) (l : loc) : ld_res :=
-  match cell_at st (lb l) (lo l) with
-  | None => LdStuck (StBounds "read")
-  | Some k =>
-    match lsl l with
-    | None => load_cell (io_char_signed (st_io st)) t k
-    | Some (boff, nb, sk) =>
-      match word_of k with
-      | Some (bits, mask) => load_slice boff nb sk bits mask
-      | None => LdStuck (StType "slice of a non-word")
-      end
-    end
-  end.
-
-Inductive wr_res : Type := WOk (st : state) | WStk (s : stuck).
-
-Definition write_loc (st : state) (c : ct) (l : loc) (v : val) : wr_res :=
-  match lsl l with
-  | None =>
-    match store_conv (io_char_signed (st_io st)) c v with
-    | COk k => match put_cell st (lb l) (lo l) k with Some st' => WOk st' | None => WStk (StBounds "write") end
-    | CStuck s => WStk s
-    end
-  | Some (boff, nb, sk) =>
-    match cell_at st (lb l) (lo l) with
-    | None => WStk (StBounds "write")
-    | Some k =>
-      match word_of k, slice_bits nb sk v with
-      | Some (bits, mask), Some (fb, fm) =>
-        let (b', m') := store_slice boff nb bits mask fb fm in
-        match put_cell st (lb l) (lo l) (KWord b' m') with Some st' => WOk st' | None => WStk (StBounds "write") end
-      | None, _ => WStk (StType "slice of a non-word")
-      | _, None => WStk (StConv "slice")
-      end
-    end
-  end.
-
-Fixpoint copy_cells (n : nat) (sb so db dofs : Z) (st : state) : option state :=
-  match n with
-  | O => Some st
-  | S n' =>
-    match cell_at st sb so with
-    | None => None
-    | Some k => match put_cell st db dofs k with
-                | Some st' => copy_cells n' sb (so + 1) db (dofs + 1) st'
-                | None => None end
-    end
-  end.
-
-Fixpoint read_cells (n : nat) (b o : Z) (st : state) : option (list cell) :=
-  match n with
-  | O => Some []
-  | S n' => match cell_at st b o, read_cells n' b (o + 1) st with
-            | Some k, Some ks => Some (k :: ks) | _, _ => None end
-  end.
-
-Fixpoint put_cells (ks : list cell) (b o : Z) (st : state) : option state :=
-  match ks with
-  | [] => Some st
-  | k :: ks' => match put_cell st b o k with Some st' => put_cells ks' b (o + 1) st' | None => None end
-  end.
-
-(* ---------------------------------------------------------------- output *)
-Fixpoint out_append (h : Z) (bytes : list Z) (outs : list (Z * list Z)) : list (Z * list Z) :=
-  match outs with
-  | [] => [(h, rev_append bytes [])]
-  | (h', bs) :: rest => if h =? h' then (h', rev_append bytes bs) :: rest else (h', bs) :: out_append h bytes rest
-  end.
-
-Definition emit (h : Z) (bytes : list Z) (st : state) : state :=
-  let x := st_io st in
-  set_io st (io_set_out x (out_append h bytes (io_out x))).
-
-Fixpoint digits_rev (fuel : nat) (n : Z) : list Z :=
-  match fuel with
-  | O => []
-  | S f => if n <? 10 then [48 + n] else (48 + Z.rem n 10) :: digits_rev f (Z.quot n 10)
-  end.
-(* printf's %ld *)
-Definition decimal (z : Z) : list Z :=
-  let d := rev (digits_rev 25 (Z.abs z)) in if z <? 0 then 45 :: d else d.
-
-(* the bytes of the NUL-terminated C string at (b, o) *)
-Fixpoint cstring (fuel : nat) (b o : Z) (st : state) : option (list Z) :=
-  match fuel with
-  | O => None
-  | S f => match cell_at st b o with
-           | Some (KInt 0) => Some []
-           | Some (KInt c) => match cstring f b (o + 1) st with Some r => Some (Z.modulo c 256 :: r) | None => None end
-           | _ => None
-           end
-  end.
-
-(* ---------------------------------------------------------------- goto continuations *)
-Fixpoint has_label (n : Z) (s : stmt) : bool :=
-  match s with
-  | SLabel m => n =? zi m
-  | SSeq ss => existsb (has_label n) ss
-  | SIf _ a b => has_label n a || has_label n b
-  | SWhile _ b => has_label n b
-  | SRepeat b _ => has_label n b
-  | SFor _ _ _ _ _ b => has_label n b
-  | SCase _ arms d => existsb (fun a => has_label n (snd a)) arms ||
-                      match d with Some x => has_label n x | None => false end
-  | _ => false
-  end.
-
-(* the statement that continues execution of s from label n inside it (C goto semantics
-   for jumps into an if branch, a case arm, a loop body or a sequence) *)
-Fixpoint resume (n : Z) (s : stmt) : option stmt :=
-  match s with
-  | SLabel m => if n =? zi m then Some SSkip else None
-  | SSeq ss =>
-    (fix go (l : list stmt) : option stmt :=
-       match l with
-       | [] => None
-       | x :: rest => if has_label n x then
-                        match resume n x with Some x' => Some (SSeq (x' :: rest)) | None => None end
-                      else go rest
-       end) ss
-  | SIf _ a b => if has_label n a then resume n a else resume n b
-  | SWhile c b => match resume n b with Some b' => Some (SSeq [b'; SWhile c b]) | None => None end
-  | SRepeat b c => match resume n b with
-                   | Some b' => Some (SSeq [b'; SIf c SSkip (SRepeat b c)]) | None => None end
-  | SCase _ arms d =>
-    (fix go (l : list (list int * stmt)) : option stmt :=
-       match l with
-       | [] => match d with Some x => resume n x | None => None end
-       | a :: rest => if has_label n (snd a) then resume n (snd a) else go rest
-       end) arms
-  | _ => None   (* a for body: web2c's bound lives in a hidden temporary *)
-  end.
 
 (* ---------------------------------------------------------------- the interpreter *)
 Section Interp.
@@ -176,25 +19,10 @@ Variable ext : (Z -> list cell -> state -> eres) -> Z -> list xarg -> state -> e
 Definition truth_or (v : val) (st : state) (k : bool -> eres) : eres :=
   match truthy v with Some b => k b | None => EStk (StType "condition") st end.
 
-(* ---------------------------------------------------------------- B2 (spike H.5 stage 2)
-   The members of the mutual block below are the pre-B2 members (RefInterp.v) with each
-   successor branch moved, verbatim, into a Definition NAME_body that takes the recursive
-   functions it calls and the fuel f as arguments. B2Equiv.v proves every member equal to its
-   pre-B2 counterpart by reflexivity: the term is the same up to unfolding NAME_body.
-   The reason is the extraction, not the semantics (H5-heap-design.md §2.2): ExtrOcamlNatInt
-   extracts `match fuel with O => a | S f => b` with b as a closure; when b made non-tail calls
-   and then read its environment, that environment kept the state the branch began with alive
-   for the whole call, and through PArray's version chains every write made since. Here the
-   closure's body is a single call of NAME_body on its own arguments, so no closure holds a
-   state across a call (h5/tools/b2static.py checks the extracted code for exactly this). *)
-
-Definition evale_body
-    (evale : nat -> expr -> state -> eres)
-    (evall : nat -> lexp -> state -> lres)
-    (evalargs : nat -> list pkind -> list arg -> state -> bres)
-    (evalx : nat -> list arg -> state -> xres)
-    (callp : nat -> Z -> list cell -> state -> eres)
-    (f : nat) (e : expr) (st : state) : eres :=
+Fixpoint evale (fuel : nat) (e : expr) (st : state) {struct fuel} : eres :=
+  match fuel with
+  | O => EStk StFuel st
+  | S f =>
   match e with
   | EInt t z => EOk (VI t (zi z)) st
   | EDbl bits => EOk (VF (float_of_bits bits)) st
@@ -357,12 +185,13 @@ Definition evale_body
     | EOk _ st1 => EStk (StType "realloc of a non-block") st1
     | r => r
     end
-  end.
+  end
+  end
 
-Definition evall_body
-    (evale : nat -> expr -> state -> eres)
-    (evall : nat -> lexp -> state -> lres)
-    (f : nat) (l : lexp) (st : state) : lres :=
+with evall (fuel : nat) (l : lexp) (st : state) {struct fuel} : lres :=
+  match fuel with
+  | O => LStk StFuel st
+  | S f =>
   match l with
   | LGlob g => LOk (mkloc (zi g) 0 None) st
   | LLoc k => LOk (mkloc (fp st) (zi k) None) st
@@ -403,14 +232,14 @@ Definition evall_body
     | LOk lc st1 => LOk (mkloc (lb lc) (Values.lo lc) (Some (zi boff, zi nb, k))) st1
     | r => r
     end
-  end.
+  end
+  end
 
 (* actual parameters of a Pascal call, evaluated left to right into frame cells *)
-Definition evalargs_body
-    (evale : nat -> expr -> state -> eres)
-    (evall : nat -> lexp -> state -> lres)
-    (evalargs : nat -> list pkind -> list arg -> state -> bres)
-    (f : nat) (ks : list pkind) (args : list arg) (st : state) : bres :=
+with evalargs (fuel : nat) (ks : list pkind) (args : list arg) (st : state) {struct fuel} : bres :=
+  match fuel with
+  | O => BStk StFuel st
+  | S f =>
   match ks, args with
   | [], [] => BOk [] st
   | PVal c :: ks', AVal _ e :: args' =>
@@ -440,14 +269,14 @@ Definition evalargs_body
     | LHalt c st1 => BHalt c st1 | LStk s st1 => BStk s st1
     end
   | _, _ => BStk (StType "arguments") st
-  end.
+  end
+  end
 
 (* an external's arguments, left to right *)
-Definition evalx_body
-    (evale : nat -> expr -> state -> eres)
-    (evall : nat -> lexp -> state -> lres)
-    (evalx : nat -> list arg -> state -> xres)
-    (f : nat) (args : list arg) (st : state) : xres :=
+with evalx (fuel : nat) (args : list arg) (st : state) {struct fuel} : xres :=
+  match fuel with
+  | O => XStk StFuel st
+  | S f =>
   match args with
   | [] => XOk [] st
   | ALv l c n :: rest =>
@@ -462,12 +291,14 @@ Definition evalx_body
     end
   | AType tid :: rest => match evalx f rest st with XOk xs st1 => XOk (XType (zi tid) :: xs) st1 | r => r end
   | _ :: _ => XStk (StType "external argument") st
-  end.
+  end
+  end
 
 (* call procedure p with its parameter cells; a function returns its result cell's value *)
-Definition callp_body
-    (exec : nat -> stmt -> state -> sres)
-    (f : nat) (p : Z) (cells : list cell) (st : state) : eres :=
+with callp (fuel : nat) (p : Z) (cells : list cell) (st : state) {struct fuel} : eres :=
+  match fuel with
+  | O => EStk StFuel st
+  | S f =>
     let pr := PArray.get procs (Uint63.of_Z p) in
     let fb := fsp st in
     if heap_cap <=? fb + 1 then EStk (StOther "frame stack exhausted") st else
@@ -497,19 +328,13 @@ Definition callp_body
       | SHalt c st3 => EHalt c st3
       | SStk s st3 => EStk (StIn p s) st3
       end
-    end.
+    end
+  end
 
-Definition exec_body
-    (evale : nat -> expr -> state -> eres)
-    (evall : nat -> lexp -> state -> lres)
-    (evalargs : nat -> list pkind -> list arg -> state -> bres)
-    (evalx : nat -> list arg -> state -> xres)
-    (callp : nat -> Z -> list cell -> state -> eres)
-    (exec : nat -> stmt -> state -> sres)
-    (for_loop : nat -> loc -> ct -> ty -> bool -> Z -> stmt -> state -> sres)
-    (exec_list : nat -> list stmt -> list stmt -> state -> sres)
-    (write_items : nat -> Z -> list witem -> bool -> state -> sres)
-    (f : nat) (s : stmt) (st : state) : sres :=
+with exec (fuel : nat) (s : stmt) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f =>
   match s with
   | SSkip => SNorm st
   | SLabel _ => SNorm st
@@ -637,12 +462,14 @@ Definition exec_body
     | EOk _ st1 => SStk (StType "write to a non-file") st1
     | EHalt c0 st1 => SHalt c0 st1 | EStk s0 st1 => SStk s0 st1
     end
-  end.
+  end
+  end
 
-Definition for_loop_body
-    (exec : nat -> stmt -> state -> sres)
-    (for_loop : nat -> loc -> ct -> ty -> bool -> Z -> stmt -> state -> sres)
-    (f : nat) (lc : loc) (c : ct) (t : ty) (up : bool) (fe : Z) (body : stmt) (st : state) : sres :=
+with for_loop (fuel : nat) (lc : loc) (c : ct) (t : ty) (up : bool) (fe : Z) (body : stmt) (st : state)
+  {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f =>
     match exec f body st with
     | SNorm st1 =>
       match read_loc st1 t lc with
@@ -657,13 +484,13 @@ Definition for_loop_body
       | LdStuck s0 => SStk s0 st1
       end
     | r => r
-    end.
+    end
+  end
 
-Definition exec_list_body
-    (exec : nat -> stmt -> state -> sres)
-    (exec_list : nat -> list stmt -> list stmt -> state -> sres)
-    (goto_in : nat -> Z -> list stmt -> list stmt -> state -> sres)
-    (f : nat) (all rest : list stmt) (st : state) : sres :=
+with exec_list (fuel : nat) (all rest : list stmt) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f =>
     match rest with
     | [] => SNorm st
     | s :: tl =>
@@ -672,14 +499,14 @@ Definition exec_list_body
       | SGo n st1 => goto_in f n all all st1
       | r => r
       end
-    end.
+    end
+  end
 
 (* a goto reaching this statement list: find the element that is, or contains, label n *)
-Definition goto_in_body
-    (exec : nat -> stmt -> state -> sres)
-    (exec_list : nat -> list stmt -> list stmt -> state -> sres)
-    (goto_in : nat -> Z -> list stmt -> list stmt -> state -> sres)
-    (f : nat) (n : Z) (all scan : list stmt) (st : state) : sres :=
+with goto_in (fuel : nat) (n : Z) (all scan : list stmt) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f =>
     match scan with
     | [] => SGo n st                     (* not here: propagate outward *)
     | SLabel m :: tl => if n =? zi m then exec_list f all tl st else goto_in f n all tl st
@@ -693,12 +520,13 @@ Definition goto_in_body
         | None => SStk (StGoto n) st
         end
       else goto_in f n all tl st
-    end.
+    end
+  end
 
-Definition write_items_body
-    (evale : nat -> expr -> state -> eres)
-    (write_items : nat -> Z -> list witem -> bool -> state -> sres)
-    (f : nat) (h : Z) (items : list witem) (nl : bool) (st : state) : sres :=
+with write_items (fuel : nat) (h : Z) (items : list witem) (nl : bool) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f =>
     match items with
     | [] => SNorm (if nl then emit h [10] st else st)
     | it :: rest =>
@@ -716,68 +544,7 @@ Definition write_items_body
         end
       | EHalt c0 st1 => SHalt c0 st1 | EStk s0 st1 => SStk s0 st1
       end
-    end.
-
-(* the fuelled block: one step of fuel, then the member's body *)
-Fixpoint evale (fuel : nat) (e : expr) (st : state) {struct fuel} : eres :=
-  match fuel with
-  | O => EStk StFuel st
-  | S f => evale_body evale evall evalargs evalx callp f e st
-  end
-
-with evall (fuel : nat) (l : lexp) (st : state) {struct fuel} : lres :=
-  match fuel with
-  | O => LStk StFuel st
-  | S f => evall_body evale evall f l st
-  end
-
-with evalargs (fuel : nat) (ks : list pkind) (args : list arg) (st : state) {struct fuel} : bres :=
-  match fuel with
-  | O => BStk StFuel st
-  | S f => evalargs_body evale evall evalargs f ks args st
-  end
-
-with evalx (fuel : nat) (args : list arg) (st : state) {struct fuel} : xres :=
-  match fuel with
-  | O => XStk StFuel st
-  | S f => evalx_body evale evall evalx f args st
-  end
-
-with callp (fuel : nat) (p : Z) (cells : list cell) (st : state) {struct fuel} : eres :=
-  match fuel with
-  | O => EStk StFuel st
-  | S f => callp_body exec f p cells st
-  end
-
-with exec (fuel : nat) (s : stmt) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f => exec_body evale evall evalargs evalx callp exec for_loop exec_list write_items f s st
-  end
-
-with for_loop (fuel : nat) (lc : loc) (c : ct) (t : ty) (up : bool) (fe : Z) (body : stmt) (st : state)
-  {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f => for_loop_body exec for_loop f lc c t up fe body st
-  end
-
-with exec_list (fuel : nat) (all rest : list stmt) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f => exec_list_body exec exec_list goto_in f all rest st
-  end
-
-with goto_in (fuel : nat) (n : Z) (all scan : list stmt) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f => goto_in_body exec exec_list goto_in f n all scan st
-  end
-
-with write_items (fuel : nat) (h : Z) (items : list witem) (nl : bool) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f => write_items_body evale write_items f h items nl st
+    end
   end.
 
 End Interp.

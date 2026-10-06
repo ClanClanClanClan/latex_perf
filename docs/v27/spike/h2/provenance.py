@@ -13,7 +13,8 @@ provenance.json binds a build to
   - the committed sources that made it: every file of translate/ and coq/ (driver.ml
     included), pipeline.sh and this file;
   - what it made: every generated Coq file (gen/), every extracted OCaml file, ps.exe;
-  - the tools: coqc and ocamlopt versions.
+  - the tools: coqc and ocamlopt versions, `ocamlopt -config` in full (flambda or not: C-146),
+    and zarith's version (coq-core is the coqc version recorded).
 verify_h2.py checks that the committed sources still hash as recorded here, and that every
 committed model output names this ps.exe: an edit to the translator, Interp.v, Boundary.v
 or the C-main values after the measurement makes the evidence STALE, and verify says so."""
@@ -71,7 +72,13 @@ def main():
             "generated": tree((out / "gen").glob("*")),
             "extracted": tree(p for p in (out / "build" / "new_ml").glob("*") if p.name != "driver.ml"),
             "ps_exe": sha(out / "build" / "ps.exe"),
-            "tools": {"coqc": ver(["coqc", "--version"]), "ocamlopt": ver(["ocamlfind", "ocamlopt", "-version"])},
+            "tools": {"coqc": ver(["coqc", "--version"]), "ocamlopt": ver(["ocamlfind", "ocamlopt", "-version"]),
+                      # C-146: a compiler is identified by its configuration, not its version
+                      "ocamlopt_config": dict(l.split(": ", 1) for l in subprocess.run(
+                          ["ocamlfind", "ocamlopt", "-config"], capture_output=True, text=True).stdout.splitlines()
+                          if ": " in l),
+                      "packages": {p: ver(["ocamlfind", "query", "-format", "%v", p])
+                                   for p in ("zarith",)}},   # coq-core is coqc's version (findlib has none)
         }
         (out / "provenance.json").write_text(json.dumps(prov, indent=1, sort_keys=True) + "\n")
         print(f"provenance: ps.exe {prov['ps_exe'][:12]}, generated tree {prov['generated']['_tree'][:12]}")

@@ -117,6 +117,32 @@ for n in $names; do
 done
 ```
 
+The `cm-*` inputs (checkpoint 3), whose spec gives its own `argv0`/`argv` lines, run with `run_bin_argv.zsh ARCH WORK SHIMDIR NAME...` (sha256 `a78a8092…`). The command comes from the `argv.txt` that `diff.py prepare` writes:
+
+```zsh
+#!/bin/zsh
+# The binary side of the inputs with a command line of their own (docs/v27/spike/h2/diff/README.md
+# quotes this file verbatim). usage: run_bin_argv.zsh ARCH WORK SHIMDIR [NAME...]
+# As run_bin_local.zsh (a container-local working directory holding WORK/NAME/cwd/), but the
+# command is WORK/NAME/argv.txt (argv[0], then one argument per line, as diff.py prepare
+# wrote it from the input's spec), run by name from the image's PATH.
+set -u
+A=$1; WORK=$2; SHIM=$3; shift 3
+IMG=texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b
+names=($@); [ ${#names} -eq 0 ] && names=(${(f)"$(<$WORK/inputs.txt)"})
+for n in $names; do
+  d=$WORK/$n; rm -rf $d/bin; mkdir -p $d/bin/w
+  envs=(); for l in ${(f)"$(<$d/docker.env)"}; do envs+=(-e "$l"); done
+  cmd=(${(f)"$(<$d/argv.txt)"})
+  docker run --rm -i --platform linux/$A --network none -v $SHIM:/shim:ro -v $d/cwd:/in:ro \
+    -v $d/bin:/out --tmpfs /w -w /w -e SHIMSO=/shim/clockshim-$A.so -e LP_CLOCK_LOG=/w/clock.log $envs \
+    $IMG sh -c 'cp -R /in/. /w/ && LD_PRELOAD=$SHIMSO "$@"; rc=$?; cp -R /w/. /out/w/; exit $rc' sh $cmd \
+    < $d/stdin > $d/bin/out 2> $d/bin/err
+  echo $? > $d/bin/rc
+  echo "$n rc=$(<$d/bin/rc)"
+done
+```
+
 `compare` leaves out of the binary's files the input files the run did not change.
 
 Then `python3 diff.py compare --arch ARCH --work WORK --write`.

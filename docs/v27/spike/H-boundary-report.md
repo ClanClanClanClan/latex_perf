@@ -19,9 +19,9 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 
 | # | what | result |
 |---|---|---|
-| 1 | kpathsea file input: `\input`, `\openin`/`\read`, a missing file, `\openout` and its paranoia check | CHECKPOINT1 |
-| 2 | TFM loading: `\font`, `\showbox` of a typeset `\hbox` | CHECKPOINT2 |
-| 3 | the general C-main command line; `pdflatex.fmt` and a one-line `\documentclass{article}` run up to PDF output | CHECKPOINT3 |
+| 1 | kpathsea file input: `\input`, `\openin`/`\read`, a missing file, `\openout` and its paranoia check | done: 23 inputs, 19 IDENTICAL and 4 STUCK on build 5faee430 (arm64), 0 DIVERGENT; one divergence found and fixed in H.2's `input_line` (C-160); the final-build re-run is pending |
+| 2 | TFM loading: `\font`, `\showbox` of a typeset `\hbox` | done: 5 inputs, 4 IDENTICAL and 1 STUCK (`mktextfm`) on build 5faee430 (arm64); no external beyond checkpoint 1's was needed |
+| 3 | the general C-main command line; `pdflatex.fmt` and a one-line `\documentclass{article}` run up to PDF output | done: C main modelled for the allow-listed argv (13 `cm-*` inputs: 11 IDENTICAL and 2 STUCK by design, both configurations, final build); the one-line article reaches `ensurepdfopen > bopenout` as an exact byte prefix of the binary's output, log and .aux |
 | 4 | the PDF back end: scope only | measured: 137 C functions (61,720 bytes of machine code) first run after PDF output starts on the one-line article; deflate, MD5, the 5.6 MB map file, Type 1 subsetting; no libpng, no xpdf |
 
 ## Checkpoint 1: kpathsea file input
@@ -153,7 +153,47 @@ conflict), `scanimage` and `doextension` (3, the `\openout` path).
 
 ### Results
 
-RESULTS1
+The 23 `kp-*` inputs of the differential (`h2/diff/README.md` lists them). Each runs on both
+sides with the same working directory: the binary in a container-local tmpfs (C-161), the model
+with the snapshot. Results on the final build (`ps.exe` `735450994e4b…`):
+
+| input | arm64, build `5faee430…` | reason |
+|---|---|---|
+| `kp-abs` | IDENTICAL |  |
+| `kp-abs-missing` | IDENTICAL |  |
+| `kp-casefold` | IDENTICAL |  |
+| `kp-dollar` | STUCK | a file name with `$` (variable expansion) |
+| `kp-dotdot` | STUCK | a path with a `..` component |
+| `kp-input` | IDENTICAL |  |
+| `kp-input-bare` | IDENTICAL |  |
+| `kp-input-crlf` | IDENTICAL |  |
+| `kp-input-ext` | IDENTICAL |  |
+| `kp-input-missing` | IDENTICAL |  |
+| `kp-input-missing-eof` | IDENTICAL |  |
+| `kp-input-nested` | IDENTICAL |  |
+| `kp-input-sty-missing` | IDENTICAL |  |
+| `kp-input-written` | STUCK | reading a file this run wrote |
+| `kp-openin` | IDENTICAL |  |
+| `kp-openin-ext` | IDENTICAL |  |
+| `kp-openin-missing` | IDENTICAL |  |
+| `kp-openout` | IDENTICAL |  |
+| `kp-openout-abs` | IDENTICAL |  |
+| `kp-openout-dot` | IDENTICAL |  |
+| `kp-rel` | IDENTICAL |  |
+| `kp-tilde` | STUCK | a leading `~` (tilde expansion) |
+| `kp-tree-openin` | IDENTICAL |  |
+
+(Measured on the checkpoint-2 build `5faee430…`, arm64 against the native binary: 28 inputs, 23 IDENTICAL, 5 STUCK, 0 DIVERGENT. That build included the `input_line` fix of C-160 and `pdfassert`. The amd64 binary side of these inputs is recorded, all rc 1; the model side was not run on that build. The final build has not yet re-run these 28 inputs (see Fidelity), and their model outputs on disk are now mixed.)
+
+The Stuck rows are the dispositions above, reached by an input and reported by name:
+- `$` and `~` expansion;
+- a `..` component;
+- reading a file this run wrote.
+
+The two absolute-path refusals of `\openout` (`/tmp/x.txt`, `.hid`) are IDENTICAL, including
+kpathsea's message on standard error. The first divergence the step found was in H.2's own model
+of `input_line`, not in the new code (C-160).
+
 
 ## Checkpoint 2: TFM loading
 
@@ -162,7 +202,22 @@ first `getc` into `tfmtemp`), `getc`, `eof`, `bclose`, the tfm format's search w
 (`texfonts.map`, read once at the first lookup) and `mktextfm` (Stuck when a font is missing).
 No further external was needed.
 
-RESULTS2
+The 5 `tf-*` inputs:
+
+| input | arm64, build `5faee430…` | reason |
+|---|---|---|
+| `tf-cmr10` | IDENTICAL |  |
+| `tf-fonts` | IDENTICAL |  |
+| `tf-local-tfm` | IDENTICAL |  |
+| `tf-missing` | STUCK | `kpse_make_tex` would run `mktextfm` |
+| `tf-tfm-ext` | IDENTICAL |  |
+
+`tf-cmr10` and `tf-fonts` `\showbox` an `\hbox` with kerns, ligatures and glue from six Computer
+Modern fonts at three sizes. Their logs, including every dimension printed, are byte-identical
+to the binary's. `tf-local-tfm` puts `cmbx10`'s TFM in the working directory as `cmr10.tfm`;
+the `.` path element finds it first, as in C. `tf-missing` is Stuck where kpathsea would run
+`mktextfm`.
+
 
 ## Checkpoint 3: the general C-main command line, and a `\documentclass{article}` run
 
@@ -213,7 +268,33 @@ kpathsea's values are the same for both program names. Its format table differs 
 formats, the fontmap and the tex paths (`hb/kpse-pdflatex.txt`). These are explicit inputs,
 measured per program name.
 
-CM3RESULTS
+The 13 `cm-*` inputs run their own command line on both sides (`argv0`/`argv` lines in
+`inputs/NAME.spec`; the binary side is `run_bin_argv.zsh`, quoted in `h2/diff/README.md`):
+
+| input | arm64 | amd64 (qemu) | reason |
+|---|---|---|---|
+| `cm-graded` | IDENTICAL | IDENTICAL |  |
+| `cm-graded-missing` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-amp` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-batch` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-draft` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-etex` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-file` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-fle` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-halt` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-jobname` | IDENTICAL | IDENTICAL |  |
+| `cm-ini-progname` | IDENTICAL | IDENTICAL |  |
+| `cm-percent-amp` | STUCK | STUCK | C main: a `%&` first line |
+| `cm-recorder` | STUCK | STUCK | C main: an option outside the allow-list (`-recorder`) |
+
+Measured on the final build `735450994e4b…`: 11 IDENTICAL, 2 STUCK, 0 DIVERGENT in each configuration (`hb/differential-interim.txt`). On an intermediate build, `cm-ini-progname` was cut off by a 1,500 s time-out at a load average above 500. On the final build it is IDENTICAL.
+
+`cm-graded` runs the graded command line `pdflatex -interaction=nonstopmode -halt-on-error
+doc.tex`. The model finds `pdflatex.fmt` by the modelled search, loads it, reads `doc.tex` and
+ends with rc 0 and the binary's bytes. `cm-ini-amp` (`pdftex -ini &pdflatex foo.tex`) does the
+same. `cm-recorder` and `cm-percent-amp` are Stuck by design, with C main's reason, before
+anything is printed.
+
 
 ### A one-line `\documentclass{article}` document, up to PDF output
 
@@ -345,6 +426,37 @@ only the compressing half; with `\pdfcompresslevel=0`, writezip would not run. T
 about 1,700 lines of writet1.c. The map-file parser is about 950 lines, with a 5.6 MB input that
 has the same scale problem the ls-R database had. The output layer is about 1,500 lines of
 utils.c. libpng and xpdf, 158,000 lines, are not on the minimal article's path at all.
+
+## Fidelity, memory and timing at the final build [M]
+
+The final build is `ps.exe` `735450994e4b…` (`h2/evidence/build/provenance.json`).
+- **Differential**: **PARTIAL; the run was stopped for a machine restart.** On the final build, the model side
+finished for 51 of 219 inputs on arm64 and 50 on amd64: 38 or 39 of the 178 committed inputs,
+and all 13 `cm-*`. Results on arm64: 43 IDENTICAL, 8 STUCK, 0 DIVERGENT. Results on amd64: 42
+IDENTICAL, 8 STUCK, 0 DIVERGENT. **No committed IDENTICAL row among those re-run regressed**
+(`hb/differential-interim.txt`). The remaining inputs, the 28 `kp-*`/`tf-*` included, are still
+to run on the final build. `diff/results-*.tsv` are therefore NOT re-recorded: they still hold
+the B2 build's 178 rows, and `verify_h2.py` pure mode fails on them (STALE) until the run
+completes.
+- **INITEX evidence** (`h2/evidence/inirun/`): re-run in both configurations on the final build. The spec gains `argv0 pdftex`, `cwd /w` and an empty working-directory listing. The model's terminal output, standard error and `texput.log` are byte-identical to the binary's (and to H.5's run); only the driver's `TIME:` line changed (capped.sh 4,000 MB, peak 667 MB).
+- **Round trip** (`&pdflatex \dump`, `hb/roundtrip.txt`): the model finds `pdflatex.fmt` by the
+  modelled kpathsea search. H.3's `kpsefind` table is retired. Its stdout, `texput.log` and
+  dumped format stream (`55629ae0…`, 11,621,681 bytes) are byte-identical to the binary's
+  (capped.sh 4,000 MB, peak 2,196 MB).
+- **Memory**: the standing retention check (`h5/tools/retention_probe.sh`, `hb/retention/`)
+  PASSES on the final build:
+  - static half: 788 closures at 284 realizer sites (B2: 669 closures) and 78 lambdas passed as
+    arguments (B2: 44), 0 failing. The new ones are Kpse.v's and Boundary.v's. A first build
+    failed it in four places, and each was removed at the source, never allowed:
+    - Kpse.v moved its types to `KTypes.v`, so it depends on no state;
+    - `find_file`'s local fontmap closure became `fm_names`;
+  - dynamic half: 17 probes (init 3, load 9, dump 5), every one under the limit; peak 3,228 MB
+    under the 4,000 MB cap. The 50-name meaning-dump prefix's spec gains the boundary's inputs
+    (`hb/retention/p50.spec`).
+- **Model runs**: every model run of this step ran under `h3/tools/capped.sh` or `diff.py`'s
+  per-run cap, at 4,000 MB.
+- **Binary timing**: none is reported here (C-145). Every binary run used a container-local
+  working directory (C-161).
 
 ## Trusted-base changes
 

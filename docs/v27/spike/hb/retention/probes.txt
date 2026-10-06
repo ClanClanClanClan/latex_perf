@@ -1,0 +1,18 @@
+RETPROBE run n 1 phase init k 1 ext 1 cpu 3.48 live 50022865 reach_state 50016794 static 298768 other -292697 limit 1000000 top 52193524
+RETPROBE run n 2 phase init k 4 ext 4 cpu 5.93 live 50022871 reach_state 50016800 static 298768 other -292697 limit 1000000 top 52193524
+RETPROBE run n 3 phase init k 16 ext 16 cpu 8.40 live 50022895 reach_state 50016824 static 298768 other -292697 limit 1000000 top 52193524
+RETPROBE run n 4 phase load k 1 ext 61 cpu 50.13 live 91339764 reach_state 91323143 static 298768 other -282147 limit 1000000 top 203173955
+RETPROBE run n 5 phase load k 4 ext 64 cpu 56.24 live 76471749 reach_state 76462338 static 298768 other -289357 limit 1000000 top 203173955
+RETPROBE run n 6 phase load k 16 ext 76 cpu 60.92 live 66414046 reach_state 66407691 static 298768 other -292413 limit 1000000 top 203173955
+RETPROBE run n 7 phase load k 64 ext 124 cpu 89.67 live 86306304 reach_state 86293582 static 298768 other -286046 limit 1000000 top 203173955
+RETPROBE run n 8 phase load k 256 ext 316 cpu 95.29 live 86311383 reach_state 86298661 static 298768 other -286046 limit 1000000 top 203173955
+RETPROBE run n 9 phase load k 1024 ext 1084 cpu 100.70 live 86335424 reach_state 86322702 static 298768 other -286046 limit 1000000 top 203173955
+RETPROBE run n 10 phase load k 4096 ext 4156 cpu 107.21 live 86427773 reach_state 86415058 static 298768 other -286053 limit 1000000 top 203173955
+RETPROBE run n 11 phase load k 16384 ext 16444 cpu 113.62 live 86427769 reach_state 86415058 static 298768 other -286057 limit 1000000 top 203173955
+RETPROBE run n 12 phase load k 24194 end-of-load ext 24254 cpu 133.37 live 102476357 reach_state 102458604 static 298768 other -281015 limit 1000000 top 205506286
+RETPROBE run n 13 phase dump k 1 ext 24255 cpu 139.60 live 102476348 reach_state 102458598 static 298768 other -281018 limit 1000000 top 205506286
+RETPROBE run n 14 phase dump k 4 ext 24258 cpu 146.12 live 102506867 reach_state 102489119 static 298768 other -281020 limit 1000000 top 205506286
+RETPROBE run n 15 phase dump k 16 ext 24270 cpu 152.36 live 102507276 reach_state 102489528 static 298768 other -281020 limit 1000000 top 205506286
+RETPROBE run n 16 phase dump k 64 ext 24318 cpu 160.62 live 102507662 reach_state 102489906 static 298768 other -281012 limit 1000000 top 205506286
+RETPROBE run n 17 phase dump k 256 ext 24510 cpu 174.96 live 102510496 reach_state 102492735 static 298768 other -281007 limit 1000000 top 205506286
+RETPROBE final n 17 phase dump k 555 ext 24809 cpu 186.70 live 102525005 reach_state 102507306 static 298768 other -281069 limit 1000000 top 205506286

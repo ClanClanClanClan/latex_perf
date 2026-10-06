@@ -1,0 +1,7 @@
+# interim: the 219-input differential on the final build 735450994e4b..., the inputs whose model side finished before the run was stopped (2026-10-06 23:35, restart); binary side as committed (H.2/H.5) plus the boundary inputs' runs
+arm64 51 inputs: IDENTICAL 43, STUCK 8
+arm64: done 51; of the 178 committed rows done: 38; new inputs done: ['cm-graded', 'cm-graded-missing', 'cm-ini-amp', 'cm-ini-batch', 'cm-ini-draft', 'cm-ini-etex', 'cm-ini-file', 'cm-ini-fle', 'cm-ini-halt', 'cm-ini-jobname', 'cm-ini-progname', 'cm-percent-amp', 'cm-recorder']
+amd64 50 inputs: IDENTICAL 42, STUCK 8
+amd64: done 50; of the 178 committed rows done: 37; new inputs done: ['cm-graded', 'cm-graded-missing', 'cm-ini-amp', 'cm-ini-batch', 'cm-ini-draft', 'cm-ini-etex', 'cm-ini-file', 'cm-ini-fle', 'cm-ini-halt', 'cm-ini-jobname', 'cm-ini-progname', 'cm-percent-amp', 'cm-recorder']
+arm64: 39 committed rows re-run; IDENTICAL rows that are no longer an exit: []; (an exit row is IDENTICAL or DIVERGENT, and compare above found no DIVERGENT)
+amd64: 38 committed rows re-run; IDENTICAL rows that are no longer an exit: []; (an exit row is IDENTICAL or DIVERGENT, and compare above found no DIVERGENT)

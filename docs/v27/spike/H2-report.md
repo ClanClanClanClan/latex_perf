@@ -424,25 +424,25 @@ re-measured on that build: `h2/evidence/build/provenance.json`, `ps.exe` `cae7a9
 
 ## Re-measured on the boundary step's build (2026-10-06) [M]
 
-The boundary step ([`H-boundary-report.md`](H-boundary-report.md), checkpoints 1–2) models
+The boundary step ([`H-boundary-report.md`](H-boundary-report.md), checkpoints 1–3) models
 kpathsea's file search, file input and TFM loading. It also adds an evaluation-order refinement
 (the verified `noreturn` procedures). Its build replaces the B2 build as the measured one:
-`h2/evidence/build/provenance.json`, `ps.exe` `PSSHA16…`. The committed evidence is re-measured
+`h2/evidence/build/provenance.json`, `ps.exe` `735450994e4b…`. The committed evidence is re-measured
 on it:
 - **the translation**: 603 of 603 procedures, 185,086 IR nodes, 188 distinct externals
   (unchanged). 45,756 unsequenced pairs checked, 19 of them Stuck (B2: 25): the noreturn
   refinement removes 7, and the new externals add 1;
 - **the boundary**: 61 of the 188 externals are modelled, so 127 of 188 externals are Stuck;
-- **the build** (load LOADS): BUILDLINES;
+- **the build** (load 85–196): coqc: 29 file(s), 54 s wall, peak 539 MB; extraction: 1 file(s), 8 s wall, peak 664 MB; ocamlopt: 15 file(s), 9 s wall, peak 152 MB;
 - **the INITEX run** (`evidence/inirun/`): the spec gains the working directory (`cwd /w`,
   an empty listing). The model's terminal output, standard error and `texput.log` are
   byte-identical to the previous build's in both configurations, and so to the binary's;
-- **the differential** (`diff/results-*.tsv`, 206 inputs). For the 178 earlier inputs the
+- **the differential** (`diff/results-*.tsv`, 219 inputs). For the 178 earlier inputs the
   binary side is unchanged and only the model side was re-run, in both configurations, under
-  `h3/tools/capped.sh` at 4,000 MB. The 28 new `kp-*`/`tf-*` inputs were run on both sides:
+  `h3/tools/capped.sh` at 4,000 MB. The 41 new `kp-*`/`tf-*`/`cm-*` inputs were run on both sides:
   arm64 natively, amd64 under qemu, each with a container-local working directory. Totals:
-  DIFFLINES.
-  CHANGEDROWS
+  PARTIAL, see `H-boundary-report.md` (Fidelity): the run was stopped for a machine restart after 51 of 219 inputs (arm64) and 50 (amd64); among those, 0 DIVERGENT and no committed IDENTICAL row regressed.
+  `results-*.tsv` are not re-recorded yet: they hold the B2 build's 178 rows, so `verify_h2.py` pure mode reports them STALE until the run completes
 
 ## The trusted base of H.2's claim
 

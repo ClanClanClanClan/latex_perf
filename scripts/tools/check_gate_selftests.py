@@ -515,6 +515,108 @@ def cli_verify_rc_off(text: str) -> str:
     return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
 
 
+def _strip_identity(block: dict) -> None:
+    """C-128: an oracle block with its identity removed (no arch, no tree
+    fingerprints) and its image named by TAG: the discovery of C-127 no
+    longer recognised it as a block, so nothing checked it."""
+    for k in ("arch", "tlpdb_sha256", "macro_layer_sha256", "fmt_sha256"):
+        block.pop(k, None)
+    block["image"] = "texlive/texlive:latest"
+
+
+def contract_pin_stripped(text: str) -> str:
+    """C-128 (review round 3): a contract pin with its identity removed."""
+    import json as _json
+    d = _json.loads(text)
+    _strip_identity(d["pin"])
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def o5_identity_stripped(text: str) -> str:
+    """C-128 (review round 3): an O-5 block with its identity removed AND
+    its clock relabelled real (both passed every gate)."""
+    import json as _json
+    d = _json.loads(text)
+    _strip_identity(d["oracle"])
+    d["oracle"]["clock"] = "real"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def contract_pin_deleted(text: str) -> str:
+    """C-128: a contract with no pin at all (its location is registered)."""
+    import json as _json
+    d = _json.loads(text)
+    del d["pin"]
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def _gc_without_grader(block: dict) -> None:
+    import _oracle
+    files = block["grading_code"]["files"]
+    del files["scripts/tools/diff_real_roots.py"]
+    block["grading_code"]["sha256"] = _oracle.grading_code_sha256(files)
+
+
+def gc_grader_dropped(text: str) -> str:
+    """C-128 (review round 3): grading_code drops the grader, sha256
+    recomputed, so it is self-consistent and names only current blobs."""
+    import json as _json
+    d = _json.loads(text)
+    _gc_without_grader(d["oracle"])
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def tag_named_block(text: str) -> str:
+    """C-128 (review round 3 LOW): an oracle naming its image by TAG and its
+    architecture under another key, in a file that records no oracle."""
+    import json as _json
+    d = _json.loads(text)
+    d["oracle"] = {"engine": "pdflatex", "image": "texlive/texlive:latest",
+                   "backend": "container", "clock": "real",
+                   "machine": "x86_64"}
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def not_a_block_widened(text: str) -> str:
+    """C-128: a pinned per-package revision pair that gains an `arch`."""
+    import json as _json
+    d = _json.loads(text)
+    d["tree_comparison"]["host_newer_revision"][0]["arch"] = "x86_64"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def results_row_forged(text: str) -> str:
+    """C-128 (review round 3 LOW, m4): a results row whose grade is changed,
+    while the re-grade and O-5 diffs that cite it still say it compiled."""
+    import json as _json
+    d = _json.loads(text)
+    doc = next(x for x in d["docs"] if x["arxiv_id"] == "2507.03478v1")
+    doc.update(pdflatex_rc=1, pdflatex_pdf=False, pdflatex_verdict="FAILS")
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def o5_both_sides_forged(text: str) -> str:
+    """C-128 (m5): both sides of an O-5 row given one forged first error, so
+    before == after and no field 'moved'."""
+    import json as _json
+    d = _json.loads(text)
+    r = d["rows"][3]
+    r["before"]["first_error"] = r["after"]["first_error"] = "! fake"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def cli_verify_rc_forged(text: str) -> str:
+    """C-128 (m16): a 'reason format only' row given a differing rc, with
+    rc_differs re-derived, so every total agrees."""
+    import json as _json
+    d = _json.loads(text)
+    s = d["samples"]["results_sample2.json"]
+    x = next(x for x in s["diffs"] if x["rec_rc"] == x["rc"])
+    x["rc"] = 0 if x["rc"] else 1
+    s["rc_differs"] = sum(y["rec_rc"] != y["rc"] for y in s["diffs"])
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
 def baseline_broken_off(text: str) -> str:
     """C-127: the oracle-baseline summary's broken rate edited."""
     import json as _json
@@ -788,6 +890,15 @@ def drift_second_setup_ocaml(text: str) -> str:
     needle = "ocaml-compiler: 5.1.1"
     i = text.rindex(needle)
     return text[:i] + "ocaml-compiler: 5.2.0" + text[i + len(needle):]
+
+
+def drift_v3_pair_compiler(text: str) -> str:
+    """OPEN-126: BOTH attempts of the non-X64 (setup-ocaml@v3) pair given
+    another compiler, so each pair is internally byte-identical."""
+    head, sep, tail = text.partition("uses: ocaml/setup-ocaml@v3")
+    assert sep and tail.count("ocaml-compiler: 5.1.1") == 2, "v3 pair drifted"
+    return head + sep + tail.replace("ocaml-compiler: 5.1.1",
+                                     "ocaml-compiler: 5.2.0")
 
 
 def flip_polyglossia(text: str) -> str:
@@ -1972,8 +2083,9 @@ REGISTRY = [
                      transform=kernel_pin_x86),
             Mutation("an oracle block no registry names",
                      "corpora/real_roots/manifest.json",
-                     r"manifest\.json \[second_grade\]: records an oracle "
-                     r"\(arch 'x86_64'\) that this gate does not know",
+                     r"manifest\.json \[second_grade\]: may record an oracle "
+                     r"\(keys \[.*'arch'.*\]\) at a location this gate does "
+                     r"not know",
                      transform=unregistered_oracle_block),
             Mutation("the host diagnostic relabelled as a container grade",
                      "corpora/oracle_baseline/diff_real_roots_sample2.json",
@@ -2018,6 +2130,41 @@ REGISTRY = [
                      "corpora/real_roots/results_sample2.json",
                      r"results_sample2\.json: records no grading_code",
                      transform=gc_dropped),
+            # C-128 (review round 3): classification by LOCATION, so a block
+            # stripped of the identity being checked is still checked; the
+            # grading code names the producer's grader exactly.
+            Mutation("a contract pin with its identity stripped",
+                     "corpora/contracts/amsart.json",
+                     r"amsart\.json \[pin\]: graded on None",
+                     transform=contract_pin_stripped),
+            Mutation("an O-5 block stripped of identity, clock relabelled",
+                     "corpora/oracle_baseline/o5_forced_clock_sample1.json",
+                     r"o5_forced_clock_sample1\.json \[oracle\]: graded on None",
+                     transform=o5_identity_stripped),
+            Mutation("a contract with its pin deleted",
+                     "corpora/contracts/article.json",
+                     r"article\.json \[pin\]: no oracle block at this location",
+                     transform=contract_pin_deleted),
+            Mutation("a GRADED grading_code that drops the grader",
+                     "corpora/real_roots/results.json",
+                     r"results\.json: grading_code names "
+                     r"\['scripts/tools/_oracle\.py'\], not exactly",
+                     transform=gc_grader_dropped),
+            Mutation("an O-5 grading_code that drops the grader",
+                     "corpora/oracle_baseline/o5_forced_clock_sample3.json",
+                     r"o5_forced_clock_sample3\.json \[oracle\]: grading_code "
+                     r"names \['scripts/tools/_oracle\.py'\], not exactly",
+                     transform=gc_grader_dropped),
+            Mutation("an oracle named by tag in a NO_ORACLE file",
+                     "corpora/real_roots/proven_coverage_sample1.json",
+                     r"proven_coverage_sample1\.json \[oracle\]: may record an "
+                     r"oracle",
+                     transform=tag_named_block),
+            Mutation("a NOT_A_BLOCK revision pair gains an arch",
+                     "corpora/oracle_baseline/summary.json",
+                     r"pinned in NOT_A_BLOCK with keys \['host', 'image', "
+                     r"'package'\], but one holds \['arch'",
+                     transform=not_a_block_widened),
         ]),
     GateTest(
         # OPEN-118 review round 2: a run with no proof that pdfTeX ran (the
@@ -2672,6 +2819,22 @@ REGISTRY = [
                      r"cli_verify_fe673dc1\.json \[results_sample2\.json\]: .* is "
                      r"not what its diffs",
                      transform=cli_verify_rc_off),
+            # C-128 (review round 3): the evidence joined by VALUE.
+            Mutation("a results grade forged under its citing diffs",
+                     "corpora/real_roots/results.json",
+                     r"o5_forced_clock_sample1\.json: row 2507\.03478v1 records "
+                     r"\[.*'after\.pdflatex_rc'.*\] unlike results\.json's row",
+                     transform=results_row_forged),
+            Mutation("both sides of an O-5 row forged alike",
+                     "corpora/oracle_baseline/o5_forced_clock_sample1.json",
+                     r"o5_forced_clock_sample1\.json: row \S+ records "
+                     r"\['before\.first_error', 'after\.first_error'\]",
+                     transform=o5_both_sides_forged),
+            Mutation("a CLI re-verification rc forged, totals re-derived",
+                     "corpora/oracle_baseline/cli_verify_fe673dc1.json",
+                     r"cli_verify_fe673dc1\.json \[results_sample2\.json\]: \S+ "
+                     r"rc \d is not results_sample2\.json's cli_rc",
+                     transform=cli_verify_rc_forged),
             Mutation("the oracle-baseline summary's broken rate edited",
                      "corpora/oracle_baseline/summary.json",
                      r"summary\.json \[corpora/apply_fixes_real/results_fresh\.json "
@@ -3035,6 +3198,12 @@ REGISTRY = [
                      ".github/actions/setup-ocaml-env/action.yml",
                      r"attempts have DRIFTED",
                      transform=drift_second_setup_ocaml),
+            # OPEN-126: the X64 (v2) and non-X64 (v3) pairs, both drifted
+            # alike, so only the cross-pair compiler check can see it.
+            Mutation("the non-X64 setup-ocaml pair builds another compiler",
+                     ".github/actions/setup-ocaml-env/action.yml",
+                     r"setup-ocaml steps install DIFFERENT compilers",
+                     transform=drift_v3_pair_compiler),
         ]),
     GateTest(
         "check_project_state (binary arm)",

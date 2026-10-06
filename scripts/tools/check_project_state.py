@@ -437,7 +437,8 @@ def main() -> int:
     from _results_summary import (  # noqa: E402
         BASELINE_SUMMARY, CLI_VERIFY, OPEN118_CELL_DIFFS, OPEN118_ROOT_DIFFS,
         REGRADE_DIFFS, baseline_summary_findings, cell_diff_findings,
-        cli_verify_findings, diff_summary_findings, field_moves,
+        cli_verify_findings, diff_summary_findings, evidence_value_findings,
+        field_moves,
         id_set_findings, real_roots_diff_findings, results_summary_findings)
     for name in ("results.json", "results_sample2.json", "results_sample3.json"):
         f = repo / "corpora/real_roots" / name
@@ -488,6 +489,8 @@ def main() -> int:
                 _load(rel), _load(art), Path(rel).name, art, key))
         findings.extend(baseline_summary_findings(_load(BASELINE_SUMMARY), _load))
         findings.extend(cli_verify_findings(_load(CLI_VERIFY), _load))
+        # C-128: and by VALUE, not only by ids and totals.
+        findings.extend(evidence_value_findings(_load))
     except FileNotFoundError as exc:
         findings.append(f"an OPEN-118/OPEN-126 evidence artefact is missing: {exc}")
     except (json.JSONDecodeError, OSError, KeyError, TypeError,

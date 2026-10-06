@@ -316,3 +316,89 @@ def cli_verify_findings(doc, load) -> list[str]:
                 out.append(f"{CLI_VERIFY} [{res_name}]: lists {d.get('id')!r}, "
                            f"not a doc of {res_name}")
     return out
+
+
+# ── C-128 (review round 3): THE EVIDENCE JOINED BY VALUE ───────────────────
+# C-127 joined each OPEN-126 diff to its results artefact by row ids and by
+# totals only. Review round 3 changed a results row to rc 1 / FALSE-READY
+# (totals re-derived) while both diffs that cite it still said rc 0; set
+# both sides of an O-5 row to the same forged first error; and moved a CLI
+# re-verification's rc; every gate passed. Now each row's recorded VALUES
+# must be the results row's.
+
+#: The oracle-side fields of a diff row's before/after sides; each must equal
+#: the same-named field of the results doc it re-grades.
+ORACLE_SIDE_FIELDS = ("pdflatex_rc", "pdflatex_verdict", "pdflatex_pdf",
+                      "pdflatex_passes", "first_error")
+
+#: The one diff measured BEFORE its results artefact's CLI side was
+#: re-measured (OPEN-126 (e)(ii), C-120): its cli_rc/cell may differ from the
+#: results doc exactly on the rows the CLI re-verification lists as
+#: rc-differing, and there they must be the re-verification's recorded side.
+CLI_REFRESH_AFTER = {
+    "corpora/oracle_baseline/regrade_open126_sample2.json": "results_sample2.json"}
+
+
+def evidence_value_findings(load) -> list[str]:
+    """Each OPEN-126 diff row agrees with its results doc in every value it
+    records (toplevel, cli_rc, cell, passes, both sides' oracle fields), and
+    the CLI re-verification's rc for every listed row is the results doc's
+    cli_rc (its recorded rc, where no refresh happened, too)."""
+    out = []
+    cv = load(CLI_VERIFY).get("samples") or {}
+    refreshed = {}
+    for res_name, s in cv.items():
+        refreshed[res_name] = {d.get("id"): d for d in s.get("diffs") or []
+                               if d.get("rec_rc") != d.get("rc")}
+    for rel, res in REGRADE_DIFFS.items():
+        name, res_name = rel.rsplit("/", 1)[-1], res.rsplit("/", 1)[-1]
+        docs = {d.get("arxiv_id"): d for d in load(res).get("docs") or []}
+        moved = (refreshed.get(CLI_REFRESH_AFTER[rel], {})
+                 if rel in CLI_REFRESH_AFTER else {})
+        for r in load(rel).get("rows") or []:
+            i = r.get("arxiv_id")
+            doc = docs.get(i)
+            if doc is None:
+                continue        # id_set_findings reports it
+            bad = []
+            if r.get("toplevel") != doc.get("toplevel"):
+                bad.append("toplevel")
+            if r.get("passes") != doc.get("pdflatex_passes"):
+                bad.append("passes")
+            for side in ("before", "after"):
+                sd = r.get(side) or {}
+                for k in ORACLE_SIDE_FIELDS:
+                    if sd.get(k) != doc.get(k):
+                        bad.append(f"{side}.{k}")
+            if i in moved:
+                if r.get("cli_rc") != moved[i].get("rec_rc") or \
+                        doc.get("cli_rc") != moved[i].get("rc"):
+                    bad.append("cli_rc (vs the CLI re-verification)")
+            else:
+                if r.get("cli_rc") != doc.get("cli_rc"):
+                    bad.append("cli_rc")
+                for side in ("before", "after"):
+                    if (r.get(side) or {}).get("cell") != doc.get("cell"):
+                        bad.append(f"{side}.cell")
+            if bad:
+                out.append(f"{name}: row {i} records {bad} unlike {res_name}'s "
+                           f"row (C-128): the evidence must be the grade it "
+                           f"cites")
+    for res_name, s in cv.items():
+        docs = {d.get("arxiv_id"): d
+                for d in load(f"corpora/real_roots/{res_name}").get("docs") or []}
+        refreshed_here = res_name in CLI_REFRESH_AFTER.values()
+        for d in s.get("diffs") or []:
+            doc = docs.get(d.get("id"))
+            if doc is None:
+                continue        # cli_verify_findings reports it
+            if d.get("rc") != doc.get("cli_rc"):
+                out.append(f"{CLI_VERIFY} [{res_name}]: {d.get('id')} rc "
+                           f"{d.get('rc')!r} is not {res_name}'s cli_rc "
+                           f"{doc.get('cli_rc')!r} (C-128)")
+            if not refreshed_here and d.get("rec_rc") != doc.get("cli_rc"):
+                out.append(f"{CLI_VERIFY} [{res_name}]: {d.get('id')} recorded "
+                           f"rc {d.get('rec_rc')!r} is not {res_name}'s cli_rc "
+                           f"{doc.get('cli_rc')!r}, and {res_name}'s CLI side "
+                           f"was never re-measured (C-128)")
+    return out

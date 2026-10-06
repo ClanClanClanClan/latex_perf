@@ -99,8 +99,9 @@ documents that pdflatex rejects, and READY (exit 0) is returned on 17 of them
 the real papers whose premises the checker certified. That rate, per sample
 and tier, is generated from the per-row artefacts into
 `docs/v27/PROJECT_STATE.md` §1 ("certified but pdflatex fails") and is
-deliberately not copied here: the copy that stood here went stale when a
-re-grade moved it (C-126). What is NOT verified at runtime: T1
+deliberately not copied here: the copy that stood here went stale when the
+in-tier definition stopped counting FOREIGN rows (C-118) and sample 2's CLI
+side was re-measured (C-120); the full re-grade itself moved no cell. What is NOT verified at runtime: T1
 macro-expansion (skipped), T4 without an `.aux` (skipped), and the
 byte-for-byte connection from your source to the abstract model the T6/T7
 compile-safety capstone is proved over (see the residual-gap note below).

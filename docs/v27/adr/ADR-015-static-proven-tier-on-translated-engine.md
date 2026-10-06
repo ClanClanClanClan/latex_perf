@@ -254,8 +254,9 @@ OPEN-126 (branch `fix/v27165-oracle-arch`) put; the evidence they rest on is tha
   - Every graded artefact and fixture set is re-graded under the fixed clock: the set is
     `check_oracle_pin.GRADED` (18 artefacts on 2026-10-05, among them the L_S0 signature file and
     bytes evidence) plus the contracts (the `corpora/contracts` rows of
-    `check_oracle_pin.ORACLE_RECORDS`). The gate discovers every recorded oracle block, so a
-    block left out of both lists fails it (C-127); and once `PROTOCOL_CLOCK` changes, it fails
+    `check_oracle_pin.ORACLE_RECORDS`). The gate classifies every tracked JSON file and checks
+    every registered location whatever its block records, and discovers blocks elsewhere, so a
+    block left out of both lists fails it (C-127, C-128); and once `PROTOCOL_CLOCK` changes, it fails
     every GRADED block that does not record the new clock. Contracts record no clock, so the
     gate cannot see whether one was regenerated under it. Only the 600 sample rows have been measured under a forced date so far.
   - *Author's note, not an owner decision:* that change edits `_oracle.py`, which is grading code

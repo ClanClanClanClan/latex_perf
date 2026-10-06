@@ -308,7 +308,8 @@ jobs:
 
       - name: Release debt (ADR-011 §6, OPEN-013)
         # Fails when HEAD is more FIRST-PARENT commits (merged PRs or direct
-        # pushes) past the nearest v* tag than the limit, which lives only in
+        # pushes) past the highest vX.Y.Z tag reachable from HEAD (other v*
+        # tags are ignored) than the limit, which lives only in
         # the script's MAX_FIRST_PARENT_DEBT, unless dune-project already
         # names a newer version (a release in preparation). Computed from git
         # at run time; no committed number. Needs fetch-depth: 0 (above): a

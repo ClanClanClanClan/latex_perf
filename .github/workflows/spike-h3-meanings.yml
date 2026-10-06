@@ -1,0 +1,360 @@
+# Spike E8 (ADR-015, owner decision E8 of 2026-10-05): a ONE-OFF measurement of the model's
+# memory on a GitHub-hosted runner. H.3's remaining clause ("meanings byte-identical to the
+# contract generator's") needs the model's full meaning dump of the 23,519 kernel names, which
+# exceeded the spike's laptop (C-112, H3-report.md). This job runs it once on ubuntu-latest and
+# records what it got: the runner's memory and cores, the model's peak memory, time and result,
+# and the byte comparison with the pinned binary's run of the same input.
+#
+# Jobs (independent runners):
+#   full          the model as built (OCaml's default GC), all 23,519 names
+#   full-compact  the same run with the driver's PS_COMPACT=3 (a compaction every third major
+#                 cycle: the profile-guided setting H.3 checkpoint 1 measured, not a model change)
+#   prefixes      the model on the first 0, 250, 500, 1000, 2000, 4000 names: memory against names
+#
+# Run 1 (37302258127) showed the model's step itself killed by SIGTERM (exit 143) at ~15.6 GB,
+# just under its cgroup cap, with no cgroup OOM event: something outside the cap (the
+# runner's whole-system memory pressure) acted first. From run 2 the cap leaves 2 GiB to the
+# rest of the runner, systemd-oomd is stopped (its state recorded), the kernel's and oomd's
+# logs are uploaded, and the model step cannot fail the job (continue-on-error).
+#
+# Run 3 (H.5 stage 2, 2026-10-06): the model build is now B2 (the interpreter's fuelled block
+# restructured at the source so that no extracted closure holds a state across a call;
+# docs/v27/spike/H5-heap-design.md, h2/coq/B2Equiv.v). The provenance check below binds the
+# run to that build. full-compact is dropped (compaction was a probe of the retention B2
+# removes); prefixes stays, as the memory-against-names curve on this runner's compiler, which
+# is OCaml 5.2.0 WITHOUT flambda (the laptop's has flambda, C-146): B2's memory property depends
+# on the compiled code, so it must hold here too.
+#
+# It fails ONLY on an infrastructure error (the build's inputs or generated program not the
+# measured ones, the image not pulled, the binary's run producing nothing). The model running
+# out of memory, out of time, Stuck or differing from the binary is a FINDING: it is recorded,
+# summarised and uploaded, and the job stays green.
+#
+# The binary side is the recipe of docs/v27/spike/h3/README.md (the meaning dump), run in the
+# pinned image (digest read from _oracle.py's source of truth, tex-oracle.yml) for linux/arm64,
+# the architecture of the contract (corpora/contracts/kernel/aarch64-a476533c0d6e64f0.json),
+# under qemu-user on this x86_64 runner. Its lines that name an engine are allow-listed line by
+# line in scripts/tools/check_oracle_pin.py (WORKFLOW_ALLOW): they do not go through _oracle.py
+# because _oracle.py has no terminal input, architecture choice or clock shim yet (owner
+# decision E7).
+name: spike-h3-meanings
+
+on:
+  push:
+    branches: [ci/v27165-h3-meanings]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spike-h3-meanings-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TL_COMMIT: dc8efcd41054ec4bf7f96c022cd2d91fe346f6e1   # texlive-source svn r78081 (H1-report.md)
+  OCAML_V: 5.2.0
+  COQ_V: 8.18.0
+  ZARITH_V: "1.14"
+  FINDLIB_V: 1.9.8
+
+jobs:
+  meanings:
+    name: meanings-${{ matrix.variant }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [full, prefixes]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record the runner (memory, cores, architecture, disk, swap, kernel)
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/h3"; mkdir -p "$D/out/runner"; echo "D=$D" >> "$GITHUB_ENV"
+          echo "JOB_T0=$(date +%s)" >> "$GITHUB_ENV"
+          R="$D/out/runner"
+          cat /proc/meminfo > "$R/meminfo.txt"; nproc > "$R/nproc.txt"; uname -m > "$R/uname-m.txt"
+          uname -a > "$R/uname-a.txt"; lscpu > "$R/lscpu.txt" 2>&1 || true
+          swapon --show > "$R/swap.txt" 2>&1 || true; free -m > "$R/free.txt"
+          df -h > "$R/df-before.txt"; cat /etc/os-release > "$R/os-release.txt"
+          stat -fc %T /sys/fs/cgroup > "$R/cgroup-fs.txt"
+          echo "matrix variant: ${{ matrix.variant }}" > "$R/variant.txt"
+          head -3 "$R/meminfo.txt"; cat "$R/nproc.txt" "$R/uname-m.txt" "$R/cgroup-fs.txt" "$R/swap.txt"
+
+      - name: Free disk space (the pinned image is ~9 GB unpacked per platform)
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost || true
+          df -h / | tee "$D/out/runner/df-after-cleanup.txt"
+
+      - name: System packages
+        run: |
+          set -euo pipefail
+          sudo rm -f /etc/apt/sources.list.d/microsoft* /etc/apt/sources.list.d/*azure* 2>/dev/null || true
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zsh time opam libgmp-dev pkg-config bubblewrap \
+            gcc g++ make perl libfontconfig-dev libx11-dev libxmu-dev libxaw7-dev > /dev/null
+          opam --version | tee "$D/out/runner/opam-version.txt"
+
+      - name: Cache the opam root (OCaml, Coq, zarith, findlib at the pinned versions)
+        id: opamcache
+        uses: actions/cache@v4
+        with:
+          path: ~/.opam
+          key: spike-h3-opam-${{ runner.os }}-ocaml${{ env.OCAML_V }}-coq${{ env.COQ_V }}-zarith${{ env.ZARITH_V }}-findlib${{ env.FINDLIB_V }}-v1
+
+      - name: Set up the opam switch
+        if: steps.opamcache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          opam init --bare --disable-sandboxing -y -q
+          ok=0
+          for attempt in 1 2 3; do
+            if opam switch create lp "ocaml-base-compiler.$OCAML_V" -y -q && \
+               opam install --switch=lp -y -q "coq.$COQ_V" "zarith.$ZARITH_V" "ocamlfind.$FINDLIB_V"; then ok=1; break; fi
+            echo "opam attempt $attempt failed; retrying"; opam switch remove lp -y 2>/dev/null || true; sleep 20
+          done
+          [ "$ok" -eq 1 ] || { echo "::error::opam setup failed 3/3"; exit 1; }
+
+      - name: Record the tools
+        run: |
+          set -euo pipefail
+          eval "$(opam env --switch=lp)"
+          { coqc --version; ocamlfind ocamlopt -version; opam list --switch=lp; } | tee "$D/out/runner/tools.txt"
+          coqc --version | grep -q "version $COQ_V" && [ "$(ocamlfind ocamlopt -version)" = "$OCAML_V" ] || \
+            { echo "::error::not the pinned tools"; exit 1; }
+
+      - name: Cache the translator's inputs (from the r78081 build tree)
+        id: tlcache
+        uses: actions/cache@v4
+        with:
+          path: ~/tlsrc
+          key: spike-h3-tl-${{ env.TL_COMMIT }}-inputs-v1
+
+      - name: Build texlive-source r78081 (TeX Live's own recipe, pdftex only) for pdftex.p and its companions
+        if: steps.tlcache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/tl" && cd "$RUNNER_TEMP/tl"
+          curl -fsSL -o src.tar.gz "https://codeload.github.com/TeX-Live/texlive-source/tar.gz/$TL_COMMIT"
+          tar xzf src.tar.gz && cd "texlive-source-$TL_COMMIT"
+          find . -name \*.info -exec touch '{}' \;
+          touch ./texk/web2c/web2c/web2c-lexer.c ./texk/web2c/web2c/web2c-parser.c ./texk/web2c/web2c/web2c-parser.h
+          export TL_MAKE_FLAGS="-j $(nproc)" CXXFLAGS='-std=c++17'
+          ./Build -C --disable-all-pkgs --enable-web2c --enable-pdftex > "$RUNNER_TEMP/tl/build.log" 2>&1 || \
+            { tail -50 "$RUNNER_TEMP/tl/build.log"; echo "::error::TeX Live build failed"; exit 1; }
+          T=~/tlsrc; mkdir -p $T/Work/texk/web2c $T/texk/web2c/web2c $T/texk/web2c/synctexdir $T/texk/web2c/pdftexdir
+          cp Work/texk/web2c/pdftex.p Work/texk/web2c/pdftexcoerce.h Work/texk/web2c/pdftex.pool $T/Work/texk/web2c/
+          cp texk/web2c/web2c/common.defines texk/web2c/web2c/texmf.defines $T/texk/web2c/web2c/
+          cp texk/web2c/synctexdir/synctex.defines $T/texk/web2c/synctexdir/
+          cp texk/web2c/pdftexdir/pdftex.defines $T/texk/web2c/pdftexdir/
+          cd / && rm -rf "$RUNNER_TEMP/tl"
+
+      - name: The inputs are the measured build's (sha256 against h2/evidence/build/provenance.json)
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, sys
+          P = json.load(open("docs/v27/spike/h2/evidence/build/provenance.json"))["inputs"]
+          T = os.path.expanduser("~/tlsrc")
+          W = T + "/texk/web2c"
+          paths = {"pdftex.p": T + "/Work/texk/web2c/pdftex.p", "pdftexcoerce.h": T + "/Work/texk/web2c/pdftexcoerce.h",
+                   "pdftex.pool": T + "/Work/texk/web2c/pdftex.pool", "common.defines": W + "/web2c/common.defines",
+                   "texmf.defines": W + "/web2c/texmf.defines", "synctex.defines": W + "/synctexdir/synctex.defines",
+                   "pdftex.defines": W + "/pdftexdir/pdftex.defines"}
+          bad = [k for k, p in paths.items() if hashlib.sha256(open(p, "rb").read()).hexdigest() != P[k]]
+          print("inputs checked:", len(paths), "mismatched:", bad)
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Build the model exactly as pipeline.sh does
+        run: |
+          set -euo pipefail
+          B="$D/build"; mkdir -p "$B"
+          OPAM_SWITCH=lp SRC=~/tlsrc OUT="$B" zsh docs/v27/spike/h2/pipeline.sh > "$D/out/pipeline.out" 2>&1 || \
+            { cat "$D/out/pipeline.out"; echo "::error::pipeline.sh failed"; exit 1; }
+          cat "$D/out/pipeline.out"
+          cp "$B/provenance.json" "$D/out/provenance-ci.json"; cp "$B/measure.tsv" "$D/out/measure-ci.tsv"
+          # the same program as the measured build: the generated Coq and the extracted OCaml are
+          # platform-independent and must hash as recorded (ps.exe is this host's compilation)
+          python3 - "$B/provenance.json" "$D/out/provenance-check.txt" <<'PY'
+          import json, sys
+          ci = json.load(open(sys.argv[1])); ref = json.load(open("docs/v27/spike/h2/evidence/build/provenance.json"))
+          bad = [k for k in ("inputs", "sources", "generated", "extracted") if ci[k] != ref[k]]
+          msg = ("generated tree %s, extracted tree %s, ps.exe (this host) %s; differs from the measured build in: %s"
+                 % (ci["generated"]["_tree"][:16], ci["extracted"]["_tree"][:16], ci["ps_exe"][:16], bad))
+          print(msg); open(sys.argv[2], "w").write(msg + "\n")
+          # inputs, sources or generated Coq differing = not the measured program: an infrastructure
+          # error. The extracted OCaml differing is recorded (a finding about extraction), not fatal.
+          sys.exit(1 if set(bad) - {"extracted"} else 0)
+          PY
+
+      - name: Register qemu-user for arm64 (the binary side and the format are the arm64 image's)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Pull the pinned image (linux/arm64, under qemu) and take pdflatex.fmt from it
+        run: |
+          set -euo pipefail
+          IMG=$(python3 -c 'import sys; sys.path.insert(0, "scripts/tools"); import _oracle as O; assert O.IMAGE == O.FINGERPRINTED_IMAGE, (O.IMAGE, O.FINGERPRINTED_IMAGE); print(O.IMAGE)')
+          echo "IMG=$IMG" >> "$GITHUB_ENV"; echo "$IMG" > "$D/out/runner/image.txt"
+          { ls -la /proc/sys/fs/binfmt_misc/; cat /proc/sys/fs/binfmt_misc/qemu-aarch64; } > "$D/out/runner/binfmt.txt" 2>&1 || true
+          docker pull --platform linux/arm64 "$IMG" > /dev/null
+          a=$(docker run --rm --platform linux/arm64 "$IMG" uname -m)
+          echo "container uname -m: $a (qemu-user on $(uname -m))" | tee -a "$D/out/runner/image.txt"
+          [ "$a" = aarch64 ] || { echo "::error::container reports $a"; exit 1; }
+          mkdir -p "$D/fmt"
+          docker run --rm --platform linux/arm64 --network none -v "$D/fmt":/w "$IMG" sh -c \
+            'cp $(kpsewhich -engine=pdftex -progname=pdftex -format=fmt pdflatex.fmt) /w/shipped.fmt'
+          python3 - "$D/fmt" <<'PY'
+          import gzip, hashlib, sys
+          d = sys.argv[1]; z = open(d + "/shipped.fmt", "rb").read(); raw = gzip.decompress(z)
+          open(d + "/pdflatex.fmt.raw", "wb").write(raw)
+          hz, hr = hashlib.sha256(z).hexdigest(), hashlib.sha256(raw).hexdigest()
+          print("shipped", hz, len(z), "decompressed", hr, len(raw))
+          sys.exit(0 if hz.startswith("a476533c0d6e64f0") and hr.startswith("6fccc888937067b4") else 1)
+          PY
+          df -h / | tee "$D/out/runner/df-after-pull.txt"
+
+      - name: The meaning dump's input, the model's run identity, the clock shim
+        run: |
+          set -euo pipefail
+          M="$D/m"; mkdir -p "$M"
+          python3 docs/v27/spike/h3/tools/meanblock.py . "$M/full" | tee "$D/out/stdin-full.json"
+          grep -q '"stdin_sha256": "b2af378bab4cb2ae0ff7d4ab7bedae40012688c1e2fca86612324a93d684b7f7"' "$D/out/stdin-full.json" || \
+            { echo "::error::not the measured meaning-dump input"; exit 1; }
+          for n in 0 250 500 1000 2000 4000; do python3 docs/v27/spike/h3/tools/meanblock.py . "$M/p$n" $n > "$D/out/stdin-p$n.json"; done
+          sed "s#=PATH-OF-THE-DECOMPRESSED-pdflatex.fmt#=$D/fmt/pdflatex.fmt.raw#" \
+            docs/v27/spike/h3/evidence/meanings/model.spec.template > "$M/spec"
+          [ "$(grep -c "=$D/fmt/pdflatex.fmt.raw" "$M/spec")" -eq 1 ] || { echo "::error::spec template"; exit 1; }
+          cp "$M/spec" "$D/out/model.spec"
+          mkdir -p "$D/shim"; cp docs/v27/spike/h3/ci/clockshim-arm64.so "$D/shim/"
+          echo "981f50cbef2266bfece65536284a487a193302a16824eb7328722be8de823358  $D/shim/clockshim-arm64.so" | sha256sum -c -
+
+      - name: Binary side (the recipe of h3/README.md, linux/arm64 under qemu)
+        if: matrix.variant != 'prefixes'
+        run: |
+          set -uo pipefail
+          M="$D/m"; B="$D/bin"; mkdir -p "$B/w"
+          CLOCK=1788076260.123456,1788076261.123456,1788076262.123456,1788076263.123456,1788076264.123456,1788076265.123456,1788076266.123456,1788076267.123456
+          t0=$(date +%s)
+          timeout -k 30 7200 docker run --rm -i --name lp-bin-meanings --platform linux/arm64 --network none -v "$B/w":/w -w /w -v "$D/shim":/shim:ro \
+            -e LD_PRELOAD=/shim/clockshim-arm64.so -e LP_CLOCK=$CLOCK -e LP_CLOCK_LOG=/w/clock.log \
+            -e SOURCE_DATE_EPOCH=0 -e FORCE_SOURCE_DATE=1 -e max_print_line=1000000 -e error_line=254 \
+            -e half_error_line=238 -e openin_any=p -e openout_any=p $IMG pdftex -ini < "$M/full/stdin-meanings" > "$B/out" 2> "$B/err"
+          rc=$?; echo "$rc" > "$B/rc"; echo "binary rc=$rc in $(( $(date +%s) - t0 )) s (qemu)" | tee "$D/out/binary-run.txt"
+          docker rm -f lp-bin-meanings > /dev/null 2>&1 || true
+          sudo chown -R "$(id -u):$(id -g)" "$B"
+          [ -s "$B/w/texput.log" ] || { echo "::error::the binary's run wrote no log"; exit 1; }
+          sha256sum "$B/out" "$B/w/texput.log" "$B/w/clock.log" | tee -a "$D/out/binary-run.txt"
+
+      - name: The model (memory cap just under physical RAM, swap off, wall-clock limit)
+        continue-on-error: true      # an out-of-memory or time-out is a finding, recorded below
+        run: |
+          set -uo pipefail
+          M="$D/m"; P="$D/build/build/ps.exe"; O="$D/out"
+          { systemctl is-active systemd-oomd.service; systemctl is-enabled systemd-oomd.service; } > "$O/runner/oomd-before.txt" 2>&1 || true
+          sudo systemctl stop systemd-oomd.socket systemd-oomd.service > /dev/null 2>&1 || true
+          systemctl is-active systemd-oomd.service > "$O/runner/oomd-during.txt" 2>&1 || true
+          sudo swapoff -a || true; swapon --show > "$O/runner/swap-during-run.txt" 2>&1 || true
+          total_kb=$(awk '/^MemTotal:/{print $2}' /proc/meminfo)
+          cap_kb=$(( total_kb - 2097152 ))            # 2 GiB under physical RAM for the runner itself
+          echo "MemTotal ${total_kb} kB; cap (MemoryMax) ${cap_kb} kB" | tee "$O/cap.txt"
+          compact=""; [ "${{ matrix.variant }}" = full-compact ] && compact=3
+          case "${{ matrix.variant }}" in prefixes) runs="p0 p250 p500 p1000 p2000 p4000" ;; *) runs="full" ;; esac
+          printf 'run\tnames\tresult\texit\twall_s\tmaxrss_kb_time_v\tcgroup_peak_bytes\toom_kills\n' > "$O/runs.tsv"
+          for r in $runs; do
+            used=$(( $(date +%s) - JOB_T0 ))
+            left=$(( 345 * 60 - used - 15 * 60 ))      # leave 15 min for the comparison and the upload
+            # too little time left is a finding (recorded), not an error: the remaining runs are skipped
+            if [ "$left" -lt 300 ]; then echo "no time left for $r" | tee -a "$O/runs.tsv"; continue; fi
+            R="$O/model-$r"; mkdir -p "$R/dump"
+            unit="lp-model-$r-$$"
+            sudo systemd-run --scope --quiet --unit="$unit" -p MemoryMax="${cap_kb}K" -p MemorySwapMax=0 -- \
+              sudo -u "$(id -un)" env PS_DUMPDIR="$R/dump" PS_PROCNAMES="$D/build/procnames.txt" ${compact:+PS_COMPACT=$compact} \
+              /usr/bin/time -v -o "$R/time-v.txt" timeout -k 60 "$left" "$P" 4000000000 "$M/spec" "$M/$r/stdin-meanings" \
+              > "$R/dump/driver.out" 2> "$R/stderr.txt" &
+            pid=$!
+            t0=$(date +%s); cg=""
+            printf 'elapsed_s\tcgroup_current_bytes\tcgroup_peak_bytes\tps_vmrss_kb\tps_vmhwm_kb\n' > "$R/curve.tsv"
+            while kill -0 "$pid" 2>/dev/null; do
+              [ -z "$cg" ] && cg=$(systemctl show -p ControlGroup --value "$unit.scope" 2>/dev/null || true)
+              cur=""; peak=""; rss=""; hwm=""
+              if [ -n "$cg" ] && [ -d "/sys/fs/cgroup$cg" ]; then
+                cur=$(cat "/sys/fs/cgroup$cg/memory.current" 2>/dev/null || true)
+                peak=$(cat "/sys/fs/cgroup$cg/memory.peak" 2>/dev/null || true)
+                cp "/sys/fs/cgroup$cg/memory.events" "$R/memory.events" 2>/dev/null || true
+                for q in $(cat "/sys/fs/cgroup$cg/cgroup.procs" 2>/dev/null || true); do
+                  if [ "$(cat /proc/$q/comm 2>/dev/null || true)" = ps.exe ]; then
+                    rss=$(awk '/^VmRSS:/{print $2}' /proc/$q/status 2>/dev/null || true)
+                    hwm=$(awk '/^VmHWM:/{print $2}' /proc/$q/status 2>/dev/null || true)
+                  fi
+                done
+              fi
+              printf '%s\t%s\t%s\t%s\t%s\n' "$(( $(date +%s) - t0 ))" "$cur" "$peak" "$rss" "$hwm" >> "$R/curve.tsv"
+              sleep 5
+            done
+            wait "$pid"; ec=$?
+            wall=$(( $(date +%s) - t0 ))
+            res=$(grep -a '^RESULT: ' "$R/dump/driver.out" | tail -1 | cut -c9- || true)
+            [ -z "$res" ] && res="no result"
+            oom=$(awk '/^oom_kill /{print $2}' "$R/memory.events" 2>/dev/null || true)
+            [ "$ec" -eq 124 ] && res="$res; killed by the wall-clock limit (${left} s)"
+            [ -n "$oom" ] && [ "$oom" -gt 0 ] && res="$res; killed by the memory cap (oom_kill $oom)"
+            maxrss=$(awk -F': ' '/Maximum resident set size/{print $2}' "$R/time-v.txt" 2>/dev/null || true)
+            lastpeak=$(tail -1 "$R/curve.tsv" | cut -f3)
+            n=$(python3 -c "import json,sys; print(len(json.load(open('$M/$r/names.json'))))")
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$r" "$n" "$res" "$ec" "$wall" "$maxrss" "$lastpeak" "${oom:-}" | tee -a "$O/runs.tsv"
+          done
+          sudo swapon -a || true
+          sudo journalctl -k -b --no-pager > "$O/runner/kernel-log.txt" 2>&1 || true
+          sudo journalctl -u systemd-oomd -b --no-pager > "$O/runner/oomd-log.txt" 2>&1 || true
+          exit 0
+
+      - name: Compare (model against binary, byte for byte; both against the contract) and summarise
+        if: always()
+        run: |
+          set -uo pipefail
+          O="$D/out"; M="$D/m"
+          if [ "${{ matrix.variant }}" != prefixes ] && [ -f "$O/model-full/dump/driver.out" ] && [ -f "$D/bin/rc" ]; then
+            python3 docs/v27/spike/h3/tools/meancompare.py --repo . --names "$M/full/names.json" --spec "$M/spec" \
+              --model "$O/model-full/dump" --bin "$D/bin" --out "$O/compare.json" > /dev/null || true
+          fi
+          python3 - "$O" "${{ matrix.variant }}" <<'PY'
+          import json, pathlib, sys
+          o, variant = pathlib.Path(sys.argv[1]), sys.argv[2]
+          mem = dict(l.split(":", 1) for l in (o / "runner/meminfo.txt").read_text().splitlines()[:3])
+          rows = [l.split("\t") for l in (o / "runs.tsv").read_text().splitlines()[1:] if "\t" in l] if (o / "runs.tsv").exists() else []
+          s = {"variant": variant, "runner": {"MemTotal": mem.get("MemTotal", "").strip(),
+                                              "nproc": (o / "runner/nproc.txt").read_text().strip(),
+                                              "uname_m": (o / "runner/uname-m.txt").read_text().strip()},
+               "cap": (o / "cap.txt").read_text().strip() if (o / "cap.txt").exists() else None,
+               "runs": [dict(zip(["run", "names", "result", "exit", "wall_s", "maxrss_kb_time_v", "cgroup_peak_bytes",
+                                  "oom_kills"], r)) for r in rows]}
+          if (o / "compare.json").exists():
+              c = json.loads((o / "compare.json").read_text())
+              s["comparison"] = {k: c.get(k) for k in ("class", "differs_in", "model_result", "binary_rc")}
+              s["comparison"]["binary_digest"] = c["binary"].get("digest", {}).get("meanings_sha256")
+              s["comparison"]["model_digest"] = c.get("model", {}).get("digest", {}).get("meanings_sha256")
+              s["comparison"]["contract_digest"] = c["contract_meanings_sha256"]
+          if (o / "binary-run.txt").exists():
+              s["binary_run"] = (o / "binary-run.txt").read_text()
+          (o / "summary.json").write_text(json.dumps(s, indent=1) + "\n")
+          print(json.dumps(s, indent=1))
+          PY
+          { echo "## spike H.3 meanings: ${{ matrix.variant }}"; echo '```'; cat "$O/summary.json"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h3-meanings-${{ matrix.variant }}
+          path: |
+            ${{ runner.temp }}/h3/out
+            ${{ runner.temp }}/h3/bin
+          retention-days: 30
+          if-no-files-found: error

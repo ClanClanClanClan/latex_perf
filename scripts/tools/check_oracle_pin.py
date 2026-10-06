@@ -284,6 +284,12 @@ WORKFLOW_ALLOW = {
         '$IMG pdftex -ini < $d/stdin > $d/realclock/out 2> $d/realclock/err',
         '(cd o-$f && SOURCE_DATE_EPOCH=1788076260 FORCE_SOURCE_DATE=1 timeout 300 pdftex $H -interaction=nonstopmode $t </dev/null > term.txt 2>&1; echo "$f rc=$?")',
     ),
+    # Owner decision E8 (ADR-015, 2026-10-05): the one-off GitHub-hosted measurement of the
+    # model's meaning dump. The binary side is the meaning-dump recipe of
+    # docs/v27/spike/h3/README.md, executed only inside the pinned image (linux/arm64).
+    ".github/workflows/spike-h3-meanings.yml": (
+        '-e half_error_line=238 -e openin_any=p -e openout_any=p $IMG pdftex -ini < "$M/full/stdin-meanings" > "$B/out" 2> "$B/err"',
+    ),
 }
 # Python lines that hold an engine's NAME as data, not a command: exact stripped lines, pinned
 # like WORKFLOW_ALLOW (a new one fails; a vanished one must be pruned).

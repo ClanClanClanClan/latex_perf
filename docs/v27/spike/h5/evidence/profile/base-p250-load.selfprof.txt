@@ -1,0 +1,14 @@
+total top-of-stack samples: 11392
+    4594  40.3%  Uint63/Sint63 <-> Z conversion (extracted Coq library code)
+    2382  20.9%  zarith (Z arithmetic)
+    1530  13.4%  BinInt/BinPos (extracted Coq Z/positive library code)
+    1385  12.2%  allocation
+     379   3.3%  interpreter (Interp)
+     231   2.0%  minor GC (promotion)
+     229   2.0%  system (mmap/TLS/memset)
+     218   1.9%  values/storage (Values)
+     206   1.8%  major GC
+     184   1.6%  persistent arrays (Parray)
+      22   0.2%  write barrier
+      16   0.1%  other: caml_find_frame_descr
+      16   0.1%  other: caml_scan_stack

@@ -1,0 +1,97 @@
+# B2 (H.5 stage 2): the restructuring, its Coq proofs, its static check. Generated 2026-10-06.
+
+## b2gen.py --check git ../../h2/coq  (Interp.v and RefInterp.v regenerated from git 9c3315be:docs/v27/spike/h2/coq/Interp.v and compared byte for byte)
+b2gen --check: OK
+
+## coqc B2Equiv.v in the measured build (pipeline.sh, ~/.cache/lp-spike-h1/h5/b2final/build/log.B2Equiv.v.txt; time lines removed)
+Axioms:
+PrimInt63.sub : PrimInt63.int -> PrimInt63.int -> PrimInt63.int
+PrimFloat.sub : PrimFloat.float -> PrimFloat.float -> PrimFloat.float
+PArray.set
+  : forall A : Type, PArray.array A -> PrimInt63.int -> A -> PArray.array A
+PrimFloat.opp : PrimFloat.float -> PrimFloat.float
+PrimFloat.of_uint63 : PrimInt63.int -> PrimFloat.float
+PrimFloat.normfr_mantissa : PrimFloat.float -> PrimInt63.int
+PrimFloat.mul : PrimFloat.float -> PrimFloat.float -> PrimFloat.float
+PArray.make : forall A : Type, PrimInt63.int -> A -> PArray.array A
+PrimInt63.ltb : PrimInt63.int -> PrimInt63.int -> bool
+PrimFloat.ltb : PrimFloat.float -> PrimFloat.float -> bool
+PrimInt63.lsr : PrimInt63.int -> PrimInt63.int -> PrimInt63.int
+PrimInt63.lsl : PrimInt63.int -> PrimInt63.int -> PrimInt63.int
+PrimInt63.lor : PrimInt63.int -> PrimInt63.int -> PrimInt63.int
+PrimFloat.leb : PrimFloat.float -> PrimFloat.float -> bool
+PrimFloat.ldshiftexp : PrimFloat.float -> PrimInt63.int -> PrimFloat.float
+PrimInt63.land : PrimInt63.int -> PrimInt63.int -> PrimInt63.int
+PrimInt63.int : Set
+PArray.get : forall A : Type, PArray.array A -> PrimInt63.int -> A
+PrimFloat.frshiftexp : PrimFloat.float -> PrimFloat.float * PrimInt63.int
+PrimFloat.float : Set
+PrimInt63.eqb : PrimInt63.int -> PrimInt63.int -> bool
+PrimFloat.eqb : PrimFloat.float -> PrimFloat.float -> bool
+PrimFloat.div : PrimFloat.float -> PrimFloat.float -> PrimFloat.float
+PrimFloat.classify : PrimFloat.float -> FloatClass.float_class
+PArray.array : Type -> Type
+PrimFloat.add : PrimFloat.float -> PrimFloat.float -> PrimFloat.float
+PrimFloat.abs : PrimFloat.float -> PrimFloat.float
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+(rc of coqc B2Equiv.v: 0; its row in measure.tsv: coqc B2Equiv.v 0 1.33 0.74 461 80.38)
+
+## mutation control (scratch copy): Interp.v's exec_body with '| SLabel _ => SNorm st' changed to '| SLabel _ => SRet st'
+coqc of 'Lemma exec_b2 : Interp.exec = RefInterp.exec. Proof. reflexivity. Qed.' then fails:
+Error: Unable to unify "exec" with "Interp.exec".
+and b2gen --check on a RefInterp.v with one appended comment line: 'b2gen --check: DIFFERS: [RefInterp.v]', rc 1
+
+## b2static.py on the pre-B2 extracted tree (H.3 checkpoint 2, 72b2ea79...)
+FAIL   Interp.ml evale: the successor closure is not a single call on identifiers
+FAIL   Interp.ml evall: the successor closure is not a single call on identifiers
+FAIL   Interp.ml evalargs: the successor closure is not a single call on identifiers
+FAIL   Interp.ml evalx: the successor closure is not a single call on identifiers
+FAIL   Interp.ml callp0: the successor closure is not a single call on identifiers
+FAIL   Interp.ml exec: the successor closure is not a single call on identifiers
+FAIL   Interp.ml for_loop: the successor closure is not a single call on identifiers
+FAIL   Interp.ml exec_list: the successor closure is not a single call on identifiers
+FAIL   Interp.ml goto_in: the successor closure is not a single call on identifiers
+FAIL   Interp.ml write_items: the successor closure is not a single call on identifiers
+b2static: 0 single-call sites, 23 allowed sites, 10 failing
+rc 1
+
+## b2static.py on the B2 extracted tree (dbace323...)
+allow  BinInt.ml of_nat: Coq library, no state
+allow  BinPos.ml of_succ_nat: Coq library, no state
+allow  Boundary.ml c_strtoull10: no state (take_digits' result)
+allow  Boundary.ml c_atoi: no state (take_digits' result)
+allow  Boundary.ml read_into: tail-recursive: B's only call after put_cell is the tail call
+allow  Boundary.ml trim_spaces: tail-recursive, reads one state
+allow  Boundary.ml map_xord: tail-recursive: B's only call after put_cell is the tail call
+allow  Boundary.ml dec_digits: no state
+allow  Boundary.ml be_bytes: no state
+allow  Boundary.ml take: no state
+allow  Boundary.ml undump_cells: no state
+allow  Boundary.ml parse_tounicode: no state
+allow  Interp.ml copy_cells: tail-recursive: B's only call after put_cell is the tail call
+allow  Interp.ml read_cells: reads one state, writes none: the state held is the current one
+allow  Interp.ml digits_rev: no state
+allow  Interp.ml cstring: reads one state, writes none: the state held is the current one
+ok     Interp.ml evale: fun f -> evale_body procs strings_base ext evale evall evalargs evalx callp0 f e
+        st
+ok     Interp.ml evall: fun f -> evall_body evale evall f l st
+ok     Interp.ml evalargs: fun f -> evalargs_body evale evall evalargs f ks args st
+ok     Interp.ml evalx: fun f -> evalx_body evale evall evalx f args st
+ok     Interp.ml callp0: fun f -> callp_body procs exec f p cells st
+ok     Interp.ml exec: fun f -> exec_body procs ext evale evall evalargs evalx callp0 exec for_loop
+        exec_list writ
+ok     Interp.ml for_loop: fun f -> for_loop_body exec for_loop f lc c t up fe body st
+ok     Interp.ml exec_list: fun f -> exec_list_body exec exec_list goto_in f all rest st
+ok     Interp.ml goto_in: fun f -> goto_in_body exec exec_list goto_in f n all scan st
+ok     Interp.ml write_items: fun f -> write_items_body evale write_items f h items nl st
+allow  List.ml nth: Coq library, no state
+allow  Main0.ml fill_run: no state (builds one block, tail-recursive)
+allow  Nat.ml tail_add: Coq library, no state
+allow  Nat.ml tail_addmul: Coq library, no state
+allow  Uint0.ml to_Z_rec: Coq library, no state
+allow  Uint0.ml of_pos_rec: Coq library, no state
+allow  Values.ml fill_chunks: no state (builds one block, tail-recursive)
+b2static: 10 single-call sites, 23 allowed sites, 0 failing
+rc 0

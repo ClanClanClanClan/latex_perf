@@ -1,0 +1,39 @@
+{
+ "model_result": "exit 0",
+ "binary_rc": 0,
+ "binary": {
+  "stdout_sha256": "81c4f87dfea725dc8ea72a81f2bebe2af9b84b5be4b0f51fda6800a767ecbd37",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "clock_readings": 2,
+  "files_sha256": {
+   "texput.log": "c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41"
+  },
+  "digest": {
+   "records": 1000,
+   "defined": 1000,
+   "undefined": 0,
+   "error": null,
+   "meanings_sha256": "261880d09eb559547d0715fd9081bee3520f94cc98f49c319043d7898e246080"
+  },
+  "digest_equals_contract": false
+ },
+ "contract_meanings_sha256": "4879fa65758830b5a203cc0f543684a6ce2c1262e5e78db7e2dc715ba96beb3e",
+ "class": "IDENTICAL",
+ "differs_in": [],
+ "model": {
+  "stdout_sha256": "81c4f87dfea725dc8ea72a81f2bebe2af9b84b5be4b0f51fda6800a767ecbd37",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "clock_readings": "2",
+  "files_sha256": {
+   "texput.log": "c362fb2488a0b4f10862f5f0db9b5d2a2e3e525447efb0442996485e60946f41"
+  },
+  "digest": {
+   "records": 1000,
+   "defined": 1000,
+   "undefined": 0,
+   "error": null,
+   "meanings_sha256": "261880d09eb559547d0715fd9081bee3520f94cc98f49c319043d7898e246080"
+  },
+  "digest_equals_contract": false
+ }
+}

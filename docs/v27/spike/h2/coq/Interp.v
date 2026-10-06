@@ -176,10 +176,25 @@ Variable ext : (Z -> list cell -> state -> eres) -> Z -> list xarg -> state -> e
 Definition truth_or (v : val) (st : state) (k : bool -> eres) : eres :=
   match truthy v with Some b => k b | None => EStk (StType "condition") st end.
 
-Fixpoint evale (fuel : nat) (e : expr) (st : state) {struct fuel} : eres :=
-  match fuel with
-  | O => EStk StFuel st
-  | S f =>
+(* ---------------------------------------------------------------- B2 (spike H.5 stage 2)
+   The members of the mutual block below are the pre-B2 members (RefInterp.v) with each
+   successor branch moved, verbatim, into a Definition NAME_body that takes the recursive
+   functions it calls and the fuel f as arguments. B2Equiv.v proves every member equal to its
+   pre-B2 counterpart by reflexivity: the term is the same up to unfolding NAME_body.
+   The reason is the extraction, not the semantics (H5-heap-design.md §2.2): ExtrOcamlNatInt
+   extracts `match fuel with O => a | S f => b` with b as a closure; when b made non-tail calls
+   and then read its environment, that environment kept the state the branch began with alive
+   for the whole call, and through PArray's version chains every write made since. Here the
+   closure's body is a single call of NAME_body on its own arguments, so no closure holds a
+   state across a call (h5/tools/b2static.py checks the extracted code for exactly this). *)
+
+Definition evale_body
+    (evale : nat -> expr -> state -> eres)
+    (evall : nat -> lexp -> state -> lres)
+    (evalargs : nat -> list pkind -> list arg -> state -> bres)
+    (evalx : nat -> list arg -> state -> xres)
+    (callp : nat -> Z -> list cell -> state -> eres)
+    (f : nat) (e : expr) (st : state) : eres :=
   match e with
   | EInt t z => EOk (VI t (zi z)) st
   | EDbl bits => EOk (VF (float_of_bits bits)) st
@@ -342,13 +357,12 @@ Fixpoint evale (fuel : nat) (e : expr) (st : state) {struct fuel} : eres :=
     | EOk _ st1 => EStk (StType "realloc of a non-block") st1
     | r => r
     end
-  end
-  end
+  end.
 
-with evall (fuel : nat) (l : lexp) (st : state) {struct fuel} : lres :=
-  match fuel with
-  | O => LStk StFuel st
-  | S f =>
+Definition evall_body
+    (evale : nat -> expr -> state -> eres)
+    (evall : nat -> lexp -> state -> lres)
+    (f : nat) (l : lexp) (st : state) : lres :=
   match l with
   | LGlob g => LOk (mkloc (zi g) 0 None) st
   | LLoc k => LOk (mkloc (fp st) (zi k) None) st
@@ -389,14 +403,14 @@ with evall (fuel : nat) (l : lexp) (st : state) {struct fuel} : lres :=
     | LOk lc st1 => LOk (mkloc (lb lc) (Values.lo lc) (Some (zi boff, zi nb, k))) st1
     | r => r
     end
-  end
-  end
+  end.
 
 (* actual parameters of a Pascal call, evaluated left to right into frame cells *)
-with evalargs (fuel : nat) (ks : list pkind) (args : list arg) (st : state) {struct fuel} : bres :=
-  match fuel with
-  | O => BStk StFuel st
-  | S f =>
+Definition evalargs_body
+    (evale : nat -> expr -> state -> eres)
+    (evall : nat -> lexp -> state -> lres)
+    (evalargs : nat -> list pkind -> list arg -> state -> bres)
+    (f : nat) (ks : list pkind) (args : list arg) (st : state) : bres :=
   match ks, args with
   | [], [] => BOk [] st
   | PVal c :: ks', AVal _ e :: args' =>
@@ -426,14 +440,14 @@ with evalargs (fuel : nat) (ks : list pkind) (args : list arg) (st : state) {str
     | LHalt c st1 => BHalt c st1 | LStk s st1 => BStk s st1
     end
   | _, _ => BStk (StType "arguments") st
-  end
-  end
+  end.
 
 (* an external's arguments, left to right *)
-with evalx (fuel : nat) (args : list arg) (st : state) {struct fuel} : xres :=
-  match fuel with
-  | O => XStk StFuel st
-  | S f =>
+Definition evalx_body
+    (evale : nat -> expr -> state -> eres)
+    (evall : nat -> lexp -> state -> lres)
+    (evalx : nat -> list arg -> state -> xres)
+    (f : nat) (args : list arg) (st : state) : xres :=
   match args with
   | [] => XOk [] st
   | ALv l c n :: rest =>
@@ -448,14 +462,12 @@ with evalx (fuel : nat) (args : list arg) (st : state) {struct fuel} : xres :=
     end
   | AType tid :: rest => match evalx f rest st with XOk xs st1 => XOk (XType (zi tid) :: xs) st1 | r => r end
   | _ :: _ => XStk (StType "external argument") st
-  end
-  end
+  end.
 
 (* call procedure p with its parameter cells; a function returns its result cell's value *)
-with callp (fuel : nat) (p : Z) (cells : list cell) (st : state) {struct fuel} : eres :=
-  match fuel with
-  | O => EStk StFuel st
-  | S f =>
+Definition callp_body
+    (exec : nat -> stmt -> state -> sres)
+    (f : nat) (p : Z) (cells : list cell) (st : state) : eres :=
     let pr := PArray.get procs (Uint63.of_Z p) in
     let fb := fsp st in
     if heap_cap <=? fb + 1 then EStk (StOther "frame stack exhausted") st else
@@ -485,13 +497,19 @@ with callp (fuel : nat) (p : Z) (cells : list cell) (st : state) {struct fuel} :
       | SHalt c st3 => EHalt c st3
       | SStk s st3 => EStk (StIn p s) st3
       end
-    end
-  end
+    end.
 
-with exec (fuel : nat) (s : stmt) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f =>
+Definition exec_body
+    (evale : nat -> expr -> state -> eres)
+    (evall : nat -> lexp -> state -> lres)
+    (evalargs : nat -> list pkind -> list arg -> state -> bres)
+    (evalx : nat -> list arg -> state -> xres)
+    (callp : nat -> Z -> list cell -> state -> eres)
+    (exec : nat -> stmt -> state -> sres)
+    (for_loop : nat -> loc -> ct -> ty -> bool -> Z -> stmt -> state -> sres)
+    (exec_list : nat -> list stmt -> list stmt -> state -> sres)
+    (write_items : nat -> Z -> list witem -> bool -> state -> sres)
+    (f : nat) (s : stmt) (st : state) : sres :=
   match s with
   | SSkip => SNorm st
   | SLabel _ => SNorm st
@@ -619,14 +637,12 @@ with exec (fuel : nat) (s : stmt) (st : state) {struct fuel} : sres :=
     | EOk _ st1 => SStk (StType "write to a non-file") st1
     | EHalt c0 st1 => SHalt c0 st1 | EStk s0 st1 => SStk s0 st1
     end
-  end
-  end
+  end.
 
-with for_loop (fuel : nat) (lc : loc) (c : ct) (t : ty) (up : bool) (fe : Z) (body : stmt) (st : state)
-  {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f =>
+Definition for_loop_body
+    (exec : nat -> stmt -> state -> sres)
+    (for_loop : nat -> loc -> ct -> ty -> bool -> Z -> stmt -> state -> sres)
+    (f : nat) (lc : loc) (c : ct) (t : ty) (up : bool) (fe : Z) (body : stmt) (st : state) : sres :=
     match exec f body st with
     | SNorm st1 =>
       match read_loc st1 t lc with
@@ -641,13 +657,13 @@ with for_loop (fuel : nat) (lc : loc) (c : ct) (t : ty) (up : bool) (fe : Z) (bo
       | LdStuck s0 => SStk s0 st1
       end
     | r => r
-    end
-  end
+    end.
 
-with exec_list (fuel : nat) (all rest : list stmt) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f =>
+Definition exec_list_body
+    (exec : nat -> stmt -> state -> sres)
+    (exec_list : nat -> list stmt -> list stmt -> state -> sres)
+    (goto_in : nat -> Z -> list stmt -> list stmt -> state -> sres)
+    (f : nat) (all rest : list stmt) (st : state) : sres :=
     match rest with
     | [] => SNorm st
     | s :: tl =>
@@ -656,14 +672,14 @@ with exec_list (fuel : nat) (all rest : list stmt) (st : state) {struct fuel} : 
       | SGo n st1 => goto_in f n all all st1
       | r => r
       end
-    end
-  end
+    end.
 
 (* a goto reaching this statement list: find the element that is, or contains, label n *)
-with goto_in (fuel : nat) (n : Z) (all scan : list stmt) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f =>
+Definition goto_in_body
+    (exec : nat -> stmt -> state -> sres)
+    (exec_list : nat -> list stmt -> list stmt -> state -> sres)
+    (goto_in : nat -> Z -> list stmt -> list stmt -> state -> sres)
+    (f : nat) (n : Z) (all scan : list stmt) (st : state) : sres :=
     match scan with
     | [] => SGo n st                     (* not here: propagate outward *)
     | SLabel m :: tl => if n =? zi m then exec_list f all tl st else goto_in f n all tl st
@@ -677,13 +693,12 @@ with goto_in (fuel : nat) (n : Z) (all scan : list stmt) (st : state) {struct fu
         | None => SStk (StGoto n) st
         end
       else goto_in f n all tl st
-    end
-  end
+    end.
 
-with write_items (fuel : nat) (h : Z) (items : list witem) (nl : bool) (st : state) {struct fuel} : sres :=
-  match fuel with
-  | O => SStk StFuel st
-  | S f =>
+Definition write_items_body
+    (evale : nat -> expr -> state -> eres)
+    (write_items : nat -> Z -> list witem -> bool -> state -> sres)
+    (f : nat) (h : Z) (items : list witem) (nl : bool) (st : state) : sres :=
     match items with
     | [] => SNorm (if nl then emit h [10] st else st)
     | it :: rest =>
@@ -701,7 +716,68 @@ with write_items (fuel : nat) (h : Z) (items : list witem) (nl : bool) (st : sta
         end
       | EHalt c0 st1 => SHalt c0 st1 | EStk s0 st1 => SStk s0 st1
       end
-    end
+    end.
+
+(* the fuelled block: one step of fuel, then the member's body *)
+Fixpoint evale (fuel : nat) (e : expr) (st : state) {struct fuel} : eres :=
+  match fuel with
+  | O => EStk StFuel st
+  | S f => evale_body evale evall evalargs evalx callp f e st
+  end
+
+with evall (fuel : nat) (l : lexp) (st : state) {struct fuel} : lres :=
+  match fuel with
+  | O => LStk StFuel st
+  | S f => evall_body evale evall f l st
+  end
+
+with evalargs (fuel : nat) (ks : list pkind) (args : list arg) (st : state) {struct fuel} : bres :=
+  match fuel with
+  | O => BStk StFuel st
+  | S f => evalargs_body evale evall evalargs f ks args st
+  end
+
+with evalx (fuel : nat) (args : list arg) (st : state) {struct fuel} : xres :=
+  match fuel with
+  | O => XStk StFuel st
+  | S f => evalx_body evale evall evalx f args st
+  end
+
+with callp (fuel : nat) (p : Z) (cells : list cell) (st : state) {struct fuel} : eres :=
+  match fuel with
+  | O => EStk StFuel st
+  | S f => callp_body exec f p cells st
+  end
+
+with exec (fuel : nat) (s : stmt) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f => exec_body evale evall evalargs evalx callp exec for_loop exec_list write_items f s st
+  end
+
+with for_loop (fuel : nat) (lc : loc) (c : ct) (t : ty) (up : bool) (fe : Z) (body : stmt) (st : state)
+  {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f => for_loop_body exec for_loop f lc c t up fe body st
+  end
+
+with exec_list (fuel : nat) (all rest : list stmt) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f => exec_list_body exec exec_list goto_in f all rest st
+  end
+
+with goto_in (fuel : nat) (n : Z) (all scan : list stmt) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f => goto_in_body exec exec_list goto_in f n all scan st
+  end
+
+with write_items (fuel : nat) (h : Z) (items : list witem) (nl : bool) (st : state) {struct fuel} : sres :=
+  match fuel with
+  | O => SStk StFuel st
+  | S f => write_items_body evale write_items f h items nl st
   end.
 
 End Interp.

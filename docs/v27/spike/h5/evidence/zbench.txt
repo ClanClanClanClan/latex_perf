@@ -1,0 +1,28 @@
+# zbench.ml (h5/tools), built with: ocamlfind ocamlopt -package zarith -linkpkg zbench.ml (switch l0-testing: OCaml 5.2.0 + flambda, zarith 1.14), Apple arm64
+## run 1, uptime: 52.11 43.35 34.80
+Z.add (small)                        3.19 ns/op   (check 22329)
+  ... of which Z.logand alone        2.81 ns/op   (check 57599)
+Z.compare + Z.sub (small)            4.69 ns/op   (check 100000099)
+Z.div/Z.rem (small)                  5.57 ns/op   (check 472461011)
+int add + land (overflow-checked, 63)   2.76 ns/op   (check 22329)
+int add + land (range-checked, i32)   3.01 ns/op   (check 22329)
+int compare + sub                    0.98 ns/op   (check 100000099)
+int div/rem                          1.99 ns/op   (check 472461011)
+## run 2, uptime: 57.07 44.52 35.26
+Z.add (small)                        3.15 ns/op   (check 22329)
+  ... of which Z.logand alone        2.69 ns/op   (check 57599)
+Z.compare + Z.sub (small)            4.40 ns/op   (check 100000099)
+Z.div/Z.rem (small)                  5.09 ns/op   (check 472461011)
+int add + land (overflow-checked, 63)   2.78 ns/op   (check 22329)
+int add + land (range-checked, i32)   2.75 ns/op   (check 22329)
+int compare + sub                    0.99 ns/op   (check 100000099)
+int div/rem                          1.92 ns/op   (check 472461011)
+## run 3, uptime: 57.07 44.52 35.26
+Z.add (small)                        3.07 ns/op   (check 22329)
+  ... of which Z.logand alone        2.71 ns/op   (check 57599)
+Z.compare + Z.sub (small)            4.41 ns/op   (check 100000099)
+Z.div/Z.rem (small)                  4.72 ns/op   (check 472461011)
+int add + land (overflow-checked, 63)   2.15 ns/op   (check 22329)
+int add + land (range-checked, i32)   1.38 ns/op   (check 22329)
+int compare + sub                    0.85 ns/op   (check 100000099)
+int div/rem                          1.69 ns/op   (check 472461011)

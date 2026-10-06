@@ -50,7 +50,7 @@ python3 $H2/translate/gen_cmain.py "$OUT/gen/manifest.json" $CMAINJ/cmain_global
 cd "$OUT/build" || exit 1
 find . -maxdepth 1 -type f \( -name '*.v' -o -name '*.vo*' -o -name '*.glob' -o -name 'log.*' -o -name '*.ml' -o -name '*.mli' \) -delete
 cp $H2/coq/*.v "$OUT/gen/"*.v .
-for f in Syntax.v Values.v Interp.v ProgGlobals.v PoolData.v Prog_*.v(n) Prog.v Boundary.v CMain.v Main.v Extract.v; do
+for f in Syntax.v Values.v Interp.v RefInterp.v ProgGlobals.v PoolData.v Prog_*.v(n) Prog.v Boundary.v CMain.v Main.v B2Equiv.v Extract.v; do
   stage=coqc; [ $f = Extract.v ] && stage=extraction    # Extract.v's coqc run IS the extraction
   timed $stage $f log.$f.txt coqc -Q . PS $f; rc=$?
   [ $rc -eq 0 ] || { grep -v 'resident\|real\|context\|instructions\|cycles\|footprint\|page\|block\|messages\|signals\|swaps' log.$f.txt | head -20; exit 1; }

@@ -1,0 +1,4 @@
+binary rc=0 in 4 s (qemu)
+8803ec328f7b2bfc78d96607b1d422f293e90729f75a8ec0707fe588186f5657  /home/runner/work/_temp/h3/bin/out
+335b024ca9a1553e646e19ac0a10dcd926640d3c0962970dd8a463d3648a22ce  /home/runner/work/_temp/h3/bin/w/texput.log
+b6717415a480b5554989a83728826c21f967dea5a2f27125d6e2f3fb304d8e86  /home/runner/work/_temp/h3/bin/w/clock.log

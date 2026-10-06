@@ -1,0 +1,4 @@
+# NAME EXE CAP_MB TIMEOUT_S ENV...   (stage-1 correction, C-145: interleaved fair rounds)
+A ~/.cache/lp-spike-h1/h5/prof-t2/ps-t2.exe 4000 2400 PS_PROBE=30 PS_PARRAY=linear OCAMLRUNPARAM=v=0x400
+B2 ~/.cache/lp-spike-h1/h5/b2sim/ps-b2sim.exe 4000 2400 PS_PROBE=30 OCAMLRUNPARAM=v=0x400
+AB2 ~/.cache/lp-spike-h1/h5/b2sim/ps-b2sim.exe 4000 2400 PS_PROBE=30 PS_PARRAY=linear OCAMLRUNPARAM=v=0x400

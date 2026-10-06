@@ -353,6 +353,16 @@ OUTPUT_NAME_ALLOW = {
         "prose in a recorded field",
     ("scripts/tools/check_oracle_equivalence.py", "INNER = r\'\'\'"):
         "the in-image driver's source, which itself calls job_output",
+    # Spike H.5 (ADR-015, OPEN-123; C-145): the binary-timing harness. It names the oracle in its
+    # header (why it bypasses it) and reads _oracle.IMAGE; it times, it never grades.
+    ('docs/v27/spike/h5/tools/bintime.sh', '-e LD_PRELOAD=/shim/clockshim-arm64.so -e LP_CLOCK=$clock -e LP_CLOCK_LOG=/tmp/w/clock.log \\'):
+        "the clock shim's own record of the clock readings TeX asked for, inside the container; not an engine output",
+    ('docs/v27/spike/h5/tools/bintime.sh', 'echo "BIN $P $i user ${t% *} sys ${t#* } $(cat /tmp/rc) logsize $(stat -c %s texput.log) logsha $(sha256sum texput.log | cut -c1-64) vmload $(cut -d" " -f1-3 /proc/loadavg | tr " " /)"'):
+        "a TIMING instrument: texput.log is hashed and sized to show the timed run wrote the comparison run's log; nothing is graded from it",
+    ('docs/v27/spike/h5/tools/fairtime.sh', 'load() { print -r -- "LOAD $1 $(date +%s) uptime[$(uptime | sed \'s/.*load averages*: *//\')] mem_free_pct $(memory_pressure 2>/dev/null | awk -F\': \' \'/free percentage/{print $2}\')" >> $o/load.log; }'):
+        "load.log is the timing harness's own record of the machine's load, not an engine output",
+    ('docs/v27/spike/h5/tools/fairtime.sh', 'print "FAIRTIME DONE" >> $o/load.log'):
+        "load.log is the timing harness's own record of the machine's load, not an engine output",
 }
 PDF_VERDICT_SOURCE = {
     "scripts/tools/diff_real_roots.py": r"\brun\.pdf\b",

@@ -1,0 +1,23 @@
+The Coq Proof Assistant, version 8.18.0
+compiled with OCaml 5.2.0
+5.2.0
+# Packages matching: installed
+# Name                # Installed # Synopsis
+base-bigarray         base
+base-domains          base
+base-nnp              base        Naked pointers prohibited in the OCaml heap
+base-threads          base
+base-unix             base
+conf-gmp              5           Virtual package relying on a GMP lib system installation
+conf-pkg-config       5           Check if pkg-config is installed and create an opam switch local pkgconfig folder
+coq                   8.18.0      The Coq Proof Assistant
+coq-core              8.18.0      The Coq Proof Assistant -- Core Binaries and Tools
+coq-stdlib            8.18.0      The Coq Proof Assistant -- Standard Library
+coqide-server         8.18.0      The Coq Proof Assistant, XML protocol server
+dune                  3.23.1      Fast, portable, and opinionated build system
+ocaml                 5.2.0       The OCaml compiler (virtual package)
+ocaml-base-compiler   5.2.0       Official release 5.2.0
+ocaml-config          3           OCaml Switch Configuration
+ocaml-options-vanilla 1           Ensure that OCaml is compiled with no special options enabled
+ocamlfind             1.9.8       A library manager for OCaml
+zarith                1.14        Implements arithmetic and logical operations over arbitrary-precision integers

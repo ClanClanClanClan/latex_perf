@@ -1,0 +1,1 @@
+MemTotal 16372436 kB; cap (MemoryMax) 14275284 kB

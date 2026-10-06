@@ -1,0 +1,7 @@
+PROBE wall 41.0 cpu 36.95 ext 256 minor 15705648547 promoted 60285827 major 97701495 minc 59920 majc 13 heap 96065394 top 96065394 set 25369339 get 68199276 make 23258 make_words 35978595 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PROBE wall 75.2 cpu 68.28 ext 25600 minor 28309975595 promoted 91904718 major 139671948 minc 108003 majc 14 heap 134188209 top 134188209 set 43471791 get 108986127 make 1158067 make_words 48793216 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PROBE wall 81.1 cpu 73.33 ext 26009 minor 30119148589 promoted 94230316 major 141997546 minc 114905 majc 15 heap 136576177 top 136576177 set 45288127 get 114751255 make 1392202 make_words 49291919 reroot_steps 0 stale 0 copy 0
+PROBECOST 0.00
+PARRAYC set 45288127 get 114751255 make 1392202 make_words 49291919 reroot_steps 0 stale 0 copy 0

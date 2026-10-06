@@ -119,7 +119,7 @@ names) under a 4–9 GB resident cap and a wall-clock time-out (`h3/tools/capped
      a run).
   After the four fixes the live data at exit is flat: 73.5 M words with 0 names, 74.0 M with
   500, 75.4 M with 2,000 (before: 81.6 M and 97.0 M with 0 and 500, and growing).
-- **What remains is not live data:** OCaml's peak major heap still grows with the work done
+- **What remains is not live data** (**corrected, C-142:** it IS live data during the run, old versions kept reachable by the extraction's fuel closures, invisible at exit; `H5-heap-design.md` §2): OCaml's peak major heap still grows with the work done
   (385 M words with 0 names, 558 M with 500, 1,147 M with 2,000), independent of
   `space_overhead` 120 or 40 and the minor heap size; periodic compaction lowers the resident peak
   (5.8 GB → 3.6 GB at 2,000 names) but not the heap high-water mark [M]. Every write promotes its
@@ -252,20 +252,82 @@ binary's outputs, not its writes, were observed. The `\time`/`\day`/`\month`/`\y
 not differ because this run's clock is the shipped build's start minute (H.1); a run at another
 date would add those entries to E.
 
+### §meanings: E8's run on a GitHub-hosted runner [M]
+
+Workflow `.github/workflows/spike-h3-meanings.yml` on branch `ci/v27165-h3-meanings` (owner
+decision E8). Run 2, the measurement: https://github.com/ClanClanClanClan/latex_perf/actions/runs/37306038862
+(run 1, https://github.com/ClanClanClanClan/latex_perf/actions/runs/37302258127, same result,
+cap 1 GiB under RAM). Outputs: `h3/evidence/meanings/run2-37306038862/`, `run1-37302258127/`.
+
+- **Runner** (recorded): `MemTotal` 16,372,436–16,373,452 kB, 4 cores (`nproc`), x86_64.
+- **Build**: texlive-source r78081 rebuilt on the runner; the 7 translator inputs hash as
+  `h2/evidence/build/provenance.json` records; `pipeline.sh` with Coq 8.18.0 / OCaml 5.2.0 gives
+  the same generated Coq tree (`e9ae7712…`) and the same sources and inputs; the extracted OCaml
+  tree hashes `72b2ea79…` there (**corrected, C-143:** the same value as the macOS build's, all 93 files equal; this report first said "a different value", which its own `provenance-check.txt` refutes);
+  `ps.exe` is that host's compilation (`f7d6631a…`).
+- **Binary side** (linux/arm64 under qemu, the h3/README.md recipe): exit 0 in 4–5 s;
+  `meanings_sha256` = `4879fa65…`, **the contract's digest**, 23,519 records, all defined.
+- **The model: no result. It ran out of memory in every full run.** Each run was in a systemd
+  scope with `MemoryMax` = MemTotal − 2 GiB (run 2) or − 1 GiB (run 1), swap off. The cgroup's
+  memory, sampled every 5 s, grew linearly until it reached the cap, and the step then ended by
+  SIGTERM (exit 143):
+
+  | run | GC | cap (bytes) | last cgroup peak (bytes) | at |
+  |---|---|---|---|---|
+  | run 2 full | default | 14,617,890,816 | 14,593,478,656 | 367 s |
+  | run 2 full-compact | `PS_COMPACT=3` | 14,618,931,200 | 14,556,397,568 | 437 s |
+  | run 1 full | default | 15,692,668,928 | 15,631,466,496 | 472 s |
+  | run 1 full-compact | `PS_COMPACT=3` | 15,692,668,928 | 15,580,200,960 | 316 s |
+
+  The cgroup's `memory.events` copy is 5 s old at the kill and shows no `oom_kill` yet; the
+  kernel log was not uploaded because the step had been killed. So "killed by the cap" is
+  inferred [I] from the peak reaching the cap in all four runs, and not observed directly.
+- **Growth curve** (run 2 `prefixes`: the first N names, `meanblock.py`, each run to the end):
+
+  | names | result | wall | peak RSS (`time -v`, kB) | cgroup peak (bytes) |
+  |---|---|---|---|---|
+  | 0 | exit 0 | 60 s | 3,106,260 | 3,105,062,912 |
+  | 250 | exit 0 | 85 s | 3,741,424 | 3,804,864,512 |
+  | 500 | exit 0 | 115 s | 4,441,264 | 4,512,489,472 |
+  | 1,000 | exit 0 | 180 s | 6,164,572 | 6,248,902,656 |
+  | 2,000 | exit 0 | 301 s | 9,157,536 | 9,317,666,816 |
+  | 4,000 | killed at the cap | ≈ 497 s | — | 14,521,110,528 at the last sample |
+
+  About 3.1 GB at 0 names plus about 3.1 MB per name between 1,000 and 2,000 names. Extrapolated
+  linearly [I], the 23,519 names need about 76 GB. Compaction every third major cycle does not
+  change the outcome (the compact runs died at the same level). The full runs reached the cap
+  after about 2,000–2,500 names [I: from their time against the prefixes'].
+- **Comparison with the binary**: not possible (no model output); the binary's digest equals
+  the contract's.
+
+**Does this touch a kill criterion?** H.3's kill is "the load cannot be made exact within the
+spike": no, the load is exact. H.2's kill, "the Coq term or its extraction is intractable (> 2 h
+compile or > 16 GB)", is about building the term, not running it: the build is minutes and
+under 1 GB. H.5's kill is "> 200× with no profile-guided fix in sight", and its pass criterion
+"≤ 60× pdfTeX per pass"; H.5 measures speed on three documents, which this run does not. The
+memory is not a speed measurement, but it bears on H.5: the same run puts the model near
+0.12 s per name (2,000 names in 301 s, 60 s of it load) against the binary's 23,519 names in
+4–5 s under qemu, a ratio far above 200× [I: different processes, the binary emulated]. The
+profile-guided fixes of checkpoint 1 removed the retention but not the growth; **the remaining
+growth (≈ 3 MB per name; "not live data" was wrong, C-142) has no fix in sight within the current heap
+representation**, which E8 leaves unfunded. Owner decision needed (below).
+
 ### H.3's criteria at checkpoint 2
 
 | criterion (verbatim) | state |
 |---|---|
 | "round trip byte-exact" | **met** in E6's reading (model = binary) on the checkpoint-2 build; and the difference from the shipped format is accounted for byte by byte (above) |
-| "meanings byte-identical to the contract generator's" | **open**: E8's run (below, §meanings) |
+| "meanings byte-identical to the contract generator's" | **NOT MET**: the binary side reproduces the contract's digest `4879fa65…`; the model's full dump ran out of memory at ≈ 14.6 GB and ≈ 15.6 GB on 16 GB runners (E8, §meanings), so there is no model output to compare. The CI prefix runs up to 2,000 names finished but were not compared with the binary; one local 50-name prefix (arm64, `ps.exe` `e41941bf…`) is byte-identical to the binary's run of the same input (`h3/evidence/meanings/local-prefix50/compare.json`) |
 | "F7 explained" | explained by H.1 (C-100); not re-derived by the model |
 | kill: "the load cannot be made exact within the spike" | **not fired** |
 
 ## Open
 
-- The meaning comparison (the full run, then a per-name comparison if the digest differs).
-- The owner's reading of "round trip byte-exact" (model = binary, met; or `store(load(x)) = x`,
-  which pdfTeX does not satisfy here); and a full decoding of the round trip's difference after
-  the string pool.
+- The meaning comparison: blocked by memory (E8, §meanings). Owner decision needed: fund a heap
+  representation whose cost does not grow with the work done (and count it against H.5), or
+  run the full dump on a runner with ≥ 96 GB, or accept a per-prefix comparison as H.3's
+  evidence (a weaker claim than the clause).
+- Done at checkpoint 2: the owner's reading (E6: model = binary) and the full decoding of the
+  round trip's difference.
 - The amd64 configuration of the round trip (only arm64 here).
 - Peak memory under persistent arrays (H.5's question).

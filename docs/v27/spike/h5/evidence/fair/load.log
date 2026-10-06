@@ -1,0 +1,73 @@
+LOAD fr1-A-p0 1791241824 uptime[17.30 46.00 58.50] mem_free_pct 42%
+LOAD end fr1-A-p0 finished rc 0 peak 867MB in 8s 1791241832 uptime[16.49 44.88 57.96] mem_free_pct 44%
+LOAD fr1-B2-p0 1791241832 uptime[16.49 44.88 57.96] mem_free_pct 44%
+LOAD end fr1-B2-p0 finished rc 0 peak 1510MB in 9s 1791241841 uptime[16.02 43.85 57.44] mem_free_pct 43%
+LOAD fr1-AB2-p0 1791241841 uptime[16.02 43.85 57.44] mem_free_pct 43%
+LOAD end fr1-AB2-p0 finished rc 0 peak 990MB in 7s 1791241848 uptime[15.78 43.33 57.18] mem_free_pct 44%
+LOAD fr1-A-p250 1791241848 uptime[15.78 43.33 57.18] mem_free_pct 44%
+LOAD end fr1-A-p250 finished rc 0 peak 1077MB in 9s 1791241857 uptime[15.11 42.29 56.64] mem_free_pct 44%
+LOAD fr1-B2-p250 1791241857 uptime[15.11 42.29 56.64] mem_free_pct 44%
+LOAD end fr1-B2-p250 finished rc 0 peak 1685MB in 9s 1791241866 uptime[14.84 41.34 56.14] mem_free_pct 44%
+LOAD fr1-AB2-p250 1791241866 uptime[14.84 41.34 56.14] mem_free_pct 44%
+LOAD end fr1-AB2-p250 finished rc 0 peak 1073MB in 8s 1791241874 uptime[14.45 40.82 55.87] mem_free_pct 44%
+LOAD fr1-A-p1000 1791241874 uptime[14.45 40.82 55.87] mem_free_pct 44%
+LOAD end fr1-A-p1000 finished rc 0 peak 1088MB in 12s 1791241886 uptime[12.93 39.19 55.02] mem_free_pct 45%
+LOAD fr1-B2-p1000 1791241886 uptime[12.93 39.19 55.02] mem_free_pct 45%
+LOAD end fr1-B2-p1000 finished rc 0 peak 1860MB in 18s 1791241904 uptime[11.88 37.68 54.21] mem_free_pct 42%
+LOAD fr1-AB2-p1000 1791241904 uptime[11.88 37.68 54.21] mem_free_pct 42%
+LOAD end fr1-AB2-p1000 finished rc 0 peak 1093MB in 12s 1791241916 uptime[10.63 36.14 53.37] mem_free_pct 43%
+LOAD fr1-A-pall 1791241917 uptime[10.63 36.14 53.37] mem_free_pct 43%
+LOAD end fr1-A-pall finished rc 0 peak 1965MB in 191s 1791242108 uptime[38.17 32.44 47.90] mem_free_pct 44%
+LOAD fr1-B2-pall 1791242108 uptime[38.17 32.44 47.90] mem_free_pct 44%
+LOAD end fr1-B2-pall finished rc 0 peak 2396MB in 228s 1791242336 uptime[9.27 19.79 38.68] mem_free_pct 41%
+LOAD fr1-AB2-pall 1791242336 uptime[9.27 19.79 38.68] mem_free_pct 41%
+LOAD end fr1-AB2-pall finished rc 0 peak 1623MB in 157s 1791242493 uptime[9.78 15.89 33.93] mem_free_pct 47%
+LOAD fr2-A-p0 1791242493 uptime[9.78 15.89 33.93] mem_free_pct 47%
+LOAD end fr2-A-p0 finished rc 0 peak 991MB in 6s 1791242499 uptime[9.63 15.75 33.78] mem_free_pct 47%
+LOAD fr2-B2-p0 1791242499 uptime[9.63 15.75 33.78] mem_free_pct 47%
+LOAD end fr2-B2-p0 finished rc 0 peak 1422MB in 8s 1791242507 uptime[9.64 15.55 33.50] mem_free_pct 46%
+LOAD fr2-AB2-p0 1791242507 uptime[9.64 15.55 33.50] mem_free_pct 46%
+LOAD end fr2-AB2-p0 finished rc 0 peak 990MB in 6s 1791242513 uptime[9.27 15.37 33.33] mem_free_pct 46%
+LOAD fr2-A-p250 1791242513 uptime[9.27 15.37 33.33] mem_free_pct 46%
+LOAD end fr2-A-p250 finished rc 0 peak 1079MB in 8s 1791242521 uptime[8.69 15.05 33.00] mem_free_pct 46%
+LOAD fr2-B2-p250 1791242521 uptime[8.69 15.05 33.00] mem_free_pct 46%
+LOAD end fr2-B2-p250 finished rc 0 peak 1695MB in 9s 1791242530 uptime[8.63 14.93 32.86] mem_free_pct 43%
+LOAD fr2-AB2-p250 1791242530 uptime[8.63 14.93 32.86] mem_free_pct 43%
+LOAD end fr2-AB2-p250 finished rc 0 peak 1072MB in 8s 1791242538 uptime[9.23 14.85 32.62] mem_free_pct 45%
+LOAD fr2-A-p1000 1791242538 uptime[9.23 14.85 32.62] mem_free_pct 45%
+LOAD end fr2-A-p1000 finished rc 0 peak 1080MB in 11s 1791242549 uptime[9.41 14.71 32.36] mem_free_pct 45%
+LOAD fr2-B2-p1000 1791242549 uptime[9.41 14.71 32.36] mem_free_pct 45%
+LOAD end fr2-B2-p1000 finished rc 0 peak 1842MB in 21s 1791242570 uptime[12.44 15.09 32.09] mem_free_pct 42%
+LOAD fr2-AB2-p1000 1791242570 uptime[12.44 15.09 32.09] mem_free_pct 42%
+LOAD end fr2-AB2-p1000 finished rc 0 peak 1105MB in 16s 1791242586 uptime[16.97 15.98 32.01] mem_free_pct 42%
+LOAD fr2-A-pall 1791242587 uptime[16.97 15.98 32.01] mem_free_pct 43%
+LOAD end fr2-A-pall finished rc 0 peak 1974MB in 190s 1791242778 uptime[16.11 16.44 29.04] mem_free_pct 40%
+LOAD fr2-B2-pall 1791242778 uptime[16.11 16.44 29.04] mem_free_pct 40%
+LOAD end fr2-B2-pall finished rc 0 peak 2402MB in 316s 1791243094 uptime[25.50 22.36 27.85] mem_free_pct 38%
+LOAD fr2-AB2-pall 1791243094 uptime[25.50 22.36 27.85] mem_free_pct 38%
+LOAD end fr2-AB2-pall finished rc 0 peak 1625MB in 250s 1791243344 uptime[21.44 27.24 29.14] mem_free_pct 44%
+LOAD fr3-A-p0 1791243345 uptime[21.44 27.24 29.14] mem_free_pct 44%
+LOAD end fr3-A-p0 finished rc 0 peak 848MB in 7s 1791243352 uptime[19.22 26.57 28.88] mem_free_pct 44%
+LOAD fr3-B2-p0 1791243352 uptime[19.22 26.57 28.88] mem_free_pct 44%
+LOAD end fr3-B2-p0 finished rc 0 peak 1501MB in 11s 1791243363 uptime[17.89 26.04 28.66] mem_free_pct 44%
+LOAD fr3-AB2-p0 1791243363 uptime[17.89 26.04 28.66] mem_free_pct 44%
+LOAD end fr3-AB2-p0 finished rc 0 peak 958MB in 7s 1791243370 uptime[17.66 25.86 28.58] mem_free_pct 44%
+LOAD fr3-A-p250 1791243371 uptime[18.01 25.80 28.54] mem_free_pct 44%
+LOAD end fr3-A-p250 finished rc 0 peak 1074MB in 9s 1791243380 uptime[19.93 26.06 28.62] mem_free_pct 44%
+LOAD fr3-B2-p250 1791243380 uptime[19.93 26.06 28.62] mem_free_pct 44%
+LOAD end fr3-B2-p250 finished rc 0 peak 1537MB in 13s 1791243393 uptime[20.56 25.91 28.52] mem_free_pct 45%
+LOAD fr3-AB2-p250 1791243393 uptime[20.56 25.91 28.52] mem_free_pct 45%
+LOAD end fr3-AB2-p250 finished rc 0 peak 1071MB in 9s 1791243402 uptime[20.25 25.67 28.41] mem_free_pct 46%
+LOAD fr3-A-p1000 1791243403 uptime[20.25 25.67 28.41] mem_free_pct 46%
+LOAD end fr3-A-p1000 finished rc 0 peak 1075MB in 16s 1791243419 uptime[18.49 25.01 28.12] mem_free_pct 47%
+LOAD fr3-B2-p1000 1791243419 uptime[18.49 25.01 28.12] mem_free_pct 47%
+LOAD end fr3-B2-p1000 finished rc 0 peak 1847MB in 24s 1791243443 uptime[16.25 23.98 27.66] mem_free_pct 45%
+LOAD fr3-AB2-p1000 1791243443 uptime[16.25 23.98 27.66] mem_free_pct 45%
+LOAD end fr3-AB2-p1000 finished rc 0 peak 1088MB in 17s 1791243460 uptime[15.93 23.52 27.43] mem_free_pct 46%
+LOAD fr3-A-pall 1791243462 uptime[15.61 23.33 27.34] mem_free_pct 47%
+LOAD end fr3-A-pall finished rc 0 peak 1981MB in 193s 1791243655 uptime[10.55 17.02 23.84] mem_free_pct 42%
+LOAD fr3-B2-pall 1791243655 uptime[10.55 17.02 23.84] mem_free_pct 42%
+LOAD end fr3-B2-pall finished rc 0 peak 2396MB in 293s 1791243948 uptime[21.44 27.13 27.61] mem_free_pct 41%
+LOAD fr3-AB2-pall 1791243948 uptime[21.44 27.13 27.61] mem_free_pct 41%
+LOAD end fr3-AB2-pall finished rc 0 peak 1633MB in 194s 1791244142 uptime[24.75 25.42 26.70] mem_free_pct 41%
+FAIRTIME DONE

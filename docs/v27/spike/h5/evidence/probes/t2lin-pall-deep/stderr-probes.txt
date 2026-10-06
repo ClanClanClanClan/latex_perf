@@ -1,0 +1,25 @@
+PROBE wall 60.7 cpu 57.83 ext 43008 minor 15426931409 promoted 119309873 major 167566298 minc 58870 majc 21 heap 100191460 top 158821553 set 165614154 get 504791113 make 16633612 make_words 81307479 reroot_steps 0 stale 0 copy 0 live 88297822 reach_state 86776334 static 298780 other 1222708 stdin_left 3464424
+PROBECOST 4.20
+PROBE wall 125.5 cpu 108.93 ext 56832 minor 28574692712 promoted 148679436 major 196935861 minc 109037 majc 27 heap 100211940 top 158821553 set 295211535 get 927385684 make 32827399 make_words 115192235 reroot_steps 0 stale 0 copy 0 live 90977932 reach_state 88238116 static 298780 other 2441036 stdin_left 3058316
+PROBECOST 8.24
+PROBE wall 190.6 cpu 166.58 ext 75520 minor 44283033810 promoted 185026701 major 233283126 minc 168972 majc 33 heap 104520932 top 158821553 set 451377843 get 1433096761 make 52460077 make_words 156479228 reroot_steps 0 stale 0 copy 0 live 94285693 reach_state 89904571 static 298780 other 4082342 stdin_left 2511206
+PROBECOST 13.63
+PROBE wall 258.3 cpu 223.47 ext 101120 minor 58520237333 promoted 222350483 major 270606908 minc 223295 majc 39 heap 107433188 top 158821553 set 597092876 get 1897929321 make 71038627 make_words 196410124 reroot_steps 0 stale 0 copy 0 live 97642486 reach_state 91047264 static 298780 other 6296442 stdin_left 1773190
+PROBECOST 18.96
+PROBE wall 325.5 cpu 279.61 ext 124416 minor 73890386284 promoted 260144128 major 308400553 minc 281940 majc 45 heap 111422692 top 158821553 set 752785578 get 2394052170 make 90914074 make_words 238697930 reroot_steps 0 stale 0 copy 0 live 101133721 reach_state 92500561 static 298780 other 8334380 stdin_left 1093868
+PROBECOST 23.88
+PROBE wall 391.6 cpu 328.35 ext 146176 minor 85990155181 promoted 291952586 major 340209011 minc 328109 majc 51 heap 112680164 top 158821553 set 875977404 get 2785221943 make 106771402 make_words 272488850 reroot_steps 0 stale 0 copy 0 live 104031606 reach_state 93645738 static 298780 other 10087088 stdin_left 509624
+PROBECOST 29.38
+PROBE wall 456.7 cpu 373.75 ext 165623 minor 96678562980 promoted 341050570 major 389306995 minc 368894 majc 57 heap 102313188 top 174927025 set 984515932 get 3129985477 make 120763096 make_words 302251811 reroot_steps 0 stale 0 copy 0 live 94698457 reach_state 94684344 static 298780 other -284667 stdin_left 0
+PROBECOST 35.13
+PARRAYC set 984515932 get 3129985477 make 120763096 make_words 302251811 reroot_steps 0 stale 0 copy 0
+allocated_words: 96726820344
+minor_words: 96678563919
+promoted_words: 341050570
+major_words: 389306995
+minor_collections: 368894
+major_collections: 57
+forced_major_collections: 14
+heap_words: 102313188
+top_heap_words: 174927025
+mean_space_overhead: 10.998015

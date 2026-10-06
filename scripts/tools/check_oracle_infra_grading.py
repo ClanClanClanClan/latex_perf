@@ -161,7 +161,7 @@ if entry == "python3":                   # the session probe
     print(json.dumps({"fp": json.loads(os.environ["FAKE_FP"]),
                       "ro": json.loads(os.environ.get("FAKE_RO", '{"euid": 501, "texmfroot": '
                             '"/usr/local/texlive/2026", "root_ro": true, "tree_ro": true}')),
-                      "env": cenv, "nonce": nonce,
+                      "env": cenv, "nonce": os.environ.get("FAKE_NONCE", nonce),
                       "shim": os.environ.get("FAKE_SHIM", json.loads(os.environ["FAKE_SHIM_MAP"])[
                           {"linux/arm64": "aarch64", "linux/amd64": "x86_64"}[
                               a[a.index("--platform") + 1]]])}))
@@ -186,6 +186,8 @@ i = a.index("-c")
 nonce = a[i + 3]
 cfg = json.loads(a[i + 6])
 cwd = host_of(workdir)
+if cwd is None:   # the run directory is not mounted where the run works
+    sys.stderr.write("fake-docker: workdir %s is not a mount\n" % workdir); sys.exit(1)
 for f in cfg.get("remove", []):         # the supervisor clears stale evidence
     try:
         os.unlink(os.path.join(cwd, f))
@@ -199,7 +201,8 @@ def rcline(rc):
     evid = os.environ.get("FAKE_EVID") or json.dumps({
         "alias": [], "cw": {}, "err": "", "overflow": 0, "engine_pid": 10,
         "shim_sha256": json.loads(os.environ["FAKE_SHIM_MAP"])[
-            cfg["shim"].rsplit("lpshim-", 1)[1][:-3]], "shim_mode": "restricted",
+            cfg["shim"].rsplit("lpshim-", 1)[1][:-3]] if cfg.get("shim") else None,
+        "shim_mode": "restricted" if cfg.get("shim") else None,
         "fs_denied": [0]})
     if evid != "OMIT":   # OMIT: a supervisor that died before reporting
         sys.stderr.write("\n%s_EVID=%s\n" % (nonce, evid))
@@ -528,6 +531,19 @@ def record_fp(arch: str | None = None) -> dict:
 # give a graded run): read back from the run's configuration.
 def protocol_env() -> dict:
     return _oracle.engine_env(_oracle.graded_env({}))
+
+
+# What the protocol's engine environment MUST hold, written out here (not
+# derived from graded_env, which a defect could empty: a kill-test removing
+# ORACLE_TEX_VARS or the fixed run variables from graded_env changed both
+# sides of a derived comparison at once).
+MUST_HOLD = {"openin_any": "p", "openout_any": "p", "HOME": "/tmp",
+             "TEXMFHOME": "/tmp/lp/texmf-home", "TEXMFVAR": "/tmp/lp/texmf-var",
+             "TEXMFCONFIG": "/tmp/lp/texmf-config", "TMPDIR": "/tmp/lp/tmp",
+             "TMP": "/tmp/lp/tmp", "TEMP": "/tmp/lp/tmp", "PYTHONHASHSEED": "0",
+             "PERL_HASH_SEED": "0", "PERL_PERTURB_KEYS": "0",
+             "FORCE_SOURCE_DATE": "1", "LP_FS_ROOTS": "/lp/run:/tmp:/usr/local/texlive",
+             "LP_FS_EXE": "/usr/local/texlive/", "LP_SHIM_MARK": "/tmp/lp/.shim"}
 
 
 class Checker:
@@ -1117,7 +1133,7 @@ class Checker:
         dump = self.td / "hdiag-stdin"
         eng = bindir / _oracle.ENGINE_PDFLATEX
         eng.write_text("#!/bin/sh\necho 'This is pdfTeX, Version 3.141592653'\n"
-                       f"cat > '{dump}'\necho x > t.pdf\n"
+                       f"cat >> '{dump}'\necho x > t.pdf\n"
                        "printf 'Output written on t.pdf (1 page, 9 bytes).\\n"
                        "PDF statistics:\\n' > t.log\n"
                        "echo 'Output written on t.pdf (1 page, 9 bytes).'\nexit 0\n")
@@ -1303,10 +1319,13 @@ class Checker:
                 return
             c = self.cfg(cfgf)
             got = c["env"]
-            diff = sorted(k for k in set(got) | set(want) if got.get(k) != want.get(k))
+            diff = sorted(k for k in set(got) | set(want) | set(MUST_HOLD)
+                          if got.get(k) != want.get(k) or (
+                              k in MUST_HOLD and got.get(k) != MUST_HOLD[k]))
             self.expect(f"{label}: the engine's environment is not EXACTLY the "
                         f"protocol's (C-91, OPEN-128)", not diff,
-                        repr({k: (got.get(k), want.get(k)) for k in diff[:6]}))
+                        repr({k: (got.get(k), want.get(k), MUST_HOLD.get(k))
+                              for k in diff[:6]}))
             self.expect(f"{label}: the supervisor does not create the run's private "
                         f"trees and TMPDIR before the engine starts (C-93)",
                         set(_oracle.FIXED_RUN_DIRS) <= set(c.get("mkdirs", [])),
@@ -1388,9 +1407,9 @@ class Checker:
                     set(_oracle.FIXED_TREES) == {"TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG"}
                     and all(v.startswith(_oracle.PRIVATE_ROOT + "/")
                             for v in _oracle.FIXED_TREES.values())
-                    and all(_oracle.FIXED_RUN_VARS[k] == _oracle.FIXED_TMP
+                    and all(_oracle.FIXED_RUN_VARS.get(k) == _oracle.FIXED_TMP
                             for k in ("TMPDIR", "TMP", "TEMP"))
-                    and _oracle.FIXED_RUN_VARS["JAVA_TOOL_OPTIONS"]
+                    and _oracle.FIXED_RUN_VARS.get("JAVA_TOOL_OPTIONS")
                     == _oracle.java_tool_options(_oracle.FIXED_TMP)
                     and _oracle.PRIVATE_ROOT.startswith("/tmp/"))
         self.expect("the protocol's clock is not a fixed one, or graded_env does "
@@ -1541,20 +1560,16 @@ class Checker:
             self.expect(f"the session probe {'refused' if want_ok else 'accepted'} "
                         f"{label}", ok == want_ok)
         # A work root the container does not see (the nonce does not round-trip).
-        o = self.bare()
-        o.workroot = self.td / "elsewhere"
-        o.workroot.mkdir(exist_ok=True)
-        real = _oracle.launch_argv
-        _oracle.launch_argv = lambda *a, **k: [x.replace(str(o.workroot), "/nowhere")
-                                               for x in real(*a, **k)]
+        os.environ["FAKE_NONCE"] = "not-the-host-nonce"
         try:
-            o.session_probe()
+            self.bare().session_probe()
             self.expect("the session probe accepted a work root the container does "
                         "not see (the nonce did not round-trip)", False)
-        except (_oracle.OracleError, OSError, TypeError):
-            self.expect("-", True)
+        except _oracle.OracleError as e:
+            self.expect("the session probe refused a wrong nonce for another reason",
+                        "not visible inside" in str(e), str(e)[:200])
         finally:
-            _oracle.launch_argv = real
+            os.environ.pop("FAKE_NONCE", None)
         # The repository's shim must be the pinned one before it is installed.
         real_dir = _oracle.SHIM_SRC_DIR
         bad = self.td / "bad-shim"

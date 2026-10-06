@@ -306,12 +306,20 @@ rendering `??`, duplicate `\label`, overfull `\hbox`).
 rejections; the distinction tracks the font/error-recovery install, not soundness,
 which is why `false_ready_oracle.sh` fails HARD only on a fixture that *compiles*.
 
-**Where it is enforced.** Before grading, tex-oracle.yml runs
-`_oracle.py assert-native` inside the image, which checks the TeX tree's fingerprint
-against the one recorded for that platform. It then runs
-`scripts/tools/false_ready_oracle.sh` (blocking within that workflow) and
-`scripts/tools/diff_compile_check.sh` (advisory) inside the pinned image on every PR.
-The digest above is the multi-arch OCI *index* digest, not a per-arch manifest digest.
+**Where it is enforced.** tex-oracle.yml runs on GitHub's arm64 runner (ADR-015 E9) and
+runs every grader ON THE RUNNER HOST, through `scripts/tools/_oracle.py`, which starts a
+fresh container of the pinned image per run by its one launch definition (ADR-015 E15,
+OPEN-128): the same `docker run` command line as on a workstation. Before grading,
+`_oracle.py version` takes the oracle's session probe, which checks the TeX tree's
+fingerprint for arm64, the read-only root, the non-root user, the image's environment and
+the pinned clock shim. It then runs `scripts/tools/false_ready_oracle.sh` (blocking) and
+`scripts/tools/diff_compile_check.sh` (advisory) on every PR. Every graded run has its
+run-dependent inputs fixed (the clock, file times, paths, host name, environment, the
+file-system view: OPEN-128; the census is `corpora/oracle_baseline/clock_census.json`).
+Until OPEN-128 the job started the image itself and graded inside it (the "native
+backend"); that is retired, and `check_oracle_pin.py` refuses a workflow step that starts
+the image. The digest above is the multi-arch OCI *index* digest, not a per-arch manifest
+digest.
 
 **Engine-year sensitivity, measured.** TL2024 (pdfTeX 1.40.26) and TL2026 (1.40.29)
 produce identical grades on all 21 fixtures, with byte-identical first-error text. The

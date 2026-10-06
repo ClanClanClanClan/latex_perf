@@ -451,7 +451,14 @@ def build(repo: Path) -> str:
             return out
 
         o3, f3 = s3["oracle"], s3["frame"]
-        _rg3 = repo / "corpora/oracle_baseline/regrade_open126_sample3.json"
+        # The latest oracle-baseline re-grade of sample 3: OPEN-128's (the
+        # fixed clock, one launch definition) when present, else OPEN-126's.
+        _rg3_row = "OPEN-126"
+        _rg3 = repo / "corpora/oracle_baseline/regrade_open128_sample3.json"
+        if _rg3.is_file():
+            _rg3_row = "OPEN-128"
+        else:
+            _rg3 = repo / "corpora/oracle_baseline/regrade_open126_sample3.json"
         rg3 = json.loads(_rg3.read_text()) if _rg3.is_file() else None
         if rg3:
             rg3["summary"] = diff_summary(rg3["rows"])   # C-126: from the rows
@@ -460,17 +467,17 @@ def build(repo: Path) -> str:
               f"{f3['offset'] + f3['n']} of the same deterministic ordering "
               f"(frame {f3['frame_size']}); drawn and graded ONCE"
               + (f", the pdflatex side re-graded under the final oracle at "
-                 f"`{str(s3['oracle_regraded_at_sha'])[:8]}` (OPEN-126: "
+                 f"`{str(s3['oracle_regraded_at_sha'])[:8]}` ({_rg3_row}: "
                  f"{rg3['summary']['cells_moved']} of {rg3['summary']['rows']} "
                  f"cells and {rg3['summary']['outcomes_moved']} rc/PDF/pass "
-                 f"outcomes moved, corpora/oracle_baseline/"
-                 f"regrade_open126_sample3.json)"
+                 f"outcomes moved, corpora/oracle_baseline/{_rg3.name})"
                  if s3.get("oracle_regraded_at_sha") and rg3 else "")
               + f", CLI "
               f"verdicts measured at "
               f"`{str(s3.get('measured_at_sha', '?'))[:8]}`, under the pinned "
               f"image `{o3.get('image', '?')}` ({o3.get('arch', '?')}, "
-              f"{o3.get('backend', '?')} backend), protocol "
+              f"{o3.get('backend', '?')} backend, clock "
+              f"`{o3.get('clock', 'unrecorded')}`), protocol "
               f"`{o3.get('protocol', '?')}`. **This is the heuristic tier's "
               "first reading on documents no windowed experiment was fitted to; "
               "10 of its ids were named by whole-corpus sweeps before the draw "

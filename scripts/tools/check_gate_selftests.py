@@ -470,6 +470,22 @@ def o5_clock_relabelled(text: str) -> str:
     return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
 
 
+def graded_is_measurement(text: str) -> str:
+    """ADR-015 E7: a measurement's provenance where a grade belongs."""
+    import json as _json
+    d = _json.loads(text)
+    d["oracle"]["entry"] = "measure"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
+def contract_other_clock(text: str) -> str:
+    """OPEN-128 (7): a contract whose pin records another clock."""
+    import json as _json
+    d = _json.loads(text)
+    d["pin"]["clock"] = "fixed:1"
+    return _json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+
+
 def graded_clock_forced(text: str) -> str:
     """C-127: a published grade recorded under the forced clock."""
     import json as _json
@@ -962,7 +978,7 @@ def contract_pass4_uncover_one(text: str) -> str:
     outside a complete contract's universe."""
     d = json.loads(text)
     hit = [x for x in d["coverage_passes"] if x["history"] == "FFS"
-           and x["env"] == "forced" and x["jobname"] == "job"]
+           and x["env"] == "grading" and x["jobname"] == "job"]
     assert len(hit) == 1 and hit[0]["uncovered"] == 0, "contract drifted; update registry"
     hit[0]["uncovered"] = 1
     hit[0]["covered"] -= 1
@@ -1675,11 +1691,23 @@ REGISTRY = [
                      r"FAIL env: no tool restates the oracle's TeX environment",
                      old="    return oracle_tex_env(td)\n",
                      new='    return dict(oracle_tex_env(td), openin_any="p")\n'),
-            Mutation("the generator's grading environment forces the date",
+            Mutation("the generator's grading environment changes a TeX variable",
                      "scripts/tools/gen_contract.py",
                      r"FAIL env grading: exactly the oracle's environment",
-                     old='    if env == "grading":\n        return out\n',
-                     new='    if env == "grading":\n        return dict(out, **FORCE_DATE)\n'),
+                     old='    return dict(_oracle.oracle_tex_vars(), **LOG_WIDTH)\n',
+                     new='    return dict(_oracle.oracle_tex_vars(), **LOG_WIDTH, openout_any="a")\n'),
+            # OPEN-128 (6): the date-dependence is found by VARYING the fixed
+            # clock; the graders' environment runs under the protocol's.
+            Mutation("the generator's grading environment leaves the protocol clock",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL env: the grading environment runs under the protocol's FIXED clock",
+                     old='CLOCKS = {"grading": _oracle.PROTOCOL_CLOCK, "second_date": SECOND_CLOCK}',
+                     new='CLOCKS = {"grading": SECOND_CLOCK, "second_date": SECOND_CLOCK}'),
+            Mutation("the second clock shares a calendar field with the protocol's",
+                     "scripts/tools/gen_contract.py",
+                     r"FAIL env: the second clock is a FIXED clock differing",
+                     old="SECOND_EPOCH = 1801662449       # Wednesday 2027-02-03 13:47:29 UTC",
+                     new="SECOND_EPOCH = 1790000000"),
         ]),
     GateTest(
         "check_fix_type_consistency", [PY, f"{TOOLS}/check_fix_type_consistency.py"],
@@ -2181,8 +2209,10 @@ REGISTRY = [
             Mutation("CI's tex-oracle job back on an amd64 runner",
                      ".github/workflows/tex-oracle.yml",
                      r"runs-on \['ubuntu-latest'\] is not a native aarch64 runner",
-                     old="    runs-on: ubuntu-24.04-arm\n",
-                     new="    runs-on: ubuntu-latest\n"),
+                     old="    runs-on: ubuntu-24.04-arm\n    timeout-minutes: 60\n    steps:\n"
+                         "      - uses: actions/checkout@v4\n\n",
+                     new="    runs-on: ubuntu-latest\n    timeout-minutes: 60\n    steps:\n"
+                         "      - uses: actions/checkout@v4\n\n"),
             # C-127 (review round 2): EVERY recorded oracle block, not only
             # GRADED's, obeys the architecture rule and is registered.
             Mutation("the L_S0 bytes evidence re-stamped x86_64",
@@ -2209,26 +2239,39 @@ REGISTRY = [
                      "corpora/oracle_baseline/o5_forced_clock_sample1.json",
                      r"o5_forced_clock_sample1\.json \[oracle\]: clock 'real', but",
                      transform=o5_clock_relabelled),
-            Mutation("a published grade under the forced clock",
+            Mutation("a published grade under a legacy clock",
                      "corpora/real_roots/results_sample3.json",
                      r"results_sample3\.json: graded with clock 'forced', not the "
-                     r"protocol clock 'real'",
+                     r"protocol clock 'fixed:1785024000'",
                      transform=graded_clock_forced),
-            Mutation("CI's in-image tmpfs options drift",
+            Mutation("a published grade that is a measurement",
+                     "corpora/real_roots/results_sample3.json",
+                     r"results_sample3\.json \[oracle\]: a measurement block",
+                     transform=graded_is_measurement),
+            Mutation("a contract generated under another clock",
+                     "corpora/contracts/article.json",
+                     r"article\.json \[pin\]: clock 'fixed:1', but",
+                     transform=contract_other_clock),
+            # ADR-015 E15, OPEN-128 (4): ONE launch definition. A workflow
+            # step that starts the TeX image itself, or names the retired
+            # native backend's selector, fails.
+            Mutation("a workflow step starts the TeX image itself",
                      ".github/workflows/tex-oracle.yml",
-                     r"an in-image `docker run` mounts /tmp with options "
-                     r"\['rw,nosuid,nodev,size=8g'\]",
-                     old='          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
-                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n',
-                     new='          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=8g \\\n'
-                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n'),
-            Mutation("an in-image docker run without --read-only",
+                     r"tex-oracle\.yml:\d+: starts a container itself",
+                     old='          python3 scripts/tools/_oracle.py info\n',
+                     new='          python3 scripts/tools/_oracle.py info\n'
+                         '          docker run --rm "$TEX_IMAGE" pdftex --version\n'),
+            Mutation("another workflow starts the TeX image",
+                     ".github/workflows/spacy-container.yml",
+                     r"spacy-container\.yml:\d+: starts a container itself",
+                     old='          docker run -d --name spacy-test -p 8090:8090 latex-perf-spacy:ci\n',
+                     new='          docker run -d --name spacy-test -p 8090:8090 latex-perf-spacy:ci\n'
+                         '          docker run --rm texlive/texlive:latest true\n'),
+            Mutation("a workflow names the native backend's selector",
                      ".github/workflows/tex-oracle.yml",
-                     r"an in-image `docker run` lacks \['--read-only'\]",
-                     old='          docker run --rm --read-only --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
-                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n',
-                     new='          docker run --rm --tmpfs /tmp:rw,nosuid,nodev,size=4g \\\n'
-                         '            --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -w "$PWD" -e HOME=/tmp \\\n'),
+                     r"tex-oracle\.yml:\d+: names LP_ORACLE_IN_IMAGE",
+                     old='          FR_FIXTURE_TSV: /tmp/fixtures.tsv\n',
+                     new='          FR_FIXTURE_TSV: /tmp/fixtures.tsv\n          LP_ORACLE_IN_IMAGE: x\n'),
             # OPEN-126: the grading code is part of a grade's provenance.
             Mutation("a re-graded artefact graded by older grader code",
                      "corpora/real_roots/results_sample3.json",
@@ -2289,12 +2332,11 @@ REGISTRY = [
         "pure",
         [
             # OPEN-126 / ADR-015 E2: the oracle refuses another architecture,
-            # a writable TeX tree, a root engine; and a container not started
-            # read-only is replaced.
+            # a writable TeX tree, a root engine.
             Mutation("the oracle grades on any architecture again",
                      "scripts/tools/_oracle.py",
                      r"_check_fingerprint accepted an oracle on x86_64",
-                     old='    if fp["arch"] != ARCH_OF_RECORD:\n',
+                     old='    if fp["arch"] != ARCH_OF_RECORD and not measurement:\n',
                      new='    if False:\n'),
             Mutation("the oracle lets its engine run as root",
                      "scripts/tools/_oracle.py",
@@ -2306,59 +2348,81 @@ REGISTRY = [
                      r"check_readonly accepted a writable tree",
                      old='    if probe.get("tree_ro") is not True or probe.get("root_ro") is not True:\n',
                      new='    if probe.get("root_ro") is not True:\n'),
-            Mutation("a non-read-only container is kept",
-                     "scripts/tools/_oracle.py",
-                     r"_ensure_container on a container with a writable root filesystem",
-                     old='                    or ro != "true" or user != self.user):\n',
-                     new='                    or user != self.user):\n'),
             Mutation("require_same_oracle ignores the architecture",
                      "scripts/tools/_oracle.py",
                      r"require_same_oracle accepted another architecture",
                      old='IDENTITY_KEYS = ("image", "arch", "tlpdb_sha256", "macro_layer_sha256",\n',
                      new='IDENTITY_KEYS = ("image", "tlpdb_sha256", "macro_layer_sha256",\n'),
+            # ADR-015 E10, OPEN-128 (3): the clock is part of the identity.
+            Mutation("require_same_oracle ignores the clock",
+                     "scripts/tools/_oracle.py",
+                     r"require_same_oracle accepted another fixed clock",
+                     old='                 "fmt_sha256", "clock")\n',
+                     new='                 "fmt_sha256")\n'),
+            Mutation("a measurement block is compared as a grade",
+                     "scripts/tools/_oracle.py",
+                     r"require_same_oracle accepted a measurement",
+                     old='        if isinstance(blk, dict) and (blk.get("entry") == "measure"\n'
+                         '                                      or blk.get("measurement_only")):\n',
+                     new='        if False:\n'),
+            Mutation("clock_vars accepts the real clock",
+                     "scripts/tools/_oracle.py",
+                     r"clock_vars accepted 'real'",
+                     old='    if not isinstance(clock, str) or not clock.startswith(CLOCK_PREFIX):\n',
+                     new='    if clock == "real":\n        return PROTOCOL_EPOCH\n'
+                         '    if not isinstance(clock, str) or not clock.startswith(CLOCK_PREFIX):\n'),
             # The contract generator is an oracle client (run_engine): the
-            # engine it names must be the one that runs, and on the native
-            # backend no host TeX variable may cross into its jobs.
+            # engine it names must be the one that runs; the clock is a
+            # parameter; a caller may change only the log width.
             Mutation("the in-container script runs a fixed engine, not the given one",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*runs the engine run_engine names",
-                     old='"$n" "$names" "$e" "$@"; \'',
-                     new='"$n" "$names" pdflatex "$@"; \''),
-            Mutation("native run_engine lets the host's TeX variables through",
+                     old='\'timeout -k 10 "$t" python3 -I -c "$sup" "$n" "$@"; \'',
+                     new='\'timeout -k 10 "$t" python3 -I -c "$sup" "$n" "$1" pdflatex; \''),
+            Mutation("run_engine ignores its clock parameter",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*no host TeX variable",
-                     old="        env = engine_env(env, self.engine_base)\n",
-                     new="        env = {**os.environ, **engine_env(env, self.engine_base)}\n"),
-            # C-91 review round 4 (HIGH): the native backend handed pdflatex
-            # the caller's whole dict minus the _ENV_FORWARD names, and a host
-            # openout_any_pdflatex=a flipped a grade. The engine's environment
-            # is an allow-list now; each kill reopens one layer of it.
+                     r"\[oracle-infra\] FAIL.*did not run under that clock",
+                     old="        base = {**FIXED_RUN_VARS, **ORACLE_TEX_VARS, **clock_vars(clock)}\n",
+                     new="        base = {**FIXED_RUN_VARS, **ORACLE_TEX_VARS, **clock_vars(PROTOCOL_CLOCK)}\n"),
+            Mutation("run_engine accepts a non-protocol TeX variable",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*run_engine accepted engine 'pdftex' with variables \[\('openin_any'",
+                     old="        if differ:\n            raise OracleError(\n                f\"run_engine: {differ}",
+                     new="        if False:\n            raise OracleError(\n                f\"run_engine: {differ}"),
+            # C-91 review round 4 (HIGH), OPEN-128: the engine's environment
+            # is an allow-list, passed verbatim by the supervisor.
             Mutation("engine_env passes every key of the caller's dict (a blocklist)",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*shim on the native backend does not give its run",
-                     old="    out.update({k: v for k, v in (tex_vars or {}).items() if _ENV_FORWARD.match(k)})\n",
+                     r"\[oracle-infra\] FAIL.*hostile caller dict: the engine's environment is not EXACTLY",
+                     old="    out.update({k: v for k, v in (tex_vars or {}).items()\n"
+                         "                if _ENV_FORWARD.match(k) or k in extra})\n",
                      new="    out.update(tex_vars or {})\n"),
-            Mutation("the container backend stops checking its container's environment",
+            Mutation("the session probe stops checking the container's environment",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*fingerprint accepted a container whose environment",
-                     old="            check_container_env(dict(x.split(",
-                     new="            (dict(x.split("),
+                     r"\[oracle-infra\] FAIL.*session probe accepted an extra variable",
+                     old='        check_container_env(got["env"], where)\n',
+                     new=''),
             Mutation("check_container_env accepts any environment",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*fingerprint accepted a container whose environment",
+                     r"\[oracle-infra\] FAIL.*session probe accepted an extra variable",
                      old="    if got != IMAGE_ENV:\n",
                      new="    if False:\n"),
+            Mutation("check_container_env accepts another host name",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*session probe accepted another HOSTNAME",
+                     old='    if env.get("HOSTNAME") != ORACLE_HOSTNAME:\n',
+                     new='    if False:\n'),
             Mutation("the container oracle drops the pdfTeX-banner proof",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*'nobanner' run",
-                     old='        _require_pdftex_ran(rc, p.stdout, f"container {self.name}")\n',
-                     new=""),
+                     old='        if require_banner:\n            _require_pdftex_ran(rc, p.stdout, what)\n',
+                     new=''),
             Mutation("the container oracle trusts the docker CLI's rc again",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*'dead' run",
-                     old="        if m is None:\n            raise OracleError(\n",
+                     old="        if m is None:\n            raise OracleError(\n                f\"docker run exited",
                      new="        if m is None:\n            return EngineRun(p.returncode, p.stdout + p.stderr, False, p.stdout)\n"
-                         "        if m is None:\n            raise OracleError(\n"),
+                         "        if m is None:\n            raise OracleError(\n                f\"docker run exited"),
             Mutation("the shim maps only OracleError to INFRA_RC",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*non-OracleError exception",
@@ -2385,13 +2449,11 @@ REGISTRY = [
                      old='  elif [ "$2" = compiles ]; then echo hard-rejects\n',
                      new=""),
             # OPEN-118 review round 3: proof pdfTeX ran is not proof its rc
-            # is the document's. MEASURED: a full work root gave banner + rc 1
-            # ("I can't write on file `t.log'", "fwrite() failed") and every
-            # grader graded FAILS. One kill per environment check.
+            # is the document's. One kill per environment check.
             Mutation("the container oracle stops refusing pdfTeX's own write failures",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*'fwrite' run",
-                     old='        _require_output_written(p.stdout + err, args, f"container {self.name}")\n',
+                     old='        _require_output_written(p.stdout + err, args, what)\n',
                      new=""),
             Mutation("the own-output check stops keying on the job name",
                      "scripts/tools/_oracle.py",
@@ -2401,14 +2463,14 @@ REGISTRY = [
             Mutation("the container oracle drops the free-space floor before a run",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*runs \(and grades\) with the work root below",
-                     old='        _require_free_space(cwd, "before")\n        cmd = ["exec"',
-                     new='        cmd = ["exec"'),
+                     old='        _require_free_space(cwd, "before")\n        nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex\n        name = self._run_name()\n',
+                     new='        nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex\n        name = self._run_name()\n'),
             Mutation("the container oracle drops the free-space floor after a run",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*grades a run after which",
-                     old='        _require_output_written(p.stdout + err, args, f"container {self.name}")\n'
+                     old='        _require_output_written(p.stdout + err, args, what)\n'
                          '        _require_free_space(cwd, "after")\n',
-                     new='        _require_output_written(p.stdout + err, args, f"container {self.name}")\n'),
+                     new='        _require_output_written(p.stdout + err, args, what)\n'),
             Mutation("false_ready_oracle.sh stops vetting each pass's output",
                      "scripts/tools/false_ready_oracle.sh",
                      r"\[oracle-infra\] FAIL.*graded plan 'fwrite'",
@@ -2424,38 +2486,54 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*diff_compile_check\.sh no longer vets",
                      old='  if [ "$envok" = yes ] && ! oracle_vet "$d" "$pout" -interaction=nonstopmode -halt-on-error "$base" 2>/dev/null; then\n    envok=no\n  fi\n',
                      new=""),
-            # OPEN-118 known limit (b), C-91: ONE grading environment, imposed
-            # by the oracle. Each kill reverts one layer of it.
+            # OPEN-118 known limit (b), C-91, OPEN-128: ONE grading
+            # environment, imposed by the oracle. Each kill reverts one layer.
             Mutation("run_pdflatex stops imposing the grading environment",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*run_pdflatex forwards a caller's TeX variables",
+                     r"\[oracle-infra\] FAIL.*hostile caller dict: the engine's environment is not EXACTLY",
                      old="        env = graded_env(env, clock)\n        self.clear_outputs(Path(cwd), args)\n",
                      new="        self.clear_outputs(Path(cwd), args)\n"),
             Mutation("graded_env stops imposing ORACLE_TEX_VARS",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*SOURCE_DATE_EPOCH=None \(protocol '0'\)",
-                     old="    out.update(ORACLE_TEX_VARS)\n    if clock not in CLOCKS:\n",
-                     new="    if clock not in CLOCKS:\n"),
+                     r"\[oracle-infra\] FAIL.*empty caller dict: the engine's environment is not EXACTLY",
+                     old="    out.update(ORACLE_TEX_VARS)\n    out.update(clock_vars(clock))\n",
+                     new="    out.update(clock_vars(clock))\n"),
+            Mutation("graded_env stops imposing the fixed clock",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*the protocol's clock is not a fixed one, or graded_env does not impose it",
+                     old="    out.update(clock_vars(clock))\n    return out\n",
+                     new="    return out\n"),
+            Mutation("graded_env stops imposing the fixed run variables",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*empty caller dict: the engine's environment is not EXACTLY",
+                     old="    out.update(FIXED_RUN_VARS)\n    out.update(ORACLE_TEX_VARS)\n",
+                     new="    out.update(ORACLE_TEX_VARS)\n"),
             Mutation("graded_env forwards the host's other TeX variables",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*host FORCE_SOURCE_DATE='1' reached the engine",
-                     old="    out = {k: v for k, v in env.items() if not _ENV_FORWARD.match(k)}\n",
-                     new="    out = dict(env)\n"),
-            Mutation("graded_env stops requiring a private TEXMFHOME/TEXMFVAR",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*run_pdflatex graded a run with no private",
-                     old="    missing = [k for k in _GRADING_TEXMF if not env.get(k)]\n",
-                     new="    missing = []\n"),
-            Mutation("_oracle.sh runs a bare pdflatex on the native backend again",
+                     r"\[oracle-infra\] FAIL.*hostile caller dict: the engine's environment is not EXACTLY",
+                     old="    out = {k: v for k, v in (env or {}).items() if not _ENV_FORWARD.match(k)}\n",
+                     new="    out = dict(env or {})\n"),
+            # ADR-015 E15: the native backend is retired, everywhere.
+            Mutation("_oracle.sh grades inside the image again",
                      "scripts/tools/_oracle.sh",
-                     r"\[oracle-infra\] FAIL.*_oracle\.sh \(native\) does not run",
-                     old='    PDFLATEX=(python3 "$py" pdflatex --timeout "$TEX_TIMEOUT")\n    ORACLE_RM=(rm -f --)\n',
-                     new='    PDFLATEX=(pdflatex)\n    ORACLE_RM=(rm -f --)\n'),
-            Mutation("check_apply_fixes_roundtrip passes the host environment again",
-                     "scripts/tools/check_apply_fixes_roundtrip.py",
-                     r"\[oracle-infra\] FAIL.*pdflatex_ok does not grade in the protocol",
-                     old="            run = o.run_pass(workdir, base, o.tex_env(td), secs)\n",
-                     new="            run = o.run_pass(workdir, base, dict(os.environ), secs)\n"),
+                     r"\[oracle-infra\] FAIL.*_oracle\.sh with LP_ORACLE_IN_IMAGE set still grades",
+                     old='  if [ -n "${LP_ORACLE_IN_IMAGE:-}" ]; then\n    echo "[$tag] FATAL: LP_ORACLE_IN_IMAGE is set',
+                     new='  if false; then\n    echo "[$tag] FATAL: LP_ORACLE_IN_IMAGE is set'),
+            Mutation("_oracle.sh runs a bare pdflatex",
+                     "scripts/tools/_oracle.sh",
+                     r"\[oracle-infra\] FAIL.*_oracle\.sh does not run every grader's pdflatex",
+                     old='    PDFLATEX=(python3 "$py" pdflatex --timeout "$TEX_TIMEOUT")\n    ORACLE_RM=(python3 "$py" rm)\n',
+                     new='    PDFLATEX=(pdflatex)\n    ORACLE_RM=(python3 "$py" rm)\n'),
+            Mutation("get_oracle grades with LP_ORACLE_IN_IMAGE set",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*get_oracle\(\) graded with LP_ORACLE_IN_IMAGE set",
+                     old="    if in_image():\n        raise OracleError(\n",
+                     new="    if False:\n        raise OracleError(\n"),
+            Mutation("the retired native backend can be constructed",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*the retired native backend can be constructed",
+                     old='    def __init__(self):\n        raise OracleError(\n            "the native backend',
+                     new='    def __init__(self):\n        return\n        raise OracleError(\n            "the native backend'),
             Mutation("image_command lets an engine through as an argument",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*image_command ran \['xargs'\]",
@@ -2471,8 +2549,7 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*image_command ran \['sh'\]",
                      old="        if not argv or Path(str(argv[0])).name in _IMAGE_SHELLS:\n",
                      new="        if not argv:\n"),
-            # C-91 review round 5: the argv allow-list, the private
-            # TEXMFCONFIG and the container-state checks, one kill each.
+            # C-91 review round 5: the argv allow-list, one kill each.
             Mutation("run_pdflatex stops checking the graded argv",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*run_pdflatex ran the argv \['-cnf-line=openout_any=a'",
@@ -2488,101 +2565,108 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*run_pdflatex ran the argv \['-shell-escape'",
                      old="        if value is None and name in flags:\n",
                      new="        if value is None:\n"),
+            # C-91 round 5, C-93, OPEN-128: every writable kpathsea tree and
+            # the TMPDIR are the run container's own, at fixed paths, created
+            # before the engine starts.
             Mutation("TEXMFCONFIG is no longer a private per-run tree",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*graded_env accepted a run without a private TEXMFCONFIG",
-                     old='_GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR", "TEXMFCONFIG")',
-                     new='_GRADING_TEXMF = ("TEXMFHOME", "TEXMFVAR")'),
-            Mutation("fingerprint stops checking the persistent TeX trees",
+                     r"\[oracle-infra\] FAIL.*no longer make every writable kpathsea tree",
+                     old='               "TEXMFCONFIG": PRIVATE_ROOT + "/texmf-config"}\n',
+                     new='               }\n'),
+            Mutation("TMPDIR is no longer one of the fixed run variables",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*fingerprint \(check_texmf_trees\) accepted",
-                     old="            self.check_texmf_trees()\n",
-                     new=""),
-            Mutation("get_oracle stops scanning the container's state",
+                     r"\[oracle-infra\] FAIL.*no longer make every writable kpathsea tree",
+                     old='    "TMPDIR": FIXED_TMP, "TMP": FIXED_TMP, "TEMP": FIXED_TMP,\n',
+                     new='    "TMP": FIXED_TMP, "TEMP": FIXED_TMP,\n'),
+            Mutation("the supervisor is not told to create the run's directories",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*session state scan accepted",
-                     old="        _ORACLE.check_state()\n",
-                     new=""),
-            # C-93: a private TMPDIR per run. MEASURED 2026-09-29: a timed-out
-            # repstopdf -> gs left /tmp/gs_* in the long-lived container and
-            # check_state then refused every later session. One kill per layer.
-            Mutation("the per-run environment drops the private TMPDIR",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*oracle_tex_vars carries no private TMPDIR",
-                     old="    return {**private_texmf_vars(td), **private_tmp_vars(td), **ORACLE_TEX_VARS}\n",
-                     new="    return {**private_texmf_vars(td), **ORACLE_TEX_VARS}\n"),
-            Mutation("TMPDIR is no longer forwarded to the engine",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*TMPDIR=None is not the run's private",
-                     old='    r"TMPDIR|TMP|TEMP|JAVA_TOOL_OPTIONS)$")',
-                     new='    r"TMP|TEMP|JAVA_TOOL_OPTIONS)$")'),
-            Mutation("graded_env stops requiring the run's private TMPDIR",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*run_pdflatex graded a run whose TMPDIR is ",
-                     old="    if not tmp or tmp != want_tmp:\n",
-                     new="    if False:\n"),
-            Mutation("graded_env stops deriving TMP/TEMP/JAVA_TOOL_OPTIONS",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*TMPDIR=None is not the run's private",
-                     old="        out.update(private_tmp_vars(Path(tmp).parent))\n",
-                     new="        pass\n"),
-            Mutation("the container backend stops checking the run's TMPDIR",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*ran an engine with a TMPDIR outside the work root",
-                     old="        make_private_tmp(env or {}, self._inside)\n",
-                     new=""),
-            Mutation("the oracle stops creating the run's TMPDIR",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*was not created before the engine started",
-                     old="        Path(tmp).mkdir(parents=True, exist_ok=True)\n",
-                     new="        pass\n"),
+                     r"\[oracle-infra\] FAIL.*does not create the run's private trees and TMPDIR",
+                     old='               "env": engine_env(env, extra=extra_env), "mkdirs": list(FIXED_RUN_DIRS),\n',
+                     new='               "env": engine_env(env, extra=extra_env), "mkdirs": [],\n'),
             # C-95: a stale PDF from an earlier pass (or run) was read as the
-            # confirming pass's, grading an aux-oscillating document compiles.
-            Mutation("run_pdflatex stops clearing the previous run's outputs",
+            # confirming pass's. The run's supervisor deletes the evidence.
+            Mutation("the run stops clearing the previous run's outputs",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*pdflatex shim left an earlier run's",
-                     old="        env = graded_env(env, clock)\n        self.clear_outputs(Path(cwd), args)\n",
-                     new="        env = graded_env(env, clock)\n"),
-            Mutation("run_engine stops clearing the previous run's outputs",
+                     old='        cfg = {"names": evidence_names(args), "remove": evidence_names(args),\n',
+                     new='        cfg = {"names": evidence_names(args), "remove": [],\n'),
+            Mutation("the cleared outputs omit the log",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*run_engine left an earlier run's",
-                     old="        self.clear_outputs(Path(cwd), list(args))\n",
-                     new=""),
-            # C-97: the long-lived container reaps (--init), is bounded
-            # (--pids-limit), and no run starts beside a leaked process.
-            Mutation("a container without --init is no longer replaced",
+                     r"\[oracle-infra\] FAIL.*left an earlier run's \['t\.log'\]",
+                     old='    RUN_OUTPUTS = (".pdf", ".log", ".fls", ".fmt")\n',
+                     new='    RUN_OUTPUTS = (".pdf", ".fls", ".fmt")\n'),
+            # ADR-015 E15, OPEN-128 (4): ONE launch definition, its flags read
+            # back from the fake docker. One kill per flag family.
+            Mutation("the launch definition drops --read-only",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*container with no --init: replaced=False",
-                     old='            if (img != IMAGE or init != "true" or pids != str(PIDS_LIMIT)\n',
-                     new='            if (img != IMAGE\n'),
-            Mutation("the oracle starts its container without --init",
+                     r"\[oracle-infra\] FAIL.*a container of the oracle lacks \[.*'--read-only'",
+                     old='            "--read-only", "--tmpfs", f"/tmp:{TMPFS_OPTIONS}",\n',
+                     new='            "--tmpfs", f"/tmp:{TMPFS_OPTIONS}",\n'),
+            Mutation("the launch definition drops --init",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*new container flags ok=False",
-                     old='                         "--label", "lp-oracle=1", "--init",\n',
-                     new='                         "--label", "lp-oracle=1",\n'),
-            Mutation("a container still without --init after creation is accepted",
+                     r"\[oracle-infra\] FAIL.*a container of the oracle lacks \[.*'--init'",
+                     old='            "--label", "lp-oracle-run=1", "--init",\n',
+                     new='            "--label", "lp-oracle-run=1",\n'),
+            Mutation("the launch definition has a network",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*docker ignoring --init: replaced=True \(want True\), accepted=True",
-                     old='        if ins.stdout.decode().split() != ["true", str(PIDS_LIMIT), "true", self.user]:\n',
+                     r"\[oracle-infra\] FAIL.*a container of the oracle lacks \[\('--network', 'none'\)",
+                     old='            "--network", "none", "--hostname", ORACLE_HOSTNAME,\n',
+                     new='            "--hostname", ORACLE_HOSTNAME,\n'),
+            Mutation("the launch definition drops the memory ceiling",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*a container of the oracle lacks \[\('--memory'",
+                     old='            "--memory", MEMORY_LIMIT, "--memory-swap", MEMORY_LIMIT,\n',
+                     new=''),
+            Mutation("an engine run's directory is not at the fixed RUN_DIR",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*launch_definition",
+                     old='        mounts = [(cwd, RUN_DIR, False), (self.shim_dir, SHIM_DIR, True)]\n',
+                     new='        mounts = [(cwd, str(cwd), False), (self.shim_dir, SHIM_DIR, True)]\n'),
+            # OPEN-128: the shim's proof, on every run and every session.
+            Mutation("a run under another shim is graded",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*another shim than the pinned one",
+                     old='        if ev.get("shim_sha256") != shim_sha256:\n',
                      new='        if False:\n'),
-            Mutation("the per-run leak check is skipped",
+            Mutation("an engine without the shim's mark is graded",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*ran the engine despite a zombie left",
-                     old='lp_leak "$n" || exit 0; ',
-                     new=''),
-            Mutation("the leak check stops seeing zombies",
+                     r"\[oracle-infra\] FAIL.*no shim mark on the engine",
+                     old='        if ev.get("shim_mode") != "restricted":\n',
+                     new='        if False:\n'),
+            Mutation("the run does not preload the shim",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*ran the engine despite a zombie left",
-                     old='|| ($3 ~ /^Z/ && $4 >= 2) ',
-                     new=''),
-            Mutation("the --init directories' contents are allowed too",
+                     r"\[oracle-infra\] FAIL.*runs without the pinned shim preloaded",
+                     old='               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": SHIM_MARK_DIR,\n',
+                     new='               "shim": None, "mark": SHIM_MARK_DIR,\n'),
+            Mutation("the session probe stops checking the mounted shim",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*session state scan accepted a container whose changed paths are '/usr/sbin/x'",
-                     old='            if typ == "d" and path in self.STATE_ALLOWED_DIRS:\n',
-                     new='            if path in self.STATE_ALLOWED_DIRS or path.startswith("/usr/"):\n'),
+                     r"\[oracle-infra\] FAIL.*session probe accepted another shim",
+                     old='        if got.get("shim") != SHIM_SHA256[arch]:\n',
+                     new='        if False:\n'),
+            Mutation("the session probe stops checking the work root's nonce",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*accepted a work root the container does not see",
+                     old='        if got.get("nonce") != nonce:\n',
+                     new='        if False:\n'),
+            Mutation("an unpinned shim is installed",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*_install_shim installed a shim",
+                     old='            if hashlib.sha256(data).hexdigest() != want:\n',
+                     new='            if False:\n'),
+            # ADR-015 E7: the measurement entry point's tag and allow-list.
+            Mutation("a measurement is tagged as a grade",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*measure on aarch64: the run, its tag",
+                     old='        prov.update({"entry": "measure", "measurement_only": arch != ARCH_OF_RECORD,\n',
+                     new='        prov.update({"entry": "grade", "measurement_only": False,\n'),
+            Mutation("a measurement may set any variable",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*measure accepted shell_escape",
+                     old="            if k not in MEASURE_ENV:\n",
+                     new="            if False:\n"),
             # Review round 2 of C-95/C-97: pdfTeX's job name is THE name, the
             # PDF verdict is pdfTeX's own report, clearing never follows a
-            # symlink, and the container's configuration is in its name.
+            # symlink.
             Mutation("the job name strips only a lowercase .tex again",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*pdftex_jobname no longer gives pdfTeX's MEASURED job names",
@@ -2613,11 +2697,6 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*remove deleted a symlink's TARGET",
                      old='        paths = [Path(p).parent.resolve() / Path(p).name for p in paths]\n',
                      new='        paths = [Path(p).resolve() for p in paths]\n'),
-            Mutation("the container name loses its configuration tag",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*container name no longer carries its",
-                     old='                     + CONTAINER_CONFIG_TAG)\n',
-                     new='                     )\n'),
             Mutation("a grader forms its own output name again (stem + .log)",
                      "scripts/tools/regrade_sample.py",
                      r"\[oracle-infra\] FAIL.*names an engine output or takes a PDF verdict other than through the oracle API.*regrade_sample\.py",
@@ -2628,17 +2707,10 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*graded a document whose t\.pdf is a symlink",
                      old="        if links:\n            raise OracleError(",
                      new="        if False:\n            raise OracleError("),
-            Mutation("the cleared outputs omit the log",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*left an earlier run's \['t\.log'\]",
-                     old='    RUN_OUTPUTS = (".pdf", ".log", ".fls", ".fmt")\n',
-                     new='    RUN_OUTPUTS = (".pdf", ".fls", ".fmt")\n'),
-            # C-99 / OPEN-118 review round 3. H1: the document must not write
-            # the oracle's evidence, and the PDF verdict needs the terminal and
+            # C-99 / OPEN-118 review round 3. The document must not write the
+            # oracle's evidence, and the PDF verdict needs the terminal and
             # the log to agree. (The supervisor's own inotify logic is killed
-            # by the gate's REAL-supervisor checks, which run on Linux only --
-            # CI and the pinned image -- so it has no mutation here: on a Mac
-            # it would survive.)
+            # by the gate's REAL-supervisor checks, which run on Linux only.)
             Mutation("the supervisor's evidence is ignored (a second close-write of the log)",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*whose supervisor reported its own log",
@@ -2664,8 +2736,6 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*run_to_fixpoint graded text after the terminal",
                      old='        ok = b"".join(tail) in terminal_tails(job)\n',
                      new='        ok = True\n'),
-            # Review round 3 LOW (fail-closed branches that survived) and
-            # round 4 (the alias, \\synctex, HostDiagnostic, a stale allow).
             Mutation("a terminal report with no report in the log is graded",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*run_to_fixpoint graded a terminal report and a log with none",
@@ -2675,7 +2745,7 @@ REGISTRY = [
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*whose supervisor reported no evidence line at all",
                      old="    if m is None:\n        raise OracleError(f\"{what}: the run's supervisor reported no evidence \"\n",
-                     new="    if m is None:\n        return stderr\n        raise OracleError(f\"{what}: the run's supervisor reported no evidence \"\n"),
+                     new="    if m is None:\n        return stderr, {}\n        raise OracleError(f\"{what}: the run's supervisor reported no evidence \"\n"),
             Mutation("text after the log's report is accepted",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*final_report on text after the log's report",
@@ -2698,7 +2768,7 @@ REGISTRY = [
                      new='    for ext in ():\n'),
             Mutation("HostDiagnostic is supervised again (every Mac host run refused)",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*HostDiagnostic (refused a host run|ran the evidence supervisor)",
+                     r"\[oracle-infra\] FAIL.*get_oracle\(\) handed out an unsupervised backend",
                      old="    supervised = False\n",
                      new="    supervised = True\n"),
             Mutation("get_oracle hands out an unsupervised backend",
@@ -2706,21 +2776,6 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*handed out an unsupervised backend",
                      old="    if not _ORACLE.supervised:  # never a grade without the evidence supervisor\n",
                      new="    if False:\n"),
-            Mutation("the leak check confirms after one re-sample again",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*container leak check on a sibling's zombie reaped after 2 samples",
-                     old="    f'while [ -n \"$l\" ] && [ $i -lt {LEAK_CONFIRM_S} ]; do sleep 1; '\n",
-                     new="    f'while [ -n \"$l\" ] && [ $i -lt 1 ]; do sleep 1; '\n"),
-            Mutation("the leak check keys a process on its state letter again",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*container leak check on a persistent orphan whose state letter alternates",
-                     old="""    'm=" $(lp_leak_list) "; k=""; for x in $l; do case "$m" in *" ${x%%:*}:"*) '\n""",
-                     new="""    'm=" $(lp_leak_list) "; k=""; for x in $l; do case "$m" in *" $x "*) '\n"""),
-            Mutation("the leak check globs a process name",
-                     "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*container leak check on a persistent zombie",
-                     old="    'lp_leak() { set -f; l=$(lp_leak_list); i=0; '\n",
-                     new="    'lp_leak() { l=$(lp_leak_list); i=0; '\n"),
             Mutation("a stale OUTPUT_NAME_ALLOW entry is kept",
                      "scripts/tools/check_oracle_infra_grading.py",
                      r"\[oracle-infra\] FAIL.*OUTPUT_NAME_ALLOW entry matches no line",
@@ -2733,16 +2788,19 @@ REGISTRY = [
                      old="    check_file_argument(p, cwd, what)\n",
                      new=""),
             # stdin: no engine run inherits the grader's stdin.
-            Mutation("the native engine run inherits the grader's stdin",
+            Mutation("a host-process engine run inherits the grader's stdin",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*native engine run read the grader's stdin",
-                     old="                                 cwd=cwd, env=env, stdin=subprocess.DEVNULL,\n",
-                     new="                                 cwd=cwd, env=env,\n"),
+                     r"\[oracle-infra\] FAIL.*HostDiagnostic's engine read the grader's stdin",
+                     old="                p = subprocess.Popen([engine, *args], cwd=cwd, env=env,\n"
+                         "                                     stdin=subprocess.DEVNULL,\n",
+                     new="                p = subprocess.Popen([engine, *args], cwd=cwd, env=env,\n"),
             Mutation("the container's docker client inherits the grader's stdin",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*docker client of an engine run read the grader's stdin",
-                     old="                               timeout=timeout + 90, stdin=subprocess.DEVNULL)\n",
-                     new="                               timeout=timeout + 90)\n"),
+                     old="            return subprocess.run([self.docker, *argv], capture_output=True,\n"
+                         "                                  timeout=timeout, stdin=subprocess.DEVNULL)\n",
+                     new="            return subprocess.run([self.docker, *argv], capture_output=True,\n"
+                         "                                  timeout=timeout)\n"),
             # M2: the inverted naming check. The four evasions the review
             # measured against the old pattern list, and a grader that stops
             # taking its PDF verdict from the oracle.

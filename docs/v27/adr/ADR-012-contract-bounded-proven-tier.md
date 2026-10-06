@@ -107,7 +107,11 @@ fingerprint). It never falls back to a host `pdflatex`. The digest is a multi-ar
 its arm64 and amd64 images were measured to carry the same macro layer (4,935 packages at
 identical revisions), so a local grade and a CI grade differ at most in the engine
 binary's architecture. The container backend was measured equivalent to the native
-backend on 97 of 97 documents. The one-time re-grade moved no cell in any re-graded
+backend on 97 of 97 documents. *(Superseded by ADR-015 E9 and E15, OPEN-126/OPEN-128:
+the project grades on arm64 only, and the native backend is retired: CI runs the
+graders on its runner host through the container oracle's one launch definition; the
+per-document comparison of the two platforms is
+`corpora/oracle_baseline/platform_residuals.json`.)* The one-time re-grade moved no cell in any re-graded
 artefact; the per-artefact diffs are in `corpora/oracle_baseline/`. Every pdflatex grade
 listed above as pre-baseline is therefore now a baseline grade, except four fixer
 research artefacts pinned as pre-baseline in `check_oracle_pin.py`. Sample 3 is drawn by

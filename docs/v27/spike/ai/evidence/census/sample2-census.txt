@@ -1,0 +1,24 @@
+papers 200 missing 0 distinct pkgs 334 distinct (class,pkgset) 200 priv cls 42 priv sty 50
+top pkgs [('amsmath', 172), ('amssymb', 156), ('graphicx', 156), ('hyperref', 145), ('xcolor', 104), ('amsthm', 104), ('amsfonts', 100), ('booktabs', 96), ('multirow', 89), ('mathtools', 67), ('float', 63), ('url', 62), ('inputenc', 61), ('color', 61), ('tikz', 60), ('subcaption', 60), ('enumitem', 60), ('geometry', 59), ('algorithm', 54), ('fontenc', 53), ('bm', 51), ('caption', 49), ('mathrsfs', 45), ('cleveref', 42), ('array', 39)]
+top classes [('article', 95), ('amsart', 37), ('IEEEtran', 15), ('llncs', 8), ('revtex4-2', 7), ('elsarticle', 6), ('sn-jnl', 3), ('acmart', 3), ('revtex4-1', 2), ('amsproc', 2), ('ecai', 2), ('revtex4', 2)]
+K 10 papers with article/amsart, no local cls/sty, all pkgs in topK: 0
+K 20 papers with article/amsart, no local cls/sty, all pkgs in topK: 3
+K 40 papers with article/amsart, no local cls/sty, all pkgs in topK: 5
+K 80 papers with article/amsart, no local cls/sty, all pkgs in topK: 20
+packages used by exactly one paper: 139
+distinct emph-relevant signatures 57
+33 article [] 
+26 amsart [] 
+22 PRIVATE-CLS [] 
+16 article ['fontenc', 'microtype'] localsty
+10 article [] localsty
+6 PRIVATE-CLS ['fontenc'] 
+5 amsart ['fontenc'] 
+4 article ['times'] localsty
+4 revtex4-2 [] 
+4 article ['fontenc'] 
+4 IEEEtran [] 
+3 article ['microtype'] localsty
+papers that share a signature with an earlier one (upper bound on \emph reuse): 143
+signatures with local files by content hash: 101 ; papers sharing with an earlier one: 99
+local files shared by >1 paper: 15 of 76

@@ -1,0 +1,65 @@
+--- stdin bytes not read: 0
+--- clock readings used: 2 of 8
+--- handle 1 (757 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)
+ restricted \write18 enabled.
+**entering extended mode
+LaTeX2e <2026-06-01>
+L3 programming layer <2026-08-10>
+
+*
+{into \tracingassigns=1}
+{changing \tracinggroups=0}
+{into \tracinggroups=1}
+{changing \tracingifs=0}
+{into \tracingifs=1}
+{changing \tracingmacros=0}
+{into \tracingmacros=2}
+{changing \tracingcommands=0}
+{into \tracingcommands=3}
+{vertical mode: \setbox}
+{entering hbox group (level 1)}
+{restricted horizontal mode: end-group character }}
+{leaving hbox group (level 1)}
+{changing \box0=void}
+{into \box0=
+\hbox(0.0+0.0)x0.0}
+{vertical mode: \tracingcommands}
+{changing \tracingcommands=3}
+{into \tracingcommands=0}
+{changing \x=undefined}
+{into \x=select font nullfont}
+
+--- handle 4 (950 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.8.30)  1 JAN 1970 00:00
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**&pdflatex
+
+*\scrollmode\tracingonline=1 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \tracingmacros=2 \tracingcommands=3 \setbox0\hbox{}\tracingcommands=0 \font\x=cmti10 \x
+
+{into \tracingassigns=1}
+{changing \tracinggroups=0}
+{into \tracinggroups=1}
+{changing \tracingifs=0}
+{into \tracingifs=1}
+{changing \tracingmacros=0}
+{into \tracingmacros=2}
+{changing \tracingcommands=0}
+{into \tracingcommands=3}
+{vertical mode: \setbox}
+{entering hbox group (level 1)}
+{restricted horizontal mode: end-group character }}
+{leaving hbox group (level 1)}
+{changing \box0=void}
+{into \box0=
+\hbox(0.0+0.0)x0.0}
+{vertical mode: \tracingcommands}
+{changing \tracingcommands=3}
+{into \tracingcommands=0}
+{changing \x=undefined}
+{into \x=select font nullfont}
+
+RESULT: stuck: 600 > 593 > 560 > 558 > 247 > unmodelled external: bopenin
+TIME: 90.13 s

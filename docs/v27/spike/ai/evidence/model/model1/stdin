@@ -1,0 +1,3 @@
+&pdflatex
+\tracingonline=1 \tracingmacros=2 \tracingcommands=3 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \emph{x}
+\csname @@end\endcsname

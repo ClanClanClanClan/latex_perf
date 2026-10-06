@@ -1,0 +1,850 @@
+\emph ->\protect \emph  
+{\relax}
+
+\emph  #1->\ifmmode \nfss@text {\em #1}\else \hmode@bgroup \text@command {#1}\em \check@icl #1\check@icr \expandafter \egroup \fi 
+#1<-x
+{\ifmmode: (level 1) entered on line 4}
+{false}
+{\else: \ifmmode (level 1) entered on line 4}
+
+\hmode@bgroup ->\leavevmode \bgroup 
+
+\leavevmode ->\unhbox \voidb@x 
+{\unhbox}
+{begin-group character {}
+{entering simple group (level 1) at line 4}
+
+\text@command #1->\edef \reserved@a {\unexpanded {#1}}\ifx \reserved@a \@empty \let \check@icl \@empty \let \check@icr \@empty \else \ifx \reserved@a \space \let \check@icl \@empty \let \check@icr \@empty \else \check@nocorr@ #1\nocorr \@nil \fi \fi 
+#1<-x
+{\edef}
+{changing \reserved@a=macro:->l3backend-pdftex.def}
+{into \reserved@a=macro:->x}
+{\ifx: (level 2) entered on line 4}
+{false}
+{\else: \ifx (level 2) entered on line 4}
+{\ifx: (level 3) entered on line 4}
+{false}
+{\else: \ifx (level 3) entered on line 4}
+
+\check@nocorr@ #1#2\nocorr #3\@nil ->\let \check@icl \maybe@ic \def \check@icr {\ifvmode \else \aftergroup \maybe@ic \fi }\def \reserved@a {\nocorr }\def \reserved@b {#1}\def \reserved@c {#3}\ifx \reserved@a \reserved@b \ifx \reserved@c \@empty \let \check@icl \@empty \else \let \check@icl \@empty \let \check@icr \@empty \fi \else \ifx \reserved@c \@empty \else \let \check@icr \@empty \fi \fi 
+#1<-x
+#2<-
+#3<-
+{\let}
+{changing \check@icl=macro:->}
+{into \check@icl=macro:->\futurelet \@let@token \maybe@ic@ }
+{\def}
+{changing \check@icr=macro:->}
+{into \check@icr=macro:->\ifvmode \else \aftergroup \maybe@ic \ETC.}
+{\def}
+{changing \reserved@a=macro:->x}
+{into \reserved@a=macro:->\nocorr }
+{\def}
+{changing \reserved@b=macro:->}
+{into \reserved@b=macro:->x}
+{\def}
+{changing \reserved@c=macro:#1.def\@nil ->\def \reserved@a {\ETC.}
+{into \reserved@c=macro:->}
+{\ifx: (level 4) entered on line 4}
+{false}
+{\else: \ifx (level 4) entered on line 4}
+{\ifx: (level 5) entered on line 4}
+{true}
+{\else: \ifx (level 5) entered on line 4}
+{\fi: \ifx (level 5) entered on line 4}
+{\fi: \ifx (level 4) entered on line 4}
+{\fi: \ifx (level 3) entered on line 4}
+{\fi: \ifx (level 2) entered on line 4}
+
+\em ->\protect \em  
+{\relax}
+
+\em  ->\@nomath \em \ifx \emfontdeclare@clist \@empty \ifdim \fontdimen \@ne \font >\z@ \eminnershape \else \itshape \fi \else \edef \em@currfont {\csname \curr@fontshape /\f@size \endcsname }\expandafter \do@emfont@update \emfontdeclare@clist \do@emfont@update \fi 
+
+\@nomath #1->\relax \ifmmode \@font@warning {Command \noexpand #1invalid in math mode}\fi 
+#1<-\em 
+{\relax}
+{\ifmmode: (level 2) entered on line 4}
+{false}
+{\fi: \ifmmode (level 2) entered on line 4}
+{\ifx: (level 2) entered on line 4}
+{true}
+{\ifdim: (level 3) entered on line 4}
+{false}
+{\else: \ifdim (level 3) entered on line 4}
+
+\itshape ->\not@math@alphabet \itshape \mathit \fontshape \itdefault \selectfont 
+
+\not@math@alphabet #1#2->\relax \ifmmode \@latex@error {Command \noexpand #1invalid in math mode}{Please \ifx #2\relax define a new math alphabet
+if you want to use a special font in math mode\else use the math alphabet \noexpand #2instead of the #1command\fi . }\fi 
+#1<-\itshape 
+#2<-\mathit 
+{\relax}
+{\ifmmode: (level 4) entered on line 4}
+{false}
+{\fi: \ifmmode (level 4) entered on line 4}
+
+\fontshape ->\protect \fontshape  
+{\relax}
+
+\fontshape  #1->\expandafter \def \expandafter \delayed@f@adjustment \expandafter {\delayed@f@adjustment \delayed@merge@font@shape {#1}}
+#1<-\itdefault 
+{\expandafter}
+{\expandafter}
+{\expandafter}
+
+\delayed@f@adjustment ->
+{\def}
+{changing \delayed@f@adjustment=macro:->}
+{into \delayed@f@adjustment=macro:->\delayed@merge@font@shape {\itdefault \ETC.}
+
+\selectfont ->\protect \selectfont  
+{\relax}
+
+\selectfont  ->\ifx \f@linespread \baselinestretch \else \set@fontsize \baselinestretch \f@size \f@baselineskip \fi \ifx \delayed@f@adjustment \@empty \else \let \f@shape@saved \f@shape \let \f@series@saved \f@series \delayed@f@adjustment \maybe@load@fontshape \ifcsname \f@encoding /\f@family /\f@series /\f@shape \endcsname \else \let \f@shape \f@shape@saved \let \f@series \f@series@saved \let \delayed@merge@font@shape \merge@font@shape \let \delayed@merge@font@series \merge@font@series \delayed@f@adjustment \let \delayed@merge@font@shape \merge@font@shape@without@substitution \let \delayed@merge@font@series \merge@font@series@without@substitution \fi \let \delayed@f@adjustment \@empty \fi \@forced@seriesfalse \xdef \font@name {\csname \curr@fontshape /\f@size \endcsname }\pickup@font \font@name \UseHook {selectfont}\size@update \enc@update 
+{\ifx: (level 4) entered on line 4}
+{true}
+{\else: \ifx (level 4) entered on line 4}
+{\fi: \ifx (level 4) entered on line 4}
+{\ifx: (level 4) entered on line 4}
+{false}
+{\else: \ifx (level 4) entered on line 4}
+{\let}
+{changing \f@shape@saved=macro:->n}
+{into \f@shape@saved=macro:->n}
+{\let}
+{changing \f@series@saved=macro:->m}
+{into \f@series@saved=macro:->m}
+
+\delayed@f@adjustment ->\delayed@merge@font@shape {\itdefault }
+
+\delayed@merge@font@shape #1->\expandafter \expandafter \expandafter \merge@font@shape@without@substitution@ \csname shape@\f@shape @#1\endcsname {#1}\@nil 
+#1<-\itdefault 
+{\expandafter}
+{\expandafter}
+{\csname}
+
+\f@shape ->n
+
+\itdefault ->it
+{\expandafter}
+
+\shape@n@it ->{it}{sl}
+
+\merge@font@shape@without@substitution@ #1#2#3\@nil ->\def \reserved@a {#3}\ifx \reserved@a \@empty \edef \f@shape {#2}\else \edef \f@shape {#1}\fi 
+#1<-it
+#2<-sl
+#3<-\itdefault 
+{\def}
+{changing \reserved@a=macro:->\nocorr }
+{into \reserved@a=macro:->\itdefault }
+{\ifx: (level 5) entered on line 4}
+{false}
+{\else: \ifx (level 5) entered on line 4}
+{\edef}
+{changing \f@shape=macro:->n}
+{into \f@shape=macro:->it}
+{\fi: \ifx (level 5) entered on line 4}
+
+\maybe@load@fontshape ->\begingroup \let \typeout \@font@info \try@load@fontshape \endgroup 
+{\begingroup}
+{entering semi simple group (level 2) at line 4}
+{\let}
+{changing \typeout=\protected\long macro:#1->\begingroup \set@display@protect \ETC.}
+{into \typeout=macro:#1->\GenericInfo {(Font)\@spaces \ETC.}
+
+\try@load@fontshape ->\expandafter \ifx \csname \f@encoding +\f@family \endcsname \relax \@font@info {Trying to load font information for \f@encoding +\f@family }\global \expandafter \let \csname \f@encoding +\f@family \endcsname \@empty \nfss@catcodes \let \nfss@catcodes \relax \edef \reserved@a {\lowercase {\noexpand \InputIfFileExists {\f@encoding \f@family .fd}}}\reserved@a \relax {\@input@ {\f@encoding \f@family .fd}}\fi 
+{\expandafter}
+{\csname}
+
+\f@encoding ->OT1
+
+\f@family ->cmr
+{\ifx: (level 5) entered on line 4}
+{false}
+{\fi: \ifx (level 5) entered on line 4}
+{\endgroup}
+{restoring \typeout=\protected\long macro:#1->\begingroup \set@display@protect \ETC.}
+{leaving semi simple group (level 2) entered at line 4}
+{\ifcsname: (level 5) entered on line 4}
+
+\f@encoding ->OT1
+
+\f@family ->cmr
+
+\f@series ->m
+
+\f@shape ->it
+{true}
+{\else: \ifcsname (level 5) entered on line 4}
+{\fi: \ifcsname (level 5) entered on line 4}
+{\let}
+{changing \delayed@f@adjustment=macro:->\delayed@merge@font@shape {\itdefault \ETC.}
+{into \delayed@f@adjustment=macro:->}
+{\fi: \ifx (level 4) entered on line 4}
+
+\@forced@seriesfalse ->\let \if@forced@series \iffalse 
+{\let}
+{reassigning \if@forced@series=\iffalse}
+{\xdef}
+{\csname}
+
+\curr@fontshape ->\f@encoding /\f@family /\f@series /\f@shape 
+
+\f@encoding ->OT1
+
+\f@family ->cmr
+
+\f@series ->m
+
+\f@shape ->it
+
+\f@size ->10
+{changing \OT1/cmr/m/it/10=undefined}
+{into \OT1/cmr/m/it/10=\relax}
+{globally changing \font@name=macro:->\OT1/cmr/m/n/10 }
+{into \font@name=macro:->\OT1/cmr/m/it/10 }
+
+\pickup@font ->\expandafter \ifx \font@name \relax \define@newfont \fi 
+{\expandafter}
+
+\font@name ->\OT1/cmr/m/it/10 
+{\ifx: (level 4) entered on line 4}
+{true}
+
+\define@newfont ->\begingroup \let \typeout \@font@info \escapechar \m@ne \expandafter \expandafter \expandafter \split@name \expandafter \string \font@name \@nil \try@load@fontshape \expandafter \ifx \csname \curr@fontshape \endcsname \relax \wrong@fontshape \else \extract@font \fi \endgroup 
+{\begingroup}
+{entering semi simple group (level 2) at line 4}
+{\let}
+{changing \typeout=\protected\long macro:#1->\begingroup \set@display@protect \ETC.}
+{into \typeout=macro:#1->\GenericInfo {(Font)\@spaces \ETC.}
+{\escapechar}
+{changing \escapechar=92}
+{into escapechar=-1}
+{expandafter}
+{expandafter}
+{expandafter}
+
+font@name ->OT1/cmr/m/it/10 
+{expandafter}
+{string}
+
+split@name #1/#2/#3/#4/#5@nil ->def f@encoding {#1}def f@family {#2}def f@series {#3}def f@shape {#4}def f@size {#5}
+#1<-OT1
+#2<-cmr
+#3<-m
+#4<-it
+#5<-10
+{def}
+{changing f@encoding=macro:->OT1}
+{into f@encoding=macro:->OT1}
+{def}
+{changing f@family=macro:->cmr}
+{into f@family=macro:->cmr}
+{def}
+{changing f@series=macro:->m}
+{into f@series=macro:->m}
+{def}
+{changing f@shape=macro:->it}
+{into f@shape=macro:->it}
+{def}
+{changing f@size=macro:->10}
+{into f@size=macro:->10}
+
+try@load@fontshape ->expandafter ifx csname f@encoding +f@family endcsname relax @font@info {Trying to load font information for f@encoding +f@family }global expandafter let csname f@encoding +f@family endcsname @empty nfss@catcodes let nfss@catcodes relax edef reserved@a {lowercase {noexpand InputIfFileExists {f@encoding f@family .fd}}}reserved@a relax {@input@ {f@encoding f@family .fd}}fi 
+{expandafter}
+{csname}
+
+f@encoding ->OT1
+
+f@family ->cmr
+{ifx: (level 5) entered on line 4}
+{false}
+{fi: ifx (level 5) entered on line 4}
+{expandafter}
+{csname}
+
+curr@fontshape ->f@encoding /f@family /f@series /f@shape 
+
+f@encoding ->OT1
+
+f@family ->cmr
+
+f@series ->m
+
+f@shape ->it
+{ifx: (level 5) entered on line 4}
+{false}
+{else: ifx (level 5) entered on line 4}
+
+extract@font ->get@external@font global expandafter font font@name external@font relax font@name relax csname f@encoding +f@family endcsname csname curr@fontshape endcsname relax 
+
+get@external@font ->let external@font @empty edef font@info {expandafter expandafter expandafter string csname curr@fontshape endcsname }try@size@range ifx external@font @empty try@size@substitution ifx external@font @empty @latex@error {Font expandafter string font@name space not found}@eha error@fontshape get@external@font fi fi 
+{let}
+{changing external@font=undefined}
+{into external@font=macro:->}
+{edef}
+{expandafter}
+{expandafter}
+{csname}
+
+curr@fontshape ->f@encoding /f@family /f@series /f@shape 
+
+f@encoding ->OT1
+
+f@family ->cmr
+
+f@series ->m
+
+f@shape ->it
+{expandafter}
+
+OT1/cmr/m/it -><5><6><7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12 
+{string}
+{changing font@info=undefined}
+{into font@info=macro:-><5><6><7>cmti7<8>cmti8<9>cmti9ETC.}
+
+try@size@range ->expandafter extract@rangefontinfo font@info <-*>@nil <@nnil 
+{expandafter}
+
+font@info -><5><6><7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12
+
+extract@rangefontinfo #1<#2>->is@range #2->@nil #2>
+#1<-
+#2<-5
+
+is@range #1-#2@nil ->if >#2expandafter check@single else expandafter check@range fi 
+#1<-5
+#2<->
+{if: (level 6) entered on line 4}
+{true}
+{expandafter}
+{else: if (level 6) entered on line 4}
+{fi: if (level 6) entered on line 4}
+
+check@single #1>#2<#3@nnil ->def reserved@f {extract@rangefontinfo <#3@nnil }ifdim f@size p@ =#1p@ set@simple@size@args #2<#3@nnil execute@size@function sizefn@info ifx external@font @empty else let reserved@f @empty fi fi reserved@f 
+#1<-5
+#2<-
+#3<-6><7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <
+{def}
+{changing reserved@f=undefined}
+{into reserved@f=macro:->extract@rangefontinfo <6><7>cmETC.}
+{ifdim: (level 6) entered on line 4}
+
+f@size ->10
+{false}
+{fi: ifdim (level 6) entered on line 4}
+
+reserved@f ->extract@rangefontinfo <6><7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <@nnil 
+
+extract@rangefontinfo #1<#2>->is@range #2->@nil #2>
+#1<-
+#2<-6
+
+is@range #1-#2@nil ->if >#2expandafter check@single else expandafter check@range fi 
+#1<-6
+#2<->
+{if: (level 6) entered on line 4}
+{true}
+{expandafter}
+{else: if (level 6) entered on line 4}
+{fi: if (level 6) entered on line 4}
+
+check@single #1>#2<#3@nnil ->def reserved@f {extract@rangefontinfo <#3@nnil }ifdim f@size p@ =#1p@ set@simple@size@args #2<#3@nnil execute@size@function sizefn@info ifx external@font @empty else let reserved@f @empty fi fi reserved@f 
+#1<-6
+#2<-
+#3<-7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <
+{def}
+{changing reserved@f=macro:->extract@rangefontinfo <6><7>cmETC.}
+{into reserved@f=macro:->extract@rangefontinfo <7>cmti7ETC.}
+{ifdim: (level 6) entered on line 4}
+
+f@size ->10
+{false}
+{fi: ifdim (level 6) entered on line 4}
+
+reserved@f ->extract@rangefontinfo <7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <@nnil 
+
+extract@rangefontinfo #1<#2>->is@range #2->@nil #2>
+#1<-
+#2<-7
+
+is@range #1-#2@nil ->if >#2expandafter check@single else expandafter check@range fi 
+#1<-7
+#2<->
+{if: (level 6) entered on line 4}
+{true}
+{expandafter}
+{else: if (level 6) entered on line 4}
+{fi: if (level 6) entered on line 4}
+
+check@single #1>#2<#3@nnil ->def reserved@f {extract@rangefontinfo <#3@nnil }ifdim f@size p@ =#1p@ set@simple@size@args #2<#3@nnil execute@size@function sizefn@info ifx external@font @empty else let reserved@f @empty fi fi reserved@f 
+#1<-7
+#2<-cmti7
+#3<-8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <
+{def}
+{changing reserved@f=macro:->extract@rangefontinfo <7>cmti7ETC.}
+{into reserved@f=macro:->extract@rangefontinfo <8>cmti8ETC.}
+{ifdim: (level 6) entered on line 4}
+
+f@size ->10
+{false}
+{fi: ifdim (level 6) entered on line 4}
+
+reserved@f ->extract@rangefontinfo <8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <@nnil 
+
+extract@rangefontinfo #1<#2>->is@range #2->@nil #2>
+#1<-
+#2<-8
+
+is@range #1-#2@nil ->if >#2expandafter check@single else expandafter check@range fi 
+#1<-8
+#2<->
+{if: (level 6) entered on line 4}
+{true}
+{expandafter}
+{else: if (level 6) entered on line 4}
+{fi: if (level 6) entered on line 4}
+
+check@single #1>#2<#3@nnil ->def reserved@f {extract@rangefontinfo <#3@nnil }ifdim f@size p@ =#1p@ set@simple@size@args #2<#3@nnil execute@size@function sizefn@info ifx external@font @empty else let reserved@f @empty fi fi reserved@f 
+#1<-8
+#2<-cmti8
+#3<-9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <
+{def}
+{changing reserved@f=macro:->extract@rangefontinfo <8>cmti8ETC.}
+{into reserved@f=macro:->extract@rangefontinfo <9>cmti9ETC.}
+{ifdim: (level 6) entered on line 4}
+
+f@size ->10
+{false}
+{fi: ifdim (level 6) entered on line 4}
+
+reserved@f ->extract@rangefontinfo <9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <@nnil 
+
+extract@rangefontinfo #1<#2>->is@range #2->@nil #2>
+#1<-
+#2<-9
+
+is@range #1-#2@nil ->if >#2expandafter check@single else expandafter check@range fi 
+#1<-9
+#2<->
+{if: (level 6) entered on line 4}
+{true}
+{expandafter}
+{else: if (level 6) entered on line 4}
+{fi: if (level 6) entered on line 4}
+
+check@single #1>#2<#3@nnil ->def reserved@f {extract@rangefontinfo <#3@nnil }ifdim f@size p@ =#1p@ set@simple@size@args #2<#3@nnil execute@size@function sizefn@info ifx external@font @empty else let reserved@f @empty fi fi reserved@f 
+#1<-9
+#2<-cmti9
+#3<-10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <
+{def}
+{changing reserved@f=macro:->extract@rangefontinfo <9>cmti9ETC.}
+{into reserved@f=macro:->extract@rangefontinfo <10><10.ETC.}
+{ifdim: (level 6) entered on line 4}
+
+f@size ->10
+{false}
+{fi: ifdim (level 6) entered on line 4}
+
+reserved@f ->extract@rangefontinfo <10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <@nnil 
+
+extract@rangefontinfo #1<#2>->is@range #2->@nil #2>
+#1<-
+#2<-10
+
+is@range #1-#2@nil ->if >#2expandafter check@single else expandafter check@range fi 
+#1<-10
+#2<->
+{if: (level 6) entered on line 4}
+{true}
+{expandafter}
+{else: if (level 6) entered on line 4}
+{fi: if (level 6) entered on line 4}
+
+check@single #1>#2<#3@nnil ->def reserved@f {extract@rangefontinfo <#3@nnil }ifdim f@size p@ =#1p@ set@simple@size@args #2<#3@nnil execute@size@function sizefn@info ifx external@font @empty else let reserved@f @empty fi fi reserved@f 
+#1<-10
+#2<-
+#3<-10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <
+{def}
+{changing reserved@f=macro:->extract@rangefontinfo <10><10.ETC.}
+{into reserved@f=macro:->extract@rangefontinfo <10.95>cETC.}
+{ifdim: (level 6) entered on line 4}
+
+f@size ->10
+{true}
+
+set@simple@size@args #1<->if <#1<expandafter remove@angles else extract@sizefn #1*@nil expandafter remove@to@nnil fi 
+#1<-
+{if: (level 7) entered on line 4}
+{true}
+{expandafter}
+{else: if (level 7) entered on line 4}
+{fi: if (level 7) entered on line 4}
+
+remove@angles #1>->set@simple@size@args 
+#1<-10.95
+
+set@simple@size@args #1<->if <#1<expandafter remove@angles else extract@sizefn #1*@nil expandafter remove@to@nnil fi 
+#1<-cmti10
+{if: (level 7) entered on line 4}
+{false}
+{else: if (level 7) entered on line 4}
+
+extract@sizefn #1*#2@nil ->if >#2>set@size@funct@args #1@nil let sizefn@info @empty else expandafter set@size@funct@args remove@star #2@nil def sizefn@info {#1}fi 
+#1<-cmti10
+#2<-
+{if: (level 8) entered on line 4}
+{true}
+
+set@size@funct@args ->@ifnextchar [set@size@funct@args@ {set@size@funct@args@ []}
+
+@ifnextchar #1#2#3->let reserved@d =#1def reserved@a {#2}def reserved@b {#3}futurelet @let@token @ifnch 
+#1<-[
+#2<-set@size@funct@args@ 
+#3<-set@size@funct@args@ []
+{let}
+{reassigning reserved@d=the character [}
+{def}
+{changing reserved@a=macro:->itdefault }
+{into reserved@a=macro:->set@size@funct@args@ }
+{def}
+{changing reserved@b=macro:->x}
+{into reserved@b=macro:->set@size@funct@args@ []}
+{futurelet}
+{changing @let@token=begin-group character {}
+{into @let@token=the character c}
+
+@ifnch ->ifx @let@token @sptoken let reserved@c @xifnch else ifx @let@token reserved@d let reserved@c reserved@a else let reserved@c reserved@b fi fi reserved@c 
+{ifx: (level 9) entered on line 4}
+{false}
+{else: ifx (level 9) entered on line 4}
+{ifx: (level 10) entered on line 4}
+{false}
+{else: ifx (level 10) entered on line 4}
+{let}
+{changing reserved@c=macro:->}
+{into reserved@c=macro:->set@size@funct@args@ []}
+{fi: ifx (level 10) entered on line 4}
+{fi: ifx (level 9) entered on line 4}
+
+reserved@c ->set@size@funct@args@ []
+
+set@size@funct@args@ [#1]#2@nil ->def mandatory@arg {#2}def optional@arg {#1}
+#1<-
+#2<-cmti10
+{def}
+{changing mandatory@arg=undefined}
+{into mandatory@arg=macro:->cmti10}
+{def}
+{changing optional@arg=undefined}
+{into optional@arg=macro:->}
+{let}
+{changing sizefn@info=undefined}
+{into sizefn@info=macro:->}
+{else: if (level 8) entered on line 4}
+{fi: if (level 8) entered on line 4}
+{expandafter}
+{fi: if (level 7) entered on line 4}
+
+remove@to@nnil #1@nnil ->
+#1<-12><14.4><17.28><20.74><24.88>cmti12<-*>@nil <
+
+execute@size@function #1->csname s@fct@#1endcsname 
+#1<-sizefn@info 
+{csname}
+
+sizefn@info ->
+
+s@fct@ ->empty@sfcnt @font@warning 
+
+empty@sfcnt #1->@tempdimb f@size p@ ifx optional@arg @empty else @tempdimb optional@arg @tempdimb #1{Fontspace shapespace `curr@fontshape 'space willspace beMessageBreak scaledspace tospace sizespace the @tempdimb }fi edef external@font {mandatory@arg space atthe @tempdimb }
+#1<-@font@warning 
+{dimen55}
+
+f@size ->10
+{reassigning dimen55=10.0pt}
+{ifx: (level 7) entered on line 4}
+{true}
+{else: ifx (level 7) entered on line 4}
+{fi: ifx (level 7) entered on line 4}
+{edef}
+
+mandatory@arg ->cmti10
+
+space -> 
+{changing external@font=macro:->}
+{into external@font=macro:->cmti10 at10.0pt}
+{ifx: (level 7) entered on line 4}
+{false}
+{else: ifx (level 7) entered on line 4}
+{let}
+{changing reserved@f=macro:->extract@rangefontinfo <10.95>cETC.}
+{into reserved@f=macro:->}
+{fi: ifx (level 7) entered on line 4}
+{fi: ifdim (level 6) entered on line 4}
+
+reserved@f ->
+{ifx: (level 6) entered on line 4}
+{false}
+{fi: ifx (level 6) entered on line 4}
+{global}
+{expandafter}
+
+font@name ->OT1/cmr/m/it/10 
+{font}
+{globally changing OT1/cmr/m/it/10=relax}
+{into OT1/cmr/m/it/10=select font nullfont}
+
+external@font ->cmti10 at10.0pt
+{globally changing OT1/cmr/m/it/10=select font nullfont}
+{into OT1/cmr/m/it/10=select font cmti10}
+{relax}
+
+font@name ->OT1/cmr/m/it/10 
+{select font cmti10}
+{changing current font=OT1/cmr/m/n/10}
+{into current font=OT1/cmr/m/it/10}
+{relax}
+{csname}
+
+f@encoding ->OT1
+
+f@family ->cmr
+
+OT1+cmr ->hyphenchar font 45
+{hyphenchar}
+{csname}
+
+curr@fontshape ->f@encoding /f@family /f@series /f@shape 
+
+f@encoding ->OT1
+
+f@family ->cmr
+
+f@series ->m
+
+f@shape ->it
+
+OT1/cmr/m/it -><5><6><7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12 
+
+<5><6><7>cmti7<8>cmti8<9>cmti9<10><10.95>cmti10<12><14.4><17.28><20.74><24.88>cmti12 ->
+{relax}
+{fi: ifx (level 5) entered on line 4}
+{endgroup}
+{restoring current font=OT1/cmr/m/n/10}
+{restoring sizefn@info=undefined}
+{restoring optional@arg=undefined}
+{restoring mandatory@arg=undefined}
+{restoring reserved@c=macro:->}
+{restoring @let@token=begin-group character {}
+{restoring reserved@b=macro:->x}
+{restoring reserved@a=macro:->itdefault }
+{restoring reserved@f=undefined}
+{restoring font@info=undefined}
+{restoring external@font=undefined}
+{restoring f@size=macro:->10}
+{restoring f@shape=macro:->it}
+{restoring f@series=macro:->m}
+{restoring f@family=macro:->cmr}
+{restoring f@encoding=macro:->OT1}
+{restoring \escapechar=92}
+{restoring \typeout=\protected\long macro:#1->\begingroup \set@display@protect \ETC.}
+{leaving semi simple group (level 2) entered at line 4}
+{\fi: \ifx (level 4) entered on line 4}
+
+\font@name ->\OT1/cmr/m/it/10 
+{select font cmti10}
+{changing current font=\OT1/cmr/m/n/10}
+{into current font=\OT1/cmr/m/it/10}
+
+\UseHook ->\hook_use:n 
+
+\hook_use:n #1->\if_cs_exist:w __hook #1\cs_end: \cs:w __hook #1\use_i:nn \fi: \use_none:n \cs_end: 
+#1<-selectfont
+{\ifcsname: (level 4) entered on line 4}
+{true}
+{\csname}
+
+\use_i:nn #1#2->#1
+#1<-\fi: 
+#2<-\use_none:n 
+{\fi: \ifcsname (level 4) entered on line 4}
+
+\__hook selectfont ->\__hook_toplevel selectfont \__hook_next selectfont 
+
+\__hook_toplevel selectfont ->
+
+\__hook_next selectfont ->
+{\relax}
+{\relax}
+{\fi: \ifdim (level 3) entered on line 4}
+{\else: \ifx (level 2) entered on line 4}
+{\fi: \ifx (level 2) entered on line 4}
+
+\check@icl ->\futurelet \@let@token \maybe@ic@ 
+{\futurelet}
+{changing \@let@token=begin-group character {}
+{into \@let@token=the letter x}
+
+\maybe@ic@ ->\ifdim \fontdimen \@ne \font >\z@ \else \maybe@ictrue \expandafter \@tfor \expandafter \reserved@a \expandafter :\expandafter =\nocorrlist \do \t@st@ic \ifmaybe@ic \sw@slant \fi \fi 
+{\ifdim: (level 2) entered on line 4}
+{true}
+{\else: \ifdim (level 2) entered on line 4}
+{\fi: \ifdim (level 2) entered on line 4}
+{the letter x}
+
+\check@icr ->\ifvmode \else \aftergroup \maybe@ic \fi 
+{\ifvmode: (level 2) entered on line 4}
+{false}
+{\else: \ifvmode (level 2) entered on line 4}
+{\aftergroup}
+{\fi: \ifvmode (level 2) entered on line 4}
+{\expandafter}
+{\fi: \ifmmode (level 1) entered on line 4}
+{end-group character }}
+{restoring \@let@token=begin-group character {}
+{restoring current font=\OT1/cmr/m/n/10}
+{retaining \OT1/cmr/m/it/10=select font cmti10}
+{restoring \f@shape=macro:->n}
+{restoring \f@series@saved=macro:->m}
+{restoring \f@shape@saved=macro:->n}
+{restoring \delayed@f@adjustment=macro:->}
+{restoring \reserved@c=macro:#1.def\@nil ->\def \reserved@a {\ETC.}
+{restoring \reserved@b=macro:->}
+{restoring \check@icr=macro:->}
+{restoring \check@icl=macro:->}
+{restoring \reserved@a=macro:->l3backend-pdftex.def}
+{leaving simple group (level 1) entered at line 4}
+
+\maybe@ic ->\futurelet \@let@token \maybe@ic@ 
+{\futurelet}
+{changing \@let@token=begin-group character {}
+{into \@let@token=blank space  }
+
+\maybe@ic@ ->\ifdim \fontdimen \@ne \font >\z@ \else \maybe@ictrue \expandafter \@tfor \expandafter \reserved@a \expandafter :\expandafter =\nocorrlist \do \t@st@ic \ifmaybe@ic \sw@slant \fi \fi 
+{\ifdim: (level 1) entered on line 4}
+{false}
+{\else: \ifdim (level 1) entered on line 4}
+
+\maybe@ictrue ->\let \ifmaybe@ic \iftrue 
+{\let}
+{changing \ifmaybe@ic=\iffalse}
+{into \ifmaybe@ic=\iftrue}
+{\expandafter}
+{\expandafter}
+{\expandafter}
+{\expandafter}
+
+\nocorrlist ->,.
+
+\@tfor #1:=->\@tf@r #1 
+#1<-\reserved@a 
+
+\@tf@r #1#2\do #3->\def \@fortmp {#2}\ifx \@fortmp \space \else \@tforloop #2\@nil \@nil \@@ #1{#3}\fi 
+#1<-\reserved@a 
+#2<- ,.
+#3<-\t@st@ic 
+{\def}
+{changing \@fortmp=macro:->,a4paper,a5paper,b5paper,lette\ETC.}
+{into \@fortmp=macro:-> ,.}
+{\ifx: (level 2) entered on line 4}
+{false}
+{\else: \ifx (level 2) entered on line 4}
+
+\@tforloop #1#2\@@ #3#4->\def #3{#1}\ifx #3\@nnil \expandafter \@fornoop \else #4\relax \expandafter \@tforloop \fi #2\@@ #3{#4}
+#1<-,
+#2<-.\@nil \@nil 
+#3<-\reserved@a 
+#4<-\t@st@ic 
+{\def}
+{changing \reserved@a=macro:->l3backend-pdftex.def}
+{into \reserved@a=macro:->,}
+{\ifx: (level 3) entered on line 4}
+{false}
+{\else: \ifx (level 3) entered on line 4}
+
+\t@st@ic ->\expandafter \let \expandafter \reserved@b \expandafter =\reserved@a \relax \ifx \reserved@b \@let@token \maybe@icfalse \@break@tfor \fi 
+{\expandafter}
+{\expandafter}
+{\expandafter}
+
+\reserved@a ->,
+{\let}
+{changing \reserved@b=macro:->}
+{into \reserved@b=the character ,}
+{\relax}
+{\ifx: (level 4) entered on line 4}
+{false}
+{\fi: \ifx (level 4) entered on line 4}
+{\relax}
+{\expandafter}
+{\fi: \ifx (level 3) entered on line 4}
+
+\@tforloop #1#2\@@ #3#4->\def #3{#1}\ifx #3\@nnil \expandafter \@fornoop \else #4\relax \expandafter \@tforloop \fi #2\@@ #3{#4}
+#1<-.
+#2<-\@nil \@nil 
+#3<-\reserved@a 
+#4<-\t@st@ic 
+{\def}
+{changing \reserved@a=macro:->,}
+{into \reserved@a=macro:->.}
+{\ifx: (level 3) entered on line 4}
+{false}
+{\else: \ifx (level 3) entered on line 4}
+
+\t@st@ic ->\expandafter \let \expandafter \reserved@b \expandafter =\reserved@a \relax \ifx \reserved@b \@let@token \maybe@icfalse \@break@tfor \fi 
+{\expandafter}
+{\expandafter}
+{\expandafter}
+
+\reserved@a ->.
+{\let}
+{changing \reserved@b=the character ,}
+{into \reserved@b=the character .}
+{\relax}
+{\ifx: (level 4) entered on line 4}
+{false}
+{\fi: \ifx (level 4) entered on line 4}
+{\relax}
+{\expandafter}
+{\fi: \ifx (level 3) entered on line 4}
+
+\@tforloop #1#2\@@ #3#4->\def #3{#1}\ifx #3\@nnil \expandafter \@fornoop \else #4\relax \expandafter \@tforloop \fi #2\@@ #3{#4}
+#1<-\@nil 
+#2<-\@nil 
+#3<-\reserved@a 
+#4<-\t@st@ic 
+{\def}
+{changing \reserved@a=macro:->.}
+{into \reserved@a=macro:->\@nil }
+{\ifx: (level 3) entered on line 4}
+{true}
+{\expandafter}
+{\else: \ifx (level 3) entered on line 4}
+{\fi: \ifx (level 3) entered on line 4}
+
+\@fornoop #1\@@ #2#3->
+#1<-\@nil 
+#2<-\reserved@a 
+#3<-\t@st@ic 
+{\fi: \ifx (level 2) entered on line 4}
+{\iftrue: (level 2) entered on line 4}
+{true}
+
+\sw@slant ->\ifdim \lastskip =\z@ \fix@penalty \else \skip@ \lastskip \unskip \fix@penalty \hskip \skip@ \fi 
+{\ifdim: (level 3) entered on line 4}
+{true}
+
+\fix@penalty ->\ifnum \lastpenalty =\z@ \@@italiccorr \else \count@ \lastpenalty \unpenalty \@@italiccorr \penalty \count@ \fi 
+{\ifnum: (level 4) entered on line 4}
+{true}
+{\/}
+{\else: \ifnum (level 4) entered on line 4}
+{\fi: \ifnum (level 4) entered on line 4}
+{\else: \ifdim (level 3) entered on line 4}
+{\fi: \ifdim (level 3) entered on line 4}
+{\fi: \iftrue (level 2) entered on line 4}
+{\fi: \ifdim (level 1) entered on line 4}
+{blank space  }
+{the letter y}

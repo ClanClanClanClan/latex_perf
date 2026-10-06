@@ -1,0 +1,2000 @@
+--- stdin bytes not read: 0
+--- clock readings used: 2 of 8
+--- handle 1 (35780 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)
+ restricted \write18 enabled.
+**entering extended mode
+LaTeX2e <2026-06-01>
+L3 programming layer <2026-08-10>
+
+*{vertical mode: \tracingassigns}
+{into \tracingassigns=1}
+{\tracinggroups}
+{changing \tracinggroups=0}
+{into \tracinggroups=1}
+{\tracingifs}
+{changing \tracingifs=0}
+{into \tracingifs=1}
+
+\emph ->\protect \emph  
+{\relax}
+
+\emph  #1->\ifmmode \nfss@text {\em #1}\else \hmode@bgroup \text@command {#1}\em \check@icl #1\check@icr \expandafter \egroup \fi 
+#1<-x
+{\ifmmode: (level 1)}
+{false}
+{\else: \ifmmode (level 1)}
+
+\hmode@bgroup ->\leavevmode \bgroup 
+
+\leavevmode ->\unhbox \voidb@x 
+{\unhbox}
+\everypar->\g__para_standard_everypar_tl 
+
+\g__para_standard_everypar_tl ->\box_gset_to_last:N \g_para_indent_box \group_begin: \tex_par:D \group_end: \tex_everypar:D {\msg_error:nnnn {hooks}{para-mode}{before}{vertical}}\@kernel@before@para@before \hook_use:n {para/before}\group_begin: \tex_everypar:D {}\skip_set:Nn \tex_parskip:D {\if@minipage -\tex_parskip:D \else: \c_zero_skip \fi: }\tex_noindent:D \group_end: \tex_everypar:D {\g__para_standard_everypar_tl }\@kernel@before@para@begin \hook_use:n {para/begin}\if_mode_horizontal: \else: \msg_error:nnnn {hooks}{para-mode}{begin}{horizontal}\fi: \__para_handle_indent: \the \toks 12 
+
+\box_gset_to_last:N #1->\tex_global:D \tex_setbox:D #1\tex_lastbox:D 
+#1<-\g_para_indent_box 
+{horizontal mode: \global}
+{\setbox}
+{globally changing \box32=void}
+{into \box32=
+\hbox(0.0+0.0)x20.0}
+{\begingroup}
+{entering semi simple group (level 1)}
+{\par}
+{vertical mode: \endgroup}
+{leaving semi simple group (level 1)}
+{\everypar}
+{changing \everypar=\g__para_standard_everypar_tl }
+{into \everypar=\msg_error:nnnn {hooks}{para-mod\ETC.}
+
+\@kernel@before@para@before ->
+
+\hook_use:n #1->\__hook_preamble_hook:n {#1}\__hook_use_initialized:n {#1}
+#1<-para/before
+
+\__hook_preamble_hook:n #1->\if_cs_exist:w __hook #1\cs_end: \__hook_initialize_hook_code:n {#1}\fi: 
+#1<-para/before
+{\ifcsname: (level 2)}
+{true}
+
+\__hook_initialize_hook_code:n #1->\__hook_debug:n {\iow_term:e {
+[lthooks] Update code for hook '#1'\on@line :
+}}\__hook_include_legacy_code_chunk:n {#1}\__hook_if_usable:nT {#1}{\prop_if_empty:cTF {g__hook_#1_code_prop}{\__hook_code_gset:ne {#1}{\exp_not:c {__hook_toplevel #1}\__hook_braced_parameter:n {#1}\exp_not:c {__hook_next #1}\__hook_braced_parameter:n {#1}}}{\__hook_if_reversed:nTF {#1}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_#1_code_prop}\__hook_initialize_single:ccn {__hook #1}{g__hook_#1_labels_clist}{#1}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {#1}{}}}}
+#1<-para/before
+
+\__hook_debug:n #1->
+#1<-\iow_term:e {
+[lthooks] Update code for hook 'para/before'\on@line :
+}
+
+\__hook_include_legacy_code_chunk:n #1->\tl_if_exist:cT {@#1hook}{\tl_if_empty:cF {@#1hook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {#1}{legacy}{\exp_not:v {@#1hook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@#1hook}}}
+#1<-para/before
+
+\tl_if_exist:cT #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_T_true:w \fi: \use_none:n 
+#1<-@para/beforehook
+{\ifcsname: (level 3)}
+{false}
+{\fi: \ifcsname (level 3)}
+
+\use_none:n #1->
+#1<-@para/beforehook
+{\iffalse: (level 3)}
+{false}
+{\fi: \iffalse (level 3)}
+
+\use_none:n #1->
+#1<-\tl_if_empty:cF {@para/beforehook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {para/before}{legacy}{\exp_not:v {@para/beforehook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@para/beforehook}}
+
+\__hook_if_usable:nT #1->\cs_if_exist:cTF {__hook #1}{\prg_return_true: }{\prg_return_false: }\exp_end: \use:n \use_none:n 
+#1<-para/before
+
+\cs_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-__hook para/before
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-__hook para/before
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\prg_return_true: 
+#2<-\prg_return_false: 
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+
+\use_i:nn #1#2->#1
+#1<-\use:n 
+#2<-\use_none:n 
+
+\use:n #1->#1
+#1<-\prop_if_empty:cTF {g__hook_para/before_code_prop}{\__hook_code_gset:ne {para/before}{\exp_not:c {__hook_toplevel para/before}\__hook_braced_parameter:n {para/before}\exp_not:c {__hook_next para/before}\__hook_braced_parameter:n {para/before}}}{\__hook_if_reversed:nTF {para/before}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/before_code_prop}\__hook_initialize_single:ccn {__hook para/before}{g__hook_para/before_labels_clist}{para/before}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/before}{}}}
+
+\prop_if_empty:cTF ->\exp_args:Nc \prop_if_empty:NTF 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\prop_if_empty:NTF 
+#2<-g__hook_para/before_code_prop
+{\expandafter}
+{\csname}
+
+\prop_if_empty:NTF #1->\if_meaning:w #1\c_empty_prop \prg_return_true: \else: \exp_after:wN \__prop_if_empty_return:w #1\__prop_flatten:w 2\s__prop 34\s__prop_stop \fi: \exp_end: 
+#1<-\g__hook_para/before_code_prop 
+{\ifx: (level 3)}
+{true}
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+{\else: \ifx (level 3)}
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\__hook_code_gset:ne {para/before}{\exp_not:c {__hook_toplevel para/before}\__hook_braced_parameter:n {para/before}\exp_not:c {__hook_next para/before}\__hook_braced_parameter:n {para/before}}
+#2<-\__hook_if_reversed:nTF {para/before}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/before_code_prop}\__hook_initialize_single:ccn {__hook para/before}{g__hook_para/before_labels_clist}{para/before}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/before}{}}
+
+\__hook_code_gset:ne ->\exp_args:Nne \__hook_code_gset:nn 
+
+\exp_args:Nne #1#2#3->\tex_expanded:D {\exp_not:N #1{\exp_not:n {#2}}{\__kernel_exp_not:w \tex_expanded:D {{#3}}}}
+#1<-\__hook_code_gset:nn 
+#2<-para/before
+#3<-\exp_not:c {__hook_toplevel para/before}\__hook_braced_parameter:n {para/before}\exp_not:c {__hook_next para/before}\__hook_braced_parameter:n {para/before}
+{\expanded}
+{\noexpand}
+{\expanded}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_toplevel para/before
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/before
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/before_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/before_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/before_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_next para/before
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/before
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/before_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/before_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/before_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\__hook_code_gset:nn ->\__hook_code_gset_aux:nnn {}
+
+\__hook_code_gset_aux:nnn #1#2#3->\cs_gset:cpn {__hook#1 #2\exp_last_unbraced:Ne }{\__hook_parameter:n {#2}}{#3}
+#1<-
+#2<-para/before
+#3<-\__hook_toplevel para/before \__hook_next para/before 
+
+\cs_gset:cpn ->\exp_args:Nc \cs_gset:Npn 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\cs_gset:Npn 
+#2<-__hook para/before\exp_last_unbraced:Ne 
+{\expandafter}
+{\csname}
+
+\exp_last_unbraced:Ne #1#2->\exp_after:wN #1\tex_expanded:D {#2}
+#1<-\cs_end: 
+#2<-\__hook_parameter:n {para/before}
+{\expandafter}
+{\expanded}
+
+\__hook_parameter:n #1->\cs:w c__hook_\tl_if_exist:cTF {c__hook_#1_parameter_tl}{#1_parameter}{empty}_tl\cs_end: 
+#1<-para/before
+{\csname}
+
+\tl_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-c__hook_para/before_parameter_tl
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-c__hook_para/before_parameter_tl
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-para/before_parameter
+#2<-empty
+
+\c__hook_para/before_parameter_tl ->
+
+\cs_gset:Npn ->\tex_long:D \tex_gdef:D 
+{\long}
+{\gdef}
+{globally changing \__hook para/before=\long macro:->}
+{into \__hook para/before=\long macro:->\__hook_toplevel para/before \__hook_next para/before }
+{\fi: \ifcsname (level 2)}
+
+\__hook_use_initialized:n #1->\if_cs_exist:w __hook #1\cs_end: \cs:w __hook #1\use_i:nn \fi: \use_none:n \cs_end: 
+#1<-para/before
+{\ifcsname: (level 2)}
+{true}
+{\csname}
+
+\use_i:nn #1#2->#1
+#1<-\fi: 
+#2<-\use_none:n 
+{\fi: \ifcsname (level 2)}
+
+\__hook para/before ->\__hook_toplevel para/before \__hook_next para/before 
+
+\__hook_toplevel para/before ->
+
+\__hook_next para/before ->
+{\begingroup}
+{entering semi simple group (level 1)}
+{\everypar}
+{changing \everypar=\msg_error:nnnn {hooks}{para-mod\ETC.}
+{into \everypar=}
+
+\skip_set:Nn #1#2->#1=\tex_glueexpr:D #2\scan_stop: 
+#1<-\tex_parskip:D 
+#2<-\if@minipage -\tex_parskip:D \else: \c_zero_skip \fi: 
+{\parskip}
+{\iffalse: (level 2)}
+{false}
+{\else: \iffalse (level 2)}
+{\fi: \iffalse (level 2)}
+{changing \parskip=0.0pt plus 1.0pt}
+{into \parskip=0.0pt}
+{\noindent}
+{horizontal mode: \endgroup}
+{leaving semi simple group (level 1)}
+{\everypar}
+{changing \everypar=\msg_error:nnnn {hooks}{para-mod\ETC.}
+{into \everypar=\g__para_standard_everypar_tl }
+
+\@kernel@before@para@begin ->
+
+\hook_use:n #1->\__hook_preamble_hook:n {#1}\__hook_use_initialized:n {#1}
+#1<-para/begin
+
+\__hook_preamble_hook:n #1->\if_cs_exist:w __hook #1\cs_end: \__hook_initialize_hook_code:n {#1}\fi: 
+#1<-para/begin
+{\ifcsname: (level 2)}
+{true}
+
+\__hook_initialize_hook_code:n #1->\__hook_debug:n {\iow_term:e {
+[lthooks] Update code for hook '#1'\on@line :
+}}\__hook_include_legacy_code_chunk:n {#1}\__hook_if_usable:nT {#1}{\prop_if_empty:cTF {g__hook_#1_code_prop}{\__hook_code_gset:ne {#1}{\exp_not:c {__hook_toplevel #1}\__hook_braced_parameter:n {#1}\exp_not:c {__hook_next #1}\__hook_braced_parameter:n {#1}}}{\__hook_if_reversed:nTF {#1}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_#1_code_prop}\__hook_initialize_single:ccn {__hook #1}{g__hook_#1_labels_clist}{#1}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {#1}{}}}}
+#1<-para/begin
+
+\__hook_debug:n #1->
+#1<-\iow_term:e {
+[lthooks] Update code for hook 'para/begin'\on@line :
+}
+
+\__hook_include_legacy_code_chunk:n #1->\tl_if_exist:cT {@#1hook}{\tl_if_empty:cF {@#1hook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {#1}{legacy}{\exp_not:v {@#1hook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@#1hook}}}
+#1<-para/begin
+
+\tl_if_exist:cT #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_T_true:w \fi: \use_none:n 
+#1<-@para/beginhook
+{\ifcsname: (level 3)}
+{false}
+{\fi: \ifcsname (level 3)}
+
+\use_none:n #1->
+#1<-@para/beginhook
+{\iffalse: (level 3)}
+{false}
+{\fi: \iffalse (level 3)}
+
+\use_none:n #1->
+#1<-\tl_if_empty:cF {@para/beginhook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {para/begin}{legacy}{\exp_not:v {@para/beginhook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@para/beginhook}}
+
+\__hook_if_usable:nT #1->\cs_if_exist:cTF {__hook #1}{\prg_return_true: }{\prg_return_false: }\exp_end: \use:n \use_none:n 
+#1<-para/begin
+
+\cs_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-__hook para/begin
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-__hook para/begin
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\prg_return_true: 
+#2<-\prg_return_false: 
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+
+\use_i:nn #1#2->#1
+#1<-\use:n 
+#2<-\use_none:n 
+
+\use:n #1->#1
+#1<-\prop_if_empty:cTF {g__hook_para/begin_code_prop}{\__hook_code_gset:ne {para/begin}{\exp_not:c {__hook_toplevel para/begin}\__hook_braced_parameter:n {para/begin}\exp_not:c {__hook_next para/begin}\__hook_braced_parameter:n {para/begin}}}{\__hook_if_reversed:nTF {para/begin}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/begin_code_prop}\__hook_initialize_single:ccn {__hook para/begin}{g__hook_para/begin_labels_clist}{para/begin}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/begin}{}}}
+
+\prop_if_empty:cTF ->\exp_args:Nc \prop_if_empty:NTF 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\prop_if_empty:NTF 
+#2<-g__hook_para/begin_code_prop
+{\expandafter}
+{\csname}
+
+\prop_if_empty:NTF #1->\if_meaning:w #1\c_empty_prop \prg_return_true: \else: \exp_after:wN \__prop_if_empty_return:w #1\__prop_flatten:w 2\s__prop 34\s__prop_stop \fi: \exp_end: 
+#1<-\g__hook_para/begin_code_prop 
+{\ifx: (level 3)}
+{true}
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+{\else: \ifx (level 3)}
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\__hook_code_gset:ne {para/begin}{\exp_not:c {__hook_toplevel para/begin}\__hook_braced_parameter:n {para/begin}\exp_not:c {__hook_next para/begin}\__hook_braced_parameter:n {para/begin}}
+#2<-\__hook_if_reversed:nTF {para/begin}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/begin_code_prop}\__hook_initialize_single:ccn {__hook para/begin}{g__hook_para/begin_labels_clist}{para/begin}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/begin}{}}
+
+\__hook_code_gset:ne ->\exp_args:Nne \__hook_code_gset:nn 
+
+\exp_args:Nne #1#2#3->\tex_expanded:D {\exp_not:N #1{\exp_not:n {#2}}{\__kernel_exp_not:w \tex_expanded:D {{#3}}}}
+#1<-\__hook_code_gset:nn 
+#2<-para/begin
+#3<-\exp_not:c {__hook_toplevel para/begin}\__hook_braced_parameter:n {para/begin}\exp_not:c {__hook_next para/begin}\__hook_braced_parameter:n {para/begin}
+{\expanded}
+{\noexpand}
+{\expanded}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_toplevel para/begin
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/begin
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/begin_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/begin_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/begin_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_next para/begin
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/begin
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/begin_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/begin_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/begin_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\__hook_code_gset:nn ->\__hook_code_gset_aux:nnn {}
+
+\__hook_code_gset_aux:nnn #1#2#3->\cs_gset:cpn {__hook#1 #2\exp_last_unbraced:Ne }{\__hook_parameter:n {#2}}{#3}
+#1<-
+#2<-para/begin
+#3<-\__hook_toplevel para/begin \__hook_next para/begin 
+
+\cs_gset:cpn ->\exp_args:Nc \cs_gset:Npn 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\cs_gset:Npn 
+#2<-__hook para/begin\exp_last_unbraced:Ne 
+{\expandafter}
+{\csname}
+
+\exp_last_unbraced:Ne #1#2->\exp_after:wN #1\tex_expanded:D {#2}
+#1<-\cs_end: 
+#2<-\__hook_parameter:n {para/begin}
+{\expandafter}
+{\expanded}
+
+\__hook_parameter:n #1->\cs:w c__hook_\tl_if_exist:cTF {c__hook_#1_parameter_tl}{#1_parameter}{empty}_tl\cs_end: 
+#1<-para/begin
+{\csname}
+
+\tl_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-c__hook_para/begin_parameter_tl
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-c__hook_para/begin_parameter_tl
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-para/begin_parameter
+#2<-empty
+
+\c__hook_para/begin_parameter_tl ->
+
+\cs_gset:Npn ->\tex_long:D \tex_gdef:D 
+{\long}
+{\gdef}
+{globally changing \__hook para/begin=\long macro:->}
+{into \__hook para/begin=\long macro:->\__hook_toplevel para/begin \__hook_next para/begin }
+{\fi: \ifcsname (level 2)}
+
+\__hook_use_initialized:n #1->\if_cs_exist:w __hook #1\cs_end: \cs:w __hook #1\use_i:nn \fi: \use_none:n \cs_end: 
+#1<-para/begin
+{\ifcsname: (level 2)}
+{true}
+{\csname}
+
+\use_i:nn #1#2->#1
+#1<-\fi: 
+#2<-\use_none:n 
+{\fi: \ifcsname (level 2)}
+
+\__hook para/begin ->\__hook_toplevel para/begin \__hook_next para/begin 
+
+\__hook_toplevel para/begin ->
+
+\__hook_next para/begin ->
+{\ifhmode: (level 2)}
+{true}
+{\else: \ifhmode (level 2)}
+{\fi: \ifhmode (level 2)}
+
+\__para_handle_indent: ->\box_use_drop:N \g_para_indent_box 
+{\box}
+{\the}
+
+\@nodocument ->\@latex@error {Missing \protect \begin {document}}\@ehd 
+
+\@latex@error #1#2->\GenericError {\space \space \space \@spaces \@spaces \@spaces }{LaTeX Error: #1}{See the LaTeX manual or LaTeX Companion for explanation.}{#2}
+#1<-Missing \protect \begin {document}
+#2<-\@ehd 
+
+\GenericError ->\protect \GenericError  
+{\relax}
+
+\GenericError  #1#2#3#4->\begingroup \immediate \write \@unused   \def \MessageBreak  
+ \set@display@protect \edef \@err@                                                                    #4  \errhelp \@err@                                                                  \let \@err@                                                                  \@empty \def \MessageBreak  
+#1 \def   \errmessage  #2.
+
+#3
+Type  H <return>  for immediate help\@err@                                                                     \endgroup 
+#1<-\space \space \space \@spaces \@spaces \@spaces 
+#2<-LaTeX Error: Missing \protect \begin {document}
+#3<-See the LaTeX manual or LaTeX Companion for explanation.
+#4<-\@ehd 
+{\begingroup}
+{entering semi simple group (level 1)}
+{\immediate}
+\write->
+
+{\def}
+{changing \MessageBreak=\relax}
+{into \MessageBreak=macro:->
+}
+
+\set@display@protect ->\let \protect \string 
+{\let}
+{changing \protect=\relax}
+{into \protect=\string}
+{\edef}
+
+\@ehd ->You're in trouble here. \space \@ehc 
+
+\space -> 
+
+\@ehc ->Try typing \space <return> \space to proceed.\MessageBreak If that doesn't work, type \space X <return> \space to quit.
+
+\space -> 
+
+\space -> 
+
+\MessageBreak ->
+
+\space -> 
+
+\space -> 
+{changing \@err@                                                                 =undefined}
+{into \@err@                                                                 =macro:-> You're in trouble here.  Try \ETC.}
+{\errhelp}
+
+\@err@                                                                  -> You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit. 
+{changing \errhelp=}
+{into \errhelp=You're in trouble here.  Try typ\ETC.}
+{\let}
+{changing \@err@                                                                 =macro:-> You're in trouble here.  Try \ETC.}
+{into \@err@                                                                 =macro:->}
+{\def}
+{changing \MessageBreak=macro:->
+}
+{into \MessageBreak=macro:->
+\space \space \space \@spaces \ETC.}
+{\def}
+{changing  =macro:-> }
+{into  =macro:->\errmessage  LaTeX Error: Miss\ETC.}
+
+ ->\errmessage  LaTeX Error: Missing \protect \begin {document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+{\errmessage}
+{\string}
+
+\@err@                                                                  ->
+! LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ->\errmessage  LaTeX Error: Missing \protect \begin {document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+                                                                                                                                                                                                                                        
+<*> \tracingonline=1 \tracingmacros=2 \tracingcommands=3 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \emph{x}
+                                                                                                                  
+? Type <return> to proceed, S to scroll future error messages,
+R to run without stopping, Q to run quietly,
+I to insert something, 
+1 or ... or 9 to ignore the next 1 to 9 tokens of input,
+H for help, X to quit.
+? 
+! Emergency stop.
+ ->\errmessage  LaTeX Error: Missing \protect \begin {document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+                                                                                                                                                                                                                                        
+<*> \tracingonline=1 \tracingmacros=2 \tracingcommands=3 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \emph{x}
+                                                                                                                  
+
+--- handle 4 (36443 bytes)
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.8.30)  1 JAN 1970 00:00
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**&pdflatex
+
+*\tracingonline=1 \tracingmacros=2 \tracingcommands=3 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \emph{x}
+{vertical mode: \tracingassigns}
+{into \tracingassigns=1}
+{\tracinggroups}
+{changing \tracinggroups=0}
+{into \tracinggroups=1}
+{\tracingifs}
+{changing \tracingifs=0}
+{into \tracingifs=1}
+
+\emph ->\protect \emph  
+{\relax}
+
+\emph  #1->\ifmmode \nfss@text {\em #1}\else \hmode@bgroup \text@command {#1}\em \check@icl #1\check@icr \expandafter \egroup \fi 
+#1<-x
+{\ifmmode: (level 1)}
+{false}
+{\else: \ifmmode (level 1)}
+
+\hmode@bgroup ->\leavevmode \bgroup 
+
+\leavevmode ->\unhbox \voidb@x 
+{\unhbox}
+\everypar->\g__para_standard_everypar_tl 
+
+\g__para_standard_everypar_tl ->\box_gset_to_last:N \g_para_indent_box \group_begin: \tex_par:D \group_end: \tex_everypar:D {\msg_error:nnnn {hooks}{para-mode}{before}{vertical}}\@kernel@before@para@before \hook_use:n {para/before}\group_begin: \tex_everypar:D {}\skip_set:Nn \tex_parskip:D {\if@minipage -\tex_parskip:D \else: \c_zero_skip \fi: }\tex_noindent:D \group_end: \tex_everypar:D {\g__para_standard_everypar_tl }\@kernel@before@para@begin \hook_use:n {para/begin}\if_mode_horizontal: \else: \msg_error:nnnn {hooks}{para-mode}{begin}{horizontal}\fi: \__para_handle_indent: \the \toks 12 
+
+\box_gset_to_last:N #1->\tex_global:D \tex_setbox:D #1\tex_lastbox:D 
+#1<-\g_para_indent_box 
+{horizontal mode: \global}
+{\setbox}
+{globally changing \box32=void}
+{into \box32=
+\hbox(0.0+0.0)x20.0}
+{\begingroup}
+{entering semi simple group (level 1)}
+{\par}
+{vertical mode: \endgroup}
+{leaving semi simple group (level 1)}
+{\everypar}
+{changing \everypar=\g__para_standard_everypar_tl }
+{into \everypar=\msg_error:nnnn {hooks}{para-mod\ETC.}
+
+\@kernel@before@para@before ->
+
+\hook_use:n #1->\__hook_preamble_hook:n {#1}\__hook_use_initialized:n {#1}
+#1<-para/before
+
+\__hook_preamble_hook:n #1->\if_cs_exist:w __hook #1\cs_end: \__hook_initialize_hook_code:n {#1}\fi: 
+#1<-para/before
+{\ifcsname: (level 2)}
+{true}
+
+\__hook_initialize_hook_code:n #1->\__hook_debug:n {\iow_term:e {
+[lthooks] Update code for hook '#1'\on@line :
+}}\__hook_include_legacy_code_chunk:n {#1}\__hook_if_usable:nT {#1}{\prop_if_empty:cTF {g__hook_#1_code_prop}{\__hook_code_gset:ne {#1}{\exp_not:c {__hook_toplevel #1}\__hook_braced_parameter:n {#1}\exp_not:c {__hook_next #1}\__hook_braced_parameter:n {#1}}}{\__hook_if_reversed:nTF {#1}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_#1_code_prop}\__hook_initialize_single:ccn {__hook #1}{g__hook_#1_labels_clist}{#1}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {#1}{}}}}
+#1<-para/before
+
+\__hook_debug:n #1->
+#1<-\iow_term:e {
+[lthooks] Update code for hook 'para/before'\on@line :
+}
+
+\__hook_include_legacy_code_chunk:n #1->\tl_if_exist:cT {@#1hook}{\tl_if_empty:cF {@#1hook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {#1}{legacy}{\exp_not:v {@#1hook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@#1hook}}}
+#1<-para/before
+
+\tl_if_exist:cT #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_T_true:w \fi: \use_none:n 
+#1<-@para/beforehook
+{\ifcsname: (level 3)}
+{false}
+{\fi: \ifcsname (level 3)}
+
+\use_none:n #1->
+#1<-@para/beforehook
+{\iffalse: (level 3)}
+{false}
+{\fi: \iffalse (level 3)}
+
+\use_none:n #1->
+#1<-\tl_if_empty:cF {@para/beforehook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {para/before}{legacy}{\exp_not:v {@para/beforehook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@para/beforehook}}
+
+\__hook_if_usable:nT #1->\cs_if_exist:cTF {__hook #1}{\prg_return_true: }{\prg_return_false: }\exp_end: \use:n \use_none:n 
+#1<-para/before
+
+\cs_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-__hook para/before
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-__hook para/before
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\prg_return_true: 
+#2<-\prg_return_false: 
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+
+\use_i:nn #1#2->#1
+#1<-\use:n 
+#2<-\use_none:n 
+
+\use:n #1->#1
+#1<-\prop_if_empty:cTF {g__hook_para/before_code_prop}{\__hook_code_gset:ne {para/before}{\exp_not:c {__hook_toplevel para/before}\__hook_braced_parameter:n {para/before}\exp_not:c {__hook_next para/before}\__hook_braced_parameter:n {para/before}}}{\__hook_if_reversed:nTF {para/before}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/before_code_prop}\__hook_initialize_single:ccn {__hook para/before}{g__hook_para/before_labels_clist}{para/before}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/before}{}}}
+
+\prop_if_empty:cTF ->\exp_args:Nc \prop_if_empty:NTF 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\prop_if_empty:NTF 
+#2<-g__hook_para/before_code_prop
+{\expandafter}
+{\csname}
+
+\prop_if_empty:NTF #1->\if_meaning:w #1\c_empty_prop \prg_return_true: \else: \exp_after:wN \__prop_if_empty_return:w #1\__prop_flatten:w 2\s__prop 34\s__prop_stop \fi: \exp_end: 
+#1<-\g__hook_para/before_code_prop 
+{\ifx: (level 3)}
+{true}
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+{\else: \ifx (level 3)}
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\__hook_code_gset:ne {para/before}{\exp_not:c {__hook_toplevel para/before}\__hook_braced_parameter:n {para/before}\exp_not:c {__hook_next para/before}\__hook_braced_parameter:n {para/before}}
+#2<-\__hook_if_reversed:nTF {para/before}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/before_code_prop}\__hook_initialize_single:ccn {__hook para/before}{g__hook_para/before_labels_clist}{para/before}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/before}{}}
+
+\__hook_code_gset:ne ->\exp_args:Nne \__hook_code_gset:nn 
+
+\exp_args:Nne #1#2#3->\tex_expanded:D {\exp_not:N #1{\exp_not:n {#2}}{\__kernel_exp_not:w \tex_expanded:D {{#3}}}}
+#1<-\__hook_code_gset:nn 
+#2<-para/before
+#3<-\exp_not:c {__hook_toplevel para/before}\__hook_braced_parameter:n {para/before}\exp_not:c {__hook_next para/before}\__hook_braced_parameter:n {para/before}
+{\expanded}
+{\noexpand}
+{\expanded}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_toplevel para/before
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/before
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/before_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/before_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/before_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_next para/before
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/before
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/before_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/before_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/before_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/before_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\__hook_code_gset:nn ->\__hook_code_gset_aux:nnn {}
+
+\__hook_code_gset_aux:nnn #1#2#3->\cs_gset:cpn {__hook#1 #2\exp_last_unbraced:Ne }{\__hook_parameter:n {#2}}{#3}
+#1<-
+#2<-para/before
+#3<-\__hook_toplevel para/before \__hook_next para/before 
+
+\cs_gset:cpn ->\exp_args:Nc \cs_gset:Npn 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\cs_gset:Npn 
+#2<-__hook para/before\exp_last_unbraced:Ne 
+{\expandafter}
+{\csname}
+
+\exp_last_unbraced:Ne #1#2->\exp_after:wN #1\tex_expanded:D {#2}
+#1<-\cs_end: 
+#2<-\__hook_parameter:n {para/before}
+{\expandafter}
+{\expanded}
+
+\__hook_parameter:n #1->\cs:w c__hook_\tl_if_exist:cTF {c__hook_#1_parameter_tl}{#1_parameter}{empty}_tl\cs_end: 
+#1<-para/before
+{\csname}
+
+\tl_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-c__hook_para/before_parameter_tl
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-c__hook_para/before_parameter_tl
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-para/before_parameter
+#2<-empty
+
+\c__hook_para/before_parameter_tl ->
+
+\cs_gset:Npn ->\tex_long:D \tex_gdef:D 
+{\long}
+{\gdef}
+{globally changing \__hook para/before=\long macro:->}
+{into \__hook para/before=\long macro:->\__hook_toplevel para/before \__hook_next para/before }
+{\fi: \ifcsname (level 2)}
+
+\__hook_use_initialized:n #1->\if_cs_exist:w __hook #1\cs_end: \cs:w __hook #1\use_i:nn \fi: \use_none:n \cs_end: 
+#1<-para/before
+{\ifcsname: (level 2)}
+{true}
+{\csname}
+
+\use_i:nn #1#2->#1
+#1<-\fi: 
+#2<-\use_none:n 
+{\fi: \ifcsname (level 2)}
+
+\__hook para/before ->\__hook_toplevel para/before \__hook_next para/before 
+
+\__hook_toplevel para/before ->
+
+\__hook_next para/before ->
+{\begingroup}
+{entering semi simple group (level 1)}
+{\everypar}
+{changing \everypar=\msg_error:nnnn {hooks}{para-mod\ETC.}
+{into \everypar=}
+
+\skip_set:Nn #1#2->#1=\tex_glueexpr:D #2\scan_stop: 
+#1<-\tex_parskip:D 
+#2<-\if@minipage -\tex_parskip:D \else: \c_zero_skip \fi: 
+{\parskip}
+{\iffalse: (level 2)}
+{false}
+{\else: \iffalse (level 2)}
+{\fi: \iffalse (level 2)}
+{changing \parskip=0.0pt plus 1.0pt}
+{into \parskip=0.0pt}
+{\noindent}
+{horizontal mode: \endgroup}
+{leaving semi simple group (level 1)}
+{\everypar}
+{changing \everypar=\msg_error:nnnn {hooks}{para-mod\ETC.}
+{into \everypar=\g__para_standard_everypar_tl }
+
+\@kernel@before@para@begin ->
+
+\hook_use:n #1->\__hook_preamble_hook:n {#1}\__hook_use_initialized:n {#1}
+#1<-para/begin
+
+\__hook_preamble_hook:n #1->\if_cs_exist:w __hook #1\cs_end: \__hook_initialize_hook_code:n {#1}\fi: 
+#1<-para/begin
+{\ifcsname: (level 2)}
+{true}
+
+\__hook_initialize_hook_code:n #1->\__hook_debug:n {\iow_term:e {
+[lthooks] Update code for hook '#1'\on@line :
+}}\__hook_include_legacy_code_chunk:n {#1}\__hook_if_usable:nT {#1}{\prop_if_empty:cTF {g__hook_#1_code_prop}{\__hook_code_gset:ne {#1}{\exp_not:c {__hook_toplevel #1}\__hook_braced_parameter:n {#1}\exp_not:c {__hook_next #1}\__hook_braced_parameter:n {#1}}}{\__hook_if_reversed:nTF {#1}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_#1_code_prop}\__hook_initialize_single:ccn {__hook #1}{g__hook_#1_labels_clist}{#1}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {#1}{}}}}
+#1<-para/begin
+
+\__hook_debug:n #1->
+#1<-\iow_term:e {
+[lthooks] Update code for hook 'para/begin'\on@line :
+}
+
+\__hook_include_legacy_code_chunk:n #1->\tl_if_exist:cT {@#1hook}{\tl_if_empty:cF {@#1hook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {#1}{legacy}{\exp_not:v {@#1hook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@#1hook}}}
+#1<-para/begin
+
+\tl_if_exist:cT #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_T_true:w \fi: \use_none:n 
+#1<-@para/beginhook
+{\ifcsname: (level 3)}
+{false}
+{\fi: \ifcsname (level 3)}
+
+\use_none:n #1->
+#1<-@para/beginhook
+{\iffalse: (level 3)}
+{false}
+{\fi: \iffalse (level 3)}
+
+\use_none:n #1->
+#1<-\tl_if_empty:cF {@para/beginhook}{\__hook_replacing_args_false: \use:e {\__hook_hook_gput_code_do:nnn {para/begin}{legacy}{\exp_not:v {@para/beginhook}}}\__hook_replacing_args_reset: \__hook_tl_gclear:c {@para/beginhook}}
+
+\__hook_if_usable:nT #1->\cs_if_exist:cTF {__hook #1}{\prg_return_true: }{\prg_return_false: }\exp_end: \use:n \use_none:n 
+#1<-para/begin
+
+\cs_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-__hook para/begin
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-__hook para/begin
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\prg_return_true: 
+#2<-\prg_return_false: 
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+
+\use_i:nn #1#2->#1
+#1<-\use:n 
+#2<-\use_none:n 
+
+\use:n #1->#1
+#1<-\prop_if_empty:cTF {g__hook_para/begin_code_prop}{\__hook_code_gset:ne {para/begin}{\exp_not:c {__hook_toplevel para/begin}\__hook_braced_parameter:n {para/begin}\exp_not:c {__hook_next para/begin}\__hook_braced_parameter:n {para/begin}}}{\__hook_if_reversed:nTF {para/begin}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/begin_code_prop}\__hook_initialize_single:ccn {__hook para/begin}{g__hook_para/begin_labels_clist}{para/begin}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/begin}{}}}
+
+\prop_if_empty:cTF ->\exp_args:Nc \prop_if_empty:NTF 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\prop_if_empty:NTF 
+#2<-g__hook_para/begin_code_prop
+{\expandafter}
+{\csname}
+
+\prop_if_empty:NTF #1->\if_meaning:w #1\c_empty_prop \prg_return_true: \else: \exp_after:wN \__prop_if_empty_return:w #1\__prop_flatten:w 2\s__prop 34\s__prop_stop \fi: \exp_end: 
+#1<-\g__hook_para/begin_code_prop 
+{\ifx: (level 3)}
+{true}
+
+\prg_return_true: ->\exp_after:wN \use_i:nn \exp:w 
+{\expandafter}
+{\romannumeral}
+{\else: \ifx (level 3)}
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-\__hook_code_gset:ne {para/begin}{\exp_not:c {__hook_toplevel para/begin}\__hook_braced_parameter:n {para/begin}\exp_not:c {__hook_next para/begin}\__hook_braced_parameter:n {para/begin}}
+#2<-\__hook_if_reversed:nTF {para/begin}{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_left:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_left:NV }{\cs_set_eq:NN \__hook_tl_gput:Nn \__hook_tl_gput_right:Nn \cs_set_eq:NN \__hook_clist_gput:NV \clist_gput_right:NV }\prop_set_eq:Nc \l__hook_work_prop {g__hook_para/begin_code_prop}\__hook_initialize_single:ccn {__hook para/begin}{g__hook_para/begin_labels_clist}{para/begin}\__hook_debug:n {\exp_args:NNe \prop_gput:Nnn \g__hook_used_prop {para/begin}{}}
+
+\__hook_code_gset:ne ->\exp_args:Nne \__hook_code_gset:nn 
+
+\exp_args:Nne #1#2#3->\tex_expanded:D {\exp_not:N #1{\exp_not:n {#2}}{\__kernel_exp_not:w \tex_expanded:D {{#3}}}}
+#1<-\__hook_code_gset:nn 
+#2<-para/begin
+#3<-\exp_not:c {__hook_toplevel para/begin}\__hook_braced_parameter:n {para/begin}\exp_not:c {__hook_next para/begin}\__hook_braced_parameter:n {para/begin}
+{\expanded}
+{\noexpand}
+{\expanded}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_toplevel para/begin
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/begin
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/begin_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/begin_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/begin_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\exp_not:c #1->\exp_after:wN \exp_not:N \cs:w #1\cs_end: 
+#1<-__hook_next para/begin
+{\expandafter}
+{\csname}
+{\noexpand}
+
+\__hook_braced_parameter:n #1->\if_case:w \int_eval:n {\exp_args:Nv \str_count:n {c__hook_#1_parameter_tl}/3}\exp_stop_f: \or: {##1}\or: {##1}{##2}\or: {##1}{##2}{##3}\or: {##1}{##2}{##3}{##4}\or: {##1}{##2}{##3}{##4}{##5}\or: {##1}{##2}{##3}{##4}{##5}{##6}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}\or: {##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}{##9}\else: \msg_expandable_error:nnn {latex2e}{should-not-happen}{Invalid parameter spec.}\fi: 
+#1<-para/begin
+{\ifcase: (level 3)}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_args:Nv \str_count:n {c__hook_para/begin_parameter_tl}/3
+{\the}
+
+\exp_args:Nv #1#2->\exp_after:wN #1\exp_after:wN {\exp:w \__exp_eval_register:c {#2}}
+#1<-\str_count:n 
+#2<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\expandafter}
+{\romannumeral}
+
+\__exp_eval_register:c #1->\exp_after:wN \__exp_eval_register:N \cs:w #1\cs_end: 
+#1<-c__hook_para/begin_parameter_tl
+{\expandafter}
+{\csname}
+
+\__exp_eval_register:N #1->\exp_after:wN \if_meaning:w \exp_not:N #1#1\if_meaning:w \scan_stop: #1\__exp_eval_error_msg:w \fi: \else: \exp_after:wN \use_i_ii:nnn \fi: \exp_after:wN \exp_end: \tex_the:D #1
+#1<-\c__hook_para/begin_parameter_tl 
+{\expandafter}
+{\noexpand}
+{\ifx: (level 4)}
+{false}
+{\else: \ifx (level 4)}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\use_i_ii:nnn #1#2#3->#1#2
+#1<-\exp_after:wN 
+#2<-\exp_end: 
+#3<-\tex_the:D 
+{\expandafter}
+
+\c__hook_para/begin_parameter_tl ->
+
+\str_count:n #1->\__str_count_aux:n {\str_count_spaces:n {#1}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {#1}}
+#1<-
+
+\__str_count_aux:n #1->\int_eval:n {#1{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop }
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\str_count_spaces:n {}+\exp_after:wN \__str_count_loop:NNNNNNNNN \tl_to_str:n {}{X8}{X7}{X6}{X5}{X4}{X3}{X2}{X1}{X0}\s__str_stop 
+{\the}
+
+\str_count_spaces:n #1->\int_eval:n {\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {#1} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop }
+#1<-
+
+\int_eval:n #1->\tex_the:D \__int_eval:w #1\__int_eval_end: 
+#1<-\exp_after:wN \__str_count_spaces_loop:w \tl_to_str:n {} X7 X6 X5 X4 X3 X2 X1 X0 X-1 \s__str_stop 
+{\the}
+{\expandafter}
+{\detokenize}
+
+\__str_count_spaces_loop:w #1 #2 #3 #4 #5 #6 #7 #8 #9 ->\if_meaning:w X#9\__str_use_i_delimit_by_s_stop:nw \fi: 9+\__str_count_spaces_loop:w 
+#1<-
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+
+\__str_use_i_delimit_by_s_stop:nw #1#2\s__str_stop ->#1
+#1<-\fi: 
+#2<-9+\__str_count_spaces_loop:w X-1 
+{\fi: \ifx (level 4)}
+{\expandafter}
+{\detokenize}
+
+\__str_count_loop:NNNNNNNNN #1#2#3#4#5#6#7#8#9->\if_meaning:w X#9\exp_after:wN \__str_use_none_delimit_by_s_stop:w \fi: 9+\__str_count_loop:NNNNNNNNN 
+#1<-X8
+#2<-X7
+#3<-X6
+#4<-X5
+#5<-X4
+#6<-X3
+#7<-X2
+#8<-X1
+#9<-X0
+{\ifx: (level 4)}
+{true}
+{\expandafter}
+{\fi: \ifx (level 4)}
+
+\__str_use_none_delimit_by_s_stop:w #1\s__str_stop ->
+#1<-9+\__str_count_loop:NNNNNNNNN 
+{case 0}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\or: \ifcase (level 3)}
+{\else: \ifcase (level 3)}
+{\fi: \ifcase (level 3)}
+
+\__hook_code_gset:nn ->\__hook_code_gset_aux:nnn {}
+
+\__hook_code_gset_aux:nnn #1#2#3->\cs_gset:cpn {__hook#1 #2\exp_last_unbraced:Ne }{\__hook_parameter:n {#2}}{#3}
+#1<-
+#2<-para/begin
+#3<-\__hook_toplevel para/begin \__hook_next para/begin 
+
+\cs_gset:cpn ->\exp_args:Nc \cs_gset:Npn 
+
+\exp_args:Nc #1#2->\exp_after:wN #1\cs:w #2\cs_end: 
+#1<-\cs_gset:Npn 
+#2<-__hook para/begin\exp_last_unbraced:Ne 
+{\expandafter}
+{\csname}
+
+\exp_last_unbraced:Ne #1#2->\exp_after:wN #1\tex_expanded:D {#2}
+#1<-\cs_end: 
+#2<-\__hook_parameter:n {para/begin}
+{\expandafter}
+{\expanded}
+
+\__hook_parameter:n #1->\cs:w c__hook_\tl_if_exist:cTF {c__hook_#1_parameter_tl}{#1_parameter}{empty}_tl\cs_end: 
+#1<-para/begin
+{\csname}
+
+\tl_if_exist:cTF #1->\if_cs_exist:w #1\cs_end: \__cs_if_exist_c_aux:w \fi: \use_none:n {#1}\if_false: \__prg_TF_true:w \fi: \use_ii:nn 
+#1<-c__hook_para/begin_parameter_tl
+{\ifcsname: (level 3)}
+{true}
+
+\__cs_if_exist_c_aux:w \fi: \use_none:n #1\if_false: ->\fi: \exp_after:wN \if_meaning:w \cs:w #1\cs_end: \scan_stop: \else: 
+#1<-c__hook_para/begin_parameter_tl
+{\fi: \ifcsname (level 3)}
+{\expandafter}
+{\csname}
+{\ifx: (level 3)}
+{false}
+{\else: \ifx (level 3)}
+
+\__prg_TF_true:w \fi: \use_ii:nn ->\fi: \use_i:nn 
+{\fi: \ifx (level 3)}
+
+\use_i:nn #1#2->#1
+#1<-para/begin_parameter
+#2<-empty
+
+\c__hook_para/begin_parameter_tl ->
+
+\cs_gset:Npn ->\tex_long:D \tex_gdef:D 
+{\long}
+{\gdef}
+{globally changing \__hook para/begin=\long macro:->}
+{into \__hook para/begin=\long macro:->\__hook_toplevel para/begin \__hook_next para/begin }
+{\fi: \ifcsname (level 2)}
+
+\__hook_use_initialized:n #1->\if_cs_exist:w __hook #1\cs_end: \cs:w __hook #1\use_i:nn \fi: \use_none:n \cs_end: 
+#1<-para/begin
+{\ifcsname: (level 2)}
+{true}
+{\csname}
+
+\use_i:nn #1#2->#1
+#1<-\fi: 
+#2<-\use_none:n 
+{\fi: \ifcsname (level 2)}
+
+\__hook para/begin ->\__hook_toplevel para/begin \__hook_next para/begin 
+
+\__hook_toplevel para/begin ->
+
+\__hook_next para/begin ->
+{\ifhmode: (level 2)}
+{true}
+{\else: \ifhmode (level 2)}
+{\fi: \ifhmode (level 2)}
+
+\__para_handle_indent: ->\box_use_drop:N \g_para_indent_box 
+{\box}
+{\the}
+
+\@nodocument ->\@latex@error {Missing \protect \begin {document}}\@ehd 
+
+\@latex@error #1#2->\GenericError {\space \space \space \@spaces \@spaces \@spaces }{LaTeX Error: #1}{See the LaTeX manual or LaTeX Companion for explanation.}{#2}
+#1<-Missing \protect \begin {document}
+#2<-\@ehd 
+
+\GenericError ->\protect \GenericError  
+{\relax}
+
+\GenericError  #1#2#3#4->\begingroup \immediate \write \@unused   \def \MessageBreak  
+ \set@display@protect \edef \@err@                                                                    #4  \errhelp \@err@                                                                  \let \@err@                                                                  \@empty \def \MessageBreak  
+#1 \def   \errmessage  #2.
+
+#3
+Type  H <return>  for immediate help\@err@                                                                     \endgroup 
+#1<-\space \space \space \@spaces \@spaces \@spaces 
+#2<-LaTeX Error: Missing \protect \begin {document}
+#3<-See the LaTeX manual or LaTeX Companion for explanation.
+#4<-\@ehd 
+{\begingroup}
+{entering semi simple group (level 1)}
+{\immediate}
+\write->
+
+{\def}
+{changing \MessageBreak=\relax}
+{into \MessageBreak=macro:->
+}
+
+\set@display@protect ->\let \protect \string 
+{\let}
+{changing \protect=\relax}
+{into \protect=\string}
+{\edef}
+
+\@ehd ->You're in trouble here. \space \@ehc 
+
+\space -> 
+
+\@ehc ->Try typing \space <return> \space to proceed.\MessageBreak If that doesn't work, type \space X <return> \space to quit.
+
+\space -> 
+
+\space -> 
+
+\MessageBreak ->
+
+\space -> 
+
+\space -> 
+{changing \@err@                                                                 =undefined}
+{into \@err@                                                                 =macro:-> You're in trouble here.  Try \ETC.}
+{\errhelp}
+
+\@err@                                                                  -> You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit. 
+{changing \errhelp=}
+{into \errhelp=You're in trouble here.  Try typ\ETC.}
+{\let}
+{changing \@err@                                                                 =macro:-> You're in trouble here.  Try \ETC.}
+{into \@err@                                                                 =macro:->}
+{\def}
+{changing \MessageBreak=macro:->
+}
+{into \MessageBreak=macro:->
+\space \space \space \@spaces \ETC.}
+{\def}
+{changing  =macro:-> }
+{into  =macro:->\errmessage  LaTeX Error: Miss\ETC.}
+
+ ->\errmessage  LaTeX Error: Missing \protect \begin {document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+{\errmessage}
+{\string}
+
+\@err@                                                                  ->
+! LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ->\errmessage  LaTeX Error: Missing \protect \begin {document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+                                                                                                                                                                                                                                        
+<*> \tracingonline=1 \tracingmacros=2 \tracingcommands=3 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \emph{x}
+                                                                                                                  
+? \csname @@end\endcsname
+Type <return> to proceed, S to scroll future error messages,
+R to run without stopping, Q to run quietly,
+I to insert something, 
+1 or ... or 9 to ignore the next 1 to 9 tokens of input,
+H for help, X to quit.
+? 
+! Emergency stop.
+ ->\errmessage  LaTeX Error: Missing \protect \begin {document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help\@err@                                                                   
+                                                                                                                                                                                                                                        
+<*> \tracingonline=1 \tracingmacros=2 \tracingcommands=3 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \emph{x}
+                                                                                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+ 
+Here is how much of TeX's memory you used:
+ 12 strings out of 467099
+ 445 string characters out of 5408265
+ 435796 words of memory out of 5000000
+ 29447 multiletter control sequences out of 15000+600000
+ 627721 words of font info for 40 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 17i,0n,19p,145b,14s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+RESULT: stuck: 600 > 593 > 563 > 20 > 35 > 21 > 19 > 597 > unmodelled external: removepdffile
+TIME: 97.64 s

@@ -1,0 +1,2 @@
+&pdflatex
+\scrollmode\tracingonline=1 \tracingassigns=1 \tracinggroups=1 \tracingifs=1 \tracingmacros=2 \tracingcommands=3 \setbox0\hbox{}\tracingcommands=0 \font\x=cmti10 \x

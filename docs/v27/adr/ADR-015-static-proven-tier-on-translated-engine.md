@@ -289,15 +289,15 @@ branch tip when this was written), not on `main`.
     `67ca47df:docs/v27/spike/h3/evidence/meanings/run3-37397064131/`). H.2's INITEX evidence, the
     178-input differential and the round trip (`55629ae0…`) are unchanged on the B2 build.
   - **Speed was NOT fixed.** B2 removes retention, not the cost of the integer conversions, and
-    the measured and estimated profile-guided changes do not reach the kill line (E12).
+    no profile-guided fix to ≤ 200× is in sight (E12).
 - **E12. H.5: the meaning-dump proxy counts as H.5's evidence** (H5-heap-design §6, owner
   question 1, option (a)). H.5 is therefore recorded as **killed on the proxy by owner ruling
   (H5 Q1(a))**. The re-audit's corrected wording, which this records: *"The only legitimate form
   is 'killed on the proxy by owner ruling (H5 Q1(a)), A+T1+T2 build'."* Every figure is labelled
   by its build (D3's lines: pass at ≤ 60× pdfTeX per pass, kill above 200× with no profile-guided
   fix in sight):
-  - *A+T1+T2 profiling build* (in-place arrays plus the conversion realizers; not a model build,
-    and not admissible as evidence under E14): **818×** on the whole dump, **≈ 1,540×** marginal
+  - *A+T1+T2 profiling build* (in-place arrays plus the conversion realizers; not a model build;
+    a profiling build in E14's sense): **818×** on the whole dump, **≈ 1,540×** marginal
     per name, **59×** on the format load, **122×** at 1,000 names
     (`67ca47df:docs/v27/spike/h5/evidence/fair/fairtable.txt`, interleaved medians). On this build
     the format load and the 1,000-name run are under the kill line; the marginal cost and the
@@ -348,10 +348,11 @@ branch tip when this was written), not on `main`.
     `scripts/tools/_oracle.sh` are **retired**. `NativeOracle` is kept **only as a non-grading
     class** (`HostDiagnostic`'s base and a comparator).
   - The claim is **"one configuration by construction"**, NOT "identical platform". The platform
-    residuals are enumerated and measured: the work-root file system (case- and
+    residuals are enumerated and are to be measured: the work-root file system (case- and
     Unicode-insensitive locally, virtiofs over APFS, against case-sensitive Linux in CI; the
-    local insensitivity is measured, `_oracle.py`'s "ONE FILE, MANY NAMES"), the kernel, CPU speed
-    against the wall-clock timeout, memory, and disk.
+    local insensitivity is measured, `_oracle.py`'s "ONE FILE, MANY NAMES"; whether it changes
+    any real document's grade is not), the kernel, CPU speed against the wall-clock timeout,
+    memory, and disk.
   - **OPEN, pending that measurement:** O3.2 (grades of record come only from CI) or O3.3 (a
     VM-local Linux work root for local grading).
   - E15 **supersedes OPEN-128 item (9)** ("match the container's options"): native work

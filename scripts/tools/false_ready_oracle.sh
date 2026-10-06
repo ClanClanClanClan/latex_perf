@@ -41,6 +41,16 @@
 #                       emitter (the pdflatex runs themselves still need python3:
 #                       since C-91 every one goes through the _oracle.py shim)
 #   TEX_TIMEOUT=30      per-pdflatex-run timeout in seconds
+#   FR_RECORD_ORACLE=1  re-baseline the manifest's ORACLE BLOCK (an oracle-
+#                       baseline change, OPEN-128): the recorded block is not
+#                       compared (it is of the old oracle); the grading code
+#                       and commit are stamped when the run STARTS; and only
+#                       when EVERY fixture reproduces its recorded grade (hard
+#                       0, soft 0) and the grading code did not move during the
+#                       run is the block rewritten -- the oracle's identity,
+#                       its clock and the grading code (false_ready_oracle.sh,
+#                       _oracle.sh; OPEN-128 (8)). The grades themselves are
+#                       never written by this mode.
 #
 # Usage:
 #   false_ready_oracle.sh                  verify the manifest matches reality
@@ -111,11 +121,19 @@ if [ ! -x "$CLI" ]; then
 fi
 
 [ -f "$MAN" ] || die_infra "no manifest at $MAN"
-# The manifest's grades are compared with this run's: they must be of the
-# SAME oracle -- image, ARCHITECTURE and tree (ADR-015 E2: the pinned pdfTeX
-# gives different verdicts on aarch64 and x86_64, C-103).
-python3 "$ROOT/scripts/tools/_oracle.py" check-recorded "$MAN" oracle \
-  || die_infra "the manifest's grades are not comparable with this oracle's (see above)"
+GRADERS_FR=(scripts/tools/false_ready_oracle.sh scripts/tools/_oracle.sh)
+if [ "${FR_RECORD_ORACLE:-0}" = 1 ]; then
+  # Stamped at the START (OPEN-128 (4)): HEAD and the grading code.
+  GC_START="$(cd "$ROOT" && python3 scripts/tools/_oracle.py grading-code "${GRADERS_FR[@]}")" \
+    || die_infra "cannot stamp the grading code (is it committed and clean?)"
+  HEAD_START="$(git -C "$ROOT" rev-parse HEAD)" || die_infra "cannot read HEAD"
+else
+  # The manifest's grades are compared with this run's: they must be of the
+  # SAME oracle -- image, ARCHITECTURE, tree and CLOCK (ADR-015 E2, E10: the
+  # pinned pdfTeX gives different verdicts on aarch64 and x86_64, C-103).
+  python3 "$ROOT/scripts/tools/_oracle.py" check-recorded "$MAN" oracle \
+    || die_infra "the manifest's grades are not comparable with this oracle's (see above)"
+fi
 
 # A CLI that cannot execute (wrong ABI inside the container, missing loader)
 # returns non-zero for EVERY document, which reads as a uniform column of
@@ -393,8 +411,34 @@ if [ "$soft" -ge $(( (n + 1) / 2 )) ] && [ "$soft" -gt 0 ]; then
 fi
 if [ "$soft" -ne 0 ]; then
   echo "[fr-oracle] NOTE: $soft strong-fatal/error-halt reclassification(s); all still rejections." >&2
-  if [ "${STRICT_GRADE:-0}" = 1 ]; then
-    echo "[fr-oracle] STRICT_GRADE=1 -> failing." >&2; exit 1
+  if [ "${STRICT_GRADE:-0}" = 1 ] || [ "${FR_RECORD_ORACLE:-0}" = 1 ]; then
+    echo "[fr-oracle] STRICT_GRADE=1 (or FR_RECORD_ORACLE=1) -> failing." >&2; exit 1
   fi
+fi
+if [ "${FR_RECORD_ORACLE:-0}" = 1 ]; then
+  GC_END="$(cd "$ROOT" && python3 scripts/tools/_oracle.py grading-code "${GRADERS_FR[@]}")" \
+    || die_infra "the grading code is no longer committed and clean; nothing recorded"
+  [ "$GC_END" = "$GC_START" ] \
+    || die_infra "the grading code changed during the run; nothing recorded (OPEN-128 (4))"
+  ( cd "$ROOT" && GC_START="$GC_START" HEAD_START="$HEAD_START" python3 - "$MAN" <<'PYEOF'
+import json, os, sys
+sys.path.insert(0, "scripts/tools")
+import _oracle
+man = sys.argv[1]
+doc = json.load(open(man))
+old = doc.get("oracle") or {}
+keep = {k: v for k, v in old.items()
+        if k in ("engine", "distribution", "protocols", "baseline_note")}
+prov = _oracle.get_oracle().provenance()
+doc["oracle"] = dict(keep, **prov, clock=_oracle.PROTOCOL_CLOCK,
+                     grading_code=json.loads(os.environ["GC_START"]),
+                     recorded_at_sha=os.environ["HEAD_START"])
+open(man, "w").write(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+print("[fr-oracle] RECORDED the manifest's oracle block: every fixture reproduced "
+      "its grade under %s (%s, clock %s, grading code %s)"
+      % (prov["image"], prov["arch"], _oracle.PROTOCOL_CLOCK,
+         doc["oracle"]["grading_code"]["sha256"][:12]))
+PYEOF
+  ) || die_infra "could not write the manifest's oracle block"
 fi
 exit 0

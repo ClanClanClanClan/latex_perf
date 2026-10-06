@@ -36,6 +36,16 @@ DETERMINISM. Same frame and same ordering as the real-paper corpus
 at an OFFSET so the sample is disjoint from the 400 documents the verdict
 channel is tuned against. Sample 1 is ranks 1-200 and sample 2 is 201-400;
 this window starts at 2000 and has never been used to tune anything.
+
+RE-GRADING AN ARTEFACT (OPEN-128 (7)/(8)). `--regrade --cli-checkout DIR`
+re-runs every row of the artefact at --out with the CLI built in DIR, which
+must be the engine tree the artefact records (src_tree_sha): the CLI side is
+the recorded one, so every moved cell is the ORACLE's. The CLI provenance
+(measured_at_sha, src_tree_sha, measured_at_note) is carried; the oracle
+block (identity, clock, grading code) and `oracle_regraded_at_sha` are this
+run's, stamped when it STARTS (_oracle.RunStamp); `--diff-out` writes the
+per-row before/after. The grading code is this file, diff_real_roots.py (the
+pass protocol) and _oracle.py.
 """
 import argparse
 import hashlib
@@ -50,9 +60,11 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from diff_real_roots import (  # noqa: E402
     PIN, build_frame, oracle_record, run_to_fixpoint_full,
 )
-from _oracle import OracleError, get_oracle, job_output  # noqa: E402
+from _oracle import OracleError, RunStamp, get_oracle, job_output  # noqa: E402
 from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
 
+GRADER_FILES = ("scripts/tools/gen_apply_fixes_real_differential.py",
+                "scripts/tools/diff_real_roots.py")
 DEFAULT_OFFSET = 2000
 DEFAULT_N = 40
 
@@ -202,10 +214,49 @@ def main() -> int:
                     default="all")
     ap.add_argument("--jobs", type=int, default=1,
                     help="papers graded in parallel")
+    ap.add_argument("--cli-checkout", default=None,
+                    help="run the CLI built in this checkout (its latex-parse/src "
+                         "must be clean)")
+    ap.add_argument("--regrade", action="store_true",
+                    help="re-grade the artefact at --out (its window, its CLI "
+                         "tree via --cli-checkout); carries its CLI provenance")
+    ap.add_argument("--diff-out", default=None,
+                    help="with --regrade: write the per-row before/after here")
     ns = ap.parse_args()
 
     repo = pathlib.Path(ns.repo).resolve()
-    cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
+    cli_root = pathlib.Path(ns.cli_checkout).resolve() if ns.cli_checkout else repo
+    cli = cli_root / "_build/default/latex-parse/src/validators_cli.exe"
+    if ns.cli_checkout and subprocess.run(
+            ["git", "status", "--porcelain", "--", "latex-parse/src"], cwd=cli_root,
+            capture_output=True, text=True).stdout.strip():
+        print(f"[apply-fixes-real] FATAL: {cli_root}: latex-parse/src is dirty",
+              file=sys.stderr)
+        return 2
+    old_doc = None
+    if ns.regrade:
+        if not ns.cli_checkout:
+            print("[apply-fixes-real] FATAL: --regrade needs --cli-checkout (the "
+                  "CLI tree the artefact records)", file=sys.stderr)
+            return 2
+        old_doc = json.loads((repo / ns.out).read_text())
+        fr = old_doc["provenance"]["frame"]
+        ns.offset, ns.n = fr["offset"], fr["n"]
+        ns.fixer_scope = old_doc["provenance"].get("fixer_scope", ns.fixer_scope)
+        tree = subprocess.run(["git", "--no-optional-locks", "rev-parse",
+                               "HEAD:latex-parse/src"], cwd=cli_root,
+                              capture_output=True, text=True).stdout.strip()
+        if tree != old_doc["provenance"].get("src_tree_sha"):
+            print(f"[apply-fixes-real] FATAL: the CLI checkout's engine tree {tree} "
+                  f"is not the artefact's {old_doc['provenance'].get('src_tree_sha')}: "
+                  f"a moved cell would not be the oracle's", file=sys.stderr)
+            return 2
+    try:
+        stamp = RunStamp(GRADER_FILES, repo)
+    except OracleError as e:
+        print(f"[apply-fixes-real] FATAL: cannot stamp the grading code: {e}",
+              file=sys.stderr)
+        return 2
     if not cli.is_file():
         print(f"[apply-fixes-real] FATAL: {cli} not built", file=sys.stderr)
         return 2
@@ -271,7 +322,11 @@ def main() -> int:
         return 2
     compiled = [r for r in rows if r["cell"] in ("preserved", "broken")]
     broken = [r for r in compiled if r["cell"] == "broken"]
-    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo,
+    why = stamp.check()
+    if why:
+        print(f"[apply-fixes-real] FATAL: nothing written: {why}", file=sys.stderr)
+        return 2
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=cli_root,
                          capture_output=True, text=True).stdout.strip()
     doc = {
         "provenance": {
@@ -281,7 +336,7 @@ def main() -> int:
             # cli_sha256, which only the producing machine can check.
             "src_tree_sha": subprocess.run(
                 ["git", "--no-optional-locks", "rev-parse",
-                 "HEAD:latex-parse/src"], cwd=repo, capture_output=True,
+                 "HEAD:latex-parse/src"], cwd=cli_root, capture_output=True,
                 text=True).stdout.strip() or None,
             "cli_sha256": sha256_file(cli),
             # The hash is only comparable on this platform (C-64).
@@ -291,7 +346,9 @@ def main() -> int:
             "frame": {"corpus": str(root.name), "frame_size": len(frame),
                       "selection": "sha256(arxiv_id) ascending",
                       "offset": ns.offset, "n": ns.n},
-            "oracle": oracle_record(),
+            # The oracle's identity, clock and grading code, stamped when the
+            # run STARTED (OPEN-128 (4)/(8)).
+            "oracle": dict(oracle_record(gc=stamp.gc)),
             "fix_scope": "every .tex in the tree, root and children",
             "fixer_scope": ns.fixer_scope,
         },
@@ -304,6 +361,41 @@ def main() -> int:
         },
         "rows": rows,
     }
+    if old_doc is not None:
+        # The CLI side is the recorded one (checked above): carry its
+        # provenance, stamp the oracle side.
+        for k in ("measured_at_sha", "measured_at_note", "src_tree_sha"):
+            if k in old_doc["provenance"]:
+                doc["provenance"][k] = old_doc["provenance"][k]
+        doc["provenance"]["oracle_regraded_at_sha"] = stamp.head
+        if ns.diff_out:
+            before = {r["arxiv_id"]: r for r in old_doc["rows"]}
+            diff_rows = []
+            for r in rows:
+                b = before.get(r["arxiv_id"], {})
+                keys = sorted((set(b) | set(r)) - {"arxiv_id", "toplevel"})
+                moved = [k for k in keys if b.get(k) != r.get(k)]
+                diff_rows.append({"arxiv_id": r["arxiv_id"],
+                                  "cell_before": b.get("cell"), "cell_after": r["cell"],
+                                  "cell_changed": b.get("cell") != r["cell"],
+                                  "fields_changed": moved,
+                                  "before": {k: b.get(k) for k in moved},
+                                  "after": {k: r.get(k) for k in moved}})
+            dp = repo / ns.diff_out
+            dp.parent.mkdir(parents=True, exist_ok=True)
+            dp.write_text(json.dumps({
+                "artefact": ns.out,
+                "oracle_before": old_doc["provenance"].get("oracle"),
+                "oracle_after": doc["provenance"]["oracle"],
+                "regraded_at_sha": stamp.head,
+                "summary": {"rows": len(diff_rows),
+                            "cells_moved": sum(1 for d in diff_rows if d["cell_changed"]),
+                            "rows_with_any_field_moved": sum(
+                                1 for d in diff_rows if d["fields_changed"]),
+                            "summary_before": old_doc.get("summary"),
+                            "summary_after": doc["summary"]},
+                "rows": diff_rows}, indent=1, ensure_ascii=False) + "\n")
+            print(f"[apply-fixes-real] before/after diff written to {ns.diff_out}")
     outp = repo / ns.out
     outp.parent.mkdir(parents=True, exist_ok=True)
     outp.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")

@@ -48,6 +48,11 @@ import _oracle  # noqa: E402
 import _strict_s0 as S  # noqa: E402
 import gen_contract as G  # noqa: E402
 
+# The grading code the lexical file names (OPEN-126, OPEN-128 (8)): the oracle
+# core, this file and gen_contract.py (the dump's TeX variables and its
+# parser), stamped when the run STARTS (_oracle.RunStamp).
+GRADER_FILES = ("scripts/tools/gen_strict_lexical.py", "scripts/tools/gen_contract.py")
+
 SCHEMA = "lp-strict-lexical/1"
 GENERATOR_VERSION = "1"
 OUT = S.REPO / "corpora/contracts/strict/article-s0-lexical.json"
@@ -118,6 +123,10 @@ def generate() -> dict:
     if st["class"] != contract["configuration"]["class"]:
         raise SystemExit(f"Syntax.v renders class {st['class']!r} but the contract's "
                          f"configuration is {contract['configuration']['class']!r}")
+    try:
+        stamp = _oracle.RunStamp(GRADER_FILES, S.REPO)
+    except _oracle.OracleError as e:
+        raise SystemExit(f"gen_strict_lexical: cannot stamp the grading code: {e}")
     oracle = _oracle.get_oracle()
     tex = dump_tex(contract["configuration"], st)
     with oracle.tempdir("lp-strict-lexical-") as td:
@@ -126,7 +135,7 @@ def generate() -> dict:
         rc, _, to = oracle.run_engine(
             td, _oracle.ENGINE_PDFLATEX,
             ["-interaction=nonstopmode", "-halt-on-error", "main.tex"],
-            G.tex_vars("grading", td), 300)
+            G.tex_vars("grading"), 300, clock=G.CLOCKS["grading"])
         log = _oracle.job_output(td, "main.tex", ".log").read_bytes()  # pdfTeX's job name
     if to or rc != 0:
         raise SystemExit(f"gen_strict_lexical: the dump did not compile (rc {rc}, "
@@ -151,7 +160,7 @@ def generate() -> dict:
         "generator_version": GENERATOR_VERSION,
         "source": S.source_block(),
         "syntax_sha256": S.sha256_file(SYNTAX),
-        "oracle": oracle.provenance(),
+        "oracle": stamp.oracle_block(oracle),
         "configuration": contract["configuration"],
         "catcodes": cats,
         "endlinechar": int(m.group(1)),
@@ -159,6 +168,7 @@ def generate() -> dict:
         "meanings": {k: meanings[k] for k in sorted(meanings)},
         "contract_catcode_diff": contract.get("catcodes", {}),
         "dump_tex_sha256": hashlib.sha256(tex).hexdigest(),
+        "_stamp": stamp,
     }
 
 
@@ -167,6 +177,10 @@ def main() -> int:
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     out = generate()
+    stamp = out.pop("_stamp")
+    why = stamp.check()
+    if why:
+        raise SystemExit(f"gen_strict_lexical: nothing written: {why}")
     text = json.dumps(out, indent=1, sort_keys=True) + "\n"
     if args.check:
         cur = OUT.read_text() if OUT.is_file() else ""

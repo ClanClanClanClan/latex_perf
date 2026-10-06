@@ -71,7 +71,10 @@ made this gate cry wolf on `good_input_child.tex`.
 USAGE
     check_apply_fixes_roundtrip.py [--repo DIR] [--record] [--require-pdflatex]
 
-  --record   re-measure and rewrite the manifest baseline (deliberate act)
+  --record   re-measure and rewrite the manifest baseline (deliberate act);
+             with pdflatex, also its `oracle` block: the oracle's identity,
+             its clock and the grading code, stamped when the run STARTS
+             (_oracle.RunStamp, OPEN-128 (4)/(8))
 
 EXIT 0 clean | 1 a NEW breakage or an unrecorded improvement | 2 infrastructure
 """
@@ -88,9 +91,13 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _oracle import (OracleError, availability, get_oracle,  # noqa: E402
-                     require_same_oracle,
+from _oracle import (OracleError, RunStamp, availability,  # noqa: E402
+                     get_oracle, require_same_oracle,
                      host_has_pdflatex, job_output)
+
+# This grader's own source is part of the oracle block --record writes
+# (OPEN-126 grading_code; OPEN-128 (8)): the oracle core plus this file.
+GRADER_FILES = ("scripts/tools/check_apply_fixes_roundtrip.py",)
 
 CORPORA = ["corpora/compile_check", "corpora/apply_fixes"]
 MANIFEST = "corpora/apply_fixes/manifest.json"
@@ -256,6 +263,15 @@ def main() -> int:
                 "be erased. Re-record inside the pinned image — tex-oracle.yml "
                 "already runs this script there.")
 
+    # OPEN-128 (4)/(8): a --record with pdflatex writes the oracle block, so
+    # its grading code and commit are stamped NOW, before the first run.
+    stamp = None
+    if args.record and have_tex:
+        try:
+            stamp = RunStamp(GRADER_FILES, repo)
+        except OracleError as exc:
+            return die(f"cannot stamp the run's grading code: {exc}")
+
     findings: list[str] = []
     observed_broken: list[dict] = []
     n_docs = 0
@@ -408,6 +424,8 @@ def main() -> int:
         # Carrying unknown keys forward keeps a re-record from silently
         # discarding provenance that another gate depends on.
         owned = {"description", "properties", "pdflatex_graded", "known_broken"}
+        if stamp is not None:
+            owned.add("oracle")
         carried: dict = {}
         if manifest_path.exists():
             # [carried = {}] on failure performs exactly the destruction this
@@ -420,6 +438,24 @@ def main() -> int:
                 return die(f"cannot read {MANIFEST} to carry its unowned keys "
                            f"forward ({exc}); refusing to --record rather than "
                            f"silently discarding the oracle provenance block")
+        oracle_block = {}
+        if stamp is not None:
+            why = stamp.check()
+            if why:
+                return die(f"nothing recorded: {why}")
+            # The descriptive keys of the old block are kept (they record its
+            # history); the identity, clock and grading code are this run's.
+            old = {}
+            if manifest_path.exists():
+                try:
+                    old = json.loads(manifest_path.read_text()).get("oracle") or {}
+                except (json.JSONDecodeError, OSError):
+                    old = {}
+            oracle_block = {"oracle": dict(
+                {k: v for k, v in old.items() if k in (
+                    "engine", "distribution", "protocols", "note", "baseline_note")},
+                **stamp.oracle_block(get_oracle()),
+                recorded_at_sha=stamp.head)}
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps({
             "description": (
@@ -434,6 +470,7 @@ def main() -> int:
             },
             "pdflatex_graded": have_tex,
             **carried,
+            **oracle_block,
             "known_broken": sorted(observed_broken, key=lambda e: (e["doc"], e["mode"])),
         }, indent=2) + "\n", encoding="utf-8")
         print(f"[fixer-roundtrip] recorded {len(observed_broken)} known breakage(s) "

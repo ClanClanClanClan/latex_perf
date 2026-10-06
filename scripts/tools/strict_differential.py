@@ -68,6 +68,10 @@ import _strict_s0 as S  # noqa: E402
 from _strict_s0 import cmd, doc, group, par, script, space, stray, text  # noqa: E402
 
 GENERATOR_VERSION = "2"
+# The grading code every artefact of this file names (OPEN-126, OPEN-128 (8)):
+# the oracle core, this file and _strict_s0.py (its grade/grade_bytes run the
+# oracle's pass protocol), stamped when the run STARTS (_oracle.RunStamp).
+GRADER_FILES = ("scripts/tools/strict_differential.py", "scripts/tools/_strict_s0.py")
 OUT_DIR = S.REPO / "corpora/strict_s0"
 DIFFERENTIAL = OUT_DIR / "differential_v2.json"
 MAX_BRACE_DEPTH, MAX_TOKENS = S.MAX_BRACE_DEPTH, S.MAX_TOKENS
@@ -819,7 +823,7 @@ def dump_records(out: dict) -> str:
     return "\n".join(lines) + "\n}\n"
 
 
-def main_bytes(args, nm: "Names", sig_path: Path) -> int:
+def main_bytes(args, nm: "Names", sig_path: Path, stamp) -> int:
     rng = random.Random(args.seed)
     discarded = None
     if args.bytes_rules:
@@ -888,7 +892,8 @@ def main_bytes(args, nm: "Names", sig_path: Path) -> int:
         "lexical_sha256": S.sha256_file(S.LEXICAL),
         "bytes_extract_sha256": S.sha256_file(S.BYTES_EXTRACT),
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
-        "oracle": oracle.provenance(),
+        "oracle": stamp.oracle_block(oracle),
+        "graded_at_sha": stamp.head,
         "agreement_rule": "strict_differential.agrees_bytes (_strict_s0.agrees) on the "
                           "extracted decide_bytes' verdict: READY iff rc 0 and a PDF; "
                           "E0 iff rc 0 and no PDF, and neither the oracle nor the record "
@@ -910,6 +915,9 @@ def main_bytes(args, nm: "Names", sig_path: Path) -> int:
         "outside": outside,
         "documents": records,
     }
+    why = stamp.check()
+    if why:
+        raise SystemExit(f"strict_differential: nothing written: {why}")
     path = Path(args.out) if args.out else default_out
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(dump_records(out))
@@ -937,8 +945,12 @@ def main() -> int:
     args = ap.parse_args()
     sig_path = Path(args.signatures)
     nm = Names(sig_path, random.Random(args.seed))
+    try:
+        stamp = _oracle.RunStamp(GRADER_FILES, S.REPO)
+    except _oracle.OracleError as e:
+        raise SystemExit(f"strict_differential: cannot stamp the grading code: {e}")
     if args.bytes_rules or args.bytes:
-        return main_bytes(args, nm, sig_path)
+        return main_bytes(args, nm, sig_path, stamp)
 
     if args.rules:
         fam = rule_docs(nm)
@@ -988,7 +1000,8 @@ def main() -> int:
         "source": S.source_block(),
         "signatures_sha256": S.sha256_file(sig_path),
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
-        "oracle": oracle.provenance(),
+        "oracle": stamp.oracle_block(oracle),
+        "graded_at_sha": stamp.head,
         "agreement_rule": "_strict_s0.agrees: READY iff rc 0 and a PDF; E0 iff rc 0 "
                           "and no PDF; any other reason iff rc != 0, the first ! "
                           "message is in _strict_s0.expected_messages(reason, token, "
@@ -1005,6 +1018,9 @@ def main() -> int:
         out["outside_tier"] = outside
     else:
         out["documents"] = records
+    why = stamp.check()
+    if why:
+        raise SystemExit(f"strict_differential: nothing written: {why}")
     path = Path(args.out) if args.out else default_out
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, indent=1) + "\n")

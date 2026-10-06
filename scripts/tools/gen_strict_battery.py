@@ -27,6 +27,14 @@ fatal line sits in an \\input child), this script records:
 Usage:
   gen_strict_battery.py [--repo .]           grade and write manifest.json
   gen_strict_battery.py --repo . --check     re-grade and diff against it
+  gen_strict_battery.py --cli-checkout DIR   take the CLI side from the CLI
+                                             built in DIR (its src_tree_sha),
+                                             e.g. to re-grade the oracle side
+                                             with the CLI the manifest records
+
+The oracle block (provenance.oracle_provenance) names the oracle's identity,
+its clock and the grading code (this file, diff_real_roots.py for the pass
+protocol, and _oracle.py), stamped when the run STARTS (OPEN-128 (4)/(8)).
 
 The --check mode needs pdflatex, so it is a local/nightly tool, never part of
 the pure spec-drift job (the OPEN-101 lesson). The CI-side assertion that no
@@ -45,8 +53,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from diff_real_roots import PIN, run_to_fixpoint_full  # noqa: E402
-from _oracle import (OracleError, get_oracle, job_output,  # noqa: E402
-                     require_same_oracle)
+from _oracle import (OracleError, RunStamp, get_oracle,  # noqa: E402
+                     job_output, require_same_oracle)
+
+# The grading code a grade of this file names (OPEN-126, OPEN-128 (8)): the
+# oracle core, this file, and diff_real_roots.py, whose run_to_fixpoint_full
+# runs the pass protocol.
+GRADER_FILES = ("scripts/tools/gen_strict_battery.py",
+                "scripts/tools/diff_real_roots.py")
 
 BATTERY = Path("corpora/strict_battery")
 CLI = Path("_build/default/latex-parse/src/validators_cli.exe")
@@ -100,8 +114,8 @@ def grade(tex: Path, timeout: int = 300) -> dict:
             "compiles": rc == 0 and pdf, "first_error": err}
 
 
-def cli_verdict(repo: Path, tex: Path) -> dict:
-    p = subprocess.run([str(repo / CLI), "--compile-check", str(tex)],
+def cli_verdict(cli_root: Path, tex: Path) -> dict:
+    p = subprocess.run([str(cli_root / CLI), "--compile-check", str(tex)],
                        capture_output=True, timeout=120)
     out = p.stdout.decode("utf-8", "replace")
     tier = kind = None
@@ -116,7 +130,12 @@ def cli_verdict(repo: Path, tex: Path) -> dict:
                                None)}
 
 
-def build(repo: Path) -> dict:
+def build(repo: Path, cli_root: Path | None = None) -> dict:
+    cli_root = cli_root or repo
+    try:
+        stamp = RunStamp(GRADER_FILES, repo)
+    except OracleError as e:
+        raise SystemExit(f"[strict-battery] cannot stamp the grading code: {e}")
     try:
         pin = get_oracle().banner
     except OracleError as e:
@@ -140,19 +159,24 @@ def build(repo: Path) -> dict:
             "e_code": code.upper(),
             "failure_mode": E_DESCRIPTIONS[code],
             "pdflatex": grade(tex),
-            "cli_m0": cli_verdict(repo, tex),
+            "cli_m0": cli_verdict(cli_root, tex),
             "must_eventually_render": f"PROVEN NOT-READY [{code.upper()}]",
         })
+    why = stamp.check()
+    if why:
+        raise SystemExit(f"[strict-battery] {why}")
     return {
         "provenance": {
             "produced_by": "scripts/tools/gen_strict_battery.py",
             "oracle": pin,
-            "oracle_provenance": get_oracle().provenance(),
+            "oracle_provenance": stamp.oracle_block(get_oracle()),
+            "graded_at_sha": stamp.head,
             "protocol": "pdflatex -interaction=nonstopmode -halt-on-error, "
                         "restricted shell-escape (default), up to 3 passes plus "
                         "a confirming pass, PDF required",
+            # The CLI side's engine tree: the checkout the CLI was built in.
             "src_tree_sha": subprocess.run(
-                ["git", "rev-parse", "HEAD:latex-parse/src"], cwd=repo,
+                ["git", "rev-parse", "HEAD:latex-parse/src"], cwd=cli_root,
                 capture_output=True, text=True).stdout.strip() or None,
         },
         "summary": {
@@ -169,9 +193,20 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo", default=".")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--cli-checkout", default=None,
+                    help="take the CLI side from the CLI built in this checkout "
+                         "(its latex-parse/src must be clean)")
     ns = ap.parse_args()
     repo = Path(ns.repo).resolve()
-    out = build(repo)
+    cli_root = None
+    if ns.cli_checkout:
+        cli_root = Path(ns.cli_checkout).resolve()
+        dirty = subprocess.run(["git", "status", "--porcelain", "--", "latex-parse/src"],
+                               cwd=cli_root, capture_output=True, text=True).stdout
+        if dirty.strip() or not (cli_root / CLI).is_file():
+            raise SystemExit(f"[strict-battery] {cli_root}: latex-parse/src is dirty "
+                             f"or its CLI is not built")
+    out = build(repo, cli_root)
     man = repo / BATTERY / "manifest.json"
     if ns.check:
         old = json.loads(man.read_text())

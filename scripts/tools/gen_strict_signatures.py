@@ -106,6 +106,10 @@ import _strict_s0 as S  # noqa: E402
 import check_strict_kernel as CK  # noqa: E402
 
 GENERATOR_VERSION = "3"
+# The grading code the signature file names (OPEN-126, OPEN-128 (8)): the
+# oracle core, this file and _strict_s0.py (grade: the oracle's protocol),
+# stamped when the run STARTS (_oracle.RunStamp).
+GRADER_FILES = ("scripts/tools/gen_strict_signatures.py", "scripts/tools/_strict_s0.py")
 STRUCTURAL = CK.STRUCTURAL
 # Two control words outside the closed world (checked in main()).
 UNDEF_A, UNDEF_B = "lpqundefa", "lpqundefb"
@@ -343,12 +347,17 @@ class Grader:
         return [self.cache[self.key(t)] for t in texs]
 
 
-def seed_from(grader: Grader, kern, path: Path, oracle) -> dict:
+def seed_from(grader: Grader, kern, path: Path, oracle, stamp) -> dict:
     old = json.loads(path.read_text())
-    prov, cur = old.get("oracle", {}), oracle.provenance()
-    diff = sorted(k for k in set(prov) | set(cur) if prov.get(k) != cur.get(k))
-    if diff:
-        raise SystemExit(f"--reuse {path}: graded by another oracle ({diff} differ)")
+    # Reused grades must be of THIS oracle (image, architecture, tree, clock:
+    # require_same_oracle) and of this grading code (OPEN-128).
+    try:
+        _oracle.require_same_oracle(old.get("oracle"), stamp.oracle_block(oracle),
+                                    f"--reuse {path}")
+        _oracle.require_same_grading_code((old.get("oracle") or {}).get("grading_code"),
+                                          stamp.gc, f"--reuse {path}")
+    except _oracle.OracleError as e:
+        raise SystemExit(str(e))
     fams = old["probes"]
     reqs, keys = [], []
     for x, ev in old["evidence"].items():
@@ -475,13 +484,17 @@ def main() -> int:
     ap.add_argument("--interleave-seeds", type=int, default=3)
     args = ap.parse_args()
 
+    try:
+        stamp = _oracle.RunStamp(GRADER_FILES, S.REPO)
+    except _oracle.OracleError as e:
+        raise SystemExit(f"gen_strict_signatures: cannot stamp the grading code: {e}")
     oracle = _oracle.get_oracle()
     kern = S.Kernel(signatures=None)
     names = candidates(args.n)
     if {UNDEF_A, UNDEF_B} & S.members():
         raise SystemExit("the look-ahead probes' undefined names are defined")
     grader = Grader(oracle, args.workers)
-    reuse = seed_from(grader, kern, Path(args.reuse), oracle) if args.reuse else None
+    reuse = seed_from(grader, kern, Path(args.reuse), oracle, stamp) if args.reuse else None
     if reuse:
         print(f"[signatures] reused {reuse['grades_reused']} grades from {reuse['file']}",
               flush=True)
@@ -621,7 +634,8 @@ def main() -> int:
         "generator": "scripts/tools/gen_strict_signatures.py",
         "generator_version": GENERATOR_VERSION,
         "source": S.source_block(),
-        "oracle": oracle.provenance(),
+        "oracle": stamp.oracle_block(oracle),
+        "graded_at_sha": stamp.head,
         "kernel_extract_sha256": S.sha256_file(S.EXTRACT),
         "selection": {"rule": "control words (ASCII letters) of the closed world "
                               "minus par/begin/end, sorted by sha256(name), first n",
@@ -644,6 +658,9 @@ def main() -> int:
         "meanings": dict(sorted(meanings.items())),
         "evidence": dict(sorted(evidence.items())),
     }
+    why = stamp.check()
+    if why:
+        raise SystemExit(f"gen_strict_signatures: nothing written: {why}")
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(out, indent=1, sort_keys=False) + "\n")
     print(json.dumps(summary, indent=1))

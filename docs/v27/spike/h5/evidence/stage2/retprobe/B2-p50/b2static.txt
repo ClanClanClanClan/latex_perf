@@ -1,36 +1,58 @@
-allow  BinInt.ml of_nat: Coq library, no state
-allow  BinPos.ml of_succ_nat: Coq library, no state
-allow  Boundary.ml c_strtoull10: no state (take_digits' result)
-allow  Boundary.ml c_atoi: no state (take_digits' result)
-allow  Boundary.ml read_into: tail-recursive: B's only call after put_cell is the tail call
-allow  Boundary.ml trim_spaces: tail-recursive, reads one state
-allow  Boundary.ml map_xord: tail-recursive: B's only call after put_cell is the tail call
-allow  Boundary.ml dec_digits: no state
-allow  Boundary.ml be_bytes: no state
-allow  Boundary.ml take: no state
-allow  Boundary.ml undump_cells: no state
-allow  Boundary.ml parse_tounicode: no state
-allow  Interp.ml copy_cells: tail-recursive: B's only call after put_cell is the tail call
-allow  Interp.ml read_cells: reads one state, writes none: the state held is the current one
-allow  Interp.ml digits_rev: no state
-allow  Interp.ml cstring: reads one state, writes none: the state held is the current one
-ok     Interp.ml evale: fun f -> evale_body procs strings_base ext evale evall evalargs evalx callp0 f e
-        st
-ok     Interp.ml evall: fun f -> evall_body evale evall f l st
-ok     Interp.ml evalargs: fun f -> evalargs_body evale evall evalargs f ks args st
-ok     Interp.ml evalx: fun f -> evalx_body evale evall evalx f args st
-ok     Interp.ml callp0: fun f -> callp_body procs exec f p cells st
-ok     Interp.ml exec: fun f -> exec_body procs ext evale evall evalargs evalx callp0 exec for_loop
-        exec_list writ
-ok     Interp.ml for_loop: fun f -> for_loop_body exec for_loop f lc c t up fe body st
-ok     Interp.ml exec_list: fun f -> exec_list_body exec exec_list goto_in f all rest st
-ok     Interp.ml goto_in: fun f -> goto_in_body exec exec_list goto_in f n all scan st
-ok     Interp.ml write_items: fun f -> write_items_body evale write_items f h items nl st
-allow  List.ml nth: Coq library, no state
-allow  Main0.ml fill_run: no state (builds one block, tail-recursive)
-allow  Nat.ml tail_add: Coq library, no state
-allow  Nat.ml tail_addmul: Coq library, no state
-allow  Uint0.ml to_Z_rec: Coq library, no state
-allow  Uint0.ml of_pos_rec: Coq library, no state
-allow  Values.ml fill_chunks: no state (builds one block, tail-recursive)
-b2static: 10 single-call sites, 23 allowed sites, 0 failing
+allow  BinPos.ml BinPos.Pos.iter positive closure 0 x1: Coq library, polymorphic; checked: 0 uses, all state-free with global function arguments
+allow  BinPos.ml BinPos.Pos.iter positive closure 1 x1: Coq library, polymorphic; checked: 0 uses, all state-free with global function arguments
+allow  BinPos.ml BinPos.Pos.iter_op positive closure 0 x1: Coq library, polymorphic; checked: 1 uses, all state-free with global function arguments
+allow  BinPos.ml BinPos.Pos.iter_op positive closure 1 x1: Coq library, polymorphic; checked: 1 uses, all state-free with global function arguments
+allow  Interp.ml Interp.evale_body Z closure 0 x1: ERealloc: the size expression calls nothing; checked: the only RUN call held is evale on the size expression; 5 ERealloc sites, every size expression ELoad (TI32, LGlob _); the ELoad and LGlob branches as pinned; read_loc write-free
+allow  Interp.ml Interp.evale_body lambda closure 0 x1: EExt's callback to the boundary; checked: free variables callp0 and f only; the bodies applied only by callp's members; callp applied once, in Main0, to constants
+allow  Interp.ml Interp.exec_body lambda closure 0 x1: SExt's callback to the boundary; checked: free variables callp0 and f only; the bodies applied only by callp's members; callp applied once, in Main0, to constants
+HOLDS     BinPos.ml:197 BinPos.Pos.iter positive closure 0 state-bearing free variables [f:a function; x:a type variable] across non-tail calls [RUN BinPos.Pos.iter (with function arguments f)]
+HOLDS     BinPos.ml:197 BinPos.Pos.iter positive closure 1 state-bearing free variables [f:a function; x:a type variable] across non-tail calls [RUN BinPos.Pos.iter (with function arguments f)]
+HOLDS     BinPos.ml:483 BinPos.Pos.iter_op positive closure 0 state-bearing free variables [a:a type variable; op:a function] across non-tail calls [RUN BinPos.Pos.iter_op (with function arguments op); RUN op (a local function or parameter)]
+HOLDS     BinPos.ml:483 BinPos.Pos.iter_op positive closure 1 state-bearing free variables [a:a type variable; op:a function] across non-tail calls [RUN op (a local function or parameter)]
+LOOP      Boundary.ml:1765 Boundary.wopenin Z closure 0 state-bearing free variables [st:Values.state] across non-tail calls [LOOP Boundary.alloc_cells (calls Interp.put_cells (a recursive writer))]
+DEAD      Interp.ml:104 Interp.copy_cells nat closure 0 
+DEAD      Interp.ml:104 Interp.copy_cells nat closure 1 
+DEAD      Interp.ml:121 Interp.read_cells nat closure 0 
+DEAD      Interp.ml:121 Interp.read_cells nat closure 1 
+DEAD      Interp.ml:166 Interp.digits_rev nat closure 0 
+DEAD      Interp.ml:166 Interp.digits_rev nat closure 1 
+DEAD      Interp.ml:216 Interp.cstring nat closure 0 
+DEAD      Interp.ml:216 Interp.cstring nat closure 1 
+DEAD      Interp.ml:223 Interp.cstring Z closure 0 
+DEAD      Interp.ml:223 Interp.cstring Z closure 1 
+DEAD      Interp.ml:223 Interp.cstring Z closure 2 
+DEAD      Interp.ml:270 Interp.has_label lambda closure 0 
+DEAD      Interp.ml:423 Interp.evale_body lambda closure 2 
+DEAD      Interp.ml:427 Interp.evale_body lambda closure 2 
+DEAD      Interp.ml:437 Interp.evale_body lambda closure 2 
+DEAD      Interp.ml:442 Interp.evale_body lambda closure 2 
+DEAD      Interp.ml:451 Interp.evale_body lambda closure 2 
+HOLDS     Interp.ml:469 Interp.evale_body lambda closure 0 state-bearing free variables [callp0:a function; f:a type variable] across non-tail calls [RUN an unknown callee, which may keep the closure; RUN callp0 (a local function or parameter)]
+HOLDS     Interp.ml:562 Interp.evale_body Z closure 0 state-bearing free variables [evale:a function; f:a type variable; st1:Values.state] across non-tail calls [LOOP Interp.copy_cells (a recursive writer); LOOP Values.new_block (calls Values.fill_chunks (a recursive writer)); RUN evale (a local function or parameter)]
+DEAD      Interp.ml:562 Interp.evale_body Z closure 1 
+DEAD      Interp.ml:562 Interp.evale_body Z closure 2 
+HOLDS     Interp.ml:918 Interp.exec_body lambda closure 0 state-bearing free variables [callp0:a function; f:a type variable] across non-tail calls [RUN an unknown callee, which may keep the closure; RUN callp0 (a local function or parameter)]
+DEAD      Interp.ml:1014 Interp.exec_body lambda closure 0 
+DEAD      Interp.ml:1014 Interp.exec_body lambda closure 0 
+DEAD      Interp.ml:1208 Interp.callp nat closure 0 
+DEAD      Interp.ml:1208 Interp.callp nat closure 1 
+DEAD      Interp.ml:1215 Interp.callp nat closure 0 
+DEAD      Interp.ml:1215 Interp.callp nat closure 1 
+DEAD      Interp.ml:1220 Interp.callp nat closure 0 
+DEAD      Interp.ml:1220 Interp.callp nat closure 1 
+DEAD      Interp.ml:1225 Interp.callp nat closure 0 
+DEAD      Interp.ml:1225 Interp.callp nat closure 1 
+DEAD      Interp.ml:1230 Interp.callp nat closure 0 
+DEAD      Interp.ml:1230 Interp.callp nat closure 1 
+DEAD      Interp.ml:1235 Interp.callp nat closure 0 
+DEAD      Interp.ml:1235 Interp.callp nat closure 1 
+DEAD      Interp.ml:1242 Interp.callp nat closure 0 
+DEAD      Interp.ml:1242 Interp.callp nat closure 1 
+DEAD      Interp.ml:1247 Interp.callp nat closure 0 
+DEAD      Interp.ml:1247 Interp.callp nat closure 1 
+DEAD      Interp.ml:1252 Interp.callp nat closure 0 
+DEAD      Interp.ml:1252 Interp.callp nat closure 1 
+DEAD      Interp.ml:1257 Interp.callp nat closure 0 
+DEAD      Interp.ml:1257 Interp.callp nat closure 1 
+STATEFREE Main0.ml:63 Main0.global_block lambda closure 0 non-tail calls LOOP Main0.fill_run (a recursive writer)
+b2static: 669 closures at 241 realizer sites: 663 DEAD, 0 STATEFREE, 1 LOOP, 5 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 7 HOLDS allowed by a checked argument; B2 members 10/10; 0 failing

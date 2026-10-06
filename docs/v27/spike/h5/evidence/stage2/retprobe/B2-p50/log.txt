@@ -1,8 +1,23 @@
-static: b2static: 10 single-call sites, 23 allowed sites, 0 failing
+static: b2static: 669 closures at 241 realizer sites: 663 DEAD, 0 STATEFREE, 1 LOOP, 5 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 7 HOLDS allowed by a checked argument; B2 members 10/10; 0 failing (rc 0)
 probe inserted: Main0.ml 1 line, driver.ml 2 lines
-RETPROBE run n 1 cpu 22.47 ext 256 live 57350118 reach_state 57337394 static 298780 other -286056 limit 1000000 top 165451634
-RETPROBE run n 2 cpu 30.51 ext 24320 live 73547758 reach_state 73529995 static 298780 other -281017 limit 1000000 top 166451058
-RETPROBE final n 2 cpu 37.16 ext 24809 live 73565098 reach_state 73547395 static 298780 other -281077 limit 1000000 top 166451058
-run: finished rc 0 peak 2337MB in 39s; 2 probes
-INCONCLUSIVE: only 2 probes
-RC=2
+RETPROBE run n 1 phase init k 1 ext 1 cpu 0.88 live 36257520 reach_state 36251442 static 298780 other -292702 limit 1000000 top 37842671
+RETPROBE run n 2 phase init k 4 ext 4 cpu 1.53 live 36257526 reach_state 36251448 static 298780 other -292702 limit 1000000 top 37842671
+RETPROBE run n 3 phase init k 16 ext 16 cpu 2.17 live 36257550 reach_state 36251472 static 298780 other -292702 limit 1000000 top 37842671
+RETPROBE run n 4 phase load k 1 ext 61 cpu 15.42 live 62379855 reach_state 62363232 static 298780 other -282157 limit 1000000 top 168195641
+RETPROBE run n 5 phase load k 4 ext 64 cpu 16.29 live 47511840 reach_state 47502427 static 298780 other -289367 limit 1000000 top 168195641
+RETPROBE run n 6 phase load k 16 ext 76 cpu 17.01 live 37454137 reach_state 37447780 static 298780 other -292423 limit 1000000 top 168195641
+RETPROBE run n 7 phase load k 64 ext 124 cpu 25.69 live 57346395 reach_state 57333671 static 298780 other -286056 limit 1000000 top 168195641
+RETPROBE run n 8 phase load k 256 ext 316 cpu 26.68 live 57351474 reach_state 57338750 static 298780 other -286056 limit 1000000 top 168195641
+RETPROBE run n 9 phase load k 1024 ext 1084 cpu 27.67 live 57375515 reach_state 57362791 static 298780 other -286056 limit 1000000 top 168195641
+RETPROBE run n 10 phase load k 4096 ext 4156 cpu 28.81 live 57467864 reach_state 57455147 static 298780 other -286063 limit 1000000 top 168195641
+RETPROBE run n 11 phase load k 16384 ext 16444 cpu 29.86 live 57467860 reach_state 57455147 static 298780 other -286067 limit 1000000 top 168195641
+RETPROBE run n 12 phase load k 24194 end-of-load ext 24254 cpu 35.30 live 73516448 reach_state 73498693 static 298780 other -281025 limit 1000000 top 170527972
+RETPROBE run n 13 phase dump k 1 ext 24255 cpu 36.48 live 73516439 reach_state 73498687 static 298780 other -281028 limit 1000000 top 170527972
+RETPROBE run n 14 phase dump k 4 ext 24258 cpu 37.69 live 73546958 reach_state 73529208 static 298780 other -281030 limit 1000000 top 170527972
+RETPROBE run n 15 phase dump k 16 ext 24270 cpu 38.87 live 73547367 reach_state 73529617 static 298780 other -281030 limit 1000000 top 170527972
+RETPROBE run n 16 phase dump k 64 ext 24318 cpu 40.71 live 73547753 reach_state 73529995 static 298780 other -281022 limit 1000000 top 170527972
+RETPROBE run n 17 phase dump k 256 ext 24510 cpu 44.54 live 73550587 reach_state 73532824 static 298780 other -281017 limit 1000000 top 170527972
+RETPROBE final n 17 phase dump k 555 ext 24809 cpu 47.43 live 73565096 reach_state 73547395 static 298780 other -281079 limit 1000000 top 170527972
+run: finished rc 0 peak 2442MB in 48s; 17 probes: init 3, load 9 (end of load: 1), dump 5
+PASS: static (b2static: 669 closures at 241 realizer sites: 663 DEAD, 0 STATEFREE, 1 LOOP, 5 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 7 HOLDS allowed by a checked argument; B2 members 10/10; 0 failing); dynamic: 17 probes: init 3, load 9 (end of load: 1), dump 5, every one under the limit (finished rc 0 peak 2442MB in 48s)
+RC=0

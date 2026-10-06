@@ -1,1 +1,1 @@
-finished rc 6 peak 2769MB in 44s
+finished rc 6 peak 2416MB in 18s

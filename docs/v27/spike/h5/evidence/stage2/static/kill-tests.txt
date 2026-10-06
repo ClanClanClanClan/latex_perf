@@ -1,0 +1,23 @@
+ok   K00 the B2 tree, unchanged: rc 0 (want 0); matched: b2static: 669 closures at 241 realizer sites: 663 DEAD, 0 STATEFREE, 1 LOOP, 5 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOL
+ok   K01 the pre-B2 tree: rc 1 (want 1); matched: B2 members 0/10; 24 failing
+ok   K-evale: the member evale holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1208 Interp.callp nat closure 1: state-bearing free variables [callp0:a function; evalargs:a function; evale:a function; evall:a function
+ok   K-evall: the member evall holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1215 Interp.callp nat closure 1: state-bearing free variables [evale:a function; evall:a function; st:Values.state
+ok   K-evalargs: the member evalargs holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1220 Interp.callp nat closure 1: state-bearing free variables [evalargs:a function; evale:a function; evall:a function; st:Values.state
+ok   K-evalx: the member evalx holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1225 Interp.callp nat closure 1: state-bearing free variables [evale:a function; evall:a function; evalx:a function; st:Values.state
+ok   K-callp0: the member callp0 holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1230 Interp.callp nat closure 1: state-bearing free variables [exec:a function; procs:a persistent array (PArray0.array); st:Values.state
+ok   K-exec: the member exec holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1235 Interp.callp nat closure 1: state-bearing free variables [callp0:a function; evalargs:a function; evale:a function; evall:a function
+ok   K-for_loop: the member for_loop holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1242 Interp.callp nat closure 1: state-bearing free variables [exec:a function; for_loop:a function; st:Values.state
+ok   K-exec_list: the member exec_list holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1247 Interp.callp nat closure 1: state-bearing free variables [exec:a function; exec_list:a function; goto_in:a function; st:Values.state
+ok   K-goto_in: the member goto_in holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1252 Interp.callp nat closure 1: state-bearing free variables [exec:a function; exec_list:a function; goto_in:a function; st:Values.state
+ok   K-write_items: the member write_items holds its state across its body's call: rc 1 (want 1); matched: FAIL   HOLDS Interp.ml:1257 Interp.callp nat closure 1: state-bearing free variables [evale:a function; st:Values.state
+ok   K11 a second HOLDS closure under the allowed key (evale_body, Z, 0): rc 1 (want 1); matched: allow ('Interp.ml', 'Interp.evale_body', 'Z', 0): 2 HOLDS closures, the entry allows exactly 1
+ok   K12 an ERealloc whose size expression is not ELoad (TI32, LGlob _): rc 1 (want 1); matched: its check FAILED: (b)
+ok   K13 evale_body's ELoad branch changed: rc 1 (want 1); matched: its check FAILED: (c) evale_body's ELoad branch
+ok   K14 a new closure in Boundary holding a state across a parameter call: rc 1 (want 1); matched: FAIL   HOLDS Boundary.ml:5159 Boundary.k14_holds nat closure 1
+ok   K15 Pos.iter_op instantiated at a state: rc 1 (want 1); matched: BinPos.Pos.iter_op', 'positive', 0) (Coq library, polymorphic): its check FAILED
+ok   K16 a realizer text the typed half does not see (in a comment): rc 1 (want 1); matched: FAIL   coverage: Boundary.ml nat: 11 realizer texts, 10 typed sites
+ok   K17 a closure holding a state across a write loop (LOOP, passes): rc 0 (want 0); matched: LOOP      Boundary.ml:5159 Boundary.k17_loop nat closure 1
+ok   K18 the boundary callback in evale_body also captures the state: rc 1 (want 1); matched: EExt's callback to the boundary): its check FAILED: (a)
+ok   K19 a source lambda given to List.map that holds a state across a parameter call: rc 1 (want 1); matched: FAIL   HOLDS Boundary.ml:5158 Boundary.k19_map lambda closure 0
+kill-tests: 21/21
+RC=0

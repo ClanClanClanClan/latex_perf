@@ -1,7 +1,10 @@
-static: b2static: 0 single-call sites, 23 allowed sites, 10 failing
+static: b2static: 669 closures at 241 realizer sites: 653 DEAD, 0 STATEFREE, 1 LOOP, 15 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 4 HOLDS allowed by a checked argument; B2 members 0/10; 24 failing (rc 1)
 probe inserted: Main0.ml 1 line, driver.ml 2 lines
-RETPROBE run n 1 cpu 35.80 ext 256 live 269107725 reach_state 57337394 static 298780 other 211471551 limit 1000000 top 278652786
-RETPROBE FAIL: 211471551 words live but not reachable from the current state (limit 1000000)
-run: finished rc 6 peak 2290MB in 38s; 1 probes
-FAIL: retention over the limit (finished rc 6 peak 2290MB in 38s); static FAIL
+RETPROBE run n 1 phase init k 1 ext 1 cpu 0.89 live 36257629 reach_state 36251442 static 298780 other -292593 limit 1000000 top 37842671
+RETPROBE run n 2 phase init k 4 ext 4 cpu 1.52 live 36257839 reach_state 36251448 static 298780 other -292389 limit 1000000 top 37842671
+RETPROBE run n 3 phase init k 16 ext 16 cpu 2.16 live 36258679 reach_state 36251472 static 298780 other -291573 limit 1000000 top 37842671
+RETPROBE run n 4 phase load k 1 ext 61 cpu 16.44 live 167543965 reach_state 62363232 static 298780 other 104881953 limit 1000000 top 169551417
+RETPROBE FAIL: 104881953 words live but not reachable from the current state (limit 1000000)
+run: finished rc 6 peak 2415MB in 18s; 4 probes: init 3, load 1 (end of load: 0), dump 0
+FAIL: retention over the limit (finished rc 6 peak 2415MB in 18s; 4 probes: init 3, load 1 (end of load: 0), dump 0); static FAIL: b2static: 669 closures at 241 realizer sites: 653 DEAD, 0 STATEFREE, 1 LOOP, 15 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 4 HOLDS allowed by a checked argument; B2 members 0/10; 24 failing
 RC=1

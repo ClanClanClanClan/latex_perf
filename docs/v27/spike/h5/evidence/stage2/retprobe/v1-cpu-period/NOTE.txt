@@ -1,0 +1,13 @@
+SUPERSEDED (review hardening, 2026-10-06; C-150). These four runs were made with the first
+version of the standing retention check (commit 953fe1eb): retprobe.ml probed every PERIOD_S
+seconds of CPU, checked every 256 external calls, and b2static.py checked the fuel realizer only.
+
+The command lines were not committed. A scratch script (~/.cache/lp-spike-h1/h5/retprobe/go.sh)
+passed PERIOD_S = 20 for the two 50-name runs, but that is not what produced them: in
+B2-p50/probes.txt the two probes are at 22.47 s and 30.51 s of CPU, 8.04 s apart, and with a
+20 s period the second probe could not have come before 42.47 s (the run ended at 37.16 s). The
+spacing fits the default 5 s period, the one the 250-name runs used. The p50 rows of the old
+H5-heap-design.md §8.2 table are therefore runs at the default period, whatever go.sh said.
+
+The deterministic check that replaces them, and its exact commands, are in ../commands.sh and
+../{preB2,B2}-{p50,p250}/.

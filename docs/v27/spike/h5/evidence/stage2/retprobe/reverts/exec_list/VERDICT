@@ -1,0 +1,1 @@
+FAIL: retention over the limit (finished rc 6 peak 2408MB in 17s; 4 probes: init 3, load 1 (end of load: 0), dump 0); static FAIL: b2static: 669 closures at 241 realizer sites: 662 DEAD, 0 STATEFREE, 1 LOOP, 6 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 5 HOLDS allowed by a checked argument; B2 members 9/10; 5 failing

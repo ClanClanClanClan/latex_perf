@@ -1,0 +1,11 @@
+static: b2static: 669 closures at 241 realizer sites: 662 DEAD, 0 STATEFREE, 1 LOOP, 6 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 5 HOLDS allowed by a checked argument; B2 members 9/10; 5 failing (rc 1)
+probe inserted: Main0.ml 1 line, driver.ml 2 lines
+RETPROBE run n 1 phase init k 1 ext 1 cpu 0.90 live 36370490 reach_state 36364410 static 298780 other -292700 limit 1000000 top 37962066
+RETPROBE run n 2 phase init k 4 ext 4 cpu 1.54 live 36370496 reach_state 36364416 static 298780 other -292700 limit 1000000 top 37962066
+RETPROBE run n 3 phase init k 16 ext 16 cpu 2.20 live 36370520 reach_state 36364440 static 298780 other -292700 limit 1000000 top 37962066
+RETPROBE run n 4 phase load k 1 ext 61 cpu 15.27 live 62492879 reach_state 62476200 static 298780 other -282101 limit 1000000 top 168310329
+RETPROBE run n 5 phase load k 4 ext 64 cpu 16.16 live 62492897 reach_state 47615395 static 298780 other 14578722 limit 1000000 top 168310329
+RETPROBE FAIL: 14578722 words live but not reachable from the current state (limit 1000000)
+run: finished rc 6 peak 2410MB in 18s; 5 probes: init 3, load 2 (end of load: 0), dump 0
+FAIL: retention over the limit (finished rc 6 peak 2410MB in 18s; 5 probes: init 3, load 2 (end of load: 0), dump 0); static FAIL: b2static: 669 closures at 241 realizer sites: 662 DEAD, 0 STATEFREE, 1 LOOP, 6 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 5 HOLDS allowed by a checked argument; B2 members 9/10; 5 failing
+RC=1

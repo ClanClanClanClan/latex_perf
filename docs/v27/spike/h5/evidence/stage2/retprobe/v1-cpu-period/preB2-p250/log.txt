@@ -1,0 +1,7 @@
+static: b2static: 0 single-call sites, 23 allowed sites, 10 failing
+probe inserted: Main0.ml 1 line, driver.ml 2 lines
+RETPROBE run n 1 cpu 40.00 ext 256 live 269220695 reach_state 57450362 static 298780 other 211471553 limit 1000000 top 278771570
+RETPROBE FAIL: 211471553 words live but not reachable from the current state (limit 1000000)
+run: finished rc 6 peak 2769MB in 44s; 1 probes
+FAIL: retention over the limit (finished rc 6 peak 2769MB in 44s); static FAIL
+RC=1

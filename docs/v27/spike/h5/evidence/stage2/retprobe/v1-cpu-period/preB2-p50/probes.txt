@@ -1,0 +1,2 @@
+RETPROBE run n 1 cpu 35.80 ext 256 live 269107725 reach_state 57337394 static 298780 other 211471551 limit 1000000 top 278652786
+RETPROBE FAIL: 211471551 words live but not reachable from the current state (limit 1000000)

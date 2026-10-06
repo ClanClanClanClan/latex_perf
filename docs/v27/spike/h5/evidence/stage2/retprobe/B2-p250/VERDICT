@@ -1,1 +1,1 @@
-PASS: 5 probes, every one under the limit (finished rc 0 peak 2446MB in 74s)
+PASS: static (b2static: 669 closures at 241 realizer sites: 663 DEAD, 0 STATEFREE, 1 LOOP, 5 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 7 HOLDS allowed by a checked argument; B2 members 10/10; 0 failing); dynamic: 18 probes: init 3, load 9 (end of load: 1), dump 6, every one under the limit (finished rc 0 peak 2443MB in 61s)

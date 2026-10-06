@@ -85,8 +85,12 @@ comes from a command in §1. Code and evidence: [`h5/`](h5/).
    - The interpreter's ten fuelled members were restructured at the source. Each is proved equal
      to its pre-B2 term by `reflexivity`, and so is `Main.run`. Nothing was added to the trusted
      base.
-   - A standing retention check fails on the pre-B2 build (211 M words retained) and passes on
-     B2 (−0.28 M).
+   - A standing retention check fails on the pre-B2 build (105 M words retained at the format
+     load's first probe) and passes on B2 (−0.28 M). After review it covers every branch closure
+     of the extraction (669, typed) and every `fun` passed as an argument (44), and probes at
+     points fixed by the program, not by CPU time.
+     Its dynamic half catches only 5 of 10 single-member reverts, so the static half is required
+     (§8.2, C-150).
    - The INITEX evidence, the 178-input differential and the round trip are unchanged
      (`55629ae0…`).
    - The full 23,519-name dump finishes in 2,673 s of CPU and 2.5 GB, IDENTICAL to the binary,
@@ -730,6 +734,9 @@ Coq, and no realizer is added. But **the memory property itself is "tested only"
 versions are unreachable is a fact about compiled code and the GC, which no Coq statement
 reaches. It can only be measured, with the probe of §2.1. One new closure capturing a state
 anywhere, in an external, a helper or a future boundary model, brings the growth back silently.
+*(Stage 2, §8.2: the standing check adds a typed static half over every closure the
+extraction's realizers create, which catches such a closure without running it; the probe stays,
+as the check of the compiled code.)*
 The simulation also shows the property depends on the compiler: B2 must be measured on the
 GitHub runner's non-flambda compiler too (stage 2), because the real B2 relies on the `fS`
 closure's call being a tail call, and the simulation does not.
@@ -940,10 +947,12 @@ from the extracted tree under `~/.cache/`.
 - The H.3 evidence:
   - `h3/evidence/roundtrip/roundtrip.json` (`h5_stage2_b2_rerun`);
   - `h3/evidence/meanings/run3-37397064131/` (E8's workflow on the B2 build).
-- `h5/tools/b2gen.py`, `b2static.py`, `retprobe.ml`, `retention_probe.sh`.
+- `h5/tools/b2gen.py`, `b2static.py`, `b2cmt.ml`, `b2static_kill.py`, `retprobe.ml`, `retention_probe.sh`.
 - `h5/evidence/stage2/`:
   - `b2-proofs.txt`;
-  - `retprobe/` (the four runs of §8.2);
+  - `retprobe/` (§8.2: the four runs and their `commands.sh`, the ten single-member reverts in
+    `reverts/`, and the first version's runs, superseded, in `v1-cpu-period/`);
+  - `static/` (§8.2: `b2static.py` on both trees, and the 19 kill-tests);
   - `fulldump/` (the local full dump: `compare.json`, the CPU and memory record, loads, the
     output hashes).
 - On branch `ci/v27165-h3-meanings`: the workflow's run 3 (matrix `full`, `prefixes`).
@@ -1007,47 +1016,177 @@ so `ocamlopt` frees it after its last use. Two things changed in how the extract
   calls instead of direct ones;
 - `exec_body` takes 14 arguments.
 
-Not restructured: the 23 other uses of the fuel realizer, each listed in `b2static.py` with its
-reason:
-- 4 in `Interp`: `copy_cells` is tail-recursive; `read_cells` and `cstring` read one state and
-  write none; `digits_rev` has no state;
-- 10 in `Boundary` (tail-recursive, or no state at all);
-- 9 in `Values`, `Main0` and Coq's library (no state).
+Not restructured: the 23 other uses of the fuel realizer, and every use of the other realizers
+that take one closure per branch (Z, N, positive, ascii). The first version of `b2static.py`
+checked only the fuel realizer, and allowed those 23 sites by `(file, function)` with a reason
+each. Since the review hardening (§8.2, C-150) it checks, by type, all 669 branch closures at the
+241 realizer uses of the extracted tree, and also the 44 `fun`s of the source passed as
+arguments. The 23 pass without an allow entry. Seven closures remain allowed, each by an
+argument the tool checks: four in Coq's polymorphic `Pos.iter` and `Pos.iter_op`,
+`ERealloc`'s, and the two callbacks the interpreter passes to the C boundary (§8.2).
 
 ### 8.2 The standing retention check, failing before B2 and passing after [M]
 
-[`retention_probe.sh ML_DIR OUT_DIR INPUT_DIR [CAP_MB [TIMEOUT_S [PERIOD_S]]]`](h5/tools/retention_probe.sh)
-has two halves, and both always run:
-1. **Static**: [`b2static.py`](h5/tools/b2static.py) finds every use of the fuel realizer in
-   the extracted tree. A site passes when its successor closure is one application whose
-   function and arguments are all identifiers. Any other site must be on the list of allowed
-   sites, each with its reason. A new site of any other shape fails the check.
+[`retention_probe.sh ML_DIR OUT_DIR INPUT_DIR [CAP_MB [TIMEOUT_S]]`](h5/tools/retention_probe.sh)
+has two halves. Both always run, and **both are required for a PASS**: the dynamic half alone
+never passes, and if the static half cannot run (no summary line) the verdict is INCONCLUSIVE
+before the dynamic half starts. Two independent reviews of the first version (commit `953fe1eb`)
+found it sound but weaker than stated; this is the hardened version (C-150).
+
+1. **Static**: [`b2static.py`](h5/tools/b2static.py), with its typed half
+   [`b2cmt.ml`](h5/tools/b2cmt.ml). It covers **every** branch closure that Coq's extraction
+   creates, not only the fuel's: the realizers of `match` on nat (the fuel), Z, N, positive and
+   ascii each take one closure per branch, and the Z realizer's closures have the same shape as
+   the fuel's (`ERealloc`, below). On the B2 tree that is 669 closures at 241 realizer uses. It
+   also checks every `fun` written in the source and passed as an argument (44), for which the
+   callee matters too: unless the callee's typed body uses that parameter only as one call in
+   tail position, the callee may keep the closure while it does other work.
+   - **Coverage**: the realizer texts are read from the installed Coq's extraction library, and
+     each file's count of each text must equal the number of typed sites found there. A realizer
+     the check does not know fails it.
+   - **Typed analysis**: the tree is typed with `-bin-annot`, and each closure is classified
+     from the typed tree. A call is LEAF (a primitive, a library function, or a tree function
+     that performs a bounded number of `Parray.set` fixed by its code), LOOP (a tree function
+     that writes in a recursive loop over its data, such as `copy_cells` or `put_cells`), or RUN
+     (a parameter, a local function, or anything that can run code it was given: these are the
+     calls that can re-enter the interpreter). The classes come from a fixpoint over the call
+     graph of the whole tree. A closure is **DEAD** when its environment is dead during every
+     non-leaf call: the call is in tail position, or nothing that runs after it inside the
+     closure reads a free variable. It is
+     **STATEFREE** when no free variable's type can reach a state (a function, a type variable,
+     a persistent array or an unknown type counts as able to). It is **LOOP** when the only
+     non-leaf calls made with its environment live are LOOP calls. Otherwise it **HOLDS**: it may
+     keep a state alive across a call that can re-enter the interpreter.
+   - Why LOOP passes: an old version of a persistent array keeps alive one Diff node per update
+     made after it. So a closure held across a write loop retains at most that loop's writes,
+     and only until the loop returns. It cannot retain the rest of the run, which is what the
+     211 M words were. Only a RUN call can do that.
+   - **B2's structure**: `Interp.callp` must contain the ten members, each one fuel realizer
+     whose successor closure is a single call of `NAME_body` on identifiers, and each DEAD.
+   - **Allowed closures**: every HOLDS closure needs an entry keyed by (file, top-level
+     function, realizer, closure index). The entry carries the exact number of HOLDS closures it
+     covers, so a second site under the same key fails. It also carries a **check** that the
+     tool runs on the tree, so the argument for the entry is checked, not only stated. The key
+     is the typed top-level function, so a local `let` cannot stand in for it (the first version
+     matched local bindings by regular expression).
 2. **Dynamic**: [`retprobe.ml`](h5/tools/retprobe.ml) is linked into a copy of the tree, around
    the C boundary (one line of `Main0.ml` and two of `driver.ml`, each asserted to match once;
    coq-core's `Parray` unchanged). The copy is run under `capped.sh`.
-   - Every 5 s of CPU, it forces a full major GC and computes `live − reach_state − static`: the
+   - **Where it probes is fixed by the program, not by the machine.** The first version probed
+     every 5 s of CPU. A control run on the unmodified B2 build got only 3 probes in 42 s of CPU,
+     a faster machine would get 2 (INCONCLUSIVE), and only one probe ever fell in the format
+     load. Now the run is cut into phases by the external calls that open and close the format
+     file: **init** (before the first `wopenin`), **load** (up to the `wclose` after it) and
+     **dump** (after it). Within each phase it probes at the external calls whose ordinal is 1,
+     4, 16, 64, …, once more at the `wclose` that ends the load, and once at the end of the run.
+     The external-call sequence is the program's own, so every machine probes the same program
+     points.
+   - At each probe it forces a full major GC and computes `live − reach_state − static`: the
      words that are live but not reachable from the state the program is computing with.
    - Any probe above **1,000,000 words (8 MB)** stops the run with exit 6.
-   - **PASS** needs the run to finish, at least 3 probes, and every probe under the limit.
+   - **PASS** needs a static PASS, the run to finish with exit 0, the end of the load reached,
+     and at least **3 probes in the load and 3 in the dump**, every one under the limit.
      **FAIL** is a static failure or a probe over the limit. Anything else is **INCONCLUSIVE**.
 
 The limit sits far from both sides of the measured gap. Before B2, the retained words were
-211 M (§2.1). After B2 they are −0.28 M, which is the program constants counted twice. Under A,
-the consumed input reached 10 M words at most (§2.5).
+105 M at the load's first probe and 211 M at its end (§2.1). After B2 they are −0.28 M, which is
+the program constants counted twice. Under A, the consumed input reached 10 M words at most
+(§2.5).
 
-The committed test input is the first 250 names (`h5/README.md`: `meanblock.py … 250`). Evidence
-is in `h5/evidence/stage2/retprobe/`. The one-minute load average was 8.3–10.8 at the start and
-end of each run (`load.txt`).
+**The allowed closures, and what the tool checks for each** (`h5/evidence/stage2/static/`):
+- Coq's `Pos.iter` and `Pos.iter_op` (4 closures): polymorphic library code whose closures hold a
+  value of a type variable and a function across a call. The check: every use outside their own
+  definitions instantiates them at state-free types and passes only global functions. `Pos.iter`
+  has 0 uses; `Pos.iter_op` has 1, in `Pos.to_nat`, at `int` with `Nat.add`.
+- `ERealloc`'s branch for a zero offset (1 closure, in `evale_body`): it holds `st1` across
+  `evale f n st1`, a non-tail RUN call. The check:
+  - (a) that is its only non-tail RUN call;
+  - (b) all 5 `ERealloc` in the program have the size `n = ELoad (TI32, LGlob _)`;
+  - (c) evaluating such an `n` is `evall` on an `LGlob`, which calls nothing, then `read_loc`,
+    which is a leaf and writes nothing. The two branches are compared with the text this
+    argument was made for.
+
+  So no `Parray.set` happens while `st1` is held. The reviewers saw that this closure has the
+  fuel closures' shape; the typed analysis also found that it holds `st1` across `copy_cells`
+  and `new_block` after `evale` returns. Those two are LOOP calls, bounded by the cells copied
+  (C-150).
+- The two callbacks the interpreter gives the C boundary, `ext (fun p cs st' -> callp0 f p cs st')`
+  in `evale_body` (`EExt`) and `exec_body` (`SExt`). `Boundary.ext` may keep them while it runs,
+  and their environment, `callp0` (a function) and `f` (the fuel, typed by a type variable),
+  cannot be cleared by type. The check:
+  - (a) their free variables are exactly `callp0` and `f`;
+  - (b) B2's structure holds, and each body is used once, by its member, so `f` is the
+    successor closure's fuel and `callp0` is a member of `callp`'s `let rec`;
+  - (c) `callp` is applied once, in `Main0`, as `callp procs_array nglobals ext fuel`, so that
+    `let rec`'s environment is the program's constants.
+
+  So they hold no state.
+- The B2 tree has one LOOP closure, in `Boundary.wopenin`: it holds the state across
+  `alloc_cells`, which writes the file name's bytes. It passes, and is listed in the output.
+- The `truth_or` continuations of `EAnd` and `EOr` hold `st1` across `evale` on the right
+  operand by type, but nothing after that call reads it, and `truth_or` calls its continuation
+  once, in tail position: DEAD. An analysis that asked only for tail position would flag them;
+  what clears them is that the environment is dead after the call.
+
+**Scope** [R]. The static half covers the closures that the realizers create and the `fun`s
+passed as arguments. It does not cover a function value bound by a local `let` and called later.
+A call to such a function is RUN, so its callers are judged conservatively, but its own
+environment is not analysed.
+
+**Kill-tests** ([`b2static_kill.py`](h5/tools/b2static_kill.py); `h5/evidence/stage2/static/kill-tests.txt`):
+**21 of 21** behave as expected:
+- the unchanged B2 tree passes, and the pre-B2 tree fails (24 failures);
+- for each of the ten members, a copy whose successor closure reads its state after its call
+  fails both the structure check and the typed check, which reports that member's closure as
+  HOLDS;
+- a second HOLDS closure under the allowed key `(evale_body, Z, 0)` fails ("2 HOLDS closures,
+  the entry allows exactly 1");
+- an `ERealloc` whose size is not `ELoad (TI32, LGlob _)` fails (b);
+- a changed `ELoad` branch fails (c);
+- a new closure in `Boundary` that holds a state across a parameter call fails;
+- `Pos.iter_op` instantiated at a state fails;
+- a realizer text the typed half cannot see (in a comment) fails coverage;
+- a closure that holds a state across a write loop passes as LOOP;
+- an `EExt` callback that also captures the state fails (a);
+- a source `fun` given to `List.map` that holds a state across a parameter call fails.
+
+**Runs** (`h5/evidence/stage2/retprobe/`, exact commands in `commands.sh`; the one-minute load
+average was 5.3–8.5 at the start and end of each run):
 
 | tree | static | dynamic | verdict |
 |---|---|---|---|
-| pre-B2 (H.3 checkpoint 2, `72b2ea79…`), 250 names | 10 failing sites: the ten members | first probe at 40.0 s CPU: **211,471,553 words** live but not reachable from the current state (live 269.2 M, state 57.5 M); stopped with exit 6 | **FAIL** |
-| B2 (`dbace323…`), 250 names | 10 single-call sites, 23 allowed, 0 failing | 5 probes, from 33.8 to 67.9 s CPU: −286,056, −281,017, −281,023, −281,015, −281,028 words; run finished with exit 0; peak 2,446 MB including the probes' heap walks | **PASS** |
-| B2, first 50 names | as above | 2 probes (−286,056 and −281,017); most of the run is the format load, during which there are few external calls | INCONCLUSIVE (this is why the test uses 250 names) |
-| pre-B2, first 50 names | 10 failing | 211,471,551 words at the first probe | FAIL |
+| pre-B2 (H.3 checkpoint 2, `72b2ea79…`), 250 names | 24 failures: the ten members' structure (10, and the summary line), the ten members' closures HOLDS (10), and three closures that before B2 sit in `callp`, not under their allowed keys (`ERealloc` and the two callbacks) | init 3 probes under the limit; **first load probe (external call 61): 104,881,953 words** live but not reachable from the current state (live 167.7 M, state 62.5 M); stopped with exit 6 | **FAIL** |
+| pre-B2, 50 names | as above | the same probe, the same 104,881,953 words | **FAIL** |
+| B2 (`dbace323…`), 250 names | 669 realizer closures: 663 DEAD, 1 LOOP, 5 HOLDS; 44 source `fun`s: 41 DEAD, 1 STATEFREE, 2 HOLDS; all 7 HOLDS allowed and checked; 10/10 members; 0 failing | **18 probes: init 3, load 9 (the end of the load included), dump 6**, every one between −292,702 and −281,017 words; finished, exit 0 | **PASS** |
+| B2, 50 names | as above | **17 probes: init 3, load 9, dump 5**, the same range; finished, exit 0 | **PASS** (INCONCLUSIVE in the first version, with 2 probes) |
 
-The pre-B2 figure is the same as stage 1's deep probe at the end of the format load (§2.1:
-211,471,569 words): two instruments, the same measurement.
+The init and load probes fall at the same external calls in all four runs (1, 4, 16, 61, 64,
+76, 124, 316, 1,084, 4,156, 16,444, 24,254), and before B2 the retained count is the same to
+the word at 50 and at 250 names. The first version's runs are kept, superseded, in
+`retprobe/v1-cpu-period/`. Their p50 command line was never committed, and the scratch script's
+20 s period does not match their probe spacing (C-150; `h5/evidence/stage2/retprobe/v1-cpu-period/NOTE.txt`).
+
+**What the dynamic half catches, and what it does not** [M]. A reviewer reverted single members
+in the Coq source and found that the first version's dynamic half caught only 3 of the 10
+(`callp`, `exec_list`, `exec`), even at 1,000 names. The other seven do not retain on
+meaning-dump workloads. Re-measured on the hardened probe
+(`retprobe/reverts/`, `summary.tsv`): one copy per member of the B2 tree whose successor closure
+reads its state after its call, 250 names.
+- The dynamic half catches **5 of 10**:
+  - `callp0`, `exec` and `exec_list`, with 104.9 M words at the load's first probe;
+  - `evale`, with 14.6 M at the load's 4th external call;
+  - `goto_in`, with 3.9 M at the dump's 64th.
+- It does **not** catch `evall`, `evalargs`, `evalx`, `for_loop` or `write_items`. Each finished
+  with exit 0 and 18 probes under the limit. Their closures do hold a state, but not across
+  enough work on this input to show.
+- The static half fails **all 10**.
+
+A first attempt at these copies read the state with a plain `ignore st`. The compiler removed
+that read, and none of the seven runs that finished retained anything. The static half
+still flagged all ten: it reads the typed tree, not the compiled code [M, not kept as evidence].
+**So the guarantee for those five members rests on the static half alone**, which is why it is
+required, never optional. The dynamic half is the check that the static model of retention
+matches the compiled code and the GC (§5 B(d)), not a second detector of every regression.
 
 ### 8.3 Fidelity, re-verified on the B2 build [M]
 

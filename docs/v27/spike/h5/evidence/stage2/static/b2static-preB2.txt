@@ -1,0 +1,83 @@
+allow  BinPos.ml BinPos.Pos.iter positive closure 0 x1: Coq library, polymorphic; checked: 0 uses, all state-free with global function arguments
+allow  BinPos.ml BinPos.Pos.iter positive closure 1 x1: Coq library, polymorphic; checked: 0 uses, all state-free with global function arguments
+allow  BinPos.ml BinPos.Pos.iter_op positive closure 0 x1: Coq library, polymorphic; checked: 1 uses, all state-free with global function arguments
+allow  BinPos.ml BinPos.Pos.iter_op positive closure 1 x1: Coq library, polymorphic; checked: 1 uses, all state-free with global function arguments
+note   allow entry ('Interp.ml', 'Interp.evale_body', 'Z', 0) matches no HOLDS closure
+note   allow entry ('Interp.ml', 'Interp.evale_body', 'lambda', 0) matches no HOLDS closure
+note   allow entry ('Interp.ml', 'Interp.exec_body', 'lambda', 0) matches no HOLDS closure
+HOLDS     BinPos.ml:197 BinPos.Pos.iter positive closure 0 state-bearing free variables [f:a function; x:a type variable] across non-tail calls [RUN BinPos.Pos.iter (with function arguments f)]
+HOLDS     BinPos.ml:197 BinPos.Pos.iter positive closure 1 state-bearing free variables [f:a function; x:a type variable] across non-tail calls [RUN BinPos.Pos.iter (with function arguments f)]
+HOLDS     BinPos.ml:483 BinPos.Pos.iter_op positive closure 0 state-bearing free variables [a:a type variable; op:a function] across non-tail calls [RUN BinPos.Pos.iter_op (with function arguments op); RUN op (a local function or parameter)]
+HOLDS     BinPos.ml:483 BinPos.Pos.iter_op positive closure 1 state-bearing free variables [a:a type variable; op:a function] across non-tail calls [RUN op (a local function or parameter)]
+LOOP      Boundary.ml:1765 Boundary.wopenin Z closure 0 state-bearing free variables [st:Values.state] across non-tail calls [LOOP Boundary.alloc_cells (calls Interp.put_cells (a recursive writer))]
+DEAD      Interp.ml:104 Interp.copy_cells nat closure 0 
+DEAD      Interp.ml:104 Interp.copy_cells nat closure 1 
+DEAD      Interp.ml:121 Interp.read_cells nat closure 0 
+DEAD      Interp.ml:121 Interp.read_cells nat closure 1 
+DEAD      Interp.ml:166 Interp.digits_rev nat closure 0 
+DEAD      Interp.ml:166 Interp.digits_rev nat closure 1 
+DEAD      Interp.ml:216 Interp.cstring nat closure 0 
+DEAD      Interp.ml:216 Interp.cstring nat closure 1 
+DEAD      Interp.ml:223 Interp.cstring Z closure 0 
+DEAD      Interp.ml:223 Interp.cstring Z closure 1 
+DEAD      Interp.ml:223 Interp.cstring Z closure 2 
+DEAD      Interp.ml:270 Interp.has_label lambda closure 0 
+DEAD      Interp.ml:324 Interp.callp nat closure 0 
+HOLDS     Interp.ml:324 Interp.callp nat closure 1 state-bearing free variables [callp0:a function; evalargs:a function; evale:a function; evall:a function; evalx:a function; ext:a function; procs:a persistent array (PArray0.array); st:Values.state] across non-tail calls [RUN evalargs (a local function or parameter); RUN evale (a local function or p
+DEAD      Interp.ml:426 Interp.callp lambda closure 2 
+DEAD      Interp.ml:430 Interp.callp lambda closure 2 
+DEAD      Interp.ml:440 Interp.callp lambda closure 2 
+DEAD      Interp.ml:445 Interp.callp lambda closure 2 
+DEAD      Interp.ml:454 Interp.callp lambda closure 2 
+HOLDS     Interp.ml:473 Interp.callp lambda closure 0 state-bearing free variables [callp0:a function] across non-tail calls [RUN an unknown callee, which may keep the closure; RUN callp0 (a local function or parameter)]
+HOLDS     Interp.ml:567 Interp.callp Z closure 0 state-bearing free variables [evale:a function; st1:Values.state] across non-tail calls [LOOP Interp.copy_cells (a recursive writer); LOOP Values.new_block (calls Values.fill_chunks (a recursive writer)); RUN evale (a local function or parameter)]
+DEAD      Interp.ml:567 Interp.callp Z closure 1 
+DEAD      Interp.ml:567 Interp.callp Z closure 2 
+DEAD      Interp.ml:622 Interp.callp nat closure 0 
+HOLDS     Interp.ml:622 Interp.callp nat closure 1 state-bearing free variables [evale:a function; evall:a function; st:Values.state] across non-tail calls [RUN evale (a local function or parameter); RUN evall (a local function or parameter)]
+DEAD      Interp.ml:700 Interp.callp nat closure 0 
+HOLDS     Interp.ml:700 Interp.callp nat closure 1 state-bearing free variables [evalargs:a function; evale:a function; evall:a function; st:Values.state] across non-tail calls [RUN evale (a local function or parameter); RUN evall (a local function or parameter)]
+DEAD      Interp.ml:784 Interp.callp nat closure 0 
+HOLDS     Interp.ml:784 Interp.callp nat closure 1 state-bearing free variables [evale:a function; evall:a function; evalx:a function; st:Values.state] across non-tail calls [RUN evale (a local function or parameter); RUN evall (a local function or parameter)]
+DEAD      Interp.ml:817 Interp.callp nat closure 0 
+HOLDS     Interp.ml:817 Interp.callp nat closure 1 state-bearing free variables [exec:a function; procs:a persistent array (PArray0.array); st:Values.state] across non-tail calls [LOOP Interp.put_cells (a recursive writer); LOOP Values.new_block (calls Values.fill_chunks (a recursive writer)); RUN exec (a local function or parameter)]
+DEAD      Interp.ml:874 Interp.callp nat closure 0 
+HOLDS     Interp.ml:874 Interp.callp nat closure 1 state-bearing free variables [callp0:a function; evalargs:a function; evale:a function; evall:a function; evalx:a function; exec:a function; exec_list:a function; ext:a function; for_loop:a function; procs:a persistent array (PArray0.array); st:Values.state; write_items:a function] across non-tail c
+HOLDS     Interp.ml:914 Interp.callp lambda closure 0 state-bearing free variables [callp0:a function] across non-tail calls [RUN an unknown callee, which may keep the closure; RUN callp0 (a local function or parameter)]
+DEAD      Interp.ml:1011 Interp.callp lambda closure 0 
+DEAD      Interp.ml:1012 Interp.callp lambda closure 0 
+DEAD      Interp.ml:1070 Interp.callp nat closure 0 
+HOLDS     Interp.ml:1070 Interp.callp nat closure 1 state-bearing free variables [exec:a function; for_loop:a function; st:Values.state] across non-tail calls [RUN exec (a local function or parameter)]
+DEAD      Interp.ml:1102 Interp.callp nat closure 0 
+HOLDS     Interp.ml:1102 Interp.callp nat closure 1 state-bearing free variables [exec:a function; exec_list:a function; goto_in:a function; st:Values.state] across non-tail calls [RUN exec (a local function or parameter)]
+DEAD      Interp.ml:1114 Interp.callp nat closure 0 
+HOLDS     Interp.ml:1114 Interp.callp nat closure 1 state-bearing free variables [exec:a function; exec_list:a function; goto_in:a function; st:Values.state] across non-tail calls [RUN Interp.has_label (passes a computed function to List.existsb, a lambda that calls or writes to List.existsb); RUN Interp.resume (calls Interp.has_label (passes a compu
+DEAD      Interp.ml:1137 Interp.callp nat closure 0 
+HOLDS     Interp.ml:1137 Interp.callp nat closure 1 state-bearing free variables [evale:a function; st:Values.state; write_items:a function] across non-tail calls [RUN evale (a local function or parameter)]
+STATEFREE Main0.ml:63 Main0.global_block lambda closure 0 non-tail calls LOOP Main0.fill_run (a recursive writer)
+FAIL   B2 structure: member evale's successor closure is not a single call of evale_body on identifiers
+FAIL   B2 structure: member evall's successor closure is not a single call of evall_body on identifiers
+FAIL   B2 structure: member evalargs's successor closure is not a single call of evalargs_body on identifiers
+FAIL   B2 structure: member evalx's successor closure is not a single call of evalx_body on identifiers
+FAIL   B2 structure: member callp0's successor closure is not a single call of callp_body on identifiers
+FAIL   B2 structure: member exec's successor closure is not a single call of exec_body on identifiers
+FAIL   B2 structure: member for_loop's successor closure is not a single call of for_loop_body on identifiers
+FAIL   B2 structure: member exec_list's successor closure is not a single call of exec_list_body on identifiers
+FAIL   B2 structure: member goto_in's successor closure is not a single call of goto_in_body on identifiers
+FAIL   B2 structure: member write_items's successor closure is not a single call of write_items_body on identifiers
+FAIL   B2 structure: Interp.callp's 10 fuel realizers (10 expected) must all be DEAD; verdicts of their closures: {'DEAD': 10, 'HOLDS': 10}
+FAIL   HOLDS Interp.ml:567 Interp.callp Z closure 0: state-bearing free variables [evale:a function; st1:Values.state] across non-tail calls [LOOP Interp.copy_cells (a recursive writer); LOOP Values.new_block (calls Values.fill_chunks (a recursive writer)); RUN evale (a local function or parameter)]
+FAIL   HOLDS Interp.ml:473 Interp.callp lambda closure 0: state-bearing free variables [callp0:a function] across non-tail calls [RUN an unknown callee, which may keep the closure; RUN callp0 (a local function or parameter)]
+FAIL   HOLDS Interp.ml:914 Interp.callp lambda closure 0: state-bearing free variables [callp0:a function] across non-tail calls [RUN an unknown callee, which may keep the closure; RUN callp0 (a local function or parameter)]
+FAIL   HOLDS Interp.ml:324 Interp.callp nat closure 1: state-bearing free variables [callp0:a function; evalargs:a function; evale:a function; evall:a function; evalx:a function; ext:a function; procs:a persistent array (PArray0.array); st:Values.state] across non-tail calls [RUN evalargs (a local function or parameter); RUN evale (a local function or parameter); RUN evalx (a local function or parameter)]
+FAIL   HOLDS Interp.ml:622 Interp.callp nat closure 1: state-bearing free variables [evale:a function; evall:a function; st:Values.state] across non-tail calls [RUN evale (a local function or parameter); RUN evall (a local function or parameter)]
+FAIL   HOLDS Interp.ml:700 Interp.callp nat closure 1: state-bearing free variables [evalargs:a function; evale:a function; evall:a function; st:Values.state] across non-tail calls [RUN evale (a local function or parameter); RUN evall (a local function or parameter)]
+FAIL   HOLDS Interp.ml:784 Interp.callp nat closure 1: state-bearing free variables [evale:a function; evall:a function; evalx:a function; st:Values.state] across non-tail calls [RUN evale (a local function or parameter); RUN evall (a local function or parameter)]
+FAIL   HOLDS Interp.ml:817 Interp.callp nat closure 1: state-bearing free variables [exec:a function; procs:a persistent array (PArray0.array); st:Values.state] across non-tail calls [LOOP Interp.put_cells (a recursive writer); LOOP Values.new_block (calls Values.fill_chunks (a recursive writer)); RUN exec (a local function or parameter)]
+FAIL   HOLDS Interp.ml:874 Interp.callp nat closure 1: state-bearing free variables [callp0:a function; evalargs:a function; evale:a function; evall:a function; evalx:a function; exec:a function; exec_list:a function; ext:a function; for_loop:a function; procs:a persistent array (PArray0.array); st:Values.state; write_items:a function] across non-tail calls [RUN evalargs (a local function or parameter); RUN evale (a local function or parameter); RUN evall (a local function or parameter); RUN evalx (a local function or parameter); RUN exec (a local function or parameter)]
+FAIL   HOLDS Interp.ml:1070 Interp.callp nat closure 1: state-bearing free variables [exec:a function; for_loop:a function; st:Values.state] across non-tail calls [RUN exec (a local function or parameter)]
+FAIL   HOLDS Interp.ml:1102 Interp.callp nat closure 1: state-bearing free variables [exec:a function; exec_list:a function; goto_in:a function; st:Values.state] across non-tail calls [RUN exec (a local function or parameter)]
+FAIL   HOLDS Interp.ml:1114 Interp.callp nat closure 1: state-bearing free variables [exec:a function; exec_list:a function; goto_in:a function; st:Values.state] across non-tail calls [RUN Interp.has_label (passes a computed function to List.existsb, a lambda that calls or writes to List.existsb); RUN Interp.resume (calls Interp.has_label (passes a computed function to List.existsb, a lambda that calls or writes to List.existsb)); RUN exec (a local function or parameter)]
+FAIL   HOLDS Interp.ml:1137 Interp.callp nat closure 1: state-bearing free variables [evale:a function; st:Values.state; write_items:a function] across non-tail calls [RUN evale (a local function or parameter)]
+b2static: 669 closures at 241 realizer sites: 653 DEAD, 0 STATEFREE, 1 LOOP, 15 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 4 HOLDS allowed by a checked argument; B2 members 0/10; 24 failing
+RC=1

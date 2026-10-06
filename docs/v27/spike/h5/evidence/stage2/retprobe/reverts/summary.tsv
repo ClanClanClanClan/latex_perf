@@ -1,0 +1,11 @@
+member	static	dynamic	first probe over the limit
+evale	FAIL	RETAINS (5 probes)	load k=4 ext=64: 14,578,722 words
+evall	FAIL	not seen (18 probes)	
+evalargs	FAIL	not seen (18 probes)	
+evalx	FAIL	not seen (18 probes)	
+callp0	FAIL	RETAINS (4 probes)	load k=1 ext=61: 104,881,804 words
+exec	FAIL	RETAINS (4 probes)	load k=1 ext=61: 104,881,858 words
+for_loop	FAIL	not seen (18 probes)	
+exec_list	FAIL	RETAINS (4 probes)	load k=1 ext=61: 104,882,730 words
+goto_in	FAIL	RETAINS (16 probes)	dump k=64 ext=24318: 3,929,793 words
+write_items	FAIL	not seen (18 probes)	

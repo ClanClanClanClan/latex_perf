@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><title>Nightly Performance Trends</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>body{font-family:system-ui,sans-serif;margin:20px}canvas{max-width:900px}</style>
+</head><body>
+<h1>Nightly Performance Trends</h1>
+<p>Data from data/perf_history.json</p>
+<canvas id="chart" height="120"></canvas>
+<script>
+async function run(){
+  const resp=await fetch("data/perf_history.json");const hist=await resp.json();
+  const xs=hist.map(e=>e.ts);
+  const y1=hist.map(e=>parseFloat(e.full_doc_p95_med100_ms||"NaN"));
+  const y2=hist.map(e=>parseFloat(e.ab10k_p95_ms||"NaN"));
+  const y3=hist.map(e=>parseFloat(e.edit4k5k_p95_ms||"NaN"));
+  const y4=hist.map(e=>parseFloat(e.xxh64_mb_per_s||"NaN"));
+  const ctx=document.getElementById("chart").getContext("2d");
+  new Chart(ctx,{type:"line",
+    data:{labels:xs,datasets:[
+      {label:"full-doc p95 ms",data:y1,borderColor:"green",yAxisID:"y"},
+      {label:"ab10k p95 ms",data:y2,borderColor:"orange",yAxisID:"y"},
+      {label:"edit4k5k p95 ms",data:y3,borderColor:"blue",yAxisID:"y"},
+      {label:"xxh64 MB/s",data:y4,borderColor:"purple",yAxisID:"y1"}]},
+    options:{responsive:true,scales:{y:{type:"linear",position:"left"},y1:{type:"linear",position:"right"}}}});
+}
+run();
+</script></body></html>

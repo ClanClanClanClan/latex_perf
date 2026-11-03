@@ -7,94 +7,134 @@ tuned or triaged on it. Owner ruling 2026-10-21: the P2 diagnostics baseline
 uses samples 1-2 ONLY, and does not read, grade, list or hash-inspect any
 sample-3 document or output.
 
-Until this module the seal was prose: diff_real_roots.py --offset 720 and
-every other tool would run on sample 3 without a word (OPEN-138). This module
-is the mechanical refusal for the P2 tools (p2_baseline.py calls it before it
-opens the corpus, builds an oracle or reads a results artefact). It does NOT
-gate the tools that legitimately RE-MEASURE sample 3 (diff_real_roots.py
---refresh-cli on results_sample3.json, gen_proven_coverage.py): changing them
-would change grading blob 9859cccf, and their sample-3 runs are the sanctioned
-measurement; gating them is OPEN-139.
+Until this module the seal was prose (C-180). This module is the mechanical
+refusal for the P2 tools; the other tools are OPEN-139.
 
-What the refusal checks, each of which check_p2_diag.py tries to defeat:
-  * the sample NUMBER: only 1 and 2 are accepted (3, "3", " 3", "03", 3.0,
-    True, any other value are refused);
-  * a frame WINDOW (offset, n): refused when it meets ranks [720, 920) or is
-    malformed (n <= 0, a negative offset, a non-integer);
-  * document IDS: refused when any is a sealed document, compared on the
-    BASE id (basename, case-folded, surrounding space and the arXiv version
-    suffix removed: "../papers/X", " x ", "Xv9" are X);
-  * an input ARTEFACT: refused when its name (or its symlink target's) says
-    sample 3, when it IS a committed sample-3 artefact under another name (a
-    symlink or a hard link: same device and inode), when its JSON
-    records frame offset 720 or a sealed window, or when any document id in it
-    is sealed (a renamed copy);
-  * the SEALED SET itself: read from corpora/real_roots/manifest_sample3.json
-    by this module only, never printed; when it cannot be read, or does not
-    hold exactly SEALED_N distinct ids, EVERY request is refused (an empty
-    seal set must not read as "nothing is sealed").
+FAIL CLOSED, BY ALLOW-LIST (review of 758e0e18, H1/H2). The first version
+tried to RECOGNISE sample-3 inputs (names, links, normalised ids) and let
+everything else through; each recogniser had a way round it ("SID/.",
+zero-width characters, fullwidth digits, a `frame_window` key it did not
+read, a row with no id). This version ACCEPTS only what it can prove is
+samples 1-2 and refuses everything else:
+  * a document id is accepted only when it is a str that fully matches the
+    ASCII pattern ID_RE (new-style arXiv: 4 digits, '.', 4-5 digits, 'v',
+    digits). Nothing is normalised: anything else is refused, never mapped
+    onto an id. (MEASURED 2026-11-03: every id of samples 1, 2 and 3 matches.)
+    A paper is compared by its version-less key, so another version of a
+    sealed paper is sealed too;
+  * the sealed set and the grades of record of samples 1-2 are read from
+    the COMMITTED blob at HEAD (`committed`), and the working-tree file must
+    equal it: an edited, untracked or swapped file is refused, and the
+    caller stamps the blob ids it read;
+  * a sample is 1 or 2 (int, or exactly the string "1"/"2"); its ids are
+    exactly its grade of record's 200, valid, distinct, none sealed;
+  * the sealed set must hold exactly 200 valid, distinct ids at offset 720,
+    or EVERY request is refused (an empty seal must not read as "nothing is
+    sealed").
 
 Messages name counts only, never a sealed id.
 """
 from __future__ import annotations
 
 import json
-import os
 import re
+import subprocess
+import unicodedata
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
 SEALED_OFFSET = 720
 SEALED_N = 200
-SEALED_MANIFEST = Path("corpora/real_roots/manifest_sample3.json")
+SEALED_MANIFEST = "corpora/real_roots/manifest_sample3.json"
 # Samples P2 may use (owner ruling 2026-10-21): number -> (offset, n, the
-# results artefact under corpora/real_roots that holds its grade of record).
-ALLOWED = {1: (0, 200, "results.json"), 2: (200, 200, "results_sample2.json")}
-_SAMPLE3_NAME = re.compile(r"sample[_-]?0*3(?!\d)", re.I)
+# results artefact that holds its grade of record).
+ALLOWED = {1: (0, 200, "corpora/real_roots/results.json"),
+           2: (200, 200, "corpora/real_roots/results_sample2.json")}
+ID_RE = re.compile(r"[0-9]{4}\.[0-9]{4,5}v[0-9]+", re.ASCII)
 
 
 class SealError(Exception):
-    """A request that would touch sealed sample 3."""
+    """A request that would touch sealed sample 3, or that cannot be proven
+    not to."""
 
 
-def base_id(x) -> str:
-    s = os.path.basename(str(x).strip().rstrip("/\\")).strip().lower()
-    return re.sub(r"v\d+$", "", s)
+def _git(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "--no-optional-locks", *args], cwd=repo, capture_output=True)
 
 
-def sealed_ids(repo: Path = REPO, manifest: Path | None = None) -> frozenset:
-    """The sealed set's base ids. Raises SealError (refuse everything) when
-    the manifest is missing, unreadable, or does not hold SEALED_N ids."""
-    p = Path(manifest) if manifest is not None else Path(repo) / SEALED_MANIFEST
+def committed(repo: Path, rel: str) -> tuple[bytes, str]:
+    """(bytes, git blob id) of `rel` at HEAD of `repo`; refuses (SealError)
+    when it is not tracked at HEAD or the working-tree file differs."""
+    rel = str(rel)
+    p = _git(Path(repo), "rev-parse", f"HEAD:{rel}")
+    if p.returncode != 0:
+        raise SealError(f"{rel} is not committed at HEAD: P2 reads only committed inputs")
+    blob = p.stdout.decode().strip()
+    wt = Path(repo) / rel
+    h = _git(Path(repo), "hash-object", "--", rel)
+    if not wt.is_file() or wt.is_symlink() or h.returncode != 0 \
+            or h.stdout.decode().strip() != blob:
+        raise SealError(f"{rel} in the working tree differs from HEAD: commit it or "
+                        f"restore it (P2 reads the committed blob only)")
+    data = _git(Path(repo), "cat-file", "blob", blob)
+    if data.returncode != 0:
+        raise SealError(f"cannot read the blob of {rel}")
+    return data.stdout, blob
+
+
+def valid_id(x) -> str:
+    """`x` when it is a valid id (ID_RE, exact); SealError otherwise."""
+    if not isinstance(x, str) or not ID_RE.fullmatch(x):
+        raise SealError("a document id is not of the form NNNN.NNNNNvN (refused, not "
+                        "normalised)")
+    return x
+
+
+def paper_key(x) -> str:
+    return valid_id(x).rsplit("v", 1)[0]
+
+
+def sealed_ids(repo: Path = REPO) -> frozenset:
+    """The sealed set's paper keys, from the committed manifest. SealError
+    (refuse everything) when it is missing, edited, unreadable, or not
+    exactly SEALED_N valid distinct ids at offset SEALED_OFFSET."""
     try:
-        d = json.loads(p.read_text())
+        data, _blob = committed(repo, SEALED_MANIFEST)
+        d = json.loads(data)
         frame = d.get("frame") or {}
-        ids = frozenset(base_id(r["arxiv_id"]) for r in d["docs"])
+        keys = [paper_key(r["arxiv_id"]) for r in d["docs"]]
+    except SealError as e:
+        raise SealError(f"the sample-3 seal cannot be read ({e}); refusing every request") \
+            from None
     except Exception as e:  # noqa: BLE001 -- any failure means: cannot enforce
         raise SealError(f"the sample-3 seal cannot be read ({type(e).__name__}); "
                         f"refusing every request until it can") from None
-    if len(ids) != SEALED_N or frame.get("offset") != SEALED_OFFSET:
-        raise SealError(f"the sample-3 seal holds {len(ids)} distinct ids at offset "
+    if len(keys) != SEALED_N or len(set(keys)) != SEALED_N \
+            or frame.get("offset") != SEALED_OFFSET:
+        raise SealError(f"the sample-3 seal holds {len(set(keys))} distinct ids at offset "
                         f"{frame.get('offset')!r}, not {SEALED_N} at {SEALED_OFFSET}: "
                         f"refusing every request")
-    return ids
+    return frozenset(keys)
+
+
+def seal_blob(repo: Path = REPO) -> str:
+    return committed(repo, SEALED_MANIFEST)[1]
 
 
 def sample_spec(k) -> tuple[int, int, str]:
-    """(offset, n, results artefact name) of an allowed sample number."""
+    """(offset, n, grade-of-record path) of an allowed sample number."""
     if isinstance(k, bool):
         raise SealError("a sample number must be 1 or 2")
-    if isinstance(k, str) and re.fullmatch(r"[12]", k):
+    if isinstance(k, str) and k in ("1", "2"):
         k = int(k)
-    if isinstance(k, int) and not isinstance(k, bool) and k in ALLOWED:
+    if type(k) is int and k in ALLOWED:
         return ALLOWED[k]
     raise SealError("P2 uses samples 1 and 2 only (owner ruling 2026-10-21); "
                     "sample 3 is sealed (OPEN-119) and no other sample is defined")
 
 
 def refuse_window(offset, n) -> None:
-    if (isinstance(offset, bool) or isinstance(n, bool) or not isinstance(offset, int)
-            or not isinstance(n, int) or offset < 0 or n <= 0):
+    if type(offset) is not int or type(n) is not int or offset < 0 or n <= 0:
         raise SealError(f"malformed frame window (offset {offset!r}, n {n!r})")
     if offset < SEALED_OFFSET + SEALED_N and SEALED_OFFSET < offset + n:
         raise SealError(f"frame window [{offset}, {offset + n}) meets the sealed "
@@ -102,46 +142,44 @@ def refuse_window(offset, n) -> None:
 
 
 def refuse_ids(ids, sealed: frozenset) -> None:
-    hit = sum(1 for x in ids if base_id(x) in sealed)
+    """Every id valid (refused, not normalised, otherwise) and none sealed."""
+    ids = list(ids)
+    hit = sum(1 for x in ids if paper_key(x) in sealed)
     if hit:
-        raise SealError(f"{hit} of the {len(list(ids))} requested documents are in sealed "
+        raise SealError(f"{hit} of the {len(ids)} requested documents are in sealed "
                         f"sample 3 (OPEN-119); P2 uses samples 1-2 only")
 
 
-def _sealed_artefacts(repo: Path) -> set:
-    """(st_dev, st_ino) of every committed sample-3 artefact: the identity a
-    symlink OR a hard link with an innocent name still shares."""
-    out = set()
-    for d in ("corpora/real_roots", "corpora/oracle_baseline"):
-        for p in (Path(repo) / d).glob("*"):
-            if _SAMPLE3_NAME.search(p.name):
-                st = os.stat(p)
-                out.add((st.st_dev, st.st_ino))
-    return out
+_SAMPLE3_NAME = re.compile(r"sample0*3(?![0-9])|(?<![a-z0-9])s0*3(?![0-9])")
 
 
-def refuse_artefact(path, sealed: frozenset, repo: Path = REPO) -> dict:
-    """Load a results-like JSON artefact for P2, refusing a sample-3 one.
-    Returns the parsed JSON. The NAME and the symlink target are checked
-    before a byte is read."""
-    p = Path(path)
-    if _SAMPLE3_NAME.search(p.name) or _SAMPLE3_NAME.search(p.resolve().name):
-        raise SealError("the artefact's name says sample 3 (sealed, OPEN-119)")
-    st = os.stat(p)
-    if (st.st_dev, st.st_ino) in _sealed_artefacts(repo):
-        raise SealError("the artefact is (a link to) a sealed sample-3 artefact")
-    d = json.loads(p.read_text())
-    frame = d.get("frame") if isinstance(d, dict) else None
-    if isinstance(frame, dict) and "offset" in frame:
-        refuse_window(frame.get("offset"), frame.get("n", SEALED_N))
-    if isinstance(d, dict) and isinstance(d.get("sample"), (int, str)):
-        sv = str(d["sample"])
-        if re.fullmatch(r"\s*0*3\s*", sv) or re.search(r"\bsample\s*0*3\b", sv, re.I):
-            raise SealError("the artefact records sample 3 (sealed, OPEN-119)")
-    rows = []
-    if isinstance(d, dict):
-        for key in ("docs", "rows"):
-            if isinstance(d.get(key), list):
-                rows += d[key]
-    refuse_ids([r.get("arxiv_id", "") for r in rows if isinstance(r, dict)], sealed)
-    return d
+def refuse_name(path) -> None:
+    """A belt over the allow-list: refuse a path whose NFKC-folded name says
+    sample 3 (separators and case ignored)."""
+    name = unicodedata.normalize("NFKC", Path(path).name).lower()
+    squeezed = re.sub(r"[^a-z0-9.]", "", name)
+    if _SAMPLE3_NAME.search(squeezed) or _SAMPLE3_NAME.search(name):
+        raise SealError("the path's name says sample 3 (sealed, OPEN-119)")
+
+
+def sample_docs(repo: Path, k, sealed: frozenset) -> tuple[list[dict], str, str]:
+    """(docs, grade-of-record path, its blob) of allowed sample `k`, read
+    from HEAD: exactly n rows, every id valid, distinct by paper, none
+    sealed. Refuses (SealError) otherwise."""
+    offset, n, rel = sample_spec(k)
+    refuse_window(offset, n)
+    data, blob = committed(repo, rel)
+    try:
+        docs = json.loads(data)["docs"]
+    except Exception:  # noqa: BLE001
+        raise SealError(f"{rel} has no `docs` list") from None
+    if not isinstance(docs, list) or len(docs) != n:
+        raise SealError(f"{rel} holds {len(docs) if isinstance(docs, list) else '?'} rows, "
+                        f"not {n}")
+    if any(not isinstance(d, dict) for d in docs):
+        raise SealError(f"{rel} has a row that is not an object")
+    keys = [paper_key(d.get("arxiv_id")) for d in docs]
+    if len(set(keys)) != n:
+        raise SealError(f"{rel} repeats a paper")
+    refuse_ids([d["arxiv_id"] for d in docs], sealed)
+    return docs, rel, blob

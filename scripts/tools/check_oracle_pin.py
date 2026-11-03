@@ -196,6 +196,10 @@ GRADED = (
     ("corpora/strict_s0/bytes_probes.json", ("oracle",)),
     ("corpora/strict_s0/bytes_differential.json", ("oracle",)),
     ("corpora/contracts/strict/article-s0-lexical.json", ("oracle",)),
+    # OPEN-138: the P2 diagnostics baseline's records (p2_baseline.py record),
+    # written in its stage 2; until then this gate reports them missing.
+    ("corpora/p2_baseline/diag_sample1.json", ("oracle",)),
+    ("corpora/p2_baseline/diag_sample2.json", ("oracle",)),
 )
 
 # EVERY OTHER RECORDED ORACLE IDENTITY (C-127). GRADED was a hand list, and
@@ -311,6 +315,13 @@ GRADERS = {
         ("scripts/tools/oracle_clock_census.py",),
     "corpora/oracle_baseline/platform_residuals.json":
         ("scripts/tools/check_oracle_platforms.py",),
+    # OPEN-138 (p2_baseline.GRADERS)
+    "corpora/p2_baseline/diag_sample1.json":
+        ("scripts/tools/p2_baseline.py", "scripts/tools/_p2_diag.py",
+         "scripts/tools/_sample_seal.py", "scripts/tools/diff_real_roots.py"),
+    "corpora/p2_baseline/diag_sample2.json":
+        ("scripts/tools/p2_baseline.py", "scripts/tools/_p2_diag.py",
+         "scripts/tools/_sample_seal.py", "scripts/tools/diff_real_roots.py"),
 }
 
 # EVERY TRACKED DATA FILE IS CLASSIFIED (C-128; data files, not only JSON,

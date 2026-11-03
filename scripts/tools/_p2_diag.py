@@ -16,14 +16,21 @@ Every recorded grade names the git blobs of its grading code
 new function, which changes the AST that grading_code_drift compares -- makes
 grading_code_drift report every recorded results*.json / regrade artefact as
 "not a grade of the current grading code". This module only IMPORTS the
-oracle's log line model (_unwrap_log); it changes neither file, so the blobs
-the recorded grades name are untouched.
+oracle's log line model (_unwrap_log); it changes neither file.
 
 THE RECORD IS A DIAGNOSTIC, NOT EVIDENCE (C-99): pdfTeX prints whatever a
 document `\\message`s, so a "! ..." or "l.N ..." line in a log can be forged.
-Nothing here decides a grade. The `consistent` flag (see halting_consistent)
-and the source-line verification (verify_location) are how a forged or
-unparseable record is EXCLUDED from scoring rather than approximated.
+Nothing here decides a grade. `consistent` (halting_consistent) and
+`verified` (verify_location, plus the stack-certainty and ambiguity checks in
+diag_record) are how a forged, ambiguous or unparseable record is EXCLUDED
+from scoring rather than approximated.
+
+ONE PATH NORMALISATION (canon_path). Every path that is compared -- the gold
+top frame, the CLI's claimed file, a stack entry -- goes through canon_path:
+relative to the document root, `normpath`ed, with an absolute path under one
+of the run's roots (the host work directory, its resolved form, and the
+container's RUN_DIR /lp/run) made relative; `..` escapes and absolute paths
+outside the run are None, and None never matches anything.
 """
 from __future__ import annotations
 
@@ -38,10 +45,12 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _oracle import _unwrap_log  # noqa: E402  (the one 79-byte line model)
 
-SCHEMA = "p2-diag/1"
+SCHEMA = "p2-diag/2"
 # Bumped whenever a definition the pre-registration names changes.
-DEFINITIONS_VERSION = "p2-defs/1"
+DEFINITIONS_VERSION = "p2-defs/2"
 
+WRAP = 79  # max_print_line: the oracle's line model joins a line of exactly this
+FATAL_PREFIX = "!  ==>"
 FATAL_REPORT = "!  ==> Fatal error occurred, no output PDF file produced!"
 _L_LINE = re.compile(r"^l\.(\d+) ?(.*)$")
 # TeX's non-file context markers (show_context): <*>, <read N>, <insert>,
@@ -49,6 +58,34 @@ _L_LINE = re.compile(r"^l\.(\d+) ?(.*)$")
 # <output>, <write>, <everypar> ... (tex.web §314).
 _CTX_MARK = re.compile(r"^<[^<>\n]{1,24}> ")
 _ELLIPSIS_CTX = re.compile(r"^ \.\.\.\s*$")
+
+
+# ── paths ────────────────────────────────────────────────────────────────────
+
+def canon_path(p, roots: tuple = ()) -> str | None:
+    """THE path normalisation (module docstring). None when `p` is not a
+    path inside the document tree."""
+    if not isinstance(p, str) or not p or "\x00" in p:
+        return None
+    s = p
+    for r in sorted((str(x).rstrip("/") for x in roots if x), key=len, reverse=True):
+        if s == r:
+            return None
+        if s.startswith(r + "/"):
+            s = s[len(r) + 1:]
+            break
+    else:
+        if s.startswith("/") or re.match(r"[A-Za-z]:[\\/]", s):
+            return None
+    n = posixpath.normpath(s)
+    if n in (".", "", "..") or n.startswith("../") or n.startswith("/"):
+        return None
+    return n
+
+
+# kept for callers of the first version: the same function
+def tree_path(name: str, work_prefixes: tuple = ()) -> str | None:
+    return canon_path(name, work_prefixes)
 
 
 # ── log reading ──────────────────────────────────────────────────────────────
@@ -59,10 +96,9 @@ def log_lines(data: bytes) -> list[str]:
     Raw, not un-wrapped: a line of exactly 79 bytes is EITHER TeX's hard wrap
     OR a full-width line followed by a new one (MEASURED: the second line of
     a context pair is padded to error_line = 79 and the help text follows it
-    directly), so un-wrapping a whole log glues a context line to the help
-    text. Context pairs are never wrapped (show_context truncates them to
-    error_line), so they are read raw; message text and the file stack, which
-    can exceed 79 bytes, are un-wrapped locally (unwrap)."""
+    directly). Context pairs are never wrapped (show_context truncates them to
+    error_line), so they are read raw; `!` lines, message text and the file
+    stack are read UN-WRAPPED (groups)."""
     return data.decode("latin-1").split("\n")
 
 
@@ -72,12 +108,26 @@ def unwrap(lines: list[str]) -> list[str]:
     return [b.decode("latin-1") for b in _unwrap_log(data)]
 
 
-def _is_error_line(s: str) -> bool:
-    return s.startswith("!") and not s.startswith("!  ==>")
+def groups(lines: list[str]) -> list[tuple[int, int, str]]:
+    """The un-wrapped lines as (first raw index, end raw index, text): the
+    oracle's rule, a raw line of exactly WRAP bytes continues on the next."""
+    out, i = [], 0
+    while i < len(lines):
+        j, text = i, lines[i]
+        while len(lines[j]) == WRAP and j + 1 < len(lines):
+            j += 1
+            text += lines[j]
+        out.append((i, j + 1, text))
+        i = j + 1
+    return out
+
+
+def _is_error_text(s: str) -> bool:
+    return s.startswith("!") and not s.startswith(FATAL_PREFIX)
 
 
 def _context_start(lines: list[str], i: int) -> bool:
-    """Is lines[i] the first line of one of TeX's two-line context pairs?
+    """Is raw line i the first line of one of TeX's two-line context pairs?
     tex.web §317: the second line is the first line's length in spaces
     followed by the rest of the input."""
     s = lines[i]
@@ -89,26 +139,35 @@ def _context_start(lines: list[str], i: int) -> bool:
     return False
 
 
+def _stop_line(s: str) -> bool:
+    return s.startswith(FATAL_PREFIX) or s.startswith("Here is how much of TeX's memory")
+
+
 def error_blocks(lines: list[str]) -> list[dict]:
-    """Every `!` block of the log, in order: its message lines, its context
-    pairs, and its l.N line when the block has one. The pdfTeX final report
-    line ("!  ==> Fatal error ...") is not a block."""
-    starts = [i for i, s in enumerate(lines) if _is_error_line(s)]
+    """Every `!` block of the log, in order. A block STARTS at an un-wrapped
+    line beginning with `!` (a raw line beginning with `!` that continues a
+    79-byte line is not a start: see swallowed_bang_lines). Its message is
+    un-wrapped; its context pairs are read raw."""
+    gs = groups(lines)
+    starts = [g for g in gs if _is_error_text(g[2])]
     out = []
-    for k, i in enumerate(starts):
-        end = starts[k + 1] if k + 1 < len(starts) else len(lines)
-        for j in range(i + 1, end):
-            if lines[j].startswith("!  ==>") or lines[j].startswith(
-                    "Here is how much of TeX's memory"):
+    for k, (r0, r1, _t) in enumerate(starts):
+        end = starts[k + 1][0] if k + 1 < len(starts) else len(lines)
+        for j in range(r0 + 1, end):
+            if _stop_line(lines[j]):
                 end = j
                 break
-        msg, j = [lines[i]], i + 1
-        while j < end and not _context_start(lines, j):
-            msg.append(lines[j])
-            j += 1
-        msg = unwrap(msg)
-        # The message's first paragraph is the error text; LaTeX's
-        # "See the ... documentation" / "Type H <return>" lines follow a blank.
+        # the message: the un-wrapped groups from r0 until a group whose first
+        # raw line starts a context pair
+        msg, j = [], r0
+        for (a, b, text) in gs:
+            if a < r0:
+                continue
+            if a >= end or (a > r0 and _context_start(lines, a)):
+                j = a
+                break
+            msg.append(text)
+            j = b
         para = []
         for s in msg:
             if not s.strip():
@@ -126,7 +185,7 @@ def error_blocks(lines: list[str]) -> list[dict]:
                 lafter = bot[len(top):] if bot.startswith(" " * len(top)) else bot.lstrip()
             j += 2
         out.append({
-            "index": i,
+            "index": r0,
             "message": "\n".join(para),
             "message_lines": msg,
             "context_pairs": ctx,
@@ -141,26 +200,45 @@ def error_blocks(lines: list[str]) -> list[dict]:
     return out
 
 
+def swallowed_bang_lines(lines: list[str]) -> int:
+    """Raw lines that begin with `!` but continue a 79-byte line: TeX's
+    output is AMBIGUOUS there (a wrap of a longer line, or a full-width line
+    followed by a new `!` line). Counted so the record can be excluded."""
+    n = 0
+    for i in range(1, len(lines)):
+        if len(lines[i - 1]) == WRAP and _is_error_text(lines[i]):
+            n += 1
+        if _stop_line(lines[i]):
+            break
+    return n
+
+
 def halting_consistent(blocks: list[dict], lines: list[str]) -> tuple[bool, str]:
     """Is the FIRST `!` block the error pdfTeX actually stopped on?
 
-    Under -halt-on-error pdfTeX stops at its first error, so a log has
-    exactly one TeX error block. The one legitimate two-block shape is
-    LaTeX's missing-file path: `\\typeout` of "! LaTeX Error: File `x' not
-    found." (a MESSAGE, not a TeX error) followed by a terminal `\\read` that
-    nonstopmode turns into the fatal "! Emergency stop." with
-    "*** (cannot \\read from terminal in nonstop modes)". Any other extra
-    block is text a document or package printed (a forgery in the C-99
-    sense) and makes the record inconsistent: it is then excluded from cause
-    and location scoring, never guessed at."""
+    Under -halt-on-error pdfTeX stops at its first error and prints its
+    final report FATAL_REPORT, so a consistent log has (i) the final report
+    after the last block, (ii) no `!` line hidden in a 79-byte wrap, and
+    (iii) exactly one block -- or the one legitimate two-block shape, LaTeX's
+    missing-file path: `\\typeout` of "! LaTeX Error: File `x' not found."
+    followed by "Enter file name:" and the fatal "! Emergency stop." with
+    "*** (cannot \\read from terminal in nonstop modes)". A `\\typeout`ed `!`
+    line in a run that ended without the final report, or any other extra
+    block, is text a document or package printed (C-99): the record is then
+    excluded from cause and location scoring, never guessed at."""
     if not blocks:
         return False, "no error block"
+    last = blocks[-1]["index"]
+    if not any(s.startswith(FATAL_REPORT) for s in lines[last:]):
+        return False, "no halt: pdfTeX's fatal-error report does not follow the block"
+    if swallowed_bang_lines(lines):
+        return False, "a `!` line continues a 79-byte line (ambiguous wrap)"
     if len(blocks) == 1:
         return True, "one error block"
     if len(blocks) == 2:
         a, b = blocks
         tail = "\n".join(lines[b["index"]:b["index"] + 12])
-        between = [s for s in lines[a["index"] + 1:b["index"]]]
+        between = lines[a["index"] + 1:b["index"]]
         if (b["message"].startswith("! Emergency stop.")
                 and "cannot \\read from terminal in nonstop modes" in tail
                 and any(s.startswith("Enter file name:") for s in between)):
@@ -172,26 +250,36 @@ def halting_consistent(blocks: list[dict], lines: list[str]) -> tuple[bool, str]
 
 _FILE_START = re.compile(r"\(([^\s()]+)")
 _BOX_DUMP = re.compile(r"^(Overfull|Underfull) \\[hv]box")
+_CLOSERS = {"[": "]", "{": "}", "<": ">"}
+# Page markers ("[1", "]") and their numbers are pdfTeX's own output around
+# file closes, not document text.
+_CLEAN = set("[]{}<>0123456789")
 
 
 def file_stack(lines: list[str], upto: int, in_tree: Callable[[str], bool] | None = None
                ) -> tuple[list[str], dict]:
-    """The input-file stack pdfTeX had open at log line `upto` (exclusive):
-    the outermost file first. Every `(` pushes (a file when the text after it
-    names one, otherwise a TEXT marker, so the `)` that closes a printed
-    "(badness 10000)" pops the marker and not a file); every `)` pops.
+    """The input-file stack pdfTeX had open at raw log line `upto`
+    (exclusive): the outermost file first. Every `(` pushes (a file when the
+    text after it names one, otherwise a TEXT marker); every `)` pops.
 
     A name is a file when it starts with ./ ../ / or a drive letter, or when
     `in_tree(name)` says the document tree has it. Box-content dumps after an
     Overfull/Underfull warning and "Missing character:" lines print DOCUMENT
     text with unbalanced parentheses and are skipped up to their blank line.
-    Returns (stack, stats); stats counts underflows (a `)` with nothing open)
-    and skipped lines, which the record carries so an unreliable parse is
-    visible."""
-    stack: list[tuple[str, str | None]] = []
-    underflow = skipped = 0
+
+    STACK CERTAINTY. pdfTeX prints a file's `)` right after its last output,
+    so a `)` that closes a FILE frame is expected at the start of a line, after
+    other closers, page markers ([n], {map}, <image>) or the file's own open
+    on the same line. A `)` that pops a file frame after other printed text
+    ("item a)") may be the document's text instead: it is counted in
+    stats["suspect_file_pops"], and diag_record then refuses to certify the
+    location. stats also counts underflows and skipped lines; `opened` lists
+    every file pushed before `upto` (for the ambiguity check)."""
+    stack: list[tuple[str, str | None, int]] = []
+    underflow = skipped = suspect = 0
+    opened: list[str] = []
     skipping = False
-    for s in unwrap(lines[:upto]):
+    for ln, s in enumerate(unwrap(lines[:upto])):
         if skipping:
             if not s.strip():
                 skipping = False
@@ -204,47 +292,45 @@ def file_stack(lines: list[str], upto: int, in_tree: Callable[[str], bool] | Non
         if s.startswith("Missing character:"):
             skipped += 1
             continue
-        k = 0
+        k, dirty = 0, False
         while k < len(s):
             c = s[k]
             if c == "(":
                 m = _FILE_START.match(s, k)
                 name = m.group(1) if m else ""
-                is_file = bool(name) and (
+                is_file = bool(name) and bool(
                     name.startswith(("./", "../", "/")) or re.match(r"[A-Za-z]:[\\/]", name)
                     or (in_tree is not None and in_tree(name)))
-                stack.append(("file", name) if is_file else ("text", None))
-                k += 1 + (len(name) if is_file else 0)
+                if is_file:
+                    stack.append(("file", name, ln))
+                    opened.append(name)
+                    k += 1 + len(name)
+                    continue
+                stack.append(("text", None, ln))
+                dirty = True
+                k += 1
                 continue
             if c == ")":
                 if stack:
-                    stack.pop()
+                    kind, _n, opened_on = stack.pop()
+                    if kind == "file" and dirty and opened_on != ln:
+                        suspect += 1
                 else:
                     underflow += 1
+                k += 1
+                continue
+            if c in _CLOSERS:
+                e = s.find(_CLOSERS[c], k + 1)
+                if e >= 0:
+                    k = e + 1
+                    continue
+            if not (c.isspace() or c in _CLEAN):
+                dirty = True
             k += 1
-    files = [n for kind, n in stack if kind == "file"]
+    files = [n for kind, n, _ in stack if kind == "file"]
     return files, {"underflow": underflow, "skipped_lines": skipped,
-                   "open_text_parens": sum(1 for kind, _ in stack if kind == "text")}
-
-
-def tree_path(name: str, work_prefixes: tuple[str, ...] = ()) -> str | None:
-    """The path of a stack entry relative to the document root, or None when
-    it is outside the tree (a TeX Live file). Relative entries are relative to
-    the root (the oracle runs with cwd = the root); an absolute entry under one
-    of `work_prefixes` (the run directory as pdfTeX saw it) is made relative."""
-    p = name
-    for w in work_prefixes:
-        w = w.rstrip("/") + "/"
-        if p.startswith(w):
-            p = p[len(w):]
-            break
-    else:
-        if p.startswith("/") or re.match(r"[A-Za-z]:[\\/]", p):
-            return None
-    p = posixpath.normpath(p)
-    if p.startswith("../") or p == "..":
-        return None
-    return p
+                   "suspect_file_pops": suspect, "opened": opened,
+                   "open_text_parens": sum(1 for kind, _, _ in stack if kind == "text")}
 
 
 # ── source-line verification ─────────────────────────────────────────────────
@@ -276,8 +362,7 @@ def verify_location(src: bytes | None, line: int, before: str | None, after: str
     error point? tex.web §318: the l.N line shows the buffer from the line's
     start to the read point (left-truncated to "..." + tail when long), the
     line below it the rest (right-truncated with "..."). pdfTeX strips
-    trailing spaces and the end-of-line character (printed ^^M when shown).
-    A record whose location fails this is EXCLUDED from location scoring."""
+    trailing spaces and the end-of-line character (printed ^^M when shown)."""
     if src is None:
         return False, "source not readable"
     rows = src.splitlines()
@@ -308,53 +393,82 @@ def verify_location(src: bytes | None, line: int, before: str | None, after: str
 
 # ── cause classes (the pre-registered taxonomy) ──────────────────────────────
 
-# (class, regex on the first message line). FIRST MATCH WINS; the order is part
-# of the definition. `obj` is the named object when the class has one.
-CAUSE_RULES: list[tuple[str, re.Pattern]] = [(c, re.compile(p)) for c, p in [
-    ("missing-file", r"^! LaTeX Error: File `(?P<obj>[^']+)' not found"),
-    ("missing-file", r"^! I can't find file `(?P<obj>[^']+)'"),
-    ("missing-file", r"^! (?:Package|Class) [\w.-]+ Error: File `(?P<obj>[^']+)' not found"),
-    ("undefined-cs", r"^! Undefined control sequence"),
-    ("undefined-env", r"^! LaTeX Error: Environment (?P<obj>\S+) undefined"),
-    ("env-mismatch", r"^! LaTeX Error: \\begin\{(?P<obj>[^}]*)\}.* ended by \\end\{"),
-    ("missing-begin-document", r"^! LaTeX Error: Missing \\begin\{document\}"),
-    ("command-already-defined", r"^! LaTeX Error: Command (?P<obj>\\\S+?) already defined"),
-    ("option-clash", r"^! LaTeX Error: Option clash for package (?P<obj>[^\s.]+)"),
+_PKG = r"(?:Fatal |Critical )?(?:Package|Class) (?P<obj>[\w.-]+) Error: "
+# An engine requirement in a package's error text (MEASURED in the pinned
+# pdfTeX build on every FEATURE_PACKAGES package: fontspec, unicode-math,
+# polyglossia via fontspec, luacode, luatexja-core, xeCJK, ctex).
+_ENGINE_WORDS = re.compile(r"XeTeX|LuaTeX|XeLaTeX|LuaLaTeX|Lua\(HB\)\(La\)TeX|"
+                           r"\bpdf(?:la)?tex\b|unavailable in current mode", re.I)
+# Primitives of another engine: undefined under pdfTeX, so a package that
+# tests one dies "Undefined control sequence" (MEASURED: luatexbase.sty,
+# \luatexversion).
+ENGINE_PRIMITIVES = frozenset({
+    "\\luatexversion", "\\luatexrevision", "\\directlua", "\\latelua", "\\luaescapestring",
+    "\\luafunction", "\\XeTeXversion", "\\XeTeXrevision", "\\XeTeXinterchartoks",
+    "\\XeTeXcharclass", "\\Umathcode", "\\Umathchardef", "\\Ucharcat"})
+# (class, regex on the FLAT message, optional predicate on the match). FIRST
+# MATCH WINS; the order is part of the definition. `obj` is the named object.
+CAUSE_RULES = [(c, re.compile(p), f) for c, p, f in [
+    ("missing-file", r"^! LaTeX Error: File `(?P<obj>[^']+)' not found", None),
+    ("missing-file", r"^! I can't find file `(?P<obj>[^']+)'", None),
+    ("missing-file", r"^! (?:Fatal |Critical )?(?:Package|Class) [\w.-]+ Error: File "
+                     r"`(?P<obj>[^']+)' not found", None),
+    ("engine-incompatible", r"^! " + _PKG + r"(?P<body>.*)$",
+     lambda m: bool(_ENGINE_WORDS.search(m.group("body")))),
+    ("undefined-cs", r"^! Undefined control sequence", None),
+    ("undefined-env", r"^! LaTeX Error: Environment (?P<obj>\S+) undefined", None),
+    ("env-mismatch", r"^! LaTeX Error: \\begin\{(?P<obj>[^}]*)\}.* ended by \\end\{", None),
+    ("missing-begin-document", r"^! LaTeX Error: Missing \\begin\{document\}", None),
+    ("command-already-defined", r"^! LaTeX Error: Command (?P<obj>\\\S+?) already defined", None),
+    ("option-clash", r"^! LaTeX Error: Option clash for package (?P<obj>[^\s.]+)", None),
     ("encoding", r"^! (?:Package inputenc|LaTeX) Error: (?:Unicode character|Invalid UTF-8"
-                 r"|Keyboard character used is undefined)"),
-    ("encoding", r"^! Text line contains an invalid character"),
-    ("engine-incompatible", r"^! (?:Fatal )?Package (?P<obj>[\w.-]+) Error: .*requires? "
-                            r".*(?:XeTeX|LuaTeX|XeLaTeX|LuaLaTeX)"),
+                 r"|Keyboard character used is undefined)", None),
+    ("encoding", r"^! Text line contains an invalid character", None),
     ("brace-imbalance", r"^! (?:Missing \} inserted|Extra \}, or forgotten|Too many \}'s"
                         r"|Argument of \S+ has an extra \}|Paragraph ended before \S+ was "
-                        r"complete|File ended while scanning|Missing \{ inserted)"),
-    ("left-right-imbalance", r"^! (?:Missing \\right\. inserted|Extra \\right|Extra \\middle)"),
+                        r"complete|File ended while scanning|Missing \{ inserted)", None),
+    ("left-right-imbalance", r"^! (?:Missing \\right\. inserted|Extra \\right|Extra \\middle)",
+     None),
     ("math-mode", r"^! (?:Missing \$ inserted|Display math should end with \$\$"
                   r"|LaTeX Error: Bad math environment delimiter|Double superscript"
-                  r"|Double subscript)"),
-    ("alignment", r"^! (?:Misplaced alignment tab character &|Extra alignment tab)"),
-    ("tex-capacity", r"^! TeX capacity exceeded"),
-    ("package-error", r"^! (?:Fatal )?Package (?P<obj>[\w.-]+) Error"),
-    ("class-error", r"^! (?:Fatal )?Class (?P<obj>[\w.-]+) Error"),
-    ("latex-error", r"^! LaTeX Error"),
-    ("emergency-stop", r"^! Emergency stop"),
-    ("other", r"^!"),
+                  r"|Double subscript)", None),
+    ("alignment", r"^! (?:Misplaced alignment tab character &|Extra alignment tab)", None),
+    ("tex-capacity", r"^! TeX capacity exceeded", None),
+    ("package-error", r"^! (?:Fatal |Critical )?Package (?P<obj>[\w.-]+) Error", None),
+    ("class-error", r"^! (?:Fatal |Critical )?Class (?P<obj>[\w.-]+) Error", None),
+    ("latex-error", r"^! LaTeX Error", None),
+    ("emergency-stop", r"^! Emergency stop", None),
+    ("other", r"^!", None),
 ]]
-CLASSES = sorted({c for c, _ in CAUSE_RULES})
+CLASSES = sorted({c for c, _, _ in CAUSE_RULES})
 _CS_AT_END = re.compile(r"(\\(?:[A-Za-z@]+|.))\s*$")
+_CONT_PREFIX = re.compile(r"^\([\w.-]+\)\s+")
+# Extensions LaTeX/pdfTeX add or the author omits: a missing file is
+# compared by its basename without one of these.
+_FILE_EXT = (".tex", ".sty", ".cls", ".def", ".clo", ".fd", ".cfg", ".ltx", ".bib", ".bst",
+             ".bbl", ".aux", ".pdf", ".png", ".jpg", ".jpeg", ".eps", ".mps", ".pgf", ".tikz")
+
+
+def flat_message(message: str) -> str:
+    """The message's lines joined by a space, with LaTeX's "(pkg)   "
+    continuation prefixes removed: "...requires either XeTeX or" +
+    "(fontspec)  LuaTeX." reads as one sentence."""
+    ls = message.split("\n")
+    return " ".join([ls[0]] + [_CONT_PREFIX.sub("", s).strip() for s in ls[1:]]).strip()
 
 
 def norm_object(cls: str, obj: str | None) -> str | None:
-    """Objects compare after this normalisation: a file by basename without a
-    .tex/.sty/.cls extension (pdfTeX and LaTeX add them), a package or feature
-    lower-cased with - and _ removed, a control sequence verbatim."""
+    """Objects compare after this normalisation: a file by basename without
+    an extension from _FILE_EXT, a package or feature lower-cased with - and _
+    removed, a control sequence verbatim."""
     if obj is None:
         return None
     o = obj.strip().strip("`'\"")
     if cls == "missing-file":
         o = posixpath.basename(o)
-        for ext in (".tex", ".sty", ".cls"):
-            if o.endswith(ext):
+        low = o.lower()
+        for ext in _FILE_EXT:
+            if low.endswith(ext):
                 o = o[:-len(ext)]
                 break
         return o
@@ -367,10 +481,10 @@ def classify_message(message: str, context: list | None = None) -> dict:
     """(class, object) of one TeX error message. For an undefined control
     sequence the object is the control sequence at the end of the first
     context line (TeX breaks the context right after the offending token)."""
-    first = message.split("\n", 1)[0]
-    for cls, rx in CAUSE_RULES:
-        m = rx.match(first)
-        if not m:
+    flat = flat_message(message)
+    for cls, rx, pred in CAUSE_RULES:
+        m = rx.match(flat)
+        if not m or (pred is not None and not pred(m)):
             continue
         obj = m.groupdict().get("obj")
         if cls == "undefined-cs" and context:
@@ -384,7 +498,7 @@ def classify_message(message: str, context: list | None = None) -> dict:
 
 def diag_record(log: bytes | None, *, read_source: Callable[[str], bytes | None] | None = None,
                 in_tree: Callable[[str], bool] | None = None,
-                work_prefixes: tuple[str, ...] = ()) -> dict:
+                work_prefixes: tuple = ()) -> dict:
     """The P2 ground-truth record of one oracle run's LAST-pass log:
 
       first_error  the full first `!` block: message (first paragraph, NOT
@@ -392,14 +506,17 @@ def diag_record(log: bytes | None, *, read_source: Callable[[str], bytes | None]
       location     the l.N of the error (the first l.N at or after the first
                    block; LaTeX's missing-file prompt puts it in the following
                    Emergency-stop block), the file stack at the first block,
-                   the top frame's path in the tree (None when it is a TeX
-                   Live file), the innermost in-tree frame, and whether the
-                   source line carries the printed context (`verified`)
+                   the top frame's canon_path (None for a TeX Live file), the
+                   innermost in-tree frame, and `verified`: the source line
+                   carries the printed context AND the stack is certain (no
+                   suspect file pop, no underflow) AND no other opened tree
+                   file carries the same context at that line
       cause        the pre-registered class and object of the first message
       consistent   halting_consistent's verdict, and why
 
     `read_source(relpath)` returns a tree file's bytes (None if absent);
-    `in_tree(name)` says whether a bare stack name is a tree file."""
+    `in_tree(name)` says whether a bare stack name is a tree file;
+    `work_prefixes` are the run's roots for canon_path."""
     rec = {"schema": SCHEMA, "definitions": DEFINITIONS_VERSION,
            "has_error": False, "first_error": None, "halting_message": None,
            "consistent": None, "consistent_why": None, "location": None, "cause": None}
@@ -414,16 +531,17 @@ def diag_record(log: bytes | None, *, read_source: Callable[[str], bytes | None]
     first = blocks[0]
     rec["has_error"] = True
     rec["first_error"] = {k: first[k] for k in (
-        "message", "message_lines", "context_pairs", "l_line", "l_before", "l_after", "context_kind")}
+        "message", "message_lines", "context_pairs", "l_line", "l_before", "l_after",
+        "context_kind")}
     rec["halting_message"] = blocks[-1]["message"]
     ok, why = halting_consistent(blocks, lines)
     rec["consistent"], rec["consistent_why"] = ok, why
     loc_block = next((b for b in blocks if b["l_line"] is not None), None)
     stack, stats = file_stack(lines, first["index"], in_tree)
     top = stack[-1] if stack else None
-    top_rel = tree_path(top, work_prefixes) if top else None
-    author = next((tree_path(f, work_prefixes) for f in reversed(stack)
-                   if tree_path(f, work_prefixes) is not None), None)
+    top_rel = canon_path(top, work_prefixes) if top else None
+    author = next((canon_path(f, work_prefixes) for f in reversed(stack)
+                   if canon_path(f, work_prefixes) is not None), None)
     loc = {"line": loc_block["l_line"] if loc_block else None,
            "line_from_block": blocks.index(loc_block) if loc_block else None,
            "file_stack": stack, "stack_stats": stats,
@@ -432,31 +550,48 @@ def diag_record(log: bytes | None, *, read_source: Callable[[str], bytes | None]
            "author_file": author, "verified": None, "verify_why": None}
     if loc["line"] is not None and top_rel is not None:
         src = read_source(top_rel) if read_source else None
-        loc["verified"], loc["verify_why"] = verify_location(
-            src, loc["line"], loc_block["l_before"], loc_block["l_after"])
+        v, vw = verify_location(src, loc["line"], loc_block["l_before"], loc_block["l_after"])
+        if v and (stats["suspect_file_pops"] or stats["underflow"]):
+            v, vw = False, (f"stack uncertain ({stats['suspect_file_pops']} suspect file pops, "
+                            f"{stats['underflow']} underflows)")
+        if v and read_source:
+            others = {canon_path(f, work_prefixes) for f in stats["opened"]} - {top_rel, None}
+            twins = sorted(f for f in others if verify_location(
+                read_source(f), loc["line"], loc_block["l_before"], loc_block["l_after"])[0])
+            if twins:
+                v, vw = False, f"ambiguous: {len(twins)} other opened file(s) match at that line"
+        loc["verified"], loc["verify_why"] = v, vw
     rec["location"] = loc
-    rec["cause"] = classify_message(first["message"], first["context_pairs"])
+    cause = classify_message(first["message"], first["context_pairs"])
+    if cause["class"] == "undefined-cs" and cause["object"] in ENGINE_PRIMITIVES:
+        pkg = posixpath.basename(top).rsplit(".", 1)[0] if top else None
+        cause = {"class": "engine-incompatible",
+                 "object": norm_object("engine-incompatible", pkg)}
+    rec["cause"] = cause
     return rec
 
 
 # ── the CLI-side prediction ──────────────────────────────────────────────────
 
 # Compile-blocking T5 rules whose meaning names a TeX-level cause class. Every
-# other rule id (DELIM-005/006/008/010, PRT-*, and ENC rules whose byte class
-# pdflatex accepts) is "unmapped": it predicts NOT-READY without a class that
-# can match, so it can never be cause-correct (pre-registration §4.3).
+# other rule id is "unmapped": it predicts NOT-READY without a class that can
+# match, so it can never be cause-correct (pre-registration §4.3).
 T5_CLASS = {"DELIM-001": "brace-imbalance", "DELIM-002": "brace-imbalance",
             "DELIM-003": "left-right-imbalance", "DELIM-004": "left-right-imbalance",
             "DELIM-009": "left-right-imbalance", "DELIM-011": "left-right-imbalance"}
 T5_CLASS.update({f"ENC-{i:03d}": "encoding" for i in (1, 2, 4, 5, 6, 9, 12, 14)})
 # CLI feature names (Project_model.feature_to_string) -> the packages whose
-# engine error they predict.
+# engine error the feature predicts, normalised (norm_object). MEASURED: the
+# package that RAISES the error under pdfTeX, not only the one loaded
+# (polyglossia dies in fontspec; luatexja in luatexja-core); every entry is
+# checked against a recorded pdfTeX log by check_p2_diag.py.
 FEATURE_PACKAGES = {"opentype_fonts": {"fontspec"}, "unicode_math": {"unicodemath"},
-                    "polyglossia": {"polyglossia"}, "lua_scripting": {"luacode", "luatexbase"},
-                    "japanese_cjk": {"xecjk", "luatexja", "ctex"}}
+                    "polyglossia": {"polyglossia", "fontspec"},
+                    "lua_scripting": {"luacode", "luatexbase", "ltluatex"},
+                    "japanese_cjk": {"xecjk", "luatexja", "luatexjacore", "ctex"}}
 
-_LOC_FILE_LINE = re.compile(r"\b([\w./-]+\.(?:tex|sty|cls|bbl|aux|ltx)):(\d+)\b")
-_LOC_IN_FILE = re.compile(r"\bin ([^\s:]+\.(?:tex|sty|cls|bbl|aux|ltx))\b")
+_LOC_FILE_LINE = re.compile(r"([\w./-]+\.(?:tex|sty|cls|bbl|aux|ltx)):(\d+)\b")
+_LOC_IN_FILE = re.compile(r"\bin (\S+\.(?:tex|sty|cls|bbl|aux|ltx))\b")
 _LOC_LINE = re.compile(r"\(line (\d+)\)")
 
 
@@ -474,7 +609,8 @@ def _located(text: str, file_hint: str | None) -> tuple[str | None, int | None]:
 
 def _reason_predictions(text: str, source: str) -> list[dict]:
     """One printed reason line -> its predictions (a T5 line names several
-    rules; each is its own prediction, in printed order)."""
+    rules; each is its own prediction, in printed order). `file` is the RAW
+    printed path here; cli_prediction canonicalises it."""
     t = text.strip()
 
     def p(cls, obj=None, file=None, line=None, code=None):
@@ -491,7 +627,7 @@ def _reason_predictions(text: str, source: str) -> list[dict]:
             k = part.find(": !")
             c = classify_message(part[k + 2:]) if k >= 0 else {"class": None, "object": None}
             f, ln = _located(part, None)
-            out.append(p(c["class"], c["object"], f, ln, code="structural"))
+            out.append({**p(c["class"], None, f, ln, code="structural"), "object": c["object"]})
         return out
     m = re.match(r"T2 project not closed: missing file (.+)$", t)
     if m:
@@ -516,7 +652,7 @@ def _reason_predictions(text: str, source: str) -> list[dict]:
     return [p(None, file=f, line=ln, code=code)]
 
 
-def cli_prediction(stdout: str, stderr: str = "") -> dict:
+def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict:
     """The CLI's `--compile-check` answer as the P2 prediction.
 
     Read from the FROZEN SURFACE only (ADR-012 M0; the same scope as
@@ -525,8 +661,9 @@ def cli_prediction(stdout: str, stderr: str = "") -> dict:
     an error, and are not predictions (pre-registration §4.2). Predictions,
     in the order a user reads them: the indented reasons under the NOT-READY
     line; then, when the model rejected, the indented lines under
-    MODEL-CONNECTED (the blocking line then only points at them); the
-    file-not-found branch writes its reasons to stderr and is read there."""
+    MODEL-CONNECTED; the file-not-found branch writes its reasons to stderr.
+    Every claimed file goes through canon_path with `run_roots` (the
+    directory the CLI ran in, as it printed it); `file_raw` keeps the text."""
     def frozen(text):
         out = []
         for line in (text or "").split("\n"):
@@ -555,13 +692,16 @@ def cli_prediction(stdout: str, stderr: str = "") -> dict:
             cur.append(t)
     preds = [x for t in blocking for x in _reason_predictions(t, "blocking")]
     preds += [x for t in model for x in _reason_predictions(t, "model")]
+    for x in preds:
+        x["file_raw"] = x["file"]
+        x["file"] = canon_path(x["file"], run_roots) if x["file"] else None
     return {"definitions": DEFINITIONS_VERSION, "verdict": verdict, "predictions": preds}
 
 
-# ── matching (pre-registration §4) ───────────────────────────────────────────
+# ── matching (pre-registration §5) ───────────────────────────────────────────
 
 def cause_correct(pred: dict, gold: dict) -> bool:
-    """§4.3: the classes are equal, and when both sides name an object the
+    """§5.1: the classes are equal, and when both sides name an object the
     objects are equal after norm_object (a T3 feature names a SET of packages;
     the gold package must be in it)."""
     if not pred.get("class") or pred["class"] != gold.get("class"):
@@ -574,16 +714,15 @@ def cause_correct(pred: dict, gold: dict) -> bool:
 
 
 def location_correct(pred: dict, gold_loc: dict, level: str = "line") -> bool:
-    """§4.4: the predicted file equals the gold top frame's tree path
-    (normalised), and at level "line" the predicted line equals l.N exactly."""
-    if not pred.get("file") or not gold_loc.get("file"):
-        return False
-    if posixpath.normpath(pred["file"].lstrip("./") or ".") != posixpath.normpath(
-            gold_loc["file"].lstrip("./") or "."):
+    """§5.1: canon_path(predicted file) equals canon_path(gold file), both
+    not None, and at level "line" the predicted line equals l.N exactly."""
+    pf, gf = canon_path(pred.get("file")), canon_path(gold_loc.get("file"))
+    if pf is None or gf is None or pf != gf:
         return False
     if level == "file":
         return True
-    return pred.get("line") is not None and pred["line"] == gold_loc.get("line")
+    ln = pred.get("line")
+    return isinstance(ln, int) and not isinstance(ln, bool) and ln == gold_loc.get("line")
 
 
 def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float | None, float | None]:
@@ -613,9 +752,10 @@ def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float | None, 
 
 
 def score_rows(rows: list[dict]) -> dict:
-    """§5 metrics over joined rows {"compiles": bool, "graded": bool,
-    "agrees_with_record": bool, "gold": diag_record, "pred": cli_prediction}.
-    Every count is returned with its denominator; nothing is a bare rate."""
+    """§5 metrics over the GRADED rows of the records (record-time
+    exclusions are counted by the scorer, p2_baseline.score). Each row:
+    {"compiles", "graded", "agrees_with_record", "gold": diag_record,
+    "pred": cli_prediction}. Every count comes with its denominator."""
     ex = {"ungraded": 0, "disagrees_with_record": 0}
     fails, comp = [], []
     for r in rows:
@@ -663,8 +803,6 @@ def score_rows(rows: list[dict]) -> dict:
         return p if p and p.get("file") and p.get("line") is not None else None
 
     k1 = sum(1 for r in cause_rows if nr(r) and top1(r) and cause_correct(top1(r), r["gold"]["cause"]))
-    kany = sum(1 for r in cause_rows if nr(r) and any(
-        cause_correct(p, r["gold"]["cause"]) for p in r["pred"].get("predictions") or []))
     # Cause precision: every row whose TOP-1 prediction names a class; a class
     # named on a compiling document is wrong; FAILS rows excluded from cause
     # scoring are excluded here too.
@@ -674,8 +812,8 @@ def score_rows(rows: list[dict]) -> dict:
     kp = sum(1 for r in named if not r["compiles"]
              and cause_correct(top1(r), r["gold"]["cause"]))
     # Localisation precision: every row whose TOP-1 prediction carries (file,
-    # line), graded or compiling; a located claim on a compiling document is
-    # wrong; FAILS rows whose gold location is excluded are excluded here too.
+    # line); a located claim on a compiling document is wrong; FAILS rows
+    # whose gold location is excluded are excluded here too.
     loc_ids = {id(r) for r in loc_rows}
     claimed = [r for r in comp if nr(r) and top1_located(r)]
     claimed += [r for r in fails if nr(r) and top1_located(r) and id(r) in loc_ids]
@@ -695,7 +833,6 @@ def score_rows(rows: list[dict]) -> dict:
             "excluded": {**ex, **{"cause_" + k: v for k, v in c_ex.items()},
                          **{"location_" + k: v for k, v in l_ex.items()}},
             "cause_recall_top1": rate(k1, len(cause_rows)),
-            "cause_recall_any": rate(kany, len(cause_rows)),
             "cause_precision_top1": rate(kp, len(named)),
             "location_precision_line": rate(kl, len(claimed)),
             "location_recall_line": rate(krec, len(loc_rows)),

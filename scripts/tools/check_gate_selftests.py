@@ -2838,6 +2838,34 @@ REGISTRY = [
                          '        out["cell"] = "ungraded-infra"\n    else:\n        compiles = row_compiles(out)\n'),
         ]),
     GateTest(
+        "check_p2_diag",
+        [PY, f"{TOOLS}/check_p2_diag.py"],
+        "pure",
+        [
+            # OPEN-138/139, review of 758e0e18. Each mutation reverts one fix
+            # of that review's class; the gate must fail on it.
+            Mutation("seal accepts any string as a document id (H1b)",
+                     "scripts/tools/_sample_seal.py",
+                     r"FAIL H1b: id '\.\./papers/",
+                     old=r'ID_RE = re.compile(r"[0-9]{4}\.[0-9]{4,5}v[0-9]+", re.ASCII)',
+                     new='ID_RE = re.compile(r".+v[0-9]+", re.ASCII)'),
+            Mutation("score no longer requires FIXED lines (H3)",
+                     "scripts/tools/p2_baseline.py",
+                     r"FAIL H3: PROPOSED lines at HEAD are refused",
+                     old='    if block.get("status") != "FIXED":',
+                     new='    if False:'),
+            Mutation("canon_path lets `..` escape the tree (H7)",
+                     "scripts/tools/_p2_diag.py",
+                     r"FAIL canon_path\('\.\./main\.tex'",
+                     old='    if n in (".", "", "..") or n.startswith("../") or n.startswith("/"):',
+                     new='    if n in (".", ""):'),
+            Mutation("an ambiguous 79-byte `!` wrap is consistent again (M2)",
+                     "scripts/tools/_p2_diag.py",
+                     r"FAIL M2 \(exp3 A\)",
+                     old='    if swallowed_bang_lines(lines):',
+                     new='    if False:'),
+        ]),
+    GateTest(
         "check_compile_check_consumers",
         [PY, f"{TOOLS}/check_compile_check_consumers.py"],
         "pure",
@@ -3507,7 +3535,7 @@ def check_spec_drift_coverage() -> list[str]:
     # as "running nowhere". Same blind-spot shape as the gate it guards.
     pf_path = REPO / ".github/workflows/proof.yml"
     pf = pf_path.read_text() if pf_path.is_file() else ""
-    invoked = set(re.findall(r"(check_[a-z_]+\.py)", sd + ci + pf))
+    invoked = set(re.findall(r"(check_[a-z0-9_]+\.py)", sd + ci + pf))
     # A gate need not be named check_*: gen_candidate_backlog.py --check is
     # a spec-drift gate with kill-tests too (honesty sweep, 2026-09-30).
     invoked |= set(re.findall(r"scripts/tools/([a-z_0-9]+\.py)", sd + ci + pf))
@@ -3524,7 +3552,10 @@ def check_spec_drift_coverage() -> list[str]:
 
     covered = {_script(g) for g in REGISTRY}
     problems = []
-    for name in sorted(set(re.findall(r"(check_[a-z_]+\.py)", sd))):
+    # [a-z0-9_], not [a-z_]: a digit in a gate's name made it invisible here
+    # (check_p2_diag.py ran in spec-drift with no kill-test and no EXEMPT
+    # entry, and this check passed; review of 758e0e18, M5).
+    for name in sorted(set(re.findall(r"(check_[a-z0-9_]+\.py)", sd))):
         if name not in covered and name not in EXEMPT:
             problems.append(
                 f"{name} is wired into required spec-drift but has neither a "

@@ -129,7 +129,7 @@ def error_blocks(lines: list[str]) -> list[dict]:
             "index": i,
             "message": "\n".join(para),
             "message_lines": msg,
-            "context": ctx,
+            "context_pairs": ctx,
             "l_line": lno,
             "l_before": lbefore,
             "l_after": lafter,
@@ -414,7 +414,7 @@ def diag_record(log: bytes | None, *, read_source: Callable[[str], bytes | None]
     first = blocks[0]
     rec["has_error"] = True
     rec["first_error"] = {k: first[k] for k in (
-        "message", "message_lines", "context", "l_line", "l_before", "l_after", "context_kind")}
+        "message", "message_lines", "context_pairs", "l_line", "l_before", "l_after", "context_kind")}
     rec["halting_message"] = blocks[-1]["message"]
     ok, why = halting_consistent(blocks, lines)
     rec["consistent"], rec["consistent_why"] = ok, why
@@ -435,7 +435,7 @@ def diag_record(log: bytes | None, *, read_source: Callable[[str], bytes | None]
         loc["verified"], loc["verify_why"] = verify_location(
             src, loc["line"], loc_block["l_before"], loc_block["l_after"])
     rec["location"] = loc
-    rec["cause"] = classify_message(first["message"], first["context"])
+    rec["cause"] = classify_message(first["message"], first["context_pairs"])
     return rec
 
 

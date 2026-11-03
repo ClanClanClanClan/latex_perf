@@ -3,9 +3,11 @@
 Sample 3 is the VIRGIN North-Star sample: frame ranks 721-920 (offset 720,
 n 200) of the 2,719-paper frame ordered by sha256(arxiv_id), drawn and graded
 once, SEALED FOR MEASUREMENT ONLY (PROJECT_STATE OPEN-119): nothing is fixed,
-tuned or triaged on it. Owner ruling 2026-10-21: the P2 diagnostics baseline
-uses samples 1-2 ONLY, and does not read, grade, list or hash-inspect any
-sample-3 document or output.
+tuned or triaged on it. The P2 diagnostics baseline uses samples 1-2 ONLY and
+does not read, grade, list or hash-inspect any sample-3 document or output:
+the coordinating assistant's default pending owner ruling §8 #16 (stock-take
+2026-10-19; OPEN-130/OPEN-132 on docs/v27165-rulings-1103) -- NOT an owner
+ruling.
 
 Until this module the seal was prose (C-180). This module is the mechanical
 refusal for the P2 tools; the other tools are OPEN-139.
@@ -46,7 +48,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 SEALED_OFFSET = 720
 SEALED_N = 200
 SEALED_MANIFEST = "corpora/real_roots/manifest_sample3.json"
-# Samples P2 may use (owner ruling 2026-10-21): number -> (offset, n, the
+# Samples P2 may use (assistant's default pending owner ruling §8 #16): number -> (offset, n, the
 # results artefact that holds its grade of record).
 ALLOWED = {1: (0, 200, "corpora/real_roots/results.json"),
            2: (200, 200, "corpora/real_roots/results_sample2.json")}
@@ -129,7 +131,8 @@ def sample_spec(k) -> tuple[int, int, str]:
         k = int(k)
     if type(k) is int and k in ALLOWED:
         return ALLOWED[k]
-    raise SealError("P2 uses samples 1 and 2 only (owner ruling 2026-10-21); "
+    raise SealError("P2 uses samples 1 and 2 only (assistant's default pending owner "
+                    "ruling §8 #16); "
                     "sample 3 is sealed (OPEN-119) and no other sample is defined")
 
 

@@ -22,7 +22,8 @@ working-tree file must equal it (_sample_seal.committed): the grades of
 record, the seal manifest, the pre-registration and the two records. Their
 blob ids are stamped into the output.
 
-SEALED SAMPLE 3 (OPEN-119; owner ruling 2026-10-21). Both commands refuse
+SEALED SAMPLE 3 (OPEN-119; samples 1-2 only is the assistant's default
+pending owner ruling §8 #16). Both commands refuse
 (exit 3), before they open the corpus, construct an oracle or read a record,
 anything they cannot prove is sample 1 or 2 (_sample_seal: allow-list of
 ids, strict id syntax, committed inputs). No flag, environment variable or

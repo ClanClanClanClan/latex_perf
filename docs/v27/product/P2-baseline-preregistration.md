@@ -20,7 +20,7 @@ The following are not measured here:
 
 ## 2. Samples, and the seal
 
-- **Samples 1 and 2 only** (owner ruling 2026-10-21). Sample 1 is frame ranks 1–200 (offset 0); its grade of record is `corpora/real_roots/results.json`. Sample 2 is ranks 201–400 (offset 200); its grade of record is `corpora/real_roots/results_sample2.json`. The frame is the 2,719-paper frame ordered by `sha256(arxiv_id)`.
+- **Samples 1 and 2 only.** This is the **assistant's default pending owner ruling §8 #16**, not an owner ruling. It follows the stock-take's recommendation and OPEN-119's seal; whether P2 may use sample 3 is an open owner question (OPEN-130/OPEN-132 on `docs/v27165-rulings-1103`). Until the owner rules, the seal below stays in force as the safe default. Sample 1 is frame ranks 1–200 (offset 0); its grade of record is `corpora/real_roots/results.json`. Sample 2 is ranks 201–400 (offset 200); its grade of record is `corpora/real_roots/results_sample2.json`. The frame is the 2,719-paper frame ordered by `sha256(arxiv_id)`.
 - **Sample 3 (ranks 721–920, offset 720) is SEALED (OPEN-119) and is never used.** Before this branch the seal was a convention, not a mechanism (C-180).
 - **How `_sample_seal` enforces it.** It works by **allow-list and fails closed**. It does not try to recognise sample-3 inputs; it accepts only what it can prove belongs to samples 1–2:
   - **Document ids.** An id is accepted only if it is a string that fully matches the ASCII pattern `NNNN.NNNN(N)vN`. Nothing is normalised: any other string is refused, never mapped onto an id. Every id in samples 1, 2 and 3 matches this pattern (measured 2026-11-03). Papers are compared without the version suffix, so another version of a sealed paper is also sealed.

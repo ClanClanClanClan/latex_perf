@@ -333,6 +333,8 @@ GRADERS = {
 # may name a directory (`**` crosses `/`). In a NO_ORACLE file the discovery
 # must find nothing outside NOT_A_BLOCK.
 NO_ORACLE = (
+    ("corpora/real_roots/manifest_p2_heldout.json",
+     "OPEN-138 / ruling R3: the P2 held-out set's ids (frame offsets 920-1999); it grades nothing"),
     ("corpora/apply_fixes_real/fix_meaning_review.json",
      "OPEN-112: a human review of the meaning audit; it grades nothing"),
     ("corpora/contracts/parser_fixtures/kernel_meanings_excerpt.json",

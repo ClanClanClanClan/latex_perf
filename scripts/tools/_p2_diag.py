@@ -47,7 +47,7 @@ from _oracle import _unwrap_log  # noqa: E402  (the one 79-byte line model)
 
 SCHEMA = "p2-diag/2"
 # Bumped whenever a definition the pre-registration names changes.
-DEFINITIONS_VERSION = "p2-defs/3"
+DEFINITIONS_VERSION = "p2-defs/4"
 
 WRAP = 79  # max_print_line: the oracle's line model joins a line of exactly this
 FATAL_PREFIX = "!  ==>"
@@ -703,6 +703,8 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
             out.append(line)
         return out
     lines = frozen(stdout) + frozen(stderr)
+    tier_line = next((ln for ln in (stdout or "").split("\n") + (stderr or "").split("\n")
+                      if ln.startswith("TIER\t")), None)
     verdict = ("READY" if any(s.startswith("READY\t") for s in lines) else
                "NOT-READY" if any(s.startswith("NOT-READY") for s in lines) else None)
     printed, cur = [], None
@@ -725,9 +727,45 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
     preds = ([x for t, src in printed for x in _reason_predictions(t, src)]
              if verdict == "NOT-READY" else [])
     for x in preds:
+        x["tier"] = "heuristic"
+    cert = certified_prediction(tier_line) if verdict == "NOT-READY" else None
+    if cert:
+        preds.append(cert)
+    for x in preds:
         x["file_raw"] = x["file"]
         x["file"] = canon_path(x["file"], run_roots) if x["file"] else None
-    return {"definitions": DEFINITIONS_VERSION, "verdict": verdict, "predictions": preds}
+    vt = tier_line.split("\t")[1] if tier_line and len(tier_line.split("\t")) > 1 else None
+    return {"definitions": DEFINITIONS_VERSION, "verdict": verdict, "verdict_tier": vt,
+            "predictions": preds}
+
+
+_PROVEN_NR = re.compile(r"^PROVEN NOT-READY (?P<file>.+?):(?P<line>[0-9]+):(?P<col>[0-9]+) "
+                        r"(?P<msg>.*?) \[(?P<rest>[^\]]*)\]$")
+
+
+def certified_prediction(tier_line: str | None) -> dict | None:
+    """THE CLAIM TIER (ruling R4). A prediction is CERTIFIED only when the
+    CLI's TIER line is a PROVEN-NOT-READY verdict (Verdict.render: the strict
+    tier decided it by proof); its file:line:col and message are the certified
+    claim. Every other prediction -- every frozen-surface reason -- is
+    HEURISTIC. As of v27.1.64 the strict-tier membership predicate is a stub
+    (M0), so no prediction is certified: the certified channel is empty, by
+    measurement, until the strict tier ships."""
+    if not tier_line:
+        return None
+    f = tier_line.split("\t")
+    if len(f) < 4 or f[1] != "proven" or f[2] != "PROVEN-NOT-READY":
+        return None
+    m = _PROVEN_NR.match(f[3])
+    if not m:
+        return {"source": "tier", "tier": "certified", "code": "PROVEN", "text": f[3],
+                "class": None, "object": None, "file": None, "line": None,
+                "malformed": True}
+    msg = m.group("msg")
+    c = classify_message(msg if msg.startswith("!") else "! " + msg)
+    return {"source": "tier", "tier": "certified", "code": "PROVEN", "text": f[3],
+            "class": c["class"], "object": c["object"], "file": m.group("file"),
+            "line": int(m.group("line"))}
 
 
 # ── matching (pre-registration §5) ───────────────────────────────────────────
@@ -810,7 +848,7 @@ def unverified_reason(why) -> str:
     return "context not on the line" if w else "unknown"
 
 
-def score_rows(rows: list[dict]) -> dict:
+def score_rows(rows: list[dict], cause_labels: dict | None = None) -> dict:
     """§5 metrics over the GRADED rows of the records (record-time
     exclusions are counted by the scorer, p2_baseline.score). Each row:
     {"compiles", "graded", "agrees_with_record", "gold": diag_record,
@@ -856,47 +894,138 @@ def score_rows(rows: list[dict]) -> dict:
     def nr(r):
         return r["pred"].get("verdict") == "NOT-READY"
 
-    def top1(r):
-        p = r["pred"].get("predictions") or []
-        return p[0] if p else None
+    def first(r, tier):
+        """The first prediction of `tier`, in the CLI's printed order."""
+        return next((p for p in r["pred"].get("predictions") or []
+                     if p.get("tier", "heuristic") == tier), None)
 
-    def top1_located(r):
-        p = top1(r)
+    def top(r):
+        """The row's claim: the certified one if there is one, else the
+        first heuristic one (recall is on certified ∪ heuristic, R4)."""
+        return first(r, "certified") or first(r, "heuristic")
+
+    def located(p):
         return p if p and p.get("file") and p.get("line") is not None else None
 
-    k1 = sum(1 for r in cause_rows if nr(r) and top1(r) and cause_correct(top1(r), r["gold"]["cause"]))
-    # Cause precision: every row whose TOP-1 prediction names a class; a class
-    # named on a compiling document is wrong; FAILS rows excluded from cause
-    # scoring are excluded here too.
     cause_ids = {id(r) for r in cause_rows}
-    named = [r for r in comp + fails if nr(r) and top1(r) and top1(r).get("class")
-             and (r["compiles"] or id(r) in cause_ids)]
-    kp = sum(1 for r in named if not r["compiles"]
-             and cause_correct(top1(r), r["gold"]["cause"]))
-    # Localisation precision: every row whose TOP-1 prediction carries (file,
-    # line); a located claim on a compiling document is wrong; FAILS rows
-    # whose gold location is excluded are excluded here too.
     loc_ids = {id(r) for r in loc_rows}
-    claimed = [r for r in comp if nr(r) and top1_located(r)]
-    claimed += [r for r in fails if nr(r) and top1_located(r) and id(r) in loc_ids]
-    kl = sum(1 for r in claimed if not r["compiles"]
-             and location_correct(top1_located(r), r["gold"]["location"]))
-    krec = sum(1 for r in loc_rows if nr(r) and top1_located(r)
-               and location_correct(top1_located(r), r["gold"]["location"]))
-    kfile = sum(1 for r in loc_rows if nr(r) and top1(r)
-                and location_correct(top1(r), r["gold"]["location"], "file"))
+    k1 = sum(1 for r in cause_rows if nr(r) and top(r) and cause_correct(top(r), r["gold"]["cause"]))
+    krec = sum(1 for r in loc_rows if nr(r) and located(top(r))
+               and location_correct(located(top(r)), r["gold"]["location"]))
+    kfile = sum(1 for r in loc_rows if nr(r) and top(r)
+                and location_correct(top(r), r["gold"]["location"], "file"))
 
     def rate(k, n):
         lo, hi = clopper_pearson(k, n)
         return {"k": k, "n": n, "lower95": lo, "upper95": hi}
+
+    out_prec = {}
+    for tier in ("certified", "heuristic"):
+        # cause precision: rows whose first `tier` prediction names a class; a
+        # class named on a compiling document is wrong; FAILS rows excluded
+        # from cause scoring are excluded here too
+        named = [r for r in comp + fails if nr(r) and first(r, tier) and first(r, tier).get("class")
+                 and (r["compiles"] or id(r) in cause_ids)]
+        kp = sum(1 for r in named if not r["compiles"]
+                 and cause_correct(first(r, tier), r["gold"]["cause"]))
+        # location precision against TeX's stopping line l.N
+        claimed = [r for r in comp + fails if nr(r) and located(first(r, tier))
+                   and (r["compiles"] or id(r) in loc_ids)]
+        kl = sum(1 for r in claimed if not r["compiles"]
+                 and location_correct(located(first(r, tier)), r["gold"]["location"]))
+        out_prec[f"cause_precision_top1_{tier}"] = rate(kp, len(named))
+        out_prec[f"location_precision_line_{tier}"] = rate(kl, len(claimed))
+
+    # SOUNDNESS (R4): a certified claim is exact or it is a defect.
+    snd = {"certified_claims": 0, "certified_wrong": 0, "certified_unscorable": 0,
+           "certified_malformed": 0, "wrong_rows": []}
+    for r in comp + fails:
+        c = first(r, "certified") if nr(r) else None
+        if not c:
+            continue
+        snd["certified_claims"] += 1
+        wrong = unscorable = False
+        if c.get("malformed"):
+            snd["certified_malformed"] += 1
+            wrong = True
+        elif r["compiles"]:
+            wrong = True        # a certified NOT-READY on a document that compiles
+        else:
+            if c.get("class"):
+                if id(r) in cause_ids:
+                    wrong |= not cause_correct(c, r["gold"]["cause"])
+                else:
+                    unscorable = True
+            if located(c):
+                if id(r) in loc_ids:
+                    wrong |= not location_correct(c, r["gold"]["location"])
+                else:
+                    unscorable = True
+        if wrong:
+            snd["certified_wrong"] += 1
+            snd["wrong_rows"].append(r.get("arxiv_id"))
+        elif unscorable:
+            snd["certified_unscorable"] += 1
+
+    # The CAUSE line (R4): a heuristic location claim scored against the
+    # two-labeller gold (cause_line_gold), where a label exists.
+    lab = cause_labels or {}
+    lab_claimed = [r for r in comp + fails if nr(r) and located(first(r, "heuristic"))
+                   and (r["compiles"] or r.get("arxiv_id") in lab)]
+    kcl = sum(1 for r in lab_claimed if not r["compiles"]
+              and location_correct(located(first(r, "heuristic")), lab[r["arxiv_id"]]))
     return {"definitions": DEFINITIONS_VERSION,
             "inputs": {"rows": len(rows), "fails": len(fails), "compiles": len(comp),
-                       "cause_scored": len(cause_rows), "location_scored": len(loc_rows)},
+                       "cause_scored": len(cause_rows), "location_scored": len(loc_rows),
+                       "cause_line_labelled": sum(1 for r in fails if r.get("arxiv_id") in lab)},
             "excluded": {**ex, **{"cause_" + k: v for k, v in c_ex.items()},
                          **{"location_" + k: v for k, v in l_ex.items()}},
             "location_unverified_by_reason": dict(sorted(unv.items())),
+            "soundness": snd,
             "cause_recall_top1": rate(k1, len(cause_rows)),
-            "cause_precision_top1": rate(kp, len(named)),
-            "location_precision_line": rate(kl, len(claimed)),
+            **out_prec,
+            "location_precision_cause_heuristic": rate(kcl, len(lab_claimed)),
             "location_recall_line": rate(krec, len(loc_rows)),
             "location_recall_file": rate(kfile, len(loc_rows))}
+
+
+LABEL_SCHEMA = "p2-cause-labels/1"
+
+
+def cause_line_gold(doc: dict) -> tuple[dict, dict]:
+    """(gold, stats) from a two-labeller cause-line file (pre-registration
+    §5.5). Each entry: {"A": claim, "B": claim[, "adjudicated": claim |
+    "unresolvable"]}, claim = {"file", "line"} or {"none": why}. Gold is the
+    agreed claim when A and B give the same (canon file, line); otherwise the
+    adjudicator's, which must be one of the two; otherwise no gold (counted).
+    Refuses (ValueError) a file whose labellers are not three distinct ids."""
+    if not isinstance(doc, dict) or doc.get("schema") != LABEL_SCHEMA:
+        raise ValueError(f"not a {LABEL_SCHEMA} file")
+    a, b, adj = doc.get("labeller_a"), doc.get("labeller_b"), doc.get("adjudicator")
+    if not (a and b and adj) or len({a, b, adj}) != 3:
+        raise ValueError("labeller_a, labeller_b and adjudicator must be three distinct ids")
+
+    def key(c):
+        if isinstance(c, dict) and "none" not in c and canon_path(c.get("file")) \
+                and isinstance(c.get("line"), int) and not isinstance(c.get("line"), bool):
+            return (canon_path(c["file"]), c["line"])
+        return None
+    gold, st = {}, {"entries": 0, "agreed": 0, "adjudicated": 0, "unresolved": 0,
+                    "no_cause_line": 0}
+    for doc_id, e in (doc.get("docs") or {}).items():
+        st["entries"] += 1
+        ka, kb = key(e.get("A")), key(e.get("B"))
+        if ka and ka == kb:
+            st["agreed"] += 1
+            gold[doc_id] = {"file": ka[0], "line": ka[1]}
+            continue
+        if ka is None and kb is None and e.get("A") and e.get("B"):
+            st["no_cause_line"] += 1
+            continue
+        kd = key(e.get("adjudicated")) if e.get("adjudicated") != "unresolvable" else None
+        if kd and kd in (ka, kb):
+            st["adjudicated"] += 1
+            gold[doc_id] = {"file": kd[0], "line": kd[1]}
+        else:
+            st["unresolved"] += 1
+    return gold, st

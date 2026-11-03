@@ -73,6 +73,14 @@ def syn(log: bytes, files: dict):
                          in_tree=lambda n: d.canon_path(n) in files)
 
 
+def _msg(fn, *a):
+    try:
+        fn(*a)
+    except Exception as e:  # noqa: BLE001
+        return str(e)
+    return ""
+
+
 def refused(fn, *a, exc=seal.SealError):
     try:
         fn(*a)
@@ -521,7 +529,8 @@ ROWS = [
 ]
 S = d.score_rows(ROWS)
 check("score: inputs", S["inputs"] == {"rows": 8, "fails": 5, "compiles": 1, "cause_scored": 4,
-                                       "location_scored": 3}, S["inputs"])
+                                       "location_scored": 3, "cause_line_labelled": 0},
+      S["inputs"])
 check("score: exclusions are counted",
       (S["excluded"]["ungraded"], S["excluded"]["disagrees_with_record"],
        S["excluded"]["cause_inconsistent"], S["excluded"]["location_unverified"]) == (1, 1, 1, 1),
@@ -529,10 +538,13 @@ check("score: exclusions are counted",
 check("score: cause recall top-1 1/4", (S["cause_recall_top1"]["k"], S["cause_recall_top1"]["n"])
       == (1, 4), S["cause_recall_top1"])
 check("score: cause precision counts a cause named on a compiling document as wrong",
-      (S["cause_precision_top1"]["k"], S["cause_precision_top1"]["n"]) == (1, 3),
-      S["cause_precision_top1"])
-check("score: location precision 1/2", (S["location_precision_line"]["k"],
-                                        S["location_precision_line"]["n"]) == (1, 2))
+      (S["cause_precision_top1_heuristic"]["k"], S["cause_precision_top1_heuristic"]["n"])
+      == (1, 3), S["cause_precision_top1_heuristic"])
+check("score: location precision 1/2", (S["location_precision_line_heuristic"]["k"],
+                                        S["location_precision_line_heuristic"]["n"]) == (1, 2))
+check("R4: with no certified claim the certified channel is empty (n = 0, no defect)",
+      S["cause_precision_top1_certified"]["n"] == 0 and S["location_precision_line_certified"]["n"]
+      == 0 and S["soundness"]["certified_claims"] == 0, S["soundness"])
 check("score: location recall 1/3", (S["location_recall_line"]["k"],
                                      S["location_recall_line"]["n"]) == (1, 3))
 check("M3(d): the gameable any-of recall is not a metric", "cause_recall_any" not in S)
@@ -544,7 +556,7 @@ shot = [{"graded": True, "agrees_with_record": True, "compiles": False,
          "pred": pred("NOT-READY", {"class": None}, *[{"class": c} for c in d.CLASSES])}] * 30
 SS = d.score_rows(shot)
 check("M3(d) (exp2 shotgun): listing every class after a classless first scores 0 recall",
-      SS["cause_recall_top1"]["k"] == 0 and SS["cause_precision_top1"]["n"] == 0, SS)
+      SS["cause_recall_top1"]["k"] == 0 and SS["cause_precision_top1_heuristic"]["n"] == 0, SS)
 
 # ── 8. the pre-registration (committed document) ─────────────────────────────
 PRE = REPO / p2_baseline.PREREG
@@ -557,8 +569,34 @@ check("prereg: every line names a known metric and stat",
       all((ln["metric"] in S or ln["metric"].split(".", 1)[0] in ("inputs", "excluded"))
           and ln["stat"] in ("k", "n", "point", "lower95", "upper95") for ln in block["lines"]),
       [ln.get("id") for ln in block["lines"]])
-check("prereg (M3b/c): S1, S3, K1 and K2 carry an n floor",
-      all(ln.get("min_n") for ln in block["lines"] if ln["id"] in ("S1", "S3", "K1", "K2")))
+check("prereg (R4): every success line has the floor min_n >= 29",
+      all((ln.get("min_n") or 0) >= 29 for ln in block["lines"] if ln["kind"] == "success")
+      and sum(1 for ln in block["lines"] if ln["kind"] == "success") >= 7,
+      [(ln["id"], ln.get("min_n")) for ln in block["lines"] if ln["kind"] == "success"])
+check("prereg (R4): certified precision lines demand exactly 1.0; heuristic >= 0.95; "
+      "heuristic kills < 0.90; no certified kill line",
+      all(ln["op"] == "==" and ln["value"] == 1.0 for ln in block["lines"]
+          if ln["kind"] == "success" and ln["metric"].endswith("_certified"))
+      and all(ln["op"] == ">=" and ln["value"] == 0.95 for ln in block["lines"]
+              if ln["kind"] == "success" and "precision" in ln["metric"]
+              and ln["metric"].endswith("_heuristic"))
+      and all(ln["op"] == "<" and ln["value"] == 0.90 and ln["metric"].endswith("_heuristic")
+              for ln in block["lines"] if ln["kind"] == "kill")
+      and {ln["metric"] for ln in block["lines"] if ln["kind"] == "kill"}
+      == {"location_precision_line_heuristic", "cause_precision_top1_heuristic",
+          "location_precision_cause_heuristic"})
+check("prereg (R4): recall targets kept (location >= 0.50, cause >= 0.80) and the baseline "
+      "predicted at zero", {(ln["metric"], ln["op"], ln["value"]) for ln in block["lines"]
+                             if ln["id"] in ("S2", "S4", "P1")}
+      == {("location_recall_line", ">=", 0.5), ("cause_recall_top1", ">=", 0.8),
+          ("location_recall_line", "<=", 0.1)})
+check("prereg: the lines block is still PROPOSED and names p2-defs/4",
+      block["status"] == "PROPOSED" and block["definitions"] == "p2-defs/4")
+check("prereg (provenance): both owner messages are quoted verbatim",
+      all(q in PRE.read_text() for q in (
+          '"What are the answers leading to the best product for the orginal vision? Ultrathink"',
+          '"Yes to run docker builder prune and listing the images. And I asked best '
+          'recommendations for perfect project concerning your other two questions"')))
 check("prereg (H5/M3b): V0 floors record-time exclusions; V6/V7 floor the cause and "
       "location sets", {"V0", "V6", "V7"} <= {ln["id"] for ln in block["lines"]})
 check("prereg: the document states the definitions version in prose",
@@ -577,6 +615,8 @@ SEALED_FAKE = [f"9999.{i:05d}v1" for i in range(200)]
 S1_FAKE = [f"0001.{i:05d}v1" for i in range(200)]
 S2_FAKE = [f"0002.{i:05d}v2" for i in range(200)]
 SID = SEALED_FAKE[17]
+HELDOUT_FAKE = [f"9998.{i:05d}v1" for i in range(1080)]
+HID = HELDOUT_FAKE[500]
 
 
 def commit_all(repo):
@@ -592,6 +632,8 @@ def make_repo(td: Path, *, prereg_status="PROPOSED", s1=None) -> Path:
     (repo / "docs/v27/product").mkdir(parents=True)
     (repo / seal.SEALED_MANIFEST).write_text(json.dumps(
         {"frame": {"offset": 720, "n": 200}, "docs": [{"arxiv_id": x} for x in SEALED_FAKE]}))
+    (repo / seal.HELDOUT_MANIFEST).write_text(json.dumps(
+        {"frame": {"offset": 920, "n": 1080}, "docs": [{"arxiv_id": x} for x in HELDOUT_FAKE]}))
     for rel, ids in ((seal.ALLOWED[1][2], s1 or S1_FAKE), (seal.ALLOWED[2][2], S2_FAKE)):
         (repo / rel).write_text(json.dumps({"docs": [
             {"arxiv_id": x, "toplevel": "main.tex", "sha256_tree": "0" * 64, "pdflatex_rc": 1,
@@ -635,7 +677,7 @@ for k in (1, 2, "1", "2"):
 for off, n in ((720, 200), (719, 2), (919, 1), (900, 1000), (0, 721), (700, 21),
                (720, 0), (-1, 5), (1000, -300), (720.0, 200), ("720", 200), (True, 200)):
     check(f"seal: window ({off!r}, {n!r}) refused", refused(seal.refuse_window, off, n))
-for off, n in ((0, 200), (200, 200), (0, 720), (920, 10), (400, 320)):
+for off, n in ((0, 200), (200, 200), (0, 720), (2000, 10), (400, 320)):
     check(f"seal: window ({off}, {n}) allowed", not refused(seal.refuse_window, off, n))
 for nm in ("results_sample3.json", "results_sample 3.json", "results-sample\uff13.json",
            "results_s3.json", "Results_Sample_03.json", "x_SAMPLE3.json"):
@@ -646,7 +688,7 @@ for nm in ("diag_sample1.json", "diag_sample2.json", "score.json", "results_samp
 with tempfile.TemporaryDirectory() as td:
     repo = make_repo(Path(td))
     S3 = seal.sealed_ids(repo)
-    check("seal(syn): the committed seal loads 200 keys", len(S3) == 200)
+    check("seal(syn): the committed seals load 200 + 1,080 keys", len(S3) == 1280)
     docs, rel, blob = seal.sample_docs(repo, 1, S3)
     check("seal(syn): sample 1's docs come from HEAD with their blob",
           len(docs) == 200 and rel == seal.ALLOWED[1][2] and len(blob) == 40)
@@ -698,6 +740,54 @@ with tempfile.TemporaryDirectory() as td:
         "commit", "-qm", "untrack")
     check("seal(syn): an untracked seal manifest refuses everything",
           refused(seal.sealed_ids, repo))
+
+# 9a'. rulings R2 and R3: sample 3 by ruling, and the P2 held-out set
+check("R2: the sample refusal cites ruling R2 (no longer a pending default)",
+      refused(seal.sample_spec, 3) and "ruling R2" in str(
+          next((e for e in [None] if False), None) or _msg(seal.sample_spec, 3)))
+for off, n in ((920, 1), (1999, 1), (1500, 10), (900, 30), (0, 2719), (1990, 100)):
+    check(f"R3: window ({off}, {n}) meets the held-out set and is refused",
+          refused(seal.refuse_window, off, n))
+for off, n in ((2000, 10), (2000, 719)):
+    check(f"R3: window ({off}, {n}) after the held-out set is allowed",
+          not refused(seal.refuse_window, off, n))
+with tempfile.TemporaryDirectory() as td:
+    repo = make_repo(Path(td))
+    keys = seal.sealed_ids(repo)
+    check("R3(syn): the sealed set is sample 3 plus the held-out set (1,280 keys)",
+          len(keys) == 1280 and seal.paper_key(HID) in keys and seal.paper_key(SID) in keys)
+    for v in (HID, HID[:-2] + "v3"):
+        check(f"R3(syn): held-out id {v!r} refused", refused(seal.refuse_ids, [v], keys))
+    m = repo / seal.HELDOUT_MANIFEST
+    orig = m.read_text()
+    m.write_text(orig.replace(HID, "0003.00002v1"))
+    check("R3(syn): an edited (uncommitted) held-out manifest refuses everything",
+          refused(seal.sealed_ids, repo))
+    m.write_text(orig)
+for label, mut in (("1,079 ids", lambda dd: dd.update(docs=dd["docs"][:1079])),
+                   ("offset 900", lambda dd: dd.update(frame={"offset": 900, "n": 1080})),
+                   ("n recorded as 1000", lambda dd: dd.update(frame={"offset": 920, "n": 1000})),
+                   ("an id shared with sample 3", lambda dd: dd["docs"][0].update(arxiv_id=SID))):
+    with tempfile.TemporaryDirectory() as td:
+        repo = make_repo(Path(td))
+        m = repo / seal.HELDOUT_MANIFEST
+        dd = json.loads(m.read_text())
+        mut(dd)
+        m.write_text(json.dumps(dd))
+        commit_all(repo)
+        check(f"R3(syn): a committed held-out manifest with {label} refuses everything",
+              refused(seal.sealed_ids, repo))
+with tempfile.TemporaryDirectory() as td:
+    repo = make_repo(Path(td), s1=S1_FAKE[:199] + [HID])
+    check("R3(syn): a grade of record holding a held-out id is refused",
+          refused(seal.sample_docs, repo, 1, seal.sealed_ids(repo)))
+with tempfile.TemporaryDirectory() as td:
+    repo = make_repo(Path(td))
+    (repo / seal.HELDOUT_MANIFEST).unlink()
+    commit_all(repo)
+    check("R3(syn): a missing held-out manifest refuses everything", refused(seal.sealed_ids, repo))
+for nm in ("manifest_p2_heldout.json", "x-held-out.json", "HELD_OUT_run.json"):
+    check(f"R3: name belt refuses {nm!r}", refused(seal.refuse_name, nm))
 
 # 9b. record, with a FAKE oracle (exp4): what reaches the engine
 seen: list = []
@@ -954,7 +1044,8 @@ if res:
           and res["excluded"]["at_record"] == 175, res.get("excluded_at_record_by_reason"))
     check("M3(a): a VOID output presents no metric",
           res.get("void") is True and not any(k in res for k in (
-              "cause_recall_top1", "cause_precision_top1", "location_precision_line",
+              "cause_recall_top1", "cause_precision_top1_heuristic",
+              "location_precision_line_heuristic",
               "location_recall_line", "location_recall_file", "lines")), sorted(res))
 
 
@@ -979,12 +1070,167 @@ rc, res = score_case("M3(c): an abstaining predictor is scored (rc 0)", arts=abs
 if res:
     st = {ln["id"]: ln["status"] for ln in res["lines"]}
     check("M3(c) (exp2 abstainer): S1/S3 not evaluable (so not met), K1/K2 not evaluable "
-          "(they do not 'hold')", all(st[i] == "not-evaluable" for i in ("S1", "S3", "K1", "K2"))
-          and all(ln["holds"] is None for ln in res["lines"] if ln["id"] in ("K1", "K2")), st)
-lines_small = [{"id": "S3", "kind": "success", "metric": "cause_precision_top1", "stat": "point",
+          "(they do not 'hold')", all(st[i] == "not-evaluable" for i in (
+              "SC1", "SC3", "SH1", "SH3", "SH5", "KH1", "KH3", "KH5"))
+          and all(ln["holds"] is None for ln in res["lines"] if ln["kind"] == "kill"), st)
+lines_small = [{"id": "S3", "kind": "success", "metric": "cause_precision_top1_heuristic",
+                "stat": "point",
                 "op": "==", "value": 1.0, "min_n": 10}]
 ev = p2_baseline.evaluate_lines({"lines": lines_small}, d.score_rows(rec_rows(S1_FAKE[:1])))
 check("M3(b) (exp2): S3 at n = 1 is not evaluable", ev[0]["status"] == "not-evaluable", ev)
+
+# 9c'. ruling R4: the claim tier, soundness, floors, cause-line gold
+PROVEN_LINE = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:4:1 ! LaTeX Error: "
+               "File `fig.sty' not found. [E-12, rule X, probe p, contract abcdef12]\n")
+p = d.cli_prediction(MODEL_OK + "NOT-READY\tmain.tex\n  T5 rule violations: [DELIM-001]\n"
+                     + PROVEN_LINE)
+tiers = [(x["tier"], x["code"]) for x in p["predictions"]]
+check("R4: a PROVEN-NOT-READY TIER line is the one certified claim; reasons stay heuristic",
+      tiers == [("heuristic", "DELIM-001"), ("certified", "PROVEN")], tiers)
+c = p["predictions"][-1]
+check("R4: the certified claim carries the proof's file:line and its classified message",
+      (c["file"], c["line"], c["class"], c["object"]) == ("main.tex", 4, "missing-file", "fig"), c)
+p = d.cli_prediction(MODEL_OK + "NOT-READY\tmain.tex\n  T5 rule violations: [DELIM-001]\n"
+                     "TIER\theuristic\tLIKELY-FAIL\tLIKELY FAIL\n")
+check("R4: a heuristic TIER line makes no certified claim",
+      all(x["tier"] == "heuristic" for x in p["predictions"]) and p["verdict_tier"] == "heuristic")
+p = d.cli_prediction(MODEL_OK + "NOT-READY\tmain.tex\n"
+                     "TIER\tproven\tPROVEN-NOT-READY\tgarbled\n")
+check("R4: an unparseable PROVEN line is a MALFORMED certified claim (fail closed)",
+      p["predictions"][-1].get("malformed") is True and p["predictions"][-1]["tier"] == "certified")
+p = d.cli_prediction(MODEL_OK + "READY\tmain.tex\nTIER\tproven\tPROVEN-NOT-READY\t"
+                     "PROVEN NOT-READY main.tex:1:1 ! x [e]\n")
+check("R4: no certified claim is read from a READY answer", p["predictions"] == [])
+
+
+def cert_row(i, compiles=False, cls="missing-file", obj="fig", line=4, gold_line=4,
+             malformed=False):
+    cp = {"tier": "certified", "code": "PROVEN", "class": cls, "object": obj,
+          "file": "main.tex", "line": line}
+    if malformed:
+        cp = {"tier": "certified", "code": "PROVEN", "class": None, "object": None,
+              "file": None, "line": None, "malformed": True}
+    return {"arxiv_id": f"0001.{i:05d}v1", "graded": True, "agrees_with_record": True,
+            "compiles": compiles, "excluded": None,
+            "gold": ({"has_error": False} if compiles else
+                     gold("missing-file", "fig", "main.tex", gold_line)),
+            "pred": pred("NOT-READY", {"tier": "heuristic", "class": "encoding"}, cp)}
+
+
+S_ok = d.score_rows([cert_row(i) for i in range(30)])
+check("R4: 30 exact certified claims: certified precision 30/30 and no defect",
+      (S_ok["cause_precision_top1_certified"]["k"], S_ok["cause_precision_top1_certified"]["n"],
+       S_ok["location_precision_line_certified"]["k"], S_ok["soundness"]["certified_wrong"])
+      == (30, 30, 30, 0), S_ok["soundness"])
+check("R4: the tiers are scored separately (the wrong heuristic first reason does not touch "
+      "certified precision; heuristic precision is 0/30)",
+      (S_ok["cause_precision_top1_heuristic"]["k"], S_ok["cause_precision_top1_heuristic"]["n"])
+      == (0, 30))
+check("R4: recall uses the certified claim first (certified ∪ heuristic)",
+      S_ok["cause_recall_top1"]["k"] == 30)
+for label, row in (("a wrong class", cert_row(99, cls="encoding")),
+                   ("a wrong line (l.N is the certified gold)", cert_row(99, line=5)),
+                   ("a claim on a compiling document", cert_row(99, compiles=True)),
+                   ("a malformed claim", cert_row(99, malformed=True))):
+    S_bad = d.score_rows([cert_row(i) for i in range(30)] + [row])
+    check(f"R4: one wrong certified claim ({label}) is a soundness defect",
+          S_bad["soundness"]["certified_wrong"] == 1
+          and S_bad["soundness"]["wrong_rows"] == ["0001.00099v1"], S_bad["soundness"])
+ev = p2_baseline.evaluate_lines({"lines": [
+    {"id": "SH3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
+     "op": "==", "value": 1.0, "min_n": 29}]}, d.score_rows([cert_row(i) for i in range(28)]))
+check("R4: a success line at n = 28 (< 29) is not evaluable", ev[0]["status"] == "not-evaluable",
+      ev)
+ev = p2_baseline.evaluate_lines({"lines": [
+    {"id": "SH3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
+     "op": "==", "value": 1.0, "min_n": 29}]}, d.score_rows([cert_row(i) for i in range(29)]))
+check("R4: ... and evaluable at n = 29", ev[0]["status"] == "holds", ev)
+
+
+def cert_arts(wrong, void=False):
+    def f(a1, a2):
+        rows1 = [dict(cert_row(i), arxiv_id=x) for i, x in enumerate(S1_FAKE)]
+        if wrong:
+            rows1[0] = dict(cert_row(0, cls="encoding"), arxiv_id=S1_FAKE[0])
+        if void:
+            rows1[1].update(excluded="tree differs from the grade of record", graded=False)
+        return {"rec1.json": dict(a1, rows=rows1), "rec2.json": a2}
+    return f
+
+
+rc, res = score_case("R4: exact certified claims score normally (rc 0)", arts=cert_arts(False),
+                     expect_rc=0)
+if res:
+    check("R4: the outcome is SCORED with an empty defect list",
+          res.get("outcome") == "SCORED" and res["soundness"]["certified_wrong"] == 0)
+rc, res = score_case("R4: one wrong certified claim exits 5 (SOUNDNESS DEFECT, not a kill)",
+                     arts=cert_arts(True), expect_rc=p2_baseline.EXIT_SOUNDNESS,
+                     expect_in="SOUNDNESS DEFECT")
+if res:
+    check("R4: the outcome names the defect and its row",
+          res.get("outcome") == "SOUNDNESS-DEFECT"
+          and res["soundness"]["wrong_rows"] == [S1_FAKE[0]], res.get("soundness"))
+rc, res = score_case("R4: the defect takes precedence over VOID (exit 5)",
+                     arts=cert_arts(True, void=True), expect_rc=p2_baseline.EXIT_SOUNDNESS)
+if res:
+    check("R4: a void run still reports its soundness block",
+          res.get("void") is True and res["soundness"]["certified_wrong"] == 1)
+
+# the two-labeller cause-line gold (§5.5)
+LAB = {"schema": d.LABEL_SCHEMA, "labeller_a": "A", "labeller_b": "B", "adjudicator": "C",
+       "docs": {
+           "0001.00000v1": {"A": {"file": "main.tex", "line": 3},
+                            "B": {"file": "./main.tex", "line": 3}},
+           "0001.00001v1": {"A": {"file": "main.tex", "line": 3}, "B": {"file": "main.tex", "line": 5},
+                            "adjudicated": {"file": "main.tex", "line": 5}},
+           "0001.00002v1": {"A": {"file": "main.tex", "line": 3}, "B": {"file": "main.tex", "line": 5},
+                            "adjudicated": {"file": "main.tex", "line": 9}},
+           "0001.00003v1": {"A": {"file": "main.tex", "line": 3}, "B": {"file": "main.tex", "line": 5},
+                            "adjudicated": "unresolvable"},
+           "0001.00004v1": {"A": {"none": "no single line"}, "B": {"none": "macro"}}}}
+gold_cl, st = d.cause_line_gold(LAB)
+check("§5.5: agreement (after canon_path) is gold; adjudication must pick one of the two; "
+      "unresolvable and both-none have no gold",
+      gold_cl == {"0001.00000v1": {"file": "main.tex", "line": 3},
+                  "0001.00001v1": {"file": "main.tex", "line": 5}}
+      and st == {"entries": 5, "agreed": 1, "adjudicated": 1, "unresolved": 2,
+                 "no_cause_line": 1}, (gold_cl, st))
+for label, bad in (("labellers not distinct", dict(LAB, labeller_b="A")),
+                   ("adjudicator = a labeller", dict(LAB, adjudicator="B")),
+                   ("wrong schema", dict(LAB, schema="x"))):
+    try:
+        d.cause_line_gold(bad)
+        ok = False
+    except ValueError:
+        ok = True
+    check(f"§5.5: a label file with {label} is refused", ok)
+
+
+def cl_rows(a1, a2):
+    rows1 = rec_rows(S1_FAKE)
+    for r_ in rows1[:2]:
+        r_["pred"] = pred("NOT-READY", {"tier": "heuristic", "class": None, "file": "main.tex",
+                                        "line": 3})
+    return {"rec1.json": dict(a1, rows=rows1), "rec2.json": a2}
+
+
+def add_labels(repo, commit=True):
+    (repo / p2_baseline.CAUSE_LABELS).write_text(json.dumps(LAB))
+    if commit:
+        commit_all(repo)
+
+
+rc, res = score_case("§5.5: committed cause-line labels are scored (rc 0)", arts=cl_rows,
+                     edit=add_labels, expect_rc=0)
+if res:
+    m_ = res.get("location_precision_cause_heuristic", {})
+    check("§5.5: heuristic claims are scored against the cause-line gold (1 of 2 right)",
+          (m_.get("k"), m_.get("n")) == (1, 2)
+          and res["provenance"]["cause_labels"]["stats"]["agreed"] == 1, (m_,
+                                                                          res.get("provenance")))
+score_case("§5.5: an uncommitted label file is refused", arts=cl_rows,
+           edit=lambda repo: add_labels(repo, commit=False), expect_rc=3,
+           expect_in="not committed")
 
 # 9d. CLI provenance (M4)
 real_cli_provenance = saved[4]
@@ -1009,9 +1255,22 @@ with tempfile.TemporaryDirectory() as td:
     check("M4: an untracked latex-parse/src file is refused",
           refused(real_cli_provenance, exe, exc=p2_baseline.InputError))
 
-# 9e. the real seal: counts only, never an id
+# 9e. the real seals: counts only, never an id
 real = seal.sealed_ids(REPO)
-check("seal: the real committed sealed set holds exactly 200 paper keys", len(real) == 200)
+check("seal: the real committed sealed sets hold exactly 200 + 1,080 paper keys",
+      len(real) == 1280, len(real))
+hm = json.loads(seal.committed(REPO, seal.HELDOUT_MANIFEST)[0])
+check("R3: the real held-out manifest records the frame rule and its verification",
+      hm["frame"] == {"corpus": "LP_v24_FULL_BACKUP_20250716_165548/corpus/papers",
+                      "frame_size": 2719, "selection": "sha256(arxiv_id) ascending",
+                      "offset": 920, "n": 1080}
+      and hm["built"]["verification"] == {
+          "frame_size": 2719, "sample1_equals_ranks_0_200": True,
+          "sample2_equals_ranks_200_400": True, "sample3_equals_ranks_720_920": True,
+          "window_920_2000_size": 1080, "window_ids_valid": True,
+          "window_disjoint_from_samples_1_3": True}
+      and set(hm) == {"purpose", "frame", "built", "docs"}
+      and all(set(r_) == {"arxiv_id"} for r_ in hm["docs"]), sorted(hm))
 for k in (1, 2):
     docs, rel, blob = seal.sample_docs(REPO, k, real)
     check(f"seal: real sample {k} loads from HEAD (200 valid ids, none sealed)", len(docs) == 200)

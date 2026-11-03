@@ -2864,6 +2864,19 @@ REGISTRY = [
                      r"FAIL M2 \(exp3 A\)",
                      old='    if swallowed_bang_lines(lines):',
                      new='    if False:'),
+            # Rulings R3 and R4 (2026-11-03): the held-out seal, and the
+            # soundness outcome of a wrong certified claim.
+            Mutation("the P2 held-out set is no longer sealed (R3)",
+                     "scripts/tools/_sample_seal.py",
+                     r"FAIL R3: window \(920, 1\) meets the held-out set",
+                     old='         ("the P2 held-out set (ruling R3)", HELDOUT_MANIFEST, '
+                         'HELDOUT_OFFSET, HELDOUT_N))',
+                     new=')'),
+            Mutation("a wrong certified claim no longer exits 5 (R4)",
+                     "scripts/tools/p2_baseline.py",
+                     r"FAIL R4: one wrong certified claim exits 5",
+                     old='    defect = out["soundness"]["certified_wrong"] > 0',
+                     new='    defect = False'),
         ]),
     GateTest(
         "check_compile_check_consumers",

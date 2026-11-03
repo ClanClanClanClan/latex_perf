@@ -36,7 +36,10 @@ results*.json fail grading_code_drift. This producer imports them unchanged,
 and its artefact names ITS grading code (the oracle core plus GRADERS).
 
 Exit codes: 0 done; 2 infrastructure / refused precondition; 3 seal refusal;
-4 the run is VOID (a validity line failed: no metric is presented as a result).
+4 the run is VOID (a validity line failed: no metric is presented as a result);
+5 SOUNDNESS DEFECT (a wrong certified claim, ruling R4: the certified channel
+stops and the class is fixed; it is not a statistical kill, and it is
+reported even when the run is also void).
 """
 from __future__ import annotations
 
@@ -64,6 +67,8 @@ LINES_BEGIN, LINES_END = "<!-- P2-LINES:BEGIN -->", "<!-- P2-LINES:END -->"
 SF_DATALESS = 0x40000000  # macOS: the file's bytes are online-only (Dropbox)
 RUN_DIR = "/lp/run"       # _oracle.RUN_DIR: where the container sees the run
 EXIT_VOID = 4
+EXIT_SOUNDNESS = 5   # a wrong CERTIFIED claim (R4): takes precedence over VOID
+CAUSE_LABELS = "corpora/p2_baseline/cause_labels.json"
 
 
 class InputError(Exception):
@@ -90,6 +95,24 @@ def read_lines_block(path) -> dict:
     """The lines block of a pre-registration FILE (for the unit tests'
     reading of the committed document; the scorer uses committed_lines)."""
     return parse_lines_block(Path(path).read_text())
+
+
+def committed_labels(repo: Path) -> tuple[dict, dict | None]:
+    """The two-labeller cause-line gold (§5.5), from HEAD; none when the file
+    is not committed (the cause-line metric is then not evaluable). A
+    working-tree file that is not committed, or differs, is refused."""
+    wt = Path(repo) / CAUSE_LABELS
+    tracked = subprocess.run(["git", "--no-optional-locks", "rev-parse", f"HEAD:{CAUSE_LABELS}"],
+                             cwd=repo, capture_output=True).returncode == 0
+    if not tracked and not wt.exists() and not wt.is_symlink():
+        return {}, None
+    data, blob = seal.committed(repo, CAUSE_LABELS)
+    try:
+        gold, st = diag.cause_line_gold(json.loads(data))
+    except ValueError as e:
+        raise InputError(f"{CAUSE_LABELS}: {e}") from None
+    seal.refuse_ids(list(gold), seal.sealed_ids(repo))
+    return gold, {"path": CAUSE_LABELS, "blob": blob, "stats": st}
 
 
 def committed_lines(repo: Path) -> tuple[dict, str]:
@@ -356,8 +379,10 @@ def evaluate_lines(block: dict, scores: dict) -> list[dict]:
     return out
 
 
-def score_artefacts(arts: list[dict], block: dict) -> tuple[dict, bool]:
-    """(output, void) from validated records."""
+def score_artefacts(arts: list[dict], block: dict,
+                    cause_labels: dict | None = None) -> tuple[dict, bool]:
+    """(output, void) from validated records. The soundness block (R4) is in
+    the output whether or not the run is void."""
     by_reason: dict = {}
     graded = []
     for art in arts:
@@ -366,7 +391,7 @@ def score_artefacts(arts: list[dict], block: dict) -> tuple[dict, bool]:
                 by_reason[r["excluded"]] = by_reason.get(r["excluded"], 0) + 1
             else:
                 graded.append(r)
-    scores = diag.score_rows(graded)
+    scores = diag.score_rows(graded, cause_labels)
     scores["inputs"]["rows_recorded"] = sum(len(a["rows"]) for a in arts)
     scores["excluded"]["at_record"] = sum(by_reason.values())
     scores["excluded_at_record_by_reason"] = dict(sorted(by_reason.items()))
@@ -379,7 +404,8 @@ def score_artefacts(arts: list[dict], block: dict) -> tuple[dict, bool]:
                "inputs": scores["inputs"], "excluded": scores["excluded"],
                "excluded_at_record_by_reason": scores["excluded_at_record_by_reason"],
                "location_unverified_by_reason": scores["location_unverified_by_reason"],
-               "validity": [ln for ln in lines if ln["kind"] == "validity"]}
+               "validity": [ln for ln in lines if ln["kind"] == "validity"],
+               "soundness": scores["soundness"]}
         return out, True
     scores["void"] = False
     scores["lines"] = lines
@@ -396,10 +422,19 @@ def score(ns, repo: Path) -> int:
     loaded = [load_record(repo, f, sealed) for f in ns.records]
     if sorted(p["sample"] for _, p in loaded) != [1, 2]:
         raise InputError("the two records must be sample 1 and sample 2, once each")
-    out, void = score_artefacts([a for a, _ in loaded], block)
+    labels, labels_prov = committed_labels(repo)
+    out, void = score_artefacts([a for a, _ in loaded], block, labels)
     out["provenance"] = {"head": _git_head(repo), "prereg": {"path": PREREG, "blob": prereg_blob},
-                         "seal_blob": seal.seal_blob(repo), "records": [p for _, p in loaded]}
+                         "seal_blob": seal.seal_blob(repo), "records": [p for _, p in loaded],
+                         "cause_labels": labels_prov}
+    defect = out["soundness"]["certified_wrong"] > 0
+    out["outcome"] = "SOUNDNESS-DEFECT" if defect else ("VOID" if void else "SCORED")
     Path(ns.out).write_text(json.dumps(out, indent=1, sort_keys=True) + "\n")
+    if defect:
+        print(f"[p2-baseline] SOUNDNESS DEFECT: {out['soundness']['certified_wrong']} wrong "
+              f"certified claim(s) -- the certified channel stops and the class is fixed "
+              f"(R4; not a kill) -> {ns.out}", file=sys.stderr)
+        return EXIT_SOUNDNESS
     if void:
         print(f"[p2-baseline] VOID ({'; '.join(out['why'])}): no metric is a result -> {ns.out}",
               file=sys.stderr)

@@ -377,6 +377,7 @@ def score_artefacts(arts: list[dict], block: dict) -> tuple[dict, bool]:
                        if ln["kind"] == "validity" and ln["holds"] is not True],
                "inputs": scores["inputs"], "excluded": scores["excluded"],
                "excluded_at_record_by_reason": scores["excluded_at_record_by_reason"],
+               "location_unverified_by_reason": scores["location_unverified_by_reason"],
                "validity": [ln for ln in lines if ln["kind"] == "validity"]}
         return out, True
     scores["void"] = False

@@ -127,6 +127,11 @@ EXPECT = {
                         "main.tex", True),
     "input_missing_subdir": (True, True, "missing-file", "nosuch", "main.tex", 3, "document",
                              "main.tex", True),
+    # L3: names with a space and with parentheses, as pdfTeX prints them
+    "name_space": (True, True, "undefined-cs", "\\spaceundefined", "my file.tex", 2,
+                   "document", "my file.tex", True),
+    "name_paren": (True, True, "undefined-cs", "\\parenundefined", "fig(1).tex", 2,
+                   "document", "fig(1).tex", True),
 }
 cases_on_disk = sorted(p.name for p in FIX.iterdir() if p.is_dir())
 check("fixtures: every case on disk has an expectation and vice versa",
@@ -213,7 +218,12 @@ check("M1: a second opened tree file with the same context at l.N makes the loca
       and "ambiguous" in (r["location"]["verify_why"] or ""), r["location"])
 r = syn(b"(./my file.tex\n! Undefined control sequence.\nl.1 \\foo\n        \n" + FATAL,
         {"my file.tex": b"\\foo\n"})
-check("exp3 D: a file name with a space is not certified", r["location"]["verified"] is False)
+check("L3 (exp3 D): a file name with a space is parsed whole and certified",
+      (r["location"]["file"], r["location"]["verified"]) == ("my file.tex", True), r["location"])
+r = syn(b"(./my file.tex\n! Undefined control sequence.\nl.1 \\foo\n        \n" + FATAL, {})
+check("L3: a spaced name the tree does not have stays unverified, counted by reason",
+      r["location"]["verified"] is False
+      and d.unverified_reason(r["location"]["verify_why"]) == "file not in the tree", r["location"])
 logF = (b"(./main.tex\n! LaTeX Error: File `x.sty' not found.\n)\n! Emergency stop.\n"
         b"<*> main.tex\n          \n*** (job aborted, no legal \\end found)\n\n" + FATAL)
 r = syn(logF, {"main.tex": b"\\typeout{! LaTeX Error: File `x.sty' not found.}\n"})
@@ -228,7 +238,8 @@ SYN_PAREN = (b"(./main.tex\n"
              b"! Undefined control sequence.\n"
              b"l.2 \\foo\n"
              b"        \n" + FATAL)
-r = d.diag_record(SYN_PAREN, in_tree=lambda n: True)
+r = d.diag_record(SYN_PAREN, in_tree=lambda n: d.canon_path(n) in {"main.tex", "sec.tex",
+                                                                    "sec2.tex"})
 check("stack: box dumps / missing-character lines are skipped; page markers are clean",
       r["location"]["file_stack"] == ["./main.tex", "./sec2.tex"]
       and r["location"]["stack_stats"]["suspect_file_pops"] == 0, r["location"])
@@ -406,8 +417,36 @@ p = d.cli_prediction("", "NOT-READY\n  T0 parse fails in /p/x.tex: file not foun
 check("cli: the file-not-found branch is read from stderr",
       p["verdict"] == "NOT-READY" and p["predictions"][0]["code"] == "T0", p)
 p = d.cli_prediction(MODEL_OK + "NOT-READY\t/p/main.tex\n  artefact-fatal (main.aux): bad\n")
-check("cli: artefact-fatal names its file",
-      (p["predictions"][0]["class"], p["predictions"][0]["file"]) == ("artefact", "main.aux"))
+check("L4: artefact-fatal names its file and NO class (the gold taxonomy has none)",
+      (p["predictions"][0]["class"], p["predictions"][0]["file"], p["predictions"][0]["code"])
+      == (None, "main.aux", "artefact"), p["predictions"][0])
+# L4, the class: every class a prediction can name is a gold class, so no
+# prediction is unscorable by construction.
+pred_classes = set(d.T5_CLASS.values()) | {"missing-file", "engine-incompatible"}
+for line in ("  T5 rule violations: [" + "; ".join(sorted(d.T5_CLASS)) + "]",
+             "  structural-fatal (will not compile): [a: ! Double superscript; b: ! LaTeX "
+             "Error: Missing \\begin{document}.; c: ! Undefined control sequence]",
+             "  artefact-fatal (main.aux): bad", "  T2 project not closed: missing file x.tex",
+             "  T3 profile incompatible: feature opentype_fonts not supported by profile p"):
+    for x in d.cli_prediction("NOT-READY\tm.tex\n" + line + "\n")["predictions"]:
+        if x["class"]:
+            pred_classes.add(x["class"])
+check("L4: every class a prediction can name is in the gold taxonomy",
+      pred_classes <= set(d.CLASSES), pred_classes - set(d.CLASSES))
+# L6: the printed order, and no prediction from a CERTIFIED model
+REJ = ("MODEL-CONNECTED\tPREMISE-REJECTED\ttier=lp-core\ta compilability-bearing obligation "
+       "failed\n  T3 body-required feature(s) [unicode_math] not admitted by engine pdflatex\n")
+p = d.cli_prediction(REJ + "NOT-READY\t/p/main.tex\n  T5 rule violations: [DELIM-001]\n"
+                     "  (model-connected checks also reject; see above)\n")
+check("L6: predictions follow the CLI's printed order (MODEL-CONNECTED first), and top-1 is "
+      "the first printed", [x["code"] for x in p["predictions"]] == ["T3", "DELIM-001"],
+      p["predictions"])
+p = d.cli_prediction(MODEL_OK + "  T3 body-required feature(s) [unicode_math] not admitted\n"
+                     "NOT-READY\t/p/main.tex\n  T5 rule violations: [DELIM-001]\n")
+check("L6: an indented line under a CERTIFIED model is not a prediction",
+      [x["code"] for x in p["predictions"]] == ["DELIM-001"], p["predictions"])
+p = d.cli_prediction(REJ + "READY\t/p/main.tex\n")
+check("L6: a READY answer predicts nothing", p["predictions"] == [], p)
 check("cli: T5 classes only name compile-blocking rules",
       set(d.T5_CLASS) <= set(f"DELIM-{i:03d}" for i in range(1, 12))
       | set(f"ENC-{i:03d}" for i in range(1, 25)))
@@ -436,6 +475,16 @@ check("cp: 28/28 lower = 0.05^(1/28)", abs(lo - 0.05 ** (1 / 28)) < 1e-6, lo)
 lo, hi = d.clopper_pearson(5, 10)
 check("cp: 5/10 is symmetric", abs(lo - (1 - hi)) < 1e-6 and abs(lo - 0.2224) < 1e-3, (lo, hi))
 check("cp: n = 0 has no bound", d.clopper_pearson(0, 0) == (None, None))
+for n_big in (1030, 5000):
+    try:
+        lo0, hi0 = d.clopper_pearson(0, n_big)
+        lo1, hi1 = d.clopper_pearson(n_big, n_big)
+        lom, him = d.clopper_pearson(n_big // 2, n_big)
+        ok = (abs(hi0 - (1 - 0.05 ** (1 / n_big))) < 1e-9 and abs(lo1 - 0.05 ** (1 / n_big)) < 1e-9
+              and abs(lom - (1 - him)) < 1e-9 and lom < 0.5 < him)
+    except (OverflowError, ValueError) as e:
+        ok = repr(e)
+    check(f"L5: clopper_pearson is stable at n = {n_big}", ok is True, ok)
 
 
 def gold(cls, obj, file, line, verified=True, consistent=True):
@@ -487,6 +536,9 @@ check("score: location precision 1/2", (S["location_precision_line"]["k"],
 check("score: location recall 1/3", (S["location_recall_line"]["k"],
                                      S["location_recall_line"]["n"]) == (1, 3))
 check("M3(d): the gameable any-of recall is not a metric", "cause_recall_any" not in S)
+check("L3: unverified locations are counted by reason",
+      S.get("location_unverified_by_reason") == {"unknown": 1},
+      S.get("location_unverified_by_reason"))
 shot = [{"graded": True, "agrees_with_record": True, "compiles": False,
          "gold": gold("missing-file", "fig", "main.tex", 4),
          "pred": pred("NOT-READY", {"class": None}, *[{"class": c} for c in d.CLASSES])}] * 30
@@ -867,6 +919,21 @@ score_case("H2c: a self-declared sample label is not trusted (sample 2's rows la
                                 "rec2.json": a2}, expect_rc=2, expect_in="not exactly")
 score_case("H2c: a string sample label is refused",
            arts=lambda a1, a2: {"rec1.json": dict(a1, sample="1"), "rec2.json": a2}, expect_rc=3)
+score_case("L1: a copy (new inode) of an id-less artefact given as a record is refused",
+           arts=lambda a1, a2: {"rec1.json": {"summary": {}}, "rec2.json": a2}, expect_rc=2,
+           expect_in="is not a")
+
+
+def dangling(repo):
+    (repo / "corpora/real_roots/x_sample3_dangling.json").symlink_to("/nonexistent")
+    (repo / "corpora/p2_baseline/dangling.json").symlink_to("/nonexistent")
+
+
+score_case("L1: a dangling *sample3* symlink beside the inputs does not crash scoring",
+           edit=dangling, expect_rc=0)
+score_case("L1: a dangling symlink given as a record is refused cleanly (no traceback)",
+           edit=dangling, records=["dangling.json", "rec2.json"], expect_rc=2,
+           expect_in="not inside the repository")
 score_case("H3: a record edited after its commit is refused",
            edit=lambda repo: (repo / "corpora/p2_baseline/rec1.json").write_text("{}"),
            expect_rc=3, expect_in="differs from HEAD")

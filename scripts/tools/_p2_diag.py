@@ -47,7 +47,7 @@ from _oracle import _unwrap_log  # noqa: E402  (the one 79-byte line model)
 
 SCHEMA = "p2-diag/2"
 # Bumped whenever a definition the pre-registration names changes.
-DEFINITIONS_VERSION = "p2-defs/2"
+DEFINITIONS_VERSION = "p2-defs/3"
 
 WRAP = 79  # max_print_line: the oracle's line model joins a line of exactly this
 FATAL_PREFIX = "!  ==>"
@@ -256,6 +256,22 @@ _CLOSERS = {"[": "]", "{": "}", "<": ">"}
 _CLEAN = set("[]{}<>0123456789")
 
 
+def _tree_name_at(s: str, k: int, in_tree) -> str | None:
+    """The LONGEST tree file named after the `(` at s[k], when `in_tree`
+    knows one. pdfTeX prints a file name verbatim, spaces and parentheses
+    included (MEASURED: `(./my file.tex`, `(./fig(1).tex`), so the name can
+    end at any space, parenthesis or the line's end; the tree decides."""
+    if in_tree is None:
+        return None
+    ends = [j for j in range(k + 2, min(len(s), k + 1 + 1024) + 1)
+            if j == len(s) or s[j] in " ()"]
+    for j in reversed(ends):
+        cand = s[k + 1:j]
+        if cand.strip() == cand and in_tree(cand):
+            return cand
+    return None
+
+
 def file_stack(lines: list[str], upto: int, in_tree: Callable[[str], bool] | None = None
                ) -> tuple[list[str], dict]:
     """The input-file stack pdfTeX had open at raw log line `upto`
@@ -296,8 +312,10 @@ def file_stack(lines: list[str], upto: int, in_tree: Callable[[str], bool] | Non
         while k < len(s):
             c = s[k]
             if c == "(":
-                m = _FILE_START.match(s, k)
-                name = m.group(1) if m else ""
+                name = _tree_name_at(s, k, in_tree)
+                if name is None:
+                    m = _FILE_START.match(s, k)
+                    name = m.group(1) if m else ""
                 is_file = bool(name) and bool(
                     name.startswith(("./", "../", "/")) or re.match(r"[A-Za-z]:[\\/]", name)
                     or (in_tree is not None and in_tree(name)))
@@ -641,7 +659,10 @@ def _reason_predictions(text: str, source: str) -> list[dict]:
                 for f in feats] or [p(None, code="T3")]
     m = re.match(r"artefact-fatal \(([^)]+)\): (.*)$", t)
     if m:
-        return [p("artefact", None, m.group(1), None, code="artefact")]
+        # No CLASS (review L4): the gold taxonomy has no "artefact" class --
+        # TeX reports the error inside the artefact as whatever it is -- so a
+        # class here could never be cause-correct. The file is a claim.
+        return [p(None, None, m.group(1), None, code="artefact")]
     m = re.match(r"T0 (?:parse fails|LP-Foreign construct\(s\)) in (\S+?)[ :]", t)
     if m:
         f, ln = _located(t, m.group(1))
@@ -656,12 +677,22 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
     """The CLI's `--compile-check` answer as the P2 prediction.
 
     Read from the FROZEN SURFACE only (ADR-012 M0; the same scope as
-    diff_real_roots.scrape_reasons): the lines before `TIER\\t`. The TIER and
-    "why not strict:" lines name constructs that block a PROOF, not causes of
-    an error, and are not predictions (pre-registration §4.2). Predictions,
-    in the order a user reads them: the indented reasons under the NOT-READY
-    line; then, when the model rejected, the indented lines under
-    MODEL-CONNECTED; the file-not-found branch writes its reasons to stderr.
+    diff_real_roots.scrape_reasons): the lines before `TIER\\t`, on stdout and
+    then on stderr (the file-not-found branch writes there). The TIER and
+    "why not strict:" lines name constructs that block a PROOF, not causes
+    of an error, and are not predictions (pre-registration §4.2).
+
+    THE PREDICTIONS, IN THE ORDER THE CLI PRINTS THEM (review L6): the CLI
+    prints the MODEL-CONNECTED line first, then READY/NOT-READY and its
+    reasons. A prediction is
+      * an indented line under MODEL-CONNECTED, ONLY when its state is
+        PREMISE-REJECTED (under PREMISE-CERTIFIED the only indented line is
+        the non-blocking duplicate-label advisory: certified premises
+        predict no error), and
+      * an indented reason under NOT-READY,
+    skipping the non-blocking advisory and the "(model-connected checks
+    ...)" pointer line, which only point back. TOP-1 is the FIRST prediction
+    in that printed order. A READY answer predicts nothing.
     Every claimed file goes through canon_path with `run_roots` (the
     directory the CLI ran in, as it printed it); `file_raw` keeps the text."""
     def frozen(text):
@@ -671,16 +702,17 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
                 break
             out.append(line)
         return out
-    head, err = frozen(stdout), frozen(stderr)
-    verdict = ("READY" if any(s.startswith("READY\t") for s in head) else
-               "NOT-READY" if any(s.startswith("NOT-READY") for s in head + err) else None)
-    blocking, model, cur = [], [], None
-    for s in head + err:
+    lines = frozen(stdout) + frozen(stderr)
+    verdict = ("READY" if any(s.startswith("READY\t") for s in lines) else
+               "NOT-READY" if any(s.startswith("NOT-READY") for s in lines) else None)
+    printed, cur = [], None
+    for s in lines:
         if s.startswith("NOT-READY"):
-            cur = blocking
+            cur = "blocking"
             continue
         if s.startswith("MODEL-CONNECTED"):
-            cur = model
+            fields = s.split("\t")
+            cur = "model" if len(fields) > 1 and fields[1] == "PREMISE-REJECTED" else None
             continue
         if not s.startswith("  "):
             cur = None
@@ -689,9 +721,9 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
             t = s.strip()
             if t.startswith("advisory (non-blocking)") or t.startswith("(model-connected checks"):
                 continue
-            cur.append(t)
-    preds = [x for t in blocking for x in _reason_predictions(t, "blocking")]
-    preds += [x for t in model for x in _reason_predictions(t, "model")]
+            printed.append((t, cur))
+    preds = ([x for t, src in printed for x in _reason_predictions(t, src)]
+             if verdict == "NOT-READY" else [])
     for x in preds:
         x["file_raw"] = x["file"]
         x["file"] = canon_path(x["file"], run_roots) if x["file"] else None
@@ -731,11 +763,24 @@ def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float | None, 
     if n <= 0:
         return None, None
 
+    # LOG SPACE (review L5): the direct sum overflows a float at n ~ 1030.
+    lc = [math.lgamma(n + 1) - math.lgamma(i + 1) - math.lgamma(n - i + 1) for i in range(n + 1)]
+
+    def tail(p, lo_i, hi_i):  # P(lo_i <= X <= hi_i)
+        if p <= 0.0:
+            return 1.0 if lo_i == 0 else 0.0
+        if p >= 1.0:
+            return 1.0 if hi_i == n else 0.0
+        lp, lq = math.log(p), math.log1p(-p)
+        t = [lc[i] + i * lp + (n - i) * lq for i in range(lo_i, hi_i + 1)]
+        m = max(t)
+        return math.exp(m) * math.fsum(math.exp(x - m) for x in t)
+
     def tail_ge(p):  # P(X >= k)
-        return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i) for i in range(k, n + 1))
+        return tail(p, k, n)
 
     def tail_le(p):  # P(X <= k)
-        return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i) for i in range(0, k + 1))
+        return tail(p, 0, k)
 
     def solve(f, target, increasing):
         lo, hi = 0.0, 1.0
@@ -749,6 +794,20 @@ def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float | None, 
     lower = 0.0 if k == 0 else solve(tail_ge, alpha, True)
     upper = 1.0 if k == n else solve(tail_le, alpha, False)
     return lower, upper
+
+
+def unverified_reason(why) -> str:
+    """The category of an unverified location (review L3: exclusions are
+    counted by reason): a file the stack names that the tree does not have
+    (a mis-parsed name), an uncertain stack, an ambiguous match, a line
+    outside the file, or printed context that is not on the line."""
+    w = str(why or "")
+    for key, cat in (("source not readable", "file not in the tree"),
+                     ("stack uncertain", "stack uncertain"), ("ambiguous", "ambiguous"),
+                     ("outside the file", "line outside the file")):
+        if key in w:
+            return cat
+    return "context not on the line" if w else "unknown"
 
 
 def score_rows(rows: list[dict]) -> dict:
@@ -779,6 +838,7 @@ def score_rows(rows: list[dict]) -> dict:
         else:
             cause_rows.append(r)
     l_ex = {"no_line": 0, "system_frame": 0, "unverified": 0}
+    unv: dict = {}
     loc_rows = []
     for r in cause_rows:
         L = r["gold"].get("location") or {}
@@ -788,6 +848,8 @@ def score_rows(rows: list[dict]) -> dict:
             l_ex["system_frame"] += 1
         elif not L.get("verified"):
             l_ex["unverified"] += 1
+            why = unverified_reason(L.get("verify_why"))
+            unv[why] = unv.get(why, 0) + 1
         else:
             loc_rows.append(r)
 
@@ -832,6 +894,7 @@ def score_rows(rows: list[dict]) -> dict:
                        "cause_scored": len(cause_rows), "location_scored": len(loc_rows)},
             "excluded": {**ex, **{"cause_" + k: v for k, v in c_ex.items()},
                          **{"location_" + k: v for k, v in l_ex.items()}},
+            "location_unverified_by_reason": dict(sorted(unv.items())),
             "cause_recall_top1": rate(k1, len(cause_rows)),
             "cause_precision_top1": rate(kp, len(named)),
             "location_precision_line": rate(kl, len(claimed)),

@@ -2,9 +2,9 @@
 
 Product track P2 ("exactly why": the cause of a failure, at source level, before compiling). The owner ruled it part of the core vision on 2026-10-21. Ledger: OPEN-138 (this baseline) and OPEN-139 (the seal outside the P2 tools), in `docs/v27/PROJECT_STATE.md`.
 
-**Status: PROPOSED. Nothing has been scored.** The success, kill and validity lines in §7 are proposals for the owner. The scorer (`p2_baseline.py score`) refuses to run until the owner sets the lines block to `"status": "FIXED"` in a commit. Definitions version: **p2-defs/2** (`_p2_diag.DEFINITIONS_VERSION`; `check_p2_diag.py` checks that this document and the code agree).
+**Status: PROPOSED. Nothing has been scored.** The success, kill and validity lines in §7 are proposals for the owner. The scorer (`p2_baseline.py score`) refuses to run until the owner sets the lines block to `"status": "FIXED"` in a commit. Definitions version: **p2-defs/3** (`_p2_diag.DEFINITIONS_VERSION`; `check_p2_diag.py` checks that this document and the code agree).
 
-p2-defs/2 replaces p2-defs/1 (commit `758e0e18`, never scored). An independent review of that version found 7 HIGH and 6 MEDIUM defects; C-183 records them, and each fix has a defeat test in `check_p2_diag.py`.
+p2-defs/2 replaced p2-defs/1 (commit `758e0e18`, never scored) after an independent review found 7 HIGH and 6 MEDIUM defects; C-183 records them. p2-defs/3 adds the review's five LOW fixes (L1, L3–L6): file names with spaces and parentheses (§3), the `artefact` claim (§4.3), the printed order of predictions (§4.2), unverified locations counted by reason (§5.4), and numerically stable bounds. Neither version was scored, and each fix has a defeat test in `check_p2_diag.py`.
 
 Code: `scripts/tools/_p2_diag.py` (record, prediction, matching, metrics), `scripts/tools/_sample_seal.py` (the sample-3 refusal), `scripts/tools/p2_baseline.py` (producer and scorer), `scripts/tools/check_p2_diag.py` (unit and defeat tests). Where this document and the code disagree, that is a defect. Fix both, then bump the definitions version.
 
@@ -50,7 +50,7 @@ The record holds the following fields:
 | **first error** | The first un-wrapped line that begins with `!`, together with its block. pdfTeX's own final report line (`!  ==> Fatal error occurred, …`) does not count. The **message** is the block's first paragraph, in full and **not truncated**. The help text after the first blank line is kept in `message_lines` but is not part of the message. |
 | **context_pairs** | TeX's two-line context pairs, read raw. |
 | **l.N** | The first context line of the form `l.N …` at or after the first block. LaTeX's missing-file path prints a `\typeout` "! LaTeX Error: File … not found." followed by "! Emergency stop."; the `l.N` is in the second block. |
-| **file stack** | The input files open when the first block starts, outermost first, from a parenthesis parse of the un-wrapped log. Every `(` pushes: a file when the following name starts with `./`, `../` or `/` (or names a file in the tree), and a text marker otherwise. Every `)` pops. Two kinds of line print document text with unbalanced parentheses and are skipped: box dumps after `Overfull`/`Underfull` warnings, up to their blank line, and `Missing character:` lines. |
+| **file stack** | The input files open when the first block starts, outermost first, from a parenthesis parse of the un-wrapped log. Every `(` pushes a file or a text marker. pdfTeX prints file names verbatim, spaces and parentheses included (measured: `(./my file.tex`, `(./fig(1).tex`). So the name is the **longest** text after the `(` that names a file in the tree, ending at a space, a parenthesis or the end of the line. Failing that, a name starting with `./`, `../` or `/`, ending at a space or parenthesis, is still a (TeX Live) file. Anything else is a text marker. Every `)` pops. Two kinds of line print document text with unbalanced parentheses and are skipped: box dumps after `Overfull`/`Underfull` warnings, up to their blank line, and `Missing character:` lines. |
 | **stack certainty** | pdfTeX prints a file's `)` straight after that file's last output. A `)` that closes a file frame is therefore expected in one of three places: at the start of a line, after other closers or page markers, or on the same line as that file's own open. A `)` that closes a file frame after other printed text (for example `item a)`) may be the document's own text. It is counted as a **suspect pop**. Suspect pops and underflows are recorded. |
 | **location** | `file` is `canon_path` of the top stack frame (§5.1), or none when it is a TeX Live file. `frame` is `document`, `system` or `none`. `author_file` is the innermost frame inside the tree. `line` is l.N. |
 | **verified** | True only when all three hold: (i) line N of `file` contains the text pdfTeX printed around the error point (left-truncated `...`, right-truncated `...` and a trailing `^^M` are allowed; `^^xx` and `^^c` are decoded; trailing spaces and the end-of-line character are stripped, as pdfTeX does); (ii) the stack has no suspect pop and no underflow; (iii) no **other** tree file opened before the error carries the same context at line N (ambiguity check). A location that fails is **excluded**, not guessed (V4). |
@@ -82,13 +82,15 @@ The CLI runs in the copied package directory with the **relative** toplevel: `cd
 
 ### 4.2 What counts as the prediction
 
-Only the **frozen surface** counts: the lines before `TIER\t`, the same scope as `diff_real_roots.scrape_reasons`. The `TIER` and `why not strict:` lines name constructs that block a proof, not causes of an error, so they are not predictions.
+Only the **frozen surface** counts: the lines before `TIER\t`, on stdout and then on stderr, the same scope as `diff_real_roots.scrape_reasons`. The `TIER` and `why not strict:` lines name constructs that block a proof, not causes of an error, so they are not predictions.
 
-The predictions are read in the order a user reads them:
-1. the indented reasons under `NOT-READY`;
-2. when the model rejects, the indented lines under `MODEL-CONNECTED`. In that case the `NOT-READY` line only points to them; the pointer line and the non-blocking duplicate-label advisory are not predictions.
+The predictions are the following lines, **in the order the CLI prints them**. The CLI prints `MODEL-CONNECTED` first, then `READY`/`NOT-READY` and its reasons.
+1. The indented lines under `MODEL-CONNECTED`, **only when its state is `PREMISE-REJECTED`**. Under `PREMISE-CERTIFIED`, the certified premises predict no error.
+2. The indented reasons under `NOT-READY`.
 
-**Top-1** is the first prediction.
+The non-blocking duplicate-label advisory and the `(model-connected checks …)` pointer line are not predictions. A `READY` answer predicts nothing.
+
+**Top-1** is the first prediction in that printed order.
 
 ### 4.3 Class of a prediction
 
@@ -98,7 +100,7 @@ The predictions are read in the order a user reads them:
 | `structural-fatal … [parts]` | Each part names the TeX message it predicts (`…: ! Double superscript`). That message is classified with the same `CAUSE_RULES`. |
 | `T2 … missing file P` | `missing-file`, object `P`. |
 | `T3 … feature F …` (contract or model line) | `engine-incompatible`, object set = the packages that **raise** F's error (`FEATURE_PACKAGES`). |
-| `artefact-fatal (F): …` | `artefact`, file F. |
+| `artefact-fatal (F): …` | **No class**: the gold taxonomy has none for it, because TeX reports an error inside an artefact as whatever it is. It would otherwise be unscorable by construction. The file F is a file-level claim. |
 | `T0 …`, `T1 …`, `T2 cycle`, `T4 …`, `input too large`, other model lines | No class: the reason says NOT-READY without naming a cause that TeX would report. |
 
 ### 4.4 Location claims
@@ -126,7 +128,7 @@ A prediction claims a location when its text names a file and a line: `F:N`, or 
 
 ### 5.3 Metrics
 
-Each metric is reported as k, n, and the one-sided 95% lower and upper bounds.
+Each metric is reported as k, n, and the exact one-sided 95% Clopper–Pearson lower and upper bounds. These are computed in log space, so they stay stable at any n; they are tested at n = 5000.
 
 | Metric | k / n |
 |---|---|
@@ -151,7 +153,7 @@ Every exclusion is counted **by reason** in the score output. Record-time exclus
 - **ungraded:** a timeout on either side. Under load this means a rerun, not a verdict;
 - **disagrees** with the grade of record;
 - **for cause scoring:** no error block, an inconsistent record, or an unclassified record;
-- **for location scoring:** no l.N, a system top frame, or an unverified location.
+- **for location scoring:** no l.N, a system top frame, or an unverified location. Unverified locations are also counted **by reason** (`location_unverified_by_reason`): a file the tree does not have (for example a mis-parsed name), an uncertain stack, an ambiguous match, a line outside the file, or context not on the line.
 
 ## 6. Procedure (stage 2; not run on this branch)
 
@@ -211,7 +213,7 @@ The block below is machine-readable. The scorer reads it **from HEAD**, and it i
 ```json
 {
  "status": "PROPOSED",
- "definitions": "p2-defs/2",
+ "definitions": "p2-defs/3",
  "lines": [
   {"id": "V0", "kind": "validity", "metric": "excluded.at_record", "stat": "n", "op": "==", "value": 0},
   {"id": "V1", "kind": "validity", "metric": "inputs.fails", "stat": "n", "op": ">=", "value": 20},

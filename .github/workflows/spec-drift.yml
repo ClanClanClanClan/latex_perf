@@ -206,6 +206,15 @@ jobs:
         # the TeX-running reproducibility gate stays local/nightly.
         run: python3 scripts/tools/check_gen_contract_parsers.py
 
+      - name: P2 diagnostics record, prediction, metrics and the sample-3 seal (OPEN-138/139)
+        # Unit tests of _p2_diag.py on recorded logs (parsing only), the
+        # pre-registered matching and metrics, p2_baseline.py's refusals (no
+        # score until the owner FIXES the lines), and defeat tests of the
+        # sample-3 refusal. Pure: no docker, no TeX, no CLI. Needs fetch-depth 0
+        # (above): it asserts the recorded grades still name this tree's
+        # grading code.
+        run: python3 scripts/tools/check_p2_diag.py
+
       - name: Strict kernel L_S0 and its evidence (ADR-012 M2 phase 1)
         # Every Runs constructor of proofs/Strict/Semantics.v is probe-tagged
         # and its family in corpora/strict_s0/rule_probes.json agrees with the

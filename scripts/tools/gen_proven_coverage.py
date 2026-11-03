@@ -38,6 +38,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
+import _grading_seal  # noqa: E402
 
 STATES = {"PREMISE-CERTIFIED", "PREMISE-REJECTED"}
 
@@ -177,12 +178,17 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--corpus")
     ap.add_argument("--cli")
+    ap.add_argument("--sealed-measurement", action="store_true",
+                    help="sample 3 is sealed (OPEN-119, OPEN-139): a request that touches it is refused unless this flag is given; then the results file is written and only aggregates are printed (no per-document id, cell or first error)")
     ap.add_argument("--rejoin", action="store_true",
                     help="refresh --out's cells from --results and recompute "
                          "its summary; runs no CLI (see rejoin)")
     args = ap.parse_args()
 
     results = json.loads(pathlib.Path(args.results).read_text())
+    _grading_seal.gate("gen-proven-coverage",
+                       [d["arxiv_id"] for d in results["docs"]],
+                       measurement=args.sealed_measurement)
     if args.rejoin:
         return rejoin(pathlib.Path(args.out), results)
     if not args.corpus or not args.cli:

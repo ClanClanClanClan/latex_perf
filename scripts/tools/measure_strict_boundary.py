@@ -28,6 +28,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _grading_seal  # noqa: E402
+
 TURING = {"def", "let", "xparse", "atletter", "expl3", "conditional", "loop",
           "csname", "expandafter", "write", "foreign"}
 
@@ -62,8 +65,12 @@ def main() -> int:
     ap.add_argument("--cli", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--jobs", type=int, default=6)
+    ap.add_argument("--sealed-measurement", action="store_true",
+                    help="sample 3 is sealed (OPEN-119, OPEN-139): a request that touches it is refused unless this flag is given; then the results file is written and only aggregates are printed (no per-document id, cell or first error)")
     a = ap.parse_args()
     res = json.loads(Path(a.results).read_text())
+    _grading_seal.gate("strict-boundary", [d["arxiv_id"] for d in res["docs"]],
+                       measurement=a.sealed_measurement)
     cli = Path(a.cli)
 
     def one(d):

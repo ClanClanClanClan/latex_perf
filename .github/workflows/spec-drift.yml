@@ -239,6 +239,9 @@ jobs:
       - name: Oracle infrastructure failures are not grades
         run: python3 scripts/tools/check_oracle_infra_grading.py --repo .
 
+      - name: Grading inputs (OPEN-139 sample-3 seal, C-181 first error, C-182 tree digest)
+        run: python3 scripts/tools/check_grading_inputs.py --repo .
+
       - name: Release-only gates, now run per-PR (OPEN-091)
         # These four ran ONLY inside pre_release_check.py, i.e. only when a
         # human cut a release — and the gap between the last two releases was

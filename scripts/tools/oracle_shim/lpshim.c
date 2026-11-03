@@ -57,7 +57,8 @@
      five identical runs, and that after a java child depended on the
      container's CPU count.
 
-   DIRECTORY ORDER.  In a TeX program (as above), readdir(3) returns a
+   DIRECTORY ORDER.  In every process of a fixed-clock run (LP_CLOCK_EPOCH;
+     before C-138 in a TeX program only), readdir(3) returns a
      directory's entries sorted by name (bytewise), not in the file system's
      order: that order is the work root's (APFS through virtiofs on a Mac,
      ext4 hash order with a per-file-system seed on a CI runner, creation
@@ -76,6 +77,15 @@
      preload the dynamic loader ignored would otherwise run the engine on the
      real clock); the children's counts are reported, not checked (C-136).
 
+   THE USER (C-139 (b)).  With LP_CLOCK_EPOCH set, getuid/geteuid/getgid/
+     getegid/getresuid/getresgid/getgroups report LP_ID (1000: the image's
+     own user, `texlive`) for the run's real ids, and every stat-family call
+     reports st_uid/st_gid = LP_ID for a file the run's user owns. The
+     container runs as the HOST user (--user; colima's virtiofs and the CI
+     runner's bind mount need it for the run directory), which was 501:20 on
+     the Mac and the runner's uid in CI, and a child (perl's $<, Python's
+     os.getuid, java's user.name) could print it.
+
    CPU TIME.  With LP_CLOCK_EPOCH set, the process and thread CPU clocks
      (clock_gettime of CLOCK_PROCESS_CPUTIME_ID / CLOCK_THREAD_CPUTIME_ID,
      clock(3), times(2)'s tms fields, getrusage(2)'s ru_utime/ru_stime) read
@@ -84,6 +94,20 @@
      os.clock, Python's process_time) could print it. CLOCK_MONOTONIC and
      CLOCK_BOOTTIME stay real (timeouts and waits inside children use them;
      no program a document can start prints them: C-137).
+
+   RANDOMNESS AND TEMPORARY NAMES (C-138).  With LP_CLOCK_EPOCH set, every
+     process -- the TeX programs and the /usr/bin interpreters a restricted
+     \write18 starts alike -- reads a DETERMINISTIC byte stream (splitmix64
+     from a fixed seed, per process) from getrandom(2), getentropy(3) and an
+     open of /dev/urandom, /dev/random or /dev/arandom (an anonymous memfd of
+     LP_RANDOM_BYTES), and the mkstemp/mkostemp/mkstemps/mkdtemp/mktemp family
+     fills its XXXXXX from a per-process counter, retrying on EEXIST. MEASURED
+     before (review of 52b81823, 2026-11-03): gs under repstopdf -dSAFER may
+     enumerate its own TMPDIR, which held gs_XXXXXX names from mkstemp64, and
+     an EPS printed them into a PDF the document then hashed: two identical
+     runs differed. Every reachable child's temporary names (gs and perl:
+     mkstemp64; the JVM: mkstemp64; Python's tempfile: getrandom) and seeds
+     are now functions of the run's own sequence of calls.
 
    Built by build.sh in a digest-pinned ubuntu:22.04; the two .so files'
    sha256 are pinned in _oracle.SHIM_SHA256 and checked before every
@@ -108,6 +132,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#define LP_ID 1000
 #define LP_RELEASE "6.0.0-lp-oracle"
 #define LP_VERSION "#1 SMP lp-oracle"
 
@@ -126,6 +151,8 @@ static int nhides;
 static char privs[3][PATH_MAX];  /* the bookkeeping directories: always refused */
 static int nprivs;
 static unsigned long long cputicks; /* CPU-clock microseconds handed out */
+static uid_t real_uid;
+static gid_t real_gid;
 
 static int split_paths(const char *r, char out[][PATH_MAX], int max)
 {
@@ -200,12 +227,17 @@ __attribute__((constructor)) static void lp_init(void)
     nhides = split_paths(getenv("LP_FS_HIDE"), hides, 8);
   }
   const char *m = getenv("LP_SHIM_MARK");
+  real_uid = (uid_t) syscall(SYS_getuid);
+  real_gid = (gid_t) syscall(SYS_getgid);
   add_priv_dir(m, 1);
   add_priv_dir(fs_log, 0);
   add_priv_dir(clock_log, 0);
   if (m && *m) {
     char p[PATH_MAX];
-    const char *mode = restrict_fs ? "restricted\n" : "free\n";
+    char mode[PATH_MAX + 16], self[PATH_MAX];
+    ssize_t sn = syscall(SYS_readlinkat, AT_FDCWD, "/proc/self/exe", self, sizeof self - 1);
+    self[sn > 0 ? sn : 0] = 0;
+    snprintf(mode, sizeof mode, "%s %s\n", restrict_fs ? "restricted" : "free", self);
     snprintf(p, sizeof p, "%s/engine", m);
     int fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
     if (fd < 0 && errno == EEXIST) {
@@ -301,6 +333,169 @@ int clock_gettime(clockid_t c, struct timespec *ts)
   return f(c, ts);
 }
 
+/* ------------------------------------------------ randomness, temp names */
+
+static int allowed_at(const char *op, int dirfd, const char *path);
+#define ALLOWED(op, p) allowed_at(op, AT_FDCWD, p)
+
+static unsigned long long rng_state = 0x6c702d6f7261636cULL; /* "lp-oracl" */
+#define LP_RANDOM_BYTES (1u << 20)
+
+static unsigned long long splitmix(void)
+{
+  unsigned long long z = __atomic_add_fetch(&rng_state, 0x9e3779b97f4a7c15ULL, __ATOMIC_SEQ_CST);
+  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+  return z ^ (z >> 31);
+}
+
+static void fill_random(void *buf, size_t n)
+{
+  unsigned char *b = buf;
+  while (n > 0) {
+    unsigned long long v = splitmix();
+    size_t k = n < 8 ? n : 8;
+    memcpy(b, &v, k);
+    b += k; n -= k;
+  }
+}
+
+ssize_t getrandom(void *buf, size_t n, unsigned int flags)
+{
+  if (!have_epoch) {
+    ssize_t (*f)(void *, size_t, unsigned int) = real("getrandom");
+    if (f) return f(buf, n, flags);
+    return syscall(SYS_getrandom, buf, n, flags);
+  }
+  fill_random(buf, n);
+  return (ssize_t) n;
+}
+
+int getentropy(void *buf, size_t n)
+{
+  if (!have_epoch) {
+    int (*f)(void *, size_t) = real("getentropy");
+    return f(buf, n);
+  }
+  if (n > 256) { errno = EIO; return -1; }
+  fill_random(buf, n);
+  return 0;
+}
+
+static int is_random_device(const char *p)
+{
+  return p && (strcmp(p, "/dev/urandom") == 0 || strcmp(p, "/dev/random") == 0
+               || strcmp(p, "/dev/arandom") == 0);
+}
+
+/* A memfd holding LP_RANDOM_BYTES of the deterministic stream, positioned at
+   0; -1 (errno EIO) if it cannot be made: fail closed, never the real device. */
+static int random_fd(void)
+{
+  int fd = syscall(SYS_memfd_create, "lp-random", 1u /* MFD_CLOEXEC */);
+  if (fd < 0) { errno = EIO; return -1; }
+  unsigned char chunk[4096];
+  for (unsigned int done = 0; done < LP_RANDOM_BYTES; done += sizeof chunk) {
+    fill_random(chunk, sizeof chunk);
+    if (syscall(SYS_write, fd, chunk, sizeof chunk) != (long) sizeof chunk) {
+      syscall(SYS_close, fd); errno = EIO; return -1;
+    }
+  }
+  if (lseek(fd, 0, SEEK_SET) != 0) { syscall(SYS_close, fd); errno = EIO; return -1; }
+  return fd;
+}
+#define RANDOM_DEV(p) if (have_epoch && is_random_device(p)) return random_fd()
+
+static unsigned long long tmp_counter;
+
+/* Fill the six X's before `suffixlen` trailing bytes of `t` with the next
+   value of the per-process counter and call `make` until it does not fail
+   with EEXIST. */
+static int lp_tempname(char *t, int suffixlen, int (*make)(const char *, int), int arg)
+{
+  size_t len = strlen(t);
+  if (suffixlen < 0 || len < 6 + (size_t) suffixlen
+      || memcmp(t + len - suffixlen - 6, "XXXXXX", 6) != 0) {
+    errno = EINVAL; return -1;
+  }
+  char *x = t + len - suffixlen - 6;
+  static const char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+  for (unsigned int tries = 0; tries < 1000000; tries++) {
+    unsigned long long v = __atomic_fetch_add(&tmp_counter, 1, __ATOMIC_SEQ_CST);
+    for (int i = 5; i >= 0; i--) { x[i] = digits[v % 36]; v /= 36; }
+    int rc = make(t, arg);
+    if (rc >= 0 || errno != EEXIST) return rc;
+  }
+  errno = EEXIST;
+  return -1;
+}
+
+static int make_file(const char *p, int flags)
+{
+  return syscall(SYS_openat, AT_FDCWD, p, O_RDWR | O_CREAT | O_EXCL | (flags & ~O_ACCMODE), 0600);
+}
+static int make_dir(const char *p, int unused)
+{
+  return syscall(SYS_mkdirat, AT_FDCWD, p, 0700);
+}
+static int make_none(const char *p, int unused)
+{
+  struct stat st;
+  if (syscall(SYS_newfstatat, AT_FDCWD, p, &st, AT_SYMLINK_NOFOLLOW) == 0) { errno = EEXIST; return -1; }
+  return 0;
+}
+
+int mkstemp(char *t) {
+  if (!have_epoch) { int (*f)(char *) = real("mkstemp"); return f(t); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, 0, make_file, 0);
+}
+int mkstemp64(char *t) {
+  if (!have_epoch) { int (*f)(char *) = real("mkstemp64"); return f(t); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, 0, make_file, 0);
+}
+int mkostemp(char *t, int fl) {
+  if (!have_epoch) { int (*f)(char *, int) = real("mkostemp"); return f(t, fl); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, 0, make_file, fl);
+}
+int mkostemp64(char *t, int fl) {
+  if (!have_epoch) { int (*f)(char *, int) = real("mkostemp64"); return f(t, fl); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, 0, make_file, fl);
+}
+int mkstemps(char *t, int sl) {
+  if (!have_epoch) { int (*f)(char *, int) = real("mkstemps"); return f(t, sl); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, sl, make_file, 0);
+}
+int mkstemps64(char *t, int sl) {
+  if (!have_epoch) { int (*f)(char *, int) = real("mkstemps64"); return f(t, sl); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, sl, make_file, 0);
+}
+int mkostemps(char *t, int sl, int fl) {
+  if (!have_epoch) { int (*f)(char *, int, int) = real("mkostemps"); return f(t, sl, fl); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, sl, make_file, fl);
+}
+int mkostemps64(char *t, int sl, int fl) {
+  if (!have_epoch) { int (*f)(char *, int, int) = real("mkostemps64"); return f(t, sl, fl); }
+  if (!ALLOWED("mkstemp", t)) return -1;
+  return lp_tempname(t, sl, make_file, fl);
+}
+char *mkdtemp(char *t) {
+  if (!have_epoch) { char *(*f)(char *) = real("mkdtemp"); return f(t); }
+  if (!ALLOWED("mkdir", t)) return NULL;
+  return lp_tempname(t, 0, make_dir, 0) == 0 ? t : NULL;
+}
+char *mktemp(char *t) {
+  if (!have_epoch) { char *(*f)(char *) = real("mktemp"); return f(t); }
+  if (lp_tempname(t, 0, make_none, 0) != 0) t[0] = 0;
+  return t;
+}
+
 clock_t clock(void)
 {
   if (!have_epoch) {
@@ -336,6 +531,48 @@ int getrusage(int who, struct rusage *u)
     u->ru_utime.tv_sec = ts.tv_sec; u->ru_utime.tv_usec = ts.tv_nsec / 1000;
     u->ru_stime.tv_sec = 0; u->ru_stime.tv_usec = 0;
   }
+  return rc;
+}
+
+#define ID_FN(name, type, realexpr)                                \
+  type name(void) {                                               \
+    type (*f)(void) = real(#name);                                \
+    type v = f();                                                 \
+    return (have_epoch && v == (realexpr)) ? (type) LP_ID : v;    \
+  }
+ID_FN(getuid, uid_t, real_uid)
+ID_FN(geteuid, uid_t, real_uid)
+ID_FN(getgid, gid_t, real_gid)
+ID_FN(getegid, gid_t, real_gid)
+
+int getresuid(uid_t *r, uid_t *e, uid_t *s)
+{
+  int (*f)(uid_t *, uid_t *, uid_t *) = real("getresuid");
+  int rc = f(r, e, s);
+  if (rc == 0 && have_epoch) {
+    if (r && *r == real_uid) *r = LP_ID;
+    if (e && *e == real_uid) *e = LP_ID;
+    if (s && *s == real_uid) *s = LP_ID;
+  }
+  return rc;
+}
+int getresgid(gid_t *r, gid_t *e, gid_t *s)
+{
+  int (*f)(gid_t *, gid_t *, gid_t *) = real("getresgid");
+  int rc = f(r, e, s);
+  if (rc == 0 && have_epoch) {
+    if (r && *r == real_gid) *r = LP_ID;
+    if (e && *e == real_gid) *e = LP_ID;
+    if (s && *s == real_gid) *s = LP_ID;
+  }
+  return rc;
+}
+int getgroups(int n, gid_t *g)
+{
+  int (*f)(int, gid_t *) = real("getgroups");
+  int rc = f(n, g);
+  if (rc > 0 && have_epoch && n > 0 && g)
+    for (int i = 0; i < rc; i++) if (g[i] == real_gid) g[i] = LP_ID;
   return rc;
 }
 
@@ -419,7 +656,7 @@ static void canonical(int dirfd, const char *path, char *out)
 }
 
 static int allowed_at(const char *op, int dirfd, const char *path)
-{
+{ /* forward-declared above */
   int meta = strstr(op, "stat") != NULL || strcmp(op, "access") == 0;
   if (!restrict_fs || !path) return 1;
   if (!*path) return 1;   /* the call fails with ENOENT by itself */
@@ -473,10 +710,16 @@ static int allowed_at(const char *op, int dirfd, const char *path)
 #define ALLOWED(op, p) allowed_at(op, AT_FDCWD, p)
 
 static void sdir_load(DIR *d);
+/* C-138: every process of a fixed-clock run lists directories sorted, not
+   only the TeX programs: the /usr/bin interpreters' children list the run
+   directory too, whose order is the work root's file system's. */
+#define SORT_DIRS (restrict_fs || have_epoch)
 
 static void fix_stat(struct stat *st)
 {
   if (!have_epoch || !st) return;
+  if (st->st_uid == real_uid) st->st_uid = LP_ID;
+  if (st->st_gid == real_gid) st->st_gid = LP_ID;
   st->st_atim.tv_sec = st->st_mtim.tv_sec = st->st_ctim.tv_sec = (time_t) epoch;
   st->st_atim.tv_nsec = st->st_mtim.tv_nsec = st->st_ctim.tv_nsec = 0;
 }
@@ -492,6 +735,7 @@ int open(const char *p, int flags, ...)
 {
   OPEN_MODE(flags, mode);
   if (!ALLOWED("open", p)) return -1;
+  RANDOM_DEV(p);
   int (*f)(const char *, int, ...) = real("open");
   return f(p, flags, mode);
 }
@@ -499,6 +743,7 @@ int open64(const char *p, int flags, ...)
 {
   OPEN_MODE(flags, mode);
   if (!ALLOWED("open", p)) return -1;
+  RANDOM_DEV(p);
   int (*f)(const char *, int, ...) = real("open64");
   return f(p, flags, mode);
 }
@@ -506,6 +751,7 @@ int openat(int d, const char *p, int flags, ...)
 {
   OPEN_MODE(flags, mode);
   if (!allowed_at("openat", d, p)) return -1;
+  if (p[0] == '/') RANDOM_DEV(p);
   int (*f)(int, const char *, int, ...) = real("openat");
   return f(d, p, flags, mode);
 }
@@ -513,30 +759,35 @@ int openat64(int d, const char *p, int flags, ...)
 {
   OPEN_MODE(flags, mode);
   if (!allowed_at("openat", d, p)) return -1;
+  if (p[0] == '/') RANDOM_DEV(p);
   int (*f)(int, const char *, int, ...) = real("openat64");
   return f(d, p, flags, mode);
 }
 int __open_2(const char *p, int flags)
 {
   if (!ALLOWED("open", p)) return -1;
+  RANDOM_DEV(p);
   int (*f)(const char *, int) = real("__open_2");
   return f(p, flags);
 }
 int __open64_2(const char *p, int flags)
 {
   if (!ALLOWED("open", p)) return -1;
+  RANDOM_DEV(p);
   int (*f)(const char *, int) = real("__open64_2");
   return f(p, flags);
 }
 int __openat_2(int d, const char *p, int flags)
 {
   if (!allowed_at("openat", d, p)) return -1;
+  if (p[0] == '/') RANDOM_DEV(p);
   int (*f)(int, const char *, int) = real("__openat_2");
   return f(d, p, flags);
 }
 int __openat64_2(int d, const char *p, int flags)
 {
   if (!allowed_at("openat", d, p)) return -1;
+  if (p[0] == '/') RANDOM_DEV(p);
   int (*f)(int, const char *, int) = real("__openat64_2");
   return f(d, p, flags);
 }
@@ -555,12 +806,20 @@ int creat64(const char *p, mode_t m)
 FILE *fopen(const char *p, const char *m)
 {
   if (!ALLOWED("fopen", p)) return NULL;
+  if (have_epoch && is_random_device(p)) {
+    int fd = random_fd();
+    return fd < 0 ? NULL : fdopen(fd, "r");
+  }
   FILE *(*f)(const char *, const char *) = real("fopen");
   return f(p, m);
 }
 FILE *fopen64(const char *p, const char *m)
 {
   if (!ALLOWED("fopen", p)) return NULL;
+  if (have_epoch && is_random_device(p)) {
+    int fd = random_fd();
+    return fd < 0 ? NULL : fdopen(fd, "r");
+  }
   FILE *(*f)(const char *, const char *) = real("fopen64");
   return f(p, m);
 }
@@ -581,7 +840,7 @@ DIR *opendir(const char *p)
   if (!ALLOWED("opendir", p)) return NULL;
   DIR *(*f)(const char *) = real("opendir");
   DIR *d = f(p);
-  if (d && restrict_fs) sdir_load(d);
+  if (d && SORT_DIRS) sdir_load(d);
   return d;
 }
 /* sorted directory streams (restricted processes only) */
@@ -645,13 +904,13 @@ DIR *fdopendir(int fd)
 {
   DIR *(*f)(int) = real("fdopendir");
   DIR *d = f(fd);
-  if (d && restrict_fs) sdir_load(d);
+  if (d && SORT_DIRS) sdir_load(d);
   return d;
 }
 
 struct dirent *readdir(DIR *d)
 {
-  struct sdir *s = restrict_fs ? sdir_find(d, 0) : NULL;
+  struct sdir *s = SORT_DIRS ? sdir_find(d, 0) : NULL;
   if (s) return s->i < s->n ? s->ents[s->i++] : NULL;
   struct dirent *(*f)(DIR *) = real("readdir");
   return f(d);
@@ -659,7 +918,7 @@ struct dirent *readdir(DIR *d)
 
 struct dirent64 *readdir64(DIR *d)
 {
-  struct sdir *s = restrict_fs ? sdir_find(d, 0) : NULL;
+  struct sdir *s = SORT_DIRS ? sdir_find(d, 0) : NULL;
   if (s) return s->i < s->n ? (struct dirent64 *) s->ents[s->i++] : NULL;
   struct dirent64 *(*f)(DIR *) = real("readdir64");
   return f(d);
@@ -667,15 +926,43 @@ struct dirent64 *readdir64(DIR *d)
 
 void rewinddir(DIR *d)
 {
-  struct sdir *s = restrict_fs ? sdir_find(d, 0) : NULL;
+  struct sdir *s = SORT_DIRS ? sdir_find(d, 0) : NULL;
   if (s) s->i = 0;
   void (*f)(DIR *) = real("rewinddir");
   f(d);
 }
 
+/* scandir(3) with no comparison function returns readdir's order, which
+   glibc's own scandir takes from its internal readdir (not the one above):
+   sorted here too (C-138). */
+static int dirent_ptr_cmp(const void *a, const void *b)
+{
+  return strcmp((*(struct dirent *const *) a)->d_name, (*(struct dirent *const *) b)->d_name);
+}
+int scandir(const char *p, struct dirent ***nl, int (*sel)(const struct dirent *),
+            int (*cmp)(const struct dirent **, const struct dirent **))
+{
+  if (!ALLOWED("opendir", p)) return -1;
+  int (*f)(const char *, struct dirent ***, int (*)(const struct dirent *),
+           int (*)(const struct dirent **, const struct dirent **)) = real("scandir");
+  int n = f(p, nl, sel, cmp);
+  if (n > 1 && !cmp && SORT_DIRS) qsort(*nl, (size_t) n, sizeof **nl, dirent_ptr_cmp);
+  return n;
+}
+int scandir64(const char *p, struct dirent64 ***nl, int (*sel)(const struct dirent64 *),
+              int (*cmp)(const struct dirent64 **, const struct dirent64 **))
+{
+  if (!ALLOWED("opendir", p)) return -1;
+  int (*f)(const char *, struct dirent64 ***, int (*)(const struct dirent64 *),
+           int (*)(const struct dirent64 **, const struct dirent64 **)) = real("scandir64");
+  int n = f(p, nl, sel, cmp);
+  if (n > 1 && !cmp && SORT_DIRS) qsort(*nl, (size_t) n, sizeof **nl, dirent_ptr_cmp);
+  return n;
+}
+
 int closedir(DIR *d)
 {
-  struct sdir *s = restrict_fs ? sdir_find(d, 1) : NULL;
+  struct sdir *s = SORT_DIRS ? sdir_find(d, 1) : NULL;
   if (s) {
     for (size_t i = 0; i < s->n; i++) free(s->ents[i]);
     free(s->ents);
@@ -912,6 +1199,8 @@ int statx(int d, const char *p, int fl, unsigned int mask, struct statx *sx)
   if (rc == 0 && have_epoch) {
     sx->stx_atime.tv_sec = sx->stx_mtime.tv_sec = sx->stx_ctime.tv_sec = sx->stx_btime.tv_sec = epoch;
     sx->stx_atime.tv_nsec = sx->stx_mtime.tv_nsec = sx->stx_ctime.tv_nsec = sx->stx_btime.tv_nsec = 0;
+    if (sx->stx_uid == real_uid) sx->stx_uid = LP_ID;
+    if (sx->stx_gid == real_gid) sx->stx_gid = LP_ID;
   }
   return rc;
 }

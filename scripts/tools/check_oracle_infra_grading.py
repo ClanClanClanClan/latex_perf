@@ -196,14 +196,16 @@ for f in cfg.get("remove", []):         # the supervisor clears stale evidence
 if os.environ.get("FAKE_CFG"):
     open(os.environ["FAKE_CFG"], "w").write(a[i + 6])
 banner = "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026)\n"
-def rcline(rc):
-    # the run supervisor's evidence line (C-99, OPEN-128), then the rc line
-    evid = os.environ.get("FAKE_EVID") or json.dumps({
+def rcline(rc, **extra):
+    # the run supervisor's evidence line (C-99, OPEN-128), then the rc line;
+    # the host readback is the configuration's own expectation (C-139 (a))
+    evid = os.environ.get("FAKE_EVID") or json.dumps(dict({
         "alias": [], "cw": {}, "err": "", "overflow": 0, "engine_pid": 10,
         "shim_sha256": json.loads(os.environ["FAKE_SHIM_MAP"])[
             cfg["shim"].rsplit("lpshim-", 1)[1][:-3]] if cfg.get("shim") else None,
         "shim_mode": "restricted" if cfg.get("shim") else None,
-        "fs_denied": [0]})
+        "host": json.loads(os.environ.get("FAKE_HOST") or "null") or cfg.get("host_expect"),
+        "timed_out": False, "oom": False, "fs_denied": [0]}, **extra))
     if evid != "OMIT":   # OMIT: a supervisor that died before reporting
         sys.stderr.write("\n%s_EVID=%s\n" % (nonce, evid))
     sys.stderr.write("\n%s=%d\n" % (nonce, rc))
@@ -220,7 +222,11 @@ elif mode == "cut":
 elif mode == "nobanner":
     rcline(1)
 elif mode == "timeout":
-    rcline(124)
+    rcline(124, timed_out=True)
+elif mode == "oom":
+    rcline(137, oom=True, oom_kills=1)
+elif mode == "kill137":     # killed, but the supervisor reported no cause
+    rcline(137)
 elif mode == "fwrite":
     sys.stdout.write(banner + "!pdfTeX error: pdflatex (file t.pdf): fwrite() failed\n"); rcline(1)
 elif mode == "cantlog":
@@ -512,7 +518,8 @@ def evid(**over) -> str:
     defect, not for a missing shim mark."""
     e = {"alias": [], "cw": {}, "err": "", "overflow": 0, "engine_pid": 10,
          "shim_sha256": _oracle.SHIM_SHA256[_oracle.ARCH_OF_RECORD],
-         "shim_mode": "restricted", "fs_denied": [0]}
+         "shim_mode": "restricted", "host": dict(getattr(_oracle, "HOST_EXPECT", {})),
+         "timed_out": False, "oom": False, "fs_denied": [0]}
     e.update(over)
     return json.dumps({k: v for k, v in e.items() if v is not OMIT})
 
@@ -635,7 +642,27 @@ class Checker:
                     err is None and got is not None and got[0] == 0, f"{got!r} {err!r}")
         got, err = self.run_pdflatex("timeout")
         self.expect("an in-container timeout (rc 124) is not reported as timed out",
-                    err is None and got is not None and got[2] is True, f"{got!r} {err!r}")
+                    err is None and got is not None and got[2] is True
+                    and not getattr(got, "oom", None), f"{got!r} {err!r}")
+        # C-139 (c): a memory kill is told apart from a timeout (and is still no
+        # grade); a kill the supervisor did not explain is refused; and a
+        # timed-out run's evidence is checked like any other.
+        got, err = self.run_pdflatex("oom")
+        self.expect("a memory-ceiling kill is not reported as an OOM, apart from a "
+                    "timeout (C-139 (c))", err is None and got is not None and got[2] is True
+                    and getattr(got, "oom", None) is True, f"{got!r} {err!r}")
+        got, err = self.run_pdflatex("kill137")
+        self.expect("an rc 137 the supervisor did not explain was read as a timeout "
+                    "instead of refused (C-139 (c))", err is not None
+                    and "unexplained kill" in str(err), f"{got!r} {err!r}")
+        os.environ["FAKE_EVID"] = evid(timed_out=True, shim_mode=None)
+        try:
+            got, err = self.run_pdflatex("timeout")
+        finally:
+            os.environ.pop("FAKE_EVID", None)
+        self.expect("a timed-out run's evidence is not checked: a run without the "
+                    "shim's mark was returned as a timeout (C-139 (c))",
+                    err is not None and "carries no mark" in str(err), f"{got!r} {err!r}")
 
         # OPEN-118 review round 3: proof pdfTeX ran is not proof its rc is the
         # document's. pdfTeX failing to write its OWN output (the measured
@@ -837,7 +864,19 @@ class Checker:
                 (evid(shim_mode=None), "no shim mark on the engine (the preload "
                  "was ignored: the real clock)", "carries no mark"),
                 (evid(shim_mode="free"), "a shim without the TeX file-system view "
-                 "on the engine", "carries no mark")):
+                 "on the engine", "carries no mark"),
+                # C-139 (a): the pins as read back inside the container
+                (evid(host=OMIT), "no host readback", "not the launch definition"),
+                (evid(host=dict(getattr(_oracle, "HOST_EXPECT", {}), affinity=[0, 1, 2])),
+                 "a cpuset the daemon did not apply as pinned", "affinity"),
+                (evid(host=dict(getattr(_oracle, "HOST_EXPECT", {}), memory_max="max")),
+                 "a memory ceiling the daemon dropped", "memory_max"),
+                (evid(host=dict(getattr(_oracle, "HOST_EXPECT", {}), nproc_onln=8, cpu_count=8)),
+                 "a host with 8 CPUs (sysconf is not cpuset)", "nproc_onln"),
+                (evid(host=dict(getattr(_oracle, "HOST_EXPECT", {}), rlimit_nofile=[1048576, 1048576])),
+                 "an rlimit the daemon did not apply", "rlimit_nofile"),
+                (evid(host_mismatch=["cpu_count"]), "the supervisor's own mismatch "
+                 "report", "not the launch definition")):
             os.environ["FAKE_EVID"] = ev
             try:
                 got, err = self.run_pdflatex("okpdf")

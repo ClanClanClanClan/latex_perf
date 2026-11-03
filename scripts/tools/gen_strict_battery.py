@@ -108,6 +108,12 @@ def grade(tex: Path, timeout: int = 300) -> dict:
             shutil.copy(tex, work / tex.name)
         run = run_to_fixpoint_full(work, tex.name, get_oracle().tex_env(td),
                                    timeout)
+        if run.timed_out:
+            # C-139 (c): an unfinished run (the clock or the memory ceiling) is
+            # not a grade; until C-139 (c) it was recorded as compiles=False
+            raise OracleError(f"{tex.name}: the oracle run "
+                              f"{'hit the memory ceiling' if run.oom else 'timed out'}"
+                              f" (not a grade)")
         rc, passes, pdf = run.rc, run.passes, run.pdf
         err = first_error(job_output(work, tex.name, ".log"))
     return {"rc": rc, "passes": passes, "pdf": pdf,

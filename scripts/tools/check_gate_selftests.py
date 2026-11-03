@@ -2324,6 +2324,43 @@ REGISTRY = [
                      transform=not_a_block_widened),
         ]),
     GateTest(
+        # R5 (OPEN-128's re-grade): the grading tools' inputs. One kill each.
+        "check_grading_inputs",
+        [PY, f"{TOOLS}/check_grading_inputs.py"],
+        "pure",
+        [
+            Mutation("diff_real_roots no longer gates sample 3",
+                     "scripts/tools/diff_real_roots.py",
+                     r"\[grading-inputs\] FAIL.*diff_real_roots on sealed sample 3 was not REFUSED",
+                     old='        sealed_run = _grading_seal.gate("real-roots", ids,\n',
+                     new='        sealed_run = False and _grading_seal.gate("real-roots", ids,\n'),
+            Mutation("the measurement-only mode prints per-document lines",
+                     "scripts/tools/_grading_seal.py",
+                     r"\[grading-inputs\] FAIL.*--sealed-measurement printed a sealed id",
+                     old='        if ANY_ID.search(line):\n',
+                     new='        if False:\n'),
+            Mutation("first_error_block glues four lines again",
+                     "scripts/tools/_oracle.py",
+                     r"\[grading-inputs\] FAIL.*first_error_block\(undef\) is not the full",
+                     old='    return first_error(log)["message"]\n',
+                     new='    ll = Path(log).read_text(errors="replace").split("\\n")\n    i = next((k for k, x in enumerate(ll) if x.startswith("!")), None)\n    return "" if i is None else "".join(ll[i:i + 4])\n'),
+            Mutation("the unwrap counts characters, not bytes",
+                     "scripts/tools/_oracle.py",
+                     r"\[grading-inputs\] FAIL.*UTF-8 message wrapped at 79 bytes",
+                     old='        if len(ln) != MAX_PRINT_LINE:\n',
+                     new='        if len(ln.decode("utf-8", errors="replace")) != MAX_PRINT_LINE:\n'),
+            Mutation("sha256_tree stops following symlinked directories",
+                     "scripts/tools/diff_real_roots.py",
+                     r"\[grading-inputs\] FAIL.*does not digest what copytree copies",
+                     old='            if e.is_dir():\n                walk(e, r)\n',
+                     new='            if e.is_dir() and not e.is_symlink():\n                walk(e, r)\n'),
+            Mutation("a link out of the package is digested",
+                     "scripts/tools/diff_real_roots.py",
+                     r"\[grading-inputs\] FAIL.*a link out of the package was digested",
+                     old='                if not inside(t):\n',
+                     new='                if False:\n'),
+        ]),
+    GateTest(
         # OPEN-118 review round 2: a run with no proof that pdfTeX ran (the
         # measured shape: docker CLI "failed to connect to the docker API",
         # exit 1) was graded "pdflatex failed". One kill per proof check.
@@ -2652,13 +2689,28 @@ REGISTRY = [
                      new='        if False:\n'),
             Mutation("the run does not preload the shim",
                      "scripts/tools/_oracle.py",
-                     # A run without the shim is refused by check_evidence
-                     # (sha256 None) before grading_env can read its
-                     # configuration back; either refusal kills the mutant.
-                     r"\[oracle-infra\] FAIL.*(runs without the pinned shim preloaded"
-                     r"|preloaded a shim with sha256 None)",
+                     # check_evidence refuses the run (sha256 None) ...
+                     r"\[oracle-infra\] FAIL.*preloaded a shim with sha256 None",
                      old='               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": SHIM_MARK_DIR,\n',
                      new='               "shim": None, "mark": SHIM_MARK_DIR,\n'),
+            # ... and grading_env's own read-back of the configuration fires
+            # by itself (a run whose mark is looked for elsewhere).
+            Mutation("the run looks for the shim's mark elsewhere",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*runs without the pinned shim preloaded",
+                     old='               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": SHIM_MARK_DIR,\n',
+                     new='               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": BOOK_DIR,\n'),
+            # C-139 (a) / C-139 (c): the readback and the evidence of an unfinished run.
+            Mutation("the pins are no longer read back",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*a cpuset the daemon did not apply",
+                     old='    if host_expect is not None:\n        # C-139 (a): the pins as the container got them, read back inside it\n',
+                     new='    if False:\n        # C-139 (a): the pins as the container got them, read back inside it\n'),
+            Mutation("a timed-out run skips the evidence checks",
+                     "scripts/tools/_oracle.py",
+                     r"\[oracle-infra\] FAIL.*a timed-out run's evidence is not checked",
+                     old='        err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch],\n                                 HOST_EXPECT)\n',
+                     new='        ev = json.loads(re.search(rb"_EVID=(.*)", err).group(1))\n        if not (ev.get("timed_out") or ev.get("oom")):\n            err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch],\n                                     HOST_EXPECT)\n'),
             Mutation("the session probe stops checking the mounted shim",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*session probe accepted another shim",

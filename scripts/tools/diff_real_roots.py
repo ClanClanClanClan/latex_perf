@@ -47,6 +47,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _grading_seal  # noqa: E402
 from _oracle import (  # noqa: E402
     IMAGE as ORACLE_IMAGE, PROTOCOL_CLOCK, OracleError, RunStamp, clock_epoch,
     clock_vars, first_error_block, get_oracle, grading_code, job_output,
@@ -182,13 +183,56 @@ def sha256_file(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
+class PackageError(ValueError):
+    """A package whose graded copy would not be the bytes its digest names."""
+
+
+def package_files(d: Path) -> list[tuple[str, Path]]:
+    """(relative path, source) of every file `shutil.copytree(d, work)` -- what
+    run_one grades -- copies, walked the way copytree walks: symbolic links
+    FOLLOWED (copytree's default, symlinks=False), a symlinked directory's
+    files included (C-182: `Path.rglob` did not descend into one, so the
+    digest did not cover bytes the grade read). Refuses (PackageError) a link
+    that is dangling, that resolves outside the package (the grade would read
+    bytes outside it) or that loops."""
+    root = Path(d).resolve()
+    out, seen = [], set()
+
+    def inside(p: Path) -> bool:
+        return p == root or root in p.parents
+
+    def walk(cur: Path, rel: Path) -> None:
+        real = cur.resolve()
+        if real in seen:
+            raise PackageError(f"a symbolic link loops at {rel or '.'}")
+        seen.add(real)
+        for e in sorted(cur.iterdir(), key=lambda p: p.name):
+            r = rel / e.name
+            if e.is_symlink():
+                try:
+                    t = e.resolve(strict=True)
+                except (OSError, RuntimeError):
+                    raise PackageError(f"dangling or looping symbolic link {r}") from None
+                if not inside(t):
+                    raise PackageError(f"symbolic link {r} resolves outside the package")
+            if e.is_dir():
+                walk(e, r)
+            elif e.is_file():
+                out.append((str(r), e))
+        seen.discard(real)
+
+    walk(Path(d), Path(""))
+    return sorted(out, key=lambda x: Path(x[0]))
+
+
 def sha256_tree(d: Path) -> str:
-    """Order-independent digest of every file in the package."""
+    """Order-independent digest of every file the graded copy holds
+    (package_files; C-182). For a package without symbolic links it is the
+    digest recorded before C-182, byte for byte."""
     h = hashlib.sha256()
-    for f in sorted(d.rglob("*")):
-        if f.is_file():
-            h.update(str(f.relative_to(d)).encode())
-            h.update(hashlib.sha256(f.read_bytes()).digest())
+    for rel, f in package_files(d):
+        h.update(rel.encode())
+        h.update(hashlib.sha256(f.read_bytes()).digest())
     return h.hexdigest()
 
 
@@ -352,6 +396,7 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
         # NEVER compile in the corpus directory: pdflatex writes .aux/.log/.pdf
         # next to the source, which would mutate the very bytes the manifest
         # hashes and make the run non-reproducible.
+        package_files(pkg)   # C-182: refuse what the digest cannot name
         shutil.copytree(pkg, work)
         top = work / rec["toplevel"]
         out["bytes"] = top.stat().st_size
@@ -992,6 +1037,8 @@ def main() -> int:  # noqa: C901
                          "leave the artefact untouched")
     ap.add_argument("--jobs", type=int, default=1,
                     help="parallel pdflatex gradings for --repass")
+    ap.add_argument("--sealed-measurement", action="store_true",
+                    help="sample 3 is sealed (OPEN-119, OPEN-139): a request that touches it is refused unless this flag is given; then the results file is written and only aggregates are printed (no per-document id, cell or first error)")
     ap.add_argument("--refresh-metadata", action="store_true",
                     help="re-read declared metadata into manifest.json; runs "
                          "neither pdflatex nor the CLI (asserts corpus "
@@ -1000,6 +1047,23 @@ def main() -> int:  # noqa: C901
 
     repo = Path(ns.repo).resolve()
     outdir = repo / ns.out
+    # OPEN-139: the sample-3 seal, before anything runs or prints a row. A
+    # re-pass/refresh is judged by the documents of the artefact it reads; a
+    # draw by its frame window (and, below, by the ids drawn).
+    if ns.repass or ns.refresh_cli or ns.refresh_metadata:
+        art = outdir / ("manifest.json" if ns.refresh_metadata else ns.results)
+        try:
+            ids = [d["arxiv_id"] for d in json.loads(art.read_text())["docs"]]
+        except (OSError, ValueError, KeyError, TypeError):
+            ids = None
+        if ids is None:
+            return die(2, f"{art.name}: unreadable, so whether it is sealed "
+                          f"sample 3 cannot be decided (OPEN-139: refused)")
+        sealed_run = _grading_seal.gate("real-roots", ids,
+                                        measurement=ns.sealed_measurement, repo=repo)
+    else:
+        sealed_run = _grading_seal.gate("real-roots", window=(ns.offset, ns.n),
+                                        measurement=ns.sealed_measurement, repo=repo)
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
     # --refresh-metadata reads 00README.json and writes the manifest; it runs
     # neither the CLI nor pdflatex, so it must not require either to be present.
@@ -1046,6 +1110,9 @@ def main() -> int:  # noqa: C901
         return die(2, f"frame has only {len(frame)} papers, need "
                       f"{ns.offset + ns.n}")
     sample = select(frame, ns.offset + ns.n)[ns.offset:]
+    if not sealed_run:
+        _grading_seal.gate("real-roots", [r["arxiv_id"] for r in sample],
+                           measurement=ns.sealed_measurement, repo=repo)
 
     # A sample other than sample 1 gets its OWN results and manifest files, and
     # recording never overwrites one: a drawn sample is graded exactly once

@@ -213,6 +213,38 @@ ULIMITS = ("nofile=1024:1024", "stack=8388608:8388608", "core=0:0",
 # exhausts memory could be killed on one and not on the other. A kill reads
 # as rc 137, a timeout: never a grade.
 MEMORY_LIMIT = "2g"
+# THE PINS ARE READ BACK FROM INSIDE THE CONTAINER (C-139 (a)). A flag is not a
+# fact: a daemon without a cgroup controller drops --cpuset-cpus/--memory
+# with a warning and still runs the container. So the run's supervisor reads
+# back, BEFORE it starts the engine, what the container got -- its CPU
+# affinity, every CPU count a child can see (sysconf ONLN/CONF, the kernel's
+# online list, /proc/cpuinfo, Python's os.cpu_count), the cgroup's memory,
+# swap and pids limits (v2, or v1's equivalents) and every pinned rlimit --
+# and the run is REFUSED, not graded, unless each equals HOST_EXPECT.
+# --cpuset-cpus does not change sysconf or /proc/cpuinfo: a host whose
+# kernel has more (or fewer) than CPU_COUNT CPUs is refused, never graded.
+def _bytes(size: str) -> int:
+    n, u = re.fullmatch(r"([0-9]+)([kmg]?)", size).groups()
+    return int(n) * {"": 1, "k": 1 << 10, "m": 1 << 20, "g": 1 << 30}[u]
+
+
+def _cpus(spec: str) -> list[int]:
+    out = []
+    for part in spec.split(","):
+        a, _, b = part.partition("-")
+        out += list(range(int(a), int(b or a) + 1))
+    return out
+
+
+HOST_EXPECT = {
+    "affinity": _cpus(CPUSET), "nproc_onln": CPU_COUNT, "nproc_conf": CPU_COUNT,
+    "cpu_online": CPUSET, "cpuinfo": CPU_COUNT, "cpu_count": CPU_COUNT,
+    "memory_max": str(_bytes(MEMORY_LIMIT)), "memory_swap_max": "0",
+    "pids_max": str(PIDS_LIMIT),
+    **{"rlimit_" + u.split("=")[0]: [int(x) for x in u.split("=")[1].split(":")]
+       for u in ULIMITS},
+}
+assert len(HOST_EXPECT["affinity"]) == CPU_COUNT
 # The architectures the pinned index holds, as docker names them.
 PLATFORMS = {"aarch64": "linux/arm64", "x86_64": "linux/amd64"}
 
@@ -964,9 +996,13 @@ class EngineRun(tuple):
     pdfTeX's TERMINAL stream alone, the channel a document cannot write after
     pdfTeX's final report (C-99)."""
 
-    def __new__(cls, rc, out, timed_out, stdout=b""):
+    def __new__(cls, rc, out, timed_out, stdout=b"", oom=False):
         t = super().__new__(cls, (rc, out, timed_out))
         t.stdout = stdout
+        # C-139 (c): a run killed by the memory ceiling is NOT a timeout; it is
+        # still never a grade (timed_out stays True for every caller that
+        # treats an unfinished run as ungraded), and it is recorded as `oom`.
+        t.oom = oom
         return t
 
 
@@ -1032,7 +1068,7 @@ class EngineRun(tuple):
 # paths the shim refused (a diagnostic), and for a measurement the clock
 # readings the run used.
 _SUPERVISOR_SRC = r"""
-import ctypes, hashlib, json, os, select, struct, subprocess, sys, unicodedata
+import ctypes, hashlib, json, os, select, signal, struct, subprocess, sys, time, unicodedata
 nonce, cfg, cmd = sys.argv[1], json.loads(sys.argv[2]), sys.argv[3:]
 names = cfg["names"]
 def fold(n):
@@ -1049,6 +1085,66 @@ try:
             pass
 except OSError as e:
     sys.stderr.write("lp-supervisor: cannot prepare the run: %r\n" % (e,)); sys.exit(127)
+def readback():
+    # C-139 (a): what the container actually got, read from INSIDE it.
+    h = {}
+    def rd(p):
+        try:
+            with open(p) as fh:
+                return fh.read().strip()
+        except OSError:
+            return None
+    try:
+        h["affinity"] = sorted(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        h["affinity"] = None
+    for k, n in (("nproc_onln", "SC_NPROCESSORS_ONLN"), ("nproc_conf", "SC_NPROCESSORS_CONF")):
+        try:
+            h[k] = os.sysconf(n)
+        except (ValueError, OSError):
+            h[k] = None
+    h["cpu_online"] = rd("/sys/devices/system/cpu/online")
+    ci = rd("/proc/cpuinfo")
+    h["cpuinfo"] = None if ci is None else sum(
+        1 for ln in ci.splitlines() if ln.split(":")[0].strip() == "processor")
+    h["cpu_count"] = os.cpu_count()
+    v2 = rd("/sys/fs/cgroup/memory.max")
+    if v2 is not None:
+        h["memory_max"] = v2
+        h["memory_swap_max"] = rd("/sys/fs/cgroup/memory.swap.max")
+        h["pids_max"] = rd("/sys/fs/cgroup/pids.max")
+    else:
+        h["memory_max"] = rd("/sys/fs/cgroup/memory/memory.limit_in_bytes")
+        sw = rd("/sys/fs/cgroup/memory/memory.memsw.limit_in_bytes")
+        h["memory_swap_max"] = None if sw is None or h["memory_max"] is None else str(
+            int(sw) - int(h["memory_max"]))
+        h["pids_max"] = rd("/sys/fs/cgroup/pids/pids.max")
+    try:
+        import resource
+        for k in ("NOFILE", "STACK", "CORE", "MEMLOCK"):
+            h["rlimit_" + k.lower()] = list(resource.getrlimit(getattr(resource, "RLIMIT_" + k)))
+    except (ImportError, OSError, ValueError):
+        pass
+    return h
+def oom_kills():
+    for p in ("/sys/fs/cgroup/memory.events", "/sys/fs/cgroup/memory/memory.oom_control"):
+        try:
+            with open(p) as fh:
+                for ln in fh:
+                    k, _, v = ln.partition(" ")
+                    if k == "oom_kill":
+                        return int(v)
+        except (OSError, ValueError):
+            pass
+    return None
+if cfg.get("host_expect") is not None:
+    ev["host"] = readback()
+    bad = sorted(k for k, v in cfg["host_expect"].items() if ev["host"].get(k) != v)
+    if bad:
+        # refused before the engine starts: the run is not the protocol's
+        ev["host_mismatch"] = bad
+        sys.stderr.write("\n%s_EVID=%s\n" % (nonce, json.dumps(ev, sort_keys=True)))
+        sys.exit(3)
 env = dict(cfg["env"])
 shim = cfg.get("shim")
 if shim:
@@ -1087,18 +1183,38 @@ def drain():
                 seen[name] = seen.get(name, 0) + seen.pop(src, 0)
             if mask & 0x8 and name:
                 seen[name] = seen.get(name, 0) + 1
+oom0 = oom_kills()
+deadline = time.monotonic() + float(cfg["timeout"]) if cfg.get("timeout") else None
+ev["timed_out"] = False
 try:
     stdin = open(cfg["stdin"], "rb") if cfg.get("stdin") else subprocess.DEVNULL
-    child = subprocess.Popen(cmd, stdin=stdin, env=env)
+    child = subprocess.Popen(cmd, stdin=stdin, env=env, start_new_session=True)
 except OSError as e:
     sys.stderr.write("%s\n" % e); sys.exit(127)
 while child.poll() is None:
+    if deadline is not None and time.monotonic() >= deadline:
+        # C-139 (c): the supervisor enforces the timeout itself, so a timed-out
+        # run still reports its evidence (and every \write18 child, in the
+        # engine's session, dies with it)
+        ev["timed_out"] = True
+        try:
+            os.killpg(child.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        child.wait()
+        break
     if fd >= 0:
         select.select([fd], [], [], 0.2)
         drain()
     else:
-        child.wait()
+        try:
+            child.wait(timeout=0.2)
+        except subprocess.TimeoutExpired:
+            pass
 drain()
+oom1 = oom_kills()
+ev["oom_kills"] = None if oom0 is None or oom1 is None else oom1 - oom0
+ev["oom"] = bool(ev["oom_kills"]) and not ev["timed_out"]
 def ident(n):
     try:
         st = os.stat(n)
@@ -1125,13 +1241,15 @@ ev["engine_pid"] = child.pid
 if cfg.get("mark"):
     try:
         with open(os.path.join(cfg["mark"], "engine")) as fh:
-            ev["shim_mode"] = fh.read().strip()
-    except OSError:
+            ev["shim_mode"] = fh.read().split()[0]
+    except (OSError, IndexError):
         ev["shim_mode"] = None
     try:
         with open(os.path.join(cfg["mark"], "children")) as fh:
-            kids = fh.read().split()
-        ev["shim_children"] = {m: kids.count(m) for m in sorted(set(kids))}
+            kids = [ln.split(None, 1) for ln in fh.read().splitlines() if ln.strip()]
+        modes = [k[0] for k in kids]
+        ev["shim_children"] = {m: modes.count(m) for m in sorted(set(modes))}
+        ev["shim_children_exe"] = sorted({k[1] for k in kids if len(k) > 1})
     except OSError:
         ev["shim_children"] = {}
 if cfg.get("fs_log"):
@@ -1150,6 +1268,8 @@ if cfg.get("clock_log"):
 sys.stderr.write("\n%s_EVID=%s\n" % (nonce, json.dumps(ev, sort_keys=True)))
 sys.stderr.flush()
 rc = child.returncode
+if ev["timed_out"]:
+    sys.exit(124)
 sys.exit(rc if rc >= 0 else 128 - rc)
 """
 
@@ -1161,7 +1281,8 @@ def evidence_names(args) -> list[str]:
 
 
 def check_evidence(stderr: bytes, nonce: str, args, what: str,
-                   shim_sha256: str | None = None) -> tuple[bytes, dict]:
+                   shim_sha256: str | None = None,
+                   host_expect: dict | None = None) -> tuple[bytes, dict]:
     """Refuse a run whose supervisor saw the document write an evidence file
     (or saw nothing), or, when `shim_sha256` is given, whose engine did not
     run under that shim with the TeX file-system view (OPEN-128). Returns
@@ -1175,6 +1296,19 @@ def check_evidence(stderr: bytes, nonce: str, args, what: str,
         ev = json.loads(m.group(1))
     except ValueError:
         raise OracleError(f"{what}: unreadable evidence line {m.group(1)[:200]!r}")
+    if host_expect is not None:
+        # C-139 (a): the pins as the container got them, read back inside it
+        host = ev.get("host")
+        bad = (sorted(k for k, v in host_expect.items() if host.get(k) != v)
+               if isinstance(host, dict) else ["<no readback>"])
+        if bad or ev.get("host_mismatch"):
+            raise OracleError(
+                f"{what}: the container is not the launch definition's: "
+                f"{bad or ev.get('host_mismatch')} read back as "
+                f"{ {k: (host or {}).get(k) for k in (bad or [])[:6]} } "
+                f"(want {[host_expect.get(k) for k in (bad or [])[:6]]}); a pin the "
+                f"daemon dropped or a host the pins cannot neutralise -- refused, "
+                f"never graded (C-139 (a))")
     if ev.get("err") or ev.get("overflow"):
         raise OracleError(f"{what}: the supervisor could not watch the run "
                           f"directory ({ev.get('err') or 'inotify queue overflow'}); "
@@ -1725,10 +1859,11 @@ def require_same_grading_code(recorded: dict | None, current: dict,
 
 @dataclass
 class OracleRun:
-    rc: int            # -1 on timeout
+    rc: int            # -1 on timeout (and on a memory kill: never a grade)
     passes: int
     pdf: bool
-    timed_out: bool
+    timed_out: bool    # True for a timeout AND for a memory kill (C-139 (c))
+    oom: bool = False  # the memory ceiling killed it (C-139 (c)), not the clock
 
     @property
     def compiles(self) -> bool:
@@ -1920,7 +2055,7 @@ class _Base:
         r = self.run_pdflatex(Path(work), args, env, timeout, clock)
         rc, _, to = r
         if to:
-            return OracleRun(-1, 1, False, True)
+            return OracleRun(-1, 1, False, True, bool(getattr(r, "oom", False)))
         return OracleRun(rc, 1, pdf_written(Path(work), toplevel, r.stdout), False)
 
     def run_to_fixpoint(self, work: Path, toplevel: str, env: dict | None,
@@ -1940,7 +2075,7 @@ class _Base:
             r = self.run_pass(work, toplevel, env, timeout, clock=clock)
             passes += 1
             if r.timed_out:
-                return OracleRun(-1, passes, False, True)
+                return OracleRun(-1, passes, False, True, r.oom)
             if r.rc == 0:
                 break
         if r.rc != 0:
@@ -1948,7 +2083,7 @@ class _Base:
         r = self.run_pass(work, toplevel, env, timeout, clock=clock)
         passes += 1
         if r.timed_out:
-            return OracleRun(-1, passes, False, True)
+            return OracleRun(-1, passes, False, True, r.oom)
         return OracleRun(r.rc, passes, r.pdf, False)
 
 
@@ -2080,8 +2215,8 @@ def default_workroot() -> Path:
 # it preloads, and the engine process must carry the shim's mark).
 SHIM_SRC_DIR = REPO / "scripts" / "tools" / "oracle_shim"
 SHIM_SHA256 = {
-    "aarch64": "218960a88a7192a63024686605078caff2caba826f3515817df57aea2d682579",
-    "x86_64": "8b5403af3daebbe253b68bddcc722c77a456fabf3900bffa1952054523839c21",
+    "aarch64": "19016df250eaf801595d20f14e7b720a85a60bb062e5813c69679a9081adb95d",
+    "x86_64": "534310db5478bd715750cf3b6597921f706bc38196e48cd503e3bc55b035735a",
 }
 
 
@@ -2096,6 +2231,9 @@ _MOUNT_BAD = re.compile(r"[:,\x00-\x1f]")
 # running), the supervisor, then the rc on a line tagged with the run's
 # nonce, which -- not the docker client's exit code -- is the rc (see
 # PDFTEX_BANNER for why).
+# The supervisor enforces the run's timeout itself (C-139 (c)); timeout(1) is only
+# the BACKSTOP, BACKSTOP_SECONDS later, for a supervisor that hangs.
+BACKSTOP_SECONDS = 60
 _RUN_SCRIPT = ('n=$1; t=$2; sup=$3; shift 3; '
                'timeout -k 10 "$t" python3 -I -c "$sup" "$n" "$@"; '
                'rc=$?; printf "\\n%s=%d\\n" "$n" "$rc" >&2')
@@ -2393,7 +2531,8 @@ class ContainerOracle(_Base):
         cfg = {"names": evidence_names(args), "remove": evidence_names(args),
                "env": engine_env(env, extra=extra_env), "mkdirs": list(FIXED_RUN_DIRS),
                "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": SHIM_MARK_DIR,
-               "fs_log": FS_LOG}
+               "fs_log": FS_LOG, "host_expect": HOST_EXPECT,
+               "timeout": int(timeout)}
         mounts = [(cwd, RUN_DIR, False), (self.shim_dir, SHIM_DIR, True)]
         indir = None
         if stdin is not None:
@@ -2406,7 +2545,8 @@ class ContainerOracle(_Base):
         try:
             p = self._launch(name, launch_argv(
                 self.user, name, arch=arch, mounts=mounts,
-                entry=("sh", "-c", _RUN_SCRIPT, "sh", nonce, str(int(timeout)),
+                entry=("sh", "-c", _RUN_SCRIPT, "sh", nonce,
+                       str(int(timeout) + BACKSTOP_SECONDS),
                        _SUPERVISOR_SRC, json.dumps(cfg, sort_keys=True),
                        engine, *args)), timeout + 90)
         finally:
@@ -2422,15 +2562,25 @@ class ContainerOracle(_Base):
                 + p.stderr.decode(errors="replace").strip()[:400])
         rc = int(m.group(1))
         err = p.stderr[:m.start()] + p.stderr[m.end():]
-        if rc in (124, 137):
-            _require_free_space(cwd, "after")
-            r = EngineRun(rc, p.stdout + err, True, p.stdout)
-            r.evidence = {}
-            return r
         if rc in (125, 126, 127):  # timeout(1) itself failed / engine missing
             raise OracleError(f"in-container timeout/{engine} failed rc={rc}: "
                               + err.decode(errors="replace")[:400])
-        err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch])
+        # C-139 (c): EVERY run's evidence is checked, a timed-out or memory-
+        # killed one included (the supervisor enforces the timeout itself
+        # and reports); a run the BACKSTOP timeout(1) killed has no evidence
+        # line and is refused here, never read as a timeout.
+        err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch],
+                                 HOST_EXPECT)
+        if ev.get("timed_out") or ev.get("oom"):
+            _require_free_space(cwd, "after")
+            r = EngineRun(124 if ev.get("timed_out") else 137, p.stdout + err, True,
+                          p.stdout, oom=bool(ev.get("oom")))
+            r.evidence = ev
+            return r
+        if rc in (124, 137):
+            raise OracleError(f"{what}: rc {rc} without the supervisor's timeout or "
+                              f"memory-kill report: an unexplained kill, not a grade "
+                              f"(C-139 (c))")
         # A measurement may legitimately stop before pdfTeX's banner (spike
         # H.2's env-sde-bad: texmfmp.c refuses SOURCE_DATE_EPOCH=1788076260x
         # and exits 1 having printed nothing); the engine process's shim mark
@@ -2585,10 +2735,37 @@ def host_has_pdflatex() -> bool:
     return shutil.which("pdflatex") is not None
 
 
-def first_error_block(log: Path, lines: int = 4) -> str:
-    """The first `!` line of a pdflatex log joined with its wrapped
-    continuation (TeX hard-wraps at ~79 columns; concatenation, not a space,
-    is the inverse of the wrap).
+# TeX's log line length (max_print_line, the pinned image's texmf.cnf and the
+# protocol's: 79). A physical log line of exactly this many BYTES continues on
+# the next (TeX counts bytes: a UTF-8 character is several).
+MAX_PRINT_LINE = 79
+_CONTEXT_LINE = re.compile(r"^(l\.[0-9]+ |<[^>\n]*> |<\*> | \.\.\.( |$))")
+_HELP_START = re.compile(r"^(See the .* (documentation|manual)|Type  H <return>|"
+                         r"Type X to quit|Try typing  <return>|Enter file name:)")
+
+
+def unwrap_log(data: bytes) -> list[str]:
+    """The log's LOGICAL lines: TeX's hard wrap at MAX_PRINT_LINE bytes
+    inverted exactly (a physical line of exactly 79 bytes is joined to the
+    next; any other length ends a logical line). C-181."""
+    out, cur = [], b""
+    for ln in data.split(b"\n"):
+        cur += ln
+        if len(ln) != MAX_PRINT_LINE:
+            out.append(cur.decode("utf-8", errors="replace"))
+            cur = b""
+    if cur:
+        out.append(cur.decode("utf-8", errors="replace"))
+    return out
+
+
+def first_error(log: Path) -> dict:
+    """The log's first error, separated (C-181): `message` -- the `!` line
+    and every line of the message after it (a \\PackageError's
+    \\MessageBreak lines), each unwrapped, joined by newlines, never cut;
+    `context` -- TeX's context lines (`<argument> ...`, `l.N ...` and the
+    line after `l.N`); `help` -- the help text that follows in nonstop mode
+    (up to the next blank line). Empty strings when the log has no error.
 
     A DIAGNOSTIC, NOT EVIDENCE (C-99, review round 3 (c)): the log is
     pdfTeX's alone (the supervisor refuses a run whose document writes it),
@@ -2598,13 +2775,57 @@ def first_error_block(log: Path, lines: int = 4) -> str:
     message genuinely. So no grade may be decided from this text; the
     graders' cells are functions of the rc, the PDF verdict and the CLI
     verdict only (diff_real_roots.cell_of)."""
+    empty = {"message": "", "context": "", "help": ""}
     if not Path(log).is_file():
-        return ""
-    ll = Path(log).read_text(errors="replace").split("\n")
-    for i, line in enumerate(ll):
-        if line.startswith("!"):
-            return "".join(ll[i:i + lines])
-    return ""
+        return empty
+    ll = unwrap_log(Path(log).read_bytes())
+    start = next((i for i, x in enumerate(ll) if x.startswith("!")), None)
+    if start is None:
+        return empty
+    msg, i = [ll[start]], start + 1
+    while i < len(ll) and ll[i].strip() and not ll[i].startswith("!") \
+            and not _CONTEXT_LINE.match(ll[i]) and not _HELP_START.match(ll[i]):
+        msg.append(ll[i])
+        i += 1
+    ctx, hlp = [], []
+    # the context: from the first context line up to the line after `l.N`
+    j = i
+    while j < len(ll) and not _CONTEXT_LINE.match(ll[j]) and not ll[j].startswith("!") \
+            and j - i < 12:
+        j += 1
+    if j < len(ll) and _CONTEXT_LINE.match(ll[j]):
+        pre = ll[i:j]
+        while j < len(ll) and not ll[j].startswith("!"):
+            ctx.append(ll[j])
+            if ll[j].startswith("l.") and re.match(r"^l\.[0-9]+ ", ll[j]):
+                if j + 1 < len(ll):
+                    ctx.append(ll[j + 1])
+                j += 2
+                break
+            j += 1
+        k = j
+        while k < len(ll) and ll[k].strip() and not ll[k].startswith("!"):
+            hlp.append(ll[k])
+            k += 1
+        # LaTeX prints its help BEFORE the context ("See the ... Type  H");
+        # keep it as help too
+        hlp = [x for x in pre if x.strip()] + hlp
+    else:
+        k = i
+        while k < len(ll) and not ll[k].startswith("!") and (ll[k].strip() or k == i):
+            if ll[k].strip():
+                hlp.append(ll[k])
+            k += 1
+    return {"message": "\n".join(msg), "context": "\n".join(ctx).rstrip(),
+            "help": "\n".join(hlp)}
+
+
+def first_error_block(log: Path) -> str:
+    """The MESSAGE of the log's first error (`first_error`): the `!` line with
+    its wrapped continuation and the rest of the message, unwrapped exactly
+    and never cut. Until C-181 this glued the next 4 physical lines whatever
+    their length (message, context and help run together)."""
+    return first_error(log)["message"]
 
 
 def main(argv: list[str]) -> int:

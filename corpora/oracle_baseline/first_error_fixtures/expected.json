@@ -1,0 +1,30 @@
+{
+ "note": "C-181: the first error of each log (real pdfTeX logs of the .tex beside them, graded by the pinned oracle at OPEN-128), separated into message / context / help; checked by check_grading_inputs.py. Hand-verified against the raw logs.",
+ "expected": {
+  "undef": {
+   "message": "! Undefined control sequence.",
+   "context": "l.3 Some text \\undefinedmacro\n                             {} and the rest of this line.",
+   "help": "The control sequence at the end of the top line\nof your error message was never \\def'ed. If you have\nmisspelled it (e.g., `\\hobx'), type `I' and the correct\nspelling (e.g., `I\\hbox'). Otherwise just continue,\nand I'll forget about whatever was undefined."
+  },
+  "missingsty": {
+   "message": "! LaTeX Error: File `a-very-long-package-name-that-certainly-does-not-exist-anywhere-in-texlive.sty' not found.",
+   "context": "",
+   "help": "Type X to quit or <RETURN> to proceed,\nor enter new name. (Default extension: sty)"
+  },
+  "pkgerr": {
+   "message": "! Package mypkg Error: A long first line of the message with ünïcödé characters that goes past the seventy-nine column limit\n(mypkg)                and a second line after the message break.",
+   "context": " ...                                              \n                                                  \nl.3 ...the message break}{The help text of mypkg.}",
+   "help": "See the mypkg package documentation for explanation.\nType  H <return>  for immediate help.\nThe help text of mypkg."
+  },
+  "argerr": {
+   "message": "! Undefined control sequence.",
+   "context": "<argument> bold \\undefinedinarg \n                                {} here\nl.3 \\textbf{bold \\undefinedinarg{} here}",
+   "help": "The control sequence at the end of the top line\nof your error message was never \\def'ed. If you have\nmisspelled it (e.g., `\\hobx'), type `I' and the correct\nspelling (e.g., `I\\hbox'). Otherwise just continue,\nand I'll forget about whatever was undefined."
+  },
+  "clean": {
+   "message": "",
+   "context": "",
+   "help": ""
+  }
+ }
+}

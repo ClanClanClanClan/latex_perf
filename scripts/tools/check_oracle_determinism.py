@@ -27,8 +27,16 @@ THE DOCUMENTS (each graded TWICE, each in a fresh work directory):
                 /etc/hostname and /etc/resolv.conf -> each must REFUSE
                 (requirement INTERP; the refusal shape per command is in
                 INTERP_REFUSED)
-For every document, both runs' rc, PDF verdict, .log bytes and .pdf bytes
-must be IDENTICAL (requirement TWICE).
+  gs_sandbox, minted, memoize_pl, memoize_py, texosquery
+                C-138: what each /usr/bin child's OWN sandbox lets it observe
+                (gs -dSAFER: its TMPDIR, whose mkstemp64 names were random;
+                latexminted's and memoize's outputs; java's listings)
+For every document, both runs' rc, PDF verdict, .log bytes, .pdf bytes and
+EVERY file the run leaves in its directory must be IDENTICAL (TWICE).
+HOST VARIANTS (C-139, review LOW-3): pid_probe and jvm graded again under a
+different --cpuset-cpus and --memory (must be REFUSED by the in-container
+readback, C-139 (a)), another --user (C-139 (b)) and another work-root path:
+identical to the baseline byte for byte, or refused.
 
 It FAILS on 0400f74a (BOOK: the pid marks are readable; TWICE: often) and
 must PASS at the tip; `--repo DIR` grades with DIR's scripts/tools/_oracle.py
@@ -39,6 +47,7 @@ with a SKIP line unless REQUIRE_PDFLATEX=1.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import os
 import re
@@ -104,6 +113,95 @@ EPS = "\n".join([
     for i, t in enumerate(TARGETS)] + ["showpage", ""])
 
 
+# C-138 (review of 52b81823, HIGH-1): what gs's OWN sandbox permits under
+# repstopdf's -dSAFER -- enumerating its TMPDIR (where its mkstemp64 names
+# were random), /tmp, the bookkeeping, the cwd; a temp file; reads of the
+# bookkeeping, /proc, /sys; getenv; rrand, vmstatus, realtime, usertime --
+# printed into lpt.pdf, which the document hashes. The review's probe, kept.
+GS_SANDBOX_EPS = """%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 500 400
+/concatstrings { exch dup length 2 index length add string dup dup 4 2 roll copy length 4 -1 roll putinterval } bind def
+/Courier findfont 7 scalefont setfont
+/y 390 def
+/L { 10 y moveto show /y y 9 sub def } def
+/S { 300 string cvs } def
+(rrand=) rrand S concatstrings L
+(vm=) vmstatus 3 1 roll S ( ) concatstrings exch S concatstrings exch S concatstrings concatstrings L
+{ (tmpA) () (w) .tempfile closefile (TEMPFILE=) exch concatstrings L } stopped { (TEMPFILE denied) L } if
+{ (/tmp/lp/tmp/*) { dup length string copy (TMP:) exch concatstrings L } 300 string filenameforall } stopped { (enumTMP denied) L } if
+{ (/tmp/*) { dup length string copy (T:) exch concatstrings L } 300 string filenameforall } stopped { (enumT denied) L } if
+{ (/tmp/lp/*) { dup length string copy (TL:) exch concatstrings L } 300 string filenameforall } stopped { (enumTL denied) L } if
+{ (/lp/book/shim/*) { dup length string copy (B:) exch concatstrings L } 300 string filenameforall } stopped { (enumB denied) L } if
+{ (*) { dup length string copy (CWD:) exch concatstrings L } 300 string filenameforall } stopped { (enumCWD denied) L } if
+{ (/lp/book/shim/children) (r) file 200 string readstring pop (CH=) exch concatstrings L } stopped { (children DENIED) L } if
+{ (/lp/book/shim/children) status { (CHST=) exch S concatstrings L pop pop pop } { (CHST none) L } ifelse } stopped { (status DENIED) L } if
+{ (/proc/self/stat) status { (PST=) exch S concatstrings L pop pop pop } { (PST none) L } ifelse } stopped { (pst DENIED) L } if
+{ (/sys/devices/system/cpu/online) (r) file 200 string readline pop (CPU=) exch concatstrings L } stopped { (cpu DENIED) L } if
+{ (/proc/meminfo) (r) file 200 string readline pop (MEM=) exch concatstrings L } stopped { (mem DENIED) L } if
+{ (HOME) getenv { (HOME=) exch concatstrings L } { (HOME none) L } ifelse } stopped { (getenv DENIED) L } if
+{ (TMPDIR) getenv { (TMPDIR=) exch concatstrings L } { (TMPDIR none) L } ifelse } stopped { (getenv2 DENIED) L } if
+(rt=) realtime S concatstrings L
+(ut=) usertime S concatstrings L
+showpage
+"""
+
+# Each /usr/bin child's own sandbox, exercised the way a document can: its
+# outputs land in the run directory, and EVERY file the run leaves there is
+# compared between the two runs (TWICE), not only the log and the PDF.
+SANDBOX_DOCS = {
+    "gs_sandbox": (r"""\documentclass{article}
+\begin{document}
+\immediate\write18{repstopdf lpt.eps}
+\IfFileExists{lpt.pdf}{\typeout{LPEPS[made][\pdfmdfivesum file{lpt.pdf}]}}{\typeout{LPEPS[none]}}
+x
+\end{document}
+""", {"lpt.eps": GS_SANDBOX_EPS}),
+    "minted": (r"""\documentclass{article}
+\usepackage{minted}
+\begin{document}
+\begin{minted}{python}
+import tempfile, os
+print(tempfile.gettempdir(), os.getuid())
+\end{minted}
+\inputminted{text}{lpsrc.txt}
+\end{document}
+""", {"lpsrc.txt": "one\ntwo\n"}),
+    # memoize 1.4.1 (the pinned image) fails on `extract=` as a package
+    # option ("Illegal parameter number"), and refuses a second `extract`:
+    # perl is its default; memoize-extract.py is run by hand on a record.
+    "memoize_pl": (r"""\documentclass{article}
+\usepackage{memoize}
+\begin{document}
+\mmz{\fbox{memoized}}
+\end{document}
+""", {}),
+    "memoize_py": (r"""\documentclass{article}
+\begin{document}
+\immediate\write18{memoize-extract.py -F latex -P lpm.pdf lpm}
+\IfFileExists{lpm.mmz.log}{\typeout{LPMMZ[\pdfmdfivesum file{lpm.mmz.log}]}}{\typeout{LPMMZ[none]}}
+x
+\end{document}
+""", {"lpm.mmz": "\\mmzNewExtern{lpm.memo.dir/X-1.pdf}{1}{10pt}{10pt}{0pt}\n",
+      "lpm.pdf": "%PDF-1.4\n%%EOF\n"}),
+    "texosquery": (r"""\documentclass{article}
+""" + PROBE_MACROS + r"""\begin{document}
+\lpprobe{texosquery-jre8 -i , .}
+\lpprobe{texosquery-jre8 -ir , .}
+\lpprobe{texosquery-jre8 -i , . date}
+\lpprobe{l3sys-query ls}
+\lpprobe{l3sys-query ls --sort date}
+\lpprobe{texosquery-jre8 -i , /tmp/lp/tmp}
+\lpprobe{texosquery-jre8 -c}
+\lpprobe{texosquery-jre8 -m}
+\lpprobe{texosquery-jre8 -t}
+\lpprobe{texosquery-jre8 -M}
+x
+\end{document}
+""", {f"f_{w}.txt": w + "\n" for w in
+      ("zeta", "alpha", "mike", "bravo", "yankee", "charlie", "xray", "delta")}),
+}
+
+
 def interpreters() -> str:
     pipes = []
     for t in TARGETS:
@@ -138,13 +236,19 @@ def docs(oracle_mod) -> dict:
                                + [f"/tmp/lp/.shim/{n}" for n in range(1, PIDS + 1)]))
     return {"pid_probe": (pid_probe(paths), {}),
             "jvm": (JVM, {}),
-            "interpreters": (interpreters(), {"lpt.eps": EPS, "lpmz.mmz": ""})}
+            "interpreters": (interpreters(), {"lpt.eps": EPS, "lpmz.mmz": ""}),
+            **SANDBOX_DOCS}
 
 
-def grade(o, name: str, src: str, extra: dict) -> dict:
+def grade(o, name: str, src: str, extra: dict, sub: str = "w") -> dict:
     with o.tempdir(prefix="lp-determinism-") as td:
-        work = Path(td) / "w"
-        work.mkdir()
+        work = Path(td) / sub
+        work.mkdir(parents=True)
+        if sub != "w":   # a variant: another path, maybe another user
+            for d in [work, *work.parents]:
+                if d == Path(td):
+                    break
+                d.chmod(0o777)
         (work / "doc.tex").write_text(src)
         for f, text in extra.items():
             (work / f).write_text(text)
@@ -155,6 +259,8 @@ def grade(o, name: str, src: str, extra: dict) -> dict:
             out[ext] = p.read_bytes() if p.exists() else None
         eps = work / "lpt.pdf"
         out["eps_pdf"] = eps.read_bytes() if eps.exists() else None
+        out["files"] = {str(f.relative_to(work)): hashlib.sha256(f.read_bytes()).hexdigest()
+                        for f in sorted(work.rglob("*")) if f.is_file()}
         return out
 
 
@@ -230,6 +336,72 @@ def check_interp(run: dict) -> list[str]:
     return bad
 
 
+# LOW-3 of the review of 52b81823: two runs on one host under one pin cannot
+# see host dependence. Each VARIANT changes one host-side condition the pins
+# and the shim are meant to neutralise, by editing the launch argv of THIS
+# process's oracle only; its result must be the baseline's, byte for byte, or
+# a refusal naming `want_refusal`.
+VARIANTS = (
+    ("cpuset 0-2", lambda a: _set(a, "--cpuset-cpus", "0-2"), "C-139 (a)"),
+    ("memory 1g", lambda a: _set(_set(a, "--memory", "1g"), "--memory-swap", "1g"), "C-139 (a)"),
+    ("user 1234:1234", lambda a: _set(a, "--user", "1234:1234"), None),
+    ("deeper work-root path", None, None),
+)
+# (no document that makes a subdirectory: under another --user its files
+# would not be removable by the host user on a Linux runner)
+VARIANT_DOCS = ("pid_probe", "jvm")
+
+
+def _set(argv: list, flag: str, value: str) -> list:
+    argv = list(argv)
+    if flag in argv:
+        argv[argv.index(flag) + 1] = value
+    else:   # an oracle that does not pin it (0400f74a): add it
+        argv[1:1] = [flag, value]
+    return argv
+
+
+def host_variants(oracle_mod, o, all_docs: dict, base: dict) -> list[str]:
+    bad = []
+    orig = oracle_mod.launch_argv
+    for label, edit, want_refusal in VARIANTS:
+        if edit is not None:
+            def patched(*a, _edit=edit, **k):
+                argv = orig(*a, **k)
+                return _edit(argv) if k.get("entry", (None,))[0] == "sh" else argv
+            oracle_mod.launch_argv = patched
+        try:
+            for name in VARIANT_DOCS:
+                if name not in base:
+                    continue
+                src, extra = all_docs[name]
+                sub = "v a/deeper/w" if edit is None else "w"
+                try:
+                    got = grade(o, name, src, extra, sub=sub)
+                except oracle_mod.OracleError as e:
+                    if isinstance(e, oracle_mod.OracleUnavailable):
+                        raise
+                    ok = want_refusal is not None and want_refusal in str(e)
+                    print(f"[oracle-determinism] variant {label:22s} {name:10s} "
+                          f"refused ({'expected' if ok else 'UNEXPECTED'}): {str(e)[:120]}")
+                    if not ok:
+                        bad.append(f"VARIANT {label}: {name} refused: {str(e)[:200]}")
+                    continue
+                diff = [k for k in ("rc", "compiles", ".log", ".pdf", "files")
+                        if got[k] != base[name][k]]
+                print(f"[oracle-determinism] variant {label:22s} {name:10s} "
+                      f"graded, differ={diff}")
+                if want_refusal is not None:
+                    bad.append(f"VARIANT {label}: {name} was GRADED; the pins must "
+                               f"refuse it ({want_refusal})")
+                elif diff:
+                    bad.append(f"VARIANT {label}: {name} differs from the baseline "
+                               f"in {diff}")
+        finally:
+            oracle_mod.launch_argv = orig
+    return bad
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dump", default=None,
@@ -249,7 +421,9 @@ def main() -> int:
         return 0
     o = oracle_mod.get_oracle()
     bad = []
-    for name, (src, extra) in docs(oracle_mod).items():
+    base = {}
+    all_docs = docs(oracle_mod)
+    for name, (src, extra) in all_docs.items():
         try:
             a, b = grade(o, name, src, extra), grade(o, name, src, extra)
         except oracle_mod.OracleError as e:
@@ -257,12 +431,17 @@ def main() -> int:
                 raise
             bad.append(f"{name}: the oracle refused the document: {str(e)[:200]}")
             continue
+        base[name] = a
         if args.dump:
             Path(args.dump).mkdir(parents=True, exist_ok=True)
             for tag, r in (("a", a), ("b", b)):
                 (Path(args.dump) / f"{name}.{tag}.log").write_bytes(r[".log"] or b"")
         diff = [k for k in ("rc", "compiles", "timeout", ".log", ".pdf", "eps_pdf")
                 if a[k] != b[k]]
+        if a["files"] != b["files"]:
+            diff.append("files:" + ",".join(sorted(
+                k for k in set(a["files"]) | set(b["files"])
+                if a["files"].get(k) != b["files"].get(k)))[:200])
         print(f"[oracle-determinism] {name:12s} rc={a['rc']},{b['rc']} "
               f"compiles={a['compiles']},{b['compiles']} differ={diff}")
         if a["timeout"] or b["timeout"]:
@@ -280,14 +459,16 @@ def main() -> int:
             bad += [f"{name}: {x}" for x in check_book(a) + check_book(b)][:12]
         if name == "interpreters":
             bad += [f"{name}: {x}" for x in check_interp(a)][:20]
+    bad += host_variants(oracle_mod, o, all_docs, base)
     if bad:
         print("[oracle-determinism] FAIL: a graded run observed something that is "
               "not fixed by the protocol:", file=sys.stderr)
         for x in bad:
             print(f"  - {x}", file=sys.stderr)
         return 1
-    print(f"[oracle-determinism] OK: 3 documents graded twice each with "
-          f"byte-identical rc, verdict, log and PDF; no bookkeeping path "
+    print(f"[oracle-determinism] OK: {len(all_docs)} documents graded twice each with "
+          f"byte-identical rc, verdict, log, PDF and run-directory files; "
+          f"{len(VARIANTS)} host variants identical or refused; no bookkeeping path "
           f"readable ({PIDS}+ probes); every /usr/bin-interpreter command "
           f"({', '.join(INTERP_COMMANDS)}) refused {len(TARGETS)} host targets")
     return 0

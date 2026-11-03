@@ -55,7 +55,8 @@ Evidence tags as elsewhere: **[M]** measured, **[R]** read from a source, **[I]*
 ## Decision
 
 The owner answered four questions in the working session (recorded answers, UTC timestamps of
-the session transcript `6724887f`):
+the session transcript `6724887f`; item 1 below holds two of them, the architecture and the
+signature track, so three items carry four answers):
 
 1. **2026-09-29 07:14:57Z — architecture:** "Design both, then decide". **Signature track:**
    "Stop it now". The per-name signature workflow is stopped; its branch is kept for its measured
@@ -150,7 +151,8 @@ draft §12, the O-n id is given; otherwise none exists and none is invented.
   enforces. Choosing aarch64 for CI (rather than keeping amd64
   with per-architecture baselines) is put to the owner in OPEN-126. *Decided 2026-10-05: E9
   (aarch64; no per-architecture baselines).*
-- **E3. Native amd64 confirmation: approved, not yet run.** The owner approved confirming the
+- **E3. Native amd64 confirmation: approved, not yet run.** [⚠ Banner 2026-11-03: superseded; it was RUN on
+  2026-10-02, see "E3 status" under the decisions of 2026-10-05.] The owner approved confirming the
   emulated amd64 evidence of H.1 by a one-off GitHub Actions job on the spike branch. That job has
   not been created or run: adding the workflow awaits the owner's permission. Until it runs, all
   amd64 evidence stays emulated and OPEN-123 lists the confirmation as open.
@@ -385,18 +387,23 @@ committed). The abstract-interpreter scoping they refer to is OPEN-129; its repo
   faithfulness work continue in parallel, since every outcome needs them. Decide after the
   tests."* *Chosen over:* "Fund the full research programme", "Re-scope the vision", "Narrow,
   accept tiny coverage".
-  - The three tests are AI-0a, AI-0b and AI-0c, with PASS and KILL lines pre-registered in
-    `b3828c3b:docs/v27/spike/AI-scoping.md` §8.2 and summarised in OPEN-129. None had started
-    by 2026-11-03.
+  - The three tests are AI-0a, AI-0b and AI-0c. **Their PASS and KILL lines are the report's, not
+    the owner's:** they are in `b3828c3b:docs/v27/spike/AI-scoping.md` §8.2 (summarised in
+    OPEN-129), committed by the scoping agent at 20:26:36Z, 48 s after the owner's answer, and
+    were never shown to the owner or approved by him. The owner approved that each test has a
+    kill line fixed in advance, not these lines. None of the tests had started by 2026-11-03.
   - *Not decided by E16:* whether a cost discriminator (AI-0d) is added, and what route follows
     a KILL beyond E19's rule. See § "Open, not decided".
 - **E17. Engine-in-the-loop is not a product.** The owner, 21:04:44Z, on the option "Re-scope
   the vision" of E16's question (*"get exact verdicts by running the pinned pdfTeX offline"*):
   *"In which world would our product be any use if what it does is run latex and say: "uhhhh,
-  not compile"?????"*. As the assistant restated it at 21:06:09Z: running a TeX engine on the
-  user's document is never what the user gets and is never offered as a product or a re-scope
-  option; running the pinned engine is legitimate only as an internal oracle that measures and
-  checks the tool's own answers.
+  not compile"?????"*. The owner's message is a question. The assistant answered at 21:06:09Z,
+  verbatim: *"In no world. You're right, and I shouldn't have put that option on the menu. Any
+  author can already run `pdflatex` and watch it fail. A product that does only that adds
+  nothing, and it throws away the one thing you set out to build. I've struck it and saved it in
+  memory as a rule: running the engine is only ever an internal tool for measuring and checking
+  our own answers, never what the user gets."* The owner never confirmed that restatement; it is
+  recorded as the assistant's reading of his question.
   - *Derived, not a separate question:* this extends D1 from PROVEN verdicts to every fallback.
     The scoping report's KILL path (`b3828c3b:docs/v27/spike/AI-scoping.md` §8.2 and §10: on any
     KILL, "ADR-014's product (deciding by executing the document asynchronously)", called "the
@@ -411,8 +418,10 @@ committed). The abstract-interpreter scoping they refer to is OPEN-129; its repo
     brief the assistant wrote afterwards (`~/.cache/lp-session-1757d56f/product-track-brief.md`,
     not committed) are the assistant's plan, not owner decisions.
   - The ledger rows are OPEN-130 (the track), OPEN-131 (real time), OPEN-132 (cause and fix) and
-    OPEN-133 (lint precision). They do not reuse ROADMAP Track P's ids P1–P4. Nothing in the
-    track had started by 2026-11-03.
+    OPEN-133 (lint precision). They do not reuse ROADMAP Track P's ids P1–P4. Until 2026-11-03
+    nothing in the track had started; since 2026-11-03 restart track E (branch
+    `feat/v27165-p2-baseline`, ledger row OPEN-138 on that branch) is building OPEN-132's
+    baseline.
 
 ## Owner decisions of 2026-10-21 (recorded on `main` 2026-11-03)
 
@@ -424,19 +433,25 @@ Same rule as above. Times are UTC, read from the session transcript `c40e4af6` (
   verifies and tells us in real time, while typing whether a latex document will compile and if
   not, exactly why (plus all the heuristics for things that are best practices or best rules but
   cannot be provably verified)"*.
-  - The assistant stated two consequences at 12:03:05Z, in the message the owner answered with
-    *"go and ok"* at 12:05:18Z:
-    - *"A failed test retires a design route, never the goal."* A KILL on a cheap test (AI-0a to
-      AI-0c, or AI-0d if adopted) or on a hypothesis H.n retires that design route and starts the
-      search for another route to the same product. Cost and speed findings are engineering
-      problems to solve, not arguments for narrowing the goal.
+  - The assistant, not the owner, wrote two consequences at 12:03:05Z, in the message the owner
+    answered with *"go and ok"* at 12:05:18Z. They are the assistant's wording, accepted by that
+    answer:
+    - *"A failed test retires a design route, never the goal. The cost problem stays a real
+      problem: the current design predicts 25–45 CPU-hours per new configuration, and real time
+      needs far less. It's an engineering problem to solve, not a reason to shrink the product. So
+      a cost test (AI-0d) is still worth running early. If it fails, it tells us to look for
+      another way to admit commands faster."* (The CPU-hour figure is the scoping report's
+      inferred estimate, `b3828c3b:docs/v27/spike/AI-scoping.md` §6.3, not a measurement.)
     - *"'Exactly why' is part of the core product, so diagnostics with cause and location (P2)
       belong on the main line, not a side track."* "P2" there is the product track's
       cause-and-fix strand, OPEN-132, not ROADMAP Track P's row P2.
-  - *Derived, not put to the owner:* outcomes that narrow the goal are excluded. Two of them are
-    re-scoping now (the stock-take's §8 item 1 (c)) and stopping the proven-tier build while
+  - *Derived, not put to the owner:* two outcomes are excluded because they change the project:
+    re-scoping now (the stock-take's §8 item 1 (c)), and stopping the proven-tier build while
     keeping the translated engine and boundary as "a verified oracle and research asset" (§8
-    item 2 (c)). **Which route follows a KILL is NOT decided.**
+    item 2 (c)). **Whether E19 also excludes §8 item 2 (a) (narrowing the static proven tier: a
+    smaller fragment, more of it Outside) and item 4 (accepting a first tier with a low coverage
+    ceiling) is an OPEN owner question**; the assistant's 11:55:29Z recommendation had bundled
+    2 (a) with 2 (c). **Which route follows a KILL is NOT decided.**
 - **Restart tracks A–E authorised (operational, not an architecture decision).** "go" started
   the five tracks the assistant had listed at 12:03:05Z:
   - this record;
@@ -446,8 +461,21 @@ Same rule as above. Times are UTC, read from the session transcript `c40e4af6` (
   - the cause-and-fix (OPEN-132) diagnostics baseline.
 
   "ok" approved shrinking the spike's scratch directory. The tracks were launched on 2026-11-03
-  after the restart steps; the coordinating session records the owner's "go" being given again
-  that day.
+  after the restart steps; the owner's "ok, go" of 2026-11-03T15:36:28Z (coordinating session
+  `e5675261`) answered a message that named the launch of tracks A–E as the next step.
+  - *What "go" therefore answers among the stock-take's §8 items* (the 12:03:05Z list points to
+    the 11:55:29Z message for its items' content):
+    - **item 14, answered:** OPEN-128 gets a narrow review of the oracle change first, then the
+      grading runs (11:55:29Z: *"OPEN-128: a narrow review of the oracle change first, then the
+      grading runs."*);
+    - **item 19, answered:** pin the CI runners to `ubuntu-24.04` (11:55:29Z quick fixes:
+      *"pinning CI runners to `ubuntu-24.04`"*);
+    - **item 20, answered in part:** close the 24 stale `proof-regression` issues (*"closing 24
+      stale issues"*). Enabling Dependabot and secret scanning, and deleting or untagging ghcr
+      `:v27.1.63`, are NOT ruled.
+    - The same quick-fix list also holds the README Docker command and the silent CI cache
+      failures; the scope of the P2 baseline is the five words *"the P2 diagnostics baseline"*
+      (12:03:05Z), nothing more (see OPEN-132).
 
 ## The spike's time boxes (facts recorded 2026-11-03; no decision)
 
@@ -477,10 +505,11 @@ stock-take (not committed).
 
 - **AI-0d, a cost discriminator** (the stock-take's §8 item 3; the assistant's "ruling 1" on
   2026-10-21 at 11:55:29Z): not ruled. If it is adopted, the owner sets its KILL line before it
-  runs; a criterion invented after the measurement is the goalpost risk that H.5 showed. E19
-  applies to it: a KILL retires the admission route it tests, never the goal.
-- **What follows a KILL** (item 2): E19 excludes the outcomes that narrow the goal. The route is
-  not chosen.
+  runs; a criterion invented after the measurement is the goalpost risk that H.5 showed. Under the
+  assistant's sentence the owner accepted in E19, a failed AI-0d would retire the admission route
+  it tests, not the goal.
+- **What follows a KILL** (item 2): E19 excludes item 2 (c) (derived, see E19). Whether it also
+  excludes item 2 (a) and item 4 is an open owner question. The route is not chosen.
 - **ADR-014 draft questions never cited by a decision above:**
   - **O-3:** bit-exact pointer-level state, or an algebraic model with separate capacity
     accounts.
@@ -495,10 +524,18 @@ stock-take (not committed).
 - **May AI-0c run before OPEN-128's fixed clock lands?** (item 12): not ruled.
 - **The rest of the stock-take's §8** is not ruled. The exceptions:
   - E19 settles item 1 against re-scoping;
+  - "go" (2026-10-21T12:05:18Z) answers item 14, item 19 and part of item 20 (see "Restart
+    tracks A–E authorised" above);
   - E18 and the restart tracks start item 16's track, while its sub-questions stay open (see
     OPEN-130);
-  - items 21 and 22 (disk and local clean-up) were approved and carried out outside the
-    repository between 2026-10-29 and 2026-11-03.
+  - item 21 (disk) was approved by "ok" at 2026-10-21T12:05:18Z and carried out outside the
+    repository: the spike's scratch directory was shrunk on 2026-10-29, and its two remaining
+    rebuildable debugging directories were deleted on 2026-11-02 after the branch-citation guard
+    was re-run;
+  - item 22: only list A (the worktrees) was approved ("ok, agreed", 2026-11-03T15:04:04Z,
+    session `e5675261`) and done that day. **List B (bundling, then deleting, the branches) was
+    neither approved nor done**: 39 local branches whose upstream is gone and 134 `worktree-*`
+    branches remain (counted 2026-11-03 with `git for-each-ref`).
 
 ## Consequences
 

@@ -52,7 +52,7 @@ The **proof** covers only **LP-Core** — a subset that most real papers do not 
 
 Delivered (1) with **verdict SOUNDNESS**, (2) in **REAL-TIME** as-you-type, (3) over the **WIDEST decidable subset** we can prove, (4) with a **clearly-labelled HEURISTIC tier** for the rest, and (5) as a **policy substrate** editors can rely on — all on a **FORMALLY-VERIFIED (Coq)** backbone.
 
-⚠ **Banner 2026-11-03:** the owner fixed the product vision on 2026-10-21 (ADR-015 E19): a provable, real-time compile verdict with the exact cause, plus heuristics. A KILL retires a design route, never this goal. Running the engine for the user is never the product (E17).
+⚠ **Banner 2026-11-03:** the owner fixed the product vision on 2026-10-21 (ADR-015 E19): a provable, real-time compile verdict with the exact cause, plus heuristics. The rule that a failed test retires a design route, never the goal, is the assistant's wording, which the owner accepted with "go and ok" (E19). On running the engine for the user, see E17.
 
 ### North-Star METRIC (the one number that means success)
 
@@ -221,7 +221,7 @@ Tracks: **S** (verdict soundness — incl. **S6/S7** zero-catalogue residual-shr
 
 | ID | Title | Status | Effort | Depends-on | Acceptance |
 |---|---|---|---|---|---|
-| **HB1** | `--compile-check --confirm-with-pdflatex` | NOT STARTED (Q-BACKSTOP) | M | SEC1; SO1 | optional flag runs real pdflatex; on **disagreement downgrades READY→LIKELY** and **feeds the disagreeing doc into S2**. Sandboxed/timed (SEC1). Value: a self-improving oracle + a trust escape-hatch for segment C. ⚠ **Banner 2026-11-03:** under ADR-015 D1 and E17 a pdflatex run is never what the user gets; whether HB1 survives in any form is not decided. |
+| **HB1** | `--compile-check --confirm-with-pdflatex` | NOT STARTED (Q-BACKSTOP) | M | SEC1; SO1 | optional flag runs real pdflatex; on **disagreement downgrades READY→LIKELY** and **feeds the disagreeing doc into S2**. Sandboxed/timed (SEC1). Value: a self-improving oracle + a trust escape-hatch for segment C. ⚠ **Banner 2026-11-03:** HB1 runs pdflatex for the user; whether that is compatible with ADR-015 D1 and the owner's question of 2026-10-06 (E17) is not decided. |
 
 ### Track OBS — Coverage Observatory (first-class, committed — "measure, don't assume")
 
@@ -370,7 +370,7 @@ Real-doc pdflatex/Overleaf is **5–60+ s** (multi-pass + biber + tikz + network
 
 ### Product track — what a user feels (owner, 2026-10-06; ADR-015 E18)
 
-Approved by the owner to run alongside the cheap tests (ADR-015 E16), never by running the engine for the user (E17); "exactly why" is core (E19). Three strands, each a ledger row in PROJECT_STATE: **real time** (OPEN-131), **cause and fix** (OPEN-132) and **lint precision** (OPEN-133), under the umbrella OPEN-130. The ids deliberately differ from Track P's P1–P4 below. Status and targets live in those rows, not here.
+Approved by the owner to run alongside the cheap tests (ADR-015 E16); on running the engine for the user, see E17; "exactly why" is core (E19). Three strands, each a ledger row in PROJECT_STATE: **real time** (OPEN-131), **cause and fix** (OPEN-132) and **lint precision** (OPEN-133), under the umbrella OPEN-130. The ids deliberately differ from Track P's P1–P4 below. Status and targets live in those rows, not here.
 
 ### Track P — Policy / Template Enforcement (first-class application track)
 

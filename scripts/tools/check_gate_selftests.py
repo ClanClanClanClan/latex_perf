@@ -2710,7 +2710,7 @@ REGISTRY = [
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*a timed-out run's evidence is not checked",
                      old='        err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch],\n                                 HOST_EXPECT)\n',
-                     new='        ev = json.loads(re.search(rb"_EVID=(.*)", err).group(1))\n        if not (ev.get("timed_out") or ev.get("oom")):\n            err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch],\n                                     HOST_EXPECT)\n'),
+                     new='        try:\n            ev = json.loads(re.search(rb"_EVID=(.*)", err).group(1))\n        except (AttributeError, ValueError):\n            ev = {}\n        if not (ev.get("timed_out") or ev.get("oom")):\n            err, ev = check_evidence(err, nonce, args, what, SHIM_SHA256[arch],\n                                     HOST_EXPECT)\n'),
             Mutation("the session probe stops checking the mounted shim",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*session probe accepted another shim",

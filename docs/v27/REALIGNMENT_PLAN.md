@@ -26,6 +26,12 @@ attested premise. The one-directional premise certificate this plan built on is
 kept only as a heuristic-tier statistic. Programme and milestones: ledger row
 OPEN-116 in `PROJECT_STATE.md`.
 
+⚠ **Banner 2026-11-03: this paragraph is stale and contradicts the banner above.** ADR-012 makes the
+strict tier a biconditional inside its boundary, and [ADR-015](adr/ADR-015-static-proven-tier-on-translated-engine.md)
+(2026-09-29) replaces the mechanism: a static, real-time, engine-free PROVEN verdict on a Coq
+translation of the pinned pdfTeX; the owner's later decisions are its E1–E20. `ROADMAP.md:427`
+no longer holds the line cited below. Kept as the record of the 2026-09-04 plan.
+
 ⚠ The biconditional is not achievable and the ROADMAP concedes it
 (`ROADMAP.md:427`). The achievable claim is **one-directional soundness over
 LP-Core** — READY ⇒ compiles — with completeness as a measured quality, not a
@@ -392,6 +398,10 @@ Not adequacy (F3). In dependency order:
 - Use the `OPEN-nnn` ledger ids. Do not open a parallel backlog.
 
 ## 5. Order of execution
+
+⚠ **Banner 2026-11-03: superseded.** This order predates ADR-012 and ADR-015. What is being
+worked on, and what is decided, is in [ADR-015](adr/ADR-015-static-proven-tier-on-translated-engine.md)
+(E16: cheap tests first; E18: the product track) and in PROJECT_STATE's ledger.
 
 **A1-A3 → B1 → C1 → D1/D2 → E1** is the first working set: it stops the false
 claims, removes the cheapest false-READY, takes the cheapest coverage gain,

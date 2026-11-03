@@ -44,6 +44,7 @@ reported even when the run is also void).
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -51,6 +52,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import zlib
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -68,7 +70,6 @@ SF_DATALESS = 0x40000000  # macOS: the file's bytes are online-only (Dropbox)
 RUN_DIR = "/lp/run"       # _oracle.RUN_DIR: where the container sees the run
 EXIT_VOID = 4
 EXIT_SOUNDNESS = 5   # a wrong CERTIFIED claim (R4): takes precedence over VOID
-CAUSE_LABELS = "corpora/p2_baseline/cause_labels.json"
 
 
 class InputError(Exception):
@@ -88,7 +89,10 @@ def parse_lines_block(text: str) -> dict:
                          f"{LINES_END} block")
     body = text.split(LINES_BEGIN, 1)[1].split(LINES_END, 1)[0]
     body = body.strip().removeprefix("```json").removesuffix("```").strip()
-    return json.loads(body)
+    try:
+        return json.loads(body)
+    except ValueError:
+        raise InputError("the lines block is not JSON") from None
 
 
 def read_lines_block(path) -> dict:
@@ -97,22 +101,72 @@ def read_lines_block(path) -> dict:
     return parse_lines_block(Path(path).read_text())
 
 
-def committed_labels(repo: Path) -> tuple[dict, dict | None]:
-    """The two-labeller cause-line gold (§5.5), from HEAD; none when the file
-    is not committed (the cause-line metric is then not evaluable). A
-    working-tree file that is not committed, or differs, is refused."""
-    wt = Path(repo) / CAUSE_LABELS
-    tracked = subprocess.run(["git", "--no-optional-locks", "rev-parse", f"HEAD:{CAUSE_LABELS}"],
-                             cwd=repo, capture_output=True).returncode == 0
-    if not tracked and not wt.exists() and not wt.is_symlink():
+LABEL_DIR = "corpora/p2_baseline/cause_labels"
+LABEL_FILES = {"A": f"{LABEL_DIR}/labeller_a.json", "B": f"{LABEL_DIR}/labeller_b.json",
+               "adj": f"{LABEL_DIR}/adjudication.json"}
+
+
+def _git_ok(repo, *a) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "--no-optional-locks", *a], cwd=repo, capture_output=True)
+
+
+def _tracked(repo, rel) -> bool:
+    return _git_ok(repo, "rev-parse", f"HEAD:{rel}").returncode == 0
+
+
+def _commits_touching(repo, rel) -> list[tuple[str, str, str]]:
+    """(sha, author email, author name) of every commit touching rel, newest first."""
+    out = _git_ok(repo, "log", "--format=%H%x09%ae%x09%an", "--", rel).stdout.decode()
+    return [tuple(l.split("\t")) for l in out.splitlines() if l.strip()]
+
+
+def committed_labels(repo: Path, record_rels: list[str]) -> tuple[dict, dict | None]:
+    """The two-labeller cause-line gold (§5.5), or ({}, None) when no label
+    file exists. FAIL CLOSED (review 2, H4, M4): the files are read from HEAD
+    (a working-tree copy that differs is refused); every id in them is
+    checked against the seals FIRST; each file must be committed ONLY by its
+    declared labeller (author e-mail or name, after norm_identity); and every
+    commit touching a label file must be a strict ancestor of the commit that
+    introduced each record -- the labels predate the predictions they score
+    (the blindness claim)."""
+    present = {k: rel for k, rel in LABEL_FILES.items()
+               if _tracked(repo, rel) or (Path(repo) / rel).exists()
+               or (Path(repo) / rel).is_symlink()}
+    if not present:
         return {}, None
-    data, blob = seal.committed(repo, CAUSE_LABELS)
+    if "A" not in present or "B" not in present:
+        raise InputError("cause labels need both labeller files (A and B)")
+    docs, blobs = {}, {}
+    for k, rel in present.items():
+        data, blobs[rel] = seal.committed(repo, rel)
+        try:
+            docs[k] = json.loads(data)
+        except ValueError:
+            raise InputError(f"{rel} is not JSON") from None
+    sealed = seal.sealed_ids(repo)
     try:
-        gold, st = diag.cause_line_gold(json.loads(data))
+        gold, st = diag.cause_line_gold(docs["A"], docs["B"], docs.get("adj"),
+                                        lambda ids: seal.refuse_ids(ids, sealed))
     except ValueError as e:
-        raise InputError(f"{CAUSE_LABELS}: {e}") from None
-    seal.refuse_ids(list(gold), seal.sealed_ids(repo))
-    return gold, {"path": CAUSE_LABELS, "blob": blob, "stats": st}
+        raise InputError(f"cause labels: {e}") from None
+    for k, rel in present.items():
+        who = diag.norm_identity(docs[k].get("adjudicator" if k == "adj" else "labeller"))
+        for sha, email, name in _commits_touching(repo, rel):
+            if who not in (diag.norm_identity(email), diag.norm_identity(name)):
+                raise InputError(f"{rel} was committed ({sha[:10]}) by someone other than its "
+                                 f"declared {'adjudicator' if k == 'adj' else 'labeller'}")
+    for rec in record_rels:
+        intro = _commits_touching(repo, rec)
+        if not intro:
+            raise InputError(f"{rec} is not committed")
+        first = intro[-1][0]
+        for rel in present.values():
+            for sha, _e, _n in _commits_touching(repo, rel):
+                if sha == first or _git_ok(repo, "merge-base", "--is-ancestor", sha,
+                                           first).returncode != 0:
+                    raise InputError(f"{rel} was committed at or after the record {rec}: the "
+                                     f"labels must predate the predictions they score (§5.5)")
+    return gold, {"files": {rel: blobs[rel] for rel in present.values()}, "stats": st}
 
 
 def committed_lines(repo: Path) -> tuple[dict, str]:
@@ -129,11 +183,55 @@ def require_fixed(block: dict) -> None:
         raise PermissionError(
             f"the pre-registration fixes definitions {block.get('definitions')!r} but "
             f"this code implements {diag.DEFINITIONS_VERSION!r}")
-    for ln in block.get("lines", []):
-        if ln.get("value") is None:
-            raise PermissionError(f"line {ln.get('id')} has no value")
-    if not any(ln.get("kind") == "validity" for ln in block.get("lines", [])):
-        raise PermissionError("the lines block has no validity line")
+    validate_lines(block)
+
+
+LINE_KINDS = ("validity", "prediction", "success", "kill")
+LINE_STATS = ("k", "n", "point", "lower95", "upper95")
+LINE_OPS = (">=", "<=", "==", "<", ">")
+RATE_METRICS = ("cause_recall_top1", "cause_precision_top1_certified",
+                "cause_precision_top1_heuristic", "location_precision_line_certified",
+                "location_precision_line_heuristic", "location_precision_cause_heuristic",
+                "location_recall_line", "location_recall_file")
+COUNT_METRICS = ("inputs.rows", "inputs.fails", "inputs.compiles", "inputs.cause_scored",
+                 "inputs.location_scored", "inputs.cause_line_labelled", "inputs.rows_recorded",
+                 "excluded.ungraded", "excluded.disagrees_with_record",
+                 "excluded.cause_no_error_block", "excluded.cause_inconsistent",
+                 "excluded.cause_unclassified", "excluded.location_no_line",
+                 "excluded.location_system_frame", "excluded.location_unverified",
+                 "excluded.at_record")
+
+
+def validate_lines(block: dict, require_validity: bool = True) -> None:
+    """The FIXED block's schema (review 2, LOW): every line has exactly the
+    known keys, a known kind, metric, stat and op, a numeric value and an
+    optional non-negative integer min_n; ids are distinct; there is a
+    validity line. InputError (exit 2) otherwise -- never a crash."""
+    lines = block.get("lines") if isinstance(block, dict) else None
+    if not isinstance(lines, list) or not lines:
+        raise InputError("the lines block has no lines")
+    ids = []
+    for ln in lines:
+        if not isinstance(ln, dict) or not ({"id", "kind", "metric", "stat", "op", "value"}
+                                            <= set(ln) <= {"id", "kind", "metric", "stat",
+                                                           "op", "value", "min_n"}):
+            raise InputError(f"line {ln!r:.60} has unknown or missing keys")
+        if ln["kind"] not in LINE_KINDS or ln["stat"] not in LINE_STATS \
+                or ln["op"] not in LINE_OPS:
+            raise InputError(f"line {ln['id']}: unknown kind, stat or op")
+        if ln["metric"] not in RATE_METRICS + COUNT_METRICS:
+            raise InputError(f"line {ln['id']}: unknown metric {ln['metric']!r}")
+        if ln["metric"] in COUNT_METRICS and ln["stat"] != "n":
+            raise InputError(f"line {ln['id']}: a count metric takes stat 'n'")
+        if type(ln["value"]) not in (int, float):
+            raise InputError(f"line {ln['id']}: value is not a number")
+        if "min_n" in ln and (type(ln["min_n"]) is not int or ln["min_n"] < 0):
+            raise InputError(f"line {ln['id']}: min_n is not a non-negative integer")
+        ids.append(ln["id"])
+    if len(set(ids)) != len(ids):
+        raise InputError("duplicate line ids")
+    if require_validity and not any(ln["kind"] == "validity" for ln in lines):
+        raise InputError("the lines block has no validity line")
 
 
 def _git_head(repo: Path) -> str:
@@ -268,8 +366,10 @@ def record(ns, repo: Path) -> int:
                 r = run_cli([cli_prov["path"], "--compile-check", d["toplevel"]],
                             work, ns.timeout, env)
                 row["cli_rc"] = r.returncode
-                row["pred"] = diag.cli_prediction(r.stdout.decode("utf-8", "replace"),
-                                                  r.stderr.decode("utf-8", "replace"), roots)
+                row["cli_stdout"] = r.stdout.decode("utf-8", "replace")
+                row["cli_stderr"] = r.stderr.decode("utf-8", "replace")
+                row["run_roots"] = list(roots)
+                row["pred"] = diag.cli_prediction(row["cli_stdout"], row["cli_stderr"], roots)
             except subprocess.TimeoutExpired:
                 row["cli_rc"], row["pred"] = -1, {"verdict": "TIMEOUT", "predictions": []}
             run = run_to_fixpoint_full(work, d["toplevel"], oracle.tex_env(td), ns.timeout)
@@ -278,6 +378,9 @@ def record(ns, repo: Path) -> int:
             logp = _oracle.job_output(work, d["toplevel"], ".log")
             log = logp.read_bytes() if logp.is_file() else None
             row["log_sha256"] = hashlib.sha256(log).hexdigest() if log else None
+            if log and not row["compiles"]:
+                # kept so the scorer can RE-DERIVE the gold (review 2, M2)
+                row["log_gz_b64"] = base64.b64encode(zlib.compress(log, 9)).decode()
 
             def read_source(rel, work=work):
                 c = diag.canon_path(rel)
@@ -296,6 +399,8 @@ def record(ns, repo: Path) -> int:
 
             row["gold"] = diag.diag_record(log, read_source=read_source, in_tree=in_tree,
                                            work_prefixes=(RUN_DIR,) + roots)
+            row["tree_files"] = sorted(str(q.relative_to(work)) for q in work.rglob("*")
+                                       if q.is_file())
         row["graded"] = run.rc != -1 and row["cli_rc"] != -1
         row["agrees_with_record"] = (row["compiles"] == row["record_compiles"]
                                      and run.rc == d.get("pdflatex_rc"))
@@ -319,13 +424,111 @@ def record(ns, repo: Path) -> int:
 
 # ── score ────────────────────────────────────────────────────────────────────
 
+TIERS = ("certified", "heuristic")
+
+
+def rederive_row(r: dict, gor_doc: dict, where: str) -> dict:
+    """A record row with every scored field RE-DERIVED from what the run
+    produced (review 2, M2): graded / compiles / agrees_with_record from the
+    row's rc, pdf and cli_rc against the LOADED grade of record; the
+    prediction from the CLI's stdout/stderr and run roots; the gold from the
+    kept log (and the run's file list). The stored prediction and gold must
+    equal the re-derived ones (the gold's `verified`, which needs the corpus,
+    is taken from the record). Every prediction's tier must be exactly
+    "certified" or "heuristic". InputError otherwise."""
+    from diff_real_roots import row_compiles
+    if r.get("excluded"):
+        if "pred" in r or "gold" in r:
+            raise InputError(f"{where}: an excluded row carries a prediction or a gold")
+        return r
+    out = dict(r)
+    for k in ("rc", "pdf", "cli_rc"):
+        if k not in r:
+            raise InputError(f"{where}: a graded row lacks {k!r}")
+    if type(r["rc"]) is not int or type(r["cli_rc"]) is not int or type(r["pdf"]) is not bool:
+        raise InputError(f"{where}: rc / cli_rc / pdf have the wrong types")
+    out["graded"] = r["rc"] != -1 and r["cli_rc"] != -1
+    out["compiles"] = (r["rc"] == 0 and r["pdf"]) if r["rc"] != -1 else None
+    out["agrees_with_record"] = (out["compiles"] is not None
+                                 and out["compiles"] == row_compiles(gor_doc)
+                                 and r["rc"] == gor_doc.get("pdflatex_rc"))
+    if r["cli_rc"] == -1:
+        out["pred"] = {"verdict": "TIMEOUT", "predictions": []}
+    else:
+        if not isinstance(r.get("cli_stdout"), str) or not isinstance(r.get("cli_stderr"), str) \
+                or not isinstance(r.get("run_roots"), list):
+            raise InputError(f"{where}: a graded row lacks the CLI's output or run roots")
+        pred = diag.cli_prediction(r["cli_stdout"], r["cli_stderr"], tuple(r["run_roots"]))
+        if r.get("pred") != pred:
+            raise InputError(f"{where}: the stored prediction is not the one the CLI's output "
+                             f"gives")
+        out["pred"] = pred
+    for x in out["pred"].get("predictions") or []:
+        if x.get("tier") not in TIERS:
+            raise InputError(f"{where}: a prediction with tier {x.get('tier')!r}")
+    if out["compiles"] is False:
+        if not isinstance(r.get("log_gz_b64"), str):
+            raise InputError(f"{where}: a failing row lacks its log: the gold cannot be "
+                             f"re-derived")
+        try:
+            log = zlib.decompress(base64.b64decode(r["log_gz_b64"], validate=True))
+        except Exception:  # noqa: BLE001
+            raise InputError(f"{where}: the kept log does not decode") from None
+        if hashlib.sha256(log).hexdigest() != r.get("log_sha256"):
+            raise InputError(f"{where}: the kept log is not the logged run's")
+        files = set(r.get("tree_files") or [])
+        roots = tuple(r.get("run_roots") or ())
+        g = diag.diag_record(log, read_source=None,
+                             in_tree=lambda n: diag.canon_path(n, roots + (RUN_DIR,)) in files,
+                             work_prefixes=(RUN_DIR,) + roots)
+        stored = r.get("gold") or {}
+        sl, gl = dict(stored.get("location") or {}), dict(g.get("location") or {})
+        for k in ("verified", "verify_why"):
+            sl.pop(k, None)
+            gl.pop(k, None)
+        if {k: v for k, v in stored.items() if k != "location"} != \
+                {k: v for k, v in g.items() if k != "location"} or sl != gl:
+            raise InputError(f"{where}: the stored gold is not the one the kept log gives")
+        g["location"]["verified"] = (stored.get("location") or {}).get("verified")
+        g["location"]["verify_why"] = (stored.get("location") or {}).get("verify_why")
+        out["gold"] = g
+    return out
+
+
+def check_stamps(repo: Path, art: dict, rel: str) -> None:
+    """The record names the grading code that produced it (review 2, M2):
+    exactly the oracle core plus GRADERS, each still at its recorded
+    behaviour; a measured_at commit that exists; a CLI provenance block."""
+    import _oracle
+    gc = (art.get("oracle") or {}).get("grading_code")
+    if not isinstance(gc, dict) or set((gc.get("files") or {})) != \
+            set(_oracle.GRADING_CODE_CORE) | set(GRADERS):
+        raise InputError(f"{rel}: its grading_code does not name the oracle core and this "
+                         f"producer's GRADERS")
+    findings, _ = _oracle.grading_code_drift(gc, Path(repo))
+    if findings:
+        raise InputError(f"{rel}: recorded by other grading code: {findings[0]}")
+    sha = art.get("measured_at_sha")
+    if not isinstance(sha, str) or subprocess.run(
+            ["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=repo,
+            capture_output=True).returncode != 0:
+        raise InputError(f"{rel}: measured_at_sha is not a commit of this repository")
+    cli = art.get("cli") or {}
+    if not all(isinstance(cli.get(k), str) and cli.get(k) for k in ("sha256", "head", "src_tree")):
+        raise InputError(f"{rel}: its CLI provenance is incomplete")
+
+
 def load_record(repo: Path, path, sealed: frozenset) -> tuple[dict, dict]:
     """A record, validated against its sample by CONTENT, never by its own
-    labels alone. Returns (artefact, provenance)."""
+    labels alone, with every scored field re-derived (rederive_row).
+    Returns (artefact, provenance)."""
     seal.refuse_name(path)
     rel = repo_rel(repo, path)
     data, blob = seal.committed(repo, rel)
-    art = json.loads(data)
+    try:
+        art = json.loads(data)
+    except ValueError:
+        raise InputError(f"{rel} is not JSON") from None
     if not isinstance(art, dict) or art.get("schema") != diag.SCHEMA \
             or art.get("definitions") != diag.DEFINITIONS_VERSION:
         raise InputError(f"{rel} is not a {diag.SCHEMA} record of {diag.DEFINITIONS_VERSION}")
@@ -345,8 +548,12 @@ def load_record(repo: Path, path, sealed: frozenset) -> tuple[dict, dict]:
         raise InputError(f"{rel} must hold exactly {n} row objects")
     seal.refuse_ids([r.get("arxiv_id") for r in rows], sealed)
     keys = [seal.paper_key(r["arxiv_id"]) for r in rows]
-    if len(set(keys)) != n or set(keys) != {seal.paper_key(d["arxiv_id"]) for d in docs}:
+    by_key = {seal.paper_key(d["arxiv_id"]): d for d in docs}
+    if len(set(keys)) != n or set(keys) != set(by_key):
         raise InputError(f"{rel}: its rows are not exactly sample {k}'s documents, once each")
+    check_stamps(repo, art, rel)
+    art = dict(art, rows=[rederive_row(r, by_key[seal.paper_key(r["arxiv_id"])],
+                                       f"{rel} row {i}") for i, r in enumerate(rows)])
     return art, {"path": rel, "blob": blob, "sha256": hashlib.sha256(data).hexdigest(),
                  "sample": k}
 
@@ -358,6 +565,7 @@ def evaluate_lines(block: dict, scores: dict) -> list[dict]:
     has n < min_n (or no observation) is NOT EVALUABLE: holds = None. A
     success line that is not evaluable is not met; a kill line that is not
     evaluable does not fire (pre-registration §7)."""
+    validate_lines(block, require_validity=False)
     ops = {">=": lambda a, b: a >= b, "<=": lambda a, b: a <= b,
            "==": lambda a, b: a == b, "<": lambda a, b: a < b, ">": lambda a, b: a > b}
     out = []
@@ -413,28 +621,40 @@ def score_artefacts(arts: list[dict], block: dict,
 
 
 def score(ns, repo: Path) -> int:
+    """THE ORDER (pre-registration §6): (1) the seals (exit 3) and the
+    records' integrity (exit 2/3) -- nothing of a record is read before it
+    passes them; (2) SOUNDNESS: every certified claim of the two records is
+    judged, and a defect is reported (exit 5) whatever the lines' status --
+    a pre-condition refusal must not mask a known defect; (3) the lines must
+    be FIXED and valid (exit 2); (4) the cause labels; (5) the metrics, VOID
+    (exit 4) or SCORED (exit 0)."""
     sealed = seal.sealed_ids(repo)
-    block, prereg_blob = committed_lines(repo)
-    require_fixed(block)
     if len(ns.records) != 2:
         raise InputError("score takes exactly two records: sample 1's and sample 2's")
     seal.refuse_name(ns.out)
     loaded = [load_record(repo, f, sealed) for f in ns.records]
     if sorted(p["sample"] for _, p in loaded) != [1, 2]:
         raise InputError("the two records must be sample 1 and sample 2, once each")
-    labels, labels_prov = committed_labels(repo)
-    out, void = score_artefacts([a for a, _ in loaded], block, labels)
-    out["provenance"] = {"head": _git_head(repo), "prereg": {"path": PREREG, "blob": prereg_blob},
-                         "seal_blob": seal.seal_blob(repo), "records": [p for _, p in loaded],
-                         "cause_labels": labels_prov}
-    defect = out["soundness"]["certified_wrong"] > 0
-    out["outcome"] = "SOUNDNESS-DEFECT" if defect else ("VOID" if void else "SCORED")
-    Path(ns.out).write_text(json.dumps(out, indent=1, sort_keys=True) + "\n")
-    if defect:
-        print(f"[p2-baseline] SOUNDNESS DEFECT: {out['soundness']['certified_wrong']} wrong "
-              f"certified claim(s) -- the certified channel stops and the class is fixed "
-              f"(R4; not a kill) -> {ns.out}", file=sys.stderr)
+    prov = {"head": _git_head(repo), "seal_blob": seal.seal_blob(repo),
+            "records": [p for _, p in loaded]}
+    graded = [r for a, _ in loaded for r in a["rows"] if not r.get("excluded")]
+    snd = diag.score_rows(graded)["soundness"]
+    if snd["certified_wrong"] > 0:
+        out = {"outcome": "SOUNDNESS-DEFECT", "definitions": diag.DEFINITIONS_VERSION,
+               "soundness": snd, "provenance": prov}
+        Path(ns.out).write_text(json.dumps(out, indent=1, sort_keys=True) + "\n")
+        print(f"[p2-baseline] SOUNDNESS DEFECT: {snd['certified_wrong']} wrong certified "
+              f"claim(s) -- the certified channel stops and the class is fixed (R4; not a "
+              f"kill; reported before the lines are read) -> {ns.out}", file=sys.stderr)
         return EXIT_SOUNDNESS
+    block, prereg_blob = committed_lines(repo)
+    require_fixed(block)
+    labels, labels_prov = committed_labels(repo, [p["path"] for _, p in loaded])
+    out, void = score_artefacts([a for a, _ in loaded], block, labels)
+    out["provenance"] = dict(prov, prereg={"path": PREREG, "blob": prereg_blob},
+                             cause_labels=labels_prov)
+    out["outcome"] = "VOID" if void else "SCORED"
+    Path(ns.out).write_text(json.dumps(out, indent=1, sort_keys=True) + "\n")
     if void:
         print(f"[p2-baseline] VOID ({'; '.join(out['why'])}): no metric is a result -> {ns.out}",
               file=sys.stderr)

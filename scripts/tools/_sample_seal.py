@@ -35,6 +35,7 @@ Messages name counts only, never a sealed id.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -51,6 +52,16 @@ HELDOUT_MANIFEST = "corpora/real_roots/manifest_p2_heldout.json"
 # (name, manifest, offset, n): every set P2 must never touch.
 SEALS = (("sample 3 (OPEN-119, ruling R2)", SEALED_MANIFEST, SEALED_OFFSET, SEALED_N),
          ("the P2 held-out set (ruling R3)", HELDOUT_MANIFEST, HELDOUT_OFFSET, HELDOUT_N))
+# THE PINS (review 2 of 6e76de3b, M1). A committed rewrite of a manifest with
+# the same count and offset but other ids would otherwise UNSEAL documents.
+# Each seal's id set is pinned by seal_digest (offset, n and the sorted ids;
+# NOT the file bytes, so a re-grade that rewrites the manifest's oracle block,
+# R5, keeps the seal). Changing a pin is an explicit, visible edit of this
+# table; check_p2_diag.py asserts the committed manifests match it.
+SEAL_PINS = {
+    SEALED_MANIFEST: "a578c57fc37ce58a86e651dbe159638458bb000d52e4f3186282c422c8f7b0dd",
+    HELDOUT_MANIFEST: "242e9541d46659086ec649ac512274241982d93505e32fd6bbed3c6c898aebb5",
+}
 # Samples P2 may use (ruling R2): number -> (offset, n, the results artefact
 # that holds its grade of record).
 ALLOWED = {1: (0, 200, "corpora/real_roots/results.json"),
@@ -99,12 +110,19 @@ def paper_key(x) -> str:
     return valid_id(x).rsplit("v", 1)[0]
 
 
+def seal_digest(offset: int, n: int, ids) -> str:
+    """The pinned identity of a sealed set: offset, n and its sorted ids."""
+    return hashlib.sha256(json.dumps({"offset": offset, "n": n, "ids": sorted(ids)},
+                                     separators=(",", ":")).encode()).hexdigest()
+
+
 def _load_seal(repo: Path, name: str, rel: str, offset: int, n: int) -> frozenset:
     try:
         data, _blob = committed(repo, rel)
         d = json.loads(data)
         frame = d.get("frame") or {}
-        keys = [paper_key(r["arxiv_id"]) for r in d["docs"]]
+        ids = [valid_id(r["arxiv_id"]) for r in d["docs"]]
+        keys = [paper_key(x) for x in ids]
     except SealError as e:
         raise SealError(f"the seal of {name} cannot be read ({e}); refusing every request") \
             from None
@@ -115,6 +133,9 @@ def _load_seal(repo: Path, name: str, rel: str, offset: int, n: int) -> frozense
             or frame.get("n", n) != n:
         raise SealError(f"the seal of {name} holds {len(set(keys))} distinct ids at offset "
                         f"{frame.get('offset')!r}, not {n} at {offset}: refusing every request")
+    if seal_digest(offset, n, ids) != SEAL_PINS.get(rel):
+        raise SealError(f"the seal of {name} does not match its pin (SEAL_PINS): its id set "
+                        f"was changed; refusing every request")
     return frozenset(keys)
 
 

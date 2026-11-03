@@ -24,6 +24,7 @@ checks run, floored, so an empty run cannot read as a pass.
 """
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import os
@@ -45,7 +46,7 @@ import p2_baseline  # noqa: E402
 
 REPO = HERE.parent.parent
 FIX = REPO / "corpora" / "p2_diag" / "fixtures"
-MIN_CHECKS = 250
+MIN_CHECKS = 640
 fails = count = 0
 
 
@@ -501,7 +502,7 @@ def gold(cls, obj, file, line, verified=True, consistent=True):
 
 
 def pred(verdict, *ps):
-    return {"verdict": verdict, "predictions": list(ps)}
+    return {"verdict": verdict, "predictions": [dict({"tier": "heuristic"}, **p) for p in ps]}
 
 
 NOGOLD = {"has_error": False}
@@ -574,13 +575,13 @@ check("prereg (R4): every success line has the floor min_n >= 29",
       and sum(1 for ln in block["lines"] if ln["kind"] == "success") >= 7,
       [(ln["id"], ln.get("min_n")) for ln in block["lines"] if ln["kind"] == "success"])
 check("prereg (R4): certified precision lines demand exactly 1.0; heuristic >= 0.95; "
-      "heuristic kills fire on upper95 < 0.95 (no min_n); no certified kill line",
+      "heuristic kills fire on upper95 < 0.90 (R4's value with a confidence requirement; no min_n); no certified kill line",
       all(ln["op"] == "==" and ln["value"] == 1.0 for ln in block["lines"]
           if ln["kind"] == "success" and ln["metric"].endswith("_certified"))
       and all(ln["op"] == ">=" and ln["value"] == 0.95 for ln in block["lines"]
               if ln["kind"] == "success" and "precision" in ln["metric"]
               and ln["metric"].endswith("_heuristic"))
-      and all(ln["op"] == "<" and ln["value"] == 0.95 and ln["stat"] == "upper95"
+      and all(ln["op"] == "<" and ln["value"] == 0.90 and ln["stat"] == "upper95"
               and "min_n" not in ln and ln["metric"].endswith("_heuristic")
               for ln in block["lines"] if ln["kind"] == "kill")
       and {ln["metric"] for ln in block["lines"] if ln["kind"] == "kill"}
@@ -591,8 +592,8 @@ check("prereg (R4): recall targets kept (location >= 0.50, cause >= 0.80) and th
                              if ln["id"] in ("S2", "S4", "P1")}
       == {("location_recall_line", ">=", 0.5), ("cause_recall_top1", ">=", 0.8),
           ("location_recall_line", "<=", 0.1)})
-check("prereg: the lines block is still PROPOSED and names p2-defs/4",
-      block["status"] == "PROPOSED" and block["definitions"] == "p2-defs/4")
+check("prereg: the lines block is still PROPOSED and names this code's definitions",
+      block["status"] == "PROPOSED" and block["definitions"] == d.DEFINITIONS_VERSION)
 check("prereg (provenance): both owner messages are quoted verbatim",
       all(q in PRE.read_text() for q in (
           '"What are the answers leading to the best product for the orginal vision? Ultrathink"',
@@ -618,14 +619,21 @@ S2_FAKE = [f"0002.{i:05d}v2" for i in range(200)]
 SID = SEALED_FAKE[17]
 HELDOUT_FAKE = [f"9998.{i:05d}v1" for i in range(1080)]
 HID = HELDOUT_FAKE[500]
+# The synthetic repositories' seals are pinned like the real ones (M1): the
+# pins are swapped for the duration of §9 and restored before §9e.
+REAL_PINS = dict(seal.SEAL_PINS)
+seal.SEAL_PINS = {seal.SEALED_MANIFEST: seal.seal_digest(720, 200, SEALED_FAKE),
+                  seal.HELDOUT_MANIFEST: seal.seal_digest(920, 1080, HELDOUT_FAKE)}
+GRADER_FILES = sorted(set(_oracle.GRADING_CODE_CORE) | set(p2_baseline.GRADERS))
 
 
-def commit_all(repo):
-    git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "add", "-A")
-    git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false", "commit", "-qm", "c")
+def commit_all(repo, who="t", paths=None):
+    git(repo, "add", *(paths or ["-A"]))
+    git(repo, "-c", f"user.email={who}@x", "-c", f"user.name={who}", "-c",
+        "commit.gpgsign=false", "commit", "-qm", "c", "--allow-empty")
 
 
-def make_repo(td: Path, *, prereg_status="PROPOSED", s1=None) -> Path:
+def make_repo(td: Path, *, prereg_status="PROPOSED", s1=None, compiling=()) -> Path:
     """A SYNTHETIC git repo: a sealed manifest of invented ids, two grades of
     record of invented ids, the pre-registration (status as given)."""
     repo = td / "repo"
@@ -637,8 +645,12 @@ def make_repo(td: Path, *, prereg_status="PROPOSED", s1=None) -> Path:
         {"frame": {"offset": 920, "n": 1080}, "docs": [{"arxiv_id": x} for x in HELDOUT_FAKE]}))
     for rel, ids in ((seal.ALLOWED[1][2], s1 or S1_FAKE), (seal.ALLOWED[2][2], S2_FAKE)):
         (repo / rel).write_text(json.dumps({"docs": [
-            {"arxiv_id": x, "toplevel": "main.tex", "sha256_tree": "0" * 64, "pdflatex_rc": 1,
-             "pdflatex_pdf": False, "cli_rc": 1} for x in ids]}))
+            {"arxiv_id": x, "toplevel": "main.tex", "sha256_tree": "0" * 64,
+             "pdflatex_rc": 0 if x in compiling else 1, "pdflatex_pdf": x in compiling,
+             "cli_rc": 1} for x in ids]}))
+    for f in GRADER_FILES:   # the grading code a record names must exist here
+        (repo / f).parent.mkdir(parents=True, exist_ok=True)
+        (repo / f).write_bytes((REPO / f).read_bytes())
     blk = dict(block, status=prereg_status)
     (repo / p2_baseline.PREREG).write_text(
         f"x\n{p2_baseline.LINES_BEGIN}\n```json\n{json.dumps(blk)}\n```\n{p2_baseline.LINES_END}\n")
@@ -906,39 +918,91 @@ finally:
     (_oracle.get_oracle, _oracle.RunStamp, diff_real_roots.run_to_fixpoint_full,
      p2_baseline.run_cli, p2_baseline.cli_provenance) = saved
 
-# 9c. score: committed inputs, exact samples, VOID, provenance (H2-H5, M3)
+# 9c. score: committed inputs, exact samples, re-derived rows, VOID, soundness
+import base64  # noqa: E402
+import zlib  # noqa: E402
+
+MS_DIR = FIX / "missing_sty"
+MS_LOG = (MS_DIR / "main.log").read_bytes()
+MS_SRC = {"main.tex": (MS_DIR / "main.tex").read_bytes()}
+ROOTS = ["/w"]
 
 
-def rec_rows(ids, kind="hit"):
-    rows = []
-    for x in ids:
-        p_ = ({"class": "missing-file", "object": "fig", "file": "main.tex", "line": 4}
-              if kind == "hit" else {"class": None})
-        rows.append({"arxiv_id": x, "graded": True, "agrees_with_record": True,
-                     "compiles": False, "excluded": None,
-                     "gold": gold("missing-file", "fig", "main.tex", 4),
-                     "pred": pred("NOT-READY", p_)})
-    return rows
+def _gold_of(log, files):
+    roots = tuple(ROOTS)
+    return d.diag_record(log, read_source=files.get,
+                         in_tree=lambda n: d.canon_path(n, roots + (p2_baseline.RUN_DIR,)) in files,
+                         work_prefixes=(p2_baseline.RUN_DIR,) + roots)
 
 
-def record_art(repo, k, rows=None):
+MS_GOLD = _gold_of(MS_LOG, MS_SRC)
+MODEL = "MODEL-CONNECTED\tPREMISE-CERTIFIED\ttier=lp-core\tx\n"
+CERT = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:{line}:1 ! LaTeX Error: "
+        "File `nosuchpackagexyz.sty' not found. [E10, rule r, probe p, contract c]\n")
+KINDS = {
+    "hit": MODEL + "NOT-READY\tmain.tex\n  T2 project not closed: missing file nosuchpackagexyz.sty\n",
+    "abstain": MODEL + "NOT-READY\tmain.tex\n  T5 rule violations: [PRT-001]\n",
+    "ready": MODEL + "READY\tmain.tex\n",
+}
+KINDS["cert_ok"] = KINDS["hit"] + CERT.format(line=4)
+KINDS["cert_bad"] = KINDS["hit"] + CERT.format(line=5)
+KINDS["loc3"] = (MODEL + "NOT-READY\tmain.tex\n  T0 LP-Foreign construct(s) in main.tex "
+                 "(outside every supported tier; not a parse failure): x (line 3)\n")
+KINDS["loc5"] = KINDS["loc3"].replace("(line 3)", "(line 5)")
+
+
+def mkrow(x, kind="hit", compiles=False, rc=None):
+    """A record row as `record` writes it (CLI output, run roots, kept log,
+    file list, derived prediction and gold)."""
+    out = KINDS[kind]
+    rc = (0 if compiles else 1) if rc is None else rc
+    r = {"arxiv_id": x, "toplevel": "main.tex", "excluded": None, "rc": rc,
+         "pdf": bool(compiles), "passes": 1, "cli_rc": 0 if kind == "ready" else 1,
+         "cli_stdout": out, "cli_stderr": "", "run_roots": ROOTS,
+         "pred": d.cli_prediction(out, "", tuple(ROOTS)), "tree_files": ["main.tex"],
+         "graded": True, "compiles": bool(compiles), "agrees_with_record": True}
+    if compiles or rc == -1:
+        r["gold"] = d.diag_record(None)
+    else:
+        r.update(log_gz_b64=base64.b64encode(zlib.compress(MS_LOG)).decode(),
+                 log_sha256=hashlib.sha256(MS_LOG).hexdigest(), gold=MS_GOLD)
+    return r
+
+
+def excluded_row(x, why="tree differs from the grade of record"):
+    return {"arxiv_id": x, "toplevel": "main.tex", "excluded": why, "graded": False}
+
+
+def rows_for(ids, kind="hit", compiling=()):
+    return [mkrow(x, kind, x in compiling) for x in ids]
+
+
+def record_art(repo, k, rows=None, compiling=()):
     o_, n, rel = seal.sample_spec(k)
     return {"schema": d.SCHEMA, "definitions": d.DEFINITIONS_VERSION, "sample": k,
             "frame_window": {"offset": o_, "n": n},
             "grade_of_record": {"path": rel, "blob": seal.committed(repo, rel)[1]},
             "seal_blob": seal.seal_blob(repo),
-            "rows": rows if rows is not None else rec_rows(S1_FAKE if k == 1 else S2_FAKE)}
+            "oracle": {"grading_code": _oracle.grading_code(p2_baseline.GRADERS, repo)},
+            "measured_at_sha": git(repo, "rev-parse", "HEAD"),
+            "cli": {"sha256": "s", "head": "h", "src_tree": "t"},
+            "rows": rows if rows is not None else rows_for(S1_FAKE if k == 1 else S2_FAKE,
+                                                           compiling=compiling)}
 
 
 def score_case(label, *, status="FIXED", arts=None, records=None, edit=None, expect_rc,
-               expect_in=""):
+               expect_in="", compiling=(), before_records=None):
     with tempfile.TemporaryDirectory() as td:
-        repo = make_repo(Path(td), prereg_status=status)
-        a1, a2 = record_art(repo, 1), record_art(repo, 2)
+        repo = make_repo(Path(td), prereg_status=status, compiling=set(compiling))
+        if before_records:
+            before_records(repo)
+        a1 = record_art(repo, 1, compiling=compiling)
+        a2 = record_art(repo, 2, compiling=compiling)
         arts_ = arts(a1, a2) if arts else {"rec1.json": a1, "rec2.json": a2}
         (repo / "corpora/p2_baseline").mkdir(exist_ok=True)
         for name, a in arts_.items():
-            (repo / "corpora/p2_baseline" / name).write_text(json.dumps(a))
+            (repo / "corpora/p2_baseline" / name).write_text(
+                a if isinstance(a, str) else json.dumps(a))
         commit_all(repo)
         if edit:
             edit(repo)
@@ -960,6 +1024,8 @@ if res:
           and prov.get("seal_blob") and len(prov.get("records", [])) == 2
           and all(r.get("blob") and r.get("sha256") for r in prov["records"]), prov)
     check("H4: n counts each document once", res["inputs"]["fails"] == 400, res["inputs"])
+    check("score: the T2 missing-file reasons are cause-correct (heuristic, re-derived)",
+          res["cause_recall_top1"]["k"] == 400, res.get("cause_recall_top1"))
 score_case("H3: PROPOSED lines at HEAD are refused", status="PROPOSED", expect_rc=2,
            expect_in="not 'FIXED'")
 
@@ -990,19 +1056,19 @@ score_case("H4 (exp2): the same record twice is refused", records=["rec1.json", 
 score_case("H4: one record alone is refused", records=["rec1.json"], expect_rc=2,
            expect_in="exactly two")
 score_case("H4: a record whose rows are another sample's is refused",
-           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rec_rows(S2_FAKE)), "rec2.json": a2},
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S2_FAKE)), "rec2.json": a2},
            expect_rc=2, expect_in="not exactly")
 score_case("H4: a record with a duplicated row is refused",
-           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rec_rows(S1_FAKE[:199] + [S1_FAKE[0]])),
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S1_FAKE[:199] + [S1_FAKE[0]])),
                                 "rec2.json": a2}, expect_rc=2, expect_in="not exactly")
 score_case("H2a (exp1): a record whose frame_window is offset 720 is refused (exit 3)",
            arts=lambda a1, a2: {"rec1.json": dict(a1, frame_window={"offset": 720, "n": 200}),
                                 "rec2.json": a2}, expect_rc=3)
 score_case("H2b: a row with no arxiv_id is refused (exit 3)",
-           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rec_rows(S1_FAKE[:199]) + [
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S1_FAKE[:199]) + [
                {"graded": True}]), "rec2.json": a2}, expect_rc=3)
 score_case("H2b: a row with a `SID/.` id is refused (exit 3)",
-           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rec_rows(S1_FAKE[:199] + [SID + "/."])),
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S1_FAKE[:199] + [SID + "/."])),
                                 "rec2.json": a2}, expect_rc=3)
 score_case("H2c: a self-declared sample label is not trusted (sample 2's rows labelled 1)",
            arts=lambda a1, a2: {"rec1.json": dict(a2, sample=1, frame_window=a1["frame_window"],
@@ -1028,12 +1094,13 @@ score_case("L1: a dangling symlink given as a record is refused cleanly (no trac
 score_case("H3: a record edited after its commit is refused",
            edit=lambda repo: (repo / "corpora/p2_baseline/rec1.json").write_text("{}"),
            expect_rc=3, expect_in="differs from HEAD")
+score_case("N11: a record that is not JSON is refused cleanly (exit 2)",
+           arts=lambda a1, a2: {"rec1.json": "{not json", "rec2.json": a2}, expect_rc=2,
+           expect_in="is not JSON")
 
 
 def with_exclusions(a1, a2):
-    rows = rec_rows(S1_FAKE)
-    for r_ in rows[:175]:
-        r_.update(excluded="tree differs from the grade of record", graded=False)
+    rows = [excluded_row(x) for x in S1_FAKE[:175]] + rows_for(S1_FAKE[175:])
     return {"rec1.json": dict(a1, rows=rows), "rec2.json": a2}
 
 
@@ -1046,139 +1113,216 @@ if res:
     check("M3(a): a VOID output presents no metric",
           res.get("void") is True and not any(k in res for k in (
               "cause_recall_top1", "cause_precision_top1_heuristic",
-              "location_precision_line_heuristic",
-              "location_recall_line", "location_recall_file", "lines")), sorted(res))
-
-
-def few_fails(a1, a2):
-    rows1, rows2 = rec_rows(S1_FAKE), rec_rows(S2_FAKE)
-    for r_ in rows1 + rows2[:-10]:
-        r_.update(compiles=True, gold={"has_error": False}, pred=pred("READY"))
-    return {"rec1.json": dict(a1, rows=rows1), "rec2.json": dict(a2, rows=rows2)}
-
-
+              "location_precision_line_heuristic", "location_recall_line", "location_recall_file",
+              "lines")), sorted(res))
+score_case("M2: an excluded row that carries a prediction is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[dict(excluded_row(S1_FAKE[0]),
+                                                                 pred={"predictions": []})]
+                                                  + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+           expect_rc=2, expect_in="excluded row carries")
+COMPILING = set(S1_FAKE) | set(S2_FAKE[:-10])
 score_case("M3(a) (exp2): V1 failing (10 fails < 20) VOIDs the run (exit 4)",
-           arts=few_fails, expect_rc=p2_baseline.EXIT_VOID, expect_in="V1")
-
-
-def abstainer(a1, a2):
-    return {"rec1.json": dict(a1, rows=rec_rows(S1_FAKE, "abstain")),
-            "rec2.json": dict(a2, rows=rec_rows(S2_FAKE, "abstain"))}
-
-
-rc, res = score_case("M3(c): an abstaining predictor is scored (rc 0)", arts=abstainer,
+           compiling=COMPILING,
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S1_FAKE, "ready", COMPILING)),
+                                "rec2.json": dict(a2, rows=rows_for(S2_FAKE[:-10], "ready",
+                                                                    COMPILING)
+                                                  + rows_for(S2_FAKE[-10:]))},
+           expect_rc=p2_baseline.EXIT_VOID, expect_in="V1")
+rc, res = score_case("M3(c): an abstaining predictor is scored (rc 0)",
+                     arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S1_FAKE, "abstain")),
+                                          "rec2.json": dict(a2, rows=rows_for(S2_FAKE, "abstain"))},
                      expect_rc=0)
 if res:
     st = {ln["id"]: ln["status"] for ln in res["lines"]}
-    check("M3(c) (exp2 abstainer): S1/S3 not evaluable (so not met), K1/K2 not evaluable "
-          "(they do not 'hold')", all(st[i] == "not-evaluable" for i in (
+    check("M3(c) (exp2 abstainer): its success lines are not evaluable (so not met) and no "
+          "kill holds", all(st[i] == "not-evaluable" for i in (
               "SC1", "SC3", "SH1", "SH3", "SH5", "KH1", "KH3", "KH5"))
           and all(ln["holds"] is None for ln in res["lines"] if ln["kind"] == "kill"), st)
-lines_small = [{"id": "S3", "kind": "success", "metric": "cause_precision_top1_heuristic",
-                "stat": "point",
-                "op": "==", "value": 1.0, "min_n": 10}]
-ev = p2_baseline.evaluate_lines({"lines": lines_small}, d.score_rows(rec_rows(S1_FAKE[:1])))
-check("M3(b) (exp2): S3 at n = 1 is not evaluable", ev[0]["status"] == "not-evaluable", ev)
 
-# 9c'. ruling R4: the claim tier, soundness, floors, cause-line gold
-PROVEN_LINE = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:4:1 ! LaTeX Error: "
-               "File `fig.sty' not found. [E-12, rule X, probe p, contract abcdef12]\n")
-p = d.cli_prediction(MODEL_OK + "NOT-READY\tmain.tex\n  T5 rule violations: [DELIM-001]\n"
-                     + PROVEN_LINE)
-tiers = [(x["tier"], x["code"]) for x in p["predictions"]]
-check("R4: a PROVEN-NOT-READY TIER line is the one certified claim; reasons stay heuristic",
-      tiers == [("heuristic", "DELIM-001"), ("certified", "PROVEN")], tiers)
-c = p["predictions"][-1]
-check("R4: the certified claim carries the proof's file:line and its classified message",
-      (c["file"], c["line"], c["class"], c["object"]) == ("main.tex", 4, "missing-file", "fig"), c)
-p = d.cli_prediction(MODEL_OK + "NOT-READY\tmain.tex\n  T5 rule violations: [DELIM-001]\n"
-                     "TIER\theuristic\tLIKELY-FAIL\tLIKELY FAIL\n")
-check("R4: a heuristic TIER line makes no certified claim",
-      all(x["tier"] == "heuristic" for x in p["predictions"]) and p["verdict_tier"] == "heuristic")
-p = d.cli_prediction(MODEL_OK + "NOT-READY\tmain.tex\n"
-                     "TIER\tproven\tPROVEN-NOT-READY\tgarbled\n")
-check("R4: an unparseable PROVEN line is a MALFORMED certified claim (fail closed)",
-      p["predictions"][-1].get("malformed") is True and p["predictions"][-1]["tier"] == "certified")
-p = d.cli_prediction(MODEL_OK + "READY\tmain.tex\nTIER\tproven\tPROVEN-NOT-READY\t"
-                     "PROVEN NOT-READY main.tex:1:1 ! x [e]\n")
-check("R4: no certified claim is read from a READY answer", p["predictions"] == [])
-
-
-def cert_row(i, compiles=False, cls="missing-file", obj="fig", line=4, gold_line=4,
-             malformed=False):
-    cp = {"tier": "certified", "code": "PROVEN", "class": cls, "object": obj,
-          "file": "main.tex", "line": line}
-    if malformed:
-        cp = {"tier": "certified", "code": "PROVEN", "class": None, "object": None,
-              "file": None, "line": None, "malformed": True}
-    return {"arxiv_id": f"0001.{i:05d}v1", "graded": True, "agrees_with_record": True,
-            "compiles": compiles, "excluded": None,
-            "gold": ({"has_error": False} if compiles else
-                     gold("missing-file", "fig", "main.tex", gold_line)),
-            "pred": pred("NOT-READY", {"tier": "heuristic", "class": "encoding"}, cp)}
+# re-derivation of every scored field (review 2, M2)
+score_case("M2 (N7): a stored prediction that is not the CLI output's (tier 'CERTIFIED') is "
+           "refused", arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[dict(
+               mkrow(S1_FAKE[0]), pred={"verdict": "NOT-READY", "predictions": [
+                   {"tier": "CERTIFIED", "class": "encoding", "file": "main.tex", "line": 9}]})]
+               + rows_for(S1_FAKE[1:])), "rec2.json": a2}, expect_rc=2,
+           expect_in="stored prediction")
+score_case("M2: a stored gold that is not the kept log's is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[dict(
+               mkrow(S1_FAKE[0]), gold=dict(MS_GOLD, cause={"class": "encoding",
+                                                             "object": None}))]
+               + rows_for(S1_FAKE[1:])), "rec2.json": a2}, expect_rc=2,
+           expect_in="stored gold")
+score_case("M2: a failing row without its kept log is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[{k: v for k, v in mkrow(
+               S1_FAKE[0]).items() if k != "log_gz_b64"}] + rows_for(S1_FAKE[1:])),
+               "rec2.json": a2}, expect_rc=2, expect_in="lacks its log")
+rc, res = score_case("M2 (N9): a row whose rc/pdf say it compiles disagrees with a failing grade "
+                     "of record, whatever its own label (VOID by V2)",
+                     arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[dict(
+                         mkrow(S1_FAKE[0], "ready", compiles=True), agrees_with_record=True)]
+                         + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+                     expect_rc=p2_baseline.EXIT_VOID)
+if res:
+    check("M2 (N9): agrees_with_record is recomputed from the loaded grade of record",
+          res["excluded"]["disagrees_with_record"] == 1, res.get("excluded"))
+score_case("M2: a record whose grading code is not this producer's GRADERS is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, oracle={"grading_code": {
+               "files": {"scripts/tools/_oracle.py": "0" * 40}, "sha256": "x"}}),
+               "rec2.json": a2}, expect_rc=2, expect_in="grading_code")
+score_case("M2: a record whose CLI provenance is incomplete is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, cli={}), "rec2.json": a2}, expect_rc=2,
+           expect_in="CLI provenance")
 
 
-S_ok = d.score_rows([cert_row(i) for i in range(30)])
-check("R4: 30 exact certified claims: certified precision 30/30 and no defect",
-      (S_ok["cause_precision_top1_certified"]["k"], S_ok["cause_precision_top1_certified"]["n"],
-       S_ok["location_precision_line_certified"]["k"], S_ok["soundness"]["certified_wrong"])
-      == (30, 30, 30, 0), S_ok["soundness"])
-check("R4: the tiers are scored separately (the wrong heuristic first reason does not touch "
-      "certified precision; heuristic precision is 0/30)",
-      (S_ok["cause_precision_top1_heuristic"]["k"], S_ok["cause_precision_top1_heuristic"]["n"])
-      == (0, 30))
-check("R4: recall uses the certified claim first (certified ∪ heuristic)",
-      S_ok["cause_recall_top1"]["k"] == 30)
-for label, row in (("a wrong class", cert_row(99, cls="encoding")),
-                   ("a wrong line (l.N is the certified gold)", cert_row(99, line=5)),
-                   ("a claim on a compiling document", cert_row(99, compiles=True)),
-                   ("a malformed claim", cert_row(99, malformed=True))):
-    S_bad = d.score_rows([cert_row(i) for i in range(30)] + [row])
-    check(f"R4: one wrong certified claim ({label}) is a soundness defect",
-          S_bad["soundness"]["certified_wrong"] == 1
-          and S_bad["soundness"]["wrong_rows"] == ["0001.00099v1"], S_bad["soundness"])
+def bad_line(repo):
+    p_ = repo / p2_baseline.PREREG
+    blk = p2_baseline.read_lines_block(p_)
+    blk["lines"].append({"id": "X", "kind": "success", "metric": "nope", "stat": "point",
+                         "op": "~", "value": 1})
+    p_.write_text(f"x\n{p2_baseline.LINES_BEGIN}\n```json\n{json.dumps(blk)}\n```\n"
+                  f"{p2_baseline.LINES_END}\n")
+    commit_all(repo)
+
+
+score_case("N11: an unknown metric/op in a FIXED block is refused cleanly (exit 2)",
+           edit=bad_line, expect_rc=2, expect_in="unknown")
+
+# ruling R4: the claim tier, soundness (§5.6), exact matching (review 2, H1-H3)
+rc, res = score_case("R4: exact certified claims score normally (rc 0)",
+                     arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S1_FAKE, "cert_ok")),
+                                          "rec2.json": a2}, expect_rc=0)
+if res:
+    check("R4: the outcome is SCORED and the 200 certified claims are exact",
+          res.get("outcome") == "SCORED" and res["soundness"]["certified_wrong"] == 0
+          and res["soundness"]["certified_claims"] == 200
+          and res["cause_precision_top1_certified"]["k"] == 200, res.get("soundness"))
+CERT_BAD = lambda a1, a2: {"rec1.json": dict(a1, rows=[mkrow(S1_FAKE[0], "cert_bad")]  # noqa: E731
+                                              + rows_for(S1_FAKE[1:], "cert_ok")), "rec2.json": a2}
+rc, res = score_case("R4: one wrong certified claim exits 5 (SOUNDNESS DEFECT, not a kill)",
+                     arts=CERT_BAD, expect_rc=p2_baseline.EXIT_SOUNDNESS,
+                     expect_in="SOUNDNESS DEFECT")
+if res:
+    check("R4: the outcome names the defect, its row and its reason",
+          res.get("outcome") == "SOUNDNESS-DEFECT" and res["soundness"]["wrong_rows"] == [S1_FAKE[0]]
+          and res["soundness"]["wrong_by_reason"] == {"location is not the gold l.N": 1},
+          res.get("soundness"))
+score_case("R4: the defect takes precedence over VOID (exit 5)",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[mkrow(S1_FAKE[0], "cert_bad"),
+                                                             excluded_row(S1_FAKE[1])]
+                                                  + rows_for(S1_FAKE[2:], "cert_ok")),
+                                "rec2.json": a2}, expect_rc=p2_baseline.EXIT_SOUNDNESS)
+score_case("LOW: a known defect is reported even while the lines are PROPOSED (exit 5, not 2)",
+           status="PROPOSED", arts=CERT_BAD, expect_rc=p2_baseline.EXIT_SOUNDNESS)
+score_case("H3 (N6): a certified NOT-READY on a document the live oracle compiled is a defect "
+           "even though the row disagrees with the grade of record",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[mkrow(S1_FAKE[0], "cert_ok",
+                                                                  compiles=True)]
+                                                  + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+           expect_rc=p2_baseline.EXIT_SOUNDNESS)
+score_case("H3 (N6): a certified claim on an UNGRADED row is not confirmable, hence a defect",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[mkrow(S1_FAKE[0], "cert_ok", rc=-1)]
+                                                  + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+           expect_rc=p2_baseline.EXIT_SOUNDNESS)
+
+
+def cl(cls, obj, file="main.tex", line=4, **kw):
+    return dict({"tier": "certified", "code": "PROVEN", "class": cls, "object": obj,
+                 "file": file, "line": line}, **kw)
+
+
+def grow(c, g=None, compiles=False, rc=1):
+    return {"arxiv_id": "0001.00000v1", "graded": rc != -1, "agrees_with_record": True,
+            "compiles": compiles, "rc": rc,
+            "gold": g if g is not None else gold("undefined-cs", "\\bar", "main.tex", 4),
+            "pred": pred("NOT-READY", c)}
+
+
+T_UNDEF = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:4:1 Undefined control "
+           "sequence \\foo [E1, rule r, probe p, contract abcdef12]")
+p = d.cli_prediction("NOT-READY\tmain.tex\n" + T_UNDEF + "\n")
+c = [x for x in p["predictions"] if x["tier"] == "certified"][0]
+check("H1 (N4): the certified claim carries its control sequence as the object",
+      (c["class"], c["object"]) == ("undefined-cs", "\\foo"), c)
+sx = d.score_rows([grow(c)])
+check("H1 (N4): \\foo against gold \\bar is a WRONG certified claim",
+      sx["soundness"]["certified_wrong"] == 1 and sx["cause_precision_top1_certified"]["k"] == 0,
+      sx["soundness"])
+for label, cc, g in (
+        ("a None claim object", cl("undefined-cs", None), None),
+        ("a None gold object", cl("undefined-cs", "\\bar"), gold("undefined-cs", None, "main.tex", 4)),
+        ("an object where the class has none", cl("math-mode", "x"),
+         gold("math-mode", None, "main.tex", 4))):
+    sx = d.score_rows([grow(cc, g)])
+    check(f"H1: {label} never matches for a certified claim",
+          sx["soundness"]["certified_wrong"] == 1, sx["soundness"])
+check("H1: an exact certified claim (class, object, l.N) is right",
+      d.score_rows([grow(cl("undefined-cs", "\\bar"))])["soundness"]["certified_wrong"] == 0)
+for label, msg, ecode in (("E10 against an undefined-cs message",
+                           "Undefined control sequence \\foo", "E10"),
+                          ("a message naming no gold class", "something odd", "E0")):
+    t = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:4:1 " + msg
+         + f" [{ecode}, rule r, probe p, contract c]")
+    c = d.cli_prediction("NOT-READY\tmain.tex\n" + t + "\n")["predictions"][-1]
+    check(f"H1: {label} is a malformed (wrong) certified claim", c.get("malformed") is True, c)
+c = d.cli_prediction("NOT-READY\tm.tex\nTIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY "
+                     "a:1:2 b.tex:4:1 ! Undefined control sequence \\x [E1, r]\n")["predictions"][-1]
+check("LOW: a file name containing ':N:N ' makes the certified location ambiguous (malformed)",
+      c.get("malformed") is True and "ambiguous" in c.get("malformed_why", ""), c)
+T_FAR = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY /elsewhere/main.tex:4:1 ! LaTeX "
+         "Error: File `fig.sty' not found. [E10, rule r, probe p, contract c]")
+c = [x for x in d.cli_prediction("NOT-READY\tmain.tex\n" + T_FAR + "\n", "", ("/work",))[
+    "predictions"] if x["tier"] == "certified"][0]
+sx = d.score_rows([grow(c, gold("missing-file", "fig", "main.tex", 4))])
+check("H2(a) (N5): a certified location outside the run is a WRONG claim, not dropped",
+      c.get("location_outside_run") is True and sx["soundness"]["certified_wrong"] == 1
+      and sx["soundness"]["wrong_by_reason"] == {"location outside the run": 1},
+      (c, sx["soundness"]))
+c4 = cl("missing-file", "fig", line=9)
+for label, g in (("a system top frame", {"has_error": True, "consistent": True,
+                                         "cause": {"class": "missing-file", "object": "fig"},
+                                         "location": {"file": None, "line": 4}}),
+                 ("no l.N", {"has_error": True, "consistent": True,
+                             "cause": {"class": "missing-file", "object": "fig"},
+                             "location": {"file": "main.tex", "line": None}}),
+                 ("an unverified location", gold("missing-file", "fig", "main.tex", 9,
+                                                 verified=False)),
+                 ("an inconsistent record", gold("missing-file", "fig", "main.tex", 9,
+                                                 consistent=False))):
+    sx = d.score_rows([grow(c4, g)])
+    check(f"H2(b,c) (N5): a certified claim against gold with {label} is WRONG "
+          f"(not 'unscorable')", sx["soundness"]["certified_wrong"] == 1
+          and "certified_unscorable" not in sx["soundness"], sx["soundness"])
+for label, rows_ in (("a disagreeing row", [dict(grow(cl("missing-file", "fig")), compiles=True,
+                                                 agrees_with_record=False)]),
+                     ("an ungraded row", [grow(cl("missing-file", "fig"), rc=-1)])):
+    sx = d.score_rows(rows_)
+    check(f"H3 (N6): a certified claim on {label} is judged (wrong)",
+          sx["soundness"]["certified_claims"] == 1 and sx["soundness"]["certified_wrong"] == 1,
+          sx["soundness"])
+for label, surf in (("no verdict line", ""), ("a READY verdict", "READY\tmain.tex\n")):
+    pp = d.cli_prediction(surf + T_UNDEF + "\n")
+    check(f"M3 (N8): a PROVEN-NOT-READY beside {label} is a malformed certified claim, "
+          f"not dropped", len(pp["predictions"]) == 1 and pp["predictions"][0]["tier"] ==
+          "certified" and pp["predictions"][0].get("malformed") is True, pp)
+    check(f"M3 (N8): ... and it is a soundness defect ({label})",
+          d.score_rows([grow(pp["predictions"][0], compiles=True, rc=0)])["soundness"][
+              "certified_wrong"] == 1)
 ev = p2_baseline.evaluate_lines({"lines": [
-    {"id": "SH3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
-     "op": "==", "value": 1.0, "min_n": 29}]}, d.score_rows([cert_row(i) for i in range(28)]))
+    {"id": "SC3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
+     "op": "==", "value": 1.0, "min_n": 29}]},
+    d.score_rows([dict(grow(cl("undefined-cs", "\\bar")), arxiv_id=f"0001.{i:05d}v1")
+                  for i in range(28)]))
 check("R4: a success line at n = 28 (< 29) is not evaluable", ev[0]["status"] == "not-evaluable",
       ev)
 ev = p2_baseline.evaluate_lines({"lines": [
-    {"id": "SH3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
-     "op": "==", "value": 1.0, "min_n": 29}]}, d.score_rows([cert_row(i) for i in range(29)]))
+    {"id": "SC3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
+     "op": "==", "value": 1.0, "min_n": 29}]},
+    d.score_rows([dict(grow(cl("undefined-cs", "\\bar")), arxiv_id=f"0001.{i:05d}v1")
+                  for i in range(29)]))
 check("R4: ... and evaluable at n = 29", ev[0]["status"] == "holds", ev)
 
-
-def cert_arts(wrong, void=False):
-    def f(a1, a2):
-        rows1 = [dict(cert_row(i), arxiv_id=x) for i, x in enumerate(S1_FAKE)]
-        if wrong:
-            rows1[0] = dict(cert_row(0, cls="encoding"), arxiv_id=S1_FAKE[0])
-        if void:
-            rows1[1].update(excluded="tree differs from the grade of record", graded=False)
-        return {"rec1.json": dict(a1, rows=rows1), "rec2.json": a2}
-    return f
-
-
-rc, res = score_case("R4: exact certified claims score normally (rc 0)", arts=cert_arts(False),
-                     expect_rc=0)
-if res:
-    check("R4: the outcome is SCORED with an empty defect list",
-          res.get("outcome") == "SCORED" and res["soundness"]["certified_wrong"] == 0)
-rc, res = score_case("R4: one wrong certified claim exits 5 (SOUNDNESS DEFECT, not a kill)",
-                     arts=cert_arts(True), expect_rc=p2_baseline.EXIT_SOUNDNESS,
-                     expect_in="SOUNDNESS DEFECT")
-if res:
-    check("R4: the outcome names the defect and its row",
-          res.get("outcome") == "SOUNDNESS-DEFECT"
-          and res["soundness"]["wrong_rows"] == [S1_FAKE[0]], res.get("soundness"))
-rc, res = score_case("R4: the defect takes precedence over VOID (exit 5)",
-                     arts=cert_arts(True, void=True), expect_rc=p2_baseline.EXIT_SOUNDNESS)
-if res:
-    check("R4: a void run still reports its soundness block",
-          res.get("void") is True and res["soundness"]["certified_wrong"] == 1)
-
-# The heuristic kill (assistant's choice pending owner ruling): fires only when
-# the exact one-sided 95% upper bound on heuristic precision is below 0.95.
+# The heuristic kill (R4's 0.90 with a confidence requirement; the assistant's
+# choice pending owner ruling): fires when the upper 95% bound is below 0.90.
 KILLS = [ln for ln in block["lines"] if ln["kind"] == "kill"]
 
 
@@ -1196,73 +1340,180 @@ def heur_rows(k, n):
     return rows
 
 
-for k, n, fires in ((8, 10, False), (20, 40, True)):
+for k, n, fires in ((26, 29, False), (10, 20, True)):
     sc = d.score_rows(heur_rows(k, n))
     ev = {e["id"]: e for e in p2_baseline.evaluate_lines({"lines": KILLS}, sc)}
     ub = sc["cause_precision_top1_heuristic"]["upper95"]
-    check(f"kill rule: {k}/{n} correct has upper bound {ub:.3f} -> "
+    check(f"M5 kill rule: {k}/{n} correct has upper bound {ub:.3f} -> "
           f"{'fires' if fires else 'does NOT fire'} (KH1, KH3)",
           ev["KH3"]["holds"] is fires and ev["KH1"]["holds"] is fires
-          and ((ub < 0.95) is fires), (ub, ev["KH3"], ev["KH1"]))
+          and ((ub < 0.90) is fires), (ub, ev["KH3"], ev["KH1"]))
 ev0 = {e["id"]: e for e in p2_baseline.evaluate_lines({"lines": KILLS}, d.score_rows([]))}
-check("kill rule: with no claims there is no bound and no kill fires",
+check("M5 kill rule: with no claims there is no bound and no kill fires",
       all(e["status"] == "not-evaluable" for e in ev0.values()), ev0)
 
-# the two-labeller cause-line gold (§5.5)
-LAB = {"schema": d.LABEL_SCHEMA, "labeller_a": "A", "labeller_b": "B", "adjudicator": "C",
-       "docs": {
-           "0001.00000v1": {"A": {"file": "main.tex", "line": 3},
-                            "B": {"file": "./main.tex", "line": 3}},
-           "0001.00001v1": {"A": {"file": "main.tex", "line": 3}, "B": {"file": "main.tex", "line": 5},
-                            "adjudicated": {"file": "main.tex", "line": 5}},
-           "0001.00002v1": {"A": {"file": "main.tex", "line": 3}, "B": {"file": "main.tex", "line": 5},
-                            "adjudicated": {"file": "main.tex", "line": 9}},
-           "0001.00003v1": {"A": {"file": "main.tex", "line": 3}, "B": {"file": "main.tex", "line": 5},
-                            "adjudicated": "unresolvable"},
-           "0001.00004v1": {"A": {"none": "no single line"}, "B": {"none": "macro"}}}}
-gold_cl, st = d.cause_line_gold(LAB)
-check("§5.5: agreement (after canon_path) is gold; adjudication must pick one of the two; "
-      "unresolvable and both-none have no gold",
-      gold_cl == {"0001.00000v1": {"file": "main.tex", "line": 3},
-                  "0001.00001v1": {"file": "main.tex", "line": 5}}
-      and st == {"entries": 5, "agreed": 1, "adjudicated": 1, "unresolved": 2,
-                 "no_cause_line": 1}, (gold_cl, st))
-for label, bad in (("labellers not distinct", dict(LAB, labeller_b="A")),
-                   ("adjudicator = a labeller", dict(LAB, adjudicator="B")),
-                   ("wrong schema", dict(LAB, schema="x"))):
+for label, tier in (("a missing tier", None), ("tier 'CERTIFIED'", "CERTIFIED"),
+                    ("tier 'proven'", "proven")):
+    cp = {"code": "PROVEN", "class": "encoding", "object": None, "file": "main.tex", "line": 9}
+    if tier:
+        cp["tier"] = tier
     try:
-        d.cause_line_gold(bad)
+        d.score_rows([{"arxiv_id": "0001.00000v1", "graded": True, "agrees_with_record": True,
+                       "compiles": False, "gold": gold("encoding", None, "main.tex", 9),
+                       "pred": {"verdict": "NOT-READY", "predictions": [cp]}}])
         ok = False
     except ValueError:
         ok = True
-    check(f"§5.5: a label file with {label} is refused", ok)
+    check(f"M2 (N7): score_rows refuses {label} (no default to heuristic)", ok)
+try:
+    p2_baseline.evaluate_lines({"lines": [{"id": "X", "kind": "success", "metric": "nope",
+                                           "stat": "point", "op": "~", "value": 1}]},
+                               d.score_rows([]))
+    ok = False
+except p2_baseline.InputError:
+    ok = True
+check("N11: evaluate_lines refuses an unknown metric/op cleanly (InputError, not KeyError)", ok)
+
+# the two-labeller cause-line protocol (§5.5; review 2, H4, M4)
+LA = {"schema": d.LABEL_SET_SCHEMA, "role": "A", "labeller": "Alice",
+      "docs": {S1_FAKE[0]: {"file": "main.tex", "line": 3}, S1_FAKE[1]: {"file": "main.tex", "line": 3},
+               S1_FAKE[2]: {"file": "main.tex", "line": 3}, S1_FAKE[3]: {"none": "macro"}}}
+LB = {"schema": d.LABEL_SET_SCHEMA, "role": "B", "labeller": "bob",
+      "docs": {S1_FAKE[0]: {"file": "./main.tex", "line": 3}, S1_FAKE[1]: {"file": "main.tex", "line": 5},
+               S1_FAKE[2]: {"file": "main.tex", "line": 5}, S1_FAKE[3]: {"none": "macro"},
+               S1_FAKE[4]: {"file": "main.tex", "line": 1}}}
+LADJ = {"schema": d.ADJUDICATION_SCHEMA, "adjudicator": "carol",
+        "docs": {S1_FAKE[1]: {"file": "main.tex", "line": 5}, S1_FAKE[2]: "unresolvable"}}
+NOID = (lambda ids: None)
+g_, st_ = d.cause_line_gold(LA, LB, LADJ, NOID)
+check("§5.5: agreement is gold; adjudication picks one of two; unresolvable, both-none and "
+      "one-labeller documents have no gold",
+      g_ == {S1_FAKE[0]: {"file": "main.tex", "line": 3}, S1_FAKE[1]: {"file": "main.tex", "line": 5}}
+      and st_ == {"entries": 5, "agreed": 1, "adjudicated": 1, "unresolved": 1,
+                  "no_cause_line": 1, "incomplete": 1}, (g_, st_))
 
 
-def cl_rows(a1, a2):
-    rows1 = rec_rows(S1_FAKE)
-    for r_ in rows1[:2]:
-        r_["pred"] = pred("NOT-READY", {"tier": "heuristic", "class": None, "file": "main.tex",
-                                        "line": 3})
-    return {"rec1.json": dict(a1, rows=rows1), "rec2.json": a2}
+def gold_refused(a, b, adj, check_id=NOID):
+    try:
+        d.cause_line_gold(a, b, adj, check_id)
+    except (ValueError, seal.SealError):
+        return True
+    return False
 
 
-def add_labels(repo, commit=True):
-    (repo / p2_baseline.CAUSE_LABELS).write_text(json.dumps(LAB))
-    if commit:
-        commit_all(repo)
+for label, a, b, adj in (
+        ("N3: an adjudication for a document only one labeller labelled", LA, LB,
+         dict(LADJ, docs={S1_FAKE[4]: {"file": "main.tex", "line": 1}})),
+        ("an adjudication where the labellers agree", LA, LB,
+         dict(LADJ, docs={S1_FAKE[0]: {"file": "main.tex", "line": 3}})),
+        ("an adjudication inventing a third label", LA, LB,
+         dict(LADJ, docs={S1_FAKE[1]: {"file": "main.tex", "line": 9}})),
+        ("N3: a garbage claim", dict(LA, docs={S1_FAKE[2]: "garbage"}), LB, None),
+        ("N3: identities equal after normalisation ('me', 'me ', 'Me')",
+         dict(LA, labeller="me"), dict(LB, labeller="me "), dict(LADJ, adjudicator="Me")),
+        ("a labeller file with the wrong role", dict(LA, role="B"), LB, None)):
+    check(f"M4: {label} is refused", gold_refused(a, b, adj))
+for label, ids in (("a sealed id in a non-gold entry", {SID: {"none": "x"}}),
+                   ("a held-out id in a disagreement", {HID: {"file": "main.tex", "line": 3}}),
+                   ("a malformed id", {"not-an-id/../x": {"none": "x"}})):
+    check(f"H4 (N2): {label} is refused before anything is read",
+          gold_refused(dict(LA, docs=dict(LA["docs"], **ids)), LB, None,
+                       lambda xs: seal.refuse_ids(xs, frozenset(
+                           seal.paper_key(x) for x in SEALED_FAKE + HELDOUT_FAKE))))
 
 
-rc, res = score_case("§5.5: committed cause-line labels are scored (rc 0)", arts=cl_rows,
-                     edit=add_labels, expect_rc=0)
+def write_labels(repo, a=LA, b=LB, adj=LADJ, authors=("Alice", "bob", "carol")):
+    base = repo / p2_baseline.LABEL_DIR
+    base.mkdir(parents=True, exist_ok=True)
+    for (key, doc), who in zip((("A", a), ("B", b), ("adj", adj)), authors):
+        if doc is None:
+            continue
+        rel = p2_baseline.LABEL_FILES[key]
+        (repo / rel).write_text(json.dumps(doc))
+        commit_all(repo, who=who, paths=[rel])
+
+
+def loc_rows(a1, a2):
+    rows = [mkrow(S1_FAKE[0], "loc3"), mkrow(S1_FAKE[1], "loc3")] + rows_for(S1_FAKE[2:])
+    return {"rec1.json": dict(a1, rows=rows), "rec2.json": a2}
+
+
+rc, res = score_case("§5.5: labels committed by their labellers BEFORE the records are scored",
+                     before_records=write_labels, arts=loc_rows, expect_rc=0)
 if res:
     m_ = res.get("location_precision_cause_heuristic", {})
     check("§5.5: heuristic claims are scored against the cause-line gold (1 of 2 right)",
           (m_.get("k"), m_.get("n")) == (1, 2)
-          and res["provenance"]["cause_labels"]["stats"]["agreed"] == 1, (m_,
-                                                                          res.get("provenance")))
-score_case("§5.5: an uncommitted label file is refused", arts=cl_rows,
-           edit=lambda repo: add_labels(repo, commit=False), expect_rc=3,
-           expect_in="not committed")
+          and res["provenance"]["cause_labels"]["stats"]["agreed"] == 1, m_)
+score_case("M4: labels committed AFTER the records are refused (blindness)", arts=loc_rows,
+           edit=write_labels, expect_rc=2, expect_in="predate")
+score_case("M4: a label file committed by someone other than its labeller is refused",
+           before_records=lambda repo: write_labels(repo, authors=("mallory", "bob", "carol")),
+           arts=loc_rows, expect_rc=2, expect_in="someone other")
+score_case("H4 (N2): a label file naming a sealed document is refused (exit 3)",
+           before_records=lambda repo: write_labels(repo, a=dict(LA, docs=dict(
+               LA["docs"], **{SID: {"none": "x"}}))), arts=loc_rows, expect_rc=3,
+           expect_in="sealed set")
+score_case("§5.5: an uncommitted label file is refused",
+           edit=lambda repo: ((repo / p2_baseline.LABEL_DIR).mkdir(parents=True, exist_ok=True),
+                              (repo / p2_baseline.LABEL_FILES["A"]).write_text(json.dumps(LA))),
+           arts=loc_rows, expect_rc=2, expect_in="both labeller files")
+
+# M1 (N1): a committed swap of a seal manifest's ids is refused by the pin
+with tempfile.TemporaryDirectory() as td:
+    repo = make_repo(Path(td), s1=S1_FAKE[:199] + [HID])
+    m = repo / seal.HELDOUT_MANIFEST
+    dd = json.loads(m.read_text())
+    dd["docs"] = [{"arxiv_id": f"9997.{i:05d}v1"} for i in range(1080)]
+    m.write_text(json.dumps(dd))
+    commit_all(repo)
+    check("M1 (N1): a committed rewrite of the held-out manifest (same n, same offset, other "
+          "ids) refuses everything", "does not match its pin" in _msg(seal.sealed_ids, repo),
+          _msg(seal.sealed_ids, repo))
+
+# M6: the held-out manifest's build reads frame metadata only
+import builtins  # noqa: E402
+import build_p2_heldout  # noqa: E402
+with tempfile.TemporaryDirectory() as td:
+    corpus = Path(td) / "papers"
+    for i in range(30):
+        pkg = corpus / f"0005.{i:05d}v1"
+        pkg.mkdir(parents=True)
+        (pkg / "00README.json").write_text(json.dumps({"process": {"compiler": "pdflatex"},
+                                                      "sources": [{"filename": "main.tex",
+                                                                   "usage": "toplevel"}]}))
+        (pkg / "main.tex").write_text("DOCUMENT BODY\n")
+    opened = []
+    real_open = builtins.open
+    real_io_open = io.open
+
+    def tracing_open(f, *a, **k):
+        opened.append(str(f))
+        return real_open(f, *a, **k)
+
+    def tracing_io_open(f, *a, **k):
+        opened.append(str(f))
+        return real_io_open(f, *a, **k)
+    builtins.open, io.open = tracing_open, tracing_io_open
+    try:
+        ids = build_p2_heldout.frame_ids(corpus)
+    finally:
+        builtins.open, io.open = real_open, real_io_open
+    check("M6: the frame build orders the synthetic frame by sha256(id)",
+          ids == sorted((f"0005.{i:05d}v1" for i in range(30)),
+                        key=lambda x: hashlib.sha256(x.encode()).hexdigest()))
+    check("M6: the frame build opens 00README.json files only, never a document",
+          opened and all(o.endswith("00README.json") for o in opened), opened[:3])
+CORPUS = os.environ.get("LP_REAL_CORPUS")
+if CORPUS and Path(CORPUS).is_dir():
+    out_, err_ = io.StringIO(), io.StringIO()
+    with redirect_stdout(out_), redirect_stderr(err_):
+        rc_ = build_p2_heldout.main(["--corpus-root", CORPUS, "--check"])
+    check("M6: a rebuild from frame metadata reproduces the committed held-out manifest",
+          rc_ == 0 and "IDENTICAL" in out_.getvalue(), out_.getvalue() + err_.getvalue())
+else:
+    print("[p2-diag] NOTE: M6 real rebuild NOT RUN (LP_REAL_CORPUS unset); run "
+          "build_p2_heldout.py --check with the corpus before pushing")
 
 # 9d. CLI provenance (M4)
 real_cli_provenance = saved[4]
@@ -1288,6 +1539,11 @@ with tempfile.TemporaryDirectory() as td:
           refused(real_cli_provenance, exe, exc=p2_baseline.InputError))
 
 # 9e. the real seals: counts only, never an id
+seal.SEAL_PINS = REAL_PINS
+for rel_, off_, n_ in ((seal.SEALED_MANIFEST, 720, 200), (seal.HELDOUT_MANIFEST, 920, 1080)):
+    ids_ = [r_["arxiv_id"] for r_ in json.loads(seal.committed(REPO, rel_)[0])["docs"]]
+    check(f"M1: the committed {rel_} matches its pin in _sample_seal.SEAL_PINS",
+          seal.seal_digest(off_, n_, ids_) == seal.SEAL_PINS[rel_])
 real = seal.sealed_ids(REPO)
 check("seal: the real committed sealed sets hold exactly 200 + 1,080 paper keys",
       len(real) == 1280, len(real))

@@ -47,7 +47,7 @@ from _oracle import _unwrap_log  # noqa: E402  (the one 79-byte line model)
 
 SCHEMA = "p2-diag/2"
 # Bumped whenever a definition the pre-registration names changes.
-DEFINITIONS_VERSION = "p2-defs/4"
+DEFINITIONS_VERSION = "p2-defs/5"
 
 WRAP = 79  # max_print_line: the oracle's line model joins a line of exactly this
 FATAL_PREFIX = "!  ==>"
@@ -728,44 +728,130 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
              if verdict == "NOT-READY" else [])
     for x in preds:
         x["tier"] = "heuristic"
-    cert = certified_prediction(tier_line) if verdict == "NOT-READY" else None
+    cert = certified_prediction(tier_line)
+    if cert is not None and verdict != "NOT-READY":
+        # review 2, M3: a PROVEN-NOT-READY beside a READY or missing verdict is
+        # never dropped: it is a malformed certified claim (wrong, §5.6).
+        cert = dict(cert, malformed=True, malformed_why=f"certified NOT-READY beside verdict "
+                                                       f"{verdict!r}")
     if cert:
         preds.append(cert)
     for x in preds:
         x["file_raw"] = x["file"]
         x["file"] = canon_path(x["file"], run_roots) if x["file"] else None
+        if x["tier"] == "certified" and x["file_raw"] and x["file"] is None:
+            # review 2, H2(a): a certified location outside the run is not
+            # dropped; it is a claim that can never be exact.
+            x["location_outside_run"] = True
     vt = tier_line.split("\t")[1] if tier_line and len(tier_line.split("\t")) > 1 else None
     return {"definitions": DEFINITIONS_VERSION, "verdict": verdict, "verdict_tier": vt,
             "predictions": preds}
 
 
-_PROVEN_NR = re.compile(r"^PROVEN NOT-READY (?P<file>.+?):(?P<line>[0-9]+):(?P<col>[0-9]+) "
-                        r"(?P<msg>.*?) \[(?P<rest>[^\]]*)\]$")
+_PROVEN_HEAD = re.compile(r"^PROVEN NOT-READY (?P<loc>.*) \[(?P<rest>[^\]]*)\]$")
+_LOC_SPLIT = re.compile(r":([0-9]+):([0-9]+) ")
+# The proof's own reason code (Verdict.e_code) where it names one of the gold
+# classes; it is authoritative over the message text. E0, E3, E5-E7, E9, E12,
+# E13 name no single gold class: the message decides.
+E_CODE_CLASS = {"E1": "undefined-cs", "E2": "undefined-env", "E4": "math-mode",
+                "E8": "command-already-defined", "E10": "missing-file", "E11": "encoding",
+                "E14": "tex-capacity"}
+# Classes whose gold carries an object (norm_object); for these a CERTIFIED
+# claim must name the same object (certified_judgement).
+OBJECT_CLASSES = frozenset({"missing-file", "engine-incompatible", "undefined-cs",
+                            "undefined-env", "env-mismatch", "command-already-defined",
+                            "option-clash", "package-error", "class-error"})
 
 
 def certified_prediction(tier_line: str | None) -> dict | None:
     """THE CLAIM TIER (ruling R4). A prediction is CERTIFIED only when the
     CLI's TIER line is a PROVEN-NOT-READY verdict (Verdict.render: the strict
-    tier decided it by proof); its file:line:col and message are the certified
-    claim. Every other prediction -- every frozen-surface reason -- is
-    HEURISTIC. As of v27.1.64 the strict-tier membership predicate is a stub
-    (M0), so no prediction is certified: the certified channel is empty, by
-    measurement, until the strict tier ships."""
+    tier decided it by proof); its file:line:col, message and E-code are the
+    certified claim. Every other prediction is HEURISTIC. As of v27.1.64 the
+    strict-tier membership predicate is a stub (M0): the channel is empty.
+
+    FAIL CLOSED (review 2): the claim is MALFORMED (hence wrong) when the
+    headline does not parse; when `:line:col ` occurs more than once (a file
+    name containing ":N:N " makes the split ambiguous); when the E-code names
+    a class the message contradicts; when it names no file or no gold class;
+    or when the class carries an object the message does not name.
+    Verdict.render's format: `PROVEN NOT-READY <file>:<line>:<col> <message>
+    [<E-code>, rule .., probe .., contract ..]`."""
     if not tier_line:
         return None
     f = tier_line.split("\t")
     if len(f) < 4 or f[1] != "proven" or f[2] != "PROVEN-NOT-READY":
         return None
-    m = _PROVEN_NR.match(f[3])
+    base = {"source": "tier", "tier": "certified", "code": "PROVEN", "text": f[3],
+            "class": None, "object": None, "file": None, "line": None}
+
+    def bad(why):
+        return dict(base, malformed=True, malformed_why=why)
+    m = _PROVEN_HEAD.match(f[3])
     if not m:
-        return {"source": "tier", "tier": "certified", "code": "PROVEN", "text": f[3],
-                "class": None, "object": None, "file": None, "line": None,
-                "malformed": True}
-    msg = m.group("msg")
+        return bad("the PROVEN headline does not parse")
+    seps = list(_LOC_SPLIT.finditer(m.group("loc")))
+    if len(seps) != 1:
+        return bad(f"{len(seps)} `:line:col ` separators: the location is ambiguous")
+    sp = seps[0]
+    file, line, msg = m.group("loc")[:sp.start()], int(sp.group(1)), m.group("loc")[sp.end():]
+    ecode = m.group("rest").split(",")[0].strip()
     c = classify_message(msg if msg.startswith("!") else "! " + msg)
-    return {"source": "tier", "tier": "certified", "code": "PROVEN", "text": f[3],
-            "class": c["class"], "object": c["object"], "file": m.group("file"),
-            "line": int(m.group("line"))}
+    cls, obj = c["class"], c["object"]
+    if ecode in E_CODE_CLASS:
+        if cls not in (None, "other", E_CODE_CLASS[ecode]):
+            return bad(f"E-code {ecode} names {E_CODE_CLASS[ecode]} but the message says {cls}")
+        cls = E_CODE_CLASS[ecode]
+    if cls == "undefined-cs":
+        mm = re.search(r"(\\(?:[A-Za-z@]+|.))\s*$", msg)
+        obj = mm.group(1) if mm else None
+    if not file or not cls or cls == "other":
+        return bad("the claim names no file or no gold cause class")
+    if cls in OBJECT_CLASSES and obj is None:
+        return bad(f"class {cls} carries an object, and the claim names none")
+    return dict(base, **{"class": cls, "object": obj, "file": file, "line": line,
+                         "e_code": ecode})
+
+
+def certified_judgement(c: dict, r: dict) -> tuple[bool, str]:
+    """(exact, why) of one CERTIFIED claim against its row (§5.6). EXACT
+    MATCHING, FAIL CLOSED (review 2, H1-H3): the claim is right only when the
+    live oracle FAILED the document, the gold record is consistent and
+    classified, the classes are equal, the objects are equal for an
+    object-carrying class (None never matches) and both None otherwise, and
+    the location is the gold's verified, in-tree l.N exactly. Anything that
+    cannot be confirmed is WRONG, with its reason. The grade of record is not
+    consulted: a certified NOT-READY on a document the live oracle compiled is
+    wrong whatever the grade of record says."""
+    if c.get("malformed"):
+        return False, f"malformed: {c.get('malformed_why', 'unparseable')}"
+    if c.get("location_outside_run"):
+        return False, "location outside the run"
+    if r.get("rc") == -1 or r.get("compiles") is None:
+        return False, "not confirmable: the oracle did not grade the document"
+    if r["compiles"]:
+        return False, "the document compiles under the live oracle"
+    g = r.get("gold") or {}
+    if not g.get("has_error") or not g.get("consistent"):
+        return False, "not confirmable: the gold record is absent or inconsistent"
+    gc = g.get("cause") or {}
+    if not gc.get("class") or c.get("class") != gc["class"]:
+        return False, f"class {c.get('class')!r} is not the gold {gc.get('class')!r}"
+    if c["class"] in OBJECT_CLASSES:
+        if c.get("object") is None or gc.get("object") is None or c["object"] != gc["object"]:
+            return False, "object differs from the gold (or either is unknown)"
+    elif c.get("object") is not None or gc.get("object") is not None:
+        return False, "object differs from the gold"
+    L = g.get("location") or {}
+    if L.get("line") is None:
+        return False, "not confirmable: the gold has no l.N"
+    if L.get("file") is None:
+        return False, "not confirmable: the gold's top frame is a system file"
+    if not L.get("verified"):
+        return False, "not confirmable: the gold location is unverified"
+    if not location_correct(c, L):
+        return False, "location is not the gold l.N"
+    return True, "exact"
 
 
 # ── matching (pre-registration §5) ───────────────────────────────────────────
@@ -894,10 +980,15 @@ def score_rows(rows: list[dict], cause_labels: dict | None = None) -> dict:
     def nr(r):
         return r["pred"].get("verdict") == "NOT-READY"
 
+    for r in rows:   # review 2, M2: no default tier, no unknown tier
+        for p in (r.get("pred") or {}).get("predictions") or []:
+            if p.get("tier") not in ("certified", "heuristic"):
+                raise ValueError(f"a prediction with tier {p.get('tier')!r}")
+
     def first(r, tier):
         """The first prediction of `tier`, in the CLI's printed order."""
         return next((p for p in r["pred"].get("predictions") or []
-                     if p.get("tier", "heuristic") == tier), None)
+                     if p["tier"] == tier), None)
 
     def top(r):
         """The row's claim: the certified one if there is one, else the
@@ -920,7 +1011,7 @@ def score_rows(rows: list[dict], cause_labels: dict | None = None) -> dict:
         return {"k": k, "n": n, "lower95": lo, "upper95": hi}
 
     out_prec = {}
-    for tier in ("certified", "heuristic"):
+    for tier in ("heuristic",):
         # cause precision: rows whose first `tier` prediction names a class; a
         # class named on a compiling document is wrong; FAILS rows excluded
         # from cause scoring are excluded here too
@@ -936,36 +1027,31 @@ def score_rows(rows: list[dict], cause_labels: dict | None = None) -> dict:
         out_prec[f"cause_precision_top1_{tier}"] = rate(kp, len(named))
         out_prec[f"location_precision_line_{tier}"] = rate(kl, len(claimed))
 
-    # SOUNDNESS (R4): a certified claim is exact or it is a defect.
-    snd = {"certified_claims": 0, "certified_wrong": 0, "certified_unscorable": 0,
-           "certified_malformed": 0, "wrong_rows": []}
-    for r in comp + fails:
-        c = first(r, "certified") if nr(r) else None
-        if not c:
-            continue
-        snd["certified_claims"] += 1
-        wrong = unscorable = False
-        if c.get("malformed"):
-            snd["certified_malformed"] += 1
-            wrong = True
-        elif r["compiles"]:
-            wrong = True        # a certified NOT-READY on a document that compiles
-        else:
-            if c.get("class"):
-                if id(r) in cause_ids:
-                    wrong |= not cause_correct(c, r["gold"]["cause"])
-                else:
-                    unscorable = True
-            if located(c):
-                if id(r) in loc_ids:
-                    wrong |= not location_correct(c, r["gold"]["location"])
-                else:
-                    unscorable = True
-        if wrong:
-            snd["certified_wrong"] += 1
-            snd["wrong_rows"].append(r.get("arxiv_id"))
-        elif unscorable:
-            snd["certified_unscorable"] += 1
+    # SOUNDNESS (R4, §5.6): a certified claim is exact or it is a defect.
+    # EVERY row's certified claims are judged -- ungraded, disagreeing and
+    # compiling rows included (review 2, H3) -- by certified_judgement.
+    snd = {"certified_claims": 0, "certified_wrong": 0, "certified_malformed": 0,
+           "wrong_rows": [], "wrong_by_reason": {}}
+    for r in rows:
+        for c in (r.get("pred") or {}).get("predictions") or []:
+            if c.get("tier") != "certified":
+                continue
+            snd["certified_claims"] += 1
+            ok, why = certified_judgement(c, r)
+            if c.get("malformed"):
+                snd["certified_malformed"] += 1
+            if not ok:
+                snd["certified_wrong"] += 1
+                snd["wrong_rows"].append(r.get("arxiv_id"))
+                key = why.split(":")[0] if why.startswith(("malformed", "not confirmable")) else why
+                snd["wrong_by_reason"][key] = snd["wrong_by_reason"].get(key, 0) + 1
+
+    # Certified precision (§5.6) is the EXACT-claim rate over every certified
+    # claim: one claim carries both cause and location, so both certified
+    # precision metrics are this one rate.
+    cert_rate = rate(snd["certified_claims"] - snd["certified_wrong"], snd["certified_claims"])
+    out_prec["cause_precision_top1_certified"] = cert_rate
+    out_prec["location_precision_line_certified"] = dict(cert_rate)
 
     # The CAUSE line (R4): a heuristic location claim scored against the
     # two-labeller gold (cause_line_gold), where a label exists.
@@ -989,43 +1075,85 @@ def score_rows(rows: list[dict], cause_labels: dict | None = None) -> dict:
             "location_recall_file": rate(kfile, len(loc_rows))}
 
 
-LABEL_SCHEMA = "p2-cause-labels/1"
+LABEL_SET_SCHEMA = "p2-cause-label-set/1"
+ADJUDICATION_SCHEMA = "p2-cause-adjudication/1"
 
 
-def cause_line_gold(doc: dict) -> tuple[dict, dict]:
-    """(gold, stats) from a two-labeller cause-line file (pre-registration
-    §5.5). Each entry: {"A": claim, "B": claim[, "adjudicated": claim |
-    "unresolvable"]}, claim = {"file", "line"} or {"none": why}. Gold is the
-    agreed claim when A and B give the same (canon file, line); otherwise the
-    adjudicator's, which must be one of the two; otherwise no gold (counted).
-    Refuses (ValueError) a file whose labellers are not three distinct ids."""
-    if not isinstance(doc, dict) or doc.get("schema") != LABEL_SCHEMA:
-        raise ValueError(f"not a {LABEL_SCHEMA} file")
-    a, b, adj = doc.get("labeller_a"), doc.get("labeller_b"), doc.get("adjudicator")
-    if not (a and b and adj) or len({a, b, adj}) != 3:
-        raise ValueError("labeller_a, labeller_b and adjudicator must be three distinct ids")
+def norm_identity(x) -> str:
+    """A labeller identity, compared case- and space-insensitively."""
+    return " ".join(str(x or "").split()).casefold()
 
-    def key(c):
-        if isinstance(c, dict) and "none" not in c and canon_path(c.get("file")) \
-                and isinstance(c.get("line"), int) and not isinstance(c.get("line"), bool):
-            return (canon_path(c["file"]), c["line"])
-        return None
-    gold, st = {}, {"entries": 0, "agreed": 0, "adjudicated": 0, "unresolved": 0,
-                    "no_cause_line": 0}
-    for doc_id, e in (doc.get("docs") or {}).items():
-        st["entries"] += 1
-        ka, kb = key(e.get("A")), key(e.get("B"))
-        if ka and ka == kb:
-            st["agreed"] += 1
-            gold[doc_id] = {"file": ka[0], "line": ka[1]}
+
+def _claim_key(c):
+    """('loc', file, line) | ('none',) for a valid claim; ValueError otherwise."""
+    if isinstance(c, dict) and set(c) == {"none"} and isinstance(c["none"], str):
+        return ("none",)
+    if isinstance(c, dict) and set(c) == {"file", "line"} and canon_path(c["file"]) \
+            and type(c["line"]) is int and c["line"] >= 1:
+        return ("loc", canon_path(c["file"]), c["line"])
+    raise ValueError(f"an invalid label claim {c!r:.80}")
+
+
+def cause_line_gold(a: dict, b: dict, adj: dict | None, check_id) -> tuple[dict, dict]:
+    """(gold, stats) of the two-labeller cause-line protocol (§5.5).
+
+    `a`, `b`: the labellers' files ({"schema": LABEL_SET_SCHEMA, "role": "A" |
+    "B", "labeller": id, "docs": {doc_id: claim}}); `adj`: the adjudicator's
+    ({"schema": ADJUDICATION_SCHEMA, "adjudicator": id, "docs": {doc_id:
+    claim | "unresolvable"}}) or None. A claim is {"file", "line"} or
+    {"none": why}. `check_id(ids)` must raise for any malformed or sealed id.
+    FAIL CLOSED (review 2, H4, M4): every id of every file is checked FIRST,
+    before any entry is read; the three identities must be distinct after
+    norm_identity; every claim must be valid; gold needs BOTH labellers; an
+    adjudication entry is allowed only for a genuine disagreement and must
+    pick one of the two located claims (or say "unresolvable"). Raises
+    ValueError on any violation."""
+    for f, schema, role in ((a, LABEL_SET_SCHEMA, "A"), (b, LABEL_SET_SCHEMA, "B")):
+        if not isinstance(f, dict) or f.get("schema") != schema or f.get("role") != role \
+                or not isinstance(f.get("docs"), dict):
+            raise ValueError(f"labeller file {role} is not a {schema} file with role {role}")
+    if adj is not None and (not isinstance(adj, dict) or adj.get("schema") != ADJUDICATION_SCHEMA
+                            or not isinstance(adj.get("docs"), dict)):
+        raise ValueError(f"the adjudication file is not a {ADJUDICATION_SCHEMA} file")
+    check_id(list(a["docs"]) + list(b["docs"]) + list((adj or {}).get("docs") or {}))
+    ids = [norm_identity(a.get("labeller")), norm_identity(b.get("labeller"))]
+    if adj is not None:
+        ids.append(norm_identity(adj.get("adjudicator")))
+    if not all(ids) or len(set(ids)) != len(ids):
+        raise ValueError("the labellers (and the adjudicator) must be distinct, non-empty "
+                         "identities")
+    ka = {k: _claim_key(v) for k, v in a["docs"].items()}
+    kb = {k: _claim_key(v) for k, v in b["docs"].items()}
+    gold, st = {}, {"entries": len(set(ka) | set(kb)), "agreed": 0, "adjudicated": 0,
+                    "unresolved": 0, "no_cause_line": 0, "incomplete": 0}
+    adj_docs = (adj or {}).get("docs") or {}
+    for doc_id in sorted(set(ka) | set(kb)):
+        if doc_id not in ka or doc_id not in kb:
+            st["incomplete"] += 1
+            if doc_id in adj_docs:
+                raise ValueError("an adjudication entry for a document only one labeller "
+                                 "labelled")
             continue
-        if ka is None and kb is None and e.get("A") and e.get("B"):
-            st["no_cause_line"] += 1
+        x, y = ka[doc_id], kb[doc_id]
+        if x == y:
+            if doc_id in adj_docs:
+                raise ValueError("an adjudication entry where the labellers agree")
+            if x[0] == "loc":
+                st["agreed"] += 1
+                gold[doc_id] = {"file": x[1], "line": x[2]}
+            else:
+                st["no_cause_line"] += 1
             continue
-        kd = key(e.get("adjudicated")) if e.get("adjudicated") != "unresolvable" else None
-        if kd and kd in (ka, kb):
-            st["adjudicated"] += 1
-            gold[doc_id] = {"file": kd[0], "line": kd[1]}
-        else:
+        e = adj_docs.get(doc_id)
+        if e is None or e == "unresolvable":
             st["unresolved"] += 1
+            continue
+        k = _claim_key(e)
+        if k[0] != "loc" or k not in (x, y):
+            raise ValueError("an adjudication that is not one of the two located labels")
+        st["adjudicated"] += 1
+        gold[doc_id] = {"file": k[1], "line": k[2]}
+    for doc_id in adj_docs:
+        if doc_id not in ka and doc_id not in kb:
+            raise ValueError("an adjudication entry for an unlabelled document")
     return gold, st

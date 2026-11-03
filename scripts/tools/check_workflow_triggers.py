@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gate: the workflows behind REQUIRED status checks must be unambiguous.
 
-Seven failure modes, each of which has actually bitten this repo:
+Eight failure modes, each of which has actually bitten this repo:
 
 1. DUPLICATE REQUIRED CONTEXT (the reason this gate exists).
    A workflow with an unfiltered `push:` fires on every branch, so a commit
@@ -65,12 +65,21 @@ Seven failure modes, each of which has actually bitten this repo:
    service responded with 400" and every save warned "Our services aren't
    available right now" -- six warnings per X64 job, every job GREEN, no opam
    cache restored for at least five weeks. A cache failure is only a warning,
-   so nothing went red. This gate refuses the action refs known to use the
-   legacy service (setup-ocaml v1/v2, actions/cache v1-v3).
+   so nothing went red. This gate refuses actions/cache below v3.4.0 / v4.2.0
+   (by version; a SHA pin must carry a `# vX.Y.Z` comment) and setup-ocaml at
+   any ref (mode 8).
 
 7. A FLOATING RUNNER LABEL (C-177). `ubuntu-latest` moved to Ubuntu 26.04
    from 2026-10-19 (actions/runner-images#14748) and main's jobs changed OS
-   with no commit. Every `runs-on:` must name a fixed image.
+   with no commit. Every `runs-on:` label must be a literal fixed image, or a
+   `${{ matrix.KEY }}` over literal values; any other expression is refused
+   because it cannot be shown to be fixed.
+
+8. A FLOATING TOOLCHAIN (C-179). setup-ocaml v3 resolves opam to the newest
+   upstream release at run time (2.1.6 under v2, 2.6.1 on 2026-11-03), and
+   dtolnay/rust-toolchain@stable resolves rustc the same way. Refused: any
+   `uses:` on a branch/channel ref, setup-ocaml at any ref, and the opam
+   installer (setup-ocaml-env) without one exact, sha256-checked version.
 
 Authority: .github/required-status-checks.json. That file -- never the
 branch-protection API -- is the source of truth; branch-protection.yml PUTs its
@@ -250,72 +259,180 @@ def drifted_retry_pairs(doc: dict, rel: str) -> list[str]:
                 f"('{twin.get('name', '?')}') pass different `with:` blocks, so "
                 f"a retry would build a different toolchain than the attempt it "
                 f"replaces. Keep them byte-identical.")
-    # One file may hold several toolchain pairs, selected by runner
-    # architecture (setup-ocaml-env: v2 on X64, v3 elsewhere, OPEN-126).
-    # They must install the SAME compiler, or an arm64 job would build with a
-    # different OCaml than every x64 job.
-    compilers = {}
-    for step in steps:
-        if (isinstance(step, dict)
-                and str(step.get("uses", "")).startswith("ocaml/setup-ocaml@")):
-            compilers.setdefault(
-                str((step.get("with") or {}).get("ocaml-compiler")),
-                []).append(step.get("name", step.get("uses")))
-    if len(compilers) > 1:
-        out.append(
-            f"{rel}: its setup-ocaml steps install DIFFERENT compilers "
-            f"{sorted(compilers)}; every runner architecture must build with "
-            f"the same OCaml (OPEN-126)")
+    # (OPEN-126's cross-pair compiler arm -- setup-ocaml v2 on X64, v3
+    # elsewhere, must install the same OCaml -- was removed with C-179: no
+    # setup-ocaml step remains, mode 8 refuses one at any ref, and the one
+    # compiler is named once, in setup-ocaml-env's switch-create command.)
     return out
 
 
-# ── Failure modes 6 and 7: legacy cache clients, floating runner labels ──
+# ── Failure modes 6, 7 and 8: cache clients, runner labels, toolchains ──
 
-# `uses:` refs whose cache client talks to the retired legacy cache service.
-LEGACY_CACHE_USES = re.compile(
-    r"^(ocaml/setup-ocaml@v[12](\.|$)"
-    r"|actions/cache(/restore|/save)?@v[123](\.|$))")
+# A `uses:` line, with an optional trailing `# vX.Y.Z` version comment (the
+# only way to know what a SHA pin is). Read from the RAW text: YAML drops
+# comments.
+USES_LINE = re.compile(
+    r"^[ \t]*(?:-[ \t]*)?uses:[ \t]*['\"]?([^\s'\"#]+)['\"]?[ \t]*(?:#[ \t]*(\S+))?",
+    re.M)
+SHA_REF = re.compile(r"^[0-9a-f]{40}$")
+VERSION_REF = re.compile(r"^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?$")
+# Refs that are branch or channel names: they resolve to new code at run
+# time, with no commit here.
+FLOATING_REFS = {"stable", "beta", "nightly", "master", "main", "latest",
+                 "head", "trunk", "develop", "dev"}
+# actions/cache talks to the CURRENT cache service from v3.4.0 / v4.2.0
+# (actions/cache README at v4.3.0: "If you are using pinned SHAs, please use
+# the SHAs of versions v4.2.0 or v3.4.0"); a bare major tag resolves to that
+# major's newest release, so @v3 and @v4 qualify and @v1/@v2 do not.
+CACHE_ACTION = re.compile(r"^actions/cache(?:/restore|/save)?$")
 FLOATING_RUNNERS = re.compile(r"-latest$")
+# The composite that installs opam must pin it exactly and checksum it.
+OPAM_INSTALLER = ACTION_DIR / "setup-ocaml-env" / "action.yml"
+OPAM_PIN = re.compile(r'^\s*OPAM_VERSION:\s*"(\d+\.\d+\.\d+)"\s*$', re.M)
+OPAM_SUMS = re.compile(r'^\s*OPAM_SHA256_(X64|ARM64):\s*"([0-9a-f]{64})"\s*$', re.M)
 
 
-def iter_uses(doc: dict):
-    """Every `uses:` value of a workflow's jobs/steps or a composite's steps."""
+def cache_ref_ok(ref: str, comment: str | None) -> tuple[bool, str]:
+    """Is this actions/cache ref on the current cache service?"""
+    shown = ref
+    if SHA_REF.match(ref):
+        if not comment:
+            return False, f"{ref} (a SHA with no `# vX.Y.Z` comment: version unknown)"
+        shown, ref = f"{ref} # {comment}", comment
+    m = VERSION_REF.match(ref)
+    if not m:
+        return False, f"{shown} (not a version)"
+    major = int(m.group(1))
+    minor = m.group(2)
+    if major <= 2:
+        return False, shown
+    if minor is None:              # bare major: resolves to its newest release
+        return True, shown
+    floor = {3: (3, 4), 4: (4, 2)}.get(major)
+    if floor and (major, int(minor)) < floor:
+        return False, shown
+    return True, shown
+
+
+def yaml_uses_count(doc: dict) -> int:
+    """`uses:` values in the parsed YAML (job-level and step-level)."""
+    n = 0
     steps = []
     if isinstance(doc.get("runs"), dict):
         steps += doc["runs"].get("steps") or []
-    if isinstance(doc.get("jobs"), dict):
-        for job in doc["jobs"].values():
-            if isinstance(job, dict):
-                if job.get("uses"):
-                    yield str(job["uses"])
-                steps += job.get("steps") or []
-    for step in steps:
-        if isinstance(step, dict) and step.get("uses"):
-            yield str(step["uses"])
+    for job in (doc.get("jobs") or {}).values():
+        if isinstance(job, dict):
+            n += 1 if job.get("uses") else 0
+            steps += job.get("steps") or []
+    return n + sum(1 for st in steps if isinstance(st, dict) and st.get("uses"))
+
+
+def uses_findings(text: str, rel: str) -> tuple[int, list[str]]:
+    """Modes 6 and 8 over every `uses:` line of one file."""
+    out, n = [], 0
+    for m in USES_LINE.finditer(text):
+        full, comment = m.group(1), m.group(2)
+        if full.startswith("./") or full.startswith("docker://"):
+            n += 1
+            continue
+        n += 1
+        action, _, ref = full.partition("@")
+        if CACHE_ACTION.match(action):
+            ok, shown = cache_ref_ok(ref, comment)
+            if not ok:
+                out.append(
+                    f"LEGACY-CACHE: {rel} uses `{action}@{shown}`, which talks to "
+                    f"GitHub's retired legacy cache service (or cannot be shown not "
+                    f"to): every restore and save fails with only a WARNING, so the "
+                    f"job stays green with no cache (C-176). Use actions/cache "
+                    f">= v4.2.0 (or >= v3.4.0), SHA pins with a `# vX.Y.Z` comment.")
+        if action == "ocaml/setup-ocaml":
+            out.append(
+                f"FLOATING-TOOLCHAIN: {rel} uses `{full}`. Every setup-ocaml "
+                f"release resolves opam to the newest upstream release at run "
+                f"time (v2's bundled cache client also talks to the retired "
+                f"cache service, C-176), whatever ref pins the action itself. "
+                f"Use ./.github/actions/setup-ocaml-env, which pins opam (C-179).")
+        elif not ref or ref.lower() in FLOATING_REFS:
+            out.append(
+                f"FLOATING-TOOLCHAIN: {rel} uses `{full}`: a branch/channel ref "
+                f"that resolves to new code at run time with no commit here. Pin "
+                f"a commit SHA (and, for a toolchain installer, an exact "
+                f"version) (C-179).")
+    return n, out
+
+
+def opam_pin_findings(repo: Path) -> list[str]:
+    """Mode 8: the opam installer names one exact, checksummed version."""
+    path = repo / OPAM_INSTALLER
+    if not path.is_file():
+        return [f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} not found; nothing pins opam"]
+    text = path.read_text()
+    out = []
+    pins = OPAM_PIN.findall(text)
+    sums = dict(OPAM_SUMS.findall(text))
+    if len(pins) != 1:
+        out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} must set exactly one "
+                   f'`OPAM_VERSION: "X.Y.Z"`, found {len(pins)} (C-179)')
+    if set(sums) != {"X64", "ARM64"}:
+        out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} must carry a sha256 for "
+                   f"both X64 and ARM64 opam binaries, found {sorted(sums)} (C-179)")
+    if "sha256sum -c" not in text:
+        out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} never checks the opam "
+                   f"binary's sha256 (`sha256sum -c`) (C-179)")
+    return out
+
+
+EXPR = re.compile(r"\$\{\{")
+MATRIX_REF = re.compile(r"^\$\{\{\s*matrix\.([\w-]+)\s*\}\}$")
 
 
 def iter_runs_on(doc: dict):
-    """(job id, label) for every runner label, including matrix values."""
+    """(job id, label, resolved) for every runner label.
+
+    Fail closed: a label that is an expression is resolved only when it is a
+    bare `${{ matrix.KEY }}` over a literal list (plus `include:` literals);
+    anything else (matrix.cfg.os, inputs.os, fromJSON(...)) is yielded
+    unresolved, and the caller refuses it.
+    """
     for jid, job in (doc.get("jobs") or {}).items():
         if not isinstance(job, dict) or "runs-on" not in job:
             continue
         ro = job["runs-on"]
-        labels = ro if isinstance(ro, list) else [ro]
         if isinstance(ro, dict):
-            labels = list(ro.get("labels") or [])
-        matrix = ((job.get("strategy") or {}).get("matrix") or {})
+            ro = ro.get("labels", [])
+            if not ro:
+                yield jid, "<runs-on group with no labels>", False
+                continue
+        labels = ro if isinstance(ro, list) else [ro]
+        matrix = (job.get("strategy") or {}).get("matrix")
         for lab in labels:
-            lab = str(lab)
-            m = re.fullmatch(r"\$\{\{\s*matrix\.([\w-]+)\s*\}\}", lab)
-            if m and isinstance(matrix, dict):
-                vals = matrix.get(m.group(1)) or []
-                for inc in matrix.get("include") or []:
-                    if isinstance(inc, dict) and m.group(1) in inc:
-                        vals = list(vals) + [inc[m.group(1)]]
-                for v in vals if isinstance(vals, list) else [vals]:
-                    yield jid, str(v)
-            else:
-                yield jid, lab
+            lab = str(lab).strip()
+            if not EXPR.search(lab):
+                yield jid, lab, True
+                continue
+            m = MATRIX_REF.match(lab)
+            if not (m and isinstance(matrix, dict)):
+                yield jid, lab, False
+                continue
+            key = m.group(1)
+            vals = matrix.get(key)
+            vals = [] if vals is None else vals
+            if not isinstance(vals, list):
+                yield jid, lab, False
+                continue
+            vals = list(vals)
+            for inc in matrix.get("include") or []:
+                if isinstance(inc, dict) and key in inc:
+                    vals.append(inc[key])
+            if not vals:
+                yield jid, lab, False
+                continue
+            for v in vals:
+                if isinstance(v, (str, int, float)) and not EXPR.search(str(v)):
+                    yield jid, str(v), True
+                else:
+                    yield jid, f"{lab} = {v!r}", False
 
 
 def main() -> int:
@@ -338,7 +455,8 @@ def main() -> int:
         print(f"FAIL: {REQUIRED_JSON} lists zero required checks", file=sys.stderr)
         return 1
 
-    workflows = sorted((repo / WORKFLOW_DIR).glob("*.yml"))
+    workflows = sorted([*(repo / WORKFLOW_DIR).glob("*.yml"),
+                        *(repo / WORKFLOW_DIR).glob("*.yaml")])
     if not workflows:
         print(f"FAIL: no workflows found under {WORKFLOW_DIR}", file=sys.stderr)
         return 1
@@ -370,7 +488,8 @@ def main() -> int:
     # Composite actions were previously invisible to this gate, which is
     # exactly where the worst instance lived (setup-ocaml-env is used by 28
     # workflows, so one silent success there is 28 silent successes).
-    scanned = list(workflows) + sorted((repo / ACTION_DIR).rglob("action.yml"))
+    scanned = list(workflows) + sorted([*(repo / ACTION_DIR).rglob("action.yml"),
+                                        *(repo / ACTION_DIR).rglob("action.yaml")])
     loops_checked = 0
     uses_checked = 0
     runners_checked = 0
@@ -392,23 +511,31 @@ def main() -> int:
                     f"with the thing it was waiting for never ready. Track "
                     f"success in a flag and `exit 1` after `done`.")
         findings.extend(drifted_retry_pairs(doc, rel))
-        for ref in iter_uses(doc):
-            uses_checked += 1
-            if LEGACY_CACHE_USES.match(ref):
-                findings.append(
-                    f"LEGACY-CACHE: {rel} uses `{ref}`, whose cache client talks "
-                    f"to GitHub's retired legacy cache service: every restore "
-                    f"and save fails with only a WARNING, so the job stays "
-                    f"green with no cache (C-176). Use ocaml/setup-ocaml@v3.x / "
-                    f"actions/cache@v4.")
-        for jid, lab in iter_runs_on(doc):
+        n_uses, uf = uses_findings(path.read_text(), rel)
+        uses_checked += n_uses
+        findings.extend(uf)
+        n_yaml = yaml_uses_count(doc)
+        if n_uses != n_yaml:
+            findings.append(
+                f"UNSCANNED-USES: {rel} has {n_yaml} `uses:` value(s) in its "
+                f"YAML but the line scan matched {n_uses}; modes 6 and 8 would "
+                f"skip the difference. Write each `uses:` on its own line.")
+        for jid, lab, resolved in iter_runs_on(doc):
             runners_checked += 1
-            if FLOATING_RUNNERS.search(lab):
+            if not resolved:
+                findings.append(
+                    f"FLOATING-RUNNER: {rel} job '{jid}' runs on `{lab}`, an "
+                    f"expression this gate cannot resolve to a fixed image; spell "
+                    f"the label out, or use `${{{{ matrix.KEY }}}}` over literal "
+                    f"values (C-177).")
+            elif FLOATING_RUNNERS.search(lab):
                 findings.append(
                     f"FLOATING-RUNNER: {rel} job '{jid}' runs on `{lab}`, a "
                     f"label GitHub re-points to a new OS without a commit "
                     f"(ubuntu-latest became 26.04 from 2026-10-19). Pin a fixed "
                     f"image, e.g. ubuntu-24.04 (C-177).")
+
+    findings.extend(opam_pin_findings(repo))
 
     if not loops_checked:
         print("FAIL: scanned zero `run:` blocks -- the mode-4 scan is vacuous",
@@ -455,8 +582,9 @@ def main() -> int:
           f"resolve to exactly one job, none with an unfiltered push trigger; "
           f"{loops_checked} `run:` block(s) across {len(scanned)} workflow/action "
           f"file(s) carry no unguarded retry loop and no drifted retry pair; "
-          f"{uses_checked} `uses:` ref(s) name no legacy-cache client and "
-          f"{runners_checked} runner label(s) are all pinned")
+          f"{uses_checked} `uses:` ref(s) name no legacy-cache client and no "
+          f"floating ref; {runners_checked} runner label(s) are all pinned; "
+          f"opam is pinned exactly and checksummed")
     return 0
 
 

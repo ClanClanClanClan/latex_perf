@@ -909,25 +909,43 @@ OPAM_SILENT_BLOCK = (
 )
 
 
-def drift_second_setup_ocaml(text: str) -> str:
-    """Give the RETRY attempt a different compiler than attempt 1.
+DRIFTED_PAIR = (
+    "  steps:\n"
+    "    - name: planted attempt 1\n"
+    "      id: planted_attempt_1\n"
+    "      continue-on-error: true\n"
+    "      uses: actions/upload-artifact@v4\n"
+    "      with:\n"
+    "        name: a\n"
+    "    - name: planted attempt 2\n"
+    "      if: steps.planted_attempt_1.outcome == 'failure'\n"
+    "      uses: actions/upload-artifact@v4\n"
+    "      with:\n"
+    "        name: b\n"
+)
 
-    Mutates the LAST occurrence so attempt 1 keeps the pinned version and the
-    pair is genuinely inconsistent -- which is the defect, not merely an edit.
-    """
-    needle = "ocaml-compiler: 5.1.1"
-    i = text.rindex(needle)
-    return text[:i] + "ocaml-compiler: 5.2.0" + text[i + len(needle):]
+
+def plant_drifted_retry_pair(text: str) -> str:
+    """Failure mode 5: a `uses:` retry pair whose retry passes a different
+    `with:` block. C-179 removed the only real pair (setup-ocaml's), so the
+    pair is planted: mode 5 must still kill it."""
+    assert text.count("  steps:\n") == 1, "composite drifted; update registry"
+    return text.replace("  steps:\n", DRIFTED_PAIR)
 
 
-def setup_ocaml_back_to_v2(text: str) -> str:
-    """C-176: attempt 1 of the setup-ocaml pair back on v2, whose cache client
-    talks to the retired legacy cache service (both attempts, so the pair is
-    not merely drifted)."""
-    assert text.count("uses: ocaml/setup-ocaml@v3.9.0") == 2, \
-        "setup-ocaml pair drifted; update registry"
-    return text.replace("uses: ocaml/setup-ocaml@v3.9.0",
-                        "uses: ocaml/setup-ocaml@v2")
+def strip_cache_version_comment(text: str) -> str:
+    """C-176 / mode 6: the SHA-pinned actions/cache restore loses the
+    `# vX.Y.Z` comment, so its version can no longer be shown >= 4.2.0."""
+    needle = " # v4.3.0\n"
+    assert text.count(needle) == 2, "cache pins drifted; update registry"
+    return text.replace(needle, "\n", 1)
+
+
+def loosen_opam_pin(text: str) -> str:
+    """C-179 / mode 8: the exact opam pin loosened to a minor version."""
+    needle = 'OPAM_VERSION: "2.6.1"'
+    assert text.count(needle) == 1, "opam pin drifted; update registry"
+    return text.replace(needle, 'OPAM_VERSION: "2.6"')
 
 
 def proof_job_floating_runner(text: str) -> str:
@@ -3353,20 +3371,27 @@ REGISTRY = [
                      old=OPAM_GUARDED_BLOCK,
                      new=OPAM_SILENT_BLOCK),
             # Failure mode 5. A retry that installs a different toolchain than
-            # the attempt it replaces is worse than no retry.
-            Mutation("the two setup-ocaml attempts drift apart",
+            # the attempt it replaces is worse than no retry. (C-179 removed
+            # setup-ocaml's real pair; the pair is planted.)
+            Mutation("a uses: retry pair drifts apart",
                      ".github/actions/setup-ocaml-env/action.yml",
                      r"attempts have DRIFTED",
-                     transform=drift_second_setup_ocaml),
-            # C-176: since one setup-ocaml pair serves every architecture,
-            # OPEN-126's X64-v2 / non-X64-v3 cross-pair mutation has no second
-            # pair to drift; the cross-pair compiler check stays in the gate
-            # and fires (with DRIFTED) on the mutation above. Failure mode 6:
-            # the pair back on the legacy-cache setup-ocaml@v2.
-            Mutation("setup-ocaml back on v2 (retired legacy cache service)",
+                     transform=plant_drifted_retry_pair),
+            # Failure mode 6: a SHA-pinned cache action whose version is unknown.
+            Mutation("the cache restore's SHA pin loses its version comment",
                      ".github/actions/setup-ocaml-env/action.yml",
-                     r"LEGACY-CACHE: .*setup-ocaml-env.*ocaml/setup-ocaml@v2",
-                     transform=setup_ocaml_back_to_v2),
+                     r"LEGACY-CACHE: .*setup-ocaml-env.*a SHA with no `# vX\.Y\.Z` comment",
+                     transform=strip_cache_version_comment),
+            # Failure mode 8: opam no longer pinned exactly; rust back on @stable.
+            Mutation("the opam pin loosened to a minor version",
+                     ".github/actions/setup-ocaml-env/action.yml",
+                     r"FLOATING-TOOLCHAIN: .*exactly one `OPAM_VERSION",
+                     transform=loosen_opam_pin),
+            Mutation("rust-proxy-smoke's toolchain back on @stable",
+                     ".github/workflows/rust-proxy-smoke.yml",
+                     r"FLOATING-TOOLCHAIN: .*rust-proxy-smoke\.yml uses `dtolnay/rust-toolchain@stable`",
+                     old="uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master 2026-10-16\n",
+                     new="uses: dtolnay/rust-toolchain@stable\n"),
             # Failure mode 7: a required job on a floating runner label.
             Mutation("proof-ci back on the floating ubuntu-latest label",
                      ".github/workflows/proof.yml",

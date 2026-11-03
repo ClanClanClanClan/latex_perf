@@ -23,8 +23,10 @@
 # the container if it hangs) and, if DOCKER_SMOKE_PLATFORM is set, a
 # `--platform`. Neither changes what the container runs.
 #
-# Env: DOCKER_SMOKE_TMP  parent dir for the work dir (default: mktemp's); on
-#                        macOS/colima it must be under a mounted path, e.g. ~.
+# Env: DOCKER_SMOKE_TMP  parent dir for the work dir. Default: mktemp's on
+#                        Linux; on macOS a dir under $HOME, because colima /
+#                        Docker Desktop share $HOME with the VM but not
+#                        mktemp's /var/folders (the mount would be empty).
 #      DOCKER_SMOKE_PLATFORM  e.g. linux/amd64
 #      README_DOCKER_DEADLINE seconds (default 180)
 set -u
@@ -36,15 +38,24 @@ IMAGE="${1:-${DOC_IMAGE}}"
 DEADLINE="${README_DOCKER_DEADLINE:-180}"
 LABEL="lp-readme-smoke=$$"
 
+if [ -z "${DOCKER_SMOKE_TMP:-}" ] && [ "$(uname -s)" = Darwin ]; then
+  DOCKER_SMOKE_TMP="${HOME}/.cache"
+  mkdir -p "${DOCKER_SMOKE_TMP}"
+fi
 if [ -n "${DOCKER_SMOKE_TMP:-}" ]; then
   WORK="$(mktemp -d "${DOCKER_SMOKE_TMP%/}/lp-readme-smoke.XXXXXX")"
 else
   WORK="$(mktemp -d)"
 fi
 cleanup() {
-  local ids
-  ids="$(command docker ps -aq --filter "label=${LABEL}" 2>/dev/null)"
-  [ -n "${ids}" ] && command docker rm -f ${ids} > /dev/null 2>&1
+  # A container whose `docker run` client was killed can still be starting;
+  # look for it for a few seconds, not once.
+  local ids _
+  for _ in 1 2 3 4 5; do
+    ids="$(command docker ps -aq --filter "label=${LABEL}" 2>/dev/null)"
+    [ -n "${ids}" ] && command docker rm -f ${ids} > /dev/null 2>&1
+    sleep 1
+  done
   rm -rf "${WORK}"
 }
 trap cleanup EXIT
@@ -73,10 +84,21 @@ esac
 CMD="${CMD//"${DOC_IMAGE}"/${IMAGE}}"
 echo "running:    ${CMD}"
 
-# 3. Run it from a reader's directory holding paper.tex.
-cp "${HERE}/docker_smoke/article.tex" "${WORK}/paper.tex"
 PLATFORM_ARGS=()
 [ -n "${DOCKER_SMOKE_PLATFORM:-}" ] && PLATFORM_ARGS=(--platform "${DOCKER_SMOKE_PLATFORM}")
+PLATFORM_PULL="${DOCKER_SMOKE_PLATFORM:+--platform ${DOCKER_SMOKE_PLATFORM}}"
+
+# 3. Make the image local FIRST (the README's own `docker pull` step), so the
+#    deadline times the run, not a download: a deadline that fired mid-pull
+#    would kill the client before the container existed, and the container
+#    would start after the cleanup had looked for it.
+if ! command docker image inspect "${IMAGE}" > /dev/null 2>&1; then
+  command docker pull ${PLATFORM_PULL:-} "${IMAGE}" > "${WORK}/pull.out" 2>&1 \
+    || die "docker pull ${IMAGE} failed: $(tail -3 "${WORK}/pull.out")"
+fi
+
+# 4. Run it from a reader's directory holding paper.tex.
+cp "${HERE}/docker_smoke/article.tex" "${WORK}/paper.tex"
 docker() {  # add only a label (+ optional platform) to `docker run`
   if [ "${1:-}" = run ]; then
     shift
@@ -98,7 +120,7 @@ done
 wait "${PID}"; RC=$?
 echo "exit code ${RC} after ~${waited}s"
 
-# 4. Assertions: exit code AND content.
+# 5. Assertions: exit code AND content.
 [ "${RC}" -eq 0 ] || die "exit code ${RC}, expected 0"
 ROWS="$(grep -cE $'^[A-Z]+-[0-9]+\t(error|warning|info)\t' "${WORK}/run.out")"
 echo "finding rows: ${ROWS}"

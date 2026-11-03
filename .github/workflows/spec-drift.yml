@@ -136,6 +136,13 @@ jobs:
         # job rename, which hangs every PR pending with nothing to point at.
         run: python3 scripts/tools/check_workflow_triggers.py --repo .
 
+      - name: "Meta-gate: workflow-trigger modes 6-8 kill their plants"
+        # C-176/C-177/C-179: each case plants one edit (a floating runner
+        # label in every spelling the 2026-11-03 review found, a legacy cache
+        # client, a floating toolchain, a loosened opam pin) in a temp copy of
+        # .github and requires the gate to refuse it; near-misses must pass.
+        run: python3 scripts/tools/test_check_workflow_triggers.py
+
       - name: "Meta-gate: every gate script is runnable"
         # P1.8 found check_regression_gates had a typo'd binary name.
         # This gate verifies every gate-script itself runs without

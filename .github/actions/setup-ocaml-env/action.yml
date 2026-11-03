@@ -1,16 +1,19 @@
 name: Setup OCaml + Install Dependencies
 description: >-
-  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v3.9.0
-  on every runner architecture -- see C-176),
-  installs system packages, filters darcs from apt, configures opam repos,
-  and performs a retry-loop dependency install.  BOTH the switch setup and
-  the dependency install retry; both fail the job when their retries are
-  exhausted.  Replaces the 15-line
-  boilerplate block that was duplicated across 25+ CI workflows.
+  Composite action that installs a PINNED opam (exact version, sha256-checked
+  binary), creates the repo-local OCaml 5.1.1 switch, installs system packages,
+  configures opam repos and performs a retry-loop dependency install, caching
+  the opam root and switch AFTER the dependency install (C-176, C-179).  The
+  switch creation and the dependency install both retry and both fail the job
+  when their retries are exhausted.  Replaces the 15-line boilerplate block
+  that was duplicated across 25+ CI workflows.
 
-  NOTE: This action calls ocaml/setup-ocaml DIRECTLY (not through an
-  intermediate composite action) to avoid GitHub Actions post-cleanup input
-  resolution failures with nested composite actions.
+  It no longer uses ocaml/setup-ocaml: every setup-ocaml release resolves
+  opam to the newest upstream release AT RUN TIME (v3.9.0: newest < 2.7.0;
+  it has no opam-version input), so opam changed under main with no commit
+  -- the class C-177 fixed for runner labels.  check_workflow_triggers.py
+  refuses setup-ocaml at any ref, and refuses this file losing its exact,
+  checksummed opam pin (failure mode 8).
 author: Internal
 
 inputs:
@@ -65,102 +68,112 @@ runs:
           musl-tools \
           rsync
 
-    - name: Filter darcs from privileged apt invocations (Linux)
-      if: runner.os == 'Linux'
+    # ── opam: an EXACT version, checksum-verified (C-179) ──────────────
+    # The sha256s below were taken from the release binaries after their
+    # GPG signatures verified against the opam dev key (fingerprint
+    # 92C526AE50DF39470EB2911BED4CF1CA67CBAA92, the key setup-ocaml checks).
+    # To bump: download both binaries + .sig, `gpg --verify`, then update the
+    # version and BOTH sums in one commit.  The environment matches what
+    # setup-ocaml v3.9.0 exported (OPAMROOT=~/.opam etc.).  Unlike
+    # setup-ocaml, nothing sets DUNE_CACHE / DUNE_CACHE_ROOT any more: dune
+    # runs with its own defaults.
+    - name: Install opam (pinned, checksum-verified)
       shell: bash
+      env:
+        OPAM_VERSION: "2.6.1"
+        OPAM_SHA256_X64: "b533d393a6967150d6ef41cb3d71e147e93ecbabeb59e921aa412c0ae79ebe3d"
+        OPAM_SHA256_ARM64: "8b24ef2f3f44a31763f54878454fb52afa1f2db7e00abed58b8d4e7ee7e290a6"
       run: |
-        mkdir -p "$HOME/.github-tools"
+        set -euo pipefail
+        case "${RUNNER_ARCH}" in
+          X64)   arch=x86_64; sum="${OPAM_SHA256_X64}" ;;
+          ARM64) arch=arm64;  sum="${OPAM_SHA256_ARM64}" ;;
+          *) echo "::error::[setup-ocaml-env] no pinned opam for ${RUNNER_ARCH}"; exit 1 ;;
+        esac
+        url="https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/opam-${OPAM_VERSION}-${arch}-linux"
+        curl -fsSL --retry 5 --retry-all-errors -o "${RUNNER_TEMP}/opam" "${url}"
+        echo "${sum}  ${RUNNER_TEMP}/opam" | sha256sum -c -
+        sudo install -m 0755 "${RUNNER_TEMP}/opam" /usr/local/bin/opam
+        test "$(opam --version)" = "${OPAM_VERSION}"
         {
-          printf '%s\n' '#!/usr/bin/env bash'
-          printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'
-          printf '%s\n' '  args=()'
-          printf '%s\n' '  install_seen=false'
-          printf '%s\n' '  for arg in "$@"; do'
-          printf '%s\n' '    if [[ "$arg" == "install" ]]; then'
-          printf '%s\n' '      install_seen=true'
-          printf '%s\n' '    fi'
-          printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'
-          printf '%s\n' '      continue'
-          printf '%s\n' '    fi'
-          printf '%s\n' '    args+=("$arg")'
-          printf '%s\n' '  done'
-          printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'
-          printf '%s\n' 'fi'
-          printf '%s\n' 'exec /usr/bin/sudo "$@"'
-        } > "$HOME/.github-tools/sudo"
-        chmod +x "$HOME/.github-tools/sudo"
-        echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
+          echo "LP_OPAM_VERSION=${OPAM_VERSION}"
+          echo "OPAMROOT=${HOME}/.opam"
+          echo "OPAMCOLOR=always"
+          echo "OPAMCONFIRMLEVEL=unsafe-yes"
+          echo "OPAMDOWNLOADJOBS=$(nproc)"
+          echo "OPAMERRLOGLEN=0"
+          echo "OPAMEXTERNALSOLVER=builtin-0install"
+          echo "OPAMPRECISETRACKING=1"
+          echo "OPAMRETRIES=10"
+          echo "OPAMSOLVERTIMEOUT=600"
+          echo "OPAMYES=1"
+          echo "CLICOLOR_FORCE=1"
+        } >> "${GITHUB_ENV}"
 
-    # ── OCaml toolchain (direct call, no intermediate composite) ───────
-    #
-    # ⚠ RUN TWICE ON PURPOSE.  setup-ocaml initialises the switch by fetching
-    # the opam repository, so a transient network fault surfaces as
-    #   "Switch initialisation failed" / "... failed with exit code 40"
-    # (opam exit 40 = Sync_error, i.e. repositories could not be synchronised).
-    # That is not a code failure and no amount of re-reading the diff finds it:
-    # on PR #601 (run 34732743239, attempt 1) tex-oracle died here while build,
-    # proof-ci, perf-ci, format, smoke and compliance all set the toolchain up
-    # successfully ON THE SAME COMMIT.  The same class cancelled unit-tests on
-    # PR #531 (a 25-minute network timeout in this action) -- see failure mode 1
-    # in scripts/tools/check_workflow_triggers.py.
-    #
-    # A `uses:` step cannot be wrapped in a shell retry loop, so the retry is
-    # spelled out: attempt 1 is allowed to fail, any half-built switch is
-    # discarded, attempt 2 runs unguarded and its failure fails the job.
-    # The two `with:` blocks MUST stay byte-identical -- enforced by failure
-    # mode 5 of check_workflow_triggers.py, which runs in required spec-drift.
-    #
-    # ⚠ ONE TOOLCHAIN PAIR, setup-ocaml@v3.9.0, ON EVERY ARCHITECTURE (C-176).
-    # Until C-176 the X64 jobs used setup-ocaml@v2, whose bundled cache client
-    # talks to the RETIRED legacy Actions cache service: every restore failed
-    # "Cache service responded with 400" and every save failed with GitHub's
-    # "Our services aren't available right now" page -- 6 warnings per job,
-    # every job green, no opam cache restored on any X64 run since at least
-    # 2026-09-30 (the badge job's history; the scan went no further back).
-    # v3 uses the current cache service. It was already the non-X64 pair
-    # (OPEN-126: v2 unconditionally apt-installs g++-multilib/gcc-multilib,
-    # which arm64 does not have; v3 installs them only where apt has them),
-    # so one pair now serves both. check_workflow_triggers.py refuses a
-    # legacy-cache action ref (failure mode 6).
-    # v3 has no `opam-depext` input (it never runs depext implicitly). Its
-    # `dune-cache` input is deprecated (one warning per step) and its v2
-    # predecessor had not restored anything since at least 2026-09-30, so it
-    # is not passed: the opam root and switch are cached (`cache` defaults to
-    # true); the dune build cache is not.
-    - name: Set up OCaml and opam (attempt 1)
-      id: setup_ocaml_attempt_1
-      continue-on-error: true
-      uses: ocaml/setup-ocaml@v3.9.0
+    # ── Cache: the opam root AND the switch, saved AFTER the deps ──────
+    # Exact key only (no prefix restore-keys), so a hit is the state a
+    # previous run built from the same inputs.  The key names everything the
+    # cached state depends on that this repo controls: image OS, arch, opam
+    # version, compiler, the opam files and this action's inputs, plus the
+    # ISO week, because opam-repository itself is not pinned (OPEN-136) and
+    # a hit would otherwise freeze dependency versions indefinitely.
+    - name: Compute the toolchain cache key
+      id: opam_key
+      shell: bash
+      env:
+        PKGS: ${{ inputs.opam-packages }}
+        REPOS: ${{ inputs.extra-repos }}
+        SYSPKGS: ${{ inputs.system-packages }}
+      run: |
+        set -euo pipefail
+        h=$( { printf '%s\n' "${PKGS}" "${REPOS}" "${SYSPKGS}"; cat ./*.opam; } \
+             | sha256sum | cut -c1-16)
+        echo "key=lp-opam-v1-${ImageOS:-unknown}-${RUNNER_ARCH}-opam${LP_OPAM_VERSION}-ocaml5.1.1-${h}-$(date -u +%G-%V)" >> "${GITHUB_OUTPUT}"
+
+    - name: Restore the opam root and switch
+      id: opam_cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
-        ocaml-compiler: 5.1.1
-        allow-prerelease-opam: false
-        opam-pin: true
-        opam-local-packages: "*.opam"
-        opam-disable-sandboxing: false
-        cache-prefix: v1
+        path: |
+          ~/.opam
+          _opam
+        key: ${{ steps.opam_key.outputs.key }}
 
-    - name: Discard a partially-initialised switch
-      if: steps.setup_ocaml_attempt_1.outcome == 'failure'
+    # ⚠ RETRIED ON PURPOSE.  Creating the switch fetches the opam repository,
+    # so a transient network fault surfaces as "... failed with exit code 40"
+    # (opam Sync_error).  That is not a code failure: on PR #601 (run
+    # 34732743239, attempt 1) tex-oracle died here while every other job set
+    # the toolchain up on the same commit, and the same class cancelled
+    # unit-tests on PR #531 (see failure mode 1 in check_workflow_triggers.py).
+    # A half-built switch is discarded between attempts; exhaustion fails.
+    - name: Initialise opam and the OCaml 5.1.1 switch (cache miss)
+      if: steps.opam_cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        echo "::warning::[setup-ocaml-env] switch setup failed on attempt 1;" \
-             "discarding any partial switch and retrying once."
-        # The switch is repo-local (_opam/), so removing the directory is
-        # enough; the `opam switch remove` is belt-and-braces for the case
-        # where opam recorded the switch before the download failed.
-        opam switch remove . -y 2>/dev/null || true
-        rm -rf _opam
+        ok=0
+        for attempt in 1 2; do
+          rm -rf "${OPAMROOT}" _opam
+          if opam init --bare --no-setup default https://opam.ocaml.org \
+             && opam switch create . --no-install --packages=ocaml-base-compiler.5.1.1; then
+            ok=1
+            break
+          fi
+          echo "::warning::[setup-ocaml-env] switch setup failed (attempt $attempt/2)"
+          sleep 15
+        done
+        if [ "$ok" -ne 1 ]; then
+          echo "::error::[setup-ocaml-env] opam init / switch create failed 2/2"
+          exit 1
+        fi
 
-    - name: Set up OCaml and opam (attempt 2)
-      if: steps.setup_ocaml_attempt_1.outcome == 'failure'
-      uses: ocaml/setup-ocaml@v3.9.0
-      with:
-        ocaml-compiler: 5.1.1
-        allow-prerelease-opam: false
-        opam-pin: true
-        opam-local-packages: "*.opam"
-        opam-disable-sandboxing: false
-        cache-prefix: v1
+    - name: Pin the local opam packages
+      shell: bash
+      run: |
+        set -euo pipefail
+        for f in ./*.opam; do
+          opam pin --no-action add "$(basename "$f" .opam).dev" .
+        done
+        opam config report
 
     # ── Extra system packages (project-specific) ──────────────────────
     - name: Install extra system packages
@@ -204,3 +217,14 @@ runs:
                "${{ inputs.opam-packages }}"
           exit 1
         fi
+
+    # Saved only after the dependency install succeeded, so a hit restores
+    # the switch WITH its dependencies (C-179; setup-ocaml saved before them).
+    - name: Save the opam root and switch
+      if: steps.opam_cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: |
+          ~/.opam
+          _opam
+        key: ${{ steps.opam_key.outputs.key }}

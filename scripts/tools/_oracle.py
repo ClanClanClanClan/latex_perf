@@ -52,9 +52,13 @@ WHAT THIS MODULE GUARANTEES.
   TeX trees and TMPDIR on a fresh tmpfs at /tmp/lp); the same host name, no
   network, a fresh pid namespace; an environment that is an exact
   allow-list; and, for every TeX Live program, a FILE-SYSTEM VIEW limited to
-  the run directory, the fresh /tmp and the TeX tree (the shim refuses
-  /proc, /sys, /dev and docker's per-container files, which a document read
-  before: /proc/uptime is the real clock). The clock is part of the
+  the run directory, the run's private trees and TMPDIR, and the TeX tree
+  (the shim refuses /proc, /sys, /dev and docker's per-container files,
+  which a document read before: /proc/uptime is the real clock, C-132; and
+  the shim's own bookkeeping, which lives outside every root: C-133); the
+  same CPUs, ulimits and JVM sizing on every host (C-134). The programs
+  under /usr/bin interpreters that restricted \\write18 may start are NOT
+  in that view: see C-135 at FIXED_RUN_VARS. The clock is part of the
   oracle's identity (IDENTITY_KEYS).
 * THE MEASUREMENT ENTRY POINT (ADR-015 E7; `measure`, `_oracle.py measure`):
   terminal input, an explicit architecture and an explicit clock (the
@@ -168,16 +172,42 @@ PIDS_LIMIT = 4096
 RUN_DIR = "/lp/run"
 SHIM_DIR = "/lp/shim"
 IN_DIR = "/lp/in"
-# The run's private trees, TMPDIR and the shim's bookkeeping, on the run's
-# own tmpfs /tmp (fresh per run, so no state crosses from one run to the
-# next: C-91, C-93).
+# The run's private trees and TMPDIR, on the run's own tmpfs /tmp (fresh per
+# run, so no state crosses from one run to the next: C-91, C-93).
 PRIVATE_ROOT = "/tmp/lp"
-SHIM_MARK_DIR = PRIVATE_ROOT + "/.shim"
-FS_LOG = PRIVATE_ROOT + "/.fs-denied"
-CLOCK_LOG = PRIVATE_ROOT + "/.clock"
+# THE SHIM'S BOOKKEEPING IS OUTSIDE EVERY ROOT A DOCUMENT CAN READ (C-133).
+# Until the review of 0400f74a it lived in /tmp/lp/.shim/<pid>, /tmp was a
+# root of the shim's file-system view, and absolute reads are allowed under
+# openin_any=p: MEASURED, a document saw with \pdffilesize a set of pids that
+# differed between five identical runs (and, after a java child, depended on
+# the container's CPU count). It now lives on its OWN tmpfs, BOOK_DIR, which
+# is in no FS_ROOTS root and under an FS_HIDE tree (metadata refused too), and
+# the shim refuses its directories before it consults the roots. The marks
+# are named by role, never by pid (lpshim.c, PROOF OF LOADING).
+BOOK_DIR = "/lp/book"
+BOOK_TMPFS_OPTIONS = "rw,nosuid,nodev,noexec,size=16m"
+SHIM_MARK_DIR = BOOK_DIR + "/shim"
+FS_LOG = BOOK_DIR + "/fs-denied"
+CLOCK_LOG = BOOK_DIR + "/clock"
+BOOKKEEPING_PATHS = (BOOK_DIR, SHIM_MARK_DIR, SHIM_MARK_DIR + "/engine",
+                     SHIM_MARK_DIR + "/children", FS_LOG, CLOCK_LOG)
 # The container's host name (docker writes it to /etc/hostname, which the
 # shim refuses to TeX programs, and children may still ask the kernel).
 ORACLE_HOSTNAME = "lp-oracle"
+# HOST-SIZED RESOURCES ARE PINNED (C-134). The number of CPUs a container
+# sees was the host's: MEASURED (2026-11-03), the JVM that texosquery-jre8
+# starts sizes its thread pools by it, and the pid of the next process after
+# it was 27 under --cpuset-cpus 0 and 34 under 0-3. CPUSET pins the CPUs
+# (both the Mac's colima VM, started with --cpu 4, and CI's ubuntu-24.04-arm
+# runner have 4; a host with fewer cannot start the container: refused, not
+# graded), and the JVM is told the same count and memory explicitly. The
+# ulimits are the daemon's defaults otherwise (they are docker's
+# configuration, not the image's): pinned to the values MEASURED in a colima
+# container of the pinned image, with core dumps off.
+CPUSET = "0-3"
+CPU_COUNT = 4
+ULIMITS = ("nofile=1024:1024", "stack=8388608:8388608", "core=0:0",
+           "memlock=8388608:8388608")
 # A memory ceiling equal on every platform (OPEN-128 (8)): the laptop's VM
 # and the CI runner have different memory, so without it a run that
 # exhausts memory could be killed on one and not on the other. A kill reads
@@ -301,7 +331,7 @@ _ENV_FORWARD = re.compile(
     r"SOURCE_DATE_EPOCH|FORCE_SOURCE_DATE|max_print_line|error_line|"
     r"half_error_line|TMPDIR|TMP|TEMP|JAVA_TOOL_OPTIONS|PYTHONHASHSEED|"
     r"PERL_HASH_SEED|PERL_PERTURB_KEYS|LP_CLOCK_EPOCH|LP_CLOCK|LP_CLOCK_LOG|"
-    r"LP_FS_ROOTS|LP_FS_EXE|LP_FS_LOG|LP_SHIM_MARK)$")
+    r"LP_FS_ROOTS|LP_FS_EXE|LP_FS_HIDE|LP_FS_LOG|LP_SHIM_MARK)$")
 
 # THE ORACLE'S TeX ENVIRONMENT: the ONE definition. Every grader (through
 # `graded_env`) and the contract generator (gen_contract.py, through
@@ -393,19 +423,57 @@ def clock_vars(clock: str) -> dict:
 #       "hash seeds").
 #   LP_FS_ROOTS/LP_FS_EXE  the shim's file-system view: a TeX Live program
 #       (its executable under LP_FS_EXE) reads, writes and lists only the run
-#       directory, the run's /tmp and the TeX tree (and /dev/null); see
-#       lpshim.c. LP_SHIM_MARK: proof the shim loaded (the supervisor's
-#       check). LP_FS_LOG: the paths it refused, reported per run.
+#       directory, the run's private trees and TMPDIR under /tmp/lp, and the
+#       TeX tree (and /dev/null); see lpshim.c. LP_FS_HIDE: trees outside the
+#       roots whose metadata is refused too (the oracle's mounts under /lp).
+#       LP_SHIM_MARK: proof the shim loaded (the supervisor's check).
+#       LP_FS_LOG: the paths it refused, reported per run. The last two live
+#       in BOOK_DIR, outside every root (C-133).
+#   WHAT THE VIEW DOES NOT COVER (C-135). The view is keyed on the process's
+#       EXECUTABLE. Five of the image's shell_escape_commands are scripts run
+#       by an interpreter under /usr/bin, so they and their children (gs) get
+#       the WHOLE file system and the real directory order: latexminted and
+#       memoize-extract.py (python3), memoize-extract.pl and repstopdf (perl,
+#       which starts /usr/bin/gs), and texosquery-jre8 (java). Nothing the
+#       shim does stops them reading /proc or /etc/hostname; each relies on
+#       ITS OWN check (latexminted's and texosquery's openin_any emulation,
+#       memoize-extract's path check, gs's -dSAFER under repstopdf), and the
+#       clock, CPU-time and uname fixes still apply (the shim is loaded).
+#       check_oracle_determinism.py probes each command against /proc and
+#       docker's files on every CI run, so a regression of any one of those
+#       checks (a new image) fails a gate instead of leaking.
 TEXMF_ROOT = "/usr/local/texlive"
 FIXED_TREES = {"TEXMFHOME": PRIVATE_ROOT + "/texmf-home",
                "TEXMFVAR": PRIVATE_ROOT + "/texmf-var",
                "TEXMFCONFIG": PRIVATE_ROOT + "/texmf-config"}
 FIXED_TMP = PRIVATE_ROOT + "/tmp"
-FS_ROOTS = (RUN_DIR, "/tmp", TEXMF_ROOT)
+# The roots of the shim's file-system view: the run directory, the run's
+# private trees and TMPDIR (not /tmp as a whole: C-133), and the TeX tree.
+FS_ROOTS = (RUN_DIR, *FIXED_TREES.values(), FIXED_TMP, TEXMF_ROOT)
+# Trees outside the roots whose METADATA the shim refuses too: the oracle's
+# own mount points (/lp/shim, /lp/in, BOOK_DIR); /lp/run is a root.
+FS_HIDE = ("/lp",)
+
+
+def _bookkeeping_outside_roots() -> None:
+    """C-133, checked at import: no bookkeeping path lies in a root of the
+    shim's view, and every one lies under an FS_HIDE tree."""
+    def under(p, r):
+        return p == r or p.startswith(r.rstrip("/") + "/")
+    for p in BOOKKEEPING_PATHS:
+        if any(under(p, r) or under(r, p) for r in FS_ROOTS) \
+                or not any(under(p, h) for h in FS_HIDE):
+            raise RuntimeError(f"_oracle: the shim's bookkeeping path {p} is "
+                               f"inside a root of the file-system view "
+                               f"{FS_ROOTS} or outside FS_HIDE {FS_HIDE} (C-133)")
+
+
+_bookkeeping_outside_roots()
 
 
 def java_tool_options(tmpdir: str) -> str:
-    return f"-XX:-UsePerfData -Djava.io.tmpdir={tmpdir}"
+    return (f"-XX:-UsePerfData -Djava.io.tmpdir={tmpdir} "
+            f"-XX:ActiveProcessorCount={CPU_COUNT} -XX:MaxRAM={MEMORY_LIMIT}")
 
 
 FIXED_RUN_VARS = {
@@ -414,6 +482,7 @@ FIXED_RUN_VARS = {
     "JAVA_TOOL_OPTIONS": java_tool_options(FIXED_TMP),
     "PYTHONHASHSEED": "0", "PERL_HASH_SEED": "0", "PERL_PERTURB_KEYS": "0",
     "LP_FS_ROOTS": ":".join(FS_ROOTS), "LP_FS_EXE": TEXMF_ROOT + "/",
+    "LP_FS_HIDE": ":".join(FS_HIDE),
     "LP_SHIM_MARK": SHIM_MARK_DIR, "LP_FS_LOG": FS_LOG,
 }
 # The directories a run's supervisor creates on the fresh tmpfs before the
@@ -1055,10 +1124,16 @@ ev["alias"] = ev["alias"][:20]
 ev["engine_pid"] = child.pid
 if cfg.get("mark"):
     try:
-        with open(os.path.join(cfg["mark"], str(child.pid))) as fh:
+        with open(os.path.join(cfg["mark"], "engine")) as fh:
             ev["shim_mode"] = fh.read().strip()
     except OSError:
         ev["shim_mode"] = None
+    try:
+        with open(os.path.join(cfg["mark"], "children")) as fh:
+            kids = fh.read().split()
+        ev["shim_children"] = {m: kids.count(m) for m in sorted(set(kids))}
+    except OSError:
+        ev["shim_children"] = {}
 if cfg.get("fs_log"):
     try:
         with open(cfg["fs_log"], errors="replace") as fh:
@@ -1901,13 +1976,16 @@ class NativeOracle(_Base):
             "host")
 
     def _exec(self, cwd, engine, args, env, timeout, exact_env=False):
-        # The run's private trees and TMPDIR: the fixed container paths
-        # (PRIVATE_ROOT) mapped to a fresh host directory, removed after.
+        # The run's private trees, TMPDIR and the shim's bookkeeping: the
+        # fixed container paths (PRIVATE_ROOT, BOOK_DIR) mapped to a fresh
+        # host directory, removed after.
         with tempfile.TemporaryDirectory(prefix="lp-native-") as priv:
-            env = {k: (v.replace(PRIVATE_ROOT, priv) if isinstance(v, str) else v)
+            def host(v):
+                return v.replace(PRIVATE_ROOT, priv).replace(BOOK_DIR, priv + "/book")
+            env = {k: (host(v) if isinstance(v, str) else v)
                    for k, v in (env or {}).items()}
             for d in FIXED_RUN_DIRS:
-                Path(d.replace(PRIVATE_ROOT, priv)).mkdir(parents=True, exist_ok=True)
+                Path(host(d)).mkdir(parents=True, exist_ok=True)
             env = engine_env(env, self.engine_base)
             _require_free_space(cwd, "before")
             try:
@@ -2002,8 +2080,8 @@ def default_workroot() -> Path:
 # it preloads, and the engine process must carry the shim's mark).
 SHIM_SRC_DIR = REPO / "scripts" / "tools" / "oracle_shim"
 SHIM_SHA256 = {
-    "aarch64": "450f0ee7bc674d168f2709b9c8bed5555f35bed9b036269fe7f3ca4a98577d34",
-    "x86_64": "b60e047ba73bf82dba423bf1f41bb32a3edbb2c5cbd247b3f43a2c89c74556bf",
+    "aarch64": "218960a88a7192a63024686605078caff2caba826f3515817df57aea2d682579",
+    "x86_64": "8b5403af3daebbe253b68bddcc722c77a456fabf3900bffa1952054523839c21",
 }
 
 
@@ -2041,6 +2119,9 @@ def launch_argv(user: str, name: str, *, arch: str = ARCH_OF_RECORD,
             "--pids-limit", str(PIDS_LIMIT),
             "--memory", MEMORY_LIMIT, "--memory-swap", MEMORY_LIMIT,
             "--read-only", "--tmpfs", f"/tmp:{TMPFS_OPTIONS}",
+            "--tmpfs", f"{BOOK_DIR}:{BOOK_TMPFS_OPTIONS}",
+            "--cpuset-cpus", CPUSET,
+            *[a for u in ULIMITS for a in ("--ulimit", u)],
             "--network", "none", "--hostname", ORACLE_HOSTNAME,
             "--user", user, "--platform", PLATFORMS[arch]]
     for host, cont, ro in mounts:

@@ -197,6 +197,14 @@ jobs:
           REQUIRE_PDFLATEX: "1"
         run: python3 scripts/tools/check_oracle_forgery.py
 
+      # C-133..C-135 (OPEN-128): a document graded twice gives byte-identical
+      # evidence, cannot open the shim's bookkeeping, and cannot read /proc or
+      # docker's files through any /usr/bin-interpreter shell-escape command.
+      - name: Oracle determinism kill-tests (real pdfTeX, graded twice)
+        env:
+          REQUIRE_PDFLATEX: "1"
+        run: python3 scripts/tools/check_oracle_determinism.py
+
       # R7-INFRA-4 property (b): "a document that compiled must still compile
       # after --apply-fixes". BLOCKING since v27.1.63: the ONLY check anywhere
       # that can observe --apply-fixes turning a compiling document into a

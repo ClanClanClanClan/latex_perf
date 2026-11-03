@@ -149,9 +149,12 @@ CENSUS = [
                     "per-container files), /dev/urandom",
      "how": "the shim's file-system view: a TeX Live program opens, stats, lists "
             "and changes only paths inside FS_ROOTS (the run directory, the run's "
-            "fresh /tmp, the TeX tree) and /dev/null; metadata of the image's own "
-            "read-only files is allowed, of /proc, /sys, /dev, docker's files and "
-            "/sbin/docker-init not",
+            "private trees and TMPDIR under /tmp/lp, the TeX tree) and /dev/null; "
+            "metadata of the image's own read-only files is allowed, of /proc, "
+            "/sys, /dev, docker's files, /sbin/docker-init, the oracle's mounts "
+            "under /lp (FS_HIDE) and the shim's own bookkeeping (BOOK_DIR, C-133) "
+            "not. Programs under /usr/bin interpreters rely on their own checks "
+            "(C-135, probed by check_oracle_determinism.py)",
      "docs": ["c-abs-read"]},
     {"id": "directory-order", "status": "fixed",
      "input": "the order of a directory's entries: opendir/readdir",
@@ -188,14 +191,34 @@ CENSUS = [
      "docs": []},
     {"id": "pid", "status": "fixed",
      "input": "the process id: getpid(2)",
-     "observed_by": "only the -recorder's temporary file list, named after the "
-                    "pid (texmfmp.c recorder_start) and renamed to the job's; "
-                    "graders do not pass "
-                    "-recorder, and a document cannot set it",
-     "how": "every run is a fresh container: a fresh pid namespace, so the engine's "
-            "pid is the same in every run (MEASURED: the supervisor reports it, "
-            "engine_pid)",
+     "observed_by": "the -recorder's temporary file list, named after the "
+                    "pid (texmfmp.c recorder_start) and renamed to the job's "
+                    "(graders do not pass -recorder, and a document cannot set "
+                    "it); and BEFORE C-133 the shim's own marks, files named "
+                    "/tmp/lp/.shim/<pid> that \\pdffilesize could test",
+     "how": "no name or content a document can read depends on a pid: the "
+            "marks are named by role, on a tmpfs outside every root (C-133). "
+            "The pids THEMSELVES are not fixed: CORRECTION (C-133) of this row's "
+            "earlier 'the engine's pid is the same in every run': MEASURED "
+            "2026-11-03, five identical runs gave the engine pid 9 once and 10 "
+            "four times, and a java child shifts later pids by its thread count",
      "docs": ["c-date"]},
+    {"id": "cpus", "status": "fixed",
+     "input": "the number of CPUs and the memory a container sees",
+     "observed_by": "the JVM under texosquery-jre8 sizes its threads by it "
+                    "(MEASURED: the next pid 27 under one CPU, 34 under four), "
+                    "and any child could print it",
+     "how": "launch_argv pins --cpuset-cpus 0-3 and --memory 2g, the ulimits, "
+            "and JAVA_TOOL_OPTIONS -XX:ActiveProcessorCount=4 -XX:MaxRAM=2g (C-134)",
+     "docs": []},
+    {"id": "cpu-time", "status": "fixed",
+     "input": "CPU time: clock_gettime(*_CPUTIME_ID), clock(3), times(2), getrusage(2)",
+     "observed_by": "gs's usertime under repstopdf (MEASURED 0), Lua os.clock, "
+                    "Python process_time in a restricted \\write18 child",
+     "how": "the shim returns a per-process counter of one microsecond per read "
+            "(C-137); CLOCK_MONOTONIC/BOOTTIME stay real (no reachable program "
+            "prints them)",
+     "docs": []},
     {"id": "user", "status": "proven",
      "input": "the user id and the password database: getuid, getpwuid, getpwnam",
      "observed_by": "kpathsea's ~ expansion: `~` reads HOME first (always /tmp), "

@@ -542,8 +542,13 @@ MUST_HOLD = {"openin_any": "p", "openout_any": "p", "HOME": "/tmp",
              "TEXMFCONFIG": "/tmp/lp/texmf-config", "TMPDIR": "/tmp/lp/tmp",
              "TMP": "/tmp/lp/tmp", "TEMP": "/tmp/lp/tmp", "PYTHONHASHSEED": "0",
              "PERL_HASH_SEED": "0", "PERL_PERTURB_KEYS": "0",
-             "FORCE_SOURCE_DATE": "1", "LP_FS_ROOTS": "/lp/run:/tmp:/usr/local/texlive",
-             "LP_FS_EXE": "/usr/local/texlive/", "LP_SHIM_MARK": "/tmp/lp/.shim"}
+             "FORCE_SOURCE_DATE": "1",
+             "LP_FS_ROOTS": "/lp/run:/tmp/lp/texmf-home:/tmp/lp/texmf-var:"
+                            "/tmp/lp/texmf-config:/tmp/lp/tmp:/usr/local/texlive",
+             "LP_FS_EXE": "/usr/local/texlive/", "LP_FS_HIDE": "/lp",
+             "LP_SHIM_MARK": "/lp/book/shim", "LP_FS_LOG": "/lp/book/fs-denied",
+             "JAVA_TOOL_OPTIONS": "-XX:-UsePerfData -Djava.io.tmpdir=/tmp/lp/tmp "
+                                  "-XX:ActiveProcessorCount=4 -XX:MaxRAM=2g"}
 
 
 class Checker:
@@ -1412,6 +1417,21 @@ class Checker:
                     and _oracle.FIXED_RUN_VARS.get("JAVA_TOOL_OPTIONS")
                     == _oracle.java_tool_options(_oracle.FIXED_TMP)
                     and _oracle.PRIVATE_ROOT.startswith("/tmp/"))
+        # C-133: no bookkeeping path in a root of the shim's view, /tmp not a
+        # root as a whole, and the bookkeeping under a metadata-hidden tree.
+        def under(p, r):
+            return p == r or p.startswith(r.rstrip("/") + "/")
+        inside = [(p, r) for p in _oracle.BOOKKEEPING_PATHS for r in _oracle.FS_ROOTS
+                  if under(p, r) or under(r, p)]
+        self.expect(f"a shim bookkeeping path lies in a root of the file-system view "
+                    f"a document reads ({inside[:3]}), /tmp is a root as a whole, or "
+                    f"the bookkeeping is not under an FS_HIDE tree (C-133)",
+                    not inside and "/tmp" not in _oracle.FS_ROOTS
+                    and {_oracle.SHIM_MARK_DIR, _oracle.FS_LOG, _oracle.CLOCK_LOG}
+                    <= set(_oracle.BOOKKEEPING_PATHS)
+                    and all(any(under(p, h) for h in _oracle.FS_HIDE)
+                            for p in _oracle.BOOKKEEPING_PATHS)
+                    and _oracle.RUN_DIR in _oracle.FS_ROOTS)
         self.expect("the protocol's clock is not a fixed one, or graded_env does "
                     "not impose it (ADR-015 E10)",
                     _oracle.PROTOCOL_CLOCK.startswith(_oracle.CLOCK_PREFIX)
@@ -1492,6 +1512,12 @@ class Checker:
         lim, mem = str(_oracle.PIDS_LIMIT), _oracle.MEMORY_LIMIT
         want_pairs = [("--pull", "never"), ("--pids-limit", lim), ("--memory", mem),
                       ("--memory-swap", mem), ("--tmpfs", f"/tmp:{_oracle.TMPFS_OPTIONS}"),
+                      # C-133: the shim's bookkeeping on its own tmpfs;
+                      # C-134: the host-sized resources pinned
+                      ("--tmpfs", "/lp/book:rw,nosuid,nodev,noexec,size=16m"),
+                      ("--cpuset-cpus", "0-3"),
+                      ("--ulimit", "nofile=1024:1024"), ("--ulimit", "stack=8388608:8388608"),
+                      ("--ulimit", "core=0:0"), ("--ulimit", "memlock=8388608:8388608"),
                       ("--network", "none"), ("--hostname", _oracle.ORACLE_HOSTNAME),
                       ("--user", FAKE_USER),
                       ("--platform", _oracle.PLATFORMS[_oracle.ARCH_OF_RECORD]),

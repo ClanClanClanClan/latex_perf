@@ -43,6 +43,19 @@
      (the pid and CPU times), and /etc/hostname and /etc/resolv.conf (the
      container's identity) with \pdfmdfivesum and \openin.
      LP_FS_LOG appends "deny OP PATH" for every refused path.
+     LP_FS_HIDE (colon-separated) names trees OUTSIDE the roots whose
+     METADATA is refused too (see allowed_at: the oracle's own mount points
+     under /lp, where its bookkeeping lives).
+
+   THE SHIM'S OWN BOOKKEEPING IS NEVER VISIBLE TO A TeX PROGRAM (OPEN-128,
+     C-133). The directories of LP_SHIM_MARK, LP_FS_LOG and LP_CLOCK_LOG are
+     refused -- content AND metadata, before the roots are consulted -- so a
+     configuration that put them inside a root would still not show them.
+     MEASURED before this rule (2026-11-03, review of 0400f74a): the marks
+     were files named by pid in /tmp/lp/.shim, /tmp was a root, and a
+     document saw, with \pdffilesize, a set of pids that differed between
+     five identical runs, and that after a java child depended on the
+     container's CPU count.
 
    DIRECTORY ORDER.  In a TeX program (as above), readdir(3) returns a
      directory's entries sorted by name (bytewise), not in the file system's
@@ -52,10 +65,25 @@
      restricted \write18 (MEASURED: its `--sort date` breaks ties of the
      equal times above by the order it was given).
 
-   PROOF OF LOADING.  With LP_SHIM_MARK=DIR, the constructor of every process
-     the library loads into creates DIR/<pid>; the oracle's run supervisor
-     refuses a run whose engine process left no mark (a preload the dynamic
-     loader ignored would otherwise run the engine on the real clock).
+   PROOF OF LOADING.  With LP_SHIM_MARK=DIR, the constructor of the FIRST
+     process the library loads into -- the engine: the supervisor preloads
+     it into the engine alone, and every other shimmed process descends from
+     the engine and starts after the engine's constructor ran -- creates
+     DIR/engine (O_EXCL); every later process appends one line to
+     DIR/children. Each holds "restricted" (the TeX file-system view) or
+     "free". No name or content depends on a pid (C-133). The oracle's run
+     supervisor refuses a run whose engine left no "restricted" mark (a
+     preload the dynamic loader ignored would otherwise run the engine on the
+     real clock); the children's counts are reported, not checked (C-136).
+
+   CPU TIME.  With LP_CLOCK_EPOCH set, the process and thread CPU clocks
+     (clock_gettime of CLOCK_PROCESS_CPUTIME_ID / CLOCK_THREAD_CPUTIME_ID,
+     clock(3), times(2)'s tms fields, getrusage(2)'s ru_utime/ru_stime) read
+     a per-process counter of one microsecond per read, like the wall clock
+     (C-137): CPU time is run-dependent and a child (gs's usertime, Lua's
+     os.clock, Python's process_time) could print it. CLOCK_MONOTONIC and
+     CLOCK_BOOTTIME stay real (timeouts and waits inside children use them;
+     no program a document can start prints them: C-137).
 
    Built by build.sh in a digest-pinned ubuntu:22.04; the two .so files'
    sha256 are pinned in _oracle.SHIM_SHA256 and checked before every
@@ -72,7 +100,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/resource.h>
 #include <sys/syscall.h>
+#include <sys/times.h>
 #include <sys/time.h>
 #include <sys/utsname.h>
 #include <time.h>
@@ -91,6 +121,48 @@ static int restrict_fs;         /* this process is a TeX program */
 static char roots[8][PATH_MAX];
 static int nroots;
 static const char *fs_log;      /* LP_FS_LOG */
+static char hides[8][PATH_MAX];  /* LP_FS_HIDE: metadata refused too */
+static int nhides;
+static char privs[3][PATH_MAX];  /* the bookkeeping directories: always refused */
+static int nprivs;
+static unsigned long long cputicks; /* CPU-clock microseconds handed out */
+
+static int split_paths(const char *r, char out[][PATH_MAX], int max)
+{
+  int n = 0;
+  while (r && *r && n < max) {
+    const char *c = strchr(r, ':');
+    size_t len = c ? (size_t) (c - r) : strlen(r);
+    if (len > 0 && len < PATH_MAX) {
+      memcpy(out[n], r, len);
+      out[n][len] = 0;
+      n++;
+    }
+    if (!c) break;
+    r = c + 1;
+  }
+  return n;
+}
+
+static void add_priv_dir(const char *path, int is_dir)
+{
+  if (!path || path[0] != '/' || nprivs >= 3) return;
+  size_t len = strlen(path);
+  if (len >= PATH_MAX) return;
+  memcpy(privs[nprivs], path, len + 1);
+  if (!is_dir) {
+    char *sl = strrchr(privs[nprivs], '/');
+    if (!sl || sl == privs[nprivs]) return;   /* never "/" itself */
+    *sl = 0;
+  }
+  nprivs++;
+}
+
+static int under(const char *c, const char *root)
+{
+  size_t l = strlen(root);
+  return strncmp(c, root, l) == 0 && (c[l] == 0 || c[l] == '/');
+}
 
 static void *real(const char *name)
 {
@@ -124,25 +196,24 @@ __attribute__((constructor)) static void lp_init(void)
       exe[n] = 0;
       if (strncmp(exe, x, strlen(x)) == 0) restrict_fs = 1;
     }
-    while (*r && nroots < 8) {
-      const char *c = strchr(r, ':');
-      size_t len = c ? (size_t) (c - r) : strlen(r);
-      if (len > 0 && len < PATH_MAX) {
-        memcpy(roots[nroots], r, len);
-        roots[nroots][len] = 0;
-        nroots++;
-      }
-      if (!c) break;
-      r = c + 1;
-    }
+    nroots = split_paths(r, roots, 8);
+    nhides = split_paths(getenv("LP_FS_HIDE"), hides, 8);
   }
   const char *m = getenv("LP_SHIM_MARK");
+  add_priv_dir(m, 1);
+  add_priv_dir(fs_log, 0);
+  add_priv_dir(clock_log, 0);
   if (m && *m) {
     char p[PATH_MAX];
-    snprintf(p, sizeof p, "%s/%ld", m, (long) syscall(SYS_getpid));
-    int fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    const char *mode = restrict_fs ? "restricted\n" : "free\n";
+    snprintf(p, sizeof p, "%s/engine", m);
+    int fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
+    if (fd < 0 && errno == EEXIST) {
+      snprintf(p, sizeof p, "%s/children", m);
+      fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+    }
     if (fd >= 0) {
-      lp_write_fd(fd, restrict_fs ? "restricted\n" : "free\n");
+      lp_write_fd(fd, mode);
       syscall(SYS_close, fd);
     }
   }
@@ -209,14 +280,63 @@ time_t time(time_t *t)
   return ts.tv_sec;
 }
 
+static void cpu_now(struct timespec *ts)
+{
+  unsigned long long n = __atomic_fetch_add(&cputicks, 1, __ATOMIC_SEQ_CST);
+  ts->tv_sec = (time_t) (n / 1000000ULL);
+  ts->tv_nsec = (long) ((n % 1000000ULL) * 1000ULL);
+}
+
 int clock_gettime(clockid_t c, struct timespec *ts)
 {
   if (have_epoch && (c == CLOCK_REALTIME || c == CLOCK_REALTIME_COARSE || c == CLOCK_TAI)) {
     if (ts) fixed_now(ts);
     return 0;
   }
+  if (have_epoch && (c == CLOCK_PROCESS_CPUTIME_ID || c == CLOCK_THREAD_CPUTIME_ID)) {
+    if (ts) cpu_now(ts);
+    return 0;
+  }
   int (*f)(clockid_t, struct timespec *) = real("clock_gettime");
   return f(c, ts);
+}
+
+clock_t clock(void)
+{
+  if (!have_epoch) {
+    clock_t (*f)(void) = real("clock");
+    return f();
+  }
+  struct timespec ts;
+  cpu_now(&ts);
+  return (clock_t) ((long long) ts.tv_sec * CLOCKS_PER_SEC + ts.tv_nsec / (1000000000L / CLOCKS_PER_SEC));
+}
+
+clock_t times(struct tms *t)
+{
+  clock_t (*f)(struct tms *) = real("times");
+  clock_t rc = f(t);
+  if (have_epoch && t) {
+    struct timespec ts;
+    cpu_now(&ts);
+    long hz = sysconf(_SC_CLK_TCK);
+    clock_t v = (clock_t) ((long long) ts.tv_sec * hz + ts.tv_nsec / (1000000000L / (hz > 0 ? hz : 100)));
+    t->tms_utime = v; t->tms_stime = 0; t->tms_cutime = 0; t->tms_cstime = 0;
+  }
+  return rc;
+}
+
+int getrusage(int who, struct rusage *u)
+{
+  int (*f)(int, struct rusage *) = real("getrusage");
+  int rc = f(who, u);
+  if (rc == 0 && have_epoch && u) {
+    struct timespec ts;
+    cpu_now(&ts);
+    u->ru_utime.tv_sec = ts.tv_sec; u->ru_utime.tv_usec = ts.tv_nsec / 1000;
+    u->ru_stime.tv_sec = 0; u->ru_stime.tv_usec = 0;
+  }
+  return rc;
 }
 
 int uname(struct utsname *u)
@@ -305,10 +425,17 @@ static int allowed_at(const char *op, int dirfd, const char *path)
   if (!*path) return 1;   /* the call fails with ENOENT by itself */
   char c[PATH_MAX * 2];
   canonical(dirfd, path, c);
-  if (strcmp(c, "/dev/null") == 0) return 1;
-  for (int i = 0; i < nroots; i++) {
-    size_t l = strlen(roots[i]);
-    if (strncmp(c, roots[i], l) == 0 && (c[l] == 0 || c[l] == '/')) return 1;
+  int priv = 0;
+  for (int i = 0; i < nprivs; i++)
+    if (under(c, privs[i])) { priv = 1; break; }
+  if (!priv) {
+    if (strcmp(c, "/dev/null") == 0) return 1;
+    for (int i = 0; i < nroots; i++)
+      if (under(c, roots[i])) return 1;
+    for (int i = 0; i < nhides; i++)
+      if (under(c, hides[i])) { meta = 0; break; }
+  } else {
+    meta = 0;
   }
   /* METADATA (stat, lstat, access) of a path on the image's own read-only
      root file system is allowed; its CONTENT is not. kpathsea locates itself
@@ -319,7 +446,9 @@ static int allowed_at(const char *op, int dirfd, const char *path)
      times are fixed below; what docker or the kernel puts into a container
      is not, and stays refused: /proc, /sys, /dev, the files docker writes per
      container (/etc/hostname, /etc/hosts, /etc/resolv.conf, /etc/mtab) and
-     the init binary it bind-mounts from the host (/sbin/docker-init). */
+     the init binary it bind-mounts from the host (/sbin/docker-init), the
+     shim's own bookkeeping (privs: above) and every LP_FS_HIDE tree (the
+     oracle's mount points under /lp other than the run directory: C-133). */
   if (meta) {
     static const char *const volatile_paths[] = {
       "/proc", "/sys", "/dev", "/run", "/var/run", "/etc/hostname", "/etc/hosts",

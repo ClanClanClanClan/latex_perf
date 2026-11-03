@@ -258,7 +258,7 @@ So a predictor that never claims a location or names a cause cannot pass: its su
 
 **Floors (ruling R4).**
 - **Success.** Every success line has `min_n` **29**: zero errors in 29 claims gives a one-sided 95% lower bound of 0.90, while 10 claims give only 0.74. The **next floor is 59** (lower bound 0.95), to be adopted once the sets can supply it.
-- **Kill.** Kill lines keep `min_n` 10, unchanged from p2-defs/2. R4 sets no kill floor, and a kill that never becomes evaluable would never retire a failing route.
+- **Kill.** A heuristic kill fires only when the exact one-sided 95% Clopper–Pearson **upper** bound on the heuristic precision is below the success value, 0.95. That is, it fires only when we are confident the route cannot reach success. There is no fixed `min_n`: the bound itself carries the sample size. Examples (tested): 8 correct of 10 has an upper bound of 0.963, so it does **not** fire; 20 of 40 has an upper bound of 0.639, so it **fires**. With no claims (n = 0) there is no bound, so the line is not evaluable. **Provenance:** this kill rule is **the assistant's choice pending owner ruling** (C-174's rule), not an owner ruling. R4 says only "kill < 0.90". The earlier proposals (point < 0.90, `min_n` 10) are replaced.
 - **Certified.** The certified channel has no kill line: it has the soundness outcome instead (§5.6).
 
 All values below are proposals.
@@ -281,9 +281,9 @@ All values below are proposals.
 | SH5 | success | location_precision_cause_heuristic (point), min_n 29 | ≥ 0.95 | Against the cause-line gold (§5.5). |
 | S2 | success | location_recall_line (point), min_n 29 | ≥ 0.50 | On certified ∪ heuristic. |
 | S4 | success | cause_recall_top1 (point), min_n 29 | ≥ 0.80 | On certified ∪ heuristic. |
-| KH1 | kill | location_precision_line_heuristic (point), min_n 10 | < 0.90 | Fires: that heuristic route is retired. |
-| KH3 | kill | cause_precision_top1_heuristic (point), min_n 10 | < 0.90 | Fires: that heuristic route is retired. |
-| KH5 | kill | location_precision_cause_heuristic (point), min_n 10 | < 0.90 | Fires: that heuristic route is retired. |
+| KH1 | kill | location_precision_line_heuristic, **upper 95% bound** | < 0.95 | Fires when we are confident the route cannot reach success: that heuristic route is retired. |
+| KH3 | kill | cause_precision_top1_heuristic, **upper 95% bound** | < 0.95 | As KH1. |
+| KH5 | kill | location_precision_cause_heuristic, **upper 95% bound** | < 0.95 | As KH1. |
 
 The block below is machine-readable. The scorer reads it **from HEAD**, and it is the authority if it ever differs from the table. The owner fixes the lines by changing `"status"` to `"FIXED"` (with any value changes) in a commit of their own.
 
@@ -309,9 +309,9 @@ The block below is machine-readable. The scorer reads it **from HEAD**, and it i
   {"id": "SH5", "kind": "success", "metric": "location_precision_cause_heuristic", "stat": "point", "op": ">=", "value": 0.95, "min_n": 29},
   {"id": "S2", "kind": "success", "metric": "location_recall_line", "stat": "point", "op": ">=", "value": 0.5, "min_n": 29},
   {"id": "S4", "kind": "success", "metric": "cause_recall_top1", "stat": "point", "op": ">=", "value": 0.8, "min_n": 29},
-  {"id": "KH1", "kind": "kill", "metric": "location_precision_line_heuristic", "stat": "point", "op": "<", "value": 0.9, "min_n": 10},
-  {"id": "KH3", "kind": "kill", "metric": "cause_precision_top1_heuristic", "stat": "point", "op": "<", "value": 0.9, "min_n": 10},
-  {"id": "KH5", "kind": "kill", "metric": "location_precision_cause_heuristic", "stat": "point", "op": "<", "value": 0.9, "min_n": 10}
+  {"id": "KH1", "kind": "kill", "metric": "location_precision_line_heuristic", "stat": "upper95", "op": "<", "value": 0.95},
+  {"id": "KH3", "kind": "kill", "metric": "cause_precision_top1_heuristic", "stat": "upper95", "op": "<", "value": 0.95},
+  {"id": "KH5", "kind": "kill", "metric": "location_precision_cause_heuristic", "stat": "upper95", "op": "<", "value": 0.95}
  ]
 }
 ```

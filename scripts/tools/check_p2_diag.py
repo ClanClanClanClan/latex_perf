@@ -574,13 +574,14 @@ check("prereg (R4): every success line has the floor min_n >= 29",
       and sum(1 for ln in block["lines"] if ln["kind"] == "success") >= 7,
       [(ln["id"], ln.get("min_n")) for ln in block["lines"] if ln["kind"] == "success"])
 check("prereg (R4): certified precision lines demand exactly 1.0; heuristic >= 0.95; "
-      "heuristic kills < 0.90; no certified kill line",
+      "heuristic kills fire on upper95 < 0.95 (no min_n); no certified kill line",
       all(ln["op"] == "==" and ln["value"] == 1.0 for ln in block["lines"]
           if ln["kind"] == "success" and ln["metric"].endswith("_certified"))
       and all(ln["op"] == ">=" and ln["value"] == 0.95 for ln in block["lines"]
               if ln["kind"] == "success" and "precision" in ln["metric"]
               and ln["metric"].endswith("_heuristic"))
-      and all(ln["op"] == "<" and ln["value"] == 0.90 and ln["metric"].endswith("_heuristic")
+      and all(ln["op"] == "<" and ln["value"] == 0.95 and ln["stat"] == "upper95"
+              and "min_n" not in ln and ln["metric"].endswith("_heuristic")
               for ln in block["lines"] if ln["kind"] == "kill")
       and {ln["metric"] for ln in block["lines"] if ln["kind"] == "kill"}
       == {"location_precision_line_heuristic", "cause_precision_top1_heuristic",
@@ -1175,6 +1176,37 @@ rc, res = score_case("R4: the defect takes precedence over VOID (exit 5)",
 if res:
     check("R4: a void run still reports its soundness block",
           res.get("void") is True and res["soundness"]["certified_wrong"] == 1)
+
+# The heuristic kill (assistant's choice pending owner ruling): fires only when
+# the exact one-sided 95% upper bound on heuristic precision is below 0.95.
+KILLS = [ln for ln in block["lines"] if ln["kind"] == "kill"]
+
+
+def heur_rows(k, n):
+    rows = []
+    for i in range(n):
+        ok = i < k
+        rows.append({"arxiv_id": f"0001.{i:05d}v1", "graded": True, "agrees_with_record": True,
+                     "compiles": False, "excluded": None,
+                     "gold": gold("missing-file", "fig", "main.tex", 4),
+                     "pred": pred("NOT-READY", {"tier": "heuristic",
+                                                "class": "missing-file" if ok else "encoding",
+                                                "object": "fig", "file": "main.tex",
+                                                "line": 4 if ok else 9})})
+    return rows
+
+
+for k, n, fires in ((8, 10, False), (20, 40, True)):
+    sc = d.score_rows(heur_rows(k, n))
+    ev = {e["id"]: e for e in p2_baseline.evaluate_lines({"lines": KILLS}, sc)}
+    ub = sc["cause_precision_top1_heuristic"]["upper95"]
+    check(f"kill rule: {k}/{n} correct has upper bound {ub:.3f} -> "
+          f"{'fires' if fires else 'does NOT fire'} (KH1, KH3)",
+          ev["KH3"]["holds"] is fires and ev["KH1"]["holds"] is fires
+          and ((ub < 0.95) is fires), (ub, ev["KH3"], ev["KH1"]))
+ev0 = {e["id"]: e for e in p2_baseline.evaluate_lines({"lines": KILLS}, d.score_rows([]))}
+check("kill rule: with no claims there is no bound and no kill fires",
+      all(e["status"] == "not-evaluable" for e in ev0.values()), ev0)
 
 # the two-labeller cause-line gold (§5.5)
 LAB = {"schema": d.LABEL_SCHEMA, "labeller_a": "A", "labeller_b": "B", "adjudicator": "C",

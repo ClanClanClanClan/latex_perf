@@ -2652,7 +2652,11 @@ REGISTRY = [
                      new='        if False:\n'),
             Mutation("the run does not preload the shim",
                      "scripts/tools/_oracle.py",
-                     r"\[oracle-infra\] FAIL.*runs without the pinned shim preloaded",
+                     # A run without the shim is refused by check_evidence
+                     # (sha256 None) before grading_env can read its
+                     # configuration back; either refusal kills the mutant.
+                     r"\[oracle-infra\] FAIL.*(runs without the pinned shim preloaded"
+                     r"|preloaded a shim with sha256 None)",
                      old='               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": SHIM_MARK_DIR,\n',
                      new='               "shim": None, "mark": SHIM_MARK_DIR,\n'),
             Mutation("the session probe stops checking the mounted shim",

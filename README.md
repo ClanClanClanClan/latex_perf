@@ -35,8 +35,14 @@ dune build @all
 
 ```bash
 docker pull ghcr.io/clanclanclanclan/latex_perf:latest
-docker run --rm -v $(pwd):/data ghcr.io/clanclanclanclan/latex_perf:latest /data/paper.tex
+docker run --rm -v "$(pwd):/data" --entrypoint validators_cli ghcr.io/clanclanclanclan/latex_perf:latest /data/paper.tex
 ```
+
+The image's default entrypoint is the REST server (port 8080), so the CLI needs
+`--entrypoint validators_cli`; any CLI flag from the reference below goes before
+the file path. The published image is linux/amd64 only; on Apple silicon Docker
+runs it under emulation and prints a platform warning. CI runs this exact
+command against every image it builds (`scripts/tools/readme_docker_smoke.sh`).
 
 ## CLI Reference
 

@@ -19,7 +19,7 @@ jobs:
   # workflow -- which knows nothing about either gate -- satisfy the requirement.
   # spec-drift.yml's own job comment records a prior instance of the same class.
   spacy-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4

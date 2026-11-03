@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   expander-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # 25, not 10 (OPEN-111). setup-ocaml-env alone takes 5+ minutes on a cache
     # miss, so a 10-minute budget killed this job mid-setup on most pushes to
     # main; GitHub reports a job TIMEOUT as "cancelled", which reads like a

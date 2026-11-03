@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gate: the workflows behind REQUIRED status checks must be unambiguous.
 
-Three failure modes, each of which has actually bitten this repo:
+Seven failure modes, each of which has actually bitten this repo:
 
 1. DUPLICATE REQUIRED CONTEXT (the reason this gate exists).
    A workflow with an unfiltered `push:` fires on every branch, so a commit
@@ -58,6 +58,19 @@ Three failure modes, each of which has actually bitten this repo:
    blocks are then a copy-paste pair that nothing keeps in step, and a retry
    that installs a DIFFERENT toolchain than the first attempt is worse than no
    retry. This gate pins them byte-equal.
+
+6. A CACHE CLIENT FOR THE RETIRED CACHE SERVICE (C-176, found 2026-11-03).
+   ocaml/setup-ocaml@v2 bundles a cache client for GitHub's legacy cache
+   service. After that service was retired every restore warned "Cache
+   service responded with 400" and every save warned "Our services aren't
+   available right now" -- six warnings per X64 job, every job GREEN, no opam
+   cache restored for at least five weeks. A cache failure is only a warning,
+   so nothing went red. This gate refuses the action refs known to use the
+   legacy service (setup-ocaml v1/v2, actions/cache v1-v3).
+
+7. A FLOATING RUNNER LABEL (C-177). `ubuntu-latest` moved to Ubuntu 26.04
+   from 2026-10-19 (actions/runner-images#14748) and main's jobs changed OS
+   with no commit. Every `runs-on:` must name a fixed image.
 
 Authority: .github/required-status-checks.json. That file -- never the
 branch-protection API -- is the source of truth; branch-protection.yml PUTs its
@@ -256,6 +269,55 @@ def drifted_retry_pairs(doc: dict, rel: str) -> list[str]:
     return out
 
 
+# ── Failure modes 6 and 7: legacy cache clients, floating runner labels ──
+
+# `uses:` refs whose cache client talks to the retired legacy cache service.
+LEGACY_CACHE_USES = re.compile(
+    r"^(ocaml/setup-ocaml@v[12](\.|$)"
+    r"|actions/cache(/restore|/save)?@v[123](\.|$))")
+FLOATING_RUNNERS = re.compile(r"-latest$")
+
+
+def iter_uses(doc: dict):
+    """Every `uses:` value of a workflow's jobs/steps or a composite's steps."""
+    steps = []
+    if isinstance(doc.get("runs"), dict):
+        steps += doc["runs"].get("steps") or []
+    if isinstance(doc.get("jobs"), dict):
+        for job in doc["jobs"].values():
+            if isinstance(job, dict):
+                if job.get("uses"):
+                    yield str(job["uses"])
+                steps += job.get("steps") or []
+    for step in steps:
+        if isinstance(step, dict) and step.get("uses"):
+            yield str(step["uses"])
+
+
+def iter_runs_on(doc: dict):
+    """(job id, label) for every runner label, including matrix values."""
+    for jid, job in (doc.get("jobs") or {}).items():
+        if not isinstance(job, dict) or "runs-on" not in job:
+            continue
+        ro = job["runs-on"]
+        labels = ro if isinstance(ro, list) else [ro]
+        if isinstance(ro, dict):
+            labels = list(ro.get("labels") or [])
+        matrix = ((job.get("strategy") or {}).get("matrix") or {})
+        for lab in labels:
+            lab = str(lab)
+            m = re.fullmatch(r"\$\{\{\s*matrix\.([\w-]+)\s*\}\}", lab)
+            if m and isinstance(matrix, dict):
+                vals = matrix.get(m.group(1)) or []
+                for inc in matrix.get("include") or []:
+                    if isinstance(inc, dict) and m.group(1) in inc:
+                        vals = list(vals) + [inc[m.group(1)]]
+                for v in vals if isinstance(vals, list) else [vals]:
+                    yield jid, str(v)
+            else:
+                yield jid, lab
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo", default=".", help="repository root")
@@ -310,6 +372,8 @@ def main() -> int:
     # workflows, so one silent success there is 28 silent successes).
     scanned = list(workflows) + sorted((repo / ACTION_DIR).rglob("action.yml"))
     loops_checked = 0
+    uses_checked = 0
+    runners_checked = 0
     for path in scanned:
         rel = str(path.relative_to(repo))
         try:
@@ -328,10 +392,33 @@ def main() -> int:
                     f"with the thing it was waiting for never ready. Track "
                     f"success in a flag and `exit 1` after `done`.")
         findings.extend(drifted_retry_pairs(doc, rel))
+        for ref in iter_uses(doc):
+            uses_checked += 1
+            if LEGACY_CACHE_USES.match(ref):
+                findings.append(
+                    f"LEGACY-CACHE: {rel} uses `{ref}`, whose cache client talks "
+                    f"to GitHub's retired legacy cache service: every restore "
+                    f"and save fails with only a WARNING, so the job stays "
+                    f"green with no cache (C-176). Use ocaml/setup-ocaml@v3.x / "
+                    f"actions/cache@v4.")
+        for jid, lab in iter_runs_on(doc):
+            runners_checked += 1
+            if FLOATING_RUNNERS.search(lab):
+                findings.append(
+                    f"FLOATING-RUNNER: {rel} job '{jid}' runs on `{lab}`, a "
+                    f"label GitHub re-points to a new OS without a commit "
+                    f"(ubuntu-latest became 26.04 from 2026-10-19). Pin a fixed "
+                    f"image, e.g. ubuntu-24.04 (C-177).")
 
     if not loops_checked:
         print("FAIL: scanned zero `run:` blocks -- the mode-4 scan is vacuous",
               file=sys.stderr)
+        return 1
+    # Floors for modes 6 and 7 (a stale walker would otherwise PASS on nothing).
+    if uses_checked < 20 or runners_checked < 20:
+        print(f"FAIL: scanned only {uses_checked} `uses:` ref(s) and "
+              f"{runners_checked} runner label(s) -- the mode-6/7 scan is "
+              f"probably vacuous (expected >= 20 of each)", file=sys.stderr)
         return 1
 
     for context in required:
@@ -367,7 +454,9 @@ def main() -> int:
     print(f"[workflow-triggers] PASS: {len(required)} required context(s) each "
           f"resolve to exactly one job, none with an unfiltered push trigger; "
           f"{loops_checked} `run:` block(s) across {len(scanned)} workflow/action "
-          f"file(s) carry no unguarded retry loop and no drifted retry pair")
+          f"file(s) carry no unguarded retry loop and no drifted retry pair; "
+          f"{uses_checked} `uses:` ref(s) name no legacy-cache client and "
+          f"{runners_checked} runner label(s) are all pinned")
     return 0
 
 

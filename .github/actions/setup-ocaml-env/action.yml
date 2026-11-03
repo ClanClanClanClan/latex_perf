@@ -1,14 +1,14 @@
 name: Setup OCaml + Install Dependencies
 description: >-
-  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v2 on
-  X64 runners, ocaml/setup-ocaml@v3 on others -- see OPEN-126),
+  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v3.9.0
+  on every runner architecture -- see C-176),
   installs system packages, filters darcs from apt, configures opam repos,
   and performs a retry-loop dependency install.  BOTH the switch setup and
   the dependency install retry; both fail the job when their retries are
   exhausted.  Replaces the 15-line
   boilerplate block that was duplicated across 25+ CI workflows.
 
-  NOTE: This action calls ocaml/setup-ocaml@v2 DIRECTLY (not through an
+  NOTE: This action calls ocaml/setup-ocaml DIRECTLY (not through an
   intermediate composite action) to avoid GitHub Actions post-cleanup input
   resolution failures with nested composite actions.
 author: Internal
@@ -26,10 +26,6 @@ inputs:
       (e.g. `coq-released=https://coq.inria.fr/opam/released`).
     required: false
     default: ""
-  dune-cache:
-    description: Enable dune build cache via ocaml/setup-ocaml.
-    required: false
-    default: "true"
   system-packages:
     description: >-
       Additional apt packages to install before opam (space-separated).
@@ -112,32 +108,35 @@ runs:
     # spelled out: attempt 1 is allowed to fail, any half-built switch is
     # discarded, attempt 2 runs unguarded and its failure fails the job.
     # The two `with:` blocks MUST stay byte-identical -- enforced by failure
-    # mode 4 of check_workflow_triggers.py, which runs in required spec-drift.
+    # mode 5 of check_workflow_triggers.py, which runs in required spec-drift.
     #
-    # ⚠ TWO TOOLCHAIN PAIRS, SELECTED BY RUNNER ARCHITECTURE (OPEN-126).
-    # setup-ocaml@v2 unconditionally `apt-get install`s g++-multilib and
-    # gcc-multilib on every Linux runner, and those packages do not exist on
-    # arm64: the required tex-oracle job, which runs on ubuntu-24.04-arm (the
-    # architecture of record, ADR-015 E2), died here before grading anything
-    # (run 37386039832). setup-ocaml@v3 installs those packages only when apt
-    # can find them. Every X64 job keeps the v2 pair it always had, byte for
-    # byte; only a non-X64 runner takes the v3 pair. Both pairs install the
-    # SAME compiler -- check_workflow_triggers.py refuses the two pairs'
-    # `ocaml-compiler` values drifting apart, as it refuses a pair's attempts
-    # drifting.
+    # ⚠ ONE TOOLCHAIN PAIR, setup-ocaml@v3.9.0, ON EVERY ARCHITECTURE (C-176).
+    # Until C-176 the X64 jobs used setup-ocaml@v2, whose bundled cache client
+    # talks to the RETIRED legacy Actions cache service: every restore failed
+    # "Cache service responded with 400" and every save failed with GitHub's
+    # "Our services aren't available right now" page -- 6 warnings per job,
+    # every job green, no opam cache restored on any X64 run since at least
+    # 2026-09-30 (the badge job's history; the scan went no further back).
+    # v3 uses the current cache service. It was already the non-X64 pair
+    # (OPEN-126: v2 unconditionally apt-installs g++-multilib/gcc-multilib,
+    # which arm64 does not have; v3 installs them only where apt has them),
+    # so one pair now serves both. check_workflow_triggers.py refuses a
+    # legacy-cache action ref (failure mode 6).
+    # v3 has no `opam-depext` input (it never runs depext implicitly). Its
+    # `dune-cache` input is deprecated (one warning per step) and its v2
+    # predecessor had not restored anything since at least 2026-09-30, so it
+    # is not passed: the opam root and switch are cached (`cache` defaults to
+    # true); the dune build cache is not.
     - name: Set up OCaml and opam (attempt 1)
       id: setup_ocaml_attempt_1
-      if: runner.arch == 'X64'
       continue-on-error: true
-      uses: ocaml/setup-ocaml@v2
+      uses: ocaml/setup-ocaml@v3.9.0
       with:
         ocaml-compiler: 5.1.1
         allow-prerelease-opam: false
         opam-pin: true
-        opam-depext: false
         opam-local-packages: "*.opam"
         opam-disable-sandboxing: false
-        dune-cache: ${{ inputs.dune-cache }}
         cache-prefix: v1
 
     - name: Discard a partially-initialised switch
@@ -154,24 +153,6 @@ runs:
 
     - name: Set up OCaml and opam (attempt 2)
       if: steps.setup_ocaml_attempt_1.outcome == 'failure'
-      uses: ocaml/setup-ocaml@v2
-      with:
-        ocaml-compiler: 5.1.1
-        allow-prerelease-opam: false
-        opam-pin: true
-        opam-depext: false
-        opam-local-packages: "*.opam"
-        opam-disable-sandboxing: false
-        dune-cache: ${{ inputs.dune-cache }}
-        cache-prefix: v1
-
-    # The non-X64 pair (see the note above attempt 1). v3 has no
-    # `opam-depext` input (it never runs depext implicitly) and otherwise takes
-    # the same settings; pinned to a release, not a moving major tag.
-    - name: Set up OCaml and opam, non-X64 runner (attempt 1)
-      id: setup_ocaml_v3_attempt_1
-      if: runner.arch != 'X64'
-      continue-on-error: true
       uses: ocaml/setup-ocaml@v3.9.0
       with:
         ocaml-compiler: 5.1.1
@@ -179,28 +160,6 @@ runs:
         opam-pin: true
         opam-local-packages: "*.opam"
         opam-disable-sandboxing: false
-        dune-cache: ${{ inputs.dune-cache }}
-        cache-prefix: v1
-
-    - name: Discard a partially-initialised switch, non-X64 runner
-      if: steps.setup_ocaml_v3_attempt_1.outcome == 'failure'
-      shell: bash
-      run: |
-        echo "::warning::[setup-ocaml-env] switch setup failed on attempt 1;" \
-             "discarding any partial switch and retrying once."
-        opam switch remove . -y 2>/dev/null || true
-        rm -rf _opam
-
-    - name: Set up OCaml and opam, non-X64 runner (attempt 2)
-      if: steps.setup_ocaml_v3_attempt_1.outcome == 'failure'
-      uses: ocaml/setup-ocaml@v3.9.0
-      with:
-        ocaml-compiler: 5.1.1
-        allow-prerelease-opam: false
-        opam-pin: true
-        opam-local-packages: "*.opam"
-        opam-disable-sandboxing: false
-        dune-cache: ${{ inputs.dune-cache }}
         cache-prefix: v1
 
     # ── Extra system packages (project-specific) ──────────────────────

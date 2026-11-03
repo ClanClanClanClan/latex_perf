@@ -25,6 +25,10 @@ on:
       - '.github/workflows/docker-push.yml'
       - 'scripts/tools/docker_smoke.sh'
       - 'scripts/tools/docker_smoke/**'
+      # The README's Docker quick-start is run verbatim by the smoke (C-175),
+      # so a README edit must re-run it.
+      - 'README.md'
+      - 'scripts/tools/readme_docker_smoke.sh'
       # The image's own entrypoint and the service it runs (OPEN-125: a
       # broker defect that only the image's REST check exercised end to end).
       - 'scripts/docker_entrypoint.sh'
@@ -42,7 +46,7 @@ permissions:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4

@@ -920,13 +920,21 @@ def drift_second_setup_ocaml(text: str) -> str:
     return text[:i] + "ocaml-compiler: 5.2.0" + text[i + len(needle):]
 
 
-def drift_v3_pair_compiler(text: str) -> str:
-    """OPEN-126: BOTH attempts of the non-X64 (setup-ocaml@v3) pair given
-    another compiler, so each pair is internally byte-identical."""
-    head, sep, tail = text.partition("uses: ocaml/setup-ocaml@v3")
-    assert sep and tail.count("ocaml-compiler: 5.1.1") == 2, "v3 pair drifted"
-    return head + sep + tail.replace("ocaml-compiler: 5.1.1",
-                                     "ocaml-compiler: 5.2.0")
+def setup_ocaml_back_to_v2(text: str) -> str:
+    """C-176: attempt 1 of the setup-ocaml pair back on v2, whose cache client
+    talks to the retired legacy cache service (both attempts, so the pair is
+    not merely drifted)."""
+    assert text.count("uses: ocaml/setup-ocaml@v3.9.0") == 2, \
+        "setup-ocaml pair drifted; update registry"
+    return text.replace("uses: ocaml/setup-ocaml@v3.9.0",
+                        "uses: ocaml/setup-ocaml@v2")
+
+
+def proof_job_floating_runner(text: str) -> str:
+    """C-177: the required proof-ci job back on the floating ubuntu-latest."""
+    needle = "runs-on: ubuntu-24.04\n"
+    assert text.count(needle) >= 1, "proof.yml runner drifted; update registry"
+    return text.replace(needle, "runs-on: ubuntu-latest\n", 1)
 
 
 def flip_polyglossia(text: str) -> str:
@@ -3350,12 +3358,20 @@ REGISTRY = [
                      ".github/actions/setup-ocaml-env/action.yml",
                      r"attempts have DRIFTED",
                      transform=drift_second_setup_ocaml),
-            # OPEN-126: the X64 (v2) and non-X64 (v3) pairs, both drifted
-            # alike, so only the cross-pair compiler check can see it.
-            Mutation("the non-X64 setup-ocaml pair builds another compiler",
+            # C-176: since one setup-ocaml pair serves every architecture,
+            # OPEN-126's X64-v2 / non-X64-v3 cross-pair mutation has no second
+            # pair to drift; the cross-pair compiler check stays in the gate
+            # and fires (with DRIFTED) on the mutation above. Failure mode 6:
+            # the pair back on the legacy-cache setup-ocaml@v2.
+            Mutation("setup-ocaml back on v2 (retired legacy cache service)",
                      ".github/actions/setup-ocaml-env/action.yml",
-                     r"setup-ocaml steps install DIFFERENT compilers",
-                     transform=drift_v3_pair_compiler),
+                     r"LEGACY-CACHE: .*setup-ocaml-env.*ocaml/setup-ocaml@v2",
+                     transform=setup_ocaml_back_to_v2),
+            # Failure mode 7: a required job on a floating runner label.
+            Mutation("proof-ci back on the floating ubuntu-latest label",
+                     ".github/workflows/proof.yml",
+                     r"FLOATING-RUNNER: .*proof\.yml job .* runs on `ubuntu-latest`",
+                     transform=proof_job_floating_runner),
         ]),
     GateTest(
         "check_project_state (binary arm)",

@@ -19,6 +19,9 @@
 #   5. the entrypoint (REST), default   -> HTTP 200 on POST /tokenize, then 10
 #      pool and a two-worker pool          more in a row, then 4 clients x 5
 #                                          concurrently; macro catalogue loaded
+#   6. README.md's Docker quick-start   -> run exactly as documented (image
+#      (readme_docker_smoke.sh)            swapped for IMAGE): exits, rc 0,
+#                                          finding rows, TYPO-005 (C-175)
 #
 # Usage: scripts/tools/docker_smoke.sh ghcr.io/clanclanclanclan/latex_perf:vX
 #        (DOCKER_SMOKE_PLATFORM=linux/amd64 to run an amd64 image elsewhere)
@@ -131,7 +134,12 @@ rest_check() {  # rest_check NAME [docker run -e ...]
 rest_check rest
 rest_check rest2w -e L0_POOL_CORES=0,1
 
-for n in lint ready notready explain rest rest2w; do
+# 6. The README's quick-start command, exactly as documented (C-175).
+bash "${HERE}/readme_docker_smoke.sh" "${IMAGE}" > "${OUT}/readme.out" 2>&1
+echo $? > "${OUT}/readme.rc"
+rc_is readme 0 && has readme '^README DOCKER SMOKE: passed'
+
+for n in lint ready notready explain rest rest2w readme; do
   echo "smoke ${n}: rc=$(cat "${OUT}/${n}.rc") lines=$(wc -l < "${OUT}/${n}.out" | tr -d ' ')"
 done
 if [ "${FAILS}" -ne 0 ]; then

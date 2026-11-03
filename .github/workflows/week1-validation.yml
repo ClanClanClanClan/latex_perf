@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   coq-compilation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
@@ -36,7 +36,7 @@ jobs:
         coqc -Q proofs LaTeXPerfectionist proofs/LexerTotality.v
 
   admit-audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
@@ -82,7 +82,7 @@ jobs:
         fi
 
   ocaml-compilation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:

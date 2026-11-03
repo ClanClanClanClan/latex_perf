@@ -20,7 +20,7 @@ jobs:
   # the same name) to [spec-drift] so it can be unambiguously added
   # to branch-protection's required-checks list.
   spec-drift:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # 20, not 5: check_gate_selftests --level pure re-runs a gate per
     # mutation and grew past 150 mutations (the oracle infra and pin
     # gates alone take seconds each); it measured 498 s on the owner's

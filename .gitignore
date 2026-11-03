@@ -5,6 +5,8 @@ _build/
 *.aux
 # v26.3 §3 items F + G: tracked .aux fixtures for the engine parser tests.
 !corpora/aux/*.aux
+# boundary step (spike): the one-line article's doc.aux from both sides is evidence (H-boundary-report.md, checkpoint 3).
+!docs/v27/spike/hb/article/*.aux
 *.vok
 *.vdd
 *.vos

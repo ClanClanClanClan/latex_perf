@@ -1,179 +1,220 @@
 input	class	binary_rc	model_result	binary_stdout_sha256_16	binary_files_sha256_16	binary_clock_readings	reason	ps_exe_sha256_16
-alig	IDENTICAL	0	exit 0	5031a02dd224c87b	texput.log=908a33db28eff130	1		cae7a953b5a3822f
-bat1	IDENTICAL	1	exit 1	dce6a4ed7a09f3a6	texput.log=f75ac3c77c4c27b0	1		cae7a953b5a3822f
-box1	IDENTICAL	1	exit 1	f3716f724e859f0f	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-box2	STUCK	1	stuck	35071fc64f1dfd4a	texput.log=d296817d547029be	1	mainbody > maincontrol > showwhatever > showbox > shownodelist > unmodelled external: fabs	cae7a953b5a3822f
-buf1	IDENTICAL	0	exit 0	c048d19eecb9301b	texput.log=0187f89d32092e3f	1		cae7a953b5a3822f
-buf2	STUCK	1	stuck	e37a3ffba6a80f92	-	1	mainbody > initterminal > unmodelled external: input_line: buffer full (stderr message, uexit(1)) not modelled	cae7a953b5a3822f
-cat1	IDENTICAL	0	exit 0	5803227995ae2cee	texput.log=e3852dd2741af7aa	1		cae7a953b5a3822f
-chr2	IDENTICAL	0	exit 0	f5e836a1d82aed29	texput.log=b7e72c677215e65d	1		cae7a953b5a3822f
-chr3	STUCK	0	stuck	6b9c92dde1ff36cf	texput.log=0e15a194447a8468	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-clk-2038	STUCK	0	stuck	474e0b58fa7c10cb	texput.log=309e387c28815264	1	mainbody > initialize > conversion: gettimeofday tv_sec to integer	cae7a953b5a3822f
-clk-elapsed	IDENTICAL	0	exit 0	5c6920be847477e9	texput.log=dc3578d20cde2e35	3		cae7a953b5a3822f
-clk-exhaust	STUCK	97	stuck	e37a3ffba6a80f92	-	1	mainbody > maincontrol > issuemessage > scantoks > thetoks > scansomethinginternal > getmicrointerval > unmodelled external: gettimeofday: no clock reading supplied (the clock is an input of the run)	cae7a953b5a3822f
-clk-reset	IDENTICAL	0	exit 0	67a4739e15c81689	texput.log=af59c3d1f863c9fe	5		cae7a953b5a3822f
-clk-seed	IDENTICAL	0	exit 0	b78926c986f58743	texput.log=1ab387d70f23c370	1		cae7a953b5a3822f
-cnt1	IDENTICAL	1	exit 1	ec55b74a874198b9	texput.log=1d7c2dea25939c29	1		cae7a953b5a3822f
-cnt2	IDENTICAL	1	exit 1	3459b9d3224414ee	texput.log=9ecea31b5482272d	1		cae7a953b5a3822f
-cnt3	IDENTICAL	0	exit 0	bd569fa160c60b0d	texput.log=d60879d447a13ac0	1		cae7a953b5a3822f
-cnt4	STUCK	0	stuck	2cc97e2a9dfd114d	texput.log=a397b6677a514311	1	mainbody > maincontrol > prefixedcommand > doregistercommand > signed overflow	cae7a953b5a3822f
-cnt5	STUCK	0	stuck	2cc97e2a9dfd114d	texput.log=cc7af96864e9d0b8	1	mainbody > maincontrol > prefixedcommand > doregistercommand > xovern > signed overflow	cae7a953b5a3822f
-cnt6	IDENTICAL	1	exit 1	90756d88fcc9b398	texput.log=a92333bb93907700	1		cae7a953b5a3822f
-crlf	IDENTICAL	1	exit 1	ff67e3da1c84cf63	texput.log=10c5429081759a67	1		cae7a953b5a3822f
-csn	IDENTICAL	1	exit 1	5896f5ecb3320424	texput.log=328e4f8fc5150088	1		cae7a953b5a3822f
-deep20000	IDENTICAL	1	exit 1	858f7177697edec3	texput.log=a731b60877aba9d8	1		cae7a953b5a3822f
-deep28000	IDENTICAL	1	exit 1	1322e6022e04dc1c	texput.log=dd8003e957278cb3	1		cae7a953b5a3822f
-deep5000	IDENTICAL	1	exit 1	7fbfabd66cf820e9	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-def1	IDENTICAL	1	exit 1	7f7cf5ccc7579b39	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-dim1	IDENTICAL	0	exit 0	fe2bb90176bcc153	texput.log=ae64217841741603	1		cae7a953b5a3822f
-dim2	IDENTICAL	1	exit 1	a65afced6f1f7eb2	texput.log=40c432fe13f462f1	1		cae7a953b5a3822f
-dim3	IDENTICAL	0	exit 0	469bafddd6e24abb	texput.log=ec8408e3eed3e25a	1		cae7a953b5a3822f
-dim4	IDENTICAL	1	exit 1	3165b2123f188e7a	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-dump1	STUCK	0	stuck	ba87decbf0e67abe	texput.fmt=ff2cbbb8f1f6be30,texput.log=c42cbb5ff61d0f92	1	mainbody > finalcleanup > storefmtfile > read of an uninitialised value	cae7a953b5a3822f
-e100	IDENTICAL	1	exit 1	b783fb7c3bfeff3e	texput.log=04543f6fc666e19c	1		cae7a953b5a3822f
-e101	IDENTICAL	0	exit 0	7a3a776ebe2b326e	texput.log=afac41123584879e	1		cae7a953b5a3822f
-e102	IDENTICAL	1	exit 1	679adf5846e2a3b6	texput.log=5183d41a3a4f00d8	1		cae7a953b5a3822f
-e103	IDENTICAL	1	exit 1	5d3c970842d066a7	texput.log=108041c23e1362d7	1		cae7a953b5a3822f
-e104	IDENTICAL	0	exit 0	8472a0187393ee5c	texput.log=55c79c367a1a84c2	1		cae7a953b5a3822f
-e105	IDENTICAL	1	exit 1	0988d77259977ba8	texput.log=aeda5c7aad4fe6d8	1		cae7a953b5a3822f
-e106	IDENTICAL	1	exit 1	0c70486f8b84569b	texput.log=55f989adc5bb4542	1		cae7a953b5a3822f
-e107	IDENTICAL	1	exit 1	cb9b91ba3f5cf729	texput.log=99dac0c8d2173823	1		cae7a953b5a3822f
-e108	IDENTICAL	1	exit 1	3e9aa4741bd88283	texput.log=820cc0fcc32cd07a	1		cae7a953b5a3822f
-e109	IDENTICAL	0	exit 0	ce67aee1a335a0af	texput.log=2355558e89b5d488	1		cae7a953b5a3822f
-e110	IDENTICAL	0	exit 0	5f156ec33204b18f	texput.log=cf758a76d9f42117	1		cae7a953b5a3822f
-e111	IDENTICAL	1	exit 1	5d1a25b245127798	texput.log=dedc1555a446f49d	1		cae7a953b5a3822f
-e112	IDENTICAL	1	exit 1	0d71497d51c70bea	texput.log=70ec7ae41a137483	1		cae7a953b5a3822f
-e113	IDENTICAL	1	exit 1	2f54ad1e45f1ee6b	texput.log=60a1441996282a2a	1		cae7a953b5a3822f
-e114	IDENTICAL	0	exit 0	27d89bf820576284	texput.log=50e53f242c50e5f3	1		cae7a953b5a3822f
-e115	IDENTICAL	1	exit 1	594a99636dd51a51	texput.log=2c2836ca061c2e5f	1		cae7a953b5a3822f
-e116	IDENTICAL	1	exit 1	d67862b2ed9b4d8d	texput.log=ae1579526e2b1b43	1		cae7a953b5a3822f
-e117	IDENTICAL	0	exit 0	6eae270b17c80828	texput.log=07b8dd858342fd9b	1		cae7a953b5a3822f
-e118	IDENTICAL	1	exit 1	1a3612c6cb532d1f	texput.log=4ff686236bd67fd1	1		cae7a953b5a3822f
-e119	IDENTICAL	1	exit 1	a61b8921bf6c5a55	texput.log=9077db2d9ae6948a	1		cae7a953b5a3822f
-e120	IDENTICAL	1	exit 1	9bca1d6514011914	texput.log=f84d53433aa6da1b	1		cae7a953b5a3822f
-e121	IDENTICAL	0	exit 0	b06d37acb0ccfca4	texput.log=6a8af72cfb56f988	1		cae7a953b5a3822f
-e122	IDENTICAL	1	exit 1	63f084c321b63c7f	texput.log=c10421ba9f683d5b	1		cae7a953b5a3822f
-e123	IDENTICAL	0	exit 0	34502235a34eead4	texput.log=924222b904622a7a	1		cae7a953b5a3822f
-edef	IDENTICAL	1	exit 1	2dfce348b6f48c71	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-empty	IDENTICAL	1	exit 1	321fdbaa96c247bd	-	1		cae7a953b5a3822f
-env-fsd-empty	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: localtime(time(NULL)), the real clock and time zone (O-5)	cae7a953b5a3822f
-env-fsd-unset	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: localtime(time(NULL)), the real clock and time zone (O-5)	cae7a953b5a3822f
-env-fsd01	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: localtime(time(NULL)), the real clock and time zone (O-5)	cae7a953b5a3822f
-env-sde-2pow55	IDENTICAL	0	exit 0	8074ff44430bc9a3	texput.log=2e8f9862f416184f	1		cae7a953b5a3822f
-env-sde-bad	STUCK	1	stuck	e3b0c44298fc1c14	-	1	mainbody > initialize > unmodelled external: init_start_time: FATAL on an invalid SOURCE_DATE_EPOCH (not modelled)	cae7a953b5a3822f
-env-sde-empty	IDENTICAL	0	exit 0	17f3768110730756	texput.log=09c17bcb2d62ef13	1		cae7a953b5a3822f
-env-sde-huge	STUCK	1	stuck	e3b0c44298fc1c14	-	1	mainbody > initialize > unmodelled external: init_start_time: FATAL on an invalid SOURCE_DATE_EPOCH (not modelled)	cae7a953b5a3822f
-env-sde-neg	STUCK	0	stuck	fbb6808db30bbeaf	texput.log=765e9ed93948cfd4	1	mainbody > initialize > conversion: SOURCE_DATE_EPOCH to time_t (implementation-defined)	cae7a953b5a3822f
-env-sde-plus	IDENTICAL	0	exit 0	af0229a944137d52	texput.log=b93232ad70907a82	1		cae7a953b5a3822f
-env-sde-space	IDENTICAL	0	exit 0	af0229a944137d52	texput.log=b93232ad70907a82	1		cae7a953b5a3822f
-env-sde-unset	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: FORCE_SOURCE_DATE=1 without SOURCE_DATE_EPOCH: gmtime(time(NULL)), the real clock	cae7a953b5a3822f
-env-sde-zero	IDENTICAL	0	exit 0	17f3768110730756	texput.log=09c17bcb2d62ef13	1		cae7a953b5a3822f
-eol1	IDENTICAL	0	exit 0	2bb86b07c1db932b	texput.log=d396aa0b1221c64a	1		cae7a953b5a3822f
-err1	IDENTICAL	1	exit 1	5c88f493301ad4a6	texput.log=6fdc700b324ae57c	1		cae7a953b5a3822f
-err2	IDENTICAL	1	exit 1	d02d4f0a713ad686	texput.log=150cdd0c055fa3fb	1		cae7a953b5a3822f
-err3	IDENTICAL	1	exit 1	2ce789af35baae04	-	1		cae7a953b5a3822f
-err4	IDENTICAL	1	exit 1	38406081a7258503	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-etx1	IDENTICAL	1	exit 1	290c09b53ac79549	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-expr2	IDENTICAL	1	exit 1	c546f07db475e6ca	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-expr3	IDENTICAL	1	exit 1	4769a2a986b202b8	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-font1	STUCK	0	stuck	5551b1e789a6970a	texput.log=e4e2d58295093888	1	mainbody > maincontrol > prefixedcommand > newfont > readfontinfo > unmodelled external: bopenin	cae7a953b5a3822f
-g0	IDENTICAL	1	exit 1	680e3ea4542f47d3	texput.log=07a1079d5f84e159	1		cae7a953b5a3822f
-g1	STUCK	1	stuck	f4a99f4c99ea1601	texput.log=a98f2a76bb2ef8a9	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-g10	STUCK	1	stuck	16ce1ef8ecb75e2f	texput.log=1e1b7c338c349df2	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-g11	IDENTICAL	1	exit 1	07110d23f92e25b1	texput.log=b05ad3dca3b61a8d	1		cae7a953b5a3822f
-g12	IDENTICAL	1	exit 1	954aa39e285653ea	texput.log=15a0137cd9c4a37c	1		cae7a953b5a3822f
-g13	IDENTICAL	1	exit 1	6ae83b3e398bc538	texput.log=27a1ca7ddbc95293	1		cae7a953b5a3822f
-g14	STUCK	1	stuck	d7f99a3ab0dd1fbf	texput.log=60b56b2d70794eeb	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-g15	IDENTICAL	1	exit 1	bcfa30bdeea47cf9	texput.log=bfc8c1fafd22a655	1		cae7a953b5a3822f
-g2	IDENTICAL	1	exit 1	82b4ad3dc528a20f	texput.log=216627dc35cec1d1	1		cae7a953b5a3822f
-g3	IDENTICAL	1	exit 1	1fa4412a39123517	texput.log=e44fcc21aee37f79	1		cae7a953b5a3822f
-g4	STUCK	1	stuck	4b1efa4b9ba990a5	texput.log=aa973a0dbd61e941	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-g5	STUCK	1	stuck	f4b3bd41b5b6987d	texput.log=93796e1b62ae2622	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-g6	IDENTICAL	1	exit 1	f498e21f4d6c841e	texput.log=129c20944e3e1515	1		cae7a953b5a3822f
-g7	IDENTICAL	0	exit 0	a9be49c47442d6e3	texput.log=67f077313e327fbf	1		cae7a953b5a3822f
-g8	STUCK	1	stuck	4fbf314945d537dc	texput.log=04538600cd624159	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-g9	IDENTICAL	1	exit 1	7643e0940b5b1df2	texput.log=e6bf0cd352323bc8	1		cae7a953b5a3822f
-grp1	IDENTICAL	1	exit 1	662c27fcd099ce79	texput.log=c8845ecc870f58c6	1		cae7a953b5a3822f
-grp2	IDENTICAL	1	exit 1	8d1170dcada726eb	texput.log=0803c6fdc301aec5	1		cae7a953b5a3822f
-hi1	IDENTICAL	1	exit 1	93dbbc8bfc2513f0	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-hsh	IDENTICAL	0	exit 0	ae9c1c4c4a772de3	texput.log=c9f58842b79c7ab3	1		cae7a953b5a3822f
-ifs1	IDENTICAL	1	exit 1	4b25e03f440c292f	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-inp1	STUCK	1	stuck	f4a394249a3369f0	texput.log=d64c9baf33e4424f	1	mainbody > maincontrol > getxtoken > expand > startinput > unmodelled external: kpseinnameok	cae7a953b5a3822f
-inter	STUCK	1	stuck	6e880aef5e6e9f79	texput.dvi=9794cd4982c2f79a,texput.log=21698fa9e8716624	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-inter2	IDENTICAL	1	exit 1	5486f2b7ac3bf1ac	texput.log=770a4bda8f4d9dba	1		cae7a953b5a3822f
-inter3	STUCK	1	stuck	0c7914f71033d962	texput.log=9ecfbb0e3f987560	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-kpse-atoi-prefix	IDENTICAL	1	exit 1	e960f9ce7b1329fa	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-kpse-atoi-space	IDENTICAL	1	exit 1	b0e6e3af02dcb0a5	-	0		cae7a953b5a3822f
-kpse-huge	STUCK	1	stuck	e960f9ce7b1329fa	texput.log=d64c9baf33e4424f	1	mainbody > conversion: setupboundvariable: atoi of a value outside int	cae7a953b5a3822f
-kpse-neg	STUCK	1	stuck	e960f9ce7b1329fa	texput.log=d64c9baf33e4424f	1	mainbody > unmodelled external: setupboundvariable: bad value warning not modelled	cae7a953b5a3822f
-last1	IDENTICAL	1	exit 1	88ef06930fe06755	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-lead1	STUCK	0	stuck	1b75d29e58d43549	texput.log=c77a49835ba2ac89	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-long1	IDENTICAL	0	exit 0	1484f8a7d5af68b4	texput.log=44860ede5556b36e	1		cae7a953b5a3822f
-lost1	STUCK	1	stuck	2a18fdd9c34c0022	texput.log=7914b3fd66b04fab	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-mth1	STUCK	1	stuck	6b5ef564dd40c5e6	texput.dvi=9794cd4982c2f79a,texput.log=ea0c358296f5bfc1	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	cae7a953b5a3822f
-nst1	IDENTICAL	1	exit 1	9c5e8aeda5318391	texput.log=dfd27370d31f1e4f	1		cae7a953b5a3822f
-num2	IDENTICAL	1	exit 1	a283b477286ba6e4	texput.log=686ddbd1514bd180	1		cae7a953b5a3822f
-nxpy	IDENTICAL	1	exit 1	e3daa8dc04f689b0	texput.log=248e898d83ef0e04	1		cae7a953b5a3822f
-outp	IDENTICAL	1	exit 1	8dc9690fbc2ce24c	texput.log=1f2beb3a0602e185	1		cae7a953b5a3822f
-par1	STUCK	1	stuck	252013159e5be8d7	texput.dvi=eb53059b9fa788c7,texput.log=09cc126d806176f8	1	mainbody > maincontrol > endgraf > linebreak > postlinebreak > hpack > showbox > shownodelist > unmodelled external: fabs	cae7a953b5a3822f
-part1	IDENTICAL	1	exit 1	15147e069701830d	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-pat1	STUCK	0	stuck	2a6bfd0843872f83	texput.dvi=eb53059b9fa788c7,texput.log=3bbfa77d4da951c2	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	cae7a953b5a3822f
-pdf1	STUCK	0	stuck	85ac3ade7fdd325c	texput.log=f7d5b814aab5161f	1	mainbody > maincontrol > issuemessage > scantoks > expand > convtoks > unmodelled external: escapestring	cae7a953b5a3822f
-pnlt	STUCK	0	stuck	5ebe80ba1bf98849	texput.dvi=4aa12479b6b4f07c,texput.log=31e4e9ccd78c4d3f	1	mainbody > maincontrol > endgraf > linebreak > postlinebreak > hpack > showbox > shownodelist > unmodelled external: fabs	cae7a953b5a3822f
-prim1	IDENTICAL	1	exit 1	ff4ba20fd36b9ffe	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-prim2	IDENTICAL	1	exit 1	e18ec798a7c32542	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-prim3	IDENTICAL	1	exit 1	a3f298fe77900621	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-read1	IDENTICAL	1	exit 1	66246d1b4053f504	texput.log=5a9474872e67abd6	1		cae7a953b5a3822f
-read2	STUCK	1	stuck	202436db814134e4	texput.log=b5a7315572d92ba3	1	mainbody > maincontrol > openorclosein > unmodelled external: kpseinnameok	cae7a953b5a3822f
-rnd1	IDENTICAL	0	exit 0	f5b4ce47b805e785	texput.log=59755b46c4acfd6d	2		cae7a953b5a3822f
-rnd2	IDENTICAL	0	exit 0	4d2203bdec884937	texput.log=d1d4451e384d41f7	1		cae7a953b5a3822f
-rnd3	IDENTICAL	0	exit 0	80ed43dc1b26a379	texput.log=cccfbb6c71ac5ce7	1		cae7a953b5a3822f
-rnd4	IDENTICAL	0	exit 0	ac454e0e0937d43f	texput.log=0095018d39051e87	1		cae7a953b5a3822f
-rnd5	IDENTICAL	0	exit 0	29fa3f7c89e16bb7	texput.log=492c61a0abfb68f6	1		cae7a953b5a3822f
-rnd6	IDENTICAL	0	exit 0	6c0e95760fc796c1	texput.log=d3aa266f54912179	2		cae7a953b5a3822f
-rom1	IDENTICAL	0	exit 0	8bb3da213cb0ae45	texput.log=a16e6bb49d2627f1	1		cae7a953b5a3822f
-romn	LIMIT	0	model resource limit	989dd953d782471e	texput.log=83a340ae82535e87	1	model resource limit: memory cap	cae7a953b5a3822f
-runaw2	IDENTICAL	1	exit 1	3e3c02f5d045a429	texput.log=851cae7c32664a69	1		cae7a953b5a3822f
-runaway	IDENTICAL	1	exit 1	c2213cfe061b5001	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-save1	IDENTICAL	1	exit 1	843ed4d55e89a41b	texput.log=737405eef01cc677	1		cae7a953b5a3822f
-scr1	IDENTICAL	1	exit 1	ee51aae90279cfe8	texput.log=100ef7d3d5d658e5	1		cae7a953b5a3822f
-sct1	IDENTICAL	1	exit 1	489ed42ee7b7da47	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-ship1	STUCK	0	stuck	1369cd3f17a8f5bd	texput.dvi=4d8a0b4bc57c32f8,texput.log=5ec7247181e7b93f	1	mainbody > maincontrol > handlerightbrace > package > boxend > shipout > dvishipout > unmodelled external: synctexsheet	cae7a953b5a3822f
-show1	IDENTICAL	1	exit 1	083801127103fa8b	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-shw2	STUCK	1	stuck	b484b696f348c84d	texput.log=2d1fa845b4338aa8	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-skp1	IDENTICAL	1	exit 1	7d21807db46c7536	texput.log=2ae72aa2e10eb907	1		cae7a953b5a3822f
-str1	IDENTICAL	0	exit 0	c9a359e374ced687	texput.log=ce95d7af18bb313b	1		cae7a953b5a3822f
-t0	IDENTICAL	1	exit 1	2ed94b5af7fe1021	texput.log=15dd324659248ec0	1		cae7a953b5a3822f
-t200	IDENTICAL	1	exit 1	e8c4a9350cca2be3	texput.log=d87375cf72f4542b	1		cae7a953b5a3822f
-t201	IDENTICAL	1	exit 1	1b096dafd7a183bd	texput.log=e1b4678ad9db8450	1		cae7a953b5a3822f
-t202	IDENTICAL	0	exit 0	39c11be4d1eca96c	texput.log=3e5f2bab81b517e9	1		cae7a953b5a3822f
-t203	IDENTICAL	0	exit 0	a86fc56ca6ae8a97	texput.log=48505658bcb75fc0	1		cae7a953b5a3822f
-t204	IDENTICAL	0	exit 0	45c3829071e09a1c	texput.log=eb5c297c06f0e2e4	1		cae7a953b5a3822f
-t205	STUCK	137	stuck	e37a3ffba6a80f92	qemu_pdftex_20261001-185233_1.core=cf601d21a5136fda	1	mainbody > maincontrol > endgraf > linebreak > finiteshrink > printnl > println > type: write to a non-file	cae7a953b5a3822f
-t206	IDENTICAL	0	exit 0	a3ac0ccf1dba19db	texput.log=a85ab455989c4cbd	1		cae7a953b5a3822f
-t207	IDENTICAL	0	exit 0	57138af8090e63b3	texput.log=01e40ab67f5dfe52	1		cae7a953b5a3822f
-t208	STUCK	137	stuck	e37a3ffba6a80f92	qemu_pdftex_20261001-192318_1.core=b5480bb07c6cf509	1	mainbody > maincontrol > endgraf > linebreak > finiteshrink > printnl > println > type: write to a non-file	cae7a953b5a3822f
-t209	IDENTICAL	0	exit 0	7bc0ac99e32d824a	texput.log=4cc8dc821ac60966	1		cae7a953b5a3822f
-t210	IDENTICAL	0	exit 0	e57d96f9edbdd3a5	texput.log=d23ad8a7118ee906	1		cae7a953b5a3822f
-t211	IDENTICAL	1	exit 1	ee88c0dd3fd19a36	texput.log=09b5f5405d78cb73	1		cae7a953b5a3822f
-tim1	IDENTICAL	1	exit 1	51660b91453edc51	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-trc1	IDENTICAL	1	exit 1	601510aa40b1430a	texput.log=d64c9baf33e4424f	1		cae7a953b5a3822f
-ucl	IDENTICAL	0	exit 0	ecb50599443fdd21	texput.log=4fd2700876de4d6c	1		cae7a953b5a3822f
-vspl	IDENTICAL	1	exit 1	a01922da08300cac	texput.log=5efa4a6020eed865	1		cae7a953b5a3822f
-wr1	STUCK	0	stuck	252db8e98195de00	texput.dvi=4d8a0b4bc57c32f8,texput.log=c8f4c05abbc6e727	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	cae7a953b5a3822f
-xetx1	IDENTICAL	1	exit 1	25010eae3dcc9ba4	texput.log=71d5766f6168b447	1		cae7a953b5a3822f
-xexpr2	IDENTICAL	1	exit 1	f2daef8f976e896a	texput.log=f3e55ceea5387470	1		cae7a953b5a3822f
-xexpr3	IDENTICAL	1	exit 1	706fcd30cfb33860	texput.log=244eb96dd89bd6a0	1		cae7a953b5a3822f
-xifs1	IDENTICAL	0	exit 0	2ccfe69ccc9c091c	texput.log=213d1ee922e30283	1		cae7a953b5a3822f
-xlr	IDENTICAL	1	exit 1	e717b3e0a1d99203	texput.log=7e71f7c55413403f	1		cae7a953b5a3822f
-xnx	IDENTICAL	1	exit 1	f7e7f8ebbbd9c5cc	texput.log=16fc7a96757128f3	1		cae7a953b5a3822f
-xovn	STUCK	0	stuck	a234f99be097adbd	texput.log=bcf0924ae34ec9cd	1	mainbody > maincontrol > prefixedcommand > doregistercommand > xovern > signed overflow	cae7a953b5a3822f
-xpart1	IDENTICAL	1	exit 1	c544dc857269f528	texput.log=71d5766f6168b447	1		cae7a953b5a3822f
-xprim2	IDENTICAL	1	exit 1	aac65282bab0b18b	texput.log=71d5766f6168b447	1		cae7a953b5a3822f
-xprim3	IDENTICAL	0	exit 0	30cd95bb9cc8f5ba	texput.log=be7c1f74f6f4610f	1		cae7a953b5a3822f
-xrl	IDENTICAL	1	exit 1	01a745a475ce1680	texput.log=d41a12d0bb8d11a3	1		cae7a953b5a3822f
-xsav	IDENTICAL	0	exit 0	9df8474c885ec63b	texput.log=0ddd0ca236368c8a	1		cae7a953b5a3822f
-xsct1	IDENTICAL	1	exit 1	ba2c4091919f47fa	texput.log=71d5766f6168b447	1		cae7a953b5a3822f
-xshw2	IDENTICAL	1	exit 1	ac85600cbf95b829	texput.log=71d5766f6168b447	1		cae7a953b5a3822f
-xtrc1	STUCK	0	stuck	8d41b856b87f1bee	texput.dvi=9794cd4982c2f79a,texput.log=b93bc10897fa4931	1	mainbody > maincontrol > getautokern > unmodelled external: pdfassert	cae7a953b5a3822f
-xxovn	STUCK	0	stuck	bda5eaed54f88bf7	texput.log=1f3184cf662f1d1e	1	mainbody > maincontrol > prefixedcommand > doregistercommand > xovern > signed overflow	cae7a953b5a3822f
+alig	IDENTICAL	0	exit 0	5031a02dd224c87b	texput.log=908a33db28eff130	1		735450994e4bf5eb
+bat1	IDENTICAL	1	exit 1	dce6a4ed7a09f3a6	texput.log=f75ac3c77c4c27b0	1		735450994e4bf5eb
+box1	IDENTICAL	1	exit 1	f3716f724e859f0f	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+box2	STUCK	1	stuck	35071fc64f1dfd4a	texput.log=d296817d547029be	1	mainbody > maincontrol > showwhatever > showbox > shownodelist > unmodelled external: fabs	735450994e4bf5eb
+buf1	IDENTICAL	0	exit 0	c048d19eecb9301b	texput.log=0187f89d32092e3f	1		735450994e4bf5eb
+buf2	STUCK	1	stuck	e37a3ffba6a80f92	-	1	mainbody > initterminal > unmodelled external: input_line: buffer full (stderr message, uexit(1)) not modelled	735450994e4bf5eb
+cat1	IDENTICAL	0	exit 0	5803227995ae2cee	texput.log=e3852dd2741af7aa	1		735450994e4bf5eb
+chr2	IDENTICAL	0	exit 0	f5e836a1d82aed29	texput.log=b7e72c677215e65d	1		735450994e4bf5eb
+chr3	IDENTICAL	0	exit 0	6b9c92dde1ff36cf	texput.log=0e15a194447a8468	1		735450994e4bf5eb
+clk-2038	STUCK	0	stuck	474e0b58fa7c10cb	texput.log=309e387c28815264	1	mainbody > initialize > conversion: gettimeofday tv_sec to integer	735450994e4bf5eb
+clk-elapsed	IDENTICAL	0	exit 0	5c6920be847477e9	texput.log=dc3578d20cde2e35	3		735450994e4bf5eb
+clk-exhaust	STUCK	97	stuck	e37a3ffba6a80f92	-	1	mainbody > maincontrol > issuemessage > scantoks > thetoks > scansomethinginternal > getmicrointerval > unmodelled external: gettimeofday: no clock reading supplied (the clock is an input of the run)	735450994e4bf5eb
+clk-reset	IDENTICAL	0	exit 0	67a4739e15c81689	texput.log=af59c3d1f863c9fe	5		735450994e4bf5eb
+clk-seed	IDENTICAL	0	exit 0	b78926c986f58743	texput.log=1ab387d70f23c370	1		735450994e4bf5eb
+cm-graded	IDENTICAL	0	exit 0	3767c776bb71815a	doc.log=26d48f97ab28f7bf	1		735450994e4bf5eb
+cm-graded-missing	IDENTICAL	1	exit 1	e0eb40f98fcbd1c9	texput.log=d7978fa3f712959b	1		735450994e4bf5eb
+cm-ini-amp	IDENTICAL	0	exit 0	093acf16546d65e2	foo.log=b7e4f909b6438f5c	2		735450994e4bf5eb
+cm-ini-batch	IDENTICAL	1	exit 1	e37a3ffba6a80f92	texput.log=c9405ba131decfff	1		735450994e4bf5eb
+cm-ini-draft	IDENTICAL	1	exit 1	5284978c8219ff2b	texput.log=0cb7f354c9e5cbaa	1		735450994e4bf5eb
+cm-ini-etex	IDENTICAL	1	exit 1	26e1c88a4ac0d98d	texput.log=67f6b77769438a22	1		735450994e4bf5eb
+cm-ini-file	IDENTICAL	1	exit 1	ef2b072f78a7813f	foo.log=7c5c2aa74c904db4	1		735450994e4bf5eb
+cm-ini-fle	IDENTICAL	1	exit 1	8fd720b61597c84c	foo.log=e0146a1c30c22425	1		735450994e4bf5eb
+cm-ini-halt	IDENTICAL	1	exit 1	c1908db008fbe689	-	1		735450994e4bf5eb
+cm-ini-jobname	IDENTICAL	1	exit 1	50674fada6d6627a	foo.log=1340317474e09ee4	1		735450994e4bf5eb
+cm-ini-progname	IDENTICAL	1	exit 1	3e6261b09da77184	foo.log=b77d69ba90070e0a	1		735450994e4bf5eb
+cm-percent-amp	STUCK	1	stuck	afe94d53931aea35	foo.log=acb55d67517468a2	2	mainbody > unmodelled external: C main: a %& first line (parse_first_line)	735450994e4bf5eb
+cm-recorder	STUCK	1	stuck	2ed94b5af7fe1021	texput.fls=f302c8bc73497df0,texput.log=37bb9b080d037b95	1	mainbody > unmodelled external: C main: a command-line option outside the modelled allow-list	735450994e4bf5eb
+cnt1	IDENTICAL	1	exit 1	ec55b74a874198b9	texput.log=1d7c2dea25939c29	1		735450994e4bf5eb
+cnt2	IDENTICAL	1	exit 1	3459b9d3224414ee	texput.log=9ecea31b5482272d	1		735450994e4bf5eb
+cnt3	IDENTICAL	0	exit 0	bd569fa160c60b0d	texput.log=d60879d447a13ac0	1		735450994e4bf5eb
+cnt4	STUCK	0	stuck	2cc97e2a9dfd114d	texput.log=a397b6677a514311	1	mainbody > maincontrol > prefixedcommand > doregistercommand > signed overflow	735450994e4bf5eb
+cnt5	STUCK	0	stuck	2cc97e2a9dfd114d	texput.log=cc7af96864e9d0b8	1	mainbody > maincontrol > prefixedcommand > doregistercommand > xovern > signed overflow	735450994e4bf5eb
+cnt6	IDENTICAL	1	exit 1	90756d88fcc9b398	texput.log=a92333bb93907700	1		735450994e4bf5eb
+crlf	IDENTICAL	1	exit 1	ff67e3da1c84cf63	texput.log=10c5429081759a67	1		735450994e4bf5eb
+csn	IDENTICAL	1	exit 1	5896f5ecb3320424	texput.log=328e4f8fc5150088	1		735450994e4bf5eb
+deep20000	IDENTICAL	1	exit 1	858f7177697edec3	texput.log=a731b60877aba9d8	1		735450994e4bf5eb
+deep28000	IDENTICAL	1	exit 1	1322e6022e04dc1c	texput.log=dd8003e957278cb3	1		735450994e4bf5eb
+deep5000	IDENTICAL	1	exit 1	7fbfabd66cf820e9	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+def1	IDENTICAL	1	exit 1	7f7cf5ccc7579b39	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+dim1	IDENTICAL	0	exit 0	fe2bb90176bcc153	texput.log=ae64217841741603	1		735450994e4bf5eb
+dim2	IDENTICAL	1	exit 1	a65afced6f1f7eb2	texput.log=40c432fe13f462f1	1		735450994e4bf5eb
+dim3	IDENTICAL	0	exit 0	469bafddd6e24abb	texput.log=ec8408e3eed3e25a	1		735450994e4bf5eb
+dim4	IDENTICAL	1	exit 1	3165b2123f188e7a	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+dump1	STUCK	0	stuck	ba87decbf0e67abe	texput.fmt=ff2cbbb8f1f6be30,texput.log=c42cbb5ff61d0f92	1	mainbody > finalcleanup > storefmtfile > read of an uninitialised value	735450994e4bf5eb
+e100	IDENTICAL	1	exit 1	b783fb7c3bfeff3e	texput.log=04543f6fc666e19c	1		735450994e4bf5eb
+e101	IDENTICAL	0	exit 0	7a3a776ebe2b326e	texput.log=afac41123584879e	1		735450994e4bf5eb
+e102	IDENTICAL	1	exit 1	679adf5846e2a3b6	texput.log=5183d41a3a4f00d8	1		735450994e4bf5eb
+e103	IDENTICAL	1	exit 1	5d3c970842d066a7	texput.log=108041c23e1362d7	1		735450994e4bf5eb
+e104	IDENTICAL	0	exit 0	8472a0187393ee5c	texput.log=55c79c367a1a84c2	1		735450994e4bf5eb
+e105	IDENTICAL	1	exit 1	0988d77259977ba8	texput.log=aeda5c7aad4fe6d8	1		735450994e4bf5eb
+e106	IDENTICAL	1	exit 1	0c70486f8b84569b	texput.log=55f989adc5bb4542	1		735450994e4bf5eb
+e107	IDENTICAL	1	exit 1	cb9b91ba3f5cf729	texput.log=99dac0c8d2173823	1		735450994e4bf5eb
+e108	IDENTICAL	1	exit 1	3e9aa4741bd88283	texput.log=820cc0fcc32cd07a	1		735450994e4bf5eb
+e109	IDENTICAL	0	exit 0	ce67aee1a335a0af	texput.log=2355558e89b5d488	1		735450994e4bf5eb
+e110	IDENTICAL	0	exit 0	5f156ec33204b18f	texput.log=cf758a76d9f42117	1		735450994e4bf5eb
+e111	IDENTICAL	1	exit 1	5d1a25b245127798	texput.log=dedc1555a446f49d	1		735450994e4bf5eb
+e112	IDENTICAL	1	exit 1	0d71497d51c70bea	texput.log=70ec7ae41a137483	1		735450994e4bf5eb
+e113	IDENTICAL	1	exit 1	2f54ad1e45f1ee6b	texput.log=60a1441996282a2a	1		735450994e4bf5eb
+e114	IDENTICAL	0	exit 0	27d89bf820576284	texput.log=50e53f242c50e5f3	1		735450994e4bf5eb
+e115	IDENTICAL	1	exit 1	594a99636dd51a51	texput.log=2c2836ca061c2e5f	1		735450994e4bf5eb
+e116	IDENTICAL	1	exit 1	d67862b2ed9b4d8d	texput.log=ae1579526e2b1b43	1		735450994e4bf5eb
+e117	IDENTICAL	0	exit 0	6eae270b17c80828	texput.log=07b8dd858342fd9b	1		735450994e4bf5eb
+e118	IDENTICAL	1	exit 1	1a3612c6cb532d1f	texput.log=4ff686236bd67fd1	1		735450994e4bf5eb
+e119	IDENTICAL	1	exit 1	a61b8921bf6c5a55	texput.log=9077db2d9ae6948a	1		735450994e4bf5eb
+e120	IDENTICAL	1	exit 1	9bca1d6514011914	texput.log=f84d53433aa6da1b	1		735450994e4bf5eb
+e121	IDENTICAL	0	exit 0	b06d37acb0ccfca4	texput.log=6a8af72cfb56f988	1		735450994e4bf5eb
+e122	IDENTICAL	1	exit 1	63f084c321b63c7f	texput.log=c10421ba9f683d5b	1		735450994e4bf5eb
+e123	IDENTICAL	0	exit 0	34502235a34eead4	texput.log=924222b904622a7a	1		735450994e4bf5eb
+edef	IDENTICAL	1	exit 1	2dfce348b6f48c71	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+empty	IDENTICAL	1	exit 1	321fdbaa96c247bd	-	1		735450994e4bf5eb
+env-fsd-empty	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: localtime(time(NULL)), the real clock and time zone (O-5)	735450994e4bf5eb
+env-fsd-unset	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: localtime(time(NULL)), the real clock and time zone (O-5)	735450994e4bf5eb
+env-fsd01	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: localtime(time(NULL)), the real clock and time zone (O-5)	735450994e4bf5eb
+env-sde-2pow55	IDENTICAL	0	exit 0	8074ff44430bc9a3	texput.log=2e8f9862f416184f	1		735450994e4bf5eb
+env-sde-bad	STUCK	1	stuck	e3b0c44298fc1c14	-	1	mainbody > initialize > unmodelled external: init_start_time: FATAL on an invalid SOURCE_DATE_EPOCH (not modelled)	735450994e4bf5eb
+env-sde-empty	IDENTICAL	0	exit 0	17f3768110730756	texput.log=09c17bcb2d62ef13	1		735450994e4bf5eb
+env-sde-huge	STUCK	1	stuck	e3b0c44298fc1c14	-	1	mainbody > initialize > unmodelled external: init_start_time: FATAL on an invalid SOURCE_DATE_EPOCH (not modelled)	735450994e4bf5eb
+env-sde-neg	STUCK	0	stuck	fbb6808db30bbeaf	texput.log=765e9ed93948cfd4	1	mainbody > initialize > conversion: SOURCE_DATE_EPOCH to time_t (implementation-defined)	735450994e4bf5eb
+env-sde-plus	IDENTICAL	0	exit 0	af0229a944137d52	texput.log=b93232ad70907a82	1		735450994e4bf5eb
+env-sde-space	IDENTICAL	0	exit 0	af0229a944137d52	texput.log=b93232ad70907a82	1		735450994e4bf5eb
+env-sde-unset	STUCK	0	stuck	7ec5dadec3a4a278	texput.log=a600a7901689b5e7	1	mainbody > fixdateandtime > unmodelled external: dateandtime: FORCE_SOURCE_DATE=1 without SOURCE_DATE_EPOCH: gmtime(time(NULL)), the real clock	735450994e4bf5eb
+env-sde-zero	IDENTICAL	0	exit 0	17f3768110730756	texput.log=09c17bcb2d62ef13	1		735450994e4bf5eb
+eol1	IDENTICAL	0	exit 0	2bb86b07c1db932b	texput.log=d396aa0b1221c64a	1		735450994e4bf5eb
+err1	IDENTICAL	1	exit 1	5c88f493301ad4a6	texput.log=6fdc700b324ae57c	1		735450994e4bf5eb
+err2	IDENTICAL	1	exit 1	d02d4f0a713ad686	texput.log=150cdd0c055fa3fb	1		735450994e4bf5eb
+err3	IDENTICAL	1	exit 1	2ce789af35baae04	-	1		735450994e4bf5eb
+err4	IDENTICAL	1	exit 1	38406081a7258503	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+etx1	IDENTICAL	1	exit 1	290c09b53ac79549	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+expr2	IDENTICAL	1	exit 1	c546f07db475e6ca	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+expr3	IDENTICAL	1	exit 1	4769a2a986b202b8	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+font1	IDENTICAL	0	exit 0	5551b1e789a6970a	texput.log=e4e2d58295093888	1		735450994e4bf5eb
+g0	IDENTICAL	1	exit 1	680e3ea4542f47d3	texput.log=07a1079d5f84e159	1		735450994e4bf5eb
+g1	IDENTICAL	1	exit 1	f4a99f4c99ea1601	texput.log=a98f2a76bb2ef8a9	1		735450994e4bf5eb
+g10	IDENTICAL	1	exit 1	16ce1ef8ecb75e2f	texput.log=1e1b7c338c349df2	1		735450994e4bf5eb
+g11	IDENTICAL	1	exit 1	07110d23f92e25b1	texput.log=b05ad3dca3b61a8d	1		735450994e4bf5eb
+g12	IDENTICAL	1	exit 1	954aa39e285653ea	texput.log=15a0137cd9c4a37c	1		735450994e4bf5eb
+g13	IDENTICAL	1	exit 1	6ae83b3e398bc538	texput.log=27a1ca7ddbc95293	1		735450994e4bf5eb
+g14	IDENTICAL	1	exit 1	d7f99a3ab0dd1fbf	texput.log=60b56b2d70794eeb	1		735450994e4bf5eb
+g15	IDENTICAL	1	exit 1	bcfa30bdeea47cf9	texput.log=bfc8c1fafd22a655	1		735450994e4bf5eb
+g2	IDENTICAL	1	exit 1	82b4ad3dc528a20f	texput.log=216627dc35cec1d1	1		735450994e4bf5eb
+g3	IDENTICAL	1	exit 1	1fa4412a39123517	texput.log=e44fcc21aee37f79	1		735450994e4bf5eb
+g4	IDENTICAL	1	exit 1	4b1efa4b9ba990a5	texput.log=aa973a0dbd61e941	1		735450994e4bf5eb
+g5	IDENTICAL	1	exit 1	f4b3bd41b5b6987d	texput.log=93796e1b62ae2622	1		735450994e4bf5eb
+g6	IDENTICAL	1	exit 1	f498e21f4d6c841e	texput.log=129c20944e3e1515	1		735450994e4bf5eb
+g7	IDENTICAL	0	exit 0	a9be49c47442d6e3	texput.log=67f077313e327fbf	1		735450994e4bf5eb
+g8	IDENTICAL	1	exit 1	4fbf314945d537dc	texput.log=04538600cd624159	1		735450994e4bf5eb
+g9	IDENTICAL	1	exit 1	7643e0940b5b1df2	texput.log=e6bf0cd352323bc8	1		735450994e4bf5eb
+grp1	IDENTICAL	1	exit 1	662c27fcd099ce79	texput.log=c8845ecc870f58c6	1		735450994e4bf5eb
+grp2	IDENTICAL	1	exit 1	8d1170dcada726eb	texput.log=0803c6fdc301aec5	1		735450994e4bf5eb
+hi1	IDENTICAL	1	exit 1	93dbbc8bfc2513f0	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+hsh	IDENTICAL	0	exit 0	ae9c1c4c4a772de3	texput.log=c9f58842b79c7ab3	1		735450994e4bf5eb
+ifs1	IDENTICAL	1	exit 1	4b25e03f440c292f	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+inp1	IDENTICAL	1	exit 1	f4a394249a3369f0	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+inter	STUCK	1	stuck	6e880aef5e6e9f79	texput.dvi=9794cd4982c2f79a,texput.log=21698fa9e8716624	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	735450994e4bf5eb
+inter2	IDENTICAL	1	exit 1	5486f2b7ac3bf1ac	texput.log=770a4bda8f4d9dba	1		735450994e4bf5eb
+inter3	IDENTICAL	1	exit 1	0c7914f71033d962	texput.log=9ecfbb0e3f987560	1		735450994e4bf5eb
+kp-abs	IDENTICAL	1	exit 1	c0537fc08273edf1	foo.log=fd2714c4fecc4057	1		735450994e4bf5eb
+kp-abs-missing	IDENTICAL	1	exit 1	d29e529b0a9656a2	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+kp-casefold	IDENTICAL	1	exit 1	3e6261b09da77184	foo.log=4f88cec15dbcfa04	1		735450994e4bf5eb
+kp-dollar	STUCK	1	stuck	da5716fbd0031ced	texput.log=d64c9baf33e4424f	1	mainbody > maincontrol > getxtoken > expand > startinput > unmodelled external: a file name with '$' (kpathsea variable expansion: not modelled)	735450994e4bf5eb
+kp-dotdot	STUCK	1	stuck	6a7f3c6b364f2fec	foo.log=39ab2ae8b0baf55c	1	mainbody > maincontrol > getxtoken > expand > startinput > unmodelled external: a path with a '..' component (symbolic links: not modelled)	735450994e4bf5eb
+kp-input	IDENTICAL	1	exit 1	3e6261b09da77184	foo.log=b77d69ba90070e0a	1		735450994e4bf5eb
+kp-input-bare	IDENTICAL	1	exit 1	45bad4154f191392	bar.log=745274009a64b29c	1		735450994e4bf5eb
+kp-input-crlf	IDENTICAL	1	exit 1	7384ef0e3457fee8	foo.log=ea76de4e7e83bdc9	1		735450994e4bf5eb
+kp-input-ext	IDENTICAL	1	exit 1	3e6261b09da77184	foo.log=ebf862d3a5882915	1		735450994e4bf5eb
+kp-input-missing	IDENTICAL	1	exit 1	b9a5c6d826fd495e	foo.log=2fcd1f47b1f57fec	1		735450994e4bf5eb
+kp-input-missing-eof	IDENTICAL	1	exit 1	9e615e691ddb870f	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+kp-input-nested	IDENTICAL	1	exit 1	6ff0f7c311f7cdea	foo.log=762173403604dde0	1		735450994e4bf5eb
+kp-input-sty-missing	IDENTICAL	1	exit 1	3c66b5aaf598111f	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+kp-input-written	STUCK	1	stuck	6726ca40d2f4eeeb	w.log=710fe1957772d4d0,w.tex=3345a075a22fb3bb	1	mainbody > maincontrol > getxtoken > expand > startinput > unmodelled external: reading a file this run wrote (not modelled)	735450994e4bf5eb
+kp-openin	IDENTICAL	1	exit 1	0393efe36d62f7b0	texput.log=6158330d5601971d	1		735450994e4bf5eb
+kp-openin-ext	IDENTICAL	1	exit 1	aeeb67da4a67f4b9	texput.log=6fce1fb9d2d0abd0	1		735450994e4bf5eb
+kp-openin-missing	IDENTICAL	1	exit 1	58388fa513e1a8b6	texput.log=9e033939c0c81230	1		735450994e4bf5eb
+kp-openout	IDENTICAL	1	exit 1	cff158e636eb105b	out.txt=5891b5b522d5df08,texput.log=84898b8570d58233	1		735450994e4bf5eb
+kp-openout-abs	IDENTICAL	1	exit 1	6452d55b90fde435	texput.log=43f29097aefc0352,y.txt=5891b5b522d5df08	1		735450994e4bf5eb
+kp-openout-dot	IDENTICAL	1	exit 1	f578bd687d5e0b67	texput.log=62b0d710d6f279b1,z.tex=5891b5b522d5df08	1		735450994e4bf5eb
+kp-rel	IDENTICAL	1	exit 1	3e6261b09da77184	foo.log=d8ff3e8fe2c15037	1		735450994e4bf5eb
+kp-tilde	STUCK	1	stuck	8f1dc021e3581aeb	texput.log=d64c9baf33e4424f	1	mainbody > maincontrol > getxtoken > expand > startinput > unmodelled external: a file name with a leading '~' (tilde expansion: not modelled)	735450994e4bf5eb
+kp-tree-openin	IDENTICAL	1	exit 1	abf8a50505117475	texput.log=3456bacf58bc4087	1		735450994e4bf5eb
+kpse-atoi-prefix	IDENTICAL	1	exit 1	e960f9ce7b1329fa	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+kpse-atoi-space	IDENTICAL	1	exit 1	b0e6e3af02dcb0a5	-	0		735450994e4bf5eb
+kpse-huge	STUCK	1	stuck	e960f9ce7b1329fa	texput.log=d64c9baf33e4424f	1	mainbody > conversion: setupboundvariable: atoi of a value outside int	735450994e4bf5eb
+kpse-neg	STUCK	1	stuck	e960f9ce7b1329fa	texput.log=d64c9baf33e4424f	1	mainbody > unmodelled external: setupboundvariable: bad value warning not modelled	735450994e4bf5eb
+last1	IDENTICAL	1	exit 1	88ef06930fe06755	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+lead1	STUCK	0	stuck	1b75d29e58d43549	texput.log=c77a49835ba2ac89	1	mainbody > maincontrol > handlerightbrace > package > hpack > showbox > shownodelist > unmodelled external: fabs	735450994e4bf5eb
+long1	IDENTICAL	0	exit 0	1484f8a7d5af68b4	texput.log=44860ede5556b36e	1		735450994e4bf5eb
+lost1	IDENTICAL	1	exit 1	2a18fdd9c34c0022	texput.log=7914b3fd66b04fab	1		735450994e4bf5eb
+mth1	STUCK	1	stuck	6b5ef564dd40c5e6	texput.dvi=9794cd4982c2f79a,texput.log=ea0c358296f5bfc1	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	735450994e4bf5eb
+nst1	IDENTICAL	1	exit 1	9c5e8aeda5318391	texput.log=dfd27370d31f1e4f	1		735450994e4bf5eb
+num2	IDENTICAL	1	exit 1	a283b477286ba6e4	texput.log=686ddbd1514bd180	1		735450994e4bf5eb
+nxpy	IDENTICAL	1	exit 1	e3daa8dc04f689b0	texput.log=248e898d83ef0e04	1		735450994e4bf5eb
+outp	IDENTICAL	1	exit 1	8dc9690fbc2ce24c	texput.log=1f2beb3a0602e185	1		735450994e4bf5eb
+par1	STUCK	1	stuck	252013159e5be8d7	texput.dvi=eb53059b9fa788c7,texput.log=09cc126d806176f8	1	mainbody > maincontrol > endgraf > linebreak > postlinebreak > hpack > showbox > shownodelist > unmodelled external: fabs	735450994e4bf5eb
+part1	IDENTICAL	1	exit 1	15147e069701830d	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+pat1	STUCK	0	stuck	2a6bfd0843872f83	texput.dvi=eb53059b9fa788c7,texput.log=3bbfa77d4da951c2	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	735450994e4bf5eb
+pdf1	STUCK	0	stuck	85ac3ade7fdd325c	texput.log=f7d5b814aab5161f	1	mainbody > maincontrol > issuemessage > scantoks > expand > convtoks > unmodelled external: escapestring	735450994e4bf5eb
+pnlt	STUCK	0	stuck	5ebe80ba1bf98849	texput.dvi=4aa12479b6b4f07c,texput.log=31e4e9ccd78c4d3f	1	mainbody > maincontrol > endgraf > linebreak > postlinebreak > hpack > showbox > shownodelist > unmodelled external: fabs	735450994e4bf5eb
+prim1	IDENTICAL	1	exit 1	ff4ba20fd36b9ffe	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+prim2	IDENTICAL	1	exit 1	e18ec798a7c32542	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+prim3	IDENTICAL	1	exit 1	a3f298fe77900621	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+read1	IDENTICAL	1	exit 1	66246d1b4053f504	texput.log=5a9474872e67abd6	1		735450994e4bf5eb
+read2	IDENTICAL	1	exit 1	202436db814134e4	texput.log=b5a7315572d92ba3	1		735450994e4bf5eb
+rnd1	IDENTICAL	0	exit 0	f5b4ce47b805e785	texput.log=59755b46c4acfd6d	2		735450994e4bf5eb
+rnd2	IDENTICAL	0	exit 0	4d2203bdec884937	texput.log=d1d4451e384d41f7	1		735450994e4bf5eb
+rnd3	IDENTICAL	0	exit 0	80ed43dc1b26a379	texput.log=cccfbb6c71ac5ce7	1		735450994e4bf5eb
+rnd4	IDENTICAL	0	exit 0	ac454e0e0937d43f	texput.log=0095018d39051e87	1		735450994e4bf5eb
+rnd5	IDENTICAL	0	exit 0	29fa3f7c89e16bb7	texput.log=492c61a0abfb68f6	1		735450994e4bf5eb
+rnd6	IDENTICAL	0	exit 0	6c0e95760fc796c1	texput.log=d3aa266f54912179	2		735450994e4bf5eb
+rom1	IDENTICAL	0	exit 0	8bb3da213cb0ae45	texput.log=a16e6bb49d2627f1	1		735450994e4bf5eb
+romn	LIMIT	0	model resource limit	989dd953d782471e	texput.log=83a340ae82535e87	1	model resource limit: memory cap	735450994e4bf5eb
+runaw2	IDENTICAL	1	exit 1	3e3c02f5d045a429	texput.log=851cae7c32664a69	1		735450994e4bf5eb
+runaway	IDENTICAL	1	exit 1	c2213cfe061b5001	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+save1	IDENTICAL	1	exit 1	843ed4d55e89a41b	texput.log=737405eef01cc677	1		735450994e4bf5eb
+scr1	IDENTICAL	1	exit 1	ee51aae90279cfe8	texput.log=100ef7d3d5d658e5	1		735450994e4bf5eb
+sct1	IDENTICAL	1	exit 1	489ed42ee7b7da47	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+ship1	STUCK	0	stuck	1369cd3f17a8f5bd	texput.dvi=4d8a0b4bc57c32f8,texput.log=5ec7247181e7b93f	1	mainbody > maincontrol > handlerightbrace > package > boxend > shipout > dvishipout > unmodelled external: synctexsheet	735450994e4bf5eb
+show1	IDENTICAL	1	exit 1	083801127103fa8b	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+shw2	IDENTICAL	1	exit 1	b484b696f348c84d	texput.log=2d1fa845b4338aa8	1		735450994e4bf5eb
+skp1	IDENTICAL	1	exit 1	7d21807db46c7536	texput.log=2ae72aa2e10eb907	1		735450994e4bf5eb
+str1	IDENTICAL	0	exit 0	c9a359e374ced687	texput.log=ce95d7af18bb313b	1		735450994e4bf5eb
+t0	IDENTICAL	1	exit 1	2ed94b5af7fe1021	texput.log=15dd324659248ec0	1		735450994e4bf5eb
+t200	IDENTICAL	1	exit 1	e8c4a9350cca2be3	texput.log=d87375cf72f4542b	1		735450994e4bf5eb
+t201	IDENTICAL	1	exit 1	1b096dafd7a183bd	texput.log=e1b4678ad9db8450	1		735450994e4bf5eb
+t202	IDENTICAL	0	exit 0	39c11be4d1eca96c	texput.log=3e5f2bab81b517e9	1		735450994e4bf5eb
+t203	IDENTICAL	0	exit 0	a86fc56ca6ae8a97	texput.log=48505658bcb75fc0	1		735450994e4bf5eb
+t204	IDENTICAL	0	exit 0	45c3829071e09a1c	texput.log=eb5c297c06f0e2e4	1		735450994e4bf5eb
+t205	STUCK	137	stuck	e37a3ffba6a80f92	qemu_pdftex_20261001-185233_1.core=cf601d21a5136fda	1	mainbody > maincontrol > endgraf > linebreak > finiteshrink > printnl > println > type: write to a non-file	735450994e4bf5eb
+t206	IDENTICAL	0	exit 0	a3ac0ccf1dba19db	texput.log=a85ab455989c4cbd	1		735450994e4bf5eb
+t207	IDENTICAL	0	exit 0	57138af8090e63b3	texput.log=01e40ab67f5dfe52	1		735450994e4bf5eb
+t208	STUCK	137	stuck	e37a3ffba6a80f92	qemu_pdftex_20261001-192318_1.core=b5480bb07c6cf509	1	mainbody > maincontrol > endgraf > linebreak > finiteshrink > printnl > println > type: write to a non-file	735450994e4bf5eb
+t209	IDENTICAL	0	exit 0	7bc0ac99e32d824a	texput.log=4cc8dc821ac60966	1		735450994e4bf5eb
+t210	IDENTICAL	0	exit 0	e57d96f9edbdd3a5	texput.log=d23ad8a7118ee906	1		735450994e4bf5eb
+t211	IDENTICAL	1	exit 1	ee88c0dd3fd19a36	texput.log=09b5f5405d78cb73	1		735450994e4bf5eb
+tf-cmr10	IDENTICAL	1	exit 1	c1a7e5d6cdb4e388	texput.log=13b4ea76735f2745	1		735450994e4bf5eb
+tf-fonts	IDENTICAL	1	exit 1	c7d6a8b96cb067d6	texput.log=7f1f565ac4855fdc	1		735450994e4bf5eb
+tf-local-tfm	IDENTICAL	1	exit 1	6b0e186114679d47	texput.log=60096c27535afeac	1		735450994e4bf5eb
+tf-missing	STUCK	1	stuck	8932caee09307f73	missfont.log=5e3099b24618e745,texput.log=cf059d07aaa4a84e	1	mainbody > maincontrol > prefixedcommand > newfont > readfontinfo > unmodelled external: kpse_make_tex would run mktex* (a program: not modelled)	735450994e4bf5eb
+tf-tfm-ext	IDENTICAL	1	exit 1	b6df790239287e20	texput.log=0029688474aac63c	1		735450994e4bf5eb
+tim1	IDENTICAL	1	exit 1	51660b91453edc51	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+trc1	IDENTICAL	1	exit 1	601510aa40b1430a	texput.log=d64c9baf33e4424f	1		735450994e4bf5eb
+ucl	IDENTICAL	0	exit 0	ecb50599443fdd21	texput.log=4fd2700876de4d6c	1		735450994e4bf5eb
+vspl	IDENTICAL	1	exit 1	a01922da08300cac	texput.log=5efa4a6020eed865	1		735450994e4bf5eb
+wr1	STUCK	0	stuck	252db8e98195de00	texput.dvi=4d8a0b4bc57c32f8,texput.log=c8f4c05abbc6e727	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	735450994e4bf5eb
+xetx1	IDENTICAL	1	exit 1	25010eae3dcc9ba4	texput.log=71d5766f6168b447	1		735450994e4bf5eb
+xexpr2	IDENTICAL	1	exit 1	f2daef8f976e896a	texput.log=f3e55ceea5387470	1		735450994e4bf5eb
+xexpr3	IDENTICAL	1	exit 1	706fcd30cfb33860	texput.log=244eb96dd89bd6a0	1		735450994e4bf5eb
+xifs1	IDENTICAL	0	exit 0	2ccfe69ccc9c091c	texput.log=213d1ee922e30283	1		735450994e4bf5eb
+xlr	IDENTICAL	1	exit 1	e717b3e0a1d99203	texput.log=7e71f7c55413403f	1		735450994e4bf5eb
+xnx	IDENTICAL	1	exit 1	f7e7f8ebbbd9c5cc	texput.log=16fc7a96757128f3	1		735450994e4bf5eb
+xovn	STUCK	0	stuck	a234f99be097adbd	texput.log=bcf0924ae34ec9cd	1	mainbody > maincontrol > prefixedcommand > doregistercommand > xovern > signed overflow	735450994e4bf5eb
+xpart1	IDENTICAL	1	exit 1	c544dc857269f528	texput.log=71d5766f6168b447	1		735450994e4bf5eb
+xprim2	IDENTICAL	1	exit 1	aac65282bab0b18b	texput.log=71d5766f6168b447	1		735450994e4bf5eb
+xprim3	IDENTICAL	0	exit 0	30cd95bb9cc8f5ba	texput.log=be7c1f74f6f4610f	1		735450994e4bf5eb
+xrl	IDENTICAL	1	exit 1	01a745a475ce1680	texput.log=d41a12d0bb8d11a3	1		735450994e4bf5eb
+xsav	IDENTICAL	0	exit 0	9df8474c885ec63b	texput.log=0ddd0ca236368c8a	1		735450994e4bf5eb
+xsct1	IDENTICAL	1	exit 1	ba2c4091919f47fa	texput.log=71d5766f6168b447	1		735450994e4bf5eb
+xshw2	IDENTICAL	1	exit 1	ac85600cbf95b829	texput.log=71d5766f6168b447	1		735450994e4bf5eb
+xtrc1	STUCK	0	stuck	8d41b856b87f1bee	texput.dvi=9794cd4982c2f79a,texput.log=b93bc10897fa4931	1	mainbody > maincontrol > itsallover > buildpage > fireup > shipout > dvishipout > unmodelled external: synctexsheet	735450994e4bf5eb
+xxovn	STUCK	0	stuck	bda5eaed54f88bf7	texput.log=1f3184cf662f1d1e	1	mainbody > maincontrol > prefixedcommand > doregistercommand > xovern > signed overflow	735450994e4bf5eb

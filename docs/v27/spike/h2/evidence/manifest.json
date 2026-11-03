@@ -1549,14 +1549,6 @@
    "args"
   ],
   [
-   "appendbead",
-   "assign"
-  ],
-  [
-   "appendbead",
-   "assign"
-  ],
-  [
    "pdfshipout",
    "args"
   ],
@@ -1606,23 +1598,7 @@
   ],
   [
    "scanimage",
-   "assign"
-  ],
-  [
-   "scanimage",
    "xargs"
-  ],
-  [
-   "doextension",
-   "assign"
-  ],
-  [
-   "doextension",
-   "assign"
-  ],
-  [
-   "doextension",
-   "assign"
   ]
  ],
  "gotos_into_structured": [

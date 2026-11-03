@@ -1,0 +1,9 @@
+# the one-line article's model side re-run on 2026-11-03 (review B-3: the 2026-10-06 run recorded no ps.exe)
+# command: h2/diff/snapgrow.py --ps PS --spec ~/.cache/lp-spike-h1/hb/cp3/spec.base (= spec.base here, modulo absolute paths) --stdin (empty) --snap snapshot.grown --blobs ~/.cache/lp-spike-h1/hb/blobs --max 1 --timeout 6000 --cap-mb 4000
+ps.exe 735450994e4bf5eb4ef1c6c08c2f1d05b19c490ff384566c8f238801d2cfc48b
+capped.sh: finished rc 0 peak 2511MB in 819s
+iteration 0: RESULT: stuck: 600 > 593 > 509 > 508 > 507 > 407 > 406 > 286 > 287 > unmodelled external: bopenout
+model.stdout: byte-identical to this re-run (f1a62cee5b775a65…)
+model.doc.log: byte-identical to this re-run (429d1fc33227a799…)
+model.doc.aux: byte-identical to this re-run (3345a075a22fb3bb…)
+model.driver.out: identical but for its TIME: line

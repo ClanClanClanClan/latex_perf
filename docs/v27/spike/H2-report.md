@@ -441,8 +441,8 @@ on it:
   binary side is unchanged and only the model side was re-run, in both configurations, under
   `h3/tools/capped.sh` at 4,000 MB. The 41 new `kp-*`/`tf-*`/`cm-*` inputs were run on both sides:
   arm64 natively, amd64 under qemu, each with a container-local working directory. Totals:
-  PARTIAL, see `H-boundary-report.md` (Fidelity): the run was stopped for a machine restart after 51 of 219 inputs (arm64) and 50 (amd64); among those, 0 DIVERGENT and no committed IDENTICAL row regressed.
-  `results-*.tsv` are not re-recorded yet: they hold the B2 build's 178 rows, so `verify_h2.py` pure mode reports them STALE until the run completes
+  arm64: 219 inputs, 181 identical, 37 Stuck, 1 without a result, 0 divergent; amd64: 219 inputs, 181 identical, 37 Stuck, 1 without a result, 0 divergent (the details in `H-boundary-report.md`, Fidelity).
+  `results-*.tsv` hold all 219 rows of the final build.
 
 ## The trusted base of H.2's claim
 

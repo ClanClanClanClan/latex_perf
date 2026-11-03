@@ -19,8 +19,8 @@ Evidence tags: **[M]** measured, **[R]** read from a source, **[I]** inferred.
 
 | # | what | result |
 |---|---|---|
-| 1 | kpathsea file input: `\input`, `\openin`/`\read`, a missing file, `\openout` and its paranoia check | done: 23 inputs, 19 IDENTICAL and 4 STUCK on build 5faee430 (arm64), 0 DIVERGENT; one divergence found and fixed in H.2's `input_line` (C-160); the final-build re-run is pending |
-| 2 | TFM loading: `\font`, `\showbox` of a typeset `\hbox` | done: 5 inputs, 4 IDENTICAL and 1 STUCK (`mktextfm`) on build 5faee430 (arm64); no external beyond checkpoint 1's was needed |
+| 1 | kpathsea file input: `\input`, `\openin`/`\read`, a missing file, `\openout` and its paranoia check | done: the 23 `kp-*` inputs below, both configurations, on the final build, 0 DIVERGENT; one divergence found and fixed in H.2's `input_line` (C-160) |
+| 2 | TFM loading: `\font`, `\showbox` of a typeset `\hbox` | done: the 5 `tf-*` inputs below, both configurations, on the final build; no external beyond checkpoint 1's was needed |
 | 3 | the general C-main command line; `pdflatex.fmt` and a one-line `\documentclass{article}` run up to PDF output | done: C main modelled for the allow-listed argv (13 `cm-*` inputs: 11 IDENTICAL and 2 STUCK by design, both configurations, final build); the one-line article reaches `ensurepdfopen > bopenout` as an exact byte prefix of the binary's output, log and .aux |
 | 4 | the PDF back end: scope only | measured: 137 C functions (61,720 bytes of machine code) first run after PDF output starts on the one-line article; deflate, MD5, the 5.6 MB map file, Type 1 subsetting; no libpng, no xpdf |
 
@@ -157,33 +157,33 @@ The 23 `kp-*` inputs of the differential (`h2/diff/README.md` lists them). Each 
 sides with the same working directory: the binary in a container-local tmpfs (C-161), the model
 with the snapshot. Results on the final build (`ps.exe` `735450994e4b…`):
 
-| input | arm64, build `5faee430…` | reason |
-|---|---|---|
-| `kp-abs` | IDENTICAL |  |
-| `kp-abs-missing` | IDENTICAL |  |
-| `kp-casefold` | IDENTICAL |  |
-| `kp-dollar` | STUCK | a file name with `$` (variable expansion) |
-| `kp-dotdot` | STUCK | a path with a `..` component |
-| `kp-input` | IDENTICAL |  |
-| `kp-input-bare` | IDENTICAL |  |
-| `kp-input-crlf` | IDENTICAL |  |
-| `kp-input-ext` | IDENTICAL |  |
-| `kp-input-missing` | IDENTICAL |  |
-| `kp-input-missing-eof` | IDENTICAL |  |
-| `kp-input-nested` | IDENTICAL |  |
-| `kp-input-sty-missing` | IDENTICAL |  |
-| `kp-input-written` | STUCK | reading a file this run wrote |
-| `kp-openin` | IDENTICAL |  |
-| `kp-openin-ext` | IDENTICAL |  |
-| `kp-openin-missing` | IDENTICAL |  |
-| `kp-openout` | IDENTICAL |  |
-| `kp-openout-abs` | IDENTICAL |  |
-| `kp-openout-dot` | IDENTICAL |  |
-| `kp-rel` | IDENTICAL |  |
-| `kp-tilde` | STUCK | a leading `~` (tilde expansion) |
-| `kp-tree-openin` | IDENTICAL |  |
+| input | arm64 | amd64 (qemu) | reason |
+|---|---|---|---|
+| `kp-abs` | IDENTICAL | IDENTICAL |  |
+| `kp-abs-missing` | IDENTICAL | IDENTICAL |  |
+| `kp-casefold` | IDENTICAL | IDENTICAL |  |
+| `kp-dollar` | STUCK | STUCK | a file name with `$` (variable expansion) |
+| `kp-dotdot` | STUCK | STUCK | a path with a `..` component |
+| `kp-input` | IDENTICAL | IDENTICAL |  |
+| `kp-input-bare` | IDENTICAL | IDENTICAL |  |
+| `kp-input-crlf` | IDENTICAL | IDENTICAL |  |
+| `kp-input-ext` | IDENTICAL | IDENTICAL |  |
+| `kp-input-missing` | IDENTICAL | IDENTICAL |  |
+| `kp-input-missing-eof` | IDENTICAL | IDENTICAL |  |
+| `kp-input-nested` | IDENTICAL | IDENTICAL |  |
+| `kp-input-sty-missing` | IDENTICAL | IDENTICAL |  |
+| `kp-input-written` | STUCK | STUCK | reading a file this run wrote |
+| `kp-openin` | IDENTICAL | IDENTICAL |  |
+| `kp-openin-ext` | IDENTICAL | IDENTICAL |  |
+| `kp-openin-missing` | IDENTICAL | IDENTICAL |  |
+| `kp-openout` | IDENTICAL | IDENTICAL |  |
+| `kp-openout-abs` | IDENTICAL | IDENTICAL |  |
+| `kp-openout-dot` | IDENTICAL | IDENTICAL |  |
+| `kp-rel` | IDENTICAL | IDENTICAL |  |
+| `kp-tilde` | STUCK | STUCK | a leading `~` (tilde expansion) |
+| `kp-tree-openin` | IDENTICAL | IDENTICAL |  |
 
-(Measured on the checkpoint-2 build `5faee430…`, arm64 against the native binary: 28 inputs, 23 IDENTICAL, 5 STUCK, 0 DIVERGENT. That build included the `input_line` fix of C-160 and `pdfassert`. The amd64 binary side of these inputs is recorded, all rc 1; the model side was not run on that build. The final build has not yet re-run these 28 inputs (see Fidelity), and their model outputs on disk are now mixed.)
+Every class above and in the `tf-*` table below is the final build's, read from `h2/diff/results-arm64.tsv` and `results-amd64.tsv`; `verify_h2.py` checks each row against them. (C-162: an earlier version of these two tables gave classes measured on the intermediate build `5faee430…`, arm64 only, and for 8 of the 23 `kp-*` inputs that build's model run had timed out, so the class it gave had no run behind it; no amd64 model run existed.)
 
 The Stuck rows are the dispositions above, reached by an input and reported by name:
 - `$` and `~` expansion;
@@ -204,13 +204,13 @@ No further external was needed.
 
 The 5 `tf-*` inputs:
 
-| input | arm64, build `5faee430…` | reason |
-|---|---|---|
-| `tf-cmr10` | IDENTICAL |  |
-| `tf-fonts` | IDENTICAL |  |
-| `tf-local-tfm` | IDENTICAL |  |
-| `tf-missing` | STUCK | `kpse_make_tex` would run `mktextfm` |
-| `tf-tfm-ext` | IDENTICAL |  |
+| input | arm64 | amd64 (qemu) | reason |
+|---|---|---|---|
+| `tf-cmr10` | IDENTICAL | IDENTICAL |  |
+| `tf-fonts` | IDENTICAL | IDENTICAL |  |
+| `tf-local-tfm` | IDENTICAL | IDENTICAL |  |
+| `tf-missing` | STUCK | STUCK | `kpse_make_tex` would run `mktextfm` |
+| `tf-tfm-ext` | IDENTICAL | IDENTICAL |  |
 
 `tf-cmr10` and `tf-fonts` `\showbox` an `\hbox` with kerns, ligatures and glue from six Computer
 Modern fonts at three sizes. Their logs, including every dimension printed, are byte-identical
@@ -287,7 +287,7 @@ The 13 `cm-*` inputs run their own command line on both sides (`argv0`/`argv` li
 | `cm-percent-amp` | STUCK | STUCK | C main: a `%&` first line |
 | `cm-recorder` | STUCK | STUCK | C main: an option outside the allow-list (`-recorder`) |
 
-Measured on the final build `735450994e4b…`: 11 IDENTICAL, 2 STUCK, 0 DIVERGENT in each configuration (`hb/differential-interim.txt`). On an intermediate build, `cm-ini-progname` was cut off by a 1,500 s time-out at a load average above 500. On the final build it is IDENTICAL.
+Measured on the final build `735450994e4b…`, in both configurations (`h2/diff/results-*.tsv`; `verify_h2.py` checks each row). On an intermediate build, `cm-ini-progname` was cut off by a 1,500 s time-out at a load average above 500. On the final build it is IDENTICAL.
 
 `cm-graded` runs the graded command line `pdflatex -interaction=nonstopmode -halt-on-error
 doc.tex`. The model finds `pdflatex.fmt` by the modelled search, loads it, reads `doc.tex` and
@@ -312,8 +312,9 @@ command line `pdflatex -interaction=nonstopmode -halt-on-error doc.tex` (`argv0 
 The rest of the snapshot was grown from the model's own questions by `h2/diff/snapgrow.py`. Each
 time the model is Stuck on a path the snapshot does not decide, the tool measures that one path
 in the image and runs again. It took three iterations, one per file the preamble reads:
-`article.cls`, `size10.clo`, `l3backend-pdftex.def` (`hb/article/snapgrow.log`,
-`hb/article/snapshot.grown`). The binary's own `-recorder` list names the same three
+`article.cls`, `size10.clo`, `l3backend-pdftex.def` (`hb/article/snapgrow-first.log`, on an
+intermediate build; `hb/article/snapshot.grown`; `hb/article/snapgrow.log` is the final build's
+single iteration). The binary's own `-recorder` list names the same three
 (`hb/article/fls.txt`). Two earlier iterations, on an intermediate build, were Stuck on
 `getfilesize` (LaTeX's `\pdffilesize` of the class), now modelled from texmfmp.c (below).
 
@@ -326,7 +327,9 @@ the preamble and `\begin{document}`:
 
 Up to that point its terminal output (503 bytes), `doc.log` (1,849 bytes) and `doc.aux`
 (8 bytes, `\relax`) are each an exact byte prefix of the binary's (749, 2,764 and 32 bytes;
-`hb/article/`). It used 1 clock reading, and its standard input was empty and fully read.
+`hb/article/`, both sides' `doc.aux` included; `verify_h2.py` checks the three prefixes). It used 1
+clock reading, and its standard input was empty and fully read. Re-run on 2026-11-03 with the
+final build recorded (`hb/article/model.rerun-2026-11-03.txt`): the same bytes.
 
 **The externals hit next.** These are the PDF back end. They are listed from the binary's run of
 the same command line (checkpoint 4, `hb/counts.json`), with the number of calls after the first
@@ -430,21 +433,27 @@ utils.c. libpng and xpdf, 158,000 lines, are not on the minimal article's path a
 ## Fidelity, memory and timing at the final build [M]
 
 The final build is `ps.exe` `735450994e4b…` (`h2/evidence/build/provenance.json`).
-- **Differential**: **PARTIAL; the run was stopped for a machine restart.** On the final build, the model side
-finished for 51 of 219 inputs on arm64 and 50 on amd64: 38 or 39 of the 178 committed inputs,
-and all 13 `cm-*`. Results on arm64: 43 IDENTICAL, 8 STUCK, 0 DIVERGENT. Results on amd64: 42
-IDENTICAL, 8 STUCK, 0 DIVERGENT. **No committed IDENTICAL row among those re-run regressed**
-(`hb/differential-interim.txt`). The remaining inputs, the 28 `kp-*`/`tf-*` included, are still
-to run on the final build. `diff/results-*.tsv` are therefore NOT re-recorded: they still hold
-the B2 build's 178 rows, and `verify_h2.py` pure mode fails on them (STALE) until the run
-completes.
+- **Differential**: complete on the final build, every row of `h2/diff/results-arm64.tsv` and
+`results-amd64.tsv` run by `735450994e4b…` (`verify_h2.py` checks each row's `ps.exe`): arm64: 219 inputs, 181 identical, 37 Stuck, 1 without a result, 0 divergent; amd64: 219 inputs, 181 identical, 37 Stuck, 1 without a result, 0 divergent.
+Against the B2 build's 178 rows (`git show 57aedcc9:docs/v27/spike/h2/diff/results-*.tsv`), no
+IDENTICAL row changed in any column, and these rows went from STUCK to IDENTICAL in both
+configurations, by the newly modelled file input: `chr3`, `font1`, `g1`, `g10`, `g14`, `g4`, `g5`, `g8`, `inp1`, `inter3`, `lost1`, `read2`, `shw2`. The one without a result is `romn`
+(the memory cap, as on every earlier build). On amd64, `t203` and `t204` first ended in the
+time-out at a load average above 200 with no output; re-run, each finished in about a minute,
+IDENTICAL (a time-out is a rerun, not a verdict). Every STUCK row's model output was also
+checked against the binary's (review of 2026-11-03): it is a byte prefix of it, except where the
+binary's own output is cut short or encoded — at `t205` and `t208` the binary dies by SIGSEGV and
+its unflushed terminal output is a prefix of the model's, and at `dump1` the binary's `texput.fmt`
+is gzipped, and the model's stream is a prefix of its decompressed bytes.
 - **INITEX evidence** (`h2/evidence/inirun/`): re-run in both configurations on the final build. The spec gains `argv0 pdftex`, `cwd /w` and an empty working-directory listing. The model's terminal output, standard error and `texput.log` are byte-identical to the binary's (and to H.5's run); only the driver's `TIME:` line changed (capped.sh 4,000 MB, peak 667 MB).
 - **Round trip** (`&pdflatex \dump`, `hb/roundtrip.txt`): the model finds `pdflatex.fmt` by the
   modelled kpathsea search. H.3's `kpsefind` table is retired. Its stdout, `texput.log` and
   dumped format stream (`55629ae0…`, 11,621,681 bytes) are byte-identical to the binary's
   (capped.sh 4,000 MB, peak 2,196 MB).
 - **Memory**: the standing retention check (`h5/tools/retention_probe.sh`, `hb/retention/`)
-  PASSES on the final build:
+  PASSES on the final build. (C-163: its static half does not see let-bound closures or partial
+  applications, so this PASS does not by itself show that nothing is retained; the dynamic half's
+  probes below are measured.)
   - static half: 788 closures at 284 realizer sites (B2: 669 closures) and 78 lambdas passed as
     arguments (B2: 44), 0 failing. The new ones are Kpse.v's and Boundary.v's. A first build
     failed it in four places, and each was removed at the source, never allowed:

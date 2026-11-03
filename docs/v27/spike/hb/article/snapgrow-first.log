@@ -1,0 +1,3 @@
+iteration 0: decide /usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls -> fsfile /usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls=@sha256:c09f5982893f8a092e69435
+iteration 1: decide /usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo -> fsfile /usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo=@sha256:7a5ab9aa1794b8864e2963db
+iteration 2: decide /usr/local/texlive/2026/texmf-dist/tex/latex/l3kernel/l3backend-pdftex.def -> fsfile /usr/local/texlive/2026/texmf-dist/tex/latex/l3kernel/l3backend-pdftex.def=@sha256:f700f4fca2

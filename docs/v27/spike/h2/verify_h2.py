@@ -111,9 +111,10 @@ def pure():
             fails.append(f"{a}: the model's output does not contain the * prompt")
 
     # 4. the differential
-    tot = {}
+    tot, cls = {}, {}
     for a in CONFIGS:
         rows = [l.split("\t") for l in (H / "diff" / f"results-{a}.tsv").read_text().splitlines()[1:]]
+        cls[a] = {r[0]: r[1] for r in rows}
         ins = sorted(p.stem for p in (H / "diff" / "inputs").glob("*.tex"))
         if sorted(r[0] for r in rows) != ins:
             fails.append(f"diff/results-{a}.tsv does not have one row per committed input")
@@ -126,6 +127,30 @@ def pure():
         n = len(rows)
         quote(f"{a}: {n} inputs, {tot.get((a, 'IDENTICAL'), 0)} identical, {tot.get((a, 'STUCK'), 0)} Stuck, "
               f"{tot.get((a, 'LIMIT'), 0)} without a result, {tot.get((a, 'DIVERGENT'), 0)} divergent")
+    # the boundary step's tables (H-boundary-report.md, checkpoints 1-3): every kp-/tf-/cm- input has
+    # exactly one row `| `NAME` | ARM64 CLASS | AMD64 CLASS | reason |`, and its classes are results-*.tsv's
+    BR = (H.parent / "H-boundary-report.md").read_text()
+    want = sorted(n for n in cls["arm64"] if re.match(r"(kp|tf|cm)-", n))
+    seen = []
+    for line in BR.splitlines():
+        mm = re.match(r"\| `((?:kp|tf|cm)-[A-Za-z0-9-]+)` \| ([A-Z]+) \| ([A-Z]+) \|", line)
+        if mm:
+            n = mm.group(1)
+            seen.append(n)
+            for a, c in zip(CONFIGS, (mm.group(2), mm.group(3))):
+                if cls[a].get(n) != c:
+                    fails.append(f"H-boundary-report.md: {n} {a} is {c}, results-{a}.tsv says {cls[a].get(n)}")
+    if len(want) < 41 or sorted(seen) != want:
+        fails.append(f"H-boundary-report.md: {len(seen)} boundary table rows, {len(want)} kp-/tf-/cm- inputs "
+                     f"(missing {sorted(set(want) - set(seen))}, extra or repeated "
+                     f"{sorted(n for n in set(seen) if seen.count(n) > 1 or n not in want)})")
+    R1b = re.sub(r"\s+", " ", BR)
+    for a in CONFIGS:
+        q = (f"{a}: {len(cls[a])} inputs, {tot.get((a, 'IDENTICAL'), 0)} identical, {tot.get((a, 'STUCK'), 0)} Stuck, "
+             f"{tot.get((a, 'LIMIT'), 0)} without a result, {tot.get((a, 'DIVERGENT'), 0)} divergent")
+        if q not in R1b:
+            fails.append(f"H-boundary-report.md does not quote {q!r}")
+    print(f"boundary tables: {len(seen)} rows checked against results-*.tsv ({len(want)} kp-/tf-/cm- inputs)")
 
     # 5. manifest, C main, the boundary, the report's numbers
     m = json.loads((E / "manifest.json").read_text())
@@ -161,6 +186,27 @@ def pure():
     for st in ("coqc", "extraction", "ocamlopt"):
         r = [x for x in rows if x[0] == st]
         quote(f"{st}: {len(r)} file(s), {sum(float(x[3]) for x in r):.0f} s wall, peak {max(int(x[5]) for x in r)} MB")
+    # the boundary step's one-line article (H-boundary-report.md, checkpoint 3): the model's terminal output,
+    # doc.log and doc.aux are each a non-empty byte prefix of the binary's, and its run stopped Stuck at bopenout
+    A = H.parent / "hb" / "article"
+    sizes = []
+    for mf, bf in (("model.stdout", "binary.stdout"), ("model.doc.log", "binary.doc.log"),
+                   ("model.doc.aux", "binary.doc.aux")):
+        if not (A / mf).exists() or not (A / bf).exists():
+            fails.append(f"hb/article/{mf} or {bf} is missing")
+            continue
+        mb, bb = (A / mf).read_bytes(), (A / bf).read_bytes()
+        if not mb or not bb.startswith(mb):
+            fails.append(f"hb/article/{mf} ({len(mb)} B) is not a non-empty prefix of {bf} ({len(bb)} B)")
+        sizes.append((len(mb), len(bb)))
+    if len(sizes) == 3:
+        (m1, b1), (m2, b2), (m3, b3) = sizes
+        for q in (f"terminal output ({m1:,} bytes)", f"`doc.log` ({m2:,} bytes)", f"`doc.aux` ({m3:,} bytes",
+                  f"({b1:,}, {b2:,} and {b3:,} bytes"):
+            if q not in R1b:
+                fails.append(f"H-boundary-report.md does not quote {q!r}")
+    if "unmodelled external: bopenout" not in (A / "model.driver.out").read_text():
+        fails.append("hb/article/model.driver.out does not end Stuck at bopenout")
 
 
 def reproduce_translate():

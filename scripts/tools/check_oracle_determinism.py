@@ -35,7 +35,7 @@ For every document, both runs' rc, PDF verdict, .log bytes, .pdf bytes and
 EVERY file the run leaves in its directory must be IDENTICAL (TWICE).
 HOST VARIANTS (C-139, review LOW-3): pid_probe and jvm graded again under a
 different --cpuset-cpus and --memory (must be REFUSED by the in-container
-readback, C-139 (a)), another --user (C-139 (b)) and another work-root path:
+readback, C-139 (a)), another --user (C-185) and another work-root path:
 identical to the baseline byte for byte, or refused.
 
 It FAILS on 0400f74a (BOOK: the pid marks are readable; TWICE: often) and

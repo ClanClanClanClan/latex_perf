@@ -2700,7 +2700,7 @@ REGISTRY = [
                      r"\[oracle-infra\] FAIL.*runs without the pinned shim preloaded",
                      old='               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": SHIM_MARK_DIR,\n',
                      new='               "shim": f"{SHIM_DIR}/{shim_name(arch)}", "mark": BOOK_DIR,\n'),
-            # C-139 (a) / C-139 (c): the readback and the evidence of an unfinished run.
+            # C-139 (a) / C-186: the readback and the evidence of an unfinished run.
             Mutation("the pins are no longer read back",
                      "scripts/tools/_oracle.py",
                      r"\[oracle-infra\] FAIL.*a cpuset the daemon did not apply",

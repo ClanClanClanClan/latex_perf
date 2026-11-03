@@ -644,16 +644,16 @@ class Checker:
         self.expect("an in-container timeout (rc 124) is not reported as timed out",
                     err is None and got is not None and got[2] is True
                     and not getattr(got, "oom", None), f"{got!r} {err!r}")
-        # C-139 (c): a memory kill is told apart from a timeout (and is still no
+        # C-186: a memory kill is told apart from a timeout (and is still no
         # grade); a kill the supervisor did not explain is refused; and a
         # timed-out run's evidence is checked like any other.
         got, err = self.run_pdflatex("oom")
         self.expect("a memory-ceiling kill is not reported as an OOM, apart from a "
-                    "timeout (C-139 (c))", err is None and got is not None and got[2] is True
+                    "timeout (C-186)", err is None and got is not None and got[2] is True
                     and getattr(got, "oom", None) is True, f"{got!r} {err!r}")
         got, err = self.run_pdflatex("kill137")
         self.expect("an rc 137 the supervisor did not explain was read as a timeout "
-                    "instead of refused (C-139 (c))", err is not None
+                    "instead of refused (C-186)", err is not None
                     and "unexplained kill" in str(err), f"{got!r} {err!r}")
         os.environ["FAKE_EVID"] = evid(timed_out=True, shim_mode=None)
         try:
@@ -661,7 +661,7 @@ class Checker:
         finally:
             os.environ.pop("FAKE_EVID", None)
         self.expect("a timed-out run's evidence is not checked: a run without the "
-                    "shim's mark was returned as a timeout (C-139 (c))",
+                    "shim's mark was returned as a timeout (C-186)",
                     err is not None and "carries no mark" in str(err), f"{got!r} {err!r}")
 
         # OPEN-118 review round 3: proof pdfTeX ran is not proof its rc is the

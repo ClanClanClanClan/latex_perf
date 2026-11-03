@@ -76,7 +76,7 @@ def syn(log: bytes, files: dict):
 def _msg(fn, *a):
     try:
         fn(*a)
-    except Exception as e:  # noqa: BLE001
+    except seal.SealError as e:
         return str(e)
     return ""
 

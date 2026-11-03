@@ -7,7 +7,7 @@ admission of OPEN-116/OPEN-122 is stopped.
 **Design basis (historical drafts, committed verbatim):**
 [`drafts/ADR-013-draft-R-EFFECT.md`](drafts/ADR-013-draft-R-EFFECT.md) and
 [`drafts/ADR-014-draft-interpreter.md`](drafts/ADR-014-draft-interpreter.md).
-**Tracking:** OPEN-123 (the foundation spike). **First result:** [`docs/v27/spike/H1-report.md`](../spike/H1-report.md).
+**Tracking:** OPEN-123 (the foundation spike); OPEN-129 (the abstract-interpreter scoping); OPEN-130 (the product track). **First result:** [`docs/v27/spike/H1-report.md`](../spike/H1-report.md).
 **Results of record:** § "H.1 result" and § "H.2 and H.3 results" below; H.5 per E12.
 
 Evidence tags as elsewhere: **[M]** measured, **[R]** read from a source, **[I]** inferred.
@@ -114,7 +114,9 @@ What this decides, and what it does not:
   wording of the trusted base. (O-5, the clock — quantify verdicts over the date and the random
   seed, or change the oracle to a forced date — was listed here; it was decided on 2026-10-05 by
   E10 below.) O-8 (accept a reference build as the oracle if the
-  revision cannot be identified) is moot after H.1: see below.
+  revision cannot be identified) is moot after H.1: see below. Everything still open as of
+  2026-11-03, including the ADR-014 questions never cited here, is listed in § "Open, not decided
+  (as of 2026-11-03)" below.
 
 ## Owner decisions of 2026-09-30 (after the H.1 report)
 
@@ -365,6 +367,138 @@ branch tip when this was written), not on `main`.
   pinned binary and loaded through the format-load path whose exactness H.3 established. It needs
   an owner ruling on the clause "works where TeX isn't installed" of the owner's 2026-09-29
   answer (Decision, item 2), to be informed by the abstract-interpreter scoping.
+
+## Owner decisions of 2026-10-06 (continued; recorded on `main` 2026-11-03)
+
+Same rule as above: this is the one place of record. These three rulings were in force from the
+times below, but until 2026-11-03 they were held only in the working session, the assistant's
+memory and `~/.cache` (C-170). Times are UTC, read from the session transcript `1757d56f` (not
+committed). The abstract-interpreter scoping they refer to is OPEN-129; its report is on branch
+`spike/v27165-ai-scoping`, cited as `b3828c3b:path`, not on `main`.
+
+- **E16. "Cheap tests first."** Asked after the abstract-interpreter scoping was reviewed;
+  answered 2026-10-06T20:25:48Z: *"Cheap tests first (Recommended)"*. The option, verbatim:
+  *"Before funding any big milestone, run three cheap decisive tests (each a few agent-weeks), each
+  with a kill line fixed in advance: (1) can pdfTeX state be reused across different papers'
+  configurations; (2) can paragraph line-breaking and box packing be analysed soundly on typical
+  text; (3) can multi-pass runs and page output be handled. The C-code modelling, oracle and
+  faithfulness work continue in parallel, since every outcome needs them. Decide after the
+  tests."* *Chosen over:* "Fund the full research programme", "Re-scope the vision", "Narrow,
+  accept tiny coverage".
+  - The three tests are AI-0a, AI-0b and AI-0c, with PASS and KILL lines pre-registered in
+    `b3828c3b:docs/v27/spike/AI-scoping.md` §8.2 and summarised in OPEN-129. None had started
+    by 2026-11-03.
+  - *Not decided by E16:* whether a cost discriminator (AI-0d) is added, and what route follows
+    a KILL beyond E19's rule. See § "Open, not decided".
+- **E17. Engine-in-the-loop is not a product.** The owner, 21:04:44Z, on the option "Re-scope
+  the vision" of E16's question (*"get exact verdicts by running the pinned pdfTeX offline"*):
+  *"In which world would our product be any use if what it does is run latex and say: "uhhhh,
+  not compile"?????"*. As the assistant restated it at 21:06:09Z: running a TeX engine on the
+  user's document is never what the user gets and is never offered as a product or a re-scope
+  option; running the pinned engine is legitimate only as an internal oracle that measures and
+  checks the tool's own answers.
+  - *Derived, not a separate question:* this extends D1 from PROVEN verdicts to every fallback.
+    The scoping report's KILL path (`b3828c3b:docs/v27/spike/AI-scoping.md` §8.2 and §10: on any
+    KILL, "ADR-014's product (deciding by executing the document asynchronously)", called "the
+    engine-free option") contradicts D1 and E17 and must be corrected before that report merges
+    (OPEN-129, C-172).
+- **E18. A product track runs alongside the cheap tests.** Asked at 21:06:09Z and again at
+  22:09:15Z: whether to add a track for what users would actually notice (real-time speed,
+  cause-and-fix diagnostics, measured lint precision) alongside the cheap tests. Answered
+  22:11:30Z (00:11 on 2026-10-07 local time, which is why the working notes say 2026-10-07):
+  *"yes fir the track"* [sic].
+  - The approval covers the track and its three strands. The targets, order and protocol in the
+    brief the assistant wrote afterwards (`~/.cache/lp-session-1757d56f/product-track-brief.md`,
+    not committed) are the assistant's plan, not owner decisions.
+  - The ledger rows are OPEN-130 (the track), OPEN-131 (real time), OPEN-132 (cause and fix) and
+    OPEN-133 (lint precision). They do not reuse ROADMAP Track P's ids P1–P4. Nothing in the
+    track had started by 2026-11-03.
+
+## Owner decisions of 2026-10-21 (recorded on `main` 2026-11-03)
+
+Same rule as above. Times are UTC, read from the session transcript `c40e4af6` (not committed).
+
+- **E19. The vision is fixed and is never re-scoped.** The 2026-10-19 stock-take (not committed)
+  had put "continue the research bet or re-scope?" to the owner. The owner, 11:59:19Z:
+  *"Also, for the rulings: I refuse to change the project: This is a product that provably
+  verifies and tells us in real time, while typing whether a latex document will compile and if
+  not, exactly why (plus all the heuristics for things that are best practices or best rules but
+  cannot be provably verified)"*.
+  - The assistant stated two consequences at 12:03:05Z, in the message the owner answered with
+    *"go and ok"* at 12:05:18Z:
+    - *"A failed test retires a design route, never the goal."* A KILL on a cheap test (AI-0a to
+      AI-0c, or AI-0d if adopted) or on a hypothesis H.n retires that design route and starts the
+      search for another route to the same product. Cost and speed findings are engineering
+      problems to solve, not arguments for narrowing the goal.
+    - *"'Exactly why' is part of the core product, so diagnostics with cause and location (P2)
+      belong on the main line, not a side track."* "P2" there is the product track's
+      cause-and-fix strand, OPEN-132, not ROADMAP Track P's row P2.
+  - *Derived, not put to the owner:* outcomes that narrow the goal are excluded. Two of them are
+    re-scoping now (the stock-take's §8 item 1 (c)) and stopping the proven-tier build while
+    keeping the translated engine and boundary as "a verified oracle and research asset" (§8
+    item 2 (c)). **Which route follows a KILL is NOT decided.**
+- **Restart tracks A–E authorised (operational, not an architecture decision).** "go" started
+  the five tracks the assistant had listed at 12:03:05Z:
+  - this record;
+  - the OPEN-128 review, then its grading lanes;
+  - finishing the boundary differential;
+  - the quick fixes;
+  - the cause-and-fix (OPEN-132) diagnostics baseline.
+
+  "ok" approved shrinking the spike's scratch directory. The tracks were launched on 2026-11-03
+  after the restart steps; the coordinating session records the owner's "go" being given again
+  that day.
+
+## The spike's time boxes (facts recorded 2026-11-03; no decision)
+
+- **E11's box expired on 2026-10-10 and nothing recorded it.** E11 set stage 2 to end by the end
+  of 2026-10-10. E12 (2026-10-06) had already replaced waiting for the box, so the expiry changed
+  no verdict: memory is flat on B2, speed was not fixed, and H.5 stands killed on the proxy (E12).
+  No working branch moved between 2026-10-06T22:05Z and 2026-11-03
+  (`git for-each-ref --sort=-committerdate refs/remotes/origin`, read 2026-11-03), so no branch
+  records the expiry either. E11 is closed by E12; nothing was extended (C-171).
+- **D3's spike has overrun.** D3, accepted on 2026-09-29, funded "≈ 2 weeks of agent work" for
+  H.1–H.6 and requires that "the spike reports before any further architecture commitment".
+  As of 2026-11-03, 35 calendar days later:
+  - H.1 and H.2 have passed;
+  - H.3 has no "PASSED" recorded;
+  - H.5 is killed on the proxy (E12);
+  - H.4 and H.6 have not started (§ "H.2 and H.3 results");
+  - no consolidated spike report exists;
+  - no extension of D3 is recorded.
+
+  E11–E18 were decided without that report. Whether to extend D3 with a date or to require the
+  consolidated report before any further commitment is **NOT decided** (stock-take §8 item 11).
+
+## Open, not decided (as of 2026-11-03)
+
+Listed here so that nothing pending reads as decided. Item numbers refer to §8 of the 2026-10-19
+stock-take (not committed).
+
+- **AI-0d, a cost discriminator** (the stock-take's §8 item 3; the assistant's "ruling 1" on
+  2026-10-21 at 11:55:29Z): not ruled. If it is adopted, the owner sets its KILL line before it
+  runs; a criterion invented after the measurement is the goalpost risk that H.5 showed. E19
+  applies to it: a KILL retires the admission route it tests, never the goal.
+- **What follows a KILL** (item 2): E19 excludes the outcomes that narrow the goal. The route is
+  not chosen.
+- **ADR-014 draft questions never cited by a decision above:**
+  - **O-3:** bit-exact pointer-level state, or an algebraic model with separate capacity
+    accounts.
+  - **O-4:** format loading, either B1 (decode the shipped format) with a B2 cross-check, or B2
+    only. ADR-014's B1/B2 are format-loading strategies, not the spike's "B2" model build of
+    E11, so E11 does not answer O-4.
+  - **O-6:** fix ADR-013's D-1 (the stale PDF across passes) first.
+
+  O-7 and O-9 stay open as listed under Decision. O-1, O-2 and O-11 are answered in substance by
+  D1, D2 and D3, and O-10 by D4 and E5; O-5 is decided by E10; O-8 is moot after H.1.
+- **O1.2** and **O3.2 / O3.3**: open, as recorded under E15.
+- **May AI-0c run before OPEN-128's fixed clock lands?** (item 12): not ruled.
+- **The rest of the stock-take's §8** is not ruled. The exceptions:
+  - E19 settles item 1 against re-scoping;
+  - E18 and the restart tracks start item 16's track, while its sub-questions stay open (see
+    OPEN-130);
+  - items 21 and 22 (disk and local clean-up) were approved and carried out outside the
+    repository between 2026-10-29 and 2026-11-03.
 
 ## Consequences
 

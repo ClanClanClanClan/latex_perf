@@ -448,10 +448,10 @@ Same rule as above. Times are UTC, read from the session transcript `c40e4af6` (
   - *Derived, not put to the owner:* two outcomes are excluded because they change the project:
     re-scoping now (the stock-take's §8 item 1 (c)), and stopping the proven-tier build while
     keeping the translated engine and boundary as "a verified oracle and research asset" (§8
-    item 2 (c)). **Whether E19 also excludes §8 item 2 (a) (narrowing the static proven tier: a
-    smaller fragment, more of it Outside) and item 4 (accepting a first tier with a low coverage
-    ceiling) is an OPEN owner question**; the assistant's 11:55:29Z recommendation had bundled
-    2 (a) with 2 (c). **Which route follows a KILL is NOT decided.**
+    item 2 (c)). Whether E19 also excluded §8 item 2 (a) (narrowing the static proven tier) and
+    item 4 (accepting a first tier with a low coverage ceiling) was left open here; the
+    assistant's 11:55:29Z recommendation had bundled 2 (a) with 2 (c). **Settled on 2026-11-03
+    by E20 (R1):** narrowing is allowed as a stage, never as the destination.
 - **Restart tracks A–E authorised (operational, not an architecture decision).** "go" started
   the five tracks the assistant had listed at 12:03:05Z:
   - this record;
@@ -498,6 +498,77 @@ Same rule as above. Times are UTC, read from the session transcript `c40e4af6` (
   E11–E18 were decided without that report. Whether to extend D3 with a date or to require the
   consolidated report before any further commitment is **NOT decided** (stock-take §8 item 11).
 
+## Owner decisions of 2026-11-03 (the assistant's recommendations, adopted by the owner)
+
+Same rule as above: this is the one place of record. Times are UTC, read from the coordinating
+session's transcript `e5675261` (not committed). **Provenance, exactly:** the owner asked at
+17:43:50Z, verbatim: *"EWHat are the answers leading to the best product for the orginal vision?
+Ultrathink"* [sic]. The coordinating assistant answered at 17:48:15Z with five recommendations,
+R1–R5 below. At 17:54:13Z the owner replied, verbatim: *"Yes to run docker builder prune and
+listing the images. And I asked best recommendations for perfect project concerning your other two
+questions"*. The assistant read that reply as adopting R1–R5 (17:54:53Z: *"I'll take it that
+you're adopting my recommendations as the answers to the open questions"*). So R1–R5 are **the
+assistant's recommendations of 2026-11-03, adopted by the owner**. Their wording is the
+assistant's, never the owner's.
+
+- **E20. R1–R5 are adopted.**
+  - **R1. Narrowing the proven tier is allowed as a stage, never as the destination** (stock-take
+    §8 items 2 (a) and 4). *Item 4:* a narrow first proven tier is accepted (its coverage ceiling
+    is OPEN-129's estimate, not restated here) under four conditions:
+    1. the stated goal stays every paper;
+    2. the tier is exact inside its contract, and everything else is Outside;
+    3. papers outside the tier still get the heuristic tier plus cause-and-fix (OPEN-132);
+    4. proven-coverage growth is the tracked progress number, with dated milestones.
+
+    *Item 2 (what a discriminator KILL leads to):* 2 (a), narrowing temporarily, TOGETHER WITH
+    2 (b), strengthening the heuristic tier, while a replacement route to the same goal is
+    scoped. 2 (c), stopping the proven-tier build, stays excluded under E19. This settles E19's
+    open question about 2 (a) and item 4.
+  - **R2. Cause-and-fix (OPEN-132) may NOT use sample 3, for anything:** no baseline, no design,
+    no scoring. Sample 3 stays sealed for the verdict tier's North-Star measurement (OPEN-119).
+    The assistant's supporting reason: sample 3 has too few failing documents for P2's floors
+    (its counts are in PROJECT_STATE §1's generated block).
+  - **R3. P2's out-of-sample sets.**
+    - Frame offsets 920–1999 of the real-paper frame (sorted by `sha256(arxiv_id)`) are designated
+      P2's held-out set, sealed with the same mechanism as sample 3: no P2 design, triage or
+      per-document reading on it; measurement only, aggregate output only. Before sealing, the
+      window must be checked unreferenced on every branch: the assistant checked `origin/main`
+      only; on 2026-11-03 a narrow search for `--offset` / `"offset"` values in the window found
+      none on the spike, OPEN-128 and P2 branches (this record's check, not a full audit).
+    - Recorded with it: under the pinned TL2026, arXiv failures are mostly package drift (arXiv
+      built these papers on an older TeX Live), which is the publisher's situation, not the
+      laptop author's.
+    - A second set of NATURAL broken states for authors (for example, public LaTeX repositories
+      where one commit breaks the build and a later one fixes it) is to be feasibility-checked
+      (about a day). Injected or synthetic errors are for development and regression tests only,
+      never for a headline number.
+  - **R4. P2's lines** (a change to the pre-registration, before the owner commits it as
+    FIXED):
+    - every prediction carries a claim tier, CERTIFIED or HEURISTIC, scored separately;
+    - CERTIFIED: precision exactly 1.0. One wrong certified claim is a soundness defect, treated
+      like a wrong PROVEN: that channel stops and the class is fixed. It is not a statistical
+      kill;
+    - HEURISTIC: success at precision ≥ 0.95; kill below 0.90, which retires that heuristic route;
+    - the floor for any success claim is n ≥ 29 claims (zero errors in 29 gives a one-sided 95 %
+      lower bound of 0.90); 59 (bound 0.95) is recorded as the next floor, once the sets can
+      supply it;
+    - location: TeX's stopping line (`l.N`) is the gold for certified location claims; the CAUSE
+      line (for example the `\usepackage` on line 3 when TeX reports line 4) is a heuristic claim,
+      scored against gold from two independent labellers;
+    - kept: the validity lines that void a run; the recall targets (location ≥ 0.50, cause ≥ 0.80)
+      on certified and heuristic claims together; the baseline predicted at zero;
+    - the lines stay PROPOSED in the pre-registration's machine block until the owner commits
+      FIXED (the scorer's rule); R4 is what the owner has agreed the FIXED values will be. The
+      pre-registration is track E's (OPEN-138, branch `feat/v27165-p2-baseline`).
+  - **R5. Three fixes are folded into track B's single re-grade** (OPEN-128): the shim fix
+    (C-133..C-137, on track B's branch) plus the sample-3 seal in the grading tools (OPEN-139),
+    the first-error extraction fix (C-181) and `sha256_tree` seeing symlinked directories (C-182),
+    those three ids being track E's, on its branch. The seal in the grading tools keeps a
+    MEASUREMENT-ONLY mode for sample 3 that writes the results file but prints aggregates only
+    (today `--record` prints each FALSE-READY's id and first error).
+  - *Not ruled by E20:* AI-0d and its KILL line (the assistant is to bring a separate
+    recommendation), branch clean-up list B, and the rest of the stock-take's §8 not named above.
+
 ## Open, not decided (as of 2026-11-03)
 
 Listed here so that nothing pending reads as decided. Item numbers refer to §8 of the 2026-10-19
@@ -508,8 +579,9 @@ stock-take (not committed).
   runs; a criterion invented after the measurement is the goalpost risk that H.5 showed. Under the
   assistant's sentence the owner accepted in E19, a failed AI-0d would retire the admission route
   it tests, not the goal.
-- **What follows a KILL** (item 2): E19 excludes item 2 (c) (derived, see E19). Whether it also
-  excludes item 2 (a) and item 4 is an open owner question. The route is not chosen.
+- **Which replacement route follows a KILL**: E20 (R1) settles the stance (narrow temporarily
+  together with a stronger heuristic tier, while a replacement route is scoped; 2 (c) excluded),
+  but no replacement route is chosen for any KILL.
 - **ADR-014 draft questions never cited by a decision above:**
   - **O-3:** bit-exact pointer-level state, or an algebraic model with separate capacity
     accounts.
@@ -526,8 +598,8 @@ stock-take (not committed).
   - E19 settles item 1 against re-scoping;
   - "go" (2026-10-21T12:05:18Z) answers item 14, item 19 and part of item 20 (see "Restart
     tracks A–E authorised" above);
-  - E18 and the restart tracks start item 16's track, while its sub-questions stay open (see
-    OPEN-130);
+  - E20 answers items 2 and 4 (R1) and item 16's sample-3 sub-question (R2); E18 and the
+    restart tracks start item 16's track, while its other sub-questions stay open (see OPEN-130);
   - item 21 (disk) was approved by "ok" at 2026-10-21T12:05:18Z and carried out outside the
     repository: the spike's scratch directory was shrunk on 2026-10-29, and its two remaining
     rebuildable debugging directories were deleted on 2026-11-02 after the branch-citation guard

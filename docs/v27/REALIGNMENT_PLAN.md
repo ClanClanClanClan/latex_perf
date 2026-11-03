@@ -29,7 +29,7 @@ OPEN-116 in `PROJECT_STATE.md`.
 ⚠ **Banner 2026-11-03: this paragraph is stale and contradicts the banner above.** ADR-012 makes the
 strict tier a biconditional inside its boundary, and [ADR-015](adr/ADR-015-static-proven-tier-on-translated-engine.md)
 (2026-09-29) replaces the mechanism: a static, real-time, engine-free PROVEN verdict on a Coq
-translation of the pinned pdfTeX; the owner's later decisions are its E1–E19. `ROADMAP.md:427`
+translation of the pinned pdfTeX; the owner's later decisions are its E1–E20. `ROADMAP.md:427`
 no longer holds the line cited below. Kept as the record of the 2026-09-04 plan.
 
 ⚠ The biconditional is not achievable and the ROADMAP concedes it

@@ -245,7 +245,7 @@ RACEFLIP_TEX = r"""\documentclass{article}
   \lpi=0 {\loop\advance\lpi1 \ifnum\lpi<2000 \repeat}%
   \advance\lpj1
   \lpgotrue
-  \ifnum0\pdffilesize{lpt.pdf}>7000 \lpgofalse\fi
+  \ifnum0\pdffilesize{lpt.pdf}>0 \lpgofalse\fi
   \ifnum\lpj>100000 \lpgofalse\fi
 \iflpgo \repeat
 \typeout{LPFLIP polls-until-gs-done=[\the\lpj]}
@@ -270,9 +270,12 @@ ORPHAN2_EPS = """%!PS-Adobe-3.0 EPSF-3.0
 /Courier findfont 8 scalefont setfont 10 50 moveto (slow) show
 showpage
 """
+SINGLE_PASS = {"raceflip"}
 SEMANTICS_DOCS = {
     "fs_meta": (FS_META_TEX, {"sub/f%d" % i: "%d\n" % i for i in range(1, 41)}),
-    "raceflip": (RACEFLIP_TEX, {"lpt.eps": GS_SANDBOX_EPS}),
+    # (the review's raceflip, with orphan2's slow EPS and "any bytes" as the
+    # stop condition, so a concurrent child is caught however fast gs is)
+    "raceflip": (RACEFLIP_TEX, {"lpt.eps": ORPHAN2_EPS}),
     "orphan2": (ORPHAN2_TEX, {"lpt.eps": ORPHAN2_EPS}),
 }
 
@@ -350,7 +353,10 @@ def grade(o, name: str, src: str, extra: dict, sub: str = "w") -> dict:
         for f, text in extra.items():
             (work / f).parent.mkdir(parents=True, exist_ok=True)
             (work / f).write_text(text)
-        r = o.run_to_fixpoint(work, "doc.tex", o.tex_env(td), 300)
+        # raceflip is graded on its FIRST pass: a later pass reads the file
+        # the first one left, which hides the race
+        r = (o.run_pass(work, "doc.tex", o.tex_env(td), 300) if name in SINGLE_PASS
+             else o.run_to_fixpoint(work, "doc.tex", o.tex_env(td), 300))
         out = {"rc": r.rc, "compiles": r.compiles, "timeout": r.timed_out}
         for ext in (".log", ".pdf"):
             p = work / ("doc" + ext)

@@ -110,6 +110,13 @@ EXEMPT = {
     "check_project_state.py": "covered (see REGISTRY)",
     "check_fix_type_consistency.py": "covered (see REGISTRY)",
     "check_gate_selftests.py": "this harness itself",
+    # P2 (review 3, M4). It FAILS by design until the owner's
+    # Seal-Change-Approved-By trailer lands on the branch that changed the
+    # seals, so the harness cannot run its kill-tests against a passing
+    # baseline here; its behaviour (pass, fail, approve, re-fail) is tested on
+    # synthetic repositories in check_p2_diag.py. Remove this entry and add a
+    # REGISTRY entry once the approval is on main.
+    "check_seal_changes.py": "kill-tested on synthetic repos by check_p2_diag.py",
 }
 
 

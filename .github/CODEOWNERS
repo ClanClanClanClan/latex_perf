@@ -1,0 +1,8 @@
+# The P2 seals (pre-registration §2.3; review 3, M4): GitHub requests the owner's
+# review for any change to the sealed sets, their pins, the seal gate or the
+# labeller allow-list. check_seal_changes.py is the anchor in CI.
+/scripts/tools/_sample_seal.py @ClanClanClanClan
+/scripts/tools/check_seal_changes.py @ClanClanClanClan
+/corpora/real_roots/manifest_sample3.json @ClanClanClanClan
+/corpora/real_roots/manifest_p2_heldout.json @ClanClanClanClan
+/corpora/p2_baseline/cause_labels/labellers.json @ClanClanClanClan

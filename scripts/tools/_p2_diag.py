@@ -47,7 +47,7 @@ from _oracle import _unwrap_log  # noqa: E402  (the one 79-byte line model)
 
 SCHEMA = "p2-diag/2"
 # Bumped whenever a definition the pre-registration names changes.
-DEFINITIONS_VERSION = "p2-defs/5"
+DEFINITIONS_VERSION = "p2-defs/6"
 
 WRAP = 79  # max_print_line: the oracle's line model joins a line of exactly this
 FATAL_PREFIX = "!  ==>"
@@ -703,8 +703,8 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
             out.append(line)
         return out
     lines = frozen(stdout) + frozen(stderr)
-    tier_line = next((ln for ln in (stdout or "").split("\n") + (stderr or "").split("\n")
-                      if ln.startswith("TIER\t")), None)
+    tier_lines = [ln for ln in (stdout or "").split("\n") + (stderr or "").split("\n")
+                  if ln.startswith("TIER")]
     verdict = ("READY" if any(s.startswith("READY\t") for s in lines) else
                "NOT-READY" if any(s.startswith("NOT-READY") for s in lines) else None)
     printed, cur = [], None
@@ -728,14 +728,7 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
              if verdict == "NOT-READY" else [])
     for x in preds:
         x["tier"] = "heuristic"
-    cert = certified_prediction(tier_line)
-    if cert is not None and verdict != "NOT-READY":
-        # review 2, M3: a PROVEN-NOT-READY beside a READY or missing verdict is
-        # never dropped: it is a malformed certified claim (wrong, §5.6).
-        cert = dict(cert, malformed=True, malformed_why=f"certified NOT-READY beside verdict "
-                                                       f"{verdict!r}")
-    if cert:
-        preds.append(cert)
+    preds += certified_predictions(tier_lines, verdict)
     for x in preds:
         x["file_raw"] = x["file"]
         x["file"] = canon_path(x["file"], run_roots) if x["file"] else None
@@ -743,105 +736,182 @@ def cli_prediction(stdout: str, stderr: str = "", run_roots: tuple = ()) -> dict
             # review 2, H2(a): a certified location outside the run is not
             # dropped; it is a claim that can never be exact.
             x["location_outside_run"] = True
-    vt = tier_line.split("\t")[1] if tier_line and len(tier_line.split("\t")) > 1 else None
+    vt = tier_lines[0].split("\t")[1] if tier_lines and len(tier_lines[0].split("\t")) > 1 else None
     return {"definitions": DEFINITIONS_VERSION, "verdict": verdict, "verdict_tier": vt,
             "predictions": preds}
 
 
 _PROVEN_HEAD = re.compile(r"^PROVEN NOT-READY (?P<loc>.*) \[(?P<rest>[^\]]*)\]$")
+_PROVEN_READY_HEAD = re.compile(r"^PROVEN READY \(decided by .+ under contract .+, pin .+\)$")
 _LOC_SPLIT = re.compile(r":([0-9]+):([0-9]+) ")
-# The proof's own reason code (Verdict.e_code) where it names one of the gold
-# classes; it is authoritative over the message text. E0, E3, E5-E7, E9, E12,
-# E13 name no single gold class: the message decides.
+# Verdict.e_code: the proof's reason codes. Any other code, or none, makes a
+# certified claim malformed (review 3).
+E_CODES = frozenset(f"E{i}" for i in range(15))
+# The E-codes that name one gold class; a message of another class contradicts
+# the proof and makes the claim malformed. (The class is a HEURISTIC-tier
+# notion: certified correctness is the exact error identity, error_identity.)
 E_CODE_CLASS = {"E1": "undefined-cs", "E2": "undefined-env", "E4": "math-mode",
                 "E8": "command-already-defined", "E10": "missing-file", "E11": "encoding",
                 "E14": "tex-capacity"}
-# Classes whose gold carries an object (norm_object); for these a CERTIFIED
-# claim must name the same object (certified_judgement).
 OBJECT_CLASSES = frozenset({"missing-file", "engine-incompatible", "undefined-cs",
                             "undefined-env", "env-mismatch", "command-already-defined",
                             "option-clash", "package-error", "class-error"})
 
 
-def certified_prediction(tier_line: str | None) -> dict | None:
-    """THE CLAIM TIER (ruling R4). A prediction is CERTIFIED only when the
-    CLI's TIER line is a PROVEN-NOT-READY verdict (Verdict.render: the strict
-    tier decided it by proof); its file:line:col, message and E-code are the
-    certified claim. Every other prediction is HEURISTIC. As of v27.1.64 the
-    strict-tier membership predicate is a stub (M0): the channel is empty.
+def certified_predictions(tier_lines: list[str], verdict) -> list[dict]:
+    """THE CLAIM TIER (ruling R4). A prediction is CERTIFIED only when a TIER
+    line names the proven tier (Verdict.render). The CLI prints ONE TIER line;
+    as of v27.1.64 the strict tier is a stub (M0) and the channel is empty.
 
-    FAIL CLOSED (review 2): the claim is MALFORMED (hence wrong) when the
-    headline does not parse; when `:line:col ` occurs more than once (a file
-    name containing ":N:N " makes the split ambiguous); when the E-code names
-    a class the message contradicts; when it names no file or no gold class;
-    or when the class carries an object the message does not name.
-    Verdict.render's format: `PROVEN NOT-READY <file>:<line>:<col> <message>
-    [<E-code>, rule .., probe .., contract ..]`."""
-    if not tier_line:
-        return None
-    f = tier_line.split("\t")
-    if len(f) < 4 or f[1] != "proven" or f[2] != "PROVEN-NOT-READY":
-        return None
-    base = {"source": "tier", "tier": "certified", "code": "PROVEN", "text": f[3],
-            "class": None, "object": None, "file": None, "line": None}
+    FAIL CLOSED (reviews 2 and 3). Every TIER line that mentions the proven
+    tier or a PROVEN kind is a certified claim, and it is MALFORMED (hence
+    wrong) when:
+      * it is not the only TIER line (a PROVEN line after another TIER line);
+      * its fields are not exactly `TIER`, `proven`, `PROVEN-NOT-READY` |
+        `PROVEN-READY`, headline (a PROVEN kind under another tier token, a
+        short line, padding);
+      * a PROVEN-NOT-READY stands beside a READY or missing verdict, or a
+        PROVEN-READY beside a NOT-READY or missing one;
+      * a PROVEN-NOT-READY headline does not parse, has an ambiguous
+        `:line:col ` split, an unknown or missing E-code, an E-code whose class
+        the message contradicts, or no file or message;
+      * a PROVEN-READY headline does not parse.
+    A PROVEN-READY is a certified claim that the document compiles (M5)."""
+    out = []
+    proven = [t for t in tier_lines
+              if "proven" in t.split("\t")[1:2] or "PROVEN" in "\t".join(t.split("\t")[2:3])]
+    for t in proven:
+        f = t.split("\t")
+        base = {"source": "tier", "tier": "certified", "code": "PROVEN", "text": t,
+                "class": None, "object": None, "file": None, "line": None, "message": None}
 
-    def bad(why):
-        return dict(base, malformed=True, malformed_why=why)
-    m = _PROVEN_HEAD.match(f[3])
-    if not m:
-        return bad("the PROVEN headline does not parse")
-    seps = list(_LOC_SPLIT.finditer(m.group("loc")))
-    if len(seps) != 1:
-        return bad(f"{len(seps)} `:line:col ` separators: the location is ambiguous")
-    sp = seps[0]
-    file, line, msg = m.group("loc")[:sp.start()], int(sp.group(1)), m.group("loc")[sp.end():]
-    ecode = m.group("rest").split(",")[0].strip()
-    c = classify_message(msg if msg.startswith("!") else "! " + msg)
-    cls, obj = c["class"], c["object"]
-    if ecode in E_CODE_CLASS:
-        if cls not in (None, "other", E_CODE_CLASS[ecode]):
-            return bad(f"E-code {ecode} names {E_CODE_CLASS[ecode]} but the message says {cls}")
-        cls = E_CODE_CLASS[ecode]
-    if cls == "undefined-cs":
-        mm = re.search(r"(\\(?:[A-Za-z@]+|.))\s*$", msg)
-        obj = mm.group(1) if mm else None
-    if not file or not cls or cls == "other":
-        return bad("the claim names no file or no gold cause class")
-    if cls in OBJECT_CLASSES and obj is None:
-        return bad(f"class {cls} carries an object, and the claim names none")
-    return dict(base, **{"class": cls, "object": obj, "file": file, "line": line,
-                         "e_code": ecode})
+        def bad(why, base=base):
+            return dict(base, malformed=True, malformed_why=why)
+        if len(tier_lines) != 1:
+            out.append(bad(f"{len(tier_lines)} TIER lines: a PROVEN line beside another"))
+            continue
+        if len(f) != 4 or f[0] != "TIER" or f[1] != "proven" \
+                or f[2] not in ("PROVEN-NOT-READY", "PROVEN-READY"):
+            out.append(bad("the TIER line is not exactly TIER, proven, a PROVEN kind, headline"))
+            continue
+        if f[2] == "PROVEN-READY":
+            c = dict(base, code="PROVEN-READY", claims="READY")
+            if not _PROVEN_READY_HEAD.match(f[3]):
+                c = bad("the PROVEN READY headline does not parse", c)
+            elif verdict != "READY":
+                c = bad(f"certified READY beside verdict {verdict!r}", c)
+            out.append(c)
+            continue
+        if verdict != "NOT-READY":
+            out.append(bad(f"certified NOT-READY beside verdict {verdict!r}"))
+            continue
+        m = _PROVEN_HEAD.match(f[3])
+        if not m:
+            out.append(bad("the PROVEN headline does not parse"))
+            continue
+        seps = list(_LOC_SPLIT.finditer(m.group("loc")))
+        if len(seps) != 1:
+            out.append(bad(f"{len(seps)} `:line:col ` separators: the location is ambiguous"))
+            continue
+        sp = seps[0]
+        file, line = m.group("loc")[:sp.start()], int(sp.group(1))
+        msg = m.group("loc")[sp.end():]
+        ecode = m.group("rest").split(",")[0].strip()
+        if ecode not in E_CODES:
+            out.append(bad(f"unknown or missing E-code {ecode!r}"))
+            continue
+        full = msg if msg.startswith("!") else "! " + msg
+        c = classify_message(full)
+        if ecode in E_CODE_CLASS and c["class"] not in (None, "other", E_CODE_CLASS[ecode]):
+            out.append(bad(f"E-code {ecode} names {E_CODE_CLASS[ecode]} but the message "
+                           f"says {c['class']}"))
+            continue
+        if not file or not msg.strip():
+            out.append(bad("the claim names no file or no message"))
+            continue
+        out.append(dict(base, **{"class": E_CODE_CLASS.get(ecode, c["class"]),
+                                 "object": c["object"], "file": file, "line": line,
+                                 "e_code": ecode, "message": full,
+                                 "identity": error_identity(full, claim=True)}))
+    return out
+
+
+_ISSUER = re.compile(r"^(?:(?:Fatal |Critical )?(?P<kind>Package|Class) (?P<name>[\w.-]+) Error"
+                     r"|(?P<latex>LaTeX Error)|(?P<pdftex>pdfTeX (?:error|warning)[^:]*)): "
+                     r"(?P<body>.*)$")
+
+
+def error_identity(message: str, context: list | None = None, claim: bool = False) -> list:
+    """THE ERROR IDENTITY (review 3, H1): what a certified claim must equal.
+    The normalised `!` message -- its first line plus LaTeX's `(pkg)`
+    continuation lines (the \\MessageBreak parts, prefix removed); NOT the
+    generic second line LaTeX adds without a prefix ("Or name \\end... illegal,
+    see p.192 of the manual") -- split into
+      [issuer, body, control sequence]
+    issuer: "tex", "latex", "package <name>", "class <name>" or the pdfTeX
+    issuer; body: the rest, spaces collapsed, one trailing "." removed. The
+    object is IN the body: the character, the capacity name, the counter, the
+    file name with its extension. For "Undefined control sequence" the
+    control sequence is the third field: from the context's first line on the
+    gold side, from the end of the message on the claim side."""
+    msg = message or ""
+    if not claim:
+        # the gold side is a pdfTeX log read as latin-1 (log_lines): its bytes,
+        # with ^^xx notation undone, are UTF-8 text (as the CLI's output is)
+        msg = tex_unprint(msg).decode("utf-8", errors="replace")
+    ls = msg.split("\n")
+    parts = [ls[0]] + [_CONT_PREFIX.sub("", s) for s in ls[1:] if _CONT_PREFIX.match(s)]
+    text = " ".join(" ".join(parts).split())
+    text = text[1:].strip() if text.startswith("!") else text
+    cs = None
+    if claim:
+        mm = re.match(r"^(Undefined control sequence)\.?\s+(\\(?:[A-Za-z@]+|.))\.?$", text)
+        if mm:
+            text, cs = mm.group(1), mm.group(2)
+    elif text.rstrip(".") == "Undefined control sequence" and context:
+        mm = _CS_AT_END.search(context[0][0])
+        cs = mm.group(1) if mm else None
+    if text.endswith("."):
+        text = text[:-1]
+    m = _ISSUER.match(text)
+    if m:
+        issuer = (f"{m.group('kind').lower()} {m.group('name')}" if m.group("kind") else
+                  "latex" if m.group("latex") else m.group("pdftex"))
+        body = m.group("body")
+    else:
+        issuer, body = "tex", text
+    return [issuer, body.strip(), cs]
 
 
 def certified_judgement(c: dict, r: dict) -> tuple[bool, str]:
-    """(exact, why) of one CERTIFIED claim against its row (§5.6). EXACT
-    MATCHING, FAIL CLOSED (review 2, H1-H3): the claim is right only when the
-    live oracle FAILED the document, the gold record is consistent and
-    classified, the classes are equal, the objects are equal for an
-    object-carrying class (None never matches) and both None otherwise, and
-    the location is the gold's verified, in-tree l.N exactly. Anything that
-    cannot be confirmed is WRONG, with its reason. The grade of record is not
-    consulted: a certified NOT-READY on a document the live oracle compiled is
-    wrong whatever the grade of record says."""
+    """(exact, why) of one CERTIFIED claim against its row (§5.6). EXACT,
+    FAIL CLOSED (reviews 2 and 3): a certified NOT-READY is right only when
+    the live oracle FAILED the document, the gold record is consistent, the
+    claim's ERROR IDENTITY (error_identity: issuer, normalised message with
+    its object, control sequence) equals the gold first error's, its file is
+    the gold top frame's full canonical path, and its line is the gold's
+    verified l.N. A certified READY (PROVEN-READY) is right only when the
+    live oracle compiled the document; on a failing one it is the worst
+    certified error (M5). Anything that cannot be confirmed is WRONG, with its
+    reason; the grade of record is not consulted."""
     if c.get("malformed"):
         return False, f"malformed: {c.get('malformed_why', 'unparseable')}"
     if c.get("location_outside_run"):
         return False, "location outside the run"
     if r.get("rc") == -1 or r.get("compiles") is None:
         return False, "not confirmable: the oracle did not grade the document"
+    if c.get("code") == "PROVEN-READY":
+        return ((True, "exact") if r["compiles"] else
+                (False, "certified READY on a document the live oracle fails"))
     if r["compiles"]:
         return False, "the document compiles under the live oracle"
     g = r.get("gold") or {}
     if not g.get("has_error") or not g.get("consistent"):
         return False, "not confirmable: the gold record is absent or inconsistent"
-    gc = g.get("cause") or {}
-    if not gc.get("class") or c.get("class") != gc["class"]:
-        return False, f"class {c.get('class')!r} is not the gold {gc.get('class')!r}"
-    if c["class"] in OBJECT_CLASSES:
-        if c.get("object") is None or gc.get("object") is None or c["object"] != gc["object"]:
-            return False, "object differs from the gold (or either is unknown)"
-    elif c.get("object") is not None or gc.get("object") is not None:
-        return False, "object differs from the gold"
+    fe = g.get("first_error") or {}
+    gid = error_identity(fe.get("message") or "", fe.get("context_pairs"))
+    if c.get("identity") != gid:
+        return False, "error identity differs from TeX's first error"
     L = g.get("location") or {}
     if L.get("line") is None:
         return False, "not confirmable: the gold has no l.N"

@@ -48,6 +48,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -120,6 +121,92 @@ def _commits_touching(repo, rel) -> list[tuple[str, str, str]]:
     return [tuple(l.split("\t")) for l in out.splitlines() if l.strip()]
 
 
+LABELLERS = f"{LABEL_DIR}/labellers.json"
+LABELLERS_SCHEMA = "p2-labellers/1"
+
+
+def _ssh_fingerprint(key: str) -> str:
+    """SHA256:... of an SSH public key line (ssh-keygen -lf)."""
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".pub", delete=False) as f:
+        f.write(key.strip() + "\n")
+    try:
+        r = subprocess.run(["ssh-keygen", "-lf", f.name], capture_output=True, text=True)
+    finally:
+        os.unlink(f.name)
+    parts = r.stdout.split()
+    if r.returncode != 0 or len(parts) < 2 or not parts[1].startswith("SHA256:"):
+        raise InputError("a labeller key in the allow-list is not an SSH public key")
+    return parts[1]
+
+
+def check_label_signatures(repo: Path, present: dict, docs: dict) -> None:
+    """WHAT THE TOOL CAN PROVE ABOUT WHO LABELLED (review 3, H2). Git
+    authorship is self-asserted, so it proves nothing on its own. The tool
+    therefore requires:
+      * a committed allow-list of the three people (LABELLERS: role -> name,
+        e-mail, SSH public key); their names, e-mails and keys pairwise
+        DISJOINT; each label file's declared identity equal to its role's;
+      * EVERY commit touching a label file signed (SSH signing, gpg.format
+        ssh) with a GOOD signature by exactly that role's listed key, with that
+        role's author name and e-mail;
+      * no commit touching more than one label file.
+    The residual trust is stated in the pre-registration (§5.5): WHO the
+    three keys belong to is an owner-designated fact outside the tool."""
+    import tempfile
+    try:
+        allow = json.loads(seal.committed(repo, LABELLERS)[0])
+    except seal.SealError as e:
+        raise InputError(f"cause labels need the committed labeller allow-list: {e}") from None
+    except ValueError:
+        raise InputError(f"{LABELLERS} is not JSON") from None
+    if not isinstance(allow, dict) or allow.get("schema") != LABELLERS_SCHEMA:
+        raise InputError(f"{LABELLERS} is not a {LABELLERS_SCHEMA} file")
+    roles = {}
+    for k in present:
+        e = allow.get(k)
+        if not isinstance(e, dict) or not all(isinstance(e.get(x), str) and e[x].strip()
+                                              for x in ("name", "email", "ssh_key")):
+            raise InputError(f"{LABELLERS} has no complete entry for role {k}")
+        roles[k] = dict(e, fingerprint=_ssh_fingerprint(e["ssh_key"]))
+    for field in ("name", "email", "fingerprint"):
+        vals = [diag.norm_identity(r[field]) for r in roles.values()]
+        if len(set(vals)) != len(vals):
+            raise InputError(f"the labellers' {field}s are not pairwise disjoint")
+    for k in present:
+        declared = docs[k].get("adjudicator" if k == "adj" else "labeller")
+        if diag.norm_identity(declared) != diag.norm_identity(roles[k]["name"]):
+            raise InputError(f"{present[k]} declares {declared!r}, not its role's listed name")
+    label_rels = set(LABEL_FILES.values())
+    with tempfile.NamedTemporaryFile("w", suffix=".allowed_signers", delete=False) as f:
+        for r in roles.values():
+            f.write(f"{r['email']} {r['ssh_key'].strip()}\n")
+    try:
+        for k, rel in present.items():
+            for sha, _e, _n in _commits_touching(repo, rel):
+                touched = set(_git_ok(repo, "show", "--name-only", "--format=", sha)
+                              .stdout.decode().split()) & label_rels
+                if len(touched) > 1:
+                    raise InputError(f"commit {sha[:10]} touches {len(touched)} label files: "
+                                     f"each label file must be committed on its own")
+                info = _git_ok(repo, "-c", "gpg.format=ssh", "-c",
+                               f"gpg.ssh.allowedSignersFile={f.name}", "log", "-1",
+                               "--format=%G?%x09%GF%x09%an%x09%ae", sha).stdout.decode()
+                parts = info.rstrip("\n").split("\t")
+                if len(parts) != 4 or parts[0] != "G":
+                    raise InputError(f"commit {sha[:10]} of {rel} is not signed with a good "
+                                     f"signature by a listed labeller key")
+                if parts[1] != roles[k]["fingerprint"]:
+                    raise InputError(f"commit {sha[:10]} of {rel} is signed by another key "
+                                     f"than role {k}'s")
+                if (diag.norm_identity(parts[2]), diag.norm_identity(parts[3])) != \
+                        (diag.norm_identity(roles[k]["name"]), diag.norm_identity(roles[k]["email"])):
+                    raise InputError(f"commit {sha[:10]} of {rel} has another author than "
+                                     f"role {k}'s listed name and e-mail")
+    finally:
+        os.unlink(f.name)
+
+
 def committed_labels(repo: Path, record_rels: list[str]) -> tuple[dict, dict | None]:
     """The two-labeller cause-line gold (§5.5), or ({}, None) when no label
     file exists. FAIL CLOSED (review 2, H4, M4): the files are read from HEAD
@@ -149,12 +236,7 @@ def committed_labels(repo: Path, record_rels: list[str]) -> tuple[dict, dict | N
                                         lambda ids: seal.refuse_ids(ids, sealed))
     except ValueError as e:
         raise InputError(f"cause labels: {e}") from None
-    for k, rel in present.items():
-        who = diag.norm_identity(docs[k].get("adjudicator" if k == "adj" else "labeller"))
-        for sha, email, name in _commits_touching(repo, rel):
-            if who not in (diag.norm_identity(email), diag.norm_identity(name)):
-                raise InputError(f"{rel} was committed ({sha[:10]}) by someone other than its "
-                                 f"declared {'adjudicator' if k == 'adj' else 'labeller'}")
+    check_label_signatures(repo, present, docs)
     for rec in record_rels:
         intro = _commits_touching(repo, rec)
         if not intro:
@@ -348,12 +430,27 @@ def record(ns, repo: Path) -> int:
         pkg = root / seal.valid_id(d["arxiv_id"])
         if not pkg.is_dir() or pkg.is_symlink():
             row["excluded"] = "missing from the corpus"
+            row["exclusion_evidence"] = {"package_is_dir": pkg.is_dir(),
+                                         "package_is_symlink": pkg.is_symlink()}
         else:
             row["excluded"] = (tree_problem(pkg) or safe_toplevel(pkg, d.get("toplevel"))
                                or (None if d.get("sha256_tree") else
                                    "the grade of record carries no tree hash")
                                or (None if sha256_tree(pkg) == d["sha256_tree"] else
                                    "tree differs from the grade of record"))
+            if row["excluded"]:
+                # the raw evidence the scorer requires of every exclusion (review 3, M1)
+                ev = {"toplevel": d.get("toplevel"), "recorded_sha256_tree": d.get("sha256_tree")}
+                if row["excluded"] == "tree differs from the grade of record":
+                    ev["observed_sha256_tree"] = sha256_tree(pkg)
+                if row["excluded"] in ("symlink in the package tree",
+                                       "online-only (dataless) files in the tree",
+                                       "special file in the package tree",
+                                       "unreadable entry in the package tree"):
+                    ev["entries"] = sorted(str(Path(r_).relative_to(pkg) / n_)
+                                           for r_, ds, fs in os.walk(pkg, followlinks=False)
+                                           for n_ in ds + fs)[:200]
+                row["exclusion_evidence"] = ev
         if row["excluded"]:
             rows.append(row)
             continue
@@ -425,21 +522,105 @@ def record(ns, repo: Path) -> int:
 # ── score ────────────────────────────────────────────────────────────────────
 
 TIERS = ("certified", "heuristic")
+# Every reason `record` can give, each with the raw evidence it must carry
+# (review 3, M1): an excluded row with another reason, or without its
+# evidence, is refused.
+EXCLUSION_REASONS = {
+    "missing from the corpus": ("package_is_dir", "package_is_symlink"),
+    "tree differs from the grade of record": ("recorded_sha256_tree", "observed_sha256_tree"),
+    "the grade of record carries no tree hash": ("recorded_sha256_tree",),
+    "symlink in the package tree": ("entries",),
+    "online-only (dataless) files in the tree": ("entries",),
+    "special file in the package tree": ("entries",),
+    "unreadable entry in the package tree": ("entries",),
+    "toplevel is not a non-empty string": ("toplevel",),
+    "toplevel is absolute": ("toplevel",),
+    "toplevel has a `..` component": ("toplevel",),
+    "toplevel resolves outside the package": ("toplevel",),
+    "toplevel is not a file of the package": ("toplevel",),
+}
+
+
+def _kept_log(r: dict) -> bytes | None:
+    """The row's kept log, verified against its sha256; None when absent or
+    when it does not decode to the logged bytes."""
+    if not isinstance(r.get("log_gz_b64"), str):
+        return None
+    try:
+        log = zlib.decompress(base64.b64decode(r["log_gz_b64"], validate=True))
+    except Exception:  # noqa: BLE001 -- an undecodable log is no log; the caller refuses
+        return None
+    return log if hashlib.sha256(log).hexdigest() == r.get("log_sha256") else None
+
+
+def _gold_from_raw(r: dict, log: bytes) -> dict:
+    files = set(r.get("tree_files") or [])
+    roots = tuple(r.get("run_roots") or ())
+    return diag.diag_record(log, read_source=None,
+                            in_tree=lambda n: diag.canon_path(n, roots + (RUN_DIR,)) in files,
+                            work_prefixes=(RUN_DIR,) + roots)
+
+
+def raw_view(r: dict) -> dict:
+    """The row AS ITS RAW STORED FIELDS SAY, best effort and never raising:
+    the soundness pass (review 3, M2) judges every certified claim the raw
+    CLI output contains, before -- and whatever -- the integrity checks say.
+    The prediction comes from the stored CLI stdout/stderr whenever present
+    (also when cli_rc is -1, M1); compiles from rc and pdf; the gold from the
+    kept log, with `verified` taken from the record only when the corpus-free
+    facts allow it."""
+    rc, pdf = r.get("rc"), r.get("pdf")
+    ok_types = type(rc) is int and type(pdf) is bool
+    out = {"arxiv_id": r.get("arxiv_id"), "rc": rc if ok_types else -1,
+           "compiles": ((rc == 0 and pdf) if rc != -1 else None) if ok_types else None,
+           "graded": False, "agrees_with_record": False}
+    so, se = r.get("cli_stdout"), r.get("cli_stderr", "")
+    roots = r.get("run_roots") if isinstance(r.get("run_roots"), list) else []
+    if isinstance(so, str) and isinstance(se, str):
+        out["pred"] = diag.cli_prediction(so, se, tuple(str(x) for x in roots))
+    else:
+        out["pred"] = {"verdict": None, "predictions": []}
+    log = _kept_log(r)
+    out["gold"] = _gold_from_raw(r, log) if log is not None else diag.diag_record(None)
+    if log is not None:
+        _set_verified(out["gold"], r)
+    return out
+
+
+def _set_verified(g: dict, r: dict) -> None:
+    """`verified` needs the corpus, so it comes from the record -- but only
+    when the CORPUS-FREE facts agree (review 3, M3): a certain stack (no
+    suspect pop, no underflow) and the gold file among the run's files."""
+    L = g.get("location") or {}
+    st = L.get("stack_stats") or {}
+    stored = ((r.get("gold") or {}).get("location") or {}).get("verified")
+    free_ok = (not st.get("suspect_file_pops") and not st.get("underflow")
+               and L.get("file") in set(r.get("tree_files") or []))
+    L["verified"] = bool(stored) and free_ok
+    L["verify_why"] = ((r.get("gold") or {}).get("location") or {}).get("verify_why")
+    g["location"] = L
 
 
 def rederive_row(r: dict, gor_doc: dict, where: str) -> dict:
     """A record row with every scored field RE-DERIVED from what the run
-    produced (review 2, M2): graded / compiles / agrees_with_record from the
-    row's rc, pdf and cli_rc against the LOADED grade of record; the
-    prediction from the CLI's stdout/stderr and run roots; the gold from the
-    kept log (and the run's file list). The stored prediction and gold must
-    equal the re-derived ones (the gold's `verified`, which needs the corpus,
-    is taken from the record). Every prediction's tier must be exactly
-    "certified" or "heuristic". InputError otherwise."""
+    produced (reviews 2 and 3): graded / compiles / agrees_with_record from
+    rc, pdf and cli_rc against the LOADED grade of record; the prediction
+    from the CLI's stdout/stderr and run roots WHENEVER they are present; the
+    gold from the kept log and the run's file list. The stored prediction and
+    gold must equal the re-derived ones; `verified` is the record's only when
+    the corpus-free facts agree (and a stored `verified` they contradict is
+    refused). An excluded row must give a known reason with its raw evidence
+    and carry no prediction or gold. InputError otherwise."""
     from diff_real_roots import row_compiles
     if r.get("excluded"):
-        if "pred" in r or "gold" in r:
-            raise InputError(f"{where}: an excluded row carries a prediction or a gold")
+        need = EXCLUSION_REASONS.get(r["excluded"])
+        if need is None:
+            raise InputError(f"{where}: unknown exclusion reason {r['excluded']!r}")
+        ev = r.get("exclusion_evidence")
+        if not isinstance(ev, dict) or any(k not in ev for k in need):
+            raise InputError(f"{where}: an exclusion without its raw evidence {list(need)}")
+        if any(k in r for k in ("pred", "gold", "cli_stdout", "log_gz_b64")):
+            raise InputError(f"{where}: an excluded row carries a prediction, a gold or run output")
         return r
     out = dict(r)
     for k in ("rc", "pdf", "cli_rc"):
@@ -452,35 +633,27 @@ def rederive_row(r: dict, gor_doc: dict, where: str) -> dict:
     out["agrees_with_record"] = (out["compiles"] is not None
                                  and out["compiles"] == row_compiles(gor_doc)
                                  and r["rc"] == gor_doc.get("pdflatex_rc"))
-    if r["cli_rc"] == -1:
-        out["pred"] = {"verdict": "TIMEOUT", "predictions": []}
-    else:
-        if not isinstance(r.get("cli_stdout"), str) or not isinstance(r.get("cli_stderr"), str) \
-                or not isinstance(r.get("run_roots"), list):
-            raise InputError(f"{where}: a graded row lacks the CLI's output or run roots")
+    has_out = isinstance(r.get("cli_stdout"), str) and isinstance(r.get("cli_stderr"), str) \
+        and isinstance(r.get("run_roots"), list)
+    if has_out:
         pred = diag.cli_prediction(r["cli_stdout"], r["cli_stderr"], tuple(r["run_roots"]))
-        if r.get("pred") != pred:
-            raise InputError(f"{where}: the stored prediction is not the one the CLI's output "
-                             f"gives")
-        out["pred"] = pred
-    for x in out["pred"].get("predictions") or []:
+    elif r["cli_rc"] == -1:
+        pred = {"verdict": "TIMEOUT", "predictions": []}
+    else:
+        raise InputError(f"{where}: a graded row lacks the CLI's output or run roots")
+    if r.get("pred") != pred:
+        raise InputError(f"{where}: the stored prediction is not the one the CLI's output gives")
+    out["pred"] = pred
+    for x in pred.get("predictions") or []:
         if x.get("tier") not in TIERS:
             raise InputError(f"{where}: a prediction with tier {x.get('tier')!r}")
-    if out["compiles"] is False:
-        if not isinstance(r.get("log_gz_b64"), str):
-            raise InputError(f"{where}: a failing row lacks its log: the gold cannot be "
-                             f"re-derived")
-        try:
-            log = zlib.decompress(base64.b64decode(r["log_gz_b64"], validate=True))
-        except Exception:  # noqa: BLE001
-            raise InputError(f"{where}: the kept log does not decode") from None
-        if hashlib.sha256(log).hexdigest() != r.get("log_sha256"):
-            raise InputError(f"{where}: the kept log is not the logged run's")
-        files = set(r.get("tree_files") or [])
-        roots = tuple(r.get("run_roots") or ())
-        g = diag.diag_record(log, read_source=None,
-                             in_tree=lambda n: diag.canon_path(n, roots + (RUN_DIR,)) in files,
-                             work_prefixes=(RUN_DIR,) + roots)
+    log = _kept_log(r)
+    if log is None and isinstance(r.get("log_gz_b64"), str):
+        raise InputError(f"{where}: the kept log does not decode to the logged run's")
+    if out["compiles"] is False and log is None:
+        raise InputError(f"{where}: a failing row lacks its log: the gold cannot be re-derived")
+    if log is not None:
+        g = _gold_from_raw(r, log)
         stored = r.get("gold") or {}
         sl, gl = dict(stored.get("location") or {}), dict(g.get("location") or {})
         for k in ("verified", "verify_why"):
@@ -489,18 +662,33 @@ def rederive_row(r: dict, gor_doc: dict, where: str) -> dict:
         if {k: v for k, v in stored.items() if k != "location"} != \
                 {k: v for k, v in g.items() if k != "location"} or sl != gl:
             raise InputError(f"{where}: the stored gold is not the one the kept log gives")
-        g["location"]["verified"] = (stored.get("location") or {}).get("verified")
-        g["location"]["verify_why"] = (stored.get("location") or {}).get("verify_why")
+        _set_verified(g, r)
+        if bool((stored.get("location") or {}).get("verified")) and not g["location"]["verified"]:
+            raise InputError(f"{where}: the stored `verified` contradicts the corpus-free facts "
+                             f"(stack certainty, file among the run's files)")
         out["gold"] = g
     return out
 
 
-def check_stamps(repo: Path, art: dict, rel: str) -> None:
-    """The record names the grading code that produced it (review 2, M2):
-    exactly the oracle core plus GRADERS, each still at its recorded
-    behaviour; a measured_at commit that exists; a CLI provenance block."""
+HEX40, HEX64 = re.compile(r"[0-9a-f]{40}"), re.compile(r"[0-9a-f]{64}")
+
+
+def check_stamps(repo: Path, art: dict, rel: str, gor_art: dict) -> None:
+    """The record is bound to real runs as far as the repository allows
+    (reviews 2 and 3): its oracle is the SAME ORACLE as the grade of record's
+    (_oracle.require_same_oracle); its grading code is exactly the oracle core
+    plus GRADERS, each at its recorded behaviour; measured_at is a commit;
+    the CLI provenance is well-formed -- a 64-hex binary sha, a commit, the
+    src tree that commit really has -- and, when a CLI built from that same
+    src tree is present, its sha256 must match. What remains trusted
+    (the corpus bytes, the oracle having run) is stated in §6."""
     import _oracle
-    gc = (art.get("oracle") or {}).get("grading_code")
+    blk = art.get("oracle") or {}
+    try:
+        _oracle.require_same_oracle(gor_art.get("oracle"), blk, f"{rel} vs its grade of record")
+    except _oracle.OracleError as e:
+        raise InputError(str(e)) from None
+    gc = blk.get("grading_code")
     if not isinstance(gc, dict) or set((gc.get("files") or {})) != \
             set(_oracle.GRADING_CODE_CORE) | set(GRADERS):
         raise InputError(f"{rel}: its grading_code does not name the oracle core and this "
@@ -508,20 +696,34 @@ def check_stamps(repo: Path, art: dict, rel: str) -> None:
     findings, _ = _oracle.grading_code_drift(gc, Path(repo))
     if findings:
         raise InputError(f"{rel}: recorded by other grading code: {findings[0]}")
-    sha = art.get("measured_at_sha")
-    if not isinstance(sha, str) or subprocess.run(
-            ["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=repo,
-            capture_output=True).returncode != 0:
+
+    def is_commit(x):
+        return isinstance(x, str) and HEX40.fullmatch(x) and subprocess.run(
+            ["git", "cat-file", "-e", f"{x}^{{commit}}"], cwd=repo,
+            capture_output=True).returncode == 0
+    if not is_commit(art.get("measured_at_sha")):
         raise InputError(f"{rel}: measured_at_sha is not a commit of this repository")
     cli = art.get("cli") or {}
-    if not all(isinstance(cli.get(k), str) and cli.get(k) for k in ("sha256", "head", "src_tree")):
-        raise InputError(f"{rel}: its CLI provenance is incomplete")
+    if not (isinstance(cli.get("sha256"), str) and HEX64.fullmatch(cli["sha256"])
+            and is_commit(cli.get("head"))):
+        raise InputError(f"{rel}: its CLI provenance is incomplete or malformed")
+    tree = subprocess.run(["git", "rev-parse", f"{cli['head']}:latex-parse/src"], cwd=repo,
+                          capture_output=True)
+    if tree.returncode != 0 or tree.stdout.decode().strip() != cli.get("src_tree"):
+        raise InputError(f"{rel}: its CLI src_tree is not the tree of its head commit")
+    built = Path(repo) / "_build/default/latex-parse/src/validators_cli.exe"
+    here = subprocess.run(["git", "rev-parse", "HEAD:latex-parse/src"], cwd=repo,
+                          capture_output=True).stdout.decode().strip()
+    if built.is_file() and here == cli["src_tree"] and subprocess.run(
+            ["git", "diff", "--quiet", "HEAD", "--", "latex-parse/src"], cwd=repo).returncode == 0:
+        if hashlib.sha256(built.read_bytes()).hexdigest() != cli["sha256"]:
+            raise InputError(f"{rel}: the CLI built from its src tree has another sha256")
 
 
-def load_record(repo: Path, path, sealed: frozenset) -> tuple[dict, dict]:
-    """A record, validated against its sample by CONTENT, never by its own
-    labels alone, with every scored field re-derived (rederive_row).
-    Returns (artefact, provenance)."""
+def seal_stage(repo: Path, path, sealed: frozenset) -> dict:
+    """What the SEAL needs before anything of a record is read (review 3, M2):
+    its name, its committed blob, JSON, its sample and frame window, and its
+    rows being exactly its sample's documents once each. SealError / InputError."""
     seal.refuse_name(path)
     rel = repo_rel(repo, path)
     data, blob = seal.committed(repo, rel)
@@ -529,9 +731,8 @@ def load_record(repo: Path, path, sealed: frozenset) -> tuple[dict, dict]:
         art = json.loads(data)
     except ValueError:
         raise InputError(f"{rel} is not JSON") from None
-    if not isinstance(art, dict) or art.get("schema") != diag.SCHEMA \
-            or art.get("definitions") != diag.DEFINITIONS_VERSION:
-        raise InputError(f"{rel} is not a {diag.SCHEMA} record of {diag.DEFINITIONS_VERSION}")
+    if not isinstance(art, dict):
+        raise InputError(f"{rel} is not a {diag.SCHEMA} record")
     k = art.get("sample")
     if type(k) is not int:
         raise seal.SealError(f"{rel}: its sample is not the integer 1 or 2")
@@ -539,10 +740,6 @@ def load_record(repo: Path, path, sealed: frozenset) -> tuple[dict, dict]:
     if art.get("frame_window") != {"offset": offset, "n": n}:
         raise seal.SealError(f"{rel}: its frame window is not sample {k}'s")
     docs, gor_rel, gor_blob = seal.sample_docs(repo, k, sealed)
-    if art.get("grade_of_record") != {"path": gor_rel, "blob": gor_blob}:
-        raise InputError(f"{rel} was recorded against another grade of record")
-    if art.get("seal_blob") != seal.seal_blob(repo):
-        raise InputError(f"{rel} was recorded under another seal")
     rows = art.get("rows")
     if not isinstance(rows, list) or len(rows) != n or any(not isinstance(r, dict) for r in rows):
         raise InputError(f"{rel} must hold exactly {n} row objects")
@@ -551,11 +748,31 @@ def load_record(repo: Path, path, sealed: frozenset) -> tuple[dict, dict]:
     by_key = {seal.paper_key(d["arxiv_id"]): d for d in docs}
     if len(set(keys)) != n or set(keys) != set(by_key):
         raise InputError(f"{rel}: its rows are not exactly sample {k}'s documents, once each")
-    check_stamps(repo, art, rel)
-    art = dict(art, rows=[rederive_row(r, by_key[seal.paper_key(r["arxiv_id"])],
-                                       f"{rel} row {i}") for i, r in enumerate(rows)])
-    return art, {"path": rel, "blob": blob, "sha256": hashlib.sha256(data).hexdigest(),
-                 "sample": k}
+    return {"art": art, "rel": rel, "blob": blob, "data": data, "sample": k, "by_key": by_key,
+            "gor": (gor_rel, gor_blob)}
+
+
+def integrity_stage(repo: Path, st: dict) -> tuple[dict, dict]:
+    """Everything else (InputError): schema and definitions, the grade of
+    record and seal the record names, its stamps, every row re-derived."""
+    art, rel = st["art"], st["rel"]
+    if art.get("schema") != diag.SCHEMA or art.get("definitions") != diag.DEFINITIONS_VERSION:
+        raise InputError(f"{rel} is not a {diag.SCHEMA} record of {diag.DEFINITIONS_VERSION}")
+    gor_rel, gor_blob = st["gor"]
+    if art.get("grade_of_record") != {"path": gor_rel, "blob": gor_blob}:
+        raise InputError(f"{rel} was recorded against another grade of record")
+    if art.get("seal_blob") != seal.seal_blob(repo):
+        raise InputError(f"{rel} was recorded under another seal")
+    check_stamps(repo, art, rel, json.loads(seal.committed(repo, gor_rel)[0]))
+    art = dict(art, rows=[rederive_row(r, st["by_key"][seal.paper_key(r["arxiv_id"])],
+                                       f"{rel} row {i}") for i, r in enumerate(art["rows"])])
+    return art, {"path": rel, "blob": st["blob"],
+                 "sha256": hashlib.sha256(st["data"]).hexdigest(), "sample": st["sample"]}
+
+
+def load_record(repo: Path, path, sealed: frozenset) -> tuple[dict, dict]:
+    """seal_stage then integrity_stage (for callers that need both at once)."""
+    return integrity_stage(repo, seal_stage(repo, path, sealed))
 
 
 def evaluate_lines(block: dict, scores: dict) -> list[dict]:
@@ -621,32 +838,48 @@ def score_artefacts(arts: list[dict], block: dict,
 
 
 def score(ns, repo: Path) -> int:
-    """THE ORDER (pre-registration §6): (1) the seals (exit 3) and the
-    records' integrity (exit 2/3) -- nothing of a record is read before it
-    passes them; (2) SOUNDNESS: every certified claim of the two records is
-    judged, and a defect is reported (exit 5) whatever the lines' status --
-    a pre-condition refusal must not mask a known defect; (3) the lines must
-    be FIXED and valid (exit 2); (4) the cause labels; (5) the metrics, VOID
-    (exit 4) or SCORED (exit 0)."""
+    """THE ORDER (pre-registration §6; review 3, M2):
+      (1) the SEAL only (exit 3; a record that is not JSON exits 2): nothing
+          of a record is read before its ids are proven to be sample 1-2's;
+      (2) SOUNDNESS from the RAW stored fields of every seal-passing row: a
+          wrong certified claim is reported (exit 5) whatever follows -- the
+          record's integrity, the lines' status; when integrity also fails the
+          outcome says so ("SOUNDNESS-DEFECT (record integrity also failed)");
+      (3) INTEGRITY (exit 2): schema, grade of record, seal, stamps, every row
+          re-derived;
+      (4) the lines must be FIXED and valid (exit 2); (5) the cause labels;
+      (6) the metrics, VOID (exit 4) or SCORED (exit 0)."""
     sealed = seal.sealed_ids(repo)
     if len(ns.records) != 2:
         raise InputError("score takes exactly two records: sample 1's and sample 2's")
     seal.refuse_name(ns.out)
-    loaded = [load_record(repo, f, sealed) for f in ns.records]
-    if sorted(p["sample"] for _, p in loaded) != [1, 2]:
+    staged = [seal_stage(repo, f, sealed) for f in ns.records]
+    if sorted(st["sample"] for st in staged) != [1, 2]:
         raise InputError("the two records must be sample 1 and sample 2, once each")
+    raw = [raw_view(r) for st in staged for r in st["art"]["rows"]]
+    snd = diag.score_rows(raw)["soundness"]
+    loaded, integrity = [], []
+    for st in staged:
+        try:
+            loaded.append(integrity_stage(repo, st))
+        except (InputError, seal.SealError) as e:
+            integrity.append(str(e))
     prov = {"head": _git_head(repo), "seal_blob": seal.seal_blob(repo),
-            "records": [p for _, p in loaded]}
-    graded = [r for a, _ in loaded for r in a["rows"] if not r.get("excluded")]
-    snd = diag.score_rows(graded)["soundness"]
+            "records": [{"path": st["rel"], "blob": st["blob"],
+                         "sha256": hashlib.sha256(st["data"]).hexdigest(),
+                         "sample": st["sample"]} for st in staged]}
     if snd["certified_wrong"] > 0:
-        out = {"outcome": "SOUNDNESS-DEFECT", "definitions": diag.DEFINITIONS_VERSION,
-               "soundness": snd, "provenance": prov}
+        out = {"outcome": "SOUNDNESS-DEFECT" + (" (record integrity also failed)"
+                                                if integrity else ""),
+               "definitions": diag.DEFINITIONS_VERSION, "soundness": snd,
+               "integrity_failures": integrity, "provenance": prov}
         Path(ns.out).write_text(json.dumps(out, indent=1, sort_keys=True) + "\n")
-        print(f"[p2-baseline] SOUNDNESS DEFECT: {snd['certified_wrong']} wrong certified "
+        print(f"[p2-baseline] {out['outcome']}: {snd['certified_wrong']} wrong certified "
               f"claim(s) -- the certified channel stops and the class is fixed (R4; not a "
-              f"kill; reported before the lines are read) -> {ns.out}", file=sys.stderr)
+              f"kill; judged from the raw stored output) -> {ns.out}", file=sys.stderr)
         return EXIT_SOUNDNESS
+    if integrity:
+        raise InputError(integrity[0])
     block, prereg_blob = committed_lines(repo)
     require_fixed(block)
     labels, labels_prov = committed_labels(repo, [p["path"] for _, p in loaded])

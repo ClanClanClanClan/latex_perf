@@ -2,9 +2,9 @@
 
 Product track P2 ("exactly why": the cause of a failure, at source level, before compiling). The owner ruled it part of the core vision on 2026-10-21. Ledger: OPEN-138 (this baseline) and OPEN-139 (the seal outside the P2 tools), in `docs/v27/PROJECT_STATE.md`.
 
-**Status: PROPOSED. Nothing has been scored.** The success, kill and validity lines in §7 are proposals for the owner. The scorer (`p2_baseline.py score`) refuses to run until the owner sets the lines block to `"status": "FIXED"` in a commit. Definitions version: **p2-defs/5** (`_p2_diag.DEFINITIONS_VERSION`; `check_p2_diag.py` checks that this document and the code agree).
+**Status: PROPOSED. Nothing has been scored.** The success, kill and validity lines in §7 are proposals for the owner. The scorer (`p2_baseline.py score`) refuses to run until the owner sets the lines block to `"status": "FIXED"` in a commit. Definitions version: **p2-defs/6** (`_p2_diag.DEFINITIONS_VERSION`; `check_p2_diag.py` checks that this document and the code agree).
 
-p2-defs/2 replaced p2-defs/1 (commit `758e0e18`, never scored) after an independent review found 7 HIGH and 6 MEDIUM defects; C-183 records them. p2-defs/3 adds the review's five LOW fixes (L1, L3–L6): file names with spaces and parentheses (§3), the `artefact` claim (§4.3), the printed order of predictions (§4.2), unverified locations counted by reason (§5.4), and numerically stable bounds. Neither version was scored, and each fix has a defeat test in `check_p2_diag.py`. p2-defs/4 applies the rulings below (R2–R4): it seals the P2 held-out set (§2.2), adds the claim tier and the soundness outcome (§4.5, §5.6, §7), adds the cause-line metric with two-labeller gold (§5.5), and plans the natural author-error set (§10). **p2-defs/5** applies the second independent review of `6e76de3b`: exact, fail-closed certified judgement (§5.6), the enforced three-file labelling protocol (§5.5), pinned seals, re-derived rows, the check order (§6), a schema-checked lines block, and the kill rule with R4's 0.90 (§7).
+p2-defs/2 replaced p2-defs/1 (commit `758e0e18`, never scored) after an independent review found 7 HIGH and 6 MEDIUM defects; C-183 records them. p2-defs/3 adds the review's five LOW fixes (L1, L3–L6): file names with spaces and parentheses (§3), the `artefact` claim (§4.3), the printed order of predictions (§4.2), unverified locations counted by reason (§5.4), and numerically stable bounds. Neither version was scored, and each fix has a defeat test in `check_p2_diag.py`. p2-defs/4 applies the rulings below (R2–R4): it seals the P2 held-out set (§2.2), adds the claim tier and the soundness outcome (§4.5, §5.6, §7), adds the cause-line metric with two-labeller gold (§5.5), and plans the natural author-error set (§10). **p2-defs/5** applies the second independent review of `6e76de3b`: exact, fail-closed certified judgement (§5.6), the enforced three-file labelling protocol (§5.5), pinned seals, re-derived rows, the check order (§6), a schema-checked lines block, and the kill rule with R4's 0.90 (§7). **p2-defs/6** applies the third review of `ee285aff`: certified claims are judged by the exact **error identity**, full path and l.N (§5.6); PROVEN-READY is judged (M5); stricter malformed rules; labels must carry signed commits from an allow-list (§5.5); soundness is judged from raw stored output before integrity (§6); records are bound to their oracle and CLI (§6); and a seal-change gate with CODEOWNERS anchors the pins (§2.3, §6).
 
 **Rulings (provenance).** R2, R3 and R4 are **the assistant's recommendations of 2026-11-03, adopted by the owner** (`~/.cache/lp-tracks-2026-11-03/RULINGS-2026-11-03.md`). They are not the owner's own phrasing. The owner asked (2026-11-03, session e5675261): "What are the answers leading to the best product for the orginal vision? Ultrathink". The coordinating assistant answered with recommendations R1–R5. The owner replied: "Yes to run docker builder prune and listing the images. And I asked best recommendations for perfect project concerning your other two questions". The assistant read that reply as adopting R1–R5.
 
@@ -52,7 +52,7 @@ The following are not measured here:
 
 ### 2.3 How `_sample_seal` enforces the seals
 
-The same mechanism covers both sealed sets: sample 3 and the held-out set.
+The same mechanism covers both sealed sets: sample 3 and the held-out set. Each seal's id set is pinned (`SEAL_PINS`). A gate outside the seal code, `check_seal_changes.py`, fails on any change to a pin, a sealed id set or the labeller allow-list, unless the owner's trailer `Seal-Change-Approved-By:` follows the change. CODEOWNERS requests the owner's review for those paths (§6).
 
 - **It works by allow-list and fails closed.** It does not try to recognise sealed inputs; it accepts only what it can prove belongs to samples 1–2:
   - **Document ids.** An id is accepted only if it is a string that fully matches the ASCII pattern `NNNN.NNNN(N)vN`. Nothing is normalised: any other string is refused, never mapped onto an id. Every id in samples 1, 2 and 3 matches this pattern (measured 2026-11-03). Papers are compared without the version suffix, so another version of a sealed paper is also sealed.
@@ -201,9 +201,10 @@ TeX's stopping line `l.N` is the gold for **certified** location claims. The **c
 **The protocol** (enforced by `p2_baseline.committed_labels` and `_p2_diag.cause_line_gold`).
 1. **Who and what.** Two labellers, A and B, label each document independently. A labeller is a person, or an agent session with no shared context. Each receives the document's source tree and the oracle's first-error record (message, `l.N`, file stack). Neither sees the CLI's output, any prediction, the other labeller's labels or any score.
 2. **Three files, three people.** The labels live in three files under `corpora/p2_baseline/cause_labels/`: `labeller_a.json`, `labeller_b.json` (schema `p2-cause-label-set/1`, with role A or B and the labeller's identity) and, optionally, `adjudication.json` (schema `p2-cause-adjudication/1`).
-   - **Distinct identities.** The three identities are compared after normalisation (case and spacing ignored) and must be distinct.
-   - **Authorship.** Every commit touching a file must be authored by that file's declared person, matched on the author's e-mail or name.
-3. **Blindness by commit order.** Every commit touching a label file must be a **strict ancestor** of the commit that introduced each record it scores. The labels provably predate the predictions.
+   - **The allow-list.** `corpora/p2_baseline/cause_labels/labellers.json` (schema `p2-labellers/1`) is committed. It lists, for each role (A, B, adjudicator), a name, an e-mail and an SSH public key. Names, e-mails and keys must be **pairwise disjoint**, and each label file must declare its role's listed name.
+   - **Signed, one file per commit.** Every commit touching a label file must have a **good SSH signature** by exactly that role's listed key, and must carry that role's name and e-mail as author. A commit that touches more than one label file refuses the set.
+   - **The residual trust, stated plainly.** Git authorship is self-asserted, and a signature proves only which **key** signed. That three keys belong to three different, independent people is an **owner-designated fact outside the tool**. The owner designates the labellers and their keys, and the allow-list is under CODEOWNERS and the seal-change gate (§2.3).
+3. **Blindness by commit order.** Every commit touching a label file must be a **strict ancestor** of the commit that introduced each record it scores. **Limits, inherent to git:** ancestry is order in the commit graph of the history at HEAD, not wall-clock time. Commit dates can be set freely. A rewritten history (rebase, force-push) can re-order commits, and the check sees only the rewritten graph. So the check proves that the labels were committed before the records in **this** history, not that the labellers had not seen predictions made elsewhere. Blindness beyond that is part of the owner-designated trust above.
 4. **The label.** Each labeller records the (file, line) of the smallest edit that fixes the first error, or `{"none": reason}` when no single line is the cause. Any other value refuses the label set.
 5. **Agreement.** When both labellers give the same canonical (file, line), that is the gold. **Gold requires both labellers.** A document labelled by only one of them is counted as incomplete and has no gold.
 6. **Disagreement.** The adjudicator resolves a **genuine** disagreement only: both labellers labelled the document and their labels differ. The adjudicator picks one of the two located labels, or says `"unresolvable"`. An adjudication entry on an agreed document, on a document one labeller skipped, or naming a third label refuses the whole label set.
@@ -215,16 +216,22 @@ TeX's stopping line `l.N` is the gold for **certified** location claims. The **c
 
 Certified precision must be **exactly 1.0**. A single wrong certified claim is a **SOUNDNESS DEFECT**, treated like a wrong PROVEN verdict: the certified channel stops and the class is fixed. It is **not** a statistical kill.
 
-**Exact matching, fail closed** (`_p2_diag.certified_judgement`). A certified claim is right **only** when all of the following hold:
+**Exact means exact** (p2-defs/6; review 3, H1; `_p2_diag.certified_judgement`). A certified **NOT-READY** claim is right **only** when all of the following hold:
 - The live oracle **failed** the document. The grade of record is not consulted, so a certified NOT-READY on a document the live oracle compiled is wrong.
-- The gold record is consistent and classified.
-- The class is the gold class. When the proof's E-code names a gold class (E1 undefined-cs, E2 undefined-env, E4 math-mode, E8 command-already-defined, E10 missing-file, E11 encoding, E14 tex-capacity), the E-code decides the class, and an E-code that contradicts the message makes the claim malformed.
-- For an object-carrying class, the objects are both present and equal; **None never matches**. For an objectless class, both objects are None.
-- The location is the gold's **verified, in-tree** `l.N`, exactly.
+- The gold record is consistent.
+- Its **error identity** equals the identity of TeX's first error (`_p2_diag.error_identity`). The identity is the normalised `!` message: its first line plus LaTeX's `(pkg)` continuation lines; not the generic second line LaTeX prints without a prefix, such as "Or name \end... illegal". It is split into:
+  - the **issuer**: TeX, LaTeX, `package <name>`, `class <name>`, or pdfTeX;
+  - the **body**, with spaces collapsed and one trailing "." dropped. The body **contains the object**: the character, the capacity name, the counter, the file name **with its extension**;
+  - for "Undefined control sequence", the **control sequence**. On the gold side it comes from TeX's context; on the claim side, from the end of the message.
+- Its **file** is the gold top frame's **full canonical path**, and its **line** is the gold's **verified, in-tree** `l.N`.
+
+**Class and identity.** The class (§3) remains a **heuristic-tier** notion; for a certified claim it serves only as a consistency check against the E-code. The E-code must be one of the proof's codes E0–E14. Where it names a class (E1 undefined-cs, E2 undefined-env, E4 math-mode, E8 command-already-defined, E10 missing-file, E11 encoding, E14 tex-capacity), a message of another class makes the claim malformed. Matching on the message means two cases are judged correctly: TL2026's `Command \iint already defined` (its prefix-less second line is not part of the identity), and errors whose class `diag_record` rewrites to engine-incompatible (an undefined `\luatexversion`).
+
+**A certified READY** (a `PROVEN-READY` TIER line) is a claim that the document compiles. It is right only when the live oracle compiled the document. On a document the oracle fails it is **wrong, the worst certified error** (M5), and it is counted in the soundness block and exits 5 like any other wrong certified claim.
 
 Everything else is **wrong**, with its reason recorded. This includes:
-- a malformed `TIER` line, including an ambiguous `:line:col` split;
-- a `PROVEN-NOT-READY` printed beside a READY or missing verdict;
+- a malformed `TIER` line: a PROVEN kind under any tier token other than `proven`, a short or padded line, an ambiguous `:line:col` split, an unknown or missing E-code, or a PROVEN line beside another TIER line (the CLI prints one);
+- a `PROVEN-NOT-READY` beside a READY or missing verdict, or a `PROVEN-READY` beside a NOT-READY or missing one;
 - a location outside the run;
 - gold with no `l.N`, with a system top frame, unverified, or inconsistent;
 - an ungraded or timed-out run.
@@ -246,17 +253,29 @@ python3 scripts/tools/p2_baseline.py score --records corpora/p2_baseline/diag_sa
 
 - **`score` inputs.** `score` takes exactly the two records, one for sample 1 and one for sample 2. It reads the pre-registration from HEAD at its canonical path; there is no option that names another file.
 - **`score` output.** The output records HEAD, the pre-registration's blob, the seal manifest's blob, and each record's blob and sha256.
-- **Order of checks.**
-  1. The seals (exit 3), then each record's integrity (exit 2 or 3). Nothing in a record is read before it passes.
-  2. **Soundness.** Every certified claim is judged, and a defect is reported with exit 5 **even while the lines are PROPOSED**, so a refusal on a pre-condition never masks a known defect.
-  3. The lines must be FIXED and valid against their schema (exit 2).
-  4. The cause labels.
-  5. The metrics: VOID (exit 4) or SCORED (exit 0).
-- **Re-derivation (review 2, M2).** `score` trusts no per-row self-label. From each row's rc, pdf and cli_rc and the **loaded** grade of record, it recomputes graded, compiles and agrees-with-record. It re-derives the prediction from the CLI's stdout, stderr and run roots kept in the record. It re-derives the gold from the kept log and the run's file list. Only `verified` is taken from the record, because re-checking it needs the corpus. A stored prediction or gold that differs, an unknown tier, or a failing row without its log refuses the record. The record must also name the oracle core plus GRADERS as its grading code, each at its current behaviour, with a `measured_at` commit that exists and a complete CLI provenance.
+- **Order of checks** (review 3, M2).
+  1. **The seal only** (exit 3; a record that is not JSON exits 2). Nothing in a record is read before its ids are proven to belong to sample 1 or 2.
+  2. **Soundness, from the raw stored fields.** For every seal-passing row, the certified claims in its stored CLI output are judged: against the live rc and pdf, and against the gold re-derived from its kept log. A defect is reported with exit 5 **whatever follows**, even while the lines are PROPOSED. When the record's integrity also fails, the outcome is `SOUNDNESS-DEFECT (record integrity also failed)`, listing the failures.
+  3. **Integrity** (exit 2): schema, grade of record, seal, stamps, every row re-derived.
+  4. The lines must be FIXED and valid against their schema (exit 2).
+  5. The cause labels.
+  6. The metrics: VOID (exit 4) or SCORED (exit 0).
+- **Re-derivation (reviews 2 and 3).** `score` trusts no per-row self-label, and it re-derives from the raw data **whenever the data is present**: a row with `cli_rc == -1` whose stored output contains a PROVEN line still has that claim judged. Every excluded row must give a known reason with its raw evidence (the observed tree hash, the entries, the toplevel), and must carry no prediction, gold or run output; otherwise the record is refused. `verified` comes from the record only when the corpus-free facts agree: a certain stack, and the gold file among the run's files. A stored `verified` that these facts contradict refuses the record. From each row's rc, pdf and cli_rc and the **loaded** grade of record, it recomputes graded, compiles and agrees-with-record. It re-derives the prediction from the CLI's stdout, stderr and run roots kept in the record. It re-derives the gold from the kept log and the run's file list. Only `verified` is taken from the record, because re-checking it needs the corpus. A stored prediction or gold that differs, an unknown tier, or a failing row without its log refuses the record. The record must also name the oracle core plus GRADERS as its grading code, each at its current behaviour, with a `measured_at` commit that exists and a complete CLI provenance.
+- **Binding to real runs** (review 3, M3), as far as the repository allows:
+  - the record's oracle must be the **same oracle** as its grade of record's (`_oracle.require_same_oracle`);
+  - its grading code must be the core plus GRADERS, each at current behaviour;
+  - `measured_at` must be a commit;
+  - the CLI provenance must be well-formed: a 64-hex binary sha, a commit, and the src tree that commit really has. When a CLI built from that same, clean src tree is present, its sha256 must match.
+
+  **The remaining trust boundary**, stated plainly: without the corpus and the oracle, the scorer cannot prove that the stored stdout, log and rc came from running that CLI and that oracle on those bytes. A record forged consistently in all its raw fields is beyond what scoring can detect. That is why records are produced only by `record`, committed, reviewed, and re-producible.
 - **VOID runs.** If a validity line fails, the run is **VOID**: exit 4, the output holds only the validity lines, the counts and the soundness block, and no metric is presented as a result.
 - **Provenance.** Each `record` stamps a `RunStamp` before its first engine run. The stamp covers the oracle core plus `p2_baseline.py`, `_p2_diag.py`, `_sample_seal.py` and `diff_real_roots.py`. The command also stamps the grade-of-record and seal blobs, and re-checks all of them before writing.
 - **Grading blobs.** `_oracle.py` and `diff_real_roots.py` are not modified, so every recorded grade's `grading_code` (blobs 6b4ce94e and 9859cccf) still names this tree's code. `check_p2_diag.py` §9 asserts this for samples 1–2.
-- **Seal pins (review 2, M1).** Each seal's id set (offset, n, sorted ids) is pinned by sha256 in `_sample_seal.SEAL_PINS`, and `check_p2_diag.py` asserts the committed manifests match. Changing the ids of a seal therefore needs an explicit, visible edit of the pin. A re-grade that rewrites only the manifest's oracle block keeps the seal.
+- **Seal pins (review 2, M1) and their anchor (review 3, M4).** Each seal's id set (offset, n, sorted ids) is pinned by sha256 in `_sample_seal.SEAL_PINS`, and `check_p2_diag.py` asserts that the committed manifests match. A re-grade that rewrites only a manifest's oracle block keeps the seal. Because the pin sits in the code it protects, a gate outside that code anchors it: `scripts/tools/check_seal_changes.py` (spec-drift).
+  - **What the gate compares.** It compares the pins, the manifests' id sets and the labeller allow-list with their state at the merge-base with main.
+  - **When it fails.** It fails on any change unless a commit **after** the last change carries the trailer `Seal-Change-Approved-By: <owner>`. That trailer **requires the owner's sign-off**.
+  - **CODEOWNERS.** GitHub requests the owner's review for these paths.
+  - **Residual trust.** The trailer is text: the gate proves that an approval was recorded after the change, not who wrote it. The owner's review of the PR is what makes it an approval.
 - **Held-out build (review 2, M6).** `scripts/tools/build_p2_heldout.py --check` rebuilds the held-out manifest from frame metadata alone (it reads only `00README.json` and stats each toplevel, as `build_frame` does) and compares it byte for byte. `check_p2_diag.py` runs it when `LP_REAL_CORPUS` is set, and otherwise says that it did not run. A synthetic-corpus test traces every file the build opens.
 - **Artefact registration.** `check_oracle_pin.py` registers `corpora/p2_baseline/diag_sample{1,2}.json` as GRADED, with these graders. Until stage 2 writes them, the gate reports them missing.
 
@@ -279,6 +298,7 @@ So a predictor that never claims a location or names a cause cannot pass: its su
 - **Kill.** A heuristic kill fires when the exact one-sided 95% Clopper–Pearson **upper** bound on the heuristic precision is below **0.90**. That keeps R4's ruled value ("kill < 0.90") and adds a confidence requirement: the line fires only when we are confident the precision is below 0.90. There is no fixed `min_n`, because the bound carries the sample size.
   - Examples (tested): 26 correct of 29 has an upper bound of 0.971, so it does **not** fire; 10 of 20 has an upper bound of 0.698, so it **fires**.
   - With no claims (n = 0) there is no bound, so the line is not evaluable.
+  - **Small n:** the rule fires on very few claims when they are all wrong. For example, 0 correct of 2 has an upper bound of 0.776 and **fires**, while 0 of 1 (upper bound 0.95) does not. This is stated for the owner, who may want a floor on kills.
   - **Provenance:** this rule is **R4's value with a confidence requirement; the assistant's choice pending owner ruling**. It is not an owner ruling. It follows the rule recorded as C-174, which is on the **unmerged** branch `docs/v27165-rulings-1103` (PR #638), not on main.
   - The previous proposal (upper bound < 0.95, commit `6e76de3b`) changed R4's number instead of adding to it, and is withdrawn.
 - **Certified.** The certified channel has no kill line: it has the soundness outcome instead (§5.6).
@@ -313,7 +333,7 @@ The block below is machine-readable. The scorer reads it **from HEAD**, and it i
 ```json
 {
  "status": "PROPOSED",
- "definitions": "p2-defs/5",
+ "definitions": "p2-defs/6",
  "lines": [
   {"id": "V0", "kind": "validity", "metric": "excluded.at_record", "stat": "n", "op": "==", "value": 0},
   {"id": "V1", "kind": "validity", "metric": "inputs.fails", "stat": "n", "op": ">=", "value": 20},

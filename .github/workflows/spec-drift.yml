@@ -215,6 +215,13 @@ jobs:
         # grading code.
         run: python3 scripts/tools/check_p2_diag.py
 
+      - name: The P2 seals' anchor -- owner sign-off on any seal change (review 3, M4)
+        # Compares SEAL_PINS, the sealed id sets and the labeller allow-list with
+        # the merge-base with main; fails on any change unless a later commit
+        # carries "Seal-Change-Approved-By: <owner>" (pre-registration §2.3, §6).
+        # Needs fetch-depth 0 (above) and origin/main.
+        run: python3 scripts/tools/check_seal_changes.py --repo .
+
       - name: Strict kernel L_S0 and its evidence (ADR-012 M2 phase 1)
         # Every Runs constructor of proofs/Strict/Semantics.v is probe-tagged
         # and its family in corpora/strict_s0/rule_probes.json agrees with the

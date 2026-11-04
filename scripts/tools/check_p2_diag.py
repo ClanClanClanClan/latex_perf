@@ -625,6 +625,10 @@ REAL_PINS = dict(seal.SEAL_PINS)
 seal.SEAL_PINS = {seal.SEALED_MANIFEST: seal.seal_digest(720, 200, SEALED_FAKE),
                   seal.HELDOUT_MANIFEST: seal.seal_digest(920, 1080, HELDOUT_FAKE)}
 GRADER_FILES = sorted(set(_oracle.GRADING_CODE_CORE) | set(p2_baseline.GRADERS))
+# The synthetic grades of record name the real oracle of record (M3: a record's
+# oracle must be the same oracle as its grade of record's).
+GOR_ORACLE = {k: v for k, v in json.loads((REPO / seal.ALLOWED[1][2]).read_text())[
+    "oracle"].items() if k != "grading_code"}
 
 
 def commit_all(repo, who="t", paths=None):
@@ -644,10 +648,12 @@ def make_repo(td: Path, *, prereg_status="PROPOSED", s1=None, compiling=()) -> P
     (repo / seal.HELDOUT_MANIFEST).write_text(json.dumps(
         {"frame": {"offset": 920, "n": 1080}, "docs": [{"arxiv_id": x} for x in HELDOUT_FAKE]}))
     for rel, ids in ((seal.ALLOWED[1][2], s1 or S1_FAKE), (seal.ALLOWED[2][2], S2_FAKE)):
-        (repo / rel).write_text(json.dumps({"docs": [
+        (repo / rel).write_text(json.dumps({"oracle": GOR_ORACLE, "docs": [
             {"arxiv_id": x, "toplevel": "main.tex", "sha256_tree": "0" * 64,
              "pdflatex_rc": 0 if x in compiling else 1, "pdflatex_pdf": x in compiling,
              "cli_rc": 1} for x in ids]}))
+    (repo / "latex-parse/src").mkdir(parents=True)          # the CLI's src tree
+    (repo / "latex-parse/src/main.ml").write_text("let () = ()\n")
     for f in GRADER_FILES:   # the grading code a record names must exist here
         (repo / f).parent.mkdir(parents=True, exist_ok=True)
         (repo / f).write_bytes((REPO / f).read_bytes())
@@ -655,6 +661,9 @@ def make_repo(td: Path, *, prereg_status="PROPOSED", s1=None, compiling=()) -> P
     (repo / p2_baseline.PREREG).write_text(
         f"x\n{p2_baseline.LINES_BEGIN}\n```json\n{json.dumps(blk)}\n```\n{p2_baseline.LINES_END}\n")
     git(repo, "init", "-q")
+    # no background gc/maintenance writing into .git while the tempdir is removed
+    git(repo, "config", "gc.auto", "0")
+    git(repo, "config", "maintenance.auto", "false")
     commit_all(repo)
     return repo
 
@@ -969,8 +978,11 @@ def mkrow(x, kind="hit", compiles=False, rc=None):
     return r
 
 
-def excluded_row(x, why="tree differs from the grade of record"):
-    return {"arxiv_id": x, "toplevel": "main.tex", "excluded": why, "graded": False}
+def excluded_row(x, why="tree differs from the grade of record", evidence=None):
+    ev = evidence if evidence is not None else {
+        k: "x" for k in p2_baseline.EXCLUSION_REASONS.get(why, ())}
+    return {"arxiv_id": x, "toplevel": "main.tex", "excluded": why, "graded": False,
+            "exclusion_evidence": ev}
 
 
 def rows_for(ids, kind="hit", compiling=()):
@@ -983,9 +995,11 @@ def record_art(repo, k, rows=None, compiling=()):
             "frame_window": {"offset": o_, "n": n},
             "grade_of_record": {"path": rel, "blob": seal.committed(repo, rel)[1]},
             "seal_blob": seal.seal_blob(repo),
-            "oracle": {"grading_code": _oracle.grading_code(p2_baseline.GRADERS, repo)},
+            "oracle": dict(GOR_ORACLE,
+                           grading_code=_oracle.grading_code(p2_baseline.GRADERS, repo)),
             "measured_at_sha": git(repo, "rev-parse", "HEAD"),
-            "cli": {"sha256": "s", "head": "h", "src_tree": "t"},
+            "cli": {"sha256": "a" * 64, "head": git(repo, "rev-parse", "HEAD"),
+                    "src_tree": git(repo, "rev-parse", "HEAD:latex-parse/src")},
             "rows": rows if rows is not None else rows_for(S1_FAKE if k == 1 else S2_FAKE,
                                                            compiling=compiling)}
 
@@ -1076,9 +1090,10 @@ score_case("H2c: a self-declared sample label is not trusted (sample 2's rows la
                                 "rec2.json": a2}, expect_rc=2, expect_in="not exactly")
 score_case("H2c: a string sample label is refused",
            arts=lambda a1, a2: {"rec1.json": dict(a1, sample="1"), "rec2.json": a2}, expect_rc=3)
-score_case("L1: a copy (new inode) of an id-less artefact given as a record is refused",
-           arts=lambda a1, a2: {"rec1.json": {"summary": {}}, "rec2.json": a2}, expect_rc=2,
-           expect_in="is not a")
+score_case("L1: a copy (new inode) of an id-less artefact given as a record is refused by the "
+           "seal (exit 3)",
+           arts=lambda a1, a2: {"rec1.json": {"summary": {}}, "rec2.json": a2}, expect_rc=3,
+           expect_in="sample is not the integer")
 
 
 def dangling(repo):
@@ -1166,8 +1181,8 @@ if res:
     check("M2 (N9): agrees_with_record is recomputed from the loaded grade of record",
           res["excluded"]["disagrees_with_record"] == 1, res.get("excluded"))
 score_case("M2: a record whose grading code is not this producer's GRADERS is refused",
-           arts=lambda a1, a2: {"rec1.json": dict(a1, oracle={"grading_code": {
-               "files": {"scripts/tools/_oracle.py": "0" * 40}, "sha256": "x"}}),
+           arts=lambda a1, a2: {"rec1.json": dict(a1, oracle=dict(a1["oracle"], grading_code={
+               "files": {"scripts/tools/_oracle.py": "0" * 40}, "sha256": "x"})),
                "rec2.json": a2}, expect_rc=2, expect_in="grading_code")
 score_case("M2: a record whose CLI provenance is incomplete is refused",
            arts=lambda a1, a2: {"rec1.json": dict(a1, cli={}), "rec2.json": a2}, expect_rc=2,
@@ -1187,6 +1202,100 @@ def bad_line(repo):
 score_case("N11: an unknown metric/op in a FIXED block is refused cleanly (exit 2)",
            edit=bad_line, expect_rc=2, expect_in="unknown")
 
+# review 3, M1-M3: raw data re-derived, exclusions with evidence, the order, stamps
+score_case("M1 (rederive_exp): a cli_rc == -1 row whose stored output holds a PROVEN line is "
+           "still judged (exit 5)",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[dict(mkrow(S1_FAKE[0], "cert_bad"),
+                                                                 cli_rc=-1)]
+                                                  + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+           expect_rc=p2_baseline.EXIT_SOUNDNESS)
+score_case("M1: an exclusion with an unknown reason is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[excluded_row(S1_FAKE[0], "because")]
+                                                  + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+           expect_rc=2, expect_in="unknown exclusion reason")
+score_case("M1: an exclusion without its raw evidence is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, rows=[excluded_row(S1_FAKE[0], evidence={})]
+                                                  + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+           expect_rc=2, expect_in="without its raw evidence")
+rc, res = score_case("M2: a defect is reported even when the record's integrity ALSO fails "
+                     "(exit 5)", arts=lambda a1, a2: {"rec1.json": dict(
+                         a1, measured_at_sha="0" * 40, rows=[mkrow(S1_FAKE[0], "cert_bad")]
+                         + rows_for(S1_FAKE[1:])), "rec2.json": a2},
+                     expect_rc=p2_baseline.EXIT_SOUNDNESS,
+                     expect_in="record integrity also failed")
+if res:
+    check("M2: ... and the output names the integrity failure",
+          res["outcome"] == "SOUNDNESS-DEFECT (record integrity also failed)"
+          and any("measured_at_sha" in x for x in res["integrity_failures"]), res)
+score_case("M2: an integrity failure alone is still refused (exit 2)",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, measured_at_sha="0" * 40),
+                                "rec2.json": a2}, expect_rc=2, expect_in="measured_at_sha")
+score_case("M3: a record whose oracle is not its grade of record's is refused",
+           arts=lambda a1, a2: {"rec1.json": dict(a1, oracle=dict(a1["oracle"], arch="x86_64")),
+                                "rec2.json": a2}, expect_rc=2, expect_in="architecture")
+for label, cli_ in (("a non-hex binary sha", {"sha256": "s"}),
+                    ("a head that is not a commit", {"head": "1" * 40}),
+                    ("a src_tree that is not its head's", {"src_tree": "2" * 40})):
+    score_case(f"M3: CLI provenance with {label} is refused",
+               arts=lambda a1, a2, cli_=cli_: {"rec1.json": dict(a1, cli=dict(a1["cli"], **cli_)),
+                                               "rec2.json": a2}, expect_rc=2,
+               expect_in="CLI")
+
+
+def _uncertain_but_verified(a1, a2):
+    r0 = mkrow(S1_FAKE[0])
+    r0["tree_files"] = ["other.tex"]        # the gold file is not among the run's files
+    return {"rec1.json": dict(a1, rows=[r0] + rows_for(S1_FAKE[1:])), "rec2.json": a2}
+
+
+score_case("M3: a stored `verified` the corpus-free facts contradict is refused",
+           arts=_uncertain_but_verified, expect_rc=2, expect_in="contradicts the corpus-free")
+
+# review 3, M4: the seal-change gate, on synthetic repositories
+import check_seal_changes  # noqa: E402
+
+
+def gate(repo, base):
+    out_ = io.StringIO()
+    with redirect_stdout(out_):
+        rc_ = check_seal_changes.main(["--repo", str(repo), "--base", base])
+    return rc_, out_.getvalue()
+
+
+with tempfile.TemporaryDirectory() as td:
+    repo = make_repo(Path(td))
+    (repo / "scripts/tools/_sample_seal.py").write_bytes(
+        (REPO / "scripts/tools/_sample_seal.py").read_bytes())
+    commit_all(repo)
+    base_ = git(repo, "rev-parse", "HEAD")
+    rc_, out_ = gate(repo, base_)
+    check("M4: no seal change -> PASS", rc_ == 0 and "PASS" in out_, out_)
+    git(repo, "commit", "-q", "--allow-empty", "-m", "unrelated")
+    m = repo / seal.HELDOUT_MANIFEST
+    dd = json.loads(m.read_text())
+    dd["docs"][0]["arxiv_id"] = "9997.00000v1"
+    m.write_text(json.dumps(dd))
+    commit_all(repo)
+    rc_, out_ = gate(repo, base_)
+    check("M4: a committed seal change without the owner trailer FAILS", rc_ == 1, out_)
+    git(repo, "-c", "user.email=o@x", "-c", "user.name=o", "commit", "-q", "--allow-empty",
+        "-m", "approve\n\nSeal-Change-Approved-By: the owner")
+    rc_, out_ = gate(repo, base_)
+    check("M4: ... and passes once a later commit carries Seal-Change-Approved-By",
+          rc_ == 0 and "APPROVED" in out_, out_)
+    sp = repo / "scripts/tools/_sample_seal.py"
+    assert REAL_PINS[seal.HELDOUT_MANIFEST] in sp.read_text()
+    sp.write_text(sp.read_text().replace(REAL_PINS[seal.HELDOUT_MANIFEST], "0" * 64))
+    commit_all(repo)
+    rc_, out_ = gate(repo, base_)
+    check("M4: a pin edited AFTER the approval FAILS again", rc_ == 1 and "pins" in out_, out_)
+    r_ = (REPO / ".github/CODEOWNERS").read_text() if (REPO / ".github/CODEOWNERS").is_file() else ""
+check("M4: CODEOWNERS names the seal code, the gate, both manifests and the allow-list",
+      all(x in r_ for x in ("/scripts/tools/_sample_seal.py", "/scripts/tools/check_seal_changes.py",
+                            "/corpora/real_roots/manifest_sample3.json",
+                            "/corpora/real_roots/manifest_p2_heldout.json",
+                            "/corpora/p2_baseline/cause_labels/labellers.json")), r_)
+
 # ruling R4: the claim tier, soundness (§5.6), exact matching (review 2, H1-H3)
 rc, res = score_case("R4: exact certified claims score normally (rc 0)",
                      arts=lambda a1, a2: {"rec1.json": dict(a1, rows=rows_for(S1_FAKE, "cert_ok")),
@@ -1200,7 +1309,7 @@ CERT_BAD = lambda a1, a2: {"rec1.json": dict(a1, rows=[mkrow(S1_FAKE[0], "cert_b
                                               + rows_for(S1_FAKE[1:], "cert_ok")), "rec2.json": a2}
 rc, res = score_case("R4: one wrong certified claim exits 5 (SOUNDNESS DEFECT, not a kill)",
                      arts=CERT_BAD, expect_rc=p2_baseline.EXIT_SOUNDNESS,
-                     expect_in="SOUNDNESS DEFECT")
+                     expect_in="SOUNDNESS-DEFECT")
 if res:
     check("R4: the outcome names the defect, its row and its reason",
           res.get("outcome") == "SOUNDNESS-DEFECT" and res["soundness"]["wrong_rows"] == [S1_FAKE[0]]
@@ -1225,101 +1334,184 @@ score_case("H3 (N6): a certified claim on an UNGRADED row is not confirmable, he
            expect_rc=p2_baseline.EXIT_SOUNDNESS)
 
 
-def cl(cls, obj, file="main.tex", line=4, **kw):
-    return dict({"tier": "certified", "code": "PROVEN", "class": cls, "object": obj,
-                 "file": file, "line": line}, **kw)
+# Certified claims are judged EXACTLY (review 3, H1): file, l.N and the error
+# IDENTITY (issuer, normalised message with its object, control sequence).
+FINAL_L = "!  ==> Fatal error occurred, no output PDF file produced!"
 
 
-def grow(c, g=None, compiles=False, rc=1):
-    return {"arxiv_id": "0001.00000v1", "graded": rc != -1, "agrees_with_record": True,
-            "compiles": compiles, "rc": rc,
-            "gold": g if g is not None else gold("undefined-cs", "\\bar", "main.tex", 4),
-            "pred": pred("NOT-READY", c)}
+def tex_log(msg_lines, before, after, file="main.tex"):
+    s = f"This is pdfTeX\n(./{file}\n" + "\n".join(msg_lines) + "\n\n"
+    head = f"l.4 {before}"
+    s += head + "\n" + " " * len(head.encode("utf-8")) + after + "\n\n" + FINAL_L + "\n"
+    return s.encode("utf-8")
 
 
-T_UNDEF = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:4:1 Undefined control "
-           "sequence \\foo [E1, rule r, probe p, contract abcdef12]")
-p = d.cli_prediction("NOT-READY\tmain.tex\n" + T_UNDEF + "\n")
-c = [x for x in p["predictions"] if x["tier"] == "certified"][0]
-check("H1 (N4): the certified claim carries its control sequence as the object",
-      (c["class"], c["object"]) == ("undefined-cs", "\\foo"), c)
-sx = d.score_rows([grow(c)])
-check("H1 (N4): \\foo against gold \\bar is a WRONG certified claim",
-      sx["soundness"]["certified_wrong"] == 1 and sx["cause_precision_top1_certified"]["k"] == 0,
-      sx["soundness"])
-for label, cc, g in (
-        ("a None claim object", cl("undefined-cs", None), None),
-        ("a None gold object", cl("undefined-cs", "\\bar"), gold("undefined-cs", None, "main.tex", 4)),
-        ("an object where the class has none", cl("math-mode", "x"),
-         gold("math-mode", None, "main.tex", 4))):
-    sx = d.score_rows([grow(cc, g)])
-    check(f"H1: {label} never matches for a certified claim",
-          sx["soundness"]["certified_wrong"] == 1, sx["soundness"])
-check("H1: an exact certified claim (class, object, l.N) is right",
-      d.score_rows([grow(cl("undefined-cs", "\\bar"))])["soundness"]["certified_wrong"] == 0)
-for label, msg, ecode in (("E10 against an undefined-cs message",
-                           "Undefined control sequence \\foo", "E10"),
-                          ("a message naming no gold class", "something odd", "E0")):
-    t = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:4:1 " + msg
-         + f" [{ecode}, rule r, probe p, contract c]")
-    c = d.cli_prediction("NOT-READY\tmain.tex\n" + t + "\n")["predictions"][-1]
-    check(f"H1: {label} is a malformed (wrong) certified claim", c.get("malformed") is True, c)
+def logged_gold(msg_lines, before, after, src, file="main.tex"):
+    return d.diag_record(tex_log(msg_lines, before, after, file),
+                         read_source=lambda rel: {file: src}.get(rel),
+                         in_tree=lambda n: d.canon_path(n) == file)
+
+
+def cert_out(msg, ecode, line=4, file="main.tex", verdict="NOT-READY\tmain.tex\n"):
+    return (verdict + f"TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY {file}:{line}:1 {msg} "
+            f"[{ecode}, rule r, probe p, contract c]\n")
+
+
+def cert_claim(msg, ecode, **kw):
+    p_ = d.cli_prediction(cert_out(msg, ecode, **kw))
+    return p_, [x for x in p_["predictions"] if x["tier"] == "certified"][0]
+
+
+def jrow(p_, g, compiles=False, rc=1, i=0):
+    return {"arxiv_id": f"0001.{i:05d}v1", "graded": rc != -1, "agrees_with_record": True,
+            "compiles": compiles, "rc": rc, "gold": g, "pred": p_}
+
+
+def judged(p_, g, **kw):
+    c_ = [x for x in p_["predictions"] if x["tier"] == "certified"][0]
+    return d.certified_judgement(c_, jrow(p_, g, **kw))
+
+
+U8 = "\\documentclass{article}\n\\usepackage[utf8]{inputenc}\n\\begin{document}\nα β\n\\end{document}\n"
+CASES3 = [  # (label, gold message lines, before, after, src, WRONG claim, ecode, RIGHT claim)
+    ("1 encoding: another character on the same line",
+     ["! Package inputenc Error: Unicode character α (U+03B1)",
+      "(inputenc)                not set up for use with LaTeX."], "α", " β", U8.encode("utf-8"),
+     "Unicode character β (U+03B2) not set up for use with LaTeX", "E11",
+     "! Package inputenc Error: Unicode character α (U+03B1) not set up for use with LaTeX."),
+    ("2 brace imbalance: the opposite error",
+     ["! Missing } inserted."], "{a}}", " b",
+     b"\\documentclass{article}\n\\begin{document}\nx\n{a}} b\n\\end{document}\n",
+     "! Extra }, or forgotten \\endgroup.", "E5", "! Missing } inserted."),
+    ("3 capacity: another capacity",
+     ["! TeX capacity exceeded, sorry [input stack size=10000]."], "\\foo", " b",
+     b"\\documentclass{article}\n\\begin{document}\nx\n\\foo b\n\\end{document}\n",
+     "! TeX capacity exceeded, sorry [main memory size=5000000].", "E14",
+     "! TeX capacity exceeded, sorry [input stack size=10000]."),
+    ("4 missing file: foo.tex vs foo.sty",
+     ["! LaTeX Error: File `foo.tex' not found."], "\\input{foo}", "",
+     b"\\documentclass{article}\n\\begin{document}\nx\n\\input{foo}\n\\end{document}\n",
+     "! LaTeX Error: File `foo.sty' not found.", "E10", "! LaTeX Error: File `foo.tex' not found."),
+    ("5 LaTeX error: another counter",
+     ["! LaTeX Error: No counter 'a' defined."], "\\stepcounter{a}", "\\stepcounter{b}",
+     b"\\documentclass{article}\n\\begin{document}\nx\n\\stepcounter{a}\\stepcounter{b}\n\\end{document}\n",
+     "! LaTeX Error: No counter 'b' defined.", "E9", "! LaTeX Error: No counter 'a' defined."),
+    ("6 math: a double superscript vs a missing $",
+     ["! Missing $ inserted."], "a^", "b^c x_1",
+     b"\\documentclass{article}\n\\begin{document}\nx\na^b^c x_1\n\\end{document}\n",
+     "! Double superscript.", "E4", "! Missing $ inserted."),
+]
+for label, ml, bef, aft, src_, wrong_msg, ecode, right_msg in CASES3:
+    g_ = logged_gold(ml, bef, aft, src_)
+    check(f"H1 (cert_exp {label}): the gold is consistent and verified",
+          g_["consistent"] and g_["location"]["verified"], g_["location"])
+    ok, why = judged(cert_claim(wrong_msg, ecode)[0], g_)
+    check(f"H1 (cert_exp {label}): the same-class claim is WRONG", not ok and "identity" in why,
+          why)
+    ok, why = judged(cert_claim(right_msg, "E0")[0], g_)
+    check(f"H1 (cert_exp {label}): the exact claim is right (no false alarm)", ok, why)
+g_ = logged_gold(["! LaTeX Error: File `foo.tex' not found."], "\\input{foo}", "",
+                 b"\\documentclass{article}\n\\begin{document}\nx\n\\input{foo}\n\\end{document}\n")
+for label, kw in (("another line", {"line": 5}), ("another file", {"file": "sec/main.tex"})):
+    ok, why = judged(cert_claim("! LaTeX Error: File `foo.tex' not found.", "E10", **kw)[0], g_)
+    check(f"H1: an exact message on {label} is WRONG (full canonical path and l.N)", not ok, why)
+# LOW false alarms: TL2026's `Command \iint already defined` (its prefix-less
+# second line is not part of the identity) and the ENGINE_PRIMITIVES rewrite
+# (the identity is the message, not the class).
+for case, msg in (("error_in_system_file", "! LaTeX Error: Command \\iint already defined."),
+                  ("eng_luatexbase", "Undefined control sequence \\luatexversion")):
+    fe = fixture(case)["first_error"]
+    check(f"LOW: {case}: the correct certified message has the gold's error identity",
+          d.error_identity(msg, claim=True) == d.error_identity(fe["message"], fe["context_pairs"]),
+          (d.error_identity(msg, claim=True), d.error_identity(fe["message"], fe["context_pairs"])))
+fe = fixture("eng_luatexbase")["first_error"]
+check("LOW: ... and the luatexbase gold's CLASS rewrite does not change its identity",
+      fixture("eng_luatexbase")["cause"]["class"] == "engine-incompatible"
+      and d.error_identity(fe["message"], fe["context_pairs"])[2] == "\\luatexversion")
+# malformed certified lines (review 3)
+for label, out_ in (
+        ("an unknown E-code", cert_out("! Undefined control sequence \\foo", "E99")),
+        ("a missing E-code", cert_out("! Undefined control sequence \\foo", "rule r")),
+        ("a PROVEN line after a heuristic TIER line",
+         "NOT-READY\tmain.tex\nTIER\theuristic\tLIKELY-FAIL\tx\n"
+         + cert_out("! Undefined control sequence \\foo", "E1", verdict="")),
+        ("a PROVEN kind under the heuristic tier token",
+         "NOT-READY\tmain.tex\nTIER\theuristic\tPROVEN-NOT-READY\tPROVEN NOT-READY main.tex:4:1 "
+         "x [E1, r]\n"),
+        ("a short proven TIER line", "NOT-READY\tmain.tex\nTIER\tproven\tPROVEN-NOT-READY\n"),
+        ("a padded PROVEN kind", "NOT-READY\tmain.tex\nTIER\tproven\tPROVEN-NOT-READY \tPROVEN "
+         "NOT-READY main.tex:4:1 ! Undefined control sequence \\foo [E1, r]\n"),
+        ("a PROVEN-READY beside a NOT-READY verdict",
+         "NOT-READY\tmain.tex\nTIER\tproven\tPROVEN-READY\tPROVEN READY (decided by k under "
+         "contract c, pin p)\n")):
+    cs_ = [x for x in d.cli_prediction(out_)["predictions"] if x["tier"] == "certified"]
+    check(f"review 3: {label} is a MALFORMED certified claim",
+          len(cs_) == 1 and cs_[0].get("malformed") is True, cs_)
+pp = d.cli_prediction("NOT-READY\tmain.tex\nTIER\theuristic\tLIKELY-FAIL\tx\n",
+                      cert_out("! Undefined control sequence \\foo", "E1", verdict=""))
+check("review 3: a PROVEN line on stderr after a heuristic TIER on stdout is malformed",
+      [x.get("malformed") for x in pp["predictions"] if x["tier"] == "certified"] == [True], pp)
+# M5: PROVEN-READY
+PR = "READY\tmain.tex\nTIER\tproven\tPROVEN-READY\tPROVEN READY (decided by k under contract c, pin p)\n"
+pr = d.cli_prediction(PR)
+fail_g = logged_gold(["! Missing $ inserted."], "a^", "b",
+                     b"\\documentclass{article}\n\\begin{document}\nx\na^b\n\\end{document}\n")
+sx = d.score_rows([jrow(pr, fail_g)])
+check("M5: a PROVEN-READY on a document the oracle fails is a WRONG certified claim",
+      sx["soundness"]["certified_claims"] == 1 and sx["soundness"]["certified_wrong"] == 1
+      and list(sx["soundness"]["wrong_by_reason"]) ==
+      ["certified READY on a document the live oracle fails"], sx["soundness"])
+check("M5: ... and right on a document the oracle compiles",
+      d.score_rows([jrow(pr, d.diag_record(None), compiles=True, rc=0)])["soundness"][
+          "certified_wrong"] == 0)
+check("M5: ... and not confirmable (wrong) on an ungraded document",
+      d.score_rows([jrow(pr, d.diag_record(None), rc=-1)])["soundness"]["certified_wrong"] == 1)
+# the earlier certified rules, against real gold
 c = d.cli_prediction("NOT-READY\tm.tex\nTIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY "
                      "a:1:2 b.tex:4:1 ! Undefined control sequence \\x [E1, r]\n")["predictions"][-1]
 check("LOW: a file name containing ':N:N ' makes the certified location ambiguous (malformed)",
       c.get("malformed") is True and "ambiguous" in c.get("malformed_why", ""), c)
-T_FAR = ("TIER\tproven\tPROVEN-NOT-READY\tPROVEN NOT-READY /elsewhere/main.tex:4:1 ! LaTeX "
-         "Error: File `fig.sty' not found. [E10, rule r, probe p, contract c]")
-c = [x for x in d.cli_prediction("NOT-READY\tmain.tex\n" + T_FAR + "\n", "", ("/work",))[
-    "predictions"] if x["tier"] == "certified"][0]
-sx = d.score_rows([grow(c, gold("missing-file", "fig", "main.tex", 4))])
+p_far = d.cli_prediction(cert_out("! LaTeX Error: File `foo.tex' not found.", "E10",
+                                  file="/elsewhere/main.tex"), "", ("/work",))
+c = [x for x in p_far["predictions"] if x["tier"] == "certified"][0]
+sx = d.score_rows([jrow(p_far, g_)])
 check("H2(a) (N5): a certified location outside the run is a WRONG claim, not dropped",
       c.get("location_outside_run") is True and sx["soundness"]["certified_wrong"] == 1
       and sx["soundness"]["wrong_by_reason"] == {"location outside the run": 1},
       (c, sx["soundness"]))
-c4 = cl("missing-file", "fig", line=9)
-for label, g in (("a system top frame", {"has_error": True, "consistent": True,
-                                         "cause": {"class": "missing-file", "object": "fig"},
-                                         "location": {"file": None, "line": 4}}),
-                 ("no l.N", {"has_error": True, "consistent": True,
-                             "cause": {"class": "missing-file", "object": "fig"},
-                             "location": {"file": "main.tex", "line": None}}),
-                 ("an unverified location", gold("missing-file", "fig", "main.tex", 9,
-                                                 verified=False)),
-                 ("an inconsistent record", gold("missing-file", "fig", "main.tex", 9,
-                                                 consistent=False))):
-    sx = d.score_rows([grow(c4, g)])
-    check(f"H2(b,c) (N5): a certified claim against gold with {label} is WRONG "
-          f"(not 'unscorable')", sx["soundness"]["certified_wrong"] == 1
-          and "certified_unscorable" not in sx["soundness"], sx["soundness"])
-for label, rows_ in (("a disagreeing row", [dict(grow(cl("missing-file", "fig")), compiles=True,
+p_ok = cert_claim("! LaTeX Error: File `foo.tex' not found.", "E10")[0]
+for label, mut in (("a system top frame", lambda G: G["location"].update(file=None)),
+                   ("no l.N", lambda G: G["location"].update(line=None)),
+                   ("an unverified location", lambda G: G["location"].update(verified=False)),
+                   ("an inconsistent record", lambda G: G.update(consistent=False))):
+    G = json.loads(json.dumps(g_))
+    mut(G)
+    sx = d.score_rows([jrow(p_ok, G)])
+    check(f"H2(b,c) (N5): a certified claim against gold with {label} is WRONG",
+          sx["soundness"]["certified_wrong"] == 1, sx["soundness"])
+check("H1: the exact certified claim against that gold is right",
+      d.score_rows([jrow(p_ok, g_)])["soundness"]["certified_wrong"] == 0)
+for label, rows_ in (("a disagreeing row", [dict(jrow(p_ok, g_), compiles=True,
                                                  agrees_with_record=False)]),
-                     ("an ungraded row", [grow(cl("missing-file", "fig"), rc=-1)])):
+                     ("an ungraded row", [jrow(p_ok, g_, rc=-1)])):
     sx = d.score_rows(rows_)
     check(f"H3 (N6): a certified claim on {label} is judged (wrong)",
           sx["soundness"]["certified_claims"] == 1 and sx["soundness"]["certified_wrong"] == 1,
           sx["soundness"])
 for label, surf in (("no verdict line", ""), ("a READY verdict", "READY\tmain.tex\n")):
-    pp = d.cli_prediction(surf + T_UNDEF + "\n")
+    pp = d.cli_prediction(cert_out("! Undefined control sequence \\foo", "E1", verdict=surf))
     check(f"M3 (N8): a PROVEN-NOT-READY beside {label} is a malformed certified claim, "
           f"not dropped", len(pp["predictions"]) == 1 and pp["predictions"][0]["tier"] ==
           "certified" and pp["predictions"][0].get("malformed") is True, pp)
-    check(f"M3 (N8): ... and it is a soundness defect ({label})",
-          d.score_rows([grow(pp["predictions"][0], compiles=True, rc=0)])["soundness"][
-              "certified_wrong"] == 1)
-ev = p2_baseline.evaluate_lines({"lines": [
-    {"id": "SC3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
-     "op": "==", "value": 1.0, "min_n": 29}]},
-    d.score_rows([dict(grow(cl("undefined-cs", "\\bar")), arxiv_id=f"0001.{i:05d}v1")
-                  for i in range(28)]))
+SC3L = [{"id": "SC3", "kind": "success", "metric": "cause_precision_top1_certified",
+         "stat": "point", "op": "==", "value": 1.0, "min_n": 29}]
+ev = p2_baseline.evaluate_lines({"lines": SC3L}, d.score_rows([jrow(p_ok, g_, i=i)
+                                                               for i in range(28)]))
 check("R4: a success line at n = 28 (< 29) is not evaluable", ev[0]["status"] == "not-evaluable",
       ev)
-ev = p2_baseline.evaluate_lines({"lines": [
-    {"id": "SC3", "kind": "success", "metric": "cause_precision_top1_certified", "stat": "point",
-     "op": "==", "value": 1.0, "min_n": 29}]},
-    d.score_rows([dict(grow(cl("undefined-cs", "\\bar")), arxiv_id=f"0001.{i:05d}v1")
-                  for i in range(29)]))
-check("R4: ... and evaluable at n = 29", ev[0]["status"] == "holds", ev)
+ev = p2_baseline.evaluate_lines({"lines": SC3L}, d.score_rows([jrow(p_ok, g_, i=i)
+                                                               for i in range(29)]))
+check("R4: ... and evaluable at n = 29 (29 exact claims)", ev[0]["status"] == "holds", ev)
 
 # The heuristic kill (R4's 0.90 with a confidence requirement; the assistant's
 # choice pending owner ruling): fires when the upper 95% bound is below 0.90.
@@ -1422,15 +1614,60 @@ for label, ids in (("a sealed id in a non-gold entry", {SID: {"none": "x"}}),
                            seal.paper_key(x) for x in SEALED_FAKE + HELDOUT_FAKE))))
 
 
-def write_labels(repo, a=LA, b=LB, adj=LADJ, authors=("Alice", "bob", "carol")):
+KEYDIR = Path(tempfile.mkdtemp(prefix="p2-label-keys-"))
+KEYS = {}
+for role in ("A", "B", "adj", "mallory"):
+    subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", role, "-f",
+                    str(KEYDIR / role)], check=True, capture_output=True)
+    KEYS[role] = (KEYDIR / role, (KEYDIR / f"{role}.pub").read_text().strip())
+PEOPLE = {"A": ("Alice", "alice@x"), "B": ("bob", "bob@x"), "adj": ("carol", "carol@x")}
+
+
+def labellers_doc(people=None, keys=None):
+    people, keys = people or PEOPLE, keys or {k: k for k in PEOPLE}
+    return dict({"schema": p2_baseline.LABELLERS_SCHEMA},
+                **{k: {"name": n, "email": e, "ssh_key": KEYS[keys[k]][1]}
+                   for k, (n, e) in people.items()})
+
+
+def signed_commit(repo, paths, name, email, keyrole, sign=True):
+    git(repo, "add", *paths)
+    args = ["-c", f"user.email={email}", "-c", f"user.name={name}"]
+    args += (["-c", "gpg.format=ssh", "-c", f"user.signingkey={KEYS[keyrole][0]}", "-c",
+              "commit.gpgsign=true"] if sign else ["-c", "commit.gpgsign=false"])
+    git(repo, *args, "commit", "-qm", "label")
+
+
+def write_labels(repo, a=LA, b=LB, adj=LADJ, people=None, keys=None, signers=None, sign=True,
+                 together=False, allow=None):
+    """The labeller allow-list (committed by the owner, here "t") and the
+    three label files, each committed ON ITS OWN, signed by its role's key."""
     base = repo / p2_baseline.LABEL_DIR
     base.mkdir(parents=True, exist_ok=True)
-    for (key, doc), who in zip((("A", a), ("B", b), ("adj", adj)), authors):
+    (repo / p2_baseline.LABELLERS).write_text(json.dumps(allow or labellers_doc(people, keys)))
+    commit_all(repo, paths=[p2_baseline.LABELLERS])
+    people, signers = people or PEOPLE, signers or {}
+    docs = [("A", a), ("B", b), ("adj", adj)]
+    if together:
+        for key, doc in docs[:2]:
+            (repo / p2_baseline.LABEL_FILES[key]).write_text(json.dumps(doc))
+        signed_commit(repo, [p2_baseline.LABEL_FILES["A"], p2_baseline.LABEL_FILES["B"]],
+                      *people["A"], "A")
+        docs = docs[2:]
+    for key, doc in docs:
         if doc is None:
             continue
         rel = p2_baseline.LABEL_FILES[key]
         (repo / rel).write_text(json.dumps(doc))
-        commit_all(repo, who=who, paths=[rel])
+        signed_commit(repo, [rel], *people[key], signers.get(key, key), sign=sign)
+
+
+def _labels_with_author(repo):
+    """Label B committed (and signed with B's key) under another author name."""
+    write_labels(repo, b=None, adj=None)
+    rel = p2_baseline.LABEL_FILES["B"]
+    (repo / rel).write_text(json.dumps(LB))
+    signed_commit(repo, [rel], "mallory", "bob@x", "B")
 
 
 def loc_rows(a1, a2):
@@ -1447,9 +1684,34 @@ if res:
           and res["provenance"]["cause_labels"]["stats"]["agreed"] == 1, m_)
 score_case("M4: labels committed AFTER the records are refused (blindness)", arts=loc_rows,
            edit=write_labels, expect_rc=2, expect_in="predate")
-score_case("M4: a label file committed by someone other than its labeller is refused",
-           before_records=lambda repo: write_labels(repo, authors=("mallory", "bob", "carol")),
-           arts=loc_rows, expect_rc=2, expect_in="someone other")
+score_case("H2: a label commit with another author than its role's is refused",
+           before_records=_labels_with_author, arts=loc_rows, expect_rc=2,
+           expect_in="another author")
+score_case("H2 (label_exp): ONE commit touching two label files is refused",
+           before_records=lambda repo: write_labels(repo, together=True), arts=loc_rows,
+           expect_rc=2, expect_in="touches 2 label files")
+score_case("H2: an UNSIGNED label commit is refused",
+           before_records=lambda repo: write_labels(repo, sign=False), arts=loc_rows,
+           expect_rc=2, expect_in="not signed with a good signature")
+score_case("H2: a label commit signed by an unlisted key is refused",
+           before_records=lambda repo: write_labels(repo, signers={"B": "mallory"}),
+           arts=loc_rows, expect_rc=2, expect_in="not signed with a good signature")
+score_case("H2: a label commit signed by ANOTHER LISTED role's key is refused",
+           before_records=lambda repo: write_labels(repo, signers={"B": "A"}), arts=loc_rows,
+           expect_rc=2, expect_in="another key")
+score_case("H2: labellers sharing an e-mail are refused (pairwise disjoint)",
+           before_records=lambda repo: write_labels(repo, people=dict(
+               PEOPLE, B=("bob", "alice@x"))), arts=loc_rows, expect_rc=2,
+           expect_in="pairwise disjoint")
+score_case("H2: labellers sharing a key are refused (pairwise disjoint)",
+           before_records=lambda repo: write_labels(repo, keys={"A": "A", "B": "A", "adj": "adj"},
+                                                    signers={"B": "A"}),
+           arts=loc_rows, expect_rc=2, expect_in="pairwise disjoint")
+score_case("H2: label files without the committed labeller allow-list are refused",
+           before_records=lambda repo: (write_labels(repo), git(repo, "rm", "-q",
+                                                              p2_baseline.LABELLERS),
+                                        commit_all(repo)), arts=loc_rows, expect_rc=2,
+           expect_in="allow-list")
 score_case("H4 (N2): a label file naming a sealed document is refused (exit 3)",
            before_records=lambda repo: write_labels(repo, a=dict(LA, docs=dict(
                LA["docs"], **{SID: {"none": "x"}}))), arts=loc_rows, expect_rc=3,

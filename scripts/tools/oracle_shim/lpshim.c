@@ -760,6 +760,15 @@ FILE *popen(const char *cmd, const char *mode)
   struct lp_pipe *pp = calloc(1, sizeof *pp);
   if (!pp) { syscall(SYS_close, fd); errno = ENOMEM; return NULL; }
   pp->w = mode[0] == 'w';
+  {   /* count the run's pipes (C-196 (4): what the serialisation costs) */
+    const char *m = getenv("LP_SHIM_MARK");
+    if (m && *m) {
+      char pth[PATH_MAX];
+      snprintf(pth, sizeof pth, "%s/pipes", m);
+      int mfd = syscall(SYS_openat, AT_FDCWD, pth, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+      if (mfd >= 0) { lp_write_fd(mfd, pp->w ? "w\n" : "r\n"); syscall(SYS_close, mfd); }
+    }
+  }
   if (!pp->w) {
     fflush(NULL);
     pp->status = run_child(cmd, -1, fd);

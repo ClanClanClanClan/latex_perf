@@ -238,7 +238,8 @@ def _cpus(spec: str) -> list[int]:
 
 HOST_EXPECT = {
     "affinity": _cpus(CPUSET), "nproc_onln": CPU_COUNT, "nproc_conf": CPU_COUNT,
-    "cpu_online": CPUSET, "cpuinfo": CPU_COUNT, "cpu_count": CPU_COUNT,
+    "cpu_online": CPUSET, "cpu_possible": CPUSET, "cpu_present": CPUSET,
+    "cpuinfo": CPU_COUNT, "cpu_count": CPU_COUNT,
     "memory_max": str(_bytes(MEMORY_LIMIT)), "memory_swap_max": "0",
     "pids_max": str(PIDS_LIMIT),
     **{"rlimit_" + u.split("=")[0]: [int(x) for x in u.split("=")[1].split(":")]
@@ -1104,6 +1105,8 @@ def readback():
         except (ValueError, OSError):
             h[k] = None
     h["cpu_online"] = rd("/sys/devices/system/cpu/online")
+    h["cpu_possible"] = rd("/sys/devices/system/cpu/possible")
+    h["cpu_present"] = rd("/sys/devices/system/cpu/present")
     ci = rd("/proc/cpuinfo")
     h["cpuinfo"] = None if ci is None else sum(
         1 for ln in ci.splitlines() if ln.split(":")[0].strip() == "processor")
@@ -1289,6 +1292,11 @@ if cfg.get("mark"):
         ev["shim_children_exe"] = sorted({k[1] for k in kids if len(k) > 1})
     except OSError:
         ev["shim_children"] = {}
+    try:
+        with open(os.path.join(cfg["mark"], "pipes")) as fh:
+            ev["pipes"] = len(fh.read().split())
+    except OSError:
+        ev["pipes"] = 0
     try:
         with open(os.path.join(cfg["mark"], "stragglers")) as fh:
             ev["stragglers"] = [ln for ln in fh.read().splitlines() if ln.strip()][:20]
@@ -1915,6 +1923,7 @@ class OracleRun:
     pdf: bool
     timed_out: bool    # True for a timeout AND for a memory kill (C-139 (c))
     oom: bool = False  # the memory ceiling killed it (C-139 (c)), not the clock
+    pipes: int = 0     # pipe children the passes ran (C-196 (4): serialised)
 
     @property
     def compiles(self) -> bool:
@@ -2105,9 +2114,11 @@ class _Base:
         args = ["-interaction=nonstopmode"] + (["-halt-on-error"] if halt else []) + [toplevel]
         r = self.run_pdflatex(Path(work), args, env, timeout, clock)
         rc, _, to = r
+        pipes = int((getattr(r, "evidence", None) or {}).get("pipes") or 0)
         if to:
-            return OracleRun(-1, 1, False, True, bool(getattr(r, "oom", False)))
-        return OracleRun(rc, 1, pdf_written(Path(work), toplevel, r.stdout), False)
+            return OracleRun(-1, 1, False, True, bool(getattr(r, "oom", False)), pipes)
+        return OracleRun(rc, 1, pdf_written(Path(work), toplevel, r.stdout), False,
+                         pipes=pipes)
 
     def run_to_fixpoint(self, work: Path, toplevel: str, env: dict | None,
                         timeout: int, max_passes: int = MAX_PASSES,
@@ -2120,22 +2131,24 @@ class _Base:
         # The PDF verdict is the LAST pass's (the authoritative one), from
         # its own terminal output and log (pdf_written, C-99); a timed-out
         # pass has none.
-        passes = 0
+        passes = pipes = 0
         r = None
         for _ in range(max_passes):
             r = self.run_pass(work, toplevel, env, timeout, clock=clock)
             passes += 1
+            pipes += r.pipes
             if r.timed_out:
-                return OracleRun(-1, passes, False, True, r.oom)
+                return OracleRun(-1, passes, False, True, r.oom, pipes)
             if r.rc == 0:
                 break
         if r.rc != 0:
-            return OracleRun(r.rc, passes, r.pdf, False)
+            return OracleRun(r.rc, passes, r.pdf, False, pipes=pipes)
         r = self.run_pass(work, toplevel, env, timeout, clock=clock)
         passes += 1
+        pipes += r.pipes
         if r.timed_out:
-            return OracleRun(-1, passes, False, True, r.oom)
-        return OracleRun(r.rc, passes, r.pdf, False)
+            return OracleRun(-1, passes, False, True, r.oom, pipes)
+        return OracleRun(r.rc, passes, r.pdf, False, pipes=pipes)
 
 
 class NativeOracle(_Base):
@@ -2266,8 +2279,8 @@ def default_workroot() -> Path:
 # it preloads, and the engine process must carry the shim's mark).
 SHIM_SRC_DIR = REPO / "scripts" / "tools" / "oracle_shim"
 SHIM_SHA256 = {
-    "aarch64": "298e0c9dcbdadadf5123108b4592e48fd510ca28d277dcfb434f09c7d78e60b6",
-    "x86_64": "6763d2c6e2e1d11c7567e1ffa235ec380f5ef3ca53b0f6e4e27b32d8975c39ee",
+    "aarch64": "b9e16d74bcbee32b176798a70b90e69da2060993ef090b53843ff5b45316e395",
+    "x86_64": "d3be219a6a5ae7a5e8c3a586f54007dd608c6a4fa67b8e5503e1b76767db316b",
 }
 
 

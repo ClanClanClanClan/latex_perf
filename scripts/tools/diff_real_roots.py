@@ -429,6 +429,7 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
         out["pdflatex_rc"] = run.rc
         out["pdflatex_passes"] = run.passes
         out["pdflatex_pdf"] = run.pdf
+        out["pdflatex_pipes"] = run.pipes   # C-196 (4): serialised pipe children
 
         # The first `!` line joined with its wrapped continuation
         # (_oracle.first_error_block): a DIAGNOSTIC, document-influenceable
@@ -789,6 +790,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
             d["sha256_tree"] = tree
         d["pdflatex_rc"], d["pdflatex_passes"] = rc, passes
         d["pdflatex_pdf"] = run.pdf
+        d["pdflatex_pipes"] = run.pipes   # C-196 (4)
         if "passes" in d:
             d["passes"] = passes
         if "graded_by" in d:

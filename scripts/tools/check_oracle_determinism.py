@@ -466,21 +466,11 @@ def _set(argv: list, flag: str, value: str) -> list:
 
 
 def _tmpfs_launch(oracle_mod, o, orig_launch):
-    """o._launch with the run directory on a tmpfs VOLUME: the host's run
-    directory is copied in before each engine container and back after it
-    (helper containers of the pinned image, as the oracle's user)."""
-    import subprocess
-    import uuid
-    vol = "lp-det-tmpfs-" + uuid.uuid4().hex[:12]
-    subprocess.run([o.docker, "volume", "create", "--driver", "local", "--opt",
-                    "type=tmpfs", "--opt", "device=tmpfs", "--opt",
-                    "o=size=128m,mode=0777", vol], check=True, capture_output=True)
-
-    def helper(host: str, script: str) -> None:
-        subprocess.run([o.docker, "run", "--rm", "--pull", "never", "--network", "none",
-                        "--user", o.user, "-v", f"{vol}:/v", "-v", f"{host}:/h",
-                        "--entrypoint", "sh", oracle_mod.IMAGE, "-c", script],
-                       check=True, capture_output=True, timeout=300)
+    """o._launch with the run directory on a TMPFS inside the engine's own
+    container: the host's run directory is bind-mounted at /lp/host instead,
+    copied onto the tmpfs before the run and back after it (in the same
+    container: a tmpfs does not outlive it). The job's evidence files are
+    cleared on the host first, as the supervisor clears them in the run."""
 
     def launch(name, argv, timeout):
         if "--entrypoint" not in argv or argv[argv.index("--entrypoint") + 1] != "sh":
@@ -489,16 +479,18 @@ def _tmpfs_launch(oracle_mod, o, orig_launch):
         k = next(i for i in range(len(argv) - 1) if argv[i] == "-v"
                  and argv[i + 1].endswith(":" + oracle_mod.RUN_DIR))
         host = argv[k + 1].rsplit(":", 1)[0]
-        argv[k:k + 2] = ["--mount", f"type=volume,src={vol},dst={oracle_mod.RUN_DIR}"]
-        helper(host, "rm -rf /v/* /v/.[!.]* 2>/dev/null; cp -a /h/. /v/")
-        try:
-            return orig_launch(name, argv, timeout)
-        finally:
-            helper(host, "rm -rf /h/* /h/.[!.]* 2>/dev/null; cp -a /v/. /h/")
+        argv[k:k + 2] = ["-v", f"{host}:/lp/host", "--tmpfs",
+                         f"{oracle_mod.RUN_DIR}:rw,nosuid,nodev,size=256m,mode=1777"]
+        c = argv.index("-c", argv.index(oracle_mod.IMAGE))
+        argv[c + 1] = ("cp -R /lp/host/. " + oracle_mod.RUN_DIR + "/ || exit 3; "
+                       + argv[c + 1] + "; cp -R " + oracle_mod.RUN_DIR + "/. /lp/host/")
+        for ext in (".log", ".pdf", ".fls", ".fmt"):
+            f = Path(host) / ("doc" + ext)
+            if f.is_file():
+                f.unlink()
+        return orig_launch(name, argv, timeout)
 
-    def cleanup():
-        subprocess.run([o.docker, "volume", "rm", "-f", vol], capture_output=True)
-    return launch, cleanup
+    return launch, (lambda: None)
 
 
 def host_variants(oracle_mod, o, all_docs: dict, base: dict) -> list[str]:

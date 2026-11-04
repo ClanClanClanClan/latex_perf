@@ -2483,7 +2483,7 @@ class ContainerOracle(_Base):
         cwd = Path(cwd).resolve()
         if not self._inside(cwd):
             raise OracleError(f"{cwd} is outside the oracle work root")
-        check_engine_argv(args, cwd, graded=True)
+        check_engine_argv(args, cwd, graded=True)  # the reference's own argv check
         why = seal_check(cwd, args)
         if why:
             raise OracleError(f"reference run refused by the sample-3 seal: {why}")

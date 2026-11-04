@@ -271,6 +271,12 @@ ORPHAN2_EPS = """%!PS-Adobe-3.0 EPSF-3.0
 showpage
 """
 SINGLE_PASS = {"raceflip"}
+# C-196, revised rule (third review): pipes run natively, as in the engine;
+# these two race in the engine itself, so the oracle must REFUSE them.
+EXPECT_REFUSAL = {
+    "raceflip": "TeX reads a PDF that a live pipe child is writing",
+    "orphan2": "a pipe child is still running when the engine exits",
+}
 SEMANTICS_DOCS = {
     "fs_meta": (FS_META_TEX, {"sub/f%d" % i: "%d\n" % i for i in range(1, 41)}),
     # (the review's raceflip, with orphan2's slow EPS and "any bytes" as the
@@ -578,7 +584,15 @@ def main() -> int:
         except oracle_mod.OracleError as e:
             if isinstance(e, oracle_mod.OracleUnavailable):
                 raise
+            if name in EXPECT_REFUSAL and "nondeterministic" in str(e):
+                print(f"[oracle-determinism] {name:12s} refused as nondeterministic "
+                      f"(required: {EXPECT_REFUSAL[name]})")
+                continue
             bad.append(f"{name}: the oracle refused the document: {str(e)[:200]}")
+            continue
+        if name in EXPECT_REFUSAL:
+            bad.append(f"{name}: GRADED, but {EXPECT_REFUSAL[name]}: it must be refused "
+                       f"as nondeterministic (C-196, revised rule)")
             continue
         base[name] = a
         if args.dump:

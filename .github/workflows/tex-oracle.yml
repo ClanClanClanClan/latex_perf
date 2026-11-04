@@ -211,6 +211,14 @@ jobs:
           REQUIRE_PDFLATEX: "1"
         run: python3 scripts/tools/check_oracle_determinism.py
 
+      # C-196 (revised rule): where the pinned engine itself is deterministic
+      # the oracle gives the same rc, verdict and log; where it is racy the
+      # oracle refuses. Compared with the UNSHIMMED engine (reference_pass).
+      - name: Oracle differential against the unshimmed engine
+        env:
+          REQUIRE_PDFLATEX: "1"
+        run: python3 scripts/tools/check_oracle_differential.py
+
       # R7-INFRA-4 property (b): "a document that compiled must still compile
       # after --apply-fixes". BLOCKING since v27.1.63: the ONLY check anywhere
       # that can observe --apply-fixes turning a compiling document into a

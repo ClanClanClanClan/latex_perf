@@ -32,6 +32,7 @@ Messages name counts only, never a sealed id.
 from __future__ import annotations
 
 import atexit
+import json
 import io
 import re
 import sys
@@ -60,10 +61,15 @@ AGGREGATE_LINES = [re.compile(x) for x in (
     r"\[real-roots\] recorded [0-9]+ rows to [\w./\-]+/",
     r"\[real-roots\] PASS",
     r"\[gen-proven-coverage\] [\w./\-]+: [0-9]+ rows, lp-core certified\+compiles = [0-9]+",
-    r"[{}],?",
-    r" *\"[a-z_]+\": ([0-9]+|\{),?",
-    r" *\},?",
-    r"\[sealed\] .*",
+    # measure_strict_boundary prints its summary as indented JSON: the exact
+    # keys, and the papers_per_category entries of a fixed vocabulary only
+    r"\{", r"\}", r" \},?",
+    r' "(n|no_finding|no_finding_and_compiles|any_turing_construct|turing_only_in_bbl|'
+    r'local_style_file|local_style_without_turing|blocked_only_by_def|'
+    r'closure_adds_a_category_the_root_lacks)": [0-9]+,?',
+    r' "papers_per_category": \{',
+    r'  "(def|let|xparse|atletter|expl3|conditional|loop|csname|expandafter|write|'
+    r'foreign|local_style)": [0-9]+,?',
 )]
 
 
@@ -126,13 +132,18 @@ def _install() -> None:
     atexit.register(report)
 
 
+_TOKEN = re.compile(r"(?<![0-9.])[0-9]{4}\.[0-9]{4,5}(?:v[0-9]+)?(?![0-9])")
+
+
 def ids_in(obj) -> list:
     """Every string anywhere in a JSON value that is a document id (the
     strict ID_RE): what a tool reading a recorded artefact will touch."""
     out = []
     if isinstance(obj, str):
-        if S.ID_RE.fullmatch(obj):
-            out.append(obj)
+        # every id-shaped token, also inside a path or a longer string, and
+        # also without a version: gate() REFUSES what is not a valid id
+        # (third review, LOW), never skips it
+        out += _TOKEN.findall(obj)
     elif isinstance(obj, dict):
         for k, v in obj.items():
             out += ids_in(k) + ids_in(v)
@@ -140,6 +151,52 @@ def ids_in(obj) -> list:
         for v in obj:
             out += ids_in(v)
     return out
+
+
+# Set by gate() for an authorised sealed measurement: the oracle's own check
+# (seal_run, called for EVERY engine run) then lets sealed documents through.
+SEALED_AUTHORIZED = False
+_CACHE: dict = {}
+
+
+def sealed_digests(repo: Path | None = None) -> frozenset:
+    """sha256 of every sealed document's top-level file (the committed
+    manifest): a COPY of a sealed package, anywhere, is recognised by it."""
+    import hashlib  # noqa: F401
+    repo = Path(repo) if repo is not None else S.REPO
+    data, _blob = S.committed(repo, S.SEALED_MANIFEST)
+    docs = json.loads(data)["docs"]
+    out = frozenset(d["sha256_toplevel"] for d in docs if d.get("sha256_toplevel"))
+    if len(out) != len(docs):
+        raise S.SealError("the sealed manifest lacks a top-level digest: refusing")
+    return out
+
+
+def seal_run(cwd, files) -> str | None:
+    """C-197 (third review, M2): the check the ORACLE makes before EVERY
+    engine run, whatever tool started it. Returns why the run touches a sealed
+    document -- an id in the run directory's path or a file's, or a file
+    whose sha256 is a sealed top-level file's -- unless a sealed measurement
+    is authorised; None otherwise. Fails closed (a reason) when the seal
+    cannot be read."""
+    import hashlib
+    try:
+        if "ids" not in _CACHE:   # the committed seal, read once per process
+            _CACHE["ids"] = S.sealed_ids(S.REPO)
+            _CACHE["digests"] = sealed_digests()
+        sealed = _CACHE["ids"]
+        tokens = ids_in(str(Path(cwd).resolve())) + ids_in([str(f) for f in files])
+        for t in tokens:
+            if S.paper_key(t) in sealed:
+                return None if SEALED_AUTHORIZED else "its path names a sealed paper"
+        digests = _CACHE["digests"]
+        for f in files:
+            f = Path(cwd) / f
+            if f.is_file() and hashlib.sha256(f.read_bytes()).hexdigest() in digests:
+                return None if SEALED_AUTHORIZED else "it is a copy of a sealed paper"
+    except S.SealError as e:
+        return f"the seal cannot be enforced ({e})"
+    return None
 
 
 def gate(tool: str, ids=(), window=None, measurement: bool = False,
@@ -170,5 +227,7 @@ def gate(tool: str, ids=(), window=None, measurement: bool = False,
               f"as a measurement (OPEN-119): pass {FLAG}, which writes the results "
               f"file and prints aggregates only", file=sys.stderr)
         raise SystemExit(2)
+    global SEALED_AUTHORIZED
+    SEALED_AUTHORIZED = True
     _install()
     return True

@@ -130,6 +130,8 @@
 #include <sys/statfs.h>
 #include <sys/statvfs.h>
 #include <sys/wait.h>
+#include <sys/ioctl.h>
+#include <poll.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
 #include <sys/times.h>
@@ -149,6 +151,7 @@ static const char *readings;    /* LP_CLOCK (measurement only) */
 static int readings_used;
 static const char *clock_log;   /* LP_CLOCK_LOG */
 static int restrict_fs;         /* this process is a TeX program */
+static int is_engine;           /* this process made the engine mark (C-196) */
 static char roots[8][PATH_MAX];
 static int nroots;
 static const char *fs_log;      /* LP_FS_LOG */
@@ -246,6 +249,7 @@ __attribute__((constructor)) static void lp_init(void)
     snprintf(mode, sizeof mode, "%s %s\n", restrict_fs ? "restricted" : "free", self);
     snprintf(p, sizeof p, "%s/engine", m);
     int fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
+    if (fd >= 0) is_engine = 1;
     if (fd < 0 && errno == EEXIST) {
       snprintf(p, sizeof p, "%s/children", m);
       fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
@@ -343,6 +347,8 @@ int clock_gettime(clockid_t c, struct timespec *ts)
 
 static int allowed_at(const char *op, int dirfd, const char *path);
 #define ALLOWED(op, p) allowed_at(op, AT_FDCWD, p)
+static void note_write_at(int dirfd, const char *path);
+static void check_child_writes(const char *c);
 
 /* per THREAD (C-198): each thread's stream is a function of its own calls */
 static __thread unsigned long long rng_state = 0x6c702d6f7261636cULL; /* "lp-oracl" */
@@ -452,6 +458,7 @@ static int lp_tempname(char *t, int suffixlen, int (*make)(const char *, int), i
 
 static int make_file(const char *p, int flags)
 {
+  note_write_at(AT_FDCWD, p);
   return syscall(SYS_openat, AT_FDCWD, p, O_RDWR | O_CREAT | O_EXCL | (flags & ~O_ACCMODE), 0600);
 }
 static int make_dir(const char *p, int unused)
@@ -720,33 +727,98 @@ static void note_stragglers(const char *what)
   if (fd >= 0) { lp_write_fd(fd, line); syscall(SYS_close, fd); }
 }
 
-/* SERIALISED PIPES (C-196 (2)). In a TeX program with the fixed clock,
-   popen(cmd, "r") runs cmd TO COMPLETION with its output captured, and only
-   then returns a stream that reads that output; popen(cmd, "w") collects
-   what TeX writes and runs cmd at pclose (or at exit) with it as stdin. So a
-   pipe child never runs concurrently with TeX: one defined schedule. This
-   DIFFERS from pdfTeX's own popen, where the child runs concurrently (on a
-   loaded machine a document could observe how far it got: MEASURED,
-   raceflip.tex gave rc 0,0,1,0,0), and from it in two corner cases: a child
-   that never ends is a timeout (not a partial read), and a "w" child's
-   output appears at pclose. */
-struct lp_pipe { FILE *f; int w; char *cmd; int status; struct lp_pipe *next; };
+/* PIPES AND CONCURRENT CHILDREN (C-196, revised rule of 2026-11-04). The
+   oracle's semantics must EQUAL the pinned pdfTeX's wherever pdfTeX is
+   deterministic, and a run where it may not be is REFUSED, never
+   approximated. So pipes run NATIVELY -- popen(cmd, "r"/"w") starts cmd
+   concurrently, as glibc's does, and nothing is flushed that pdfTeX would
+   not flush (MEASURED by the third review: serialising them, as before,
+   flipped rc both ways, sigpipe.tex 0 -> 1 and sigpipe2.tex 1 -> 0, and a
+   flush before \write18 made \pdffilesize{\jobname.log} 1900 where the real
+   engine gives 0) -- and the shim REFUSES (records a race; the supervisor
+   refuses the run) when:
+     * TeX opens, stats or lists a path that a still-live child created,
+       opened for writing or wrote during its life (children record every
+       write in the mark directory's `writes`; the engine checks at each
+       access while it has a pipe open);
+     * TeX closes an "r" pipe whose child is still alive and neither has
+       closed its end (no more output possible) nor is blocked on a full pipe
+       (its next write certainly fails, as in the real engine), or whose
+       child wrote more after the close point than it could have in the
+       real engine (the early-close race at the pipe-buffer boundary);
+     * a process other than TeX's ancestors is still running after a pipe
+       has been closed or a \write18 command has returned (`stragglers`). */
+
+static void note_line(const char *file, const char *line)
+{
+  const char *m = getenv("LP_SHIM_MARK");
+  if (!m || !*m) return;
+  char p[PATH_MAX];
+  snprintf(p, sizeof p, "%s/%s", m, file);
+  int fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+  if (fd >= 0) { lp_write_fd(fd, line); syscall(SYS_close, fd); }
+}
+
+static void note_race(const char *what)
+{
+  char line[160];
+  snprintf(line, sizeof line, "%.150s\n", what);
+  note_line("races", line);
+}
+
+/* a child records every path it opens for writing (by canonical path) */
+static void note_write_at(int dirfd, const char *path)
+{
+  if (!have_epoch || is_engine || !path || !*path) return;
+  const char *m = getenv("LP_SHIM_MARK");
+  if (!m || !*m) return;
+  char c[PATH_MAX * 2], line[PATH_MAX * 2 + 32];
+  canonical(dirfd, path, c);
+  snprintf(line, sizeof line, "%ld %s\n", (long) syscall(SYS_getpid), c);
+  note_line("writes", line);
+}
+#define WRITES(flags) ((flags) & (O_WRONLY | O_RDWR | O_CREAT | O_TRUNC | O_APPEND))
+
+struct lp_pipe { FILE *f; int w; int fd; pid_t pid; struct lp_pipe *next; };
 static struct lp_pipe *pipes;
 static pthread_mutex_t pipe_mu = PTHREAD_MUTEX_INITIALIZER;
 
-static int run_child(const char *cmd, int in_fd, int out_fd)
+static int alive(long pid)
 {
-  pid_t pid = fork();
-  if (pid == 0) {
-    if (in_fd >= 0) dup2(in_fd, 0);
-    if (out_fd >= 0) dup2(out_fd, 1);
-    execl("/bin/sh", "sh", "-c", cmd, (char *) NULL);
-    _exit(127);
+  long r = read_ppid(pid);
+  return r != -1 && r != -2;
+}
+
+/* At an access by the engine while a pipe is open: a path a live child
+   wrote is a race (C-196). */
+static void check_child_writes(const char *c)
+{
+  if (!(is_engine && have_epoch && pipes)) return;
+  const char *m = getenv("LP_SHIM_MARK");
+  if (!m || !*m) return;
+  char p[PATH_MAX];
+  snprintf(p, sizeof p, "%s/writes", m);
+  int fd = syscall(SYS_openat, AT_FDCWD, p, O_RDONLY | O_CLOEXEC);
+  if (fd < 0) return;
+  static char buf[1 << 16];
+  char line[PATH_MAX * 2 + 32]; size_t ln = 0; long n;
+  while ((n = syscall(SYS_read, fd, buf, sizeof buf)) > 0) {
+    for (long k = 0; k < n; k++) {
+      if (buf[k] != '\n') { if (ln < sizeof line - 1) line[ln++] = buf[k]; continue; }
+      line[ln] = 0; ln = 0;
+      char *sp = strchr(line, ' ');
+      if (!sp) continue;
+      *sp = 0;
+      if (strcmp(sp + 1, c) == 0 && alive(strtol(line, NULL, 10))) {
+        char what[96];
+        snprintf(what, sizeof what, "access while a live child writes it");
+        note_race(what);
+        syscall(SYS_close, fd);
+        return;
+      }
+    }
   }
-  if (pid < 0) return -1;
-  int st = 0;
-  while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
-  return st;
+  syscall(SYS_close, fd);
 }
 
 FILE *popen(const char *cmd, const char *mode)
@@ -755,56 +827,117 @@ FILE *popen(const char *cmd, const char *mode)
     FILE *(*f)(const char *, const char *) = real("popen");
     return f(cmd, mode);
   }
-  int fd = syscall(SYS_memfd_create, "lp-pipe", 1u /* MFD_CLOEXEC */);
-  if (fd < 0) { errno = EMFILE; return NULL; }
-  struct lp_pipe *pp = calloc(1, sizeof *pp);
-  if (!pp) { syscall(SYS_close, fd); errno = ENOMEM; return NULL; }
-  pp->w = mode[0] == 'w';
-  {   /* count the run's pipes (C-196 (4): what the serialisation costs) */
-    const char *m = getenv("LP_SHIM_MARK");
-    if (m && *m) {
-      char pth[PATH_MAX];
-      snprintf(pth, sizeof pth, "%s/pipes", m);
-      int mfd = syscall(SYS_openat, AT_FDCWD, pth, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
-      if (mfd >= 0) { lp_write_fd(mfd, pp->w ? "w\n" : "r\n"); syscall(SYS_close, mfd); }
-    }
+  int w = mode[0] == 'w', p[2];
+  if (syscall(SYS_pipe2, p, O_CLOEXEC) != 0) return NULL;
+  pid_t pid = fork();
+  if (pid < 0) {   /* as glibc's popen: NULL, errno from fork */
+    int e = errno;
+    syscall(SYS_close, p[0]); syscall(SYS_close, p[1]);
+    errno = e;
+    return NULL;
   }
-  if (!pp->w) {
-    fflush(NULL);
-    pp->status = run_child(cmd, -1, fd);
-    note_stragglers("popen");
-    lseek(fd, 0, SEEK_SET);
-    pp->f = fdopen(fd, "r");
-  } else {
-    pp->cmd = strdup(cmd);
-    pp->f = fdopen(fd, "w+");
+  if (pid == 0) {
+    for (struct lp_pipe *q = pipes; q; q = q->next) syscall(SYS_close, q->fd);
+    if (w) { if (p[0] != 0) dup2(p[0], 0); }
+    else   { if (p[1] != 1) dup2(p[1], 1); }
+    execl("/bin/sh", "sh", "-c", cmd, (char *) NULL);
+    _exit(127);
   }
-  if (!pp->f) { syscall(SYS_close, fd); free(pp->cmd); free(pp); return NULL; }
+  int keep = w ? p[1] : p[0];
+  syscall(SYS_close, w ? p[0] : p[1]);
+  FILE *f = fdopen(keep, w ? "w" : "r");
+  struct lp_pipe *pp = f ? calloc(1, sizeof *pp) : NULL;
+  if (!pp) {
+    if (f) fclose(f); else syscall(SYS_close, keep);
+    while (waitpid(pid, NULL, 0) < 0 && errno == EINTR) {}
+    errno = ENOMEM;
+    return NULL;
+  }
+  pp->f = f; pp->w = w; pp->fd = keep; pp->pid = pid;
   pthread_mutex_lock(&pipe_mu);
   pp->next = pipes; pipes = pp;
   pthread_mutex_unlock(&pipe_mu);
-  return pp->f;
+  note_line("pipes", w ? "w\n" : "r\n");
+  return f;
 }
 
-static int finish_pipe(struct lp_pipe *pp)
+/* Is `pid` asleep in the kernel waiting to write to a pipe? */
+static int blocked_in_pipe_write(long pid)
 {
-  int st = pp->status;
-  if (pp->w) {
-    fflush(pp->f);
-    int fd2 = dup(fileno(pp->f));
-    fclose(pp->f);
-    if (fd2 >= 0) {
-      lseek(fd2, 0, SEEK_SET);
-      fflush(NULL);
-      st = run_child(pp->cmd, fd2, -1);
-      note_stragglers("popen-w");
-      syscall(SYS_close, fd2);
+  char path[64], buf[64];
+  snprintf(path, sizeof path, "/proc/%ld/wchan", pid);
+  int fd = syscall(SYS_openat, AT_FDCWD, path, O_RDONLY | O_CLOEXEC);
+  if (fd < 0) return 0;
+  long n = syscall(SYS_read, fd, buf, sizeof buf - 1);
+  syscall(SYS_close, fd);
+  if (n <= 0) return 0;
+  buf[n] = 0;
+  return strncmp(buf, "pipe_write", 10) == 0 || strncmp(buf, "pipe_wait_writable", 18) == 0;
+}
+
+/* Is some process whose stdout is OUR pipe (the child, or the program its
+   shell started) asleep writing to it? sh -c does not exec the command, so
+   the writer is usually the child's child. */
+static int writer_blocked(int pipefd)
+{
+  struct stat st;
+  if (syscall(SYS_newfstatat, pipefd, "", &st, AT_EMPTY_PATH) != 0) return 0;
+  char want[64];
+  snprintf(want, sizeof want, "pipe:[%llu]", (unsigned long long) st.st_ino);
+  int dfd = syscall(SYS_openat, AT_FDCWD, "/proc", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  if (dfd < 0) return 0;
+  char buf[8192]; long n; int found = 0;
+  while (!found && (n = syscall(SYS_getdents64, dfd, buf, sizeof buf)) > 0) {
+    for (long off = 0; off < n && !found;) {
+      struct { unsigned long long ino; long long off; unsigned short reclen; unsigned char type; char name[]; } *e = (void *) (buf + off);
+      off += e->reclen;
+      char *end; long pid = strtol(e->name, &end, 10);
+      if (*end || pid <= 0) continue;
+      char lk[64], tgt[64];
+      snprintf(lk, sizeof lk, "/proc/%ld/fd/1", pid);
+      long k = syscall(SYS_readlinkat, AT_FDCWD, lk, tgt, sizeof tgt - 1);
+      if (k <= 0) continue;
+      tgt[k] = 0;
+      if (strcmp(tgt, want) == 0 && blocked_in_pipe_write(pid)) found = 1;
     }
-  } else {
-    fclose(pp->f);
   }
-  free(pp->cmd); free(pp);
-  return st;
+  syscall(SYS_close, dfd);
+  return found;
+}
+
+/* The close of an "r" pipe whose child is still alive (C-196). */
+static void judge_read_close(struct lp_pipe *pp)
+{
+  int n0 = 0;
+  ioctl(pp->fd, FIONREAD, &n0);
+  int cap = fcntl(pp->fd, F_GETPIPE_SZ);
+  for (int t = 0; t < 5000; t++) {
+    if (!alive(pp->pid)) {
+      int n = 0; ioctl(pp->fd, FIONREAD, &n);
+      if (n > n0) note_race("r pipe: the child wrote after TeX's close point");
+      return;
+    }
+    struct pollfd pf = { pp->fd, POLLIN, 0 };
+    poll(&pf, 1, 0);
+    int n = 0; ioctl(pp->fd, FIONREAD, &n);
+    if (pf.revents & POLLHUP) {      /* its end is closed: no more output */
+      if (n > n0) note_race("r pipe: the child wrote after TeX's close point");
+      return;
+    }
+    /* blocked on a full pipe (less than a page free, and the child asleep in
+       pipe_write): its pending write fails with EPIPE once TeX closes, as in
+       the engine */
+    if (cap > 0 && cap - n < 4096 && writer_blocked(pp->fd)) return;
+    struct timespec ts = { 0, 1000000 };
+    nanosleep(&ts, NULL);
+  }
+  {
+    int n = 0; ioctl(pp->fd, FIONREAD, &n);
+    char what[128];
+    snprintf(what, sizeof what, "r pipe: closed while the child was alive and undecided "
+             "(bytes %d of %d, %d at close)", n, cap, n0);
+    note_race(what);
+  }
 }
 
 int pclose(FILE *f)
@@ -815,23 +948,18 @@ int pclose(FILE *f)
     if ((*q)->f == f) { pp = *q; *q = pp->next; break; }
   pthread_mutex_unlock(&pipe_mu);
   if (!pp) { int (*g)(FILE *) = real("pclose"); return g(f); }
-  return finish_pipe(pp);
-}
-
-__attribute__((destructor)) static void lp_fini(void)
-{
-  /* a "w" pipe TeX never closed: its child runs now, as it would get EOF at
-     TeX's exit */
-  while (pipes) {
-    struct lp_pipe *pp = pipes; pipes = pp->next;
-    if (pp->w) finish_pipe(pp); else { free(pp->cmd); free(pp); }
-  }
+  if (!pp->w && alive(pp->pid)) judge_read_close(pp);
+  fclose(f);
+  int st = -1;
+  while (waitpid(pp->pid, &st, 0) < 0 && errno == EINTR) {}
+  free(pp);
+  note_stragglers("pclose");
+  return st;
 }
 
 int system(const char *cmd)
 {
   int (*f)(const char *) = real("system");
-  if (restrict_fs && have_epoch) fflush(NULL);
   int rc = f(cmd);
   if (cmd) note_stragglers("system");
   return rc;
@@ -923,6 +1051,7 @@ static int allowed_at(const char *op, int dirfd, const char *path)
   if (!*path) return 1;   /* the call fails with ENOENT by itself */
   char c[PATH_MAX * 2];
   canonical(dirfd, path, c);
+  check_child_writes(c);   /* C-196: an access racing a live child's write */
   int priv = 0;
   for (int i = 0; i < nprivs; i++)
     if (under(c, privs[i])) { priv = 1; break; }
@@ -988,32 +1117,28 @@ static void sdir_load(DIR *d);
    are 0755 for directories and executables, 0644 for other regular files.
    MEASURED before (review of 82638518): texosquery printed a directory's
    File.length() as 1344 on APFS/virtiofs, 4096 on ext4, 840 on tmpfs. */
-#define LP_DEV 0x4c50
-struct ino_map { dev_t dev; ino_t ino; unsigned long long v; };
-static struct ino_map *inos;
-static size_t ninos, cinos;
-static pthread_mutex_t ino_mu = PTHREAD_MUTEX_INITIALIZER;
-
-static unsigned long long virt_ino(dev_t dev, ino_t ino)
+#define LP_DEV_MINOR 0x4c
+#define LP_DEV ((dev_t) LP_DEV_MINOR)   /* = makedev(0, LP_DEV_MINOR): stat and statx agree */
+/* C-195 (third review, M1): the virtual inode is a function of the CANONICAL
+   PATH (FNV-1a), so a directory entry and a stat of the same path agree on
+   every file system and in every process; an fd without a path (a pipe, a
+   socket) gets one number per kind. */
+static unsigned long long path_ino(int dirfd, const char *p, int fd)
 {
-  pthread_mutex_lock(&ino_mu);
-  for (size_t i = 0; i < ninos; i++)
-    if (inos[i].dev == dev && inos[i].ino == ino) {
-      unsigned long long v = inos[i].v;
-      pthread_mutex_unlock(&ino_mu);
-      return v;
-    }
-  if (ninos == cinos) {
-    size_t nc = cinos ? cinos * 2 : 256;
-    struct ino_map *n = realloc(inos, nc * sizeof *n);
-    if (!n) { pthread_mutex_unlock(&ino_mu); return 1; }
-    inos = n; cinos = nc;
+  char c[PATH_MAX * 2];
+  if (p && *p) {
+    canonical(dirfd, p, c);
+  } else {
+    char lk[64];
+    snprintf(lk, sizeof lk, "/proc/self/fd/%d", fd);
+    long k = syscall(SYS_readlinkat, AT_FDCWD, lk, c, sizeof c - 1);
+    if (k <= 0) return 1;
+    c[k] = 0;
+    if (c[0] != '/') { char *b = strchr(c, '['); if (b) *b = 0; }
   }
-  unsigned long long v = 1000 + ninos;
-  inos[ninos].dev = dev; inos[ninos].ino = ino; inos[ninos].v = v;
-  ninos++;
-  pthread_mutex_unlock(&ino_mu);
-  return v;
+  unsigned long long h = 1469598103934665603ULL;
+  for (const unsigned char *q = (const unsigned char *) c; *q; q++) { h ^= *q; h *= 1099511628211ULL; }
+  return 1000 + (h % 0xffffffffffULL);
 }
 
 static mode_t norm_mode(mode_t m)
@@ -1024,14 +1149,14 @@ static mode_t norm_mode(mode_t m)
   return m;
 }
 
-static void fix_stat(struct stat *st)
+static void fix_stat(struct stat *st, unsigned long long vino)
 {
   if (!have_epoch || !st) return;
   if (st->st_uid == real_uid) st->st_uid = LP_ID;
   if (st->st_gid == real_gid) st->st_gid = LP_ID;
   st->st_atim.tv_sec = st->st_mtim.tv_sec = st->st_ctim.tv_sec = (time_t) epoch;
   st->st_atim.tv_nsec = st->st_mtim.tv_nsec = st->st_ctim.tv_nsec = 0;
-  st->st_ino = (ino_t) virt_ino(st->st_dev, st->st_ino);
+  st->st_ino = (ino_t) vino;
   st->st_dev = LP_DEV;
   if (S_ISDIR(st->st_mode)) { st->st_size = 4096; st->st_nlink = 1; }
   st->st_blksize = 4096;
@@ -1117,6 +1242,7 @@ int open(const char *p, int flags, ...)
   OPEN_MODE(flags, mode);
   if (!ALLOWED("open", p)) return -1;
   RANDOM_DEV(p);
+  if (WRITES(flags)) note_write_at(AT_FDCWD, p);
   int (*f)(const char *, int, ...) = real("open");
   return f(p, flags, mode);
 }
@@ -1125,6 +1251,7 @@ int open64(const char *p, int flags, ...)
   OPEN_MODE(flags, mode);
   if (!ALLOWED("open", p)) return -1;
   RANDOM_DEV(p);
+  if (WRITES(flags)) note_write_at(AT_FDCWD, p);
   int (*f)(const char *, int, ...) = real("open64");
   return f(p, flags, mode);
 }
@@ -1133,6 +1260,7 @@ int openat(int d, const char *p, int flags, ...)
   OPEN_MODE(flags, mode);
   if (!allowed_at("openat", d, p)) return -1;
   RANDOM_DEV_AT(d, p);
+  if (WRITES(flags)) note_write_at(d, p);
   int (*f)(int, const char *, int, ...) = real("openat");
   return f(d, p, flags, mode);
 }
@@ -1141,6 +1269,7 @@ int openat64(int d, const char *p, int flags, ...)
   OPEN_MODE(flags, mode);
   if (!allowed_at("openat", d, p)) return -1;
   RANDOM_DEV_AT(d, p);
+  if (WRITES(flags)) note_write_at(d, p);
   int (*f)(int, const char *, int, ...) = real("openat64");
   return f(d, p, flags, mode);
 }
@@ -1148,6 +1277,7 @@ int __open_2(const char *p, int flags)
 {
   if (!ALLOWED("open", p)) return -1;
   RANDOM_DEV(p);
+  if (WRITES(flags)) note_write_at(AT_FDCWD, p);
   int (*f)(const char *, int) = real("__open_2");
   return f(p, flags);
 }
@@ -1155,6 +1285,7 @@ int __open64_2(const char *p, int flags)
 {
   if (!ALLOWED("open", p)) return -1;
   RANDOM_DEV(p);
+  if (WRITES(flags)) note_write_at(AT_FDCWD, p);
   int (*f)(const char *, int) = real("__open64_2");
   return f(p, flags);
 }
@@ -1162,6 +1293,7 @@ int __openat_2(int d, const char *p, int flags)
 {
   if (!allowed_at("openat", d, p)) return -1;
   RANDOM_DEV_AT(d, p);
+  if (WRITES(flags)) note_write_at(d, p);
   int (*f)(int, const char *, int) = real("__openat_2");
   return f(d, p, flags);
 }
@@ -1169,18 +1301,21 @@ int __openat64_2(int d, const char *p, int flags)
 {
   if (!allowed_at("openat", d, p)) return -1;
   RANDOM_DEV_AT(d, p);
+  if (WRITES(flags)) note_write_at(d, p);
   int (*f)(int, const char *, int) = real("__openat64_2");
   return f(d, p, flags);
 }
 int creat(const char *p, mode_t m)
 {
   if (!ALLOWED("creat", p)) return -1;
+  note_write_at(AT_FDCWD, p);
   int (*f)(const char *, mode_t) = real("creat");
   return f(p, m);
 }
 int creat64(const char *p, mode_t m)
 {
   if (!ALLOWED("creat", p)) return -1;
+  note_write_at(AT_FDCWD, p);
   int (*f)(const char *, mode_t) = real("creat64");
   return f(p, m);
 }
@@ -1191,6 +1326,7 @@ FILE *fopen(const char *p, const char *m)
     int fd = random_fd();
     return fd < 0 ? NULL : fdopen(fd, "r");
   }
+  if (m && strpbrk(m, "wa+")) note_write_at(AT_FDCWD, p);
   FILE *(*f)(const char *, const char *) = real("fopen");
   return f(p, m);
 }
@@ -1201,18 +1337,21 @@ FILE *fopen64(const char *p, const char *m)
     int fd = random_fd();
     return fd < 0 ? NULL : fdopen(fd, "r");
   }
+  if (m && strpbrk(m, "wa+")) note_write_at(AT_FDCWD, p);
   FILE *(*f)(const char *, const char *) = real("fopen64");
   return f(p, m);
 }
 FILE *freopen(const char *p, const char *m, FILE *s)
 {
   if (!ALLOWED("freopen", p)) return NULL;
+  if (p && m && strpbrk(m, "wa+")) note_write_at(AT_FDCWD, p);
   FILE *(*f)(const char *, const char *, FILE *) = real("freopen");
   return f(p, m, s);
 }
 FILE *freopen64(const char *p, const char *m, FILE *s)
 {
   if (!ALLOWED("freopen", p)) return NULL;
+  if (p && m && strpbrk(m, "wa+")) note_write_at(AT_FDCWD, p);
   FILE *(*f)(const char *, const char *, FILE *) = real("freopen64");
   return f(p, m, s);
 }
@@ -1248,8 +1387,6 @@ static void sdir_load(DIR *d)
   struct dirent *e;
   if (!s || !rd) { free(s); return; }
   s->d = d;
-  struct stat dst;
-  dev_t dirdev = syscall(SYS_newfstatat, dirfd(d), "", &dst, AT_EMPTY_PATH) == 0 ? dst.st_dev : 0;
   while ((e = rd(d)) != NULL) {
     if (s->n == cap) {
       size_t nc = cap ? cap * 2 : 64;
@@ -1260,15 +1397,17 @@ static void sdir_load(DIR *d)
     struct dirent *c = malloc(sizeof *c);
     if (!c) break;
     memcpy(c, e, sizeof *c);
-    if (have_epoch) {   /* C-195: no file-system order, number or type */
-      c->d_ino = (ino_t) virt_ino(dirdev, e->d_ino);
-      c->d_type = DT_UNKNOWN;
-    }
     s->ents[s->n++] = c;
   }
   qsort(s->ents, s->n, sizeof *s->ents, dirent_cmp);
+  /* C-195 (third review, M1): numbered AFTER sorting, so no virtual inode
+     depends on the file system's order */
   if (have_epoch)
-    for (size_t i = 0; i < s->n; i++) s->ents[i]->d_off = (off_t) (i + 1);
+    for (size_t i = 0; i < s->n; i++) {
+      s->ents[i]->d_ino = (ino_t) path_ino(dirfd(d), s->ents[i]->d_name, -1);
+      s->ents[i]->d_type = DT_UNKNOWN;
+      s->ents[i]->d_off = (off_t) (i + 1);
+    }
   pthread_mutex_lock(&sdir_mu);
   s->next = sdirs; sdirs = s;
   pthread_mutex_unlock(&sdir_mu);
@@ -1337,10 +1476,9 @@ int scandir(const char *p, struct dirent ***nl, int (*sel)(const struct dirent *
   int n = f(p, nl, sel, cmp);
   if (n > 1 && !cmp && SORT_DIRS) qsort(*nl, (size_t) n, sizeof **nl, dirent_ptr_cmp);
   if (n > 0 && have_epoch) {
-    struct stat dst;
-    dev_t dd = syscall(SYS_newfstatat, AT_FDCWD, p, &dst, 0) == 0 ? dst.st_dev : 0;
     for (int i = 0; i < n; i++) {
-      (*nl)[i]->d_ino = (ino_t) virt_ino(dd, (*nl)[i]->d_ino);
+      { char ep[PATH_MAX * 2]; snprintf(ep, sizeof ep, "%s/%s", p, (*nl)[i]->d_name);
+        (*nl)[i]->d_ino = (ino_t) path_ino(AT_FDCWD, ep, -1); }
       (*nl)[i]->d_type = DT_UNKNOWN; (*nl)[i]->d_off = i + 1;
     }
   }
@@ -1355,10 +1493,9 @@ int scandir64(const char *p, struct dirent64 ***nl, int (*sel)(const struct dire
   int n = f(p, nl, sel, cmp);
   if (n > 1 && !cmp && SORT_DIRS) qsort(*nl, (size_t) n, sizeof **nl, dirent_ptr_cmp);
   if (n > 0 && have_epoch) {
-    struct stat dst;
-    dev_t dd = syscall(SYS_newfstatat, AT_FDCWD, p, &dst, 0) == 0 ? dst.st_dev : 0;
     for (int i = 0; i < n; i++) {
-      (*nl)[i]->d_ino = (ino_t) virt_ino(dd, (*nl)[i]->d_ino);
+      { char ep[PATH_MAX * 2]; snprintf(ep, sizeof ep, "%s/%s", p, (*nl)[i]->d_name);
+        (*nl)[i]->d_ino = (ino_t) path_ino(AT_FDCWD, ep, -1); }
       (*nl)[i]->d_type = DT_UNKNOWN; (*nl)[i]->d_off = i + 1;
     }
   }
@@ -1404,12 +1541,14 @@ int faccessat(int d, const char *p, int m, int fl)
 int mkdir(const char *p, mode_t m)
 {
   if (!ALLOWED("mkdir", p)) return -1;
+  note_write_at(AT_FDCWD, p);
   int (*f)(const char *, mode_t) = real("mkdir");
   return f(p, m);
 }
 int mkdirat(int d, const char *p, mode_t m)
 {
   if (!allowed_at("mkdir", d, p)) return -1;
+  note_write_at(d, p);
   int (*f)(int, const char *, mode_t) = real("mkdirat");
   return f(d, p, m);
 }
@@ -1440,12 +1579,14 @@ int remove(const char *p)
 int rename(const char *a, const char *b)
 {
   if (!ALLOWED("rename", a) || !ALLOWED("rename", b)) return -1;
+  note_write_at(AT_FDCWD, a); note_write_at(AT_FDCWD, b);
   int (*f)(const char *, const char *) = real("rename");
   return f(a, b);
 }
 int renameat(int da, const char *a, int db, const char *b)
 {
   if (!allowed_at("rename", da, a) || !allowed_at("rename", db, b)) return -1;
+  note_write_at(da, a); note_write_at(db, b);
   int (*f)(int, const char *, int, const char *) = real("renameat");
   return f(da, a, db, b);
 }
@@ -1459,7 +1600,7 @@ int stat(const char *p, struct stat *st)
   if (!ALLOWED("stat", p)) return -1;
   int (*f)(const char *, struct stat *) = real("stat");
   int rc = f(p, st);
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int lstat(const char *p, struct stat *st)
@@ -1467,14 +1608,14 @@ int lstat(const char *p, struct stat *st)
   if (!ALLOWED("lstat", p)) return -1;
   int (*f)(const char *, struct stat *) = real("lstat");
   int rc = f(p, st);
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int fstat(int fd, struct stat *st)
 {
   int (*f)(int, struct stat *) = real("fstat");
   int rc = f(fd, st);
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, path_ino(AT_FDCWD, NULL, fd));
   return rc;
 }
 int fstatat(int d, const char *p, struct stat *st, int fl)
@@ -1482,7 +1623,7 @@ int fstatat(int d, const char *p, struct stat *st, int fl)
   if (!((fl & AT_EMPTY_PATH) && !*p) && !allowed_at("fstatat", d, p)) return -1;
   int (*f)(int, const char *, struct stat *, int) = real("fstatat");
   int rc = f(d, p, st, fl);
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, ((fl & AT_EMPTY_PATH) && !*p ? path_ino(AT_FDCWD, NULL, d) : path_ino(d, p, -1)));
   return rc;
 }
 int stat64(const char *p, struct stat64 *st)
@@ -1490,7 +1631,7 @@ int stat64(const char *p, struct stat64 *st)
   if (!ALLOWED("stat", p)) return -1;
   int (*f)(const char *, struct stat64 *) = real("stat64");
   int rc = f(p, st);
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int lstat64(const char *p, struct stat64 *st)
@@ -1498,14 +1639,14 @@ int lstat64(const char *p, struct stat64 *st)
   if (!ALLOWED("lstat", p)) return -1;
   int (*f)(const char *, struct stat64 *) = real("lstat64");
   int rc = f(p, st);
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int fstat64(int fd, struct stat64 *st)
 {
   int (*f)(int, struct stat64 *) = real("fstat64");
   int rc = f(fd, st);
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, path_ino(AT_FDCWD, NULL, fd));
   return rc;
 }
 int fstatat64(int d, const char *p, struct stat64 *st, int fl)
@@ -1513,7 +1654,7 @@ int fstatat64(int d, const char *p, struct stat64 *st, int fl)
   if (!((fl & AT_EMPTY_PATH) && !*p) && !allowed_at("fstatat", d, p)) return -1;
   int (*f)(int, const char *, struct stat64 *, int) = real("fstatat64");
   int rc = f(d, p, st, fl);
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, ((fl & AT_EMPTY_PATH) && !*p ? path_ino(AT_FDCWD, NULL, d) : path_ino(d, p, -1)));
   return rc;
 }
 int __xstat(int ver, const char *p, struct stat *st)
@@ -1523,7 +1664,7 @@ int __xstat(int ver, const char *p, struct stat *st)
   int rc;
   if (f) rc = f(ver, p, st);
   else { int (*g)(const char *, struct stat *) = real("stat"); rc = g(p, st); }
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int __lxstat(int ver, const char *p, struct stat *st)
@@ -1533,7 +1674,7 @@ int __lxstat(int ver, const char *p, struct stat *st)
   int rc;
   if (f) rc = f(ver, p, st);
   else { int (*g)(const char *, struct stat *) = real("lstat"); rc = g(p, st); }
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int __fxstat(int ver, int fd, struct stat *st)
@@ -1542,7 +1683,7 @@ int __fxstat(int ver, int fd, struct stat *st)
   int rc;
   if (f) rc = f(ver, fd, st);
   else { int (*g)(int, struct stat *) = real("fstat"); rc = g(fd, st); }
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, path_ino(AT_FDCWD, NULL, fd));
   return rc;
 }
 int __fxstatat(int ver, int d, const char *p, struct stat *st, int fl)
@@ -1552,7 +1693,7 @@ int __fxstatat(int ver, int d, const char *p, struct stat *st, int fl)
   int rc;
   if (f) rc = f(ver, d, p, st, fl);
   else { int (*g)(int, const char *, struct stat *, int) = real("fstatat"); rc = g(d, p, st, fl); }
-  if (rc == 0) fix_stat(st);
+  if (rc == 0) fix_stat(st, ((fl & AT_EMPTY_PATH) && !*p ? path_ino(AT_FDCWD, NULL, d) : path_ino(d, p, -1)));
   return rc;
 }
 int __xstat64(int ver, const char *p, struct stat64 *st)
@@ -1562,7 +1703,7 @@ int __xstat64(int ver, const char *p, struct stat64 *st)
   int rc;
   if (f) rc = f(ver, p, st);
   else { int (*g)(const char *, struct stat64 *) = real("stat64"); rc = g(p, st); }
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int __lxstat64(int ver, const char *p, struct stat64 *st)
@@ -1572,7 +1713,7 @@ int __lxstat64(int ver, const char *p, struct stat64 *st)
   int rc;
   if (f) rc = f(ver, p, st);
   else { int (*g)(const char *, struct stat64 *) = real("lstat64"); rc = g(p, st); }
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, path_ino(AT_FDCWD, p, -1));
   return rc;
 }
 int __fxstat64(int ver, int fd, struct stat64 *st)
@@ -1581,7 +1722,7 @@ int __fxstat64(int ver, int fd, struct stat64 *st)
   int rc;
   if (f) rc = f(ver, fd, st);
   else { int (*g)(int, struct stat64 *) = real("fstat64"); rc = g(fd, st); }
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, path_ino(AT_FDCWD, NULL, fd));
   return rc;
 }
 int __fxstatat64(int ver, int d, const char *p, struct stat64 *st, int fl)
@@ -1591,7 +1732,7 @@ int __fxstatat64(int ver, int d, const char *p, struct stat64 *st, int fl)
   int rc;
   if (f) rc = f(ver, d, p, st, fl);
   else { int (*g)(int, const char *, struct stat64 *, int) = real("fstatat64"); rc = g(d, p, st, fl); }
-  if (rc == 0) fix_stat((struct stat *) st);
+  if (rc == 0) fix_stat((struct stat *) st, ((fl & AT_EMPTY_PATH) && !*p ? path_ino(AT_FDCWD, NULL, d) : path_ino(d, p, -1)));
   return rc;
 }
 
@@ -1606,9 +1747,9 @@ int statx(int d, const char *p, int fl, unsigned int mask, struct statx *sx)
     sx->stx_atime.tv_nsec = sx->stx_mtime.tv_nsec = sx->stx_ctime.tv_nsec = sx->stx_btime.tv_nsec = 0;
     if (sx->stx_uid == real_uid) sx->stx_uid = LP_ID;
     if (sx->stx_gid == real_gid) sx->stx_gid = LP_ID;
-    dev_t rdev = makedev(sx->stx_dev_major, sx->stx_dev_minor);
-    sx->stx_ino = virt_ino(rdev, (ino_t) sx->stx_ino);
-    sx->stx_dev_major = 0; sx->stx_dev_minor = LP_DEV;
+    sx->stx_ino = (fl & AT_EMPTY_PATH) && !*p ? path_ino(AT_FDCWD, NULL, d)
+                                              : path_ino(d, p, -1);
+    sx->stx_dev_major = 0; sx->stx_dev_minor = LP_DEV_MINOR;
     if (S_ISDIR(sx->stx_mode)) { sx->stx_size = 4096; sx->stx_nlink = 1; }
     sx->stx_blksize = 4096;
     sx->stx_blocks = S_ISREG(sx->stx_mode) || S_ISDIR(sx->stx_mode)

@@ -126,22 +126,74 @@ _RUNS = re.compile(r"\b(run_to_fixpoint|run_to_fixpoint_full|run_once|run_pass|"
                    r"run_pdflatex|--compile-check)\b")
 
 
-def check_gate_coverage(c: Checker, repo: Path) -> None:
-    """C-197 (review of 82638518, M1): EVERY tool that takes a frame window, a
-    results artefact or a list of ids, or that reads ids and runs the oracle
-    or the CLI on them, goes through the one gate."""
-    seen = 0
+def check_gate_coverage(c: Checker, repo: Path) -> dict:
+    """C-197 (third review, M2): the seal holds by CONSTRUCTION for every
+    engine run -- the oracle checks it at the one place every run passes
+    (_exec, reference_pass, _image_command) -- and by a per-tool gate for every
+    tool that takes documents without running the oracle (it runs the CLI on
+    them). Returns the counts the PASS line prints."""
+    import inspect
+    om = importlib.import_module("_oracle")
+    co = om.ContainerOracle
+    choke = ("_exec", "reference_pass", "_image_command")
+    for m in choke:
+        src = inspect.getsource(getattr(co, m)) if hasattr(co, m) else ""
+        c.expect(f"C-197: ContainerOracle.{m} starts a container without the "
+                 f"sample-3 seal check (seal_check)", "seal_check(" in src)
+    # every container the oracle starts is one of these, or carries no document
+    nodoc = {"hostinfo", "session_probe", "remove", "_dk", "stop"}
+    launches = set()
+    for name, fn in inspect.getmembers(co, inspect.isfunction):
+        if "self._launch(" in inspect.getsource(fn):
+            launches.add(name)
+    stray = sorted(launches - set(choke) - nodoc)
+    c.expect(f"C-197: a container is started outside the sealed choke points: {stray}",
+             not stray)
+    # behaviour: an id in the path, a copy by digest, an authorised measurement
+    gs = importlib.import_module("_grading_seal")
+    m3 = json.loads((repo / "corpora/real_roots/manifest_sample3.json").read_text())
+    sid = m3["docs"][0]["arxiv_id"]
+    with tempfile.TemporaryDirectory(prefix="seal-run-") as td:
+        d = Path(td) / sid
+        d.mkdir()
+        (d / "main.tex").write_text("x\n")
+        c.expect("C-197: seal_run let a run inside a directory named after a sealed "
+                 "paper through", bool(gs.seal_run(d, ["main.tex"])))
+        other = Path(td) / "copy"
+        other.mkdir()
+        (other / "main.tex").write_text("a copy\n")
+        gs.seal_run(other, ["main.tex"])          # fills the cache
+        gs._CACHE["digests"] = gs._CACHE["digests"] | {
+            hashlib.sha256(b"a copy\n").hexdigest()}
+        c.expect("C-197: seal_run let a COPY of a sealed top-level file through",
+                 bool(gs.seal_run(other, ["main.tex"])))
+        gs.SEALED_AUTHORIZED = True
+        c.expect("C-197: an authorised sealed measurement was refused by seal_run",
+                 gs.seal_run(other, ["main.tex"]) is None)
+        gs.SEALED_AUTHORIZED = False
+        gs._CACHE.clear()
+    # tools: those that run the oracle are gated by construction; those that
+    # take documents without running it must call the gate themselves
+    runs = re.compile(r"\b(run_pdflatex|run_to_fixpoint(_full)?|run_pass|run_once|"
+                      r"run_engine|reference_pass|measure)\s*\(|_oracle\.py")
+    n_run = n_doc = 0
     for f in sorted((repo / "scripts" / "tools").glob("*.py")):
         s = f.read_text(errors="replace")
         if "__main__" not in s or f.name in GATE_EXEMPT:
             continue
+        if runs.search(s):
+            n_run += 1
+            continue
         if _TAKES_DOCS.search(s) or ("arxiv_id" in s and _RUNS.search(s)):
-            seen += 1
+            n_doc += 1
             c.expect(f"C-197: {f.name} takes documents but never calls "
                      f"_grading_seal.gate (it could grade sealed sample 3)",
                      "_grading_seal.gate(" in s)
-    c.expect(f"C-197: the scan found only {seen} document-taking tools (floor 12)",
-             seen >= 12, str(seen))
+    c.expect(f"C-197: the scan found only {n_run} oracle-running tools (floor 20)",
+             n_run >= 20, str(n_run))
+    c.expect(f"C-197: the scan found only {n_doc} other document-taking tools "
+             f"(floor 4)", n_doc >= 4, str(n_doc))
+    return {"oracle_tools": n_run, "doc_tools": n_doc}
 
 
 def check_first_error(c: Checker, repo: Path, om) -> None:
@@ -240,7 +292,7 @@ def main() -> int:
     print(f"[grading-inputs] modules: {om.__file__}, {drr.__file__}")
     c = Checker()
     check_seal(c, repo)
-    check_gate_coverage(c, repo)
+    scan = check_gate_coverage(c, repo)
     check_first_error(c, repo, om)
     check_tree(c, drr)
     if c.failures:
@@ -248,9 +300,12 @@ def main() -> int:
         for f in c.failures:
             print(f"  - {f}", file=sys.stderr)
         return 1
-    print(f"[grading-inputs] OK: {c.n} checks (OPEN-139 seal in 3 grading tools, "
-          f"C-181 first error on {len(json.loads((repo / FIX / 'expected.json').read_text())['expected'])} "
-          f"real logs, C-182 copytree-consistent digest)")
+    print(f"[grading-inputs] OK: {c.n} checks: the seal at every engine run (the "
+          f"oracle's choke points) and in {scan['doc_tools']} document-taking tools "
+          f"(floor 4), {scan['oracle_tools']} oracle-running tools gated by "
+          f"construction (floor 20), the sealed output an allow-list; C-181 first "
+          f"error on {len(json.loads((repo / FIX / 'expected.json').read_text())['expected'])} "
+          f"real logs; C-182 copytree-consistent digest")
     return 0
 
 

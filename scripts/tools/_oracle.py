@@ -1298,6 +1298,11 @@ if cfg.get("mark"):
     except OSError:
         ev["pipes"] = 0
     try:
+        with open(os.path.join(cfg["mark"], "races")) as fh:
+            ev["races"] = [ln for ln in fh.read().splitlines() if ln.strip()][:20]
+    except OSError:
+        ev["races"] = []
+    try:
         with open(os.path.join(cfg["mark"], "stragglers")) as fh:
             ev["stragglers"] = [ln for ln in fh.read().splitlines() if ln.strip()][:20]
     except OSError:
@@ -1322,6 +1327,15 @@ if ev["timed_out"]:
     sys.exit(124)
 sys.exit(rc if rc >= 0 else 128 - rc)
 """
+
+
+def seal_check(cwd, args) -> str | None:
+    """The sample-3 seal for one engine run (C-197): the run directory and
+    every file argument (`_grading_seal.seal_run`)."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import _grading_seal
+    files = [a for a in args if not str(a).startswith("-") and not str(a).startswith("&")]
+    return _grading_seal.seal_run(cwd, files)
 
 
 def evidence_names(args) -> list[str]:
@@ -1364,12 +1378,13 @@ def check_evidence(stderr: bytes, nonce: str, args, what: str,
                           f"directory ({ev.get('err') or 'inotify queue overflow'}); "
                           f"not a grade (C-99)")
     if host_expect is not None and (ev.get("survivors") or ev.get("stragglers")
-                                    or ev.get("survivors_unkilled")
-                                    or "survivors" not in ev):
+                                    or ev.get("survivors_unkilled") or ev.get("races")
+                                    or "survivors" not in ev or "races" not in ev):
         raise OracleError(
             f"{what}: a process the document started outlived the engine "
-            f"({ev.get('survivors')!r}) or was still running when TeX went on "
-            f"after its pipe or \\write18 command ({ev.get('stragglers')!r}): the "
+            f"({ev.get('survivors')!r}), was still running when TeX went on "
+            f"after its pipe or \\write18 command ({ev.get('stragglers')!r}), or "
+            f"raced TeX ({ev.get('races')!r}): the "
             f"grade would depend on scheduling -- refused as nondeterministic, "
             f"never graded (C-196)")
     alias = ev.get("alias")
@@ -2279,8 +2294,8 @@ def default_workroot() -> Path:
 # it preloads, and the engine process must carry the shim's mark).
 SHIM_SRC_DIR = REPO / "scripts" / "tools" / "oracle_shim"
 SHIM_SHA256 = {
-    "aarch64": "b9e16d74bcbee32b176798a70b90e69da2060993ef090b53843ff5b45316e395",
-    "x86_64": "d3be219a6a5ae7a5e8c3a586f54007dd608c6a4fa67b8e5503e1b76767db316b",
+    "aarch64": "5dae90fe1f957d97bc2ba774f2627c15bdd9a61a8f190a70564dd4dfecdf6c0f",
+    "x86_64": "424a063ef5033f3470dc48a777db2b9c734d9e9b4e40ed9029bc2523174b6ce0",
 }
 
 
@@ -2456,6 +2471,48 @@ class ContainerOracle(_Base):
             self._dk("rm", "-f", name, timeout=60)
             raise OracleError(f"docker run {name} did not return within {timeout}s")
 
+    def reference_pass(self, cwd: Path, args: list[str], timeout: int = 300) -> dict:
+        """ONE pass of the pinned engine WITHOUT the shim: the reference the
+        differential gate compares the oracle with (C-196, revised rule: the
+        oracle's semantics must equal the pinned pdfTeX's wherever that is
+        deterministic). The same launch definition, supervisor, environment
+        and fixed clock VARIABLES, but no LD_PRELOAD, so the engine sees the
+        real clock, the real file system and native scheduling. NEVER A
+        GRADE: it returns {rc, stdout, log, timed_out}, and nothing records
+        it."""
+        cwd = Path(cwd).resolve()
+        if not self._inside(cwd):
+            raise OracleError(f"{cwd} is outside the oracle work root")
+        check_engine_argv(args, cwd, graded=True)
+        why = seal_check(cwd, args)
+        if why:
+            raise OracleError(f"reference run refused by the sample-3 seal: {why}")
+        nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
+        env = {k: v for k, v in engine_env(graded_env({})).items()
+               if not k.startswith("LP_")}
+        cfg = {"names": evidence_names(args), "remove": evidence_names(args),
+               "env": env, "mkdirs": [d for d in FIXED_RUN_DIRS
+                                      if not d.startswith(BOOK_DIR)],
+               "timeout": int(timeout)}
+        name = self._run_name()
+        p = self._launch(name, launch_argv(
+            self.user, name, mounts=[(cwd, RUN_DIR, False)],
+            entry=("sh", "-c", _RUN_SCRIPT, "sh", nonce,
+                   str(int(timeout) + BACKSTOP_SECONDS), _SUPERVISOR_SRC,
+                   json.dumps(cfg, sort_keys=True), ENGINE_PDFLATEX, *args)),
+            timeout + 90)
+        m = re.search(rb"^" + nonce.encode() + rb"=(\d+)$", p.stderr, re.M)
+        if m is None:
+            raise OracleError("reference run: no in-container rc line")
+        ev = {}
+        e = re.search(rb"^" + nonce.encode() + rb"_EVID=(.*)$", p.stderr, re.M)
+        if e:
+            ev = json.loads(e.group(1))
+        log = job_output(cwd, args, ".log")
+        return {"rc": int(m.group(1)), "stdout": p.stdout,
+                "log": log.read_bytes() if log.is_file() else b"",
+                "timed_out": bool(ev.get("timed_out"))}
+
     def hostinfo(self, arch: str = ARCH_OF_RECORD) -> dict:
         """One container of the launch definition reports every CPU and
         memory source a child could read (diagnostic, C-139)."""
@@ -2598,6 +2655,10 @@ class ContainerOracle(_Base):
         # same inside.
         if cwd is not None and not self._inside(Path(cwd)):
             raise OracleError(f"{cwd} is outside the oracle work root")
+        if cwd is not None:
+            why = seal_check(Path(cwd), [str(a) for a in argv[1:]])
+            if why:
+                raise OracleError(f"image command refused by the sample-3 seal: {why}")
         name = self._run_name()
         p = self._launch(name, launch_argv(
             self.user, name, mounts=((self.workroot, str(self.workroot), False),),
@@ -2624,6 +2685,14 @@ class ContainerOracle(_Base):
         args = [os.path.relpath(Path(a).resolve(), cwd)
                 if os.path.isabs(a) and self._inside(Path(a)) else a for a in args]
         self.fingerprint(arch)
+        # C-197 (third review, M2): EVERY engine run, whichever tool asked for
+        # it, is checked against the sample-3 seal here, at the one place
+        # every run passes; a sealed document is graded only inside an
+        # authorised --sealed-measurement (_grading_seal.gate)
+        why = seal_check(cwd, args)
+        if why:
+            raise OracleError(f"run in {cwd.name}: refused by the sample-3 seal "
+                              f"(OPEN-119, OPEN-139): {why}")
         _require_free_space(cwd, "before")
         nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
         name = self._run_name()

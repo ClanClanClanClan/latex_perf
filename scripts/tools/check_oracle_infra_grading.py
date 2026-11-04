@@ -206,7 +206,7 @@ def rcline(rc, **extra):
         "shim_mode": "restricted" if cfg.get("shim") else None,
         "host": json.loads(os.environ.get("FAKE_HOST") or "null") or cfg.get("host_expect"),
         "timed_out": False, "oom": False, "survivors": 0, "survivors_unkilled": 0,
-        "stragglers": [], "fs_denied": [0]}, **extra))
+        "stragglers": [], "races": [], "fs_denied": [0]}, **extra))
     if evid != "OMIT":   # OMIT: a supervisor that died before reporting
         sys.stderr.write("\n%s_EVID=%s\n" % (nonce, evid))
     sys.stderr.write("\n%s=%d\n" % (nonce, rc))
@@ -521,7 +521,7 @@ def evid(**over) -> str:
          "shim_sha256": _oracle.SHIM_SHA256[_oracle.ARCH_OF_RECORD],
          "shim_mode": "restricted", "host": dict(getattr(_oracle, "HOST_EXPECT", {})),
          "timed_out": False, "oom": False, "survivors": 0, "survivors_unkilled": 0,
-         "stragglers": [], "fs_denied": [0]}
+         "stragglers": [], "races": [], "fs_denied": [0]}
     e.update(over)
     return json.dumps({k: v for k, v in e.items() if v is not OMIT})
 
@@ -884,7 +884,10 @@ class Checker:
                  "refused as nondeterministic"),
                 (evid(stragglers=["popen 1"]), "a pipe child's process still running "
                  "when TeX went on", "refused as nondeterministic"),
-                (evid(survivors=OMIT), "no survivor count", "refused as nondeterministic")):
+                (evid(survivors=OMIT), "no survivor count", "refused as nondeterministic"),
+                (evid(races=["access while a live child writes it"]),
+                 "TeX reading a file a live pipe child writes", "refused as nondeterministic"),
+                (evid(races=OMIT), "no race report", "refused as nondeterministic")):
             os.environ["FAKE_EVID"] = ev
             try:
                 got, err = self.run_pdflatex("okpdf")

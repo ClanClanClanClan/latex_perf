@@ -62,6 +62,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
+sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent))
+import _grading_seal  # noqa: E402
 
 NORM = re.compile(r"\s+")
 
@@ -127,6 +129,8 @@ def main() -> int:
     pkgs = sorted((p for p in root.iterdir() if p.is_dir()),
                   key=lambda p: hashlib.sha256(p.name.encode()).hexdigest())
     sample = pkgs[ns.offset:ns.offset + ns.n]
+    # OPEN-139 / C-197: never a sealed paper
+    _grading_seal.gate("fix-reach", [p.name for p in sample])
     if len(sample) < ns.n:
         print(f"[fix-reach] FATAL: frame has {len(pkgs)} packages; offset "
               f"{ns.offset} + n {ns.n} overruns it", file=sys.stderr)

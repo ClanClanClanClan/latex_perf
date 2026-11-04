@@ -57,6 +57,7 @@ TMPROOT = SCRATCH / "guardsim" / "tmp"
 
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+import _grading_seal  # noqa: E402
 from _oracle import OracleError, get_oracle, oracle_tex_env  # noqa: E402
 import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import (  # noqa: E402
@@ -604,6 +605,8 @@ def main():
     ordered = sorted(frame, key=lambda r: hashlib.sha256(
         r["arxiv_id"].encode()).hexdigest())
     window = ordered[ns.offset:ns.offset + ns.n]
+    # OPEN-139 / C-197: a design tool never touches sealed sample 3
+    _grading_seal.gate("simulate-fix-guard", [r["arxiv_id"] for r in window], window=(ns.offset, ns.n))
     if len(window) < ns.n:
         sys.exit(f"FATAL: frame {len(ordered)} too small for window")
     mine = [(ns.offset + i, r) for i, r in enumerate(window) if i % K == k]

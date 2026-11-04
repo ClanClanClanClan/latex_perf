@@ -42,6 +42,7 @@ import argparse, hashlib, json, os, pathlib, shutil, subprocess
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
 from diff_real_roots import PIN, build_frame, run_to_fixpoint  # noqa: E402
+import _grading_seal  # noqa: E402
 from _oracle import OracleError, get_oracle, oracle_tex_env  # noqa: E402
 import _measurement_provenance as _mp  # noqa: E402
 from gen_apply_fixes_real_differential import first_error  # noqa: E402
@@ -197,6 +198,9 @@ def main() -> int:
         window = ordered[ns.offset:ns.offset + ns.n]
         if len(window) < ns.n:
             sys.exit("FATAL: window overruns frame")
+    # OPEN-139 / C-197: a design tool never touches sealed sample 3
+    _grading_seal.gate("attribute-fix-rules", [r["arxiv_id"] for r in window],
+                       window=None if ns.only_ids else (ns.offset, ns.n))
 
     prov = {"frame_size": len(frame), "selection": "sha256(arxiv_id) ascending",
             "offset": ns.offset, "n": ns.n, "only_ids": ns.only_ids or None,

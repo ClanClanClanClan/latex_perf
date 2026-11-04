@@ -111,7 +111,10 @@ def grade(o, name: str) -> object:
         if name == "forge_link":
             os.symlink("doc.log", work / "evil.txt")
         try:
-            return o.run_to_fixpoint(work, "doc.tex", o.tex_env(td), 180).compiles
+            r = o.run_to_fixpoint(work, "doc.tex", o.tex_env(td), 180)
+            # C-186 (review of 82638518, L1): an unfinished run is no verdict;
+            # until then a timeout read as compiles=False
+            return ("oom" if r.oom else "timeout") if r.timed_out else r.compiles
         except _oracle.OracleError as e:
             if isinstance(e, _oracle.OracleUnavailable):
                 raise

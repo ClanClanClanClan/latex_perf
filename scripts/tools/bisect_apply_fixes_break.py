@@ -42,6 +42,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import _grading_seal  # noqa: E402
 from diff_real_roots import run_to_fixpoint, PIN  # noqa: E402
 from _oracle import OracleError, get_oracle, job_output, oracle_tex_env  # noqa: E402
 
@@ -223,6 +224,7 @@ def main():
     ap.add_argument("papers", nargs="+")
     ap.add_argument("--out", default="")
     ns = ap.parse_args()
+    _grading_seal.gate("bisect-apply-fixes", ns.papers)  # OPEN-139
     if not CLI.is_file():
         print(f"FATAL: {CLI} not built", file=sys.stderr)
         return 2

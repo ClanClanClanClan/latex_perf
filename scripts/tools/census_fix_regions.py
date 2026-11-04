@@ -28,6 +28,8 @@ from __future__ import annotations
 
 import argparse, collections, concurrent.futures as cf, difflib, hashlib, json
 import os, pathlib, re, shutil, subprocess, sys, tempfile
+sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent))
+import _grading_seal  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 CLI = REPO / "_build/default/latex-parse/src/validators_cli.exe"
@@ -654,6 +656,8 @@ def main():
     pkgs = sorted((p for p in root.iterdir() if p.is_dir()),
                   key=lambda p: hashlib.sha256(p.name.encode()).hexdigest())
     sample = pkgs[ns.offset:ns.offset + ns.n]
+    # OPEN-139 / C-197: never a sealed paper
+    _grading_seal.gate("fix-regions", [p.name for p in sample])
     assert len(sample) == ns.n
     res = {}
     with cf.ThreadPoolExecutor(ns.jobs) as ex:

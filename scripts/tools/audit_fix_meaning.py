@@ -32,6 +32,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts/tools"))
+import _grading_seal  # noqa: E402
 from diff_real_roots import PIN, run_to_fixpoint_full  # noqa: E402
 from _oracle import (OracleError, get_oracle, job_output,  # noqa: E402
                      oracle_tex_env)
@@ -137,6 +138,7 @@ def main() -> int:
             sys.exit(f"FATAL: {k} set in the caller's environment")
 
     sweep = json.loads(SWEEP.read_text())
+    _grading_seal.gate("audit-fix-meaning", _grading_seal.ids_in(sweep))  # OPEN-139
     rows = [r for s in sweep["shards"] for r in s["rows"]
             if r.get("cell") == "preserved"]
     by_rule = collections.defaultdict(list)

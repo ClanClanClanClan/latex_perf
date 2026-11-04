@@ -202,6 +202,103 @@ x
 }
 
 
+# The review of 82638518's reproducers, kept (H1, H2).
+# fs_meta (H1, C-195): a directory's size and the other stat fields through
+#   texosquery (java) and TeX: 1344 on APFS/virtiofs, 4096 on ext4, 840 on
+#   tmpfs before C-195. Required: every directory reports 4096.
+FS_META_TEX = r"""\documentclass{article}
+\makeatletter
+\def\lpprobe#1{\immediate\openin1=|"#1"\relax
+ \ifeof1 \typeout{LPPIPE[#1]=<eof>}\else
+ \loop\unless\ifeof1 \readline1 to\lpx \typeout{LPPIPE[#1]=[\lpx]}\repeat\fi
+ \immediate\closein1}
+\makeatother
+\begin{document}
+\lpprobe{texosquery-jre8 -s .}
+\lpprobe{texosquery-jre8 -s sub}
+\lpprobe{texosquery-jre8 -s sub/f1}
+\lpprobe{texosquery-jre8 -s doc.tex}
+\lpprobe{texosquery-jre8 -i , . size}
+\lpprobe{texosquery-jre8 -id , .}
+\lpprobe{texosquery-jre8 -i , sub}
+\lpprobe{texosquery-jre8 -m}
+\lpprobe{texosquery-jre8 -t}
+\lpprobe{texosquery-jre8 -c}
+\lpprobe{texosquery-jre8 -d sub}
+\lpprobe{texosquery-jre8 -o -r -a}
+\lpprobe{texosquery-jre8 -L -cs}
+\lpprobe{l3sys-query ls --type d}
+\typeout{LPTEX[\pdffilesize{sub}][\pdffilemoddate{sub}][\pdffilesize{sub/f1}]}
+x
+\end{document}
+"""
+# raceflip (H2, C-196): TeX polls the size of the PDF a pipe child (repstopdf
+#   -> gs) is writing; with a concurrent child the count depended on
+#   scheduling (rc 0,0,1,0,0). Required: the child had finished when popen
+#   returned (one poll).
+RACEFLIP_TEX = r"""\documentclass{article}
+\newcount\lpi \newcount\lpj \newif\iflpgo
+\begin{document}
+\immediate\openin1=|"repstopdf lpt.eps"\relax
+\lpj=0
+\loop
+  \lpi=0 {\loop\advance\lpi1 \ifnum\lpi<2000 \repeat}%
+  \advance\lpj1
+  \lpgotrue
+  \ifnum0\pdffilesize{lpt.pdf}>7000 \lpgofalse\fi
+  \ifnum\lpj>100000 \lpgofalse\fi
+\iflpgo \repeat
+\typeout{LPFLIP polls-until-gs-done=[\the\lpj]}
+\ifnum\lpj>48 \errmessage{LPFLIP slow}\fi
+x
+\immediate\closein1
+\end{document}
+"""
+# orphan2 (H2, C-196): a pipe child still running when the engine exits left
+#   a 0-byte lpt.pdf that the NEXT pass read. Required: the next pass sees
+#   the finished file.
+ORPHAN2_TEX = r"""\documentclass{article}
+\begin{document}
+\IfFileExists{lpt.pdf}{\typeout{LPORPHAN[prev=\pdffilesize{lpt.pdf}]}}{\typeout{LPORPHAN[prev=none]}}
+\immediate\openin1=|"repstopdf lpt.eps"\relax
+x
+\end{document}
+"""
+ORPHAN2_EPS = """%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 100 100
+0 1 40000000 { pop } for
+/Courier findfont 8 scalefont setfont 10 50 moveto (slow) show
+showpage
+"""
+SEMANTICS_DOCS = {
+    "fs_meta": (FS_META_TEX, {"sub/f%d" % i: "%d\n" % i for i in range(1, 41)}),
+    "raceflip": (RACEFLIP_TEX, {"lpt.eps": GS_SANDBOX_EPS}),
+    "orphan2": (ORPHAN2_TEX, {"lpt.eps": ORPHAN2_EPS}),
+}
+
+
+def check_semantics(name: str, run: dict) -> list[str]:
+    log = unwrap(run[".log"])
+    bad = []
+    if name == "fs_meta":
+        sizes = re.findall(r"^LPPIPE\[texosquery-jre8 -s (\.|sub)\]=\[([0-9]+)", log, re.M)
+        if len(sizes) != 2 or any(v != "4096" for _, v in sizes):
+            bad.append(f"C-195: a directory's size is the file system's, not 4096: {sizes}")
+    if name == "raceflip":
+        m = re.findall(r"LPFLIP polls-until-gs-done=\[([0-9]+)\]", log)
+        if m != ["1"]:
+            bad.append(f"C-196: the pipe child was still running when TeX read its "
+                       f"output (polls {m}; the defined schedule gives 1)")
+    if name == "orphan2":
+        final = run["files"].get("lpt.pdf")
+        m = re.findall(r"LPORPHAN\[prev=([^\]]*)\]", log)
+        size = run.get("sizes", {}).get("lpt.pdf")
+        if not size or m != [str(size)]:
+            bad.append(f"C-196: the last pass read an unfinished lpt.pdf (it saw "
+                       f"{m}, the finished file has {size} bytes; digest {str(final)[:12]})")
+    return bad
+
+
 def interpreters() -> str:
     pipes = []
     for t in TARGETS:
@@ -237,7 +334,7 @@ def docs(oracle_mod) -> dict:
     return {"pid_probe": (pid_probe(paths), {}),
             "jvm": (JVM, {}),
             "interpreters": (interpreters(), {"lpt.eps": EPS, "lpmz.mmz": ""}),
-            **SANDBOX_DOCS}
+            **SANDBOX_DOCS, **SEMANTICS_DOCS}
 
 
 def grade(o, name: str, src: str, extra: dict, sub: str = "w") -> dict:
@@ -251,6 +348,7 @@ def grade(o, name: str, src: str, extra: dict, sub: str = "w") -> dict:
                 d.chmod(0o777)
         (work / "doc.tex").write_text(src)
         for f, text in extra.items():
+            (work / f).parent.mkdir(parents=True, exist_ok=True)
             (work / f).write_text(text)
         r = o.run_to_fixpoint(work, "doc.tex", o.tex_env(td), 300)
         out = {"rc": r.rc, "compiles": r.compiles, "timeout": r.timed_out}
@@ -260,6 +358,8 @@ def grade(o, name: str, src: str, extra: dict, sub: str = "w") -> dict:
         eps = work / "lpt.pdf"
         out["eps_pdf"] = eps.read_bytes() if eps.exists() else None
         out["files"] = {str(f.relative_to(work)): hashlib.sha256(f.read_bytes()).hexdigest()
+                        for f in sorted(work.rglob("*")) if f.is_file()}
+        out["sizes"] = {str(f.relative_to(work)): f.stat().st_size
                         for f in sorted(work.rglob("*")) if f.is_file()}
         return out
 
@@ -346,10 +446,14 @@ VARIANTS = (
     ("memory 1g", lambda a: _set(_set(a, "--memory", "1g"), "--memory-swap", "1g"), "C-139 (a)"),
     ("user 1234:1234", lambda a: _set(a, "--user", "1234:1234"), None),
     ("deeper work-root path", None, None),
+    # C-195 (review of 82638518, H1): the run directory on ANOTHER file system
+    # -- a tmpfs volume instead of the bind mount (virtiofs over APFS on a
+    # Mac, the runner's ext4 in CI) -- must give identical output.
+    ("tmpfs work root", "TMPFS", None),
 )
 # (no document that makes a subdirectory: under another --user its files
 # would not be removable by the host user on a Linux runner)
-VARIANT_DOCS = ("pid_probe", "jvm")
+VARIANT_DOCS = ("pid_probe", "jvm", "fs_meta")
 
 
 def _set(argv: list, flag: str, value: str) -> list:
@@ -361,10 +465,54 @@ def _set(argv: list, flag: str, value: str) -> list:
     return argv
 
 
+def _tmpfs_launch(oracle_mod, o, orig_launch):
+    """o._launch with the run directory on a tmpfs VOLUME: the host's run
+    directory is copied in before each engine container and back after it
+    (helper containers of the pinned image, as the oracle's user)."""
+    import subprocess
+    import uuid
+    vol = "lp-det-tmpfs-" + uuid.uuid4().hex[:12]
+    subprocess.run([o.docker, "volume", "create", "--driver", "local", "--opt",
+                    "type=tmpfs", "--opt", "device=tmpfs", "--opt",
+                    "o=size=128m,mode=0777", vol], check=True, capture_output=True)
+
+    def helper(host: str, script: str) -> None:
+        subprocess.run([o.docker, "run", "--rm", "--pull", "never", "--network", "none",
+                        "--user", o.user, "-v", f"{vol}:/v", "-v", f"{host}:/h",
+                        "--entrypoint", "sh", oracle_mod.IMAGE, "-c", script],
+                       check=True, capture_output=True, timeout=300)
+
+    def launch(name, argv, timeout):
+        if "--entrypoint" not in argv or argv[argv.index("--entrypoint") + 1] != "sh":
+            return orig_launch(name, argv, timeout)
+        argv = list(argv)
+        k = next(i for i in range(len(argv) - 1) if argv[i] == "-v"
+                 and argv[i + 1].endswith(":" + oracle_mod.RUN_DIR))
+        host = argv[k + 1].rsplit(":", 1)[0]
+        argv[k:k + 2] = ["--mount", f"type=volume,src={vol},dst={oracle_mod.RUN_DIR}"]
+        helper(host, "rm -rf /v/* /v/.[!.]* 2>/dev/null; cp -a /h/. /v/")
+        try:
+            return orig_launch(name, argv, timeout)
+        finally:
+            helper(host, "rm -rf /h/* /h/.[!.]* 2>/dev/null; cp -a /v/. /h/")
+
+    def cleanup():
+        subprocess.run([o.docker, "volume", "rm", "-f", vol], capture_output=True)
+    return launch, cleanup
+
+
 def host_variants(oracle_mod, o, all_docs: dict, base: dict) -> list[str]:
     bad = []
     orig = oracle_mod.launch_argv
     for label, edit, want_refusal in VARIANTS:
+        cleanup = None
+        if edit == "TMPFS":
+            launch, cleanup = _tmpfs_launch(oracle_mod, o, o._launch)
+            o._launch = launch
+            edit = None
+            sub = "w"
+        else:
+            sub = None
         if edit is not None:
             def patched(*a, _edit=edit, **k):
                 argv = orig(*a, **k)
@@ -375,9 +523,9 @@ def host_variants(oracle_mod, o, all_docs: dict, base: dict) -> list[str]:
                 if name not in base:
                     continue
                 src, extra = all_docs[name]
-                sub = "v a/deeper/w" if edit is None else "w"
+                where = sub or ("v a/deeper/w" if edit is None else "w")
                 try:
-                    got = grade(o, name, src, extra, sub=sub)
+                    got = grade(o, name, src, extra, sub=where)
                 except oracle_mod.OracleError as e:
                     if isinstance(e, oracle_mod.OracleUnavailable):
                         raise
@@ -399,6 +547,9 @@ def host_variants(oracle_mod, o, all_docs: dict, base: dict) -> list[str]:
                                f"in {diff}")
         finally:
             oracle_mod.launch_argv = orig
+            if cleanup is not None:
+                o.__dict__.pop("_launch", None)
+                cleanup()
     return bad
 
 
@@ -459,6 +610,8 @@ def main() -> int:
             bad += [f"{name}: {x}" for x in check_book(a) + check_book(b)][:12]
         if name == "interpreters":
             bad += [f"{name}: {x}" for x in check_interp(a)][:20]
+        if name in SEMANTICS_DOCS:
+            bad += [f"{name}: {x}" for x in check_semantics(name, a) + check_semantics(name, b)]
     bad += host_variants(oracle_mod, o, all_docs, base)
     if bad:
         print("[oracle-determinism] FAIL: a graded run observed something that is "

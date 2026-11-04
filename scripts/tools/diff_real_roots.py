@@ -219,6 +219,10 @@ def package_files(d: Path) -> list[tuple[str, Path]]:
                 walk(e, r)
             elif e.is_file():
                 out.append((str(r), e))
+            else:
+                # a FIFO, socket or device: copytree would block on or copy
+                # what no digest names (review of 82638518, L4): refused
+                raise PackageError(f"{r} is not a regular file or directory")
         seen.discard(real)
 
     walk(Path(d), Path(""))
@@ -431,7 +435,7 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
         # (see cell_of). The join is TeX's 79-column hard wrap inverted:
         # 2507.08096v1's "...-eps-converted-to.pdf' n" + "ot found" (C-45).
         first_full = first_error_block(job_output(work, rec["toplevel"], ".log"))
-        out["first_error"] = first_full[:160]
+        out["first_error"] = first_full   # the full message (C-181)
 
     if out["pdflatex_rc"] == -1 or out["cli_rc"] == -1:
         out["cell"] = "ungraded-timeout"
@@ -789,7 +793,7 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
             d["passes"] = passes
         if "graded_by" in d:
             d["graded_by"] = "pinned-image oracle (ADR-012 decision 7)"
-        d["first_error"] = first_full[:160]
+        d["first_error"] = first_full   # the full message (C-181)
         cell_before = d["cell"]
         if rc == -1:
             d["cell"] = "ungraded-timeout"
@@ -1064,6 +1068,9 @@ def main() -> int:  # noqa: C901
     else:
         sealed_run = _grading_seal.gate("real-roots", window=(ns.offset, ns.n),
                                         measurement=ns.sealed_measurement, repo=repo)
+    if sealed_run:
+        _grading_seal.side_outputs("real-roots", diff_out=ns.diff_out,
+                                   experiment_out=ns.experiment_out)
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
     # --refresh-metadata reads 00README.json and writes the manifest; it runs
     # neither the CLI nor pdflatex, so it must not require either to be present.

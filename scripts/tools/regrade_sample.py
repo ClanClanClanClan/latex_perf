@@ -16,6 +16,7 @@ MAX_PASSES, TIMEOUT = 3, 300
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _oracle import get_oracle, job_output  # noqa: E402
+import _grading_seal  # noqa: E402
 
 
 def run_to_fixpoint(work, toplevel, env):
@@ -75,6 +76,9 @@ def grade(aid, top):
 
 if __name__ == "__main__":
     todo = [l.split("\t") for l in open(sys.argv[1]).read().splitlines() if l.strip()]
+    # OPEN-139 / C-197: a sample-3 row is graded only by diff_real_roots's
+    # --sealed-measurement, never here
+    _grading_seal.gate("regrade-sample", [aid for aid, _top in todo])
     out_path = sys.argv[2]
     rows = []
     for i, (aid, top) in enumerate(todo, 1):

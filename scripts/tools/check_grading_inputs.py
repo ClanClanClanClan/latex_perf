@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import importlib
 import json
 import os
@@ -84,6 +85,11 @@ def check_seal(c: Checker, repo: Path) -> None:
             f"print('  [1/1] ' + {sid!r} + ' FALSE-READY')\n"
             f"print('[real-roots] FALSE-READY ' + {sid!r} + ': ! Undefined')\n"
             "print('[real-roots]   FALSE-READY        7')\n"
+            # C-197 (review of 82638518, H3): id-free per-document text
+            "print('[real-roots] false-READY classes:')\n"
+            "print('[real-roots]   x1  ! Package foo Error: SECRET-FIRST-ERROR-LINE-1')\n"
+            "print('SECRET-CONTINUATION-LINE-2 (\\\\MessageBreak)')\n"
+            "sys.stderr.write('Traceback: SECRET-TRACE\\n')\n"
             f"sys.stderr.write('FATAL: ' + {sid!r} + ' tree sha differs\\n')\n")
     p = subprocess.run([sys.executable, "-c", prog], cwd=repo, capture_output=True,
                        text=True, timeout=60)
@@ -92,6 +98,50 @@ def check_seal(c: Checker, repo: Path) -> None:
              "aggregate line", p.returncode == 0 and sid not in out
              and "FALSE-READY        7" in out and "withheld" in out,
              f"rc {p.returncode}, id printed: {sid in out}")
+    c.expect("C-197: --sealed-measurement printed per-document text that carries no "
+             "id (a deny-list of id lines leaks; it must be an allow-list)",
+             "SECRET" not in out, [ln for ln in out.splitlines() if "SECRET" in ln][:3])
+    rc, out = run_tool(repo, ["scripts/tools/diff_real_roots.py", "--repass", "--results",
+                              "results_sample3.json", "--repo", ".", "--sealed-measurement",
+                              "--diff-out", os.devnull])
+    c.expect("C-197: a sealed measurement accepted --diff-out (a per-row file)",
+             rc == 2 and "C-197" in out, out[-200:])
+    rc, out = run_tool(repo, ["scripts/tools/diff_real_roots.py", "--repass", "--results",
+                              "results_sample3.json", "--repo", ".", "--sealed-measurement",
+                              "--experiment-out", os.devnull])
+    c.expect("C-197: a sealed measurement accepted --experiment-out (a per-row file)",
+             rc == 2 and "C-197" in out, out[-200:])
+
+
+# The tools that need not gate (C-197): tests and harnesses whose ids are their
+# own fixtures, never a corpus window.
+GATE_EXEMPT = {
+    "check_oracle_infra_grading.py": "pure test; fake engine, synthetic ids",
+    "check_gate_selftests.py": "mutation harness; quotes other tools' code",
+    "check_grading_inputs.py": "this test",
+}
+_TAKES_DOCS = re.compile(r'add_argument\(\s*"--(offset|sample-offset|only-ids|ids|results|window)"'
+                         r'|build_frame\(')
+_RUNS = re.compile(r"\b(run_to_fixpoint|run_to_fixpoint_full|run_once|run_pass|"
+                   r"run_pdflatex|--compile-check)\b")
+
+
+def check_gate_coverage(c: Checker, repo: Path) -> None:
+    """C-197 (review of 82638518, M1): EVERY tool that takes a frame window, a
+    results artefact or a list of ids, or that reads ids and runs the oracle
+    or the CLI on them, goes through the one gate."""
+    seen = 0
+    for f in sorted((repo / "scripts" / "tools").glob("*.py")):
+        s = f.read_text(errors="replace")
+        if "__main__" not in s or f.name in GATE_EXEMPT:
+            continue
+        if _TAKES_DOCS.search(s) or ("arxiv_id" in s and _RUNS.search(s)):
+            seen += 1
+            c.expect(f"C-197: {f.name} takes documents but never calls "
+                     f"_grading_seal.gate (it could grade sealed sample 3)",
+                     "_grading_seal.gate(" in s)
+    c.expect(f"C-197: the scan found only {seen} document-taking tools (floor 12)",
+             seen >= 12, str(seen))
 
 
 def check_first_error(c: Checker, repo: Path, om) -> None:
@@ -169,6 +219,15 @@ def check_tree(c: Checker, drr) -> None:
         except (ValueError, RecursionError, OSError):
             refused = True
         c.expect("C-182: a looping link was not refused", refused)
+        fifo = td / "fifo"
+        shutil.copytree(plain, fifo)
+        os.mkfifo(fifo / "pipe")
+        try:
+            drr.sha256_tree(fifo)
+            refused = False
+        except ValueError:
+            refused = True
+        c.expect("C-182 (L4): a package FIFO was skipped instead of refused", refused)
 
 
 def main() -> int:
@@ -181,6 +240,7 @@ def main() -> int:
     print(f"[grading-inputs] modules: {om.__file__}, {drr.__file__}")
     c = Checker()
     check_seal(c, repo)
+    check_gate_coverage(c, repo)
     check_first_error(c, repo, om)
     check_tree(c, drr)
     if c.failures:

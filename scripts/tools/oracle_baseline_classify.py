@@ -42,6 +42,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _grading_seal  # noqa: E402
 import _oracle  # noqa: E402
 
 
@@ -89,6 +90,8 @@ def main() -> int:
 
     dpath = Path(ns.diff)
     diff = json.loads(dpath.read_text())
+    _grading_seal.gate("oracle-baseline-classify",
+                       _grading_seal.ids_in(diff) + list(ns.also))  # OPEN-139
     howner, hrev = tlpdb_files(Path(ns.host_tlpdb))
     iowner, irev = tlpdb_files(Path(ns.image_tlpdb))
     host = _oracle.host_diagnostic()

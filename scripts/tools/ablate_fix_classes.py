@@ -11,6 +11,7 @@ after-number is compatible with the change having helped, hurt, or done nothing
 import json, os, pathlib, re, shutil, subprocess, sys, difflib
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import _grading_seal  # noqa: E402
 from _oracle import get_oracle, oracle_tex_env  # noqa: E402
 
 CLI = pathlib.Path("_build/default/latex-parse/src/validators_cli.exe").resolve()
@@ -95,6 +96,7 @@ def compile_rc(work, top, td):
 
 def main():
     rows = json.load(open("corpora/apply_fixes_real/results_fresh.json"))["rows"]
+    _grading_seal.gate("ablate-fix-classes", _grading_seal.ids_in(rows))  # OPEN-139
     broken = [r for r in rows if r.get("cell") == "broken"]
     arms = [("0 all-fixes", [], False),
             ("T no-tie", [is_tie], False),

@@ -17,10 +17,16 @@ Every request of those tools now goes through `gate`:
     `--sealed-measurement`;
   * in that MEASUREMENT-ONLY mode the tool still writes its results file
     (the re-grade the protocol needs: OPEN-119's sanctioned re-measurement,
-    OPEN-128's re-grade), but its own output is AGGREGATES ONLY: every
-    line of stdout or stderr that carries an arXiv id is withheld (so no
-    per-row id, cell or first error is printed), and the number withheld is
-    reported at exit.
+    OPEN-128's re-grade), but its own output is AGGREGATES ONLY, by an
+    ALLOW-LIST (C-197; the review of 82638518 showed a deny-list of
+    id-bearing lines leaks: the "false-READY classes" line carries no id, a
+    multi-line first error spills onto lines without one): a line of stdout
+    or stderr is printed only when it matches one of AGGREGATE_LINES -- fixed
+    templates of counts, rates, shas and fixed vocabulary -- and every other
+    line is withheld; the number withheld is reported at exit;
+  * a tool refuses, in that mode, every option that writes a per-row file
+    besides its results file (`side_outputs`: diff_real_roots's --diff-out
+    and --experiment-out).
 Messages name counts only, never a sealed id.
 """
 from __future__ import annotations
@@ -38,10 +44,43 @@ import _sample_seal as S  # noqa: E402
 ANY_ID = re.compile(r"(?<![0-9])[0-9]{4}\.[0-9]{4,5}(?:v[0-9]+)?(?![0-9])"
                     r"|(?<![A-Za-z])[a-z][a-z\-]*(?:\.[A-Z]{2})?/[0-9]{7}(?:v[0-9]+)?")
 FLAG = "--sealed-measurement"
+_CELL = r"(true-READY|true-NOT-READY|FALSE-READY|false-NOT-READY|ungraded-infra|ungraded-timeout)"
+# The ONLY lines a sealed measurement prints (full-line matches): aggregates.
+AGGREGATE_LINES = [re.compile(x) for x in (
+    r"",
+    r"\[real-roots\] oracle : pdfTeX [0-9.\-]+ .*\(container:[\w./@:\-]+\)",
+    r"\[real-roots\] frame  : [0-9]+ papers, sampled [0-9]+ by sha256\(arxiv_id\) ascending",
+    r"\[real-roots\]   " + _CELL + r" +[0-9]+",
+    r"\[real-roots\] over-rejection: [0-9]+/[0-9]+ graded = [0-9.]+%",
+    r"\[real-roots\] correct verdicts: [0-9]+/[0-9]+ = [0-9.]+%",
+    r"\[real-roots\] refreshed: [0-9]+ cell change\(s\)",
+    r"\[real-roots\] measured_at_sha = [0-9a-f]{7,40}",
+    r"\[real-roots\] [0-9]+ cell\(s\) changed:",
+    r"\[real-roots\] counts now: \{('" + _CELL + r"': [0-9]+(, )?)*\}",
+    r"\[real-roots\] recorded [0-9]+ rows to [\w./\-]+/",
+    r"\[real-roots\] PASS",
+    r"\[gen-proven-coverage\] [\w./\-]+: [0-9]+ rows, lp-core certified\+compiles = [0-9]+",
+    r"[{}],?",
+    r" *\"[a-z_]+\": ([0-9]+|\{),?",
+    r" *\},?",
+    r"\[sealed\] .*",
+)]
+
+
+def side_outputs(tool: str, **opts) -> None:
+    """In a sealed measurement, refuse (SystemExit 2) every option that
+    writes per-row output besides the results file."""
+    given = sorted(k for k, v in opts.items() if v)
+    if given:
+        print(f"[{tool}] REFUSED (OPEN-139, C-197): {', '.join('--' + g.replace('_', '-') for g in given)} "
+              f"writes per-row output; a sealed measurement writes its results file "
+              f"only", file=sys.__stderr__)   # names options only, never a row
+        raise SystemExit(2)
 
 
 class _Withhold(io.TextIOBase):
-    """A line filter over a text stream: lines carrying an id are dropped."""
+    """A line filter over a text stream: a line is passed only when it is an
+    aggregate (AGGREGATE_LINES, a full match) and carries no id."""
 
     def __init__(self, inner, counter: list):
         self.inner, self.buf, self.counter = inner, "", counter
@@ -57,10 +96,11 @@ class _Withhold(io.TextIOBase):
         return len(s)
 
     def _emit(self, line: str) -> None:
-        if ANY_ID.search(line):
-            self.counter[0] += 1
-        else:
+        body = line.rstrip("\n")
+        if not ANY_ID.search(body) and any(t.fullmatch(body) for t in AGGREGATE_LINES):
             self.inner.write(line)
+        else:
+            self.counter[0] += 1
 
     def flush(self) -> None:
         if self.buf:
@@ -84,6 +124,22 @@ def _install() -> None:
         real_err.write(f"[sealed] measurement-only (OPEN-139): {counter[0]} "
                        f"per-document line(s) withheld; aggregates only\n")
     atexit.register(report)
+
+
+def ids_in(obj) -> list:
+    """Every string anywhere in a JSON value that is a document id (the
+    strict ID_RE): what a tool reading a recorded artefact will touch."""
+    out = []
+    if isinstance(obj, str):
+        if S.ID_RE.fullmatch(obj):
+            out.append(obj)
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            out += ids_in(k) + ids_in(v)
+    elif isinstance(obj, (list, tuple)):
+        for v in obj:
+            out += ids_in(v)
+    return out
 
 
 def gate(tool: str, ids=(), window=None, measurement: bool = False,

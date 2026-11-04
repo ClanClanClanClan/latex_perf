@@ -139,6 +139,12 @@ jobs:
             exit 1 ;; esac
           python3 scripts/tools/_oracle.py info
 
+      # C-139 (review of 82638518, M3): what a container of the launch
+      # definition sees of this runner (every CPU-count source, the cgroup
+      # limits), printed so HOST_EXPECT is calibrated against a real runner.
+      - name: Runner readback (diagnostic)
+        run: python3 scripts/tools/_oracle.py hostinfo
+
       # The anti-silent-green measure. A missing .sty grades identically to the
       # intended fatal (strong-fatal), so an under-provisioned image would let
       # fixtures report `ok` while testing nothing. Prove the install can compile

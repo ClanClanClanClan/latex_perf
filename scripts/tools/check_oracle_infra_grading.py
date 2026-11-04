@@ -205,7 +205,8 @@ def rcline(rc, **extra):
             cfg["shim"].rsplit("lpshim-", 1)[1][:-3]] if cfg.get("shim") else None,
         "shim_mode": "restricted" if cfg.get("shim") else None,
         "host": json.loads(os.environ.get("FAKE_HOST") or "null") or cfg.get("host_expect"),
-        "timed_out": False, "oom": False, "fs_denied": [0]}, **extra))
+        "timed_out": False, "oom": False, "survivors": 0, "survivors_unkilled": 0,
+        "stragglers": [], "fs_denied": [0]}, **extra))
     if evid != "OMIT":   # OMIT: a supervisor that died before reporting
         sys.stderr.write("\n%s_EVID=%s\n" % (nonce, evid))
     sys.stderr.write("\n%s=%d\n" % (nonce, rc))
@@ -519,7 +520,8 @@ def evid(**over) -> str:
     e = {"alias": [], "cw": {}, "err": "", "overflow": 0, "engine_pid": 10,
          "shim_sha256": _oracle.SHIM_SHA256[_oracle.ARCH_OF_RECORD],
          "shim_mode": "restricted", "host": dict(getattr(_oracle, "HOST_EXPECT", {})),
-         "timed_out": False, "oom": False, "fs_denied": [0]}
+         "timed_out": False, "oom": False, "survivors": 0, "survivors_unkilled": 0,
+         "stragglers": [], "fs_denied": [0]}
     e.update(over)
     return json.dumps({k: v for k, v in e.items() if v is not OMIT})
 
@@ -876,7 +878,13 @@ class Checker:
                 (evid(host=dict(getattr(_oracle, "HOST_EXPECT", {}), rlimit_nofile=[1048576, 1048576])),
                  "an rlimit the daemon did not apply", "rlimit_nofile"),
                 (evid(host_mismatch=["cpu_count"]), "the supervisor's own mismatch "
-                 "report", "not the launch definition")):
+                 "report", "not the launch definition"),
+                # C-196: concurrency the grade would depend on
+                (evid(survivors=1), "a process that outlived the engine",
+                 "refused as nondeterministic"),
+                (evid(stragglers=["popen 1"]), "a pipe child's process still running "
+                 "when TeX went on", "refused as nondeterministic"),
+                (evid(survivors=OMIT), "no survivor count", "refused as nondeterministic")):
             os.environ["FAKE_EVID"] = ev
             try:
                 got, err = self.run_pdflatex("okpdf")

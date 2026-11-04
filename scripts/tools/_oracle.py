@@ -1212,6 +1212,43 @@ while child.poll() is None:
         except subprocess.TimeoutExpired:
             pass
 drain()
+def others():
+    # C-196 (1): every process of the container that is not this supervisor
+    # or one of its ancestors (docker-init, the run's sh and timeout)
+    anc, cur = set(), os.getpid()
+    while cur > 0 and cur not in anc:
+        anc.add(cur)
+        try:
+            with open("/proc/%d/stat" % cur) as fh:
+                cur = int(fh.read().rsplit(")", 1)[1].split()[1])
+        except (OSError, ValueError, IndexError):
+            break
+    out = []
+    for e in os.listdir("/proc"):
+        if e.isdigit() and int(e) not in anc:
+            try:
+                with open("/proc/%s/stat" % e) as fh:
+                    if fh.read().rsplit(")", 1)[1].split()[0] not in ("Z", "X"):
+                        out.append(int(e))
+            except (OSError, IndexError):
+                pass
+    return out
+if cfg.get("host_expect") is not None:
+    # wait for, or kill, EVERY member of the run before any output is read;
+    # a process that outlived the engine makes the run nondeterministic
+    left = others()
+    ev["survivors"] = len(left)
+    for _ in range(50):
+        if not left:
+            break
+        for q in left:
+            try:
+                os.kill(q, signal.SIGKILL)
+            except OSError:
+                pass
+        time.sleep(0.1)
+        left = others()
+    ev["survivors_unkilled"] = len(left)
 oom1 = oom_kills()
 ev["oom_kills"] = None if oom0 is None or oom1 is None else oom1 - oom0
 ev["oom"] = bool(ev["oom_kills"]) and not ev["timed_out"]
@@ -1252,6 +1289,11 @@ if cfg.get("mark"):
         ev["shim_children_exe"] = sorted({k[1] for k in kids if len(k) > 1})
     except OSError:
         ev["shim_children"] = {}
+    try:
+        with open(os.path.join(cfg["mark"], "stragglers")) as fh:
+            ev["stragglers"] = [ln for ln in fh.read().splitlines() if ln.strip()][:20]
+    except OSError:
+        ev["stragglers"] = []
 if cfg.get("fs_log"):
     try:
         with open(cfg["fs_log"], errors="replace") as fh:
@@ -1313,6 +1355,15 @@ def check_evidence(stderr: bytes, nonce: str, args, what: str,
         raise OracleError(f"{what}: the supervisor could not watch the run "
                           f"directory ({ev.get('err') or 'inotify queue overflow'}); "
                           f"not a grade (C-99)")
+    if host_expect is not None and (ev.get("survivors") or ev.get("stragglers")
+                                    or ev.get("survivors_unkilled")
+                                    or "survivors" not in ev):
+        raise OracleError(
+            f"{what}: a process the document started outlived the engine "
+            f"({ev.get('survivors')!r}) or was still running when TeX went on "
+            f"after its pipe or \\write18 command ({ev.get('stragglers')!r}): the "
+            f"grade would depend on scheduling -- refused as nondeterministic, "
+            f"never graded (C-196)")
     alias = ev.get("alias")
     if not isinstance(alias, list):
         raise OracleError(f"{what}: the supervisor's evidence line has no alias "
@@ -2215,8 +2266,8 @@ def default_workroot() -> Path:
 # it preloads, and the engine process must carry the shim's mark).
 SHIM_SRC_DIR = REPO / "scripts" / "tools" / "oracle_shim"
 SHIM_SHA256 = {
-    "aarch64": "19016df250eaf801595d20f14e7b720a85a60bb062e5813c69679a9081adb95d",
-    "x86_64": "534310db5478bd715750cf3b6597921f706bc38196e48cd503e3bc55b035735a",
+    "aarch64": "298e0c9dcbdadadf5123108b4592e48fd510ca28d277dcfb434f09c7d78e60b6",
+    "x86_64": "6763d2c6e2e1d11c7567e1ffa235ec380f5ef3ca53b0f6e4e27b32d8975c39ee",
 }
 
 
@@ -2391,6 +2442,41 @@ class ContainerOracle(_Base):
         except subprocess.TimeoutExpired:
             self._dk("rm", "-f", name, timeout=60)
             raise OracleError(f"docker run {name} did not return within {timeout}s")
+
+    def hostinfo(self, arch: str = ARCH_OF_RECORD) -> dict:
+        """One container of the launch definition reports every CPU and
+        memory source a child could read (diagnostic, C-139)."""
+        src = ("import json, os\n"
+               "def rd(p):\n"
+               "    try:\n"
+               "        return open(p).read().strip()\n"
+               "    except OSError as e:\n"
+               "        return 'ERR %s' % e.__class__.__name__\n"
+               "ci = rd('/proc/cpuinfo')\n"
+               "print(json.dumps({'affinity': sorted(os.sched_getaffinity(0)),\n"
+               " 'nproc_onln': os.sysconf('SC_NPROCESSORS_ONLN'),\n"
+               " 'nproc_conf': os.sysconf('SC_NPROCESSORS_CONF'),\n"
+               " 'cpu_count': os.cpu_count(),\n"
+               " 'cpu_online': rd('/sys/devices/system/cpu/online'),\n"
+               " 'cpu_possible': rd('/sys/devices/system/cpu/possible'),\n"
+               " 'cpu_present': rd('/sys/devices/system/cpu/present'),\n"
+               " 'cpuinfo_processors': sum(1 for l in ci.splitlines() if l.split(':')[0].strip() == 'processor'),\n"
+               " 'cpuset_effective': rd('/sys/fs/cgroup/cpuset.cpus.effective'),\n"
+               " 'memory_max': rd('/sys/fs/cgroup/memory.max'),\n"
+               " 'memory_swap_max': rd('/sys/fs/cgroup/memory.swap.max'),\n"
+               " 'pids_max': rd('/sys/fs/cgroup/pids.max'),\n"
+               " 'meminfo_total': rd('/proc/meminfo').splitlines()[0] if not rd('/proc/meminfo').startswith('ERR') else None,\n"
+               " 'kernel': os.uname().release}))\n")
+        name = self._run_name()
+        p = self._launch(name, launch_argv(self.user, name, arch=arch,
+                                           entry=("python3", "-I", "-c", src)), 120)
+        if p.returncode != 0:
+            raise OracleError(f"hostinfo: rc {p.returncode}: "
+                              + p.stderr.decode(errors="replace")[:300])
+        out = json.loads(p.stdout.decode().strip().splitlines()[-1])
+        out["host_cpu_count"] = os.cpu_count()
+        out["host_expect"] = HOST_EXPECT
+        return out
 
     @staticmethod
     def _run_name() -> str:
@@ -2886,6 +2972,12 @@ def main(argv: list[str]) -> int:
             except (OracleError, OSError) as e:
                 print(f"[oracle] NOT GRADED: {e}", file=sys.stderr)
                 return INFRA_RC
+        if cmd == "hostinfo":
+            # C-139 (review of 82638518, M3): what a container of the launch
+            # definition sees of its host, for calibrating HOST_EXPECT on a
+            # runner (diagnostic; grades nothing)
+            print(json.dumps(ContainerOracle().hostinfo(), indent=1, sort_keys=True))
+            return 0
         if cmd == "workroot":
             print(default_workroot().expanduser().resolve())
             return 0

@@ -61,6 +61,7 @@ from diff_real_roots import (  # noqa: E402
     PIN, build_frame, oracle_record, run_to_fixpoint_full,
 )
 from _oracle import OracleError, RunStamp, get_oracle, job_output  # noqa: E402
+import _grading_seal  # noqa: E402
 from _measurement_provenance import cli_build_root, cli_platform  # noqa: E402
 
 GRADER_FILES = ("scripts/tools/gen_apply_fixes_real_differential.py",
@@ -290,6 +291,10 @@ def main() -> int:
     ordered = sorted(frame, key=lambda r: hashlib.sha256(
         r["arxiv_id"].encode()).hexdigest())
     window = ordered[ns.offset:ns.offset + ns.n]
+    # OPEN-139 / C-197: the apply-fixes differential never grades sample 3
+    _grading_seal.gate("apply-fixes-real", [r["arxiv_id"] for r in window],
+                       window=(ns.offset, ns.n), repo=pathlib.Path(ns.repo).resolve()
+                       if hasattr(ns, "repo") else None)
     if len(window) < ns.n:
         print(f"[apply-fixes-real] FATAL: frame has {len(ordered)} papers; "
               f"offset {ns.offset} + n {ns.n} runs past the end. Widening the "

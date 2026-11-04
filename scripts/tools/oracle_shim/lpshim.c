@@ -120,10 +120,16 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <sys/sysmacros.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/statfs.h>
+#include <sys/statvfs.h>
+#include <sys/wait.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
 #include <sys/times.h>
@@ -338,12 +344,13 @@ int clock_gettime(clockid_t c, struct timespec *ts)
 static int allowed_at(const char *op, int dirfd, const char *path);
 #define ALLOWED(op, p) allowed_at(op, AT_FDCWD, p)
 
-static unsigned long long rng_state = 0x6c702d6f7261636cULL; /* "lp-oracl" */
+/* per THREAD (C-198): each thread's stream is a function of its own calls */
+static __thread unsigned long long rng_state = 0x6c702d6f7261636cULL; /* "lp-oracl" */
 #define LP_RANDOM_BYTES (1u << 20)
 
 static unsigned long long splitmix(void)
 {
-  unsigned long long z = __atomic_add_fetch(&rng_state, 0x9e3779b97f4a7c15ULL, __ATOMIC_SEQ_CST);
+  unsigned long long z = (rng_state += 0x9e3779b97f4a7c15ULL);
   z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
   z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
   return z ^ (z >> 31);
@@ -382,11 +389,23 @@ int getentropy(void *buf, size_t n)
   return 0;
 }
 
-static int is_random_device(const char *p)
+static void canonical(int dirfd, const char *path, char *out);
+/* C-198: the path is CANONICALISED first (`/dev//urandom`, `./`, relative and
+   dirfd-relative forms, symlinks), so every spelling of the device matches. */
+static int is_random_device_at(int dirfd, const char *p)
 {
-  return p && (strcmp(p, "/dev/urandom") == 0 || strcmp(p, "/dev/random") == 0
-               || strcmp(p, "/dev/arandom") == 0);
+  if (!p || !*p) return 0;
+  if (!strstr(p, "random") && !strstr(p, "fd")) {
+    /* a path can name the device only by its name or through a link */
+    struct stat st;
+    if (syscall(SYS_newfstatat, dirfd, p, &st, 0) != 0 || !S_ISCHR(st.st_mode)) return 0;
+  }
+  char c[PATH_MAX * 2];
+  canonical(dirfd, p, c);
+  return strcmp(c, "/dev/urandom") == 0 || strcmp(c, "/dev/random") == 0
+         || strcmp(c, "/dev/arandom") == 0;
 }
+#define is_random_device(p) is_random_device_at(AT_FDCWD, p)
 
 /* A memfd holding LP_RANDOM_BYTES of the deterministic stream, positioned at
    0; -1 (errno EIO) if it cannot be made: fail closed, never the real device. */
@@ -405,8 +424,9 @@ static int random_fd(void)
   return fd;
 }
 #define RANDOM_DEV(p) if (have_epoch && is_random_device(p)) return random_fd()
+#define RANDOM_DEV_AT(d, p) if (have_epoch && is_random_device_at(d, p)) return random_fd()
 
-static unsigned long long tmp_counter;
+static __thread unsigned long long tmp_counter;
 
 /* Fill the six X's before `suffixlen` trailing bytes of `t` with the next
    value of the per-process counter and call `make` until it does not fail
@@ -421,7 +441,7 @@ static int lp_tempname(char *t, int suffixlen, int (*make)(const char *, int), i
   char *x = t + len - suffixlen - 6;
   static const char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
   for (unsigned int tries = 0; tries < 1000000; tries++) {
-    unsigned long long v = __atomic_fetch_add(&tmp_counter, 1, __ATOMIC_SEQ_CST);
+    unsigned long long v = tmp_counter++;
     for (int i = 5; i >= 0; i--) { x[i] = digits[v % 36]; v /= 36; }
     int rc = make(t, arg);
     if (rc >= 0 || errno != EEXIST) return rc;
@@ -494,6 +514,52 @@ char *mktemp(char *t) {
   if (!have_epoch) { char *(*f)(char *) = real("mktemp"); return f(t); }
   if (lp_tempname(t, 0, make_none, 0) != 0) t[0] = 0;
   return t;
+}
+
+uint32_t arc4random(void)
+{
+  if (!have_epoch) { uint32_t (*f)(void) = real("arc4random"); return f(); }
+  uint32_t v; fill_random(&v, sizeof v); return v;
+}
+void arc4random_buf(void *b, size_t n)
+{
+  if (!have_epoch) { void (*f)(void *, size_t) = real("arc4random_buf"); f(b, n); return; }
+  fill_random(b, n);
+}
+uint32_t arc4random_uniform(uint32_t ub)
+{
+  if (!have_epoch) { uint32_t (*f)(uint32_t) = real("arc4random_uniform"); return f(ub); }
+  if (ub < 2) return 0;
+  uint32_t lim = -ub % ub, v;
+  do { fill_random(&v, sizeof v); } while (v < lim);
+  return v % ub;
+}
+static char tmpnam_buf[PATH_MAX];
+static char *lp_tmpname(char *out, size_t cap, const char *dir, const char *pfx)
+{
+  if (!dir || !*dir) dir = getenv("TMPDIR");
+  if (!dir || !*dir) dir = "/tmp";
+  snprintf(out, cap, "%s/%.5sXXXXXX", dir, pfx && *pfx ? pfx : "lp");
+  if (lp_tempname(out, 0, make_none, 0) != 0) return NULL;
+  return out;
+}
+char *tmpnam(char s[L_tmpnam])
+{
+  if (!have_epoch) { char *(*f)(char *) = real("tmpnam"); return f(s); }
+  return lp_tmpname(s ? s : tmpnam_buf, s ? L_tmpnam : sizeof tmpnam_buf, "/tmp", "lp");
+}
+char *tmpnam_r(char s[L_tmpnam])
+{
+  if (!have_epoch) { char *(*f)(char *) = real("tmpnam_r"); return f(s); }
+  return s ? lp_tmpname(s, L_tmpnam, "/tmp", "lp") : NULL;
+}
+char *tempnam(const char *dir, const char *pfx)
+{
+  if (!have_epoch) { char *(*f)(const char *, const char *) = real("tempnam"); return f(dir, pfx); }
+  char *out = malloc(PATH_MAX);
+  if (!out) return NULL;
+  if (!lp_tmpname(out, PATH_MAX, dir, pfx)) { free(out); return NULL; }
+  return out;
 }
 
 clock_t clock(void)
@@ -573,6 +639,192 @@ int getgroups(int n, gid_t *g)
   int rc = f(n, g);
   if (rc > 0 && have_epoch && n > 0 && g)
     for (int i = 0; i < rc; i++) if (g[i] == real_gid) g[i] = LP_ID;
+  return rc;
+}
+
+/* ------------------------------------------- processes: pids, pipes, stragglers */
+
+/* L2 of the review of 82638518 (C-198): in a TeX program the pid is VIRTUAL
+   (pdfTeX names its -recorder file list pdflatex<pid>.fls, which a document
+   can test); children keep their real pids, because a child that signals its
+   own pid ($$ in sh, perl) would otherwise signal another process. */
+#define LP_PID 4242
+pid_t getpid(void)
+{
+  if (restrict_fs && have_epoch) return LP_PID;
+  return (pid_t) syscall(SYS_getpid);
+}
+pid_t getppid(void)
+{
+  if (restrict_fs && have_epoch) return LP_PID - 1;
+  return (pid_t) syscall(SYS_getppid);
+}
+
+/* STRAGGLERS (C-196 (3)). After a pipe child or a \write18 command has been
+   waited for, any process of the container that is not this process or one
+   of its ancestors is a straggler: something the document started is still
+   running while TeX goes on reading files. The supervisor refuses such a
+   run (nondeterministic, not graded); the shim records it in the mark
+   directory, by count only. */
+static long read_ppid(long pid)
+{
+  char path[64], buf[512];
+  snprintf(path, sizeof path, "/proc/%ld/stat", pid);
+  int fd = syscall(SYS_openat, AT_FDCWD, path, O_RDONLY | O_CLOEXEC);
+  if (fd < 0) return -1;
+  long n = syscall(SYS_read, fd, buf, sizeof buf - 1);
+  syscall(SYS_close, fd);
+  if (n <= 0) return -1;
+  buf[n] = 0;
+  char *r = strrchr(buf, ')');
+  if (!r) return -1;
+  char st; long ppid;
+  if (sscanf(r + 1, " %c %ld", &st, &ppid) != 2) return -1;
+  if (st == 'Z' || st == 'X') return -2;   /* a zombie: not running */
+  return ppid;
+}
+
+static int count_stragglers(void)
+{
+  long anc[64]; int na = 0;
+  long cur = syscall(SYS_getpid);
+  while (cur > 0 && na < 64) { anc[na++] = cur; cur = read_ppid(cur); }
+  int fd = syscall(SYS_openat, AT_FDCWD, "/proc", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  if (fd < 0) return -1;
+  char buf[8192]; int strays = 0; long n;
+  while ((n = syscall(SYS_getdents64, fd, buf, sizeof buf)) > 0) {
+    for (long off = 0; off < n;) {
+      struct { unsigned long long ino; long long off; unsigned short reclen; unsigned char type; char name[]; } *e = (void *) (buf + off);
+      off += e->reclen;
+      char *end; long pid = strtol(e->name, &end, 10);
+      if (*end || pid <= 0) continue;
+      int mine = 0;
+      for (int i = 0; i < na; i++) if (anc[i] == pid) { mine = 1; break; }
+      if (!mine && read_ppid(pid) != -2 && read_ppid(pid) != -1) strays++;
+    }
+  }
+  syscall(SYS_close, fd);
+  return strays;
+}
+
+static void note_stragglers(const char *what)
+{
+  if (!(restrict_fs && have_epoch)) return;
+  int n = count_stragglers();
+  const char *m = getenv("LP_SHIM_MARK");
+  if (n == 0 || !m || !*m) return;
+  char p[PATH_MAX], line[96];
+  snprintf(p, sizeof p, "%s/stragglers", m);
+  snprintf(line, sizeof line, "%s %d\n", what, n);
+  int fd = syscall(SYS_openat, AT_FDCWD, p, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+  if (fd >= 0) { lp_write_fd(fd, line); syscall(SYS_close, fd); }
+}
+
+/* SERIALISED PIPES (C-196 (2)). In a TeX program with the fixed clock,
+   popen(cmd, "r") runs cmd TO COMPLETION with its output captured, and only
+   then returns a stream that reads that output; popen(cmd, "w") collects
+   what TeX writes and runs cmd at pclose (or at exit) with it as stdin. So a
+   pipe child never runs concurrently with TeX: one defined schedule. This
+   DIFFERS from pdfTeX's own popen, where the child runs concurrently (on a
+   loaded machine a document could observe how far it got: MEASURED,
+   raceflip.tex gave rc 0,0,1,0,0), and from it in two corner cases: a child
+   that never ends is a timeout (not a partial read), and a "w" child's
+   output appears at pclose. */
+struct lp_pipe { FILE *f; int w; char *cmd; int status; struct lp_pipe *next; };
+static struct lp_pipe *pipes;
+static pthread_mutex_t pipe_mu = PTHREAD_MUTEX_INITIALIZER;
+
+static int run_child(const char *cmd, int in_fd, int out_fd)
+{
+  pid_t pid = fork();
+  if (pid == 0) {
+    if (in_fd >= 0) dup2(in_fd, 0);
+    if (out_fd >= 0) dup2(out_fd, 1);
+    execl("/bin/sh", "sh", "-c", cmd, (char *) NULL);
+    _exit(127);
+  }
+  if (pid < 0) return -1;
+  int st = 0;
+  while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
+  return st;
+}
+
+FILE *popen(const char *cmd, const char *mode)
+{
+  if (!(restrict_fs && have_epoch) || !cmd || !mode || (mode[0] != 'r' && mode[0] != 'w')) {
+    FILE *(*f)(const char *, const char *) = real("popen");
+    return f(cmd, mode);
+  }
+  int fd = syscall(SYS_memfd_create, "lp-pipe", 1u /* MFD_CLOEXEC */);
+  if (fd < 0) { errno = EMFILE; return NULL; }
+  struct lp_pipe *pp = calloc(1, sizeof *pp);
+  if (!pp) { syscall(SYS_close, fd); errno = ENOMEM; return NULL; }
+  pp->w = mode[0] == 'w';
+  if (!pp->w) {
+    fflush(NULL);
+    pp->status = run_child(cmd, -1, fd);
+    note_stragglers("popen");
+    lseek(fd, 0, SEEK_SET);
+    pp->f = fdopen(fd, "r");
+  } else {
+    pp->cmd = strdup(cmd);
+    pp->f = fdopen(fd, "w+");
+  }
+  if (!pp->f) { syscall(SYS_close, fd); free(pp->cmd); free(pp); return NULL; }
+  pthread_mutex_lock(&pipe_mu);
+  pp->next = pipes; pipes = pp;
+  pthread_mutex_unlock(&pipe_mu);
+  return pp->f;
+}
+
+static int finish_pipe(struct lp_pipe *pp)
+{
+  int st = pp->status;
+  if (pp->w) {
+    fflush(pp->f);
+    int fd2 = dup(fileno(pp->f));
+    fclose(pp->f);
+    if (fd2 >= 0) {
+      lseek(fd2, 0, SEEK_SET);
+      fflush(NULL);
+      st = run_child(pp->cmd, fd2, -1);
+      note_stragglers("popen-w");
+      syscall(SYS_close, fd2);
+    }
+  } else {
+    fclose(pp->f);
+  }
+  free(pp->cmd); free(pp);
+  return st;
+}
+
+int pclose(FILE *f)
+{
+  struct lp_pipe **q, *pp = NULL;
+  pthread_mutex_lock(&pipe_mu);
+  for (q = &pipes; *q; q = &(*q)->next)
+    if ((*q)->f == f) { pp = *q; *q = pp->next; break; }
+  pthread_mutex_unlock(&pipe_mu);
+  if (!pp) { int (*g)(FILE *) = real("pclose"); return g(f); }
+  return finish_pipe(pp);
+}
+
+__attribute__((destructor)) static void lp_fini(void)
+{
+  /* a "w" pipe TeX never closed: its child runs now, as it would get EOF at
+     TeX's exit */
+  while (pipes) {
+    struct lp_pipe *pp = pipes; pipes = pp->next;
+    if (pp->w) finish_pipe(pp); else { free(pp->cmd); free(pp); }
+  }
+}
+
+int system(const char *cmd)
+{
+  int (*f)(const char *) = real("system");
+  if (restrict_fs && have_epoch) fflush(NULL);
+  int rc = f(cmd);
+  if (cmd) note_stragglers("system");
   return rc;
 }
 
@@ -715,6 +967,54 @@ static void sdir_load(DIR *d);
    directory too, whose order is the work root's file system's. */
 #define SORT_DIRS (restrict_fs || have_epoch)
 
+/* FILE-SYSTEM METADATA (C-195). With LP_CLOCK_EPOCH set, every stat-family
+   result of every shimmed process is normalised so that no field depends on
+   the file system the run directory lives on (APFS through virtiofs on a Mac,
+   ext4 on a CI runner, tmpfs) or on its allocation: st_dev is LP_DEV; st_ino
+   is a VIRTUAL number, assigned per process in the order (dev, ino) pairs are
+   first seen (identity within the process is kept, the host's numbers are
+   not shown); a directory's st_size is 4096 and its st_nlink 1 (the
+   "unknown" convention: no program may infer subdirectories from it); every
+   st_blksize is 4096 and st_blocks is a function of st_size; permission bits
+   are 0755 for directories and executables, 0644 for other regular files.
+   MEASURED before (review of 82638518): texosquery printed a directory's
+   File.length() as 1344 on APFS/virtiofs, 4096 on ext4, 840 on tmpfs. */
+#define LP_DEV 0x4c50
+struct ino_map { dev_t dev; ino_t ino; unsigned long long v; };
+static struct ino_map *inos;
+static size_t ninos, cinos;
+static pthread_mutex_t ino_mu = PTHREAD_MUTEX_INITIALIZER;
+
+static unsigned long long virt_ino(dev_t dev, ino_t ino)
+{
+  pthread_mutex_lock(&ino_mu);
+  for (size_t i = 0; i < ninos; i++)
+    if (inos[i].dev == dev && inos[i].ino == ino) {
+      unsigned long long v = inos[i].v;
+      pthread_mutex_unlock(&ino_mu);
+      return v;
+    }
+  if (ninos == cinos) {
+    size_t nc = cinos ? cinos * 2 : 256;
+    struct ino_map *n = realloc(inos, nc * sizeof *n);
+    if (!n) { pthread_mutex_unlock(&ino_mu); return 1; }
+    inos = n; cinos = nc;
+  }
+  unsigned long long v = 1000 + ninos;
+  inos[ninos].dev = dev; inos[ninos].ino = ino; inos[ninos].v = v;
+  ninos++;
+  pthread_mutex_unlock(&ino_mu);
+  return v;
+}
+
+static mode_t norm_mode(mode_t m)
+{
+  if (S_ISDIR(m)) return (m & S_IFMT) | 0755;
+  if (S_ISREG(m)) return (m & S_IFMT) | ((m & 0111) ? 0755 : 0644);
+  if (S_ISLNK(m)) return (m & S_IFMT) | 0777;
+  return m;
+}
+
 static void fix_stat(struct stat *st)
 {
   if (!have_epoch || !st) return;
@@ -722,6 +1022,78 @@ static void fix_stat(struct stat *st)
   if (st->st_gid == real_gid) st->st_gid = LP_ID;
   st->st_atim.tv_sec = st->st_mtim.tv_sec = st->st_ctim.tv_sec = (time_t) epoch;
   st->st_atim.tv_nsec = st->st_mtim.tv_nsec = st->st_ctim.tv_nsec = 0;
+  st->st_ino = (ino_t) virt_ino(st->st_dev, st->st_ino);
+  st->st_dev = LP_DEV;
+  if (S_ISDIR(st->st_mode)) { st->st_size = 4096; st->st_nlink = 1; }
+  st->st_blksize = 4096;
+  st->st_blocks = S_ISREG(st->st_mode) || S_ISDIR(st->st_mode)
+                  ? ((st->st_size + 4095) / 4096) * 8 : 0;
+  st->st_mode = norm_mode(st->st_mode);
+}
+
+static void fix_statfs(struct statfs *f)
+{
+  if (!have_epoch || !f) return;
+  long keep = f->f_flags & (ST_RDONLY | ST_NOSUID | ST_NODEV | ST_NOEXEC);
+  memset(f, 0, sizeof *f);
+  f->f_type = 0x4c50; f->f_bsize = 4096; f->f_frsize = 4096;
+  f->f_blocks = 1 << 20; f->f_bfree = f->f_bavail = 1 << 19;
+  f->f_files = 1 << 16; f->f_ffree = 1 << 15; f->f_namelen = 255;
+  f->f_flags = keep;
+}
+static void fix_statvfs(struct statvfs *f)
+{
+  if (!have_epoch || !f) return;
+  unsigned long keep = f->f_flag & (ST_RDONLY | ST_NOSUID | ST_NODEV | ST_NOEXEC);
+  memset(f, 0, sizeof *f);
+  f->f_bsize = 4096; f->f_frsize = 4096;
+  f->f_blocks = 1 << 20; f->f_bfree = f->f_bavail = 1 << 19;
+  f->f_files = 1 << 16; f->f_ffree = f->f_favail = 1 << 15;
+  f->f_namemax = 255; f->f_flag = keep;
+}
+int statfs(const char *p, struct statfs *f)
+{
+  if (!ALLOWED("stat", p)) return -1;
+  int (*g)(const char *, struct statfs *) = real("statfs");
+  int rc = g(p, f); if (rc == 0) fix_statfs(f); return rc;
+}
+int fstatfs(int fd, struct statfs *f)
+{
+  int (*g)(int, struct statfs *) = real("fstatfs");
+  int rc = g(fd, f); if (rc == 0) fix_statfs(f); return rc;
+}
+int statfs64(const char *p, struct statfs64 *f)
+{
+  if (!ALLOWED("stat", p)) return -1;
+  int (*g)(const char *, struct statfs64 *) = real("statfs64");
+  int rc = g(p, f); if (rc == 0) fix_statfs((struct statfs *) f); return rc;
+}
+int fstatfs64(int fd, struct statfs64 *f)
+{
+  int (*g)(int, struct statfs64 *) = real("fstatfs64");
+  int rc = g(fd, f); if (rc == 0) fix_statfs((struct statfs *) f); return rc;
+}
+int statvfs(const char *p, struct statvfs *f)
+{
+  if (!ALLOWED("stat", p)) return -1;
+  int (*g)(const char *, struct statvfs *) = real("statvfs");
+  int rc = g(p, f); if (rc == 0) fix_statvfs(f); return rc;
+}
+int fstatvfs(int fd, struct statvfs *f)
+{
+  int (*g)(int, struct statvfs *) = real("fstatvfs");
+  int rc = g(fd, f); if (rc == 0) fix_statvfs(f); return rc;
+}
+int statvfs64(const char *p, struct statvfs64 *f)
+{
+  if (!ALLOWED("stat", p)) return -1;
+  int (*g)(const char *, struct statvfs64 *) = real("statvfs64");
+  int rc = g(p, f); if (rc == 0) fix_statvfs((struct statvfs *) f); return rc;
+}
+int fstatvfs64(int fd, struct statvfs64 *f)
+{
+  int (*g)(int, struct statvfs64 *) = real("fstatvfs64");
+  int rc = g(fd, f); if (rc == 0) fix_statvfs((struct statvfs *) f); return rc;
 }
 
 #define OPEN_MODE(flags, mode)                          \
@@ -751,7 +1123,7 @@ int openat(int d, const char *p, int flags, ...)
 {
   OPEN_MODE(flags, mode);
   if (!allowed_at("openat", d, p)) return -1;
-  if (p[0] == '/') RANDOM_DEV(p);
+  RANDOM_DEV_AT(d, p);
   int (*f)(int, const char *, int, ...) = real("openat");
   return f(d, p, flags, mode);
 }
@@ -759,7 +1131,7 @@ int openat64(int d, const char *p, int flags, ...)
 {
   OPEN_MODE(flags, mode);
   if (!allowed_at("openat", d, p)) return -1;
-  if (p[0] == '/') RANDOM_DEV(p);
+  RANDOM_DEV_AT(d, p);
   int (*f)(int, const char *, int, ...) = real("openat64");
   return f(d, p, flags, mode);
 }
@@ -780,14 +1152,14 @@ int __open64_2(const char *p, int flags)
 int __openat_2(int d, const char *p, int flags)
 {
   if (!allowed_at("openat", d, p)) return -1;
-  if (p[0] == '/') RANDOM_DEV(p);
+  RANDOM_DEV_AT(d, p);
   int (*f)(int, const char *, int) = real("__openat_2");
   return f(d, p, flags);
 }
 int __openat64_2(int d, const char *p, int flags)
 {
   if (!allowed_at("openat", d, p)) return -1;
-  if (p[0] == '/') RANDOM_DEV(p);
+  RANDOM_DEV_AT(d, p);
   int (*f)(int, const char *, int) = real("__openat64_2");
   return f(d, p, flags);
 }
@@ -867,6 +1239,8 @@ static void sdir_load(DIR *d)
   struct dirent *e;
   if (!s || !rd) { free(s); return; }
   s->d = d;
+  struct stat dst;
+  dev_t dirdev = syscall(SYS_newfstatat, dirfd(d), "", &dst, AT_EMPTY_PATH) == 0 ? dst.st_dev : 0;
   while ((e = rd(d)) != NULL) {
     if (s->n == cap) {
       size_t nc = cap ? cap * 2 : 64;
@@ -877,9 +1251,15 @@ static void sdir_load(DIR *d)
     struct dirent *c = malloc(sizeof *c);
     if (!c) break;
     memcpy(c, e, sizeof *c);
+    if (have_epoch) {   /* C-195: no file-system order, number or type */
+      c->d_ino = (ino_t) virt_ino(dirdev, e->d_ino);
+      c->d_type = DT_UNKNOWN;
+    }
     s->ents[s->n++] = c;
   }
   qsort(s->ents, s->n, sizeof *s->ents, dirent_cmp);
+  if (have_epoch)
+    for (size_t i = 0; i < s->n; i++) s->ents[i]->d_off = (off_t) (i + 1);
   pthread_mutex_lock(&sdir_mu);
   s->next = sdirs; sdirs = s;
   pthread_mutex_unlock(&sdir_mu);
@@ -947,6 +1327,14 @@ int scandir(const char *p, struct dirent ***nl, int (*sel)(const struct dirent *
            int (*)(const struct dirent **, const struct dirent **)) = real("scandir");
   int n = f(p, nl, sel, cmp);
   if (n > 1 && !cmp && SORT_DIRS) qsort(*nl, (size_t) n, sizeof **nl, dirent_ptr_cmp);
+  if (n > 0 && have_epoch) {
+    struct stat dst;
+    dev_t dd = syscall(SYS_newfstatat, AT_FDCWD, p, &dst, 0) == 0 ? dst.st_dev : 0;
+    for (int i = 0; i < n; i++) {
+      (*nl)[i]->d_ino = (ino_t) virt_ino(dd, (*nl)[i]->d_ino);
+      (*nl)[i]->d_type = DT_UNKNOWN; (*nl)[i]->d_off = i + 1;
+    }
+  }
   return n;
 }
 int scandir64(const char *p, struct dirent64 ***nl, int (*sel)(const struct dirent64 *),
@@ -957,6 +1345,14 @@ int scandir64(const char *p, struct dirent64 ***nl, int (*sel)(const struct dire
            int (*)(const struct dirent64 **, const struct dirent64 **)) = real("scandir64");
   int n = f(p, nl, sel, cmp);
   if (n > 1 && !cmp && SORT_DIRS) qsort(*nl, (size_t) n, sizeof **nl, dirent_ptr_cmp);
+  if (n > 0 && have_epoch) {
+    struct stat dst;
+    dev_t dd = syscall(SYS_newfstatat, AT_FDCWD, p, &dst, 0) == 0 ? dst.st_dev : 0;
+    for (int i = 0; i < n; i++) {
+      (*nl)[i]->d_ino = (ino_t) virt_ino(dd, (*nl)[i]->d_ino);
+      (*nl)[i]->d_type = DT_UNKNOWN; (*nl)[i]->d_off = i + 1;
+    }
+  }
   return n;
 }
 
@@ -1201,6 +1597,20 @@ int statx(int d, const char *p, int fl, unsigned int mask, struct statx *sx)
     sx->stx_atime.tv_nsec = sx->stx_mtime.tv_nsec = sx->stx_ctime.tv_nsec = sx->stx_btime.tv_nsec = 0;
     if (sx->stx_uid == real_uid) sx->stx_uid = LP_ID;
     if (sx->stx_gid == real_gid) sx->stx_gid = LP_ID;
+    dev_t rdev = makedev(sx->stx_dev_major, sx->stx_dev_minor);
+    sx->stx_ino = virt_ino(rdev, (ino_t) sx->stx_ino);
+    sx->stx_dev_major = 0; sx->stx_dev_minor = LP_DEV;
+    if (S_ISDIR(sx->stx_mode)) { sx->stx_size = 4096; sx->stx_nlink = 1; }
+    sx->stx_blksize = 4096;
+    sx->stx_blocks = S_ISREG(sx->stx_mode) || S_ISDIR(sx->stx_mode)
+                     ? ((sx->stx_size + 4095) / 4096) * 8 : 0;
+    sx->stx_mode = (unsigned short) norm_mode(sx->stx_mode);
+    sx->stx_attributes = 0; sx->stx_attributes_mask = 0;
+    sx->stx_mask &= ~0x1000u;   /* STATX_MNT_ID: no mount id is reported */
+    /* everything after stx_dev_minor (stx_mnt_id, the dio and subvolume
+       fields of newer kernels) is zeroed */
+    size_t off = offsetof(struct statx, stx_dev_minor) + sizeof sx->stx_dev_minor;
+    memset((char *) sx + off, 0, sizeof *sx - off);
   }
   return rc;
 }

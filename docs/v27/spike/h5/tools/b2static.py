@@ -48,6 +48,8 @@ KINDS = {  # parameter names of the realizer's own `fun` -> (kind, number of con
     ("f2p1", "f2p", "f1", "p"): ("positive", 3),
     ("f", "c"): ("ascii", 1),
 }
+MEMBERS_BY_SOURCE_ORDER = ["evale", "evall", "evalargs", "evalx", "callp0", "exec", "for_loop", "exec_list",
+                           "goto_in", "write_items"]
 MEMBERS = ["evale", "evall", "evalargs", "evalx", "callp0", "exec", "for_loop", "exec_list",
            "goto_in", "write_items"]
 IDENT = r"[A-Za-z_][A-Za-z0-9_']*(?:\.[A-Za-z_][A-Za-z0-9_']*)*"
@@ -90,8 +92,18 @@ def check_instances(ctx, key):
     top = key[1]
     uses = [u for u in ctx["uses"] if u[0] == top]
     bad = [u for u in uses if u[2] != "state-free global-function-arguments"]
-    return (not bad, f"{len(uses)} uses, all state-free with global function arguments"
-            if not bad else f"uses not state-free: {bad}")
+    if bad:
+        return False, f"uses not state-free: {bad}"
+    if not uses:
+        # a check that matched no input is not a pass (C-189): with no use, the function must be
+        # unreachable from every module that can see a state (b2cmt's REACHABLE lines, which
+        # follow every named value, applied or not)
+        if top in ctx["reachable"]:
+            return False, f"0 uses, but {top} is reachable from a module that can see a state"
+        if not ctx["reachable"]:
+            return False, "0 uses, and no REACHABLE lines to show that it is unreachable"
+        return True, f"0 uses, and not reachable from any module that can see a state ({len(ctx['reachable'])} reachable values)"
+    return True, f"{len(uses)} uses, all state-free with global function arguments"
 
 
 def norm(s):
@@ -196,6 +208,13 @@ def check_callback(ctx, key):
     fv = sorted({m for s in hold for m in re.findall(r"(\w+):", re.search(r"free variables \[(.*?)\]", s["detail"]).group(1))})
     if fv != ["callp0", "f"]:
         return False, f"(a) the closure's free variables are {fv}, not callp0 and f"
+    return callp_constant(ctx, key)
+
+
+def callp_constant(ctx, key):
+    """(b) and (c) of check_callback: the members are callp's own, and callp is applied once, in
+    Main0, to the program's constants"""
+    d = ctx["dir"]
     if ctx["struct_ok"] != 10:
         return False, "(b) B2's structure does not hold, so callp0 and f are not known to be the members' own"
     interp = (d / "Interp.ml").read_text()
@@ -210,6 +229,44 @@ def check_callback(ctx, key):
     return True, "free variables callp0 and f only; the bodies applied only by callp's members; callp applied once, in Main0, to constants"
 
 
+def check_members(ctx, key):
+    """The ten fuelled members of Interp.callp's `let rec` escape (each is passed to the bodies,
+    and callp returns callp0), so the capture pass cannot clear them by liveness and reports them
+    UNANALYSED. Their environment is constant: (a) the state-bearing values they capture are only
+    callp's parameters procs and ext and the members themselves; (b) callp is the `let rec` over
+    (procs, strings_base, ext) and (c) is applied once, in Main0, to `procs_array nglobals ext
+    fuel` (the checks of the boundary callback); (d) Main0's procs_array is never written after it
+    is built: every persistent-array write whose element is a Syntax.proc is in Main0.procs_array's
+    own definition. So a member's environment holds no state, and the table it holds is the
+    program's constant one (the probe's `static` words)."""
+    hold = [s for s in ctx["holds"] if (s["file"], s["top"], s["kind"], s["i"]) == key]
+    members = set(MEMBERS)
+    for s in hold:
+        caps = re.search(r"state-bearing captured values \[(.*)\]", s["detail"])
+        names = {x.split(":")[0].strip() for x in caps.group(1).split(";")} if caps else {"?"}
+        if not names <= ({"procs", "ext"} | members):
+            return False, f"(a) captured state-bearing values {sorted(names)}, not only procs, ext and the members"
+        if f"bound to {MEMBERS_BY_SOURCE_ORDER[key[3]]} that escapes" not in s["detail"]:
+            return False, f"(a) not the escaping member closure this argument was made for: {s['detail'][:120]}"
+    if not hold:
+        return False, "(a) no member closure under this key"
+    interp = (ctx["dir"] / "Interp.ml").read_text()
+    if interp.count("\nlet callp procs strings_base ext =\n  let rec evale fuel e st =") != 1:
+        return False, "(b) Interp.callp is not the `let rec` of the members over (procs, strings_base, ext)"
+    if ctx["struct_ok"] != 10:
+        return False, "(b) B2's structure does not hold"
+    main0 = (ctx["dir"] / "Main0.ml").read_text()
+    if len(re.findall(r"\bcallp\b", main0)) != 1 or main0.count("callp procs_array nglobals ext fuel") != 1:
+        return False, "(c) Main0 does not apply callp exactly once, to procs_array nglobals ext fuel"
+    if not re.search(r"\nlet procs_array =\n", main0):
+        return False, "(c) Main0.procs_array is not a top-level value"
+    procsets = [x for x in ctx["psets"] if x[3] == "Syntax.proc"]
+    if not procsets or any(x[2] != "Main0.procs_array" for x in procsets):
+        return False, f"(d) persistent-array writes of Syntax.proc outside Main0.procs_array, or none found: {procsets}"
+    return True, (f"captures only procs, ext and the members; callp applied once, in Main0, to constants; "
+                  f"{len(procsets)} write(s) of the procedure table, all while Main0.procs_array is built")
+
+
 # (file, top-level function, realizer, closure index) -> (count, reason, check)
 ALLOW = {
     ("BinPos.ml", "BinPos.Pos.iter", "positive", 0): (1, "Coq library, polymorphic", check_instances),
@@ -219,6 +276,8 @@ ALLOW = {
     ("Interp.ml", "Interp.evale_body", "Z", 0): (1, "ERealloc: the size expression calls nothing", check_erealloc),
     ("Interp.ml", "Interp.evale_body", "lambda", 0): (1, "EExt's callback to the boundary", check_callback),
     ("Interp.ml", "Interp.exec_body", "lambda", 0): (1, "SExt's callback to the boundary", check_callback),
+    **{("Interp.ml", "Interp.callp", "capture", i): (1, f"callp's member {m}: a constant environment", check_members)
+       for i, m in enumerate(MEMBERS_BY_SOURCE_ORDER)},
 }
 
 
@@ -279,7 +338,7 @@ def main():
             print(err)
             print("b2static: COULD NOT RUN (b2cmt.exe failed)")
             sys.exit(2)
-    sites, callgraph, uses = [], {}, []
+    sites, callgraph, uses, coverage, psets, reachable = [], {}, [], [], [], set()
     for line in out.splitlines():
         p = line.split(" ", 8)
         if p[0] == "SITE":
@@ -287,13 +346,19 @@ def main():
                               verdict=p[7], detail=p[8] if len(p) > 8 else ""))
         elif p[0] == "CALLGRAPH":
             callgraph[p[1]] = line.split(" ", 2)[2]
+        elif p[0] == "PSET":
+            psets.append(line.split(" ", 4)[1:])
+        elif p[0] == "REACHABLE":
+            reachable.add(p[1])
+        elif p[0] == "COVERAGE":
+            coverage.append(line)
         elif p[0] == "USE":
             q = line.split(" ", 3)
             uses.append((q[1], q[2], q[3]))
     # 2. coverage
     typed = Counter()
     for (f, ln, col, k), group in _group_sites(sites).items():
-        if k != "lambda":
+        if k not in ("lambda", "capture"):
             typed[(f, k)] += 1
     for key in sorted(set(textual) | set(typed)):
         if textual[key] != typed[key]:
@@ -315,8 +380,15 @@ def main():
         fails.append(f"B2 structure: Interp.callp's {len(succ)} fuel realizers (10 expected) must all be DEAD; "
                      f"verdicts of their closures: {dict(Counter(s['verdict'] for s in members))}")
     # 4. HOLDS closures and the allow list
-    holds = [s for s in sites if s["verdict"] == "HOLDS"]
-    ctx = dict(dir=d, holds=holds, callgraph=callgraph, uses=uses, struct_ok=struct_ok)
+    # 5. captures (C-187): every other closure, partial application and store must be accounted for
+    if len(coverage) != 1:
+        fails.append(f"captures: {len(coverage)} COVERAGE lines from b2cmt (1 expected): the pass did not run")
+    else:
+        m = re.match(r"COVERAGE closures (\d+) classified (\d+) ", coverage[0] + " ")
+        if not m or m.group(1) != m.group(2) or int(m.group(1)) == 0:
+            fails.append(f"captures: the role walk did not classify every closure-allocating expression: {coverage[0]}")
+    holds = [s for s in sites if s["verdict"] in ("HOLDS", "UNANALYSED")]
+    ctx = dict(dir=d, holds=holds, callgraph=callgraph, uses=uses, struct_ok=struct_ok, psets=psets, reachable=reachable)
     by_key = Counter((s["file"], s["top"], s["kind"], s["i"]) for s in holds)
     n_allowed = 0
     for key in sorted(by_key):
@@ -337,18 +409,21 @@ def main():
             print(f"allow  {key[0]} {key[1]} {key[2]} closure {key[3]} x{count}: {reason}; checked: {why}")
     for key in sorted(set(ALLOW) - set(by_key)):
         print(f"note   allow entry {key} matches no HOLDS closure")
-    v = Counter(s["verdict"] for s in sites if s["kind"] != "lambda")
+    v = Counter(s["verdict"] for s in sites if s["kind"] not in ("lambda", "capture"))
+    vc = Counter(s["verdict"] for s in sites if s["kind"] == "capture")
     vl = Counter(s["verdict"] for s in sites if s["kind"] == "lambda")
     for s in sites:
-        if s["file"] == "Interp.ml" or s["verdict"] != "DEAD":
+        if (s["file"] == "Interp.ml" and s["kind"] != "capture") or s["verdict"] not in ("DEAD", "STATEFREE"):
             print(f"{s['verdict']:9} {s['file']}:{s['line']} {s['top']} {s['kind']} closure {s['i']} {s['detail'][:300]}")
     for f in fails:
         print("FAIL   " + f)
-    nsites = len([k for k in _group_sites(sites) if k[3] != "lambda"])
+    nsites = len([k for k in _group_sites(sites) if k[3] not in ("lambda", "capture")])
     nl = sum(vl.values())
     print(f"b2static: {sum(v.values())} closures at {nsites} realizer sites: {v['DEAD']} DEAD, {v['STATEFREE']} STATEFREE, "
           f"{v['LOOP']} LOOP, {v['HOLDS']} HOLDS; {nl} source lambdas passed as arguments: {vl['DEAD']} DEAD, "
           f"{vl['STATEFREE']} STATEFREE, {vl['LOOP']} LOOP, {vl['HOLDS']} HOLDS; {n_allowed} HOLDS allowed by a checked argument; "
+          f"{sum(vc.values())} other captures: {vc['STATEFREE']} STATEFREE, {vc['DEAD']} DEAD, {vc['LOOP']} LOOP, "
+          f"{vc['HOLDS']} HOLDS, {vc['UNANALYSED']} UNANALYSED ({coverage[0][len('COVERAGE '):] if coverage else 'no coverage line'}); "
           f"B2 members {struct_ok}/10; "
           f"{len(fails)} failing")
     sys.exit(1 if fails else 0)

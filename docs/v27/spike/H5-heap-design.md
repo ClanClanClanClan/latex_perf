@@ -1188,6 +1188,42 @@ still flagged all ten: it reads the typed tree, not the compiled code [M, not ke
 required, never optional. The dynamic half is the check that the static model of retention
 matches the compiled code and the GC (§5 B(d)), not a second detector of every regression.
 
+### 8.2a Independent review of the hardening (2026-11-03): what the static half did not see [M]
+
+**Downgrade, in force until the fix below is reviewed.** §8.2 said the static half carries the
+guarantee. It did not, for every way a value can be kept. It saw the realizers' continuation
+closures and the `fun`s written as arguments, nothing else (C-187).
+
+- **The counter-example.** In the B2 tree, one field of `Interp.callp_body`'s let-bound `finish`
+  was changed from `fp = caller_fp` to `fp = st.fp`
+  (`h5/evidence/stage2/retprobe/c187/mfinish-p50/mutation.diff`). The closure then holds the
+  caller's state across the callee's `exec`.
+  - The old static half reported 0 failing.
+  - The dynamic half failed at the format load's first probe.
+- **The fix.** `b2cmt.ml`'s capture pass classifies every closure-allocating expression of the
+  tree, and every store outside a frame. Anything it does not model is UNANALYSED and fails unless
+  a checked allow entry covers it. Its classifications are counted against an independent walk.
+  - On B2 (`c187/B2-p50/b2static.txt`): 47 other captures, of which 35 are STATEFREE and 2 DEAD.
+    The other 10 are callp's members, UNANALYSED because they escape, and are allowed by
+    `check_members`.
+  - 3,310 of 3,310 closure-allocating expressions are classified.
+- **Kill-tests: 30/30** (`c187/kill-tests.txt`). Each of the four review mutations now FAILS the
+  static half, as do:
+  - a closure escaping into a tuple;
+  - `lazy`;
+  - `ref`;
+  - a procedure-table write outside `Main0.procs_array`;
+  - an unapplied `Pos.iter`.
+- **The probe** (C-188, C-189):
+  - the final probe is held to the limit;
+  - the test uses `excess`, which removes the reachable words outside the major heap (measured:
+    `reach_state` and `static` do not overlap).
+  - B2 PASSES at 50 and at 250 names. The mutation FAILS both halves, with an excess of
+    105,174,431 words.
+
+B2's MEASURED memory is not affected by any of this. That is the full dump at 2.46 GB here, and
+2.47 GB on the runner.
+
 ### 8.3 Fidelity, re-verified on the B2 build [M]
 
 - **INITEX** (`h2/evidence/inirun/`): terminal output, standard error and `texput.log` are

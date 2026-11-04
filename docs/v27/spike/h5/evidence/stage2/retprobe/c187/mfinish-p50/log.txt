@@ -1,0 +1,11 @@
+start mfinish-p50 Wed  4 Nov 2026 08:46:55 CST load={ 30.17 29.87 57.31 }
+static: b2static: 669 closures at 241 realizer sites: 663 DEAD, 0 STATEFREE, 1 LOOP, 5 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 17 HOLDS allowed by a checked argument; 47 other captures: 34 STATEFREE, 2 DEAD, 0 LOOP, 1 HOLDS, 10 UNANALYSED (closures 3310 classified 3310 let=21,other=5,papply-other=5,realizer-or-redex=2333,site=713,top=233); B2 members 10/10; 1 failing (rc 1)
+probe inserted: Main0.ml 1 line, driver.ml 3 lines
+RETPROBE run n 1 phase init k 1 ext 1 cpu 3.74 live 36257601 reach_state 36251442 static 298780 union 36550222 other -292621 base -292621 excess 0 limit 1000000 top 37842671
+RETPROBE run n 2 phase init k 4 ext 4 cpu 7.00 live 36257813 reach_state 36251448 static 298780 union 36550228 other -292415 base -292621 excess 206 limit 1000000 top 37842671
+RETPROBE run n 3 phase init k 16 ext 16 cpu 10.06 live 36258653 reach_state 36251472 static 298780 union 36550252 other -291599 base -292621 excess 1022 limit 1000000 top 37842671
+RETPROBE run n 4 phase load k 1 ext 61 cpu 49.07 live 167543822 reach_state 62363232 static 298780 union 62662012 other 104881810 base -292621 excess 105174431 limit 1000000 top 168199737
+RETPROBE FAIL: 105174431 words live but not reachable from the current state (limit 1000000)
+run: finished rc 6 peak 2399MB in 600s; 4 probes: init 3, load 1 (end of load: 0), dump 0
+FAIL: retention over the limit (finished rc 6 peak 2399MB in 600s; 4 probes: init 3, load 1 (end of load: 0), dump 0); static FAIL: b2static: 669 closures at 241 realizer sites: 663 DEAD, 0 STATEFREE, 1 LOOP, 5 HOLDS; 44 source lambdas passed as arguments: 41 DEAD, 1 STATEFREE, 0 LOOP, 2 HOLDS; 17 HOLDS allowed by a checked argument; 47 other captures: 34 STATEFREE, 2 DEAD, 0 LOOP, 1 HOLDS, 10 UNANALYSED (closures 3310 classified 3310 let=21,other=5,papply-other=5,realizer-or-redex=2333,site=713,top=233); B2 members 10/10; 1 failing
+RC=1

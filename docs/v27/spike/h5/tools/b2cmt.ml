@@ -753,6 +753,262 @@ let rec bearing_inst ~cur t =
       match bearing_inst ~cur a with Some w -> Some w | None -> bearing_inst ~cur b)
   | _ -> bearing ~cur t
 
+(* ---------------------------------------------------------------- captures (C-187)
+   EVERY value the compiled program can keep alive outside a stack frame, not only the shapes the
+   pre-B2 bug was first seen in. The SITE lines above cover the realizers' continuation closures
+   and the `fun`s written as arguments. This pass enumerates every other closure-allocating
+   expression of the tree, and every construct that can store a value outside a frame:
+
+     - a `fun` (Texp_function) anywhere but (a) the expression of a top-level binding (its
+       environment is empty: free variables of a top-level function are top-level values),
+       (b) a realizer's own function or the function of a full beta-redex (applied, not
+       allocated), (c) a realizer's continuation or a `fun` passed as an argument (SITE lines);
+     - an application whose result is a function (Texp_apply of arrow type): a partial
+       application, or a call that returns a closure; it captures its callee and arguments;
+     - lazy, objects, first-class modules, let-operators, local modules and classes: not
+       modelled at all;
+     - stores outside a frame: a mutable record field write, and the library's mutable
+       containers (ref, :=, arrays, Hashtbl, Queue, Stack, Buffer, Weak, Ephemeron, Atomic).
+
+   For each, printed as `SITE <file> <line> <col> capture <toplevel> <i> <verdict> <detail>`:
+     STATEFREE   no captured value (or stored value) has a type that can reach a state;
+     DEAD / LOOP / HOLDS
+                 a closure bound by `let x = C in B` (or a `let rec` group) whose every use in
+                 B (and in the group's own bodies) is as the callee of an application: the
+                 verdict combines the non-leaf calls C's own body makes with its environment live
+                 (as for SITE closures) and the non-leaf calls B makes while x is still to be read
+                 (the same `scan`, with x as the only tracked variable);
+     UNANALYSED  anything else that captures or stores a state-bearing value: a closure that
+                 escapes (passed, stored, returned), a partial application not bound by `let`,
+                 a mutable store, a construct this pass does not model. b2static.py fails on it
+                 unless an allow entry's checked argument covers it.
+   COVERAGE lines count every Texp_function and every arrow-typed Texp_apply of the tree, by an
+   independent plain walk, and by the role this pass gave it; b2static.py fails when they differ. *)
+type role = Top | Skip | Arg | Bound of Ident.t list * expression list | Other
+
+let mutators =
+  [ "Stdlib.ref"; "Stdlib.:="; "Stdlib.Array.set"; "Stdlib.Array.unsafe_set"; "Stdlib.Array.make";
+    "Stdlib.Array.init"; "Stdlib.Array.fill"; "Stdlib.Array.blit"; "Stdlib.Hashtbl.add"; "Stdlib.Hashtbl.replace";
+    "Stdlib.Queue.add"; "Stdlib.Queue.push"; "Stdlib.Stack.push"; "Stdlib.Weak.set"; "Stdlib.Ephemeron";
+    "Stdlib.Atomic.make"; "Stdlib.Atomic.set"; "Stdlib.Atomic.exchange"; "Stdlib.Lazy" ]
+
+let is_mutator q =
+  let q = if String.length q > 7 && String.sub q 0 7 = "Stdlib." then q else "Stdlib." ^ q in
+  List.exists (fun m -> q = m || (String.length q > String.length m && String.sub q 0 (String.length m + 1) = m ^ ".")) mutators
+
+let cov_all = ref 0 and cov_roles : (string, int) Hashtbl.t = Hashtbl.create 7
+
+let count_role r = Hashtbl.replace cov_roles r (1 + Option.value ~default:0 (Hashtbl.find_opt cov_roles r))
+
+(* every occurrence of id in e, outside a nested `fun`, is the callee of an application *)
+let only_called id es =
+  let ok = ref true in
+  let rec go e =
+    match e.exp_desc with
+    | Texp_apply ({ exp_desc = Texp_ident (Path.Pident i, _, _); _ }, args) when Ident.same i id ->
+        List.iter (function _, Some a -> go a | _ -> ()) args
+    | Texp_ident (Path.Pident i, _, _) when Ident.same i id -> ok := false
+    | _ ->
+        (* everywhere in scope, nested closures included: an occurrence inside a nested `fun`
+           that is not a call of id passes or stores it as surely as one outside *)
+        let open Tast_iterator in
+        let it = { default_iterator with expr = (fun _ e' -> go e') } in
+        default_iterator.expr it e
+  in
+  List.iter go es;
+  !ok
+
+let is_arrow_id vbs id =
+  List.exists
+    (fun vb ->
+      match (vb.vb_pat.pat_desc, vb.vb_expr.exp_desc) with
+      | Tpat_var (i, _, _), Texp_function _ -> Ident.same i id
+      | _ -> false)
+    vbs
+
+let analyse_captures file modname str =
+  let idx = Hashtbl.create 97 in
+  let top = ref "?" in
+  let emit e verdict detail =
+    let pos = e.exp_loc.Location.loc_start in
+    let i = Option.value ~default:0 (Hashtbl.find_opt idx !top) in
+    Hashtbl.replace idx !top (i + 1);
+    sites :=
+      Printf.sprintf "SITE %s %d %d capture %s %d %s %s" file pos.Lexing.pos_lnum
+        (pos.Lexing.pos_cnum - pos.Lexing.pos_bol) !top i verdict
+        (String.map (fun ch -> if ch = '\n' || ch = '\t' then ' ' else ch) detail)
+      :: !sites
+  in
+  (* clean: let-bound names whose value is a closure that captures nothing state-bearing (itself
+     judged so, transitively): capturing one captures no state *)
+  let clean = Hashtbl.create 97 in
+  let bear_of ?(except = []) fv =
+    List.filter_map
+      (fun (u, n, t) ->
+        if Hashtbl.mem clean u || List.mem u except then None
+        else match bearing ~cur:modname t with Some w -> Some (n ^ ":" ^ w) | None -> None)
+      fv
+  in
+  let kind_of e = match e.exp_desc with Texp_function _ -> "a closure" | _ -> "a partial application (or a returned closure)" in
+  let judge role e =
+    let fv = free_vars e in
+    let bear = bear_of fv in
+    let what = kind_of e in
+    if bear = [] then emit e "STATEFREE" what
+    else
+      let caps = "state-bearing captured values [" ^ String.concat "; " bear ^ "]" in
+      match role with
+      | Bound (ids, scope) ->
+          let id = List.hd ids in
+          if not (only_called id scope) then
+            emit e "UNANALYSED" (what ^ " bound to " ^ Ident.name id ^ " that escapes (used other than as a callee); " ^ caps)
+          else begin
+            let inside =
+              match e.exp_desc with
+              | Texp_function _ -> (
+                  match classify_closure modname e with
+                  | "DEAD", _ -> []
+                  | _, d -> [ "its own body: " ^ d ])
+              | _ -> []
+            in
+            Hashtbl.reset cur_fv;
+            Hashtbl.replace cur_fv (Ident.unique_name id) ();
+            let body = match scope with b :: _ -> b | [] -> assert false in
+            let held = List.sort_uniq compare (scan ~after:false body) in
+            Hashtbl.reset cur_fv;
+            let all = inside @ held in
+            if all = [] then emit e "DEAD" (what ^ " bound to " ^ Ident.name id ^ "; " ^ caps)
+            else if inside = [] && List.for_all (fun c -> String.length c > 5 && String.sub c 0 5 = "LOOP ") held then
+              emit e "LOOP" (what ^ " bound to " ^ Ident.name id ^ "; " ^ caps ^ " held across [" ^ String.concat "; " held ^ "]")
+            else
+              emit e "HOLDS"
+                (what ^ " bound to " ^ Ident.name id ^ "; " ^ caps ^ "; held across non-tail calls ["
+                ^ String.concat "; " all ^ "]")
+          end
+      | _ -> emit e "UNANALYSED" (what ^ " not bound by `let` (passed, stored or returned); " ^ caps)
+  in
+  let role = ref Other in
+  let visit self r e =
+    role := r;
+    self.Tast_iterator.expr self e
+  in
+  let open Tast_iterator in
+  let it =
+    {
+      default_iterator with
+      structure_item =
+        (fun self si ->
+          match si.str_desc with
+          | Tstr_value (_, vbs) ->
+              List.iter
+                (fun vb ->
+                  (match vb.vb_pat.pat_desc with Tpat_var (id, _, _) -> top := qual (Path.Pident id) | _ -> ());
+                  self.pat self vb.vb_pat;
+                  visit self Top vb.vb_expr)
+                vbs
+          | _ -> default_iterator.structure_item self si);
+      expr =
+        (fun self e ->
+          let r = !role in
+          role := Other;
+          (match e.exp_desc with
+          | Texp_function _ -> (
+              count_role
+                (match r with Top -> "top" | Skip -> "realizer-or-redex" | Arg -> "site" | Bound _ -> "let" | Other -> "other");
+              match r with Top | Skip | Arg -> () | Bound _ | Other -> judge r e)
+          | Texp_apply _ when is_arrow e.exp_type -> (
+              count_role (match r with Bound _ -> "papply-let" | Skip -> "papply-head" | _ -> "papply-other");
+              match r with Skip -> () | _ -> judge r e)
+          | Texp_lazy _ | Texp_object _ | Texp_pack _ | Texp_letop _ | Texp_letmodule _ | Texp_new _ | Texp_send _
+          | Texp_override _ | Texp_setinstvar _ ->
+              emit e "UNANALYSED" "a construct this check does not model (lazy, object, module, let-operator)"
+          | Texp_setfield (_, _, ld, v) -> (
+              match bearing ~cur:modname v.exp_type with
+              | Some w -> emit e "UNANALYSED" ("a mutable field write (" ^ ld.Types.lbl_name ^ ") of a state-bearing value: " ^ w)
+              | None -> emit e "STATEFREE" ("a mutable field write (" ^ ld.Types.lbl_name ^ ")"))
+          | Texp_ident (p, _, _) when qual p = "PArray0.set" || qual p = "Parray.set" ->
+              (* every persistent-array write, by element type: b2static.py checks that the
+                 procedure table is written only while it is built *)
+              let elt =
+                match Types.get_desc e.exp_type with
+                | Types.Tarrow (_, a, _, _) -> (
+                    match Types.get_desc a with
+                    | Types.Tconstr (_, [ t ], _) -> (
+                        match Types.get_desc t with Types.Tconstr (tp, _, _) -> qual tp | _ -> "?")
+                    | _ -> "?")
+                | _ -> "?"
+              in
+              sites := Printf.sprintf "PSET %s %d %s %s" file e.exp_loc.Location.loc_start.Lexing.pos_lnum !top elt :: !sites
+          | Texp_ident (p, _, _) when (not (is_toplevel_path p && in_tree (qual p))) && is_mutator (qual p) -> (
+              match bearing_inst ~cur:modname e.exp_type with
+              | Some w -> emit e "UNANALYSED" ("a mutable container (" ^ qual p ^ ") at a state-bearing type: " ^ w)
+              | None -> emit e "STATEFREE" ("a mutable container (" ^ qual p ^ ") at a state-free type"))
+          | _ -> ());
+          match e.exp_desc with
+          | Texp_apply (f, args) when realizer_kind f <> None ->
+              let _, nk = Option.get (realizer_kind f) in
+              visit self Skip f;
+              List.iteri
+                (fun i (_, a) -> match a with Some a -> visit self (if i < nk then Arg else Other) a | None -> ())
+                args
+          | Texp_apply (({ exp_desc = Texp_function (ps, _); _ } as f), args)
+            when List.length ps = List.length args && List.for_all (fun (_, a) -> a <> None) args ->
+              visit self Skip f;
+              List.iter (function _, Some a -> visit self Other a | _ -> ()) args
+          | Texp_apply (f, args) ->
+              (* a partial application in callee position is applied at once: not kept *)
+              visit self (match f.exp_desc with Texp_apply _ -> Skip | _ -> Other) f;
+              let f_is_fun = match f.exp_desc with Texp_function _ -> true | _ -> false in
+              List.iter
+                (fun (_, a) ->
+                  match a with
+                  | Some ({ exp_desc = Texp_function _; _ } as a) -> visit self (if f_is_fun then Other else Arg) a
+                  | Some a -> visit self Other a
+                  | None -> ())
+                args
+          | Texp_let (rf, vbs, body) ->
+              let ids = List.filter_map (fun vb -> match vb.vb_pat.pat_desc with Tpat_var (id, _, _) -> Some id | _ -> None) vbs in
+          (* a group whose members capture nothing state-bearing but each other is clean as a whole;
+             a non-recursive binding is clean when its value captures nothing state-bearing *)
+          let us = if rf = Asttypes.Recursive then List.map Ident.unique_name ids else [] in
+          if List.for_all (fun vb -> bear_of ~except:us (free_vars vb.vb_expr) = []) vbs then
+            List.iter (fun id -> if is_arrow_id vbs id then Hashtbl.replace clean (Ident.unique_name id) ()) ids;
+              List.iter
+                (fun vb ->
+                  self.pat self vb.vb_pat;
+                  match vb.vb_pat.pat_desc with
+                  | Tpat_var (id, _, _) ->
+                      let scope = body :: (if rf = Asttypes.Recursive then List.map (fun v -> v.vb_expr) vbs else []) in
+                      ignore ids;
+                      visit self (Bound ([ id ], scope)) vb.vb_expr
+                  | _ -> visit self Other vb.vb_expr)
+                vbs;
+              visit self Other body
+          | _ -> default_iterator.expr self e);
+    }
+  in
+  it.structure it str;
+  (* the independent count *)
+  let plain =
+    {
+      default_iterator with
+      expr =
+        (fun self e ->
+          (match e.exp_desc with
+          | Texp_function _ -> incr cov_all
+          | Texp_apply _ when is_arrow e.exp_type -> incr cov_all
+          | _ -> ());
+          default_iterator.expr self e);
+    }
+  in
+  plain.structure plain str
+
+let print_coverage () =
+  let roles = Hashtbl.fold (fun k v acc -> (k, v) :: acc) cov_roles [] |> List.sort compare in
+  Printf.printf "COVERAGE closures %d classified %d %s\n" !cov_all
+    (List.fold_left (fun a (_, v) -> a + v) 0 roles)
+    (String.concat "," (List.map (fun (k, v) -> k ^ "=" ^ string_of_int v) roles))
+
 let uses targets file modname str =
   let open Tast_iterator in
   let top = ref "?" in
@@ -887,6 +1143,8 @@ let () =
       compute ();
       List.iter (fun (_, _, s) -> compute_tail_only s) loaded;
       List.iter (fun (f, m, s) -> analyse_structure (Filename.chop_suffix f ".cmt" ^ ".ml") m s) loaded;
+      List.iter (fun (f, m, s) -> analyse_captures (Filename.chop_suffix f ".cmt" ^ ".ml") m s) loaded;
+      print_coverage ();
       Hashtbl.fold (fun q _ acc -> q :: acc) fns []
       |> List.sort compare
       |> List.iter (fun q ->

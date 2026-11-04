@@ -53,7 +53,7 @@ def member_revert(m):
 
 TESTS = [
     ("K00 the B2 tree, unchanged", B2, None, 0, r"^b2static: .* 0 failing$"),
-    ("K01 the pre-B2 tree", PRE, None, 1, r"B2 members 0/10; 24 failing$"),
+    ("K01 the pre-B2 tree", PRE, None, 1, r"B2 members 0/10; 34 failing$"),
 ]
 for m in MEMBERS:
     TESTS.append((f"K-{m}: the member {m} holds its state across its body's call", B2, member_revert(m), 1,
@@ -102,6 +102,44 @@ TESTS += [
      lambda d: append(d, "Boundary.ml",
                       "let k19_map (g : Values.state -> Values.state) st l = List.map (fun x -> (g st, x)) l"),
      1, r"^FAIL   HOLDS Boundary.ml:\d+ Boundary.k19_map lambda closure 0"),
+    # C-187: closures and stores outside the realizer and argument shapes (the review's mutations)
+    ("K20 callp_body's let-bound `finish` captures the caller's state (one field changed)", B2,
+     lambda d: rep(d, "Interp.ml", "hput { heap = st3.heap; hp = st3.hp; fp = caller_fp; fsp = fb;",
+                   "hput { heap = st3.heap; hp = st3.hp; fp = st.fp; fsp = fb;"),
+     1, r"^FAIL   HOLDS Interp.ml:\d+ Interp.callp_body capture closure \d+: a closure bound to finish; .*st:Values.state.*RUN exec"),
+    ("K21 a let-bound closure holding a state across a parameter call", B2,
+     lambda d: append(d, "Boundary.ml",
+                      "let x1_letclosure (g : Values.state -> Values.state) st =\n  let fail = fun () -> st in\n"
+                      "  let s2 = g st in\n  if s2 == s2 then s2 else fail ()"),
+     1, r"^FAIL   HOLDS Boundary.ml:\d+ Boundary.x1_letclosure capture closure \d+: a closure bound to fail;"),
+    ("K22 a let-bound partial application holding a state across a parameter call", B2,
+     lambda d: append(d, "Boundary.ml",
+                      "let x2_partial (g : Values.state -> Values.state) st =\n"
+                      "  let pick (a : Values.state) (b : int) = if b = 0 then a else a in\n"
+                      "  let k = pick st in\n  let s2 = g st in\n  if k 1 == s2 then s2 else s2"),
+     1, r"^FAIL   HOLDS Boundary.ml:\d+ Boundary.x2_partial capture closure \d+: a partial application .* bound to k;"),
+    ("K23 a partial application holding a state, passed to List.map", B2,
+     lambda d: append(d, "Boundary.ml",
+                      "let x3_partial_arg (g : Values.state -> Values.state) st l =\n"
+                      "  let pick (a : Values.state) (b : int) = ignore (g a); b in\n  List.map (pick st) l"),
+     1, r"^FAIL   HOLDS Boundary.ml:\d+ Boundary.x3_partial_arg capture closure \d+: a partial application .* not bound by `let`"),
+    ("K24 a let-bound closure that escapes into a tuple", B2,
+     lambda d: append(d, "Boundary.ml",
+                      "let k24_escape (g : Values.state -> Values.state) st =\n  let c = fun () -> st in\n  (c, g st)"),
+     1, r"^FAIL   HOLDS Boundary.ml:\d+ Boundary.k24_escape capture closure \d+: a closure bound to c that escapes"),
+    ("K25 a lazy value (a construct the check does not model)", B2,
+     lambda d: append(d, "Boundary.ml", "let k25_lazy (st : Values.state) = lazy st"),
+     1, r"^FAIL   HOLDS Boundary.ml:\d+ Boundary.k25_lazy capture closure \d+: a construct this check does not model"),
+    ("K26 a ref cell holding a state", B2,
+     lambda d: append(d, "Boundary.ml", "let k26_ref (st : Values.state) = ref st"),
+     1, r"^FAIL   HOLDS Boundary.ml:\d+ Boundary.k26_ref capture closure \d+: a mutable container \(Stdlib.ref\)"),
+    ("K27 the procedure table written outside its definition", B2,
+     lambda d: append(d, "Boundary.ml",
+                      "let k27_pset (a : Syntax.proc PArray0.array) p = PArray0.set a (Uint63.of_int 0) p"),
+     1, r"callp's member evale: a constant environment\): its check FAILED: \(d\)"),
+    ("K28 Pos.iter named (not applied) where a state can reach it: its 0-use allow fails", B2,
+     lambda d: append(d, "Boundary.ml", "let k28_iter = BinPos.Pos.iter"),
+     1, r"BinPos.Pos.iter', 'positive', 0\) \(Coq library, polymorphic\): its check FAILED"),
 ]
 
 

@@ -1,0 +1,4 @@
+851c851
+<               hput { heap = st3.heap; hp = st3.hp; fp = caller_fp; fsp = fb;
+---
+>               hput { heap = st3.heap; hp = st3.hp; fp = st.fp; fsp = fb;

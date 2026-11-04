@@ -1,0 +1,5 @@
+RETPROBE run n 1 phase init k 1 ext 1 cpu 3.74 live 36257601 reach_state 36251442 static 298780 union 36550222 other -292621 base -292621 excess 0 limit 1000000 top 37842671
+RETPROBE run n 2 phase init k 4 ext 4 cpu 7.00 live 36257813 reach_state 36251448 static 298780 union 36550228 other -292415 base -292621 excess 206 limit 1000000 top 37842671
+RETPROBE run n 3 phase init k 16 ext 16 cpu 10.06 live 36258653 reach_state 36251472 static 298780 union 36550252 other -291599 base -292621 excess 1022 limit 1000000 top 37842671
+RETPROBE run n 4 phase load k 1 ext 61 cpu 49.07 live 167543822 reach_state 62363232 static 298780 union 62662012 other 104881810 base -292621 excess 105174431 limit 1000000 top 168199737
+RETPROBE FAIL: 105174431 words live but not reachable from the current state (limit 1000000)

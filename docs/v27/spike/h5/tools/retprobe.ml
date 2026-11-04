@@ -18,33 +18,50 @@
    Each probe forces a full major GC and splits the live words into
      reach_state  the words reachable from the state the program is computing with now,
      static       the words reachable from the procedure table (the program's constants),
-     other        live - reach_state - static: data that is live, but NOT reachable from the
-                  current state. Before B2 this was 211-245 M words at the end of the format
-                  load: old states kept alive by the fuel closures (§2.1).
-   A probe whose `other` exceeds PS_RETPROBE_LIMIT words (default 1,000,000 = 8 MB) stops the
-   run with exit 6 and the line RETPROBE FAIL. (static and reach_state can overlap, so a small
-   negative `other` means nothing is retained: B2 measured -0.28 M at every probe.)
+     union        the words reachable from either: one traversal of the pair, less the pair's
+                  own 3-word block, so the words they share are counted once,
+     other        live - union. `live` counts the major heap only; `union` also counts the
+                  reachable words outside it (the compiled program's static data: the procedure
+                  table's constants), so `other` is the retained words LESS that out-of-heap part,
+     base         min(0, `other` at the run's first probe): the out-of-heap part, measured before
+                  the program has done anything that could retain,
+     excess       other - base: the words live but NOT reachable from the current state or the
+                  constants. Before B2 this was 211-245 M words at the end of the format load:
+                  old states kept alive by the fuel closures (§2.1).
+   (C-189: the first version tested live - reach_state - static. Measured on B2, the two sets do
+   not overlap (union = reach_state + static at every probe); the -0.28 M it printed is the
+   out-of-heap part, so the test passed retention up to the limit plus ~0.29 M words. `excess`
+   removes it; `base` is capped at 0, so the correction can only make the test stricter.)
+   A probe whose `excess` exceeds PS_RETPROBE_LIMIT words (default 1,000,000 = 8 MB) stops the
+   run with exit 6 and the line RETPROBE FAIL. The final probe, at the end of the run, is held to
+   the same limit (C-188: it was printed and ignored, so retention that appeared after the last
+   power-of-4 probe could pass).
    PS_RETPROBE=1 enables it; without it the copy runs as the model does. *)
 let enabled = Sys.getenv_opt "PS_RETPROBE" = Some "1"
 let limit = match Sys.getenv_opt "PS_RETPROBE_LIMIT" with Some s -> int_of_string s | None -> 1_000_000
 let static_words = ref 0
+let static_root = ref (Obj.repr 0)
 let calls = ref 0
 let probes = ref 0
 let phase = ref "init"
 let k = ref 0 (* ordinal of the current external call within its phase *)
+let base = ref None
 
 let probe ?(final = false) ?(at = "") (st : Values.state) =
   Gc.full_major ();
   let s = Gc.stat () in
   let r = Obj.reachable_words (Obj.repr st) in
-  let other = s.Gc.live_words - r - !static_words in
+  let union = Obj.reachable_words (Obj.repr (st, !static_root)) - 3 in
+  let other = s.Gc.live_words - union in
+  let b = match !base with Some b -> b | None -> let b = min 0 other in base := Some b; b in
+  let excess = other - b in
   if not final then incr probes;
   Printf.eprintf
-    "RETPROBE %s n %d phase %s k %d%s ext %d cpu %.2f live %d reach_state %d static %d other %d limit %d top %d\n%!"
+    "RETPROBE %s n %d phase %s k %d%s ext %d cpu %.2f live %d reach_state %d static %d union %d other %d base %d excess %d limit %d top %d\n%!"
     (if final then "final" else "run") !probes !phase !k at !calls (Sys.time ()) s.Gc.live_words r !static_words
-    other limit s.Gc.top_heap_words;
-  if (not final) && other > limit then begin
-    Printf.eprintf "RETPROBE FAIL: %d words live but not reachable from the current state (limit %d)\n%!" other
+    union other b excess limit s.Gc.top_heap_words;
+  if excess > limit then begin
+    Printf.eprintf "RETPROBE FAIL: %d words live but not reachable from the current state (limit %d)\n%!" excess
       limit;
     exit 6
   end

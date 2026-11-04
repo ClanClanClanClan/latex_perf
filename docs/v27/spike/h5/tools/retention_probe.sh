@@ -10,7 +10,7 @@
 #      not a stop: the dynamic half runs either way, so a failing tree shows both verdicts. If it
 #      cannot run (its summary line is missing), the check is INCONCLUSIVE.
 #   2. dynamic: a copy of ML_DIR with retprobe.ml around the C boundary (one line of Main0.ml and
-#      two of driver.ml, each asserted to match once; nothing else changed, coq-core's Parray
+#      three lines of driver.ml, each replacement asserted to match once; nothing else changed, coq-core's Parray
 #      unchanged) is built and run on INPUT_DIR (a meaning-dump prefix: spec + stdin-meanings,
 #      h5/README.md) under h3/tools/capped.sh. A forced full GC measures the words live but not
 #      reachable from the current state at external calls chosen from the program's own call
@@ -19,7 +19,8 @@
 # Verdicts (last line, and the exit status):
 #   PASS (0)          static PASS; the run finished; the load and the dump each got >= 3 probes;
 #                     every probe under the limit
-#   FAIL (1)          a static failure, or a probe over the limit (the run stops at that probe)
+#   FAIL (1)          a static failure, or a probe over the limit, the final probe included (the
+#                     run stops at that probe)
 #   INCONCLUSIVE (2)  anything else (the static half did not run, killed by the cap or the
 #                     timeout, a phase not reached or with too few probes, build failed)
 # ML_DIR is an extracted tree (pipeline.sh's build/ml, or build/new_ml). driver.ml is taken from it
@@ -53,12 +54,13 @@ def rep(name, a, b):
 rep("Main0.ml", "callp procs_array nglobals ext fuel", "callp procs_array nglobals Retprobe.ext fuel")
 rep("driver.ml", "  let t0 = Unix.gettimeofday () in\n",
     "  Retprobe.static_words := Obj.reachable_words (Obj.repr Main0.procs_array);\n"
+    "  Retprobe.static_root := Obj.repr Main0.procs_array;\n"
     "  let t0 = Unix.gettimeofday () in\n")
 rep("driver.ml", '  Printf.printf "TIME: %.2f s\\n" (t1 -. t0)',
     "  (let st = match r with Interp.EOk (_, s) | Interp.EHalt (_, s) | Interp.EStk (_, s) -> s in"
     " Retprobe.probe ~final:true st);\n"
     '  Printf.printf "TIME: %.2f s\\n" (t1 -. t0)')
-print("probe inserted: Main0.ml 1 line, driver.ml 2 lines")
+print("probe inserted: Main0.ml 1 line, driver.ml 3 lines")
 EOF
 zsh $T/build.sh $out/ml $out/probe.exe > $out/build.txt 2>&1 || { cat $out/build.txt; verdict "INCONCLUSIVE: build failed" 2 }
 shasum -a 256 $out/probe.exe > $out/probe.sha256

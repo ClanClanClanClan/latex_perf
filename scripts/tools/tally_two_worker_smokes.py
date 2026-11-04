@@ -33,13 +33,34 @@ WORKFLOWS = ["rust-proxy-smoke", "l1-smoke", "l1-nightly", "latency-nightly",
              "validators-pilot-smoke"]
 
 
+LIMIT = 1000
+BAD = ("failure", "cancelled", "timed_out", "startup_failure")
+
+
 def runs(wf: str, since: str) -> list[dict]:
     out = subprocess.run(
         ["gh", "run", "list", "--repo", REPO, "--workflow", f"{wf}.yml",
-         "--limit", "1000", "--created", f">={since}", "--json",
-         "databaseId,conclusion,createdAt,headSha,headBranch"],
+         "--limit", str(LIMIT), "--created", f">={since}", "--json",
+         "databaseId,conclusion,status,createdAt,headSha,headBranch,attempt"],
         capture_output=True, text=True, check=True).stdout
-    return json.loads(out)
+    rs = json.loads(out)
+    if len(rs) >= LIMIT:
+        raise SystemExit(f"FAIL: {wf}: {len(rs)} runs = --limit {LIMIT}; the list is "
+                         f"truncated and the tally would be partial")
+    return rs
+
+
+def attempts(r: dict) -> list[dict]:
+    """Every attempt of a run: `gh run list` reports only the latest, and a
+    re-run that passed hides the attempt that failed."""
+    n = int(r.get("attempt") or 1)
+    out = [dict(r, attempt=n)]
+    for a in range(1, n):
+        d = json.loads(subprocess.run(
+            ["gh", "api", f"repos/{REPO}/actions/runs/{r['databaseId']}/attempts/{a}"],
+            capture_output=True, text=True, check=True).stdout)
+        out.append(dict(r, attempt=a, conclusion=d.get("conclusion"), status=d.get("status")))
+    return out
 
 
 _memo: dict[str, bool | None] = {}
@@ -65,35 +86,47 @@ def main() -> int:
     ap.add_argument("--since", default="2026-08-01")
     ns = ap.parse_args()
     total = collections.Counter()
+    unknown = 0
     for wf in WORKFLOWS:
         rs = runs(wf, ns.since)
         if not rs:
             print(f"FAIL: {wf}: zero runs listed -- the tally would be vacuous")
             return 1
         c = collections.Counter()
-        fails = []
+        bad = []
         for r in rs:
-            if r["createdAt"] < FIX_TIME:
-                cls = "pre"
-            else:
-                cls = {True: "post", False: "pre", None: "unknown"}[contains_fix(r["headSha"])]
-            c[(cls, r["conclusion"])] += 1
-            if r["conclusion"] == "failure":
-                fails.append(f"{cls}:{r['databaseId']}")
+            for a in attempts(r):
+                if a.get("status") != "completed":
+                    cls = "unknown"
+                elif a["createdAt"] < FIX_TIME:
+                    cls = "pre"
+                else:
+                    cls = {True: "post", False: "pre", None: "unknown"}[contains_fix(a["headSha"])]
+                unknown += cls == "unknown"
+                c[(cls, a.get("conclusion") or a.get("status"))] += 1
+                if a.get("conclusion") in BAD:
+                    bad.append(f"{cls}:{a['databaseId']}#{a['attempt']}:{a['conclusion']}")
         total.update(c)
-        print(f"{wf:24s} {dict(sorted(c.items()))} failures={fails}")
-    post = sum(v for (cls, concl), v in total.items()
-               if cls == "post" and concl in ("success", "failure"))
-    post_fail = total[("post", "failure")]
-    pre = sum(v for (cls, concl), v in total.items()
-              if cls == "pre" and concl in ("success", "failure"))
-    print(f"TOTAL {dict(sorted(total.items()))}")
-    print(f"pre-fix: {total[('pre', 'failure')]} failure(s) in {pre} completed run(s); "
-          f"post-fix: {post_fail} failure(s) in {post} completed run(s)")
-    if post and not post_fail:
-        print(f"zero post-fix failures bound the post-fix rate below 3/{post} "
-              f"= {3 / post:.4f} (95%); compare with the pre-fix rate of the POOL "
-              f"class only (classify each pre-fix failure by its log first)")
+        print(f"{wf:24s} {dict(sorted(c.items()))} not-success={bad}")
+    print(f"TOTAL attempts {dict(sorted(total.items()))}")
+    for cls in ("pre", "post"):
+        n = sum(v for (k, _), v in total.items() if k == cls)
+        nb = {b: total[(cls, b)] for b in BAD if total[(cls, b)]}
+        print(f"{cls}-fix: {n} attempt(s); not-success {nb or 0}")
+    if unknown:
+        print(f"NO BOUND: {unknown} attempt(s) could not be classified (in progress, or "
+              f"ancestry undecidable); refusing to print a rate bound")
+        return 1
+    post = sum(v for (k, _), v in total.items() if k == "post")
+    post_bad = sum(total[("post", b)] for b in BAD)
+    if post and not post_bad:
+        print(f"zero post-fix failures/cancellations/time-outs bound the post-fix rate "
+              f"below 3/{post} = {3 / post:.4f} (95%). A pool hang can surface as "
+              f"`cancelled`, so cancellations count as bad here; compare with the "
+              f"pre-fix rate of the POOL class only (classify each pre-fix "
+              f"not-success attempt by its log first)")
+    elif post_bad:
+        print(f"{post_bad} post-fix not-success attempt(s): read their logs before any claim")
     return 0
 
 

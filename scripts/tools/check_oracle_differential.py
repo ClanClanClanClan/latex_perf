@@ -200,6 +200,7 @@ def main() -> int:
         sys.path.insert(0, str(here))
         spec = importlib.util.spec_from_file_location("_oracle_ref", here / "_oracle.py")
         ref_mod = importlib.util.module_from_spec(spec)
+        sys.modules["_oracle_ref"] = ref_mod
         spec.loader.exec_module(ref_mod)
         ref = ref_mod.get_oracle()
     else:

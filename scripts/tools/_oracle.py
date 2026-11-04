@@ -2490,7 +2490,8 @@ class ContainerOracle(_Base):
         nonce = "LP_ORACLE_RC_" + uuid.uuid4().hex
         env = {k: v for k, v in engine_env(graded_env({})).items()
                if not k.startswith("LP_")}
-        cfg = {"names": evidence_names(args), "remove": evidence_names(args),
+        names = evidence_names(args)
+        cfg = {"names": names, "remove": names,
                "env": env, "mkdirs": [d for d in FIXED_RUN_DIRS
                                       if not d.startswith(BOOK_DIR)],
                "timeout": int(timeout)}

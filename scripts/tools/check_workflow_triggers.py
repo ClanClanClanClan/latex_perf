@@ -79,7 +79,7 @@ Nine failure modes, each of which has actually bitten this repo:
    over literal values; any other expression is refused because it cannot be
    shown to be fixed.
 
-8. A FLOATING TOOLCHAIN OR ACTION (C-179, C-180). setup-ocaml resolves opam
+8. A FLOATING TOOLCHAIN OR ACTION (C-179, C-200). setup-ocaml resolves opam
    to the newest upstream release at run time (2.1.6 under v2, 2.6.1 on
    2026-11-03); dtolnay/rust-toolchain@stable resolves rustc the same way; and
    a tag or branch ref (`@v4`, `@1.99`, `@release`) is mutable. Refused: any
@@ -91,7 +91,7 @@ Nine failure modes, each of which has actually bitten this repo:
    spelled on a plain `uses: VALUE` line, or a quoted `"uses"` key, is
    refused, since its comment could not be read.
 
-9. OPAM FROM ANYWHERE BUT THE PIN (C-179, C-180). opam is installed only by
+9. OPAM FROM ANYWHERE BUT THE PIN (C-179, C-200). opam is installed only by
    setup-ocaml-env's step, whose run text (and the key and switch steps) must
    equal the canonical text in CANON below: an exact release URL, a checksum
    that fails the step before the binary is touched, the compiler from the
@@ -453,7 +453,7 @@ def uses_findings(doc: dict, text: str, rel: str, registry: dict) -> tuple[int, 
     out: list[str] = []
     if QUOTED_USES_KEY.search(text):
         out.append(f"UNSCANNED-USES: {rel} spells a `uses` key in quotes; write "
-                   f"`uses:` plainly so its version comment can be read (C-180).")
+                   f"`uses:` plainly so its version comment can be read (C-200).")
     raw: dict[str, list[str | None]] = {}
     for m in RAW_USES.finditer(text):
         v = m.group("v").strip("'\"")
@@ -471,7 +471,7 @@ def uses_findings(doc: dict, text: str, rel: str, registry: dict) -> tuple[int, 
             out.append(
                 f"UNSCANNED-USES: {rel} has `uses: {full}` in its YAML but on no "
                 f"line of the form `uses: VALUE` (an alias, a flow mapping or a "
-                f"multi-line scalar); write it plainly (C-180).")
+                f"multi-line scalar); write it plainly (C-200).")
             continue
         comment = raw[full][0]
         if full.startswith("./"):
@@ -479,7 +479,7 @@ def uses_findings(doc: dict, text: str, rel: str, registry: dict) -> tuple[int, 
         if full.lower().startswith("docker://"):
             if not DIGEST_REF.match(full):
                 out.append(f"FLOATING-TOOLCHAIN: {rel} uses `{full}`: a docker image "
-                           f"must be pinned by `@sha256:<digest>` (C-180).")
+                           f"must be pinned by `@sha256:<digest>` (C-200).")
             continue
         action, at, ref = full.partition("@")
         action_l = action.lower()
@@ -497,17 +497,17 @@ def uses_findings(doc: dict, text: str, rel: str, registry: dict) -> tuple[int, 
                 f"FLOATING-TOOLCHAIN: {rel} uses `{full}`: a third-party action "
                 f"must be pinned by a 40-hex commit SHA with a `# <version>` "
                 f"comment (tags and branches are mutable; run "
-                f"scripts/tools/pin_actions.py --pin) (C-180).")
+                f"scripts/tools/pin_actions.py --pin) (C-200).")
             continue
         recorded = registry.get(repo_l, {}).get(ref)
         if recorded is None:
             out.append(f"FLOATING-TOOLCHAIN: {rel} uses `{full}`, a SHA not recorded "
-                       f"in {PIN_REGISTRY} (C-180).")
+                       f"in {PIN_REGISTRY} (C-200).")
             continue
         if comment != recorded:
             out.append(f"FLOATING-TOOLCHAIN: {rel} uses `{full}` with comment "
                        f"`# {comment}`, but {PIN_REGISTRY} records that SHA as "
-                       f"`{recorded}` (C-180).")
+                       f"`{recorded}` (C-200).")
             continue
         if action_l.split("/")[:2] == ["actions", "cache"] and not cache_version_ok(recorded):
             out.append(
@@ -524,14 +524,14 @@ def uses_findings(doc: dict, text: str, rel: str, registry: dict) -> tuple[int, 
             vals = [str(v)] if not EXPR.search(str(v)) else resolve_matrix(str(v).strip(), matrix)
             if vals is None:
                 out.append(f"FLOATING-TOOLCHAIN: {rel}: `{action}` input `{k}: {v}` "
-                           f"is an expression this gate cannot resolve (C-180).")
+                           f"is an expression this gate cannot resolve (C-200).")
                 continue
             for x in vals:
                 if not EXACT_VERSION.match(x.strip()):
                     out.append(
                         f"FLOATING-TOOLCHAIN: {rel}: `{action}` input `{k}: {x}` "
                         f"is not an exact version (stable/nightly/latest, a bare "
-                        f"major or a minor all resolve at run time) (C-180).")
+                        f"major or a minor all resolve at run time) (C-200).")
     return n, out
 
 
@@ -556,7 +556,7 @@ def opam_findings(repo: Path, docs: dict[str, dict]) -> list[str]:
                 f"the canonical pinned text in check_workflow_triggers.py (exact "
                 f"download URL, a checksum that fails the step before the binary "
                 f"is touched, the switch built from LP_OCAML_VERSION); if the edit "
-                f"is intended, update CANON there (C-179/C-180).")
+                f"is intended, update CANON there (C-179/C-200).")
     st = steps.get(OPAM_STEP)
     if st is not None:
         if str(st.get("if", "")).strip() != OPAM_STEP_IF:
@@ -582,7 +582,7 @@ def opam_findings(repo: Path, docs: dict[str, dict]) -> list[str]:
                     out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} step "
                                f"`{st.get('name')}` spells a version number "
                                f"(`{ln.strip()[:80]}`); derive it from OCAML_VERSION "
-                               f"/ OPAM_VERSION (C-180)")
+                               f"/ OPAM_VERSION (C-200)")
     for rel, d in docs.items():
         for label, run_text in iter_run_blocks(d, rel):
             if rel == key and label == f"{rel} :: {OPAM_STEP}":
@@ -590,7 +590,7 @@ def opam_findings(repo: Path, docs: dict[str, dict]) -> list[str]:
             for ln in run_text.splitlines():
                 if OPAM_ELSEWHERE.search(strip_comment(ln)):
                     out.append(f"FLOATING-TOOLCHAIN: {label} installs opam outside "
-                               f"{OPAM_INSTALLER}'s pinned step: `{ln.strip()[:100]}` (C-180)")
+                               f"{OPAM_INSTALLER}'s pinned step: `{ln.strip()[:100]}` (C-200)")
     return out
 
 

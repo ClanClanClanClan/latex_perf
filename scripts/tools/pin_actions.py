@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pin every third-party GitHub Action to a commit SHA (C-180).
+"""Pin every third-party GitHub Action to a commit SHA (C-200).
 
 Tags and branches are mutable: `@v4` today is not `@v4` next month, and a
 branch named `1.99` is not a release. check_workflow_triggers.py failure mode

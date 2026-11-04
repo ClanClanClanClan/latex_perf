@@ -8,7 +8,7 @@ name: Spec Drift
 on:
   push:
     branches: [main]
-  # Dispatchable so a toolchain change can be run on a branch before its PR (C-180).
+  # Dispatchable so a toolchain change can be run on a branch before its PR (C-200).
   workflow_dispatch:
   pull_request:
     branches: [main]

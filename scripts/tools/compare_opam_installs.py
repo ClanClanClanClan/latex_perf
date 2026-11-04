@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare the opam packages two CI runs installed, job by job (C-180).
+"""Compare the opam packages two CI runs installed, job by job (C-200).
 
 For a toolchain change (opam version, solver, installer), the question is
 whether the jobs still resolve the SAME package versions. This reads the

@@ -548,7 +548,7 @@ def _kept_log(r: dict) -> bytes | None:
         return None
     try:
         log = zlib.decompress(base64.b64decode(r["log_gz_b64"], validate=True))
-    except Exception:  # noqa: BLE001 -- an undecodable log is no log; the caller refuses
+    except (ValueError, zlib.error):   # an undecodable log is no log; the caller refuses
         return None
     return log if hashlib.sha256(log).hexdigest() == r.get("log_sha256") else None
 

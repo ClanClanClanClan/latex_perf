@@ -96,7 +96,7 @@ def state_at(repo, rev) -> dict:
         try:
             ids = [r["arxiv_id"] for r in json.loads(data)["docs"]]
             st["manifests"][rel] = seal.seal_digest(off, n, ids)
-        except Exception:  # noqa: BLE001 -- an unreadable manifest is a state of its own
+        except (ValueError, KeyError, TypeError):  # unreadable: a state of its own
             st["manifests"][rel] = "<unreadable>"
     lab = show(repo, rev, LABELLERS)
     st["labellers"] = None if lab is None else lab.decode("utf-8", "replace")

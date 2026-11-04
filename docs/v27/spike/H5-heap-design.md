@@ -1203,11 +1203,11 @@ closures and the `fun`s written as arguments, nothing else (C-187).
 - **The fix.** `b2cmt.ml`'s capture pass classifies every closure-allocating expression of the
   tree, and every store outside a frame. Anything it does not model is UNANALYSED and fails unless
   a checked allow entry covers it. Its classifications are counted against an independent walk.
-  - On B2 (`c187/B2-p50/b2static.txt`): 47 other captures, of which 35 are STATEFREE and 2 DEAD.
+  - On B2 (`h5/evidence/stage2/retprobe/c187/B2-p50/b2static.txt`): 47 other captures, of which 35 are STATEFREE and 2 DEAD.
     The other 10 are callp's members, UNANALYSED because they escape, and are allowed by
     `check_members`.
   - 3,310 of 3,310 closure-allocating expressions are classified.
-- **Kill-tests: 30/30** (`c187/kill-tests.txt`). Each of the four review mutations now FAILS the
+- **Kill-tests: 30/30** (`h5/evidence/stage2/retprobe/c187/kill-tests.txt`). Each of the four review mutations now FAILS the
   static half, as do:
   - a closure escaping into a tuple;
   - `lazy`;

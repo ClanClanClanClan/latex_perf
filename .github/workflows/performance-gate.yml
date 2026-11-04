@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - uses: ./.github/actions/setup-ocaml-env
 
@@ -74,7 +74,7 @@ jobs:
             corpora/perf/edit_window_4kb.tex 1000 --window 4096 --mode cluster --cluster-span 128 --csv edit_replay_cluster_1k.csv
 
       - name: Upload benchmark artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: performance-benchmarks
           path: |
@@ -97,7 +97,7 @@ jobs:
             replay_cluster1k edit_replay_cluster_1k.csv
 
       - name: Upload merged summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: perf-summary
           path: perf_summary.csv

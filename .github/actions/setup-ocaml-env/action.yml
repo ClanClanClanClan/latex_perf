@@ -1,7 +1,8 @@
 name: Setup OCaml + Install Dependencies
 description: >-
   Composite action that installs a PINNED opam (exact version, sha256-checked
-  binary), creates the repo-local OCaml 5.1.1 switch, installs system packages,
+  binary), creates the repo-local OCaml switch (OCAML_VERSION, set once in the
+  opam step), installs system packages,
   configures opam repos and performs a retry-loop dependency install, caching
   the opam root and switch AFTER the dependency install (C-176, C-179).  The
   switch creation and the dependency install both retry and both fail the job
@@ -78,8 +79,10 @@ runs:
     # setup-ocaml, nothing sets DUNE_CACHE / DUNE_CACHE_ROOT any more: dune
     # runs with its own defaults.
     - name: Install opam (pinned, checksum-verified)
+      if: runner.os == 'Linux' && (runner.arch == 'X64' || runner.arch == 'ARM64')
       shell: bash
       env:
+        OCAML_VERSION: "5.1.1"
         OPAM_VERSION: "2.6.1"
         OPAM_SHA256_X64: "b533d393a6967150d6ef41cb3d71e147e93ecbabeb59e921aa412c0ae79ebe3d"
         OPAM_SHA256_ARM64: "8b24ef2f3f44a31763f54878454fb52afa1f2db7e00abed58b8d4e7ee7e290a6"
@@ -97,6 +100,7 @@ runs:
         test "$(opam --version)" = "${OPAM_VERSION}"
         {
           echo "LP_OPAM_VERSION=${OPAM_VERSION}"
+          echo "LP_OCAML_VERSION=${OCAML_VERSION}"
           echo "OPAMROOT=${HOME}/.opam"
           echo "OPAMCOLOR=always"
           echo "OPAMCONFIRMLEVEL=unsafe-yes"
@@ -114,7 +118,9 @@ runs:
     # Exact key only (no prefix restore-keys), so a hit is the state a
     # previous run built from the same inputs.  The key names everything the
     # cached state depends on that this repo controls: image OS, arch, opam
-    # version, compiler, the opam files and this action's inputs, plus the
+    # version, compiler, the opam files (root and latex-parse/), this
+    # action's own action.yml (so editing these steps invalidates the cache)
+    # and its inputs, plus the
     # ISO week, because opam-repository itself is not pinned (OPEN-136) and
     # a hit would otherwise freeze dependency versions indefinitely.
     - name: Compute the toolchain cache key
@@ -126,13 +132,14 @@ runs:
         SYSPKGS: ${{ inputs.system-packages }}
       run: |
         set -euo pipefail
-        h=$( { printf '%s\n' "${PKGS}" "${REPOS}" "${SYSPKGS}"; cat ./*.opam; } \
+        h=$( { printf '%s\n' "${PKGS}" "${REPOS}" "${SYSPKGS}"; \
+               cat ./*.opam ./latex-parse/*.opam "${GITHUB_ACTION_PATH}/action.yml"; } \
              | sha256sum | cut -c1-16)
-        echo "key=lp-opam-v1-${ImageOS:-unknown}-${RUNNER_ARCH}-opam${LP_OPAM_VERSION}-ocaml5.1.1-${h}-$(date -u +%G-%V)" >> "${GITHUB_OUTPUT}"
+        echo "key=lp-opam-v1-${ImageOS}-${RUNNER_ARCH}-opam${LP_OPAM_VERSION}-ocaml${LP_OCAML_VERSION}-${h}-$(date -u +%G-%V)" >> "${GITHUB_OUTPUT}"
 
     - name: Restore the opam root and switch
       id: opam_cache
-      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
       with:
         path: |
           ~/.opam
@@ -146,7 +153,7 @@ runs:
     # the toolchain up on the same commit, and the same class cancelled
     # unit-tests on PR #531 (see failure mode 1 in check_workflow_triggers.py).
     # A half-built switch is discarded between attempts; exhaustion fails.
-    - name: Initialise opam and the OCaml 5.1.1 switch (cache miss)
+    - name: Initialise opam and the OCaml switch (cache miss)
       if: steps.opam_cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
@@ -154,7 +161,7 @@ runs:
         for attempt in 1 2; do
           rm -rf "${OPAMROOT}" _opam
           if opam init --bare --no-setup default https://opam.ocaml.org \
-             && opam switch create . --no-install --packages=ocaml-base-compiler.5.1.1; then
+             && opam switch create . --no-install --packages="ocaml-base-compiler.${LP_OCAML_VERSION}"; then
             ok=1
             break
           fi
@@ -222,7 +229,7 @@ runs:
     # the switch WITH its dependencies (C-179; setup-ocaml saved before them).
     - name: Save the opam root and switch
       if: steps.opam_cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
       with:
         path: |
           ~/.opam

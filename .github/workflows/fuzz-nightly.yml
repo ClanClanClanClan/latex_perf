@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup-ocaml-env
       - name: Build fuzz + stress executables
         run: |
@@ -33,7 +33,7 @@ jobs:
             ./_build/default/latex-parse/src/test_long_stress.exe
       - name: Create issue on failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             await github.rest.issues.create({

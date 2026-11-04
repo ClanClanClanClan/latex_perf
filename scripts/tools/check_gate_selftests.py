@@ -935,8 +935,9 @@ def plant_drifted_retry_pair(text: str) -> str:
 
 def strip_cache_version_comment(text: str) -> str:
     """C-176 / mode 6: the SHA-pinned actions/cache restore loses the
-    `# vX.Y.Z` comment, so its version can no longer be shown >= 4.2.0."""
-    needle = " # v4.3.0\n"
+    `# vX.Y.Z` comment, so its version can no longer be checked against the
+    pin registry (.github/action-pins.json)."""
+    needle = " # v5.1.0\n"
     assert text.count(needle) == 2, "cache pins drifted; update registry"
     return text.replace(needle, "\n", 1)
 
@@ -3380,17 +3381,17 @@ REGISTRY = [
             # Failure mode 6: a SHA-pinned cache action whose version is unknown.
             Mutation("the cache restore's SHA pin loses its version comment",
                      ".github/actions/setup-ocaml-env/action.yml",
-                     r"LEGACY-CACHE: .*setup-ocaml-env.*a SHA with no `# vX\.Y\.Z` comment",
+                     r"FLOATING-TOOLCHAIN: .*setup-ocaml-env.*actions/cache/restore@.* with comment `# None`",
                      transform=strip_cache_version_comment),
             # Failure mode 8: opam no longer pinned exactly; rust back on @stable.
             Mutation("the opam pin loosened to a minor version",
                      ".github/actions/setup-ocaml-env/action.yml",
-                     r"FLOATING-TOOLCHAIN: .*exactly one `OPAM_VERSION",
+                     r"FLOATING-TOOLCHAIN: .*must set exactly .*each exact",
                      transform=loosen_opam_pin),
             Mutation("rust-proxy-smoke's toolchain back on @stable",
                      ".github/workflows/rust-proxy-smoke.yml",
                      r"FLOATING-TOOLCHAIN: .*rust-proxy-smoke\.yml uses `dtolnay/rust-toolchain@stable`",
-                     old="uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master 2026-10-16\n",
+                     old="uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # untagged\n",
                      new="uses: dtolnay/rust-toolchain@stable\n"),
             # Failure mode 7: a required job on a floating runner label.
             Mutation("proof-ci back on the floating ubuntu-latest label",

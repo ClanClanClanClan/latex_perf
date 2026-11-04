@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - uses: ./.github/actions/setup-ocaml-env
         with:
@@ -44,7 +44,7 @@ jobs:
           test -f /tmp/latencies_ms.txt
 
       - name: Upload latency artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: expand-latencies
           path: /tmp/latencies_ms.txt
@@ -55,7 +55,7 @@ jobs:
           cat /tmp/latency_badge.json
 
       - name: Upload badge artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: latency-badge
           path: /tmp/latency_badge.json
@@ -67,7 +67,7 @@ jobs:
           cp /tmp/latency_badge.json public-badges/expand_latency.json
 
       - name: Publish badge to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages

@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - uses: ./.github/actions/setup-ocaml-env
         with:
@@ -44,7 +44,7 @@ jobs:
           bash scripts/latency_smoke_expand.sh 500 http://127.0.0.1:8080/expand?layer=l1 | tee /tmp/l1_latency.txt
 
       - name: Upload L1 latencies
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: l1-expand-latencies
           path: /tmp/latencies_ms.txt
@@ -55,7 +55,7 @@ jobs:
           cat /tmp/latency_badge_l1.json
 
       - name: Upload L1 badge artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: l1-latency-badge
           path: /tmp/latency_badge_l1.json
@@ -65,7 +65,7 @@ jobs:
           mkdir -p public-badges && cp /tmp/latency_badge_l1.json public-badges/expand_latency_l1.json
 
       - name: Publish L1 badge to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages

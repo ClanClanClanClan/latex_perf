@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gate: the workflows behind REQUIRED status checks must be unambiguous.
 
-Eight failure modes, each of which has actually bitten this repo:
+Nine failure modes, each of which has actually bitten this repo:
 
 1. DUPLICATE REQUIRED CONTEXT (the reason this gate exists).
    A workflow with an unfiltered `push:` fires on every branch, so a commit
@@ -65,21 +65,38 @@ Eight failure modes, each of which has actually bitten this repo:
    service responded with 400" and every save warned "Our services aren't
    available right now" -- six warnings per X64 job, every job GREEN, no opam
    cache restored for at least five weeks. A cache failure is only a warning,
-   so nothing went red. This gate refuses actions/cache below v3.4.0 / v4.2.0
-   (by version; a SHA pin must carry a `# vX.Y.Z` comment) and setup-ocaml at
-   any ref (mode 8).
+   so nothing went red. Refused: actions/cache below v3.4.0 / v4.2.0. The
+   version is the one .github/action-pins.json records for the pinned SHA:
+   this mode TRUSTS that registry (and mode 8 requires the line's
+   `# <version>` comment to equal it), so a lying comment fails, while a lying
+   registry entry is a reviewed diff that `pin_actions.py --verify` re-derives.
 
 7. A FLOATING RUNNER LABEL (C-177). `ubuntu-latest` moved to Ubuntu 26.04
    from 2026-10-19 (actions/runner-images#14748) and main's jobs changed OS
-   with no commit. Every `runs-on:` label must be a literal fixed image, or a
-   `${{ matrix.KEY }}` over literal values; any other expression is refused
-   because it cannot be shown to be fixed.
+   with no commit. Every `runs-on:` label must be on an ALLOW-list of fixed
+   images (ubuntu-NN.NN[-arm], macos-NN[...], windows-NNNN; compared
+   case-insensitively, as GitHub does), a literal or a `${{ matrix.KEY }}`
+   over literal values; any other expression is refused because it cannot be
+   shown to be fixed.
 
-8. A FLOATING TOOLCHAIN (C-179). setup-ocaml v3 resolves opam to the newest
-   upstream release at run time (2.1.6 under v2, 2.6.1 on 2026-11-03), and
-   dtolnay/rust-toolchain@stable resolves rustc the same way. Refused: any
-   `uses:` on a branch/channel ref, setup-ocaml at any ref, and the opam
-   installer (setup-ocaml-env) without one exact, sha256-checked version.
+8. A FLOATING TOOLCHAIN OR ACTION (C-179, C-180). setup-ocaml resolves opam
+   to the newest upstream release at run time (2.1.6 under v2, 2.6.1 on
+   2026-11-03); dtolnay/rust-toolchain@stable resolves rustc the same way; and
+   a tag or branch ref (`@v4`, `@1.99`, `@release`) is mutable. Refused: any
+   third-party `uses:` that is not `@<40-hex SHA> # <version>` with that pair
+   in .github/action-pins.json; a docker:// ref without `@sha256:`;
+   setup-ocaml at any ref; and a version-selecting `with:` input
+   (toolchain, *-version, ...) that is not an exact X.Y.Z. `uses:` values are
+   read THROUGH the YAML parse (aliases, quoting); one that is not also
+   spelled on a plain `uses: VALUE` line, or a quoted `"uses"` key, is
+   refused, since its comment could not be read.
+
+9. OPAM FROM ANYWHERE BUT THE PIN (C-179, C-180). opam is installed only by
+   setup-ocaml-env's step, whose run text (and the key and switch steps) must
+   equal the canonical text in CANON below: an exact release URL, a checksum
+   that fails the step before the binary is touched, the compiler from the
+   one OCAML_VERSION. Any other `run:` that fetches or package-installs opam
+   is refused. Composite actions are scanned wherever they live in the repo.
 
 Authority: .github/required-status-checks.json. That file -- never the
 branch-protection API -- is the source of truth; branch-protection.yml PUTs its
@@ -92,7 +109,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -266,132 +285,320 @@ def drifted_retry_pairs(doc: dict, rel: str) -> list[str]:
     return out
 
 
-# ── Failure modes 6, 7 and 8: cache clients, runner labels, toolchains ──
+# ── Failure modes 6-9: cache clients, runner labels, toolchains, opam ──
+#
+# TRUST ROOT. A SHA says nothing about which release it is, so every
+# third-party `uses:` must be `owner/repo[/path]@<40-hex> # <version>` AND
+# that SHA -> version pair must be recorded in .github/action-pins.json.
+# Modes 6 and 8 TRUST that registry (a reviewed, committed file written by
+# scripts/tools/pin_actions.py, whose `--verify` re-derives every entry from
+# GitHub). A comment that disagrees with the registry is refused, so a lying
+# `# v4.3.0` on another SHA fails; a lying registry entry is a reviewed diff.
 
-# A `uses:` line, with an optional trailing `# vX.Y.Z` version comment (the
-# only way to know what a SHA pin is). Read from the RAW text: YAML drops
-# comments.
-USES_LINE = re.compile(
-    r"^[ \t]*(?:-[ \t]*)?uses:[ \t]*['\"]?([^\s'\"#]+)['\"]?[ \t]*(?:#[ \t]*(\S+))?",
-    re.M)
+PIN_REGISTRY = Path(".github/action-pins.json")
 SHA_REF = re.compile(r"^[0-9a-f]{40}$")
 VERSION_REF = re.compile(r"^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?$")
-# Refs that are branch or channel names: they resolve to new code at run
-# time, with no commit here.
-FLOATING_REFS = {"stable", "beta", "nightly", "master", "main", "latest",
-                 "head", "trunk", "develop", "dev"}
-# actions/cache talks to the CURRENT cache service from v3.4.0 / v4.2.0
-# (actions/cache README at v4.3.0: "If you are using pinned SHAs, please use
-# the SHAs of versions v4.2.0 or v3.4.0"); a bare major tag resolves to that
-# major's newest release, so @v3 and @v4 qualify and @v1/@v2 do not.
-CACHE_ACTION = re.compile(r"^actions/cache(?:/restore|/save)?$")
-FLOATING_RUNNERS = re.compile(r"-latest$")
-# The composite that installs opam must pin it exactly and checksum it.
+DIGEST_REF = re.compile(r"^docker://[^@\s]+@sha256:[0-9a-f]{64}$")
+# Raw lines: a `uses:` written as a plain block-mapping key, and the
+# spellings a YAML parser accepts that a line scan would not see.
+RAW_USES = re.compile(
+    r"^[ \t]*(?:-[ \t]+)?uses:[ \t]*(?P<v>[^\s#'\"]+|'[^']*'|\"[^\"]*\")"
+    r"[ \t]*(?:#[ \t]*(?P<c>\S+))?[ \t]*$", re.M)
+QUOTED_USES_KEY = re.compile(r"""^[ \t]*(?:-[ \t]+)?["']uses["'][ \t]*:""", re.M | re.I)
+# actions/cache talks to the current cache service from v3.4.0 / v4.2.0
+# (actions/cache README at v4.3.0); v5+ also.
+CACHE_ACTION = "actions/cache"
+# Runner labels: an ALLOW-list of fixed images (compared case-insensitively;
+# GitHub matches labels case-insensitively). ubuntu-latest, ubuntu-slim and
+# any unknown label are refused.
+FIXED_RUNNER = re.compile(
+    r"^(ubuntu-\d{2}\.\d{2}(-arm)?|macos-\d{2}(-(arm64|intel|large|xlarge))?"
+    r"|windows-\d{4}(-arm)?)$")
+# `with:` inputs that select a toolchain version.
+VERSION_INPUT = re.compile(r"^(toolchain|version|ocaml-compiler|[a-z0-9-]+-version)$", re.I)
+EXACT_VERSION = re.compile(r"^\d+\.\d+\.\d+(?:[.+-][0-9A-Za-z.]+)?$")
+EXPR = re.compile(r"\$\{\{")
+MATRIX_REF = re.compile(r"^\$\{\{\s*matrix\.([\w-]+)\s*\}\}$")
+# opam installed by anything but setup-ocaml-env's pinned step.
+OPAM_ELSEWHERE = re.compile(
+    r"opam\.ocaml\.org/install|ocaml/opam/releases/|github\.com/ocaml/opam/"
+    r"|\b(?:apt|apt-get|brew|dnf|yum|apk|snap|nix-env|port)\b[^\n]*\binstall\b[^\n]*\bopam\b",
+    re.I)
+
 OPAM_INSTALLER = ACTION_DIR / "setup-ocaml-env" / "action.yml"
-OPAM_PIN = re.compile(r'^\s*OPAM_VERSION:\s*"(\d+\.\d+\.\d+)"\s*$', re.M)
-OPAM_SUMS = re.compile(r'^\s*OPAM_SHA256_(X64|ARM64):\s*"([0-9a-f]{64})"\s*$', re.M)
+OPAM_STEP = "Install opam (pinned, checksum-verified)"
+OPAM_STEP_IF = "runner.os == 'Linux' && (runner.arch == 'X64' || runner.arch == 'ARM64')"
+OPAM_ENV = {
+    "OCAML_VERSION": re.compile(r"^\d+\.\d+\.\d+$"),
+    "OPAM_VERSION": re.compile(r"^\d+\.\d+\.\d+$"),
+    "OPAM_SHA256_X64": re.compile(r"^[0-9a-f]{64}$"),
+    "OPAM_SHA256_ARM64": re.compile(r"^[0-9a-f]{64}$"),
+}
+# The steps whose text IS the pin: compared line for line (comment-only and
+# blank lines dropped, whitespace trimmed). The download URL is exact, the
+# checksum line fails the step (set -euo pipefail, nothing after it on the
+# line), and nothing touches the binary before the check. Editing these steps
+# means editing this constant: that is the point.
+CANON = {
+    OPAM_STEP: """
+set -euo pipefail
+case "${RUNNER_ARCH}" in
+X64)   arch=x86_64; sum="${OPAM_SHA256_X64}" ;;
+ARM64) arch=arm64;  sum="${OPAM_SHA256_ARM64}" ;;
+*) echo "::error::[setup-ocaml-env] no pinned opam for ${RUNNER_ARCH}"; exit 1 ;;
+esac
+url="https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/opam-${OPAM_VERSION}-${arch}-linux"
+curl -fsSL --retry 5 --retry-all-errors -o "${RUNNER_TEMP}/opam" "${url}"
+echo "${sum}  ${RUNNER_TEMP}/opam" | sha256sum -c -
+sudo install -m 0755 "${RUNNER_TEMP}/opam" /usr/local/bin/opam
+test "$(opam --version)" = "${OPAM_VERSION}"
+{
+echo "LP_OPAM_VERSION=${OPAM_VERSION}"
+echo "LP_OCAML_VERSION=${OCAML_VERSION}"
+echo "OPAMROOT=${HOME}/.opam"
+echo "OPAMCOLOR=always"
+echo "OPAMCONFIRMLEVEL=unsafe-yes"
+echo "OPAMDOWNLOADJOBS=$(nproc)"
+echo "OPAMERRLOGLEN=0"
+echo "OPAMEXTERNALSOLVER=builtin-0install"
+echo "OPAMPRECISETRACKING=1"
+echo "OPAMRETRIES=10"
+echo "OPAMSOLVERTIMEOUT=600"
+echo "OPAMYES=1"
+echo "CLICOLOR_FORCE=1"
+} >> "${GITHUB_ENV}"
+""",
+    "Compute the toolchain cache key": """
+set -euo pipefail
+h=$( { printf '%s\\n' "${PKGS}" "${REPOS}" "${SYSPKGS}"; \\
+cat ./*.opam ./latex-parse/*.opam "${GITHUB_ACTION_PATH}/action.yml"; } \\
+| sha256sum | cut -c1-16)
+echo "key=lp-opam-v1-${ImageOS}-${RUNNER_ARCH}-opam${LP_OPAM_VERSION}-ocaml${LP_OCAML_VERSION}-${h}-$(date -u +%G-%V)" >> "${GITHUB_OUTPUT}"
+""",
+    "Initialise opam and the OCaml switch (cache miss)": """
+ok=0
+for attempt in 1 2; do
+rm -rf "${OPAMROOT}" _opam
+if opam init --bare --no-setup default https://opam.ocaml.org \\
+&& opam switch create . --no-install --packages="ocaml-base-compiler.${LP_OCAML_VERSION}"; then
+ok=1
+break
+fi
+echo "::warning::[setup-ocaml-env] switch setup failed (attempt $attempt/2)"
+sleep 15
+done
+if [ "$ok" -ne 1 ]; then
+echo "::error::[setup-ocaml-env] opam init / switch create failed 2/2"
+exit 1
+fi
+""",
+}
 
 
-def cache_ref_ok(ref: str, comment: str | None) -> tuple[bool, str]:
-    """Is this actions/cache ref on the current cache service?"""
-    shown = ref
-    if SHA_REF.match(ref):
-        if not comment:
-            return False, f"{ref} (a SHA with no `# vX.Y.Z` comment: version unknown)"
-        shown, ref = f"{ref} # {comment}", comment
-    m = VERSION_REF.match(ref)
-    if not m:
-        return False, f"{shown} (not a version)"
-    major = int(m.group(1))
-    minor = m.group(2)
-    if major <= 2:
-        return False, shown
-    if minor is None:              # bare major: resolves to its newest release
-        return True, shown
-    floor = {3: (3, 4), 4: (4, 2)}.get(major)
-    if floor and (major, int(minor)) < floor:
-        return False, shown
-    return True, shown
+def canon(text: str) -> list[str]:
+    return [ln.strip() for ln in text.splitlines()
+            if ln.strip() and not ln.strip().startswith("#")]
 
 
-def yaml_uses_count(doc: dict) -> int:
-    """`uses:` values in the parsed YAML (job-level and step-level)."""
-    n = 0
-    steps = []
+def all_steps(doc: dict):
+    """(job id or None, step) for every step, plus job-level `uses:` jobs."""
     if isinstance(doc.get("runs"), dict):
-        steps += doc["runs"].get("steps") or []
-    for job in (doc.get("jobs") or {}).values():
+        for st in doc["runs"].get("steps") or []:
+            yield None, st
+    for jid, job in (doc.get("jobs") or {}).items():
         if isinstance(job, dict):
-            n += 1 if job.get("uses") else 0
-            steps += job.get("steps") or []
-    return n + sum(1 for st in steps if isinstance(st, dict) and st.get("uses"))
+            if "uses" in job:
+                yield jid, {"uses": job["uses"], "with": job.get("with")}
+            for st in job.get("steps") or []:
+                yield jid, st
 
 
-def uses_findings(text: str, rel: str) -> tuple[int, list[str]]:
-    """Modes 6 and 8 over every `uses:` line of one file."""
-    out, n = [], 0
-    for m in USES_LINE.finditer(text):
-        full, comment = m.group(1), m.group(2)
-        if full.startswith("./") or full.startswith("docker://"):
-            n += 1
+def cache_version_ok(ver: str) -> bool:
+    m = VERSION_REF.match(ver)
+    if not m:
+        return False
+    major, minor = int(m.group(1)), m.group(2)
+    if major <= 2:
+        return False
+    if minor is None:              # bare major resolves to its newest release
+        return True
+    floor = {3: (3, 4), 4: (4, 2)}.get(major)
+    return not (floor and (major, int(minor)) < floor)
+
+
+def resolve_matrix(value: str, matrix) -> list[str] | None:
+    """Literal values of a bare `${{ matrix.KEY }}`, else None (unresolvable)."""
+    m = MATRIX_REF.match(value)
+    if not (m and isinstance(matrix, dict)):
+        return None
+    vals = matrix.get(m.group(1))
+    if not isinstance(vals, list):
+        vals = [] if vals is None else None
+    if vals is None:
+        return None
+    vals = list(vals)
+    for inc in matrix.get("include") or []:
+        if isinstance(inc, dict) and m.group(1) in inc:
+            vals.append(inc[m.group(1)])
+    if not vals or any(not isinstance(v, (str, int, float)) or EXPR.search(str(v))
+                       for v in vals):
+        return None
+    return [str(v) for v in vals]
+
+
+def uses_findings(doc: dict, text: str, rel: str, registry: dict) -> tuple[int, list[str]]:
+    """Modes 6 and 8 over every `uses:` of one file, read THROUGH the YAML
+    parse (aliases resolved, quoting undone), with each value's version
+    comment looked up on the raw line that spells it."""
+    out: list[str] = []
+    if QUOTED_USES_KEY.search(text):
+        out.append(f"UNSCANNED-USES: {rel} spells a `uses` key in quotes; write "
+                   f"`uses:` plainly so its version comment can be read (C-180).")
+    raw: dict[str, list[str | None]] = {}
+    for m in RAW_USES.finditer(text):
+        v = m.group("v").strip("'\"")
+        raw.setdefault(v, []).append(m.group("c"))
+    n = 0
+    for jid, st in all_steps(doc):
+        if not isinstance(st, dict) or "uses" not in st:
             continue
         n += 1
-        action, _, ref = full.partition("@")
-        if CACHE_ACTION.match(action):
-            ok, shown = cache_ref_ok(ref, comment)
-            if not ok:
-                out.append(
-                    f"LEGACY-CACHE: {rel} uses `{action}@{shown}`, which talks to "
-                    f"GitHub's retired legacy cache service (or cannot be shown not "
-                    f"to): every restore and save fails with only a WARNING, so the "
-                    f"job stays green with no cache (C-176). Use actions/cache "
-                    f">= v4.2.0 (or >= v3.4.0), SHA pins with a `# vX.Y.Z` comment.")
-        if action == "ocaml/setup-ocaml":
+        full = st["uses"]
+        if not isinstance(full, str):
+            out.append(f"UNSCANNED-USES: {rel}: a `uses:` value {full!r} is not a string")
+            continue
+        if full not in raw:
+            out.append(
+                f"UNSCANNED-USES: {rel} has `uses: {full}` in its YAML but on no "
+                f"line of the form `uses: VALUE` (an alias, a flow mapping or a "
+                f"multi-line scalar); write it plainly (C-180).")
+            continue
+        comment = raw[full][0]
+        if full.startswith("./"):
+            continue
+        if full.lower().startswith("docker://"):
+            if not DIGEST_REF.match(full):
+                out.append(f"FLOATING-TOOLCHAIN: {rel} uses `{full}`: a docker image "
+                           f"must be pinned by `@sha256:<digest>` (C-180).")
+            continue
+        action, at, ref = full.partition("@")
+        action_l = action.lower()
+        repo_l = "/".join(action_l.split("/")[:2])
+        if repo_l == "ocaml/setup-ocaml":
             out.append(
                 f"FLOATING-TOOLCHAIN: {rel} uses `{full}`. Every setup-ocaml "
                 f"release resolves opam to the newest upstream release at run "
                 f"time (v2's bundled cache client also talks to the retired "
                 f"cache service, C-176), whatever ref pins the action itself. "
                 f"Use ./.github/actions/setup-ocaml-env, which pins opam (C-179).")
-        elif not ref or ref.lower() in FLOATING_REFS:
+            continue
+        if not at or not SHA_REF.match(ref):
             out.append(
-                f"FLOATING-TOOLCHAIN: {rel} uses `{full}`: a branch/channel ref "
-                f"that resolves to new code at run time with no commit here. Pin "
-                f"a commit SHA (and, for a toolchain installer, an exact "
-                f"version) (C-179).")
+                f"FLOATING-TOOLCHAIN: {rel} uses `{full}`: a third-party action "
+                f"must be pinned by a 40-hex commit SHA with a `# <version>` "
+                f"comment (tags and branches are mutable; run "
+                f"scripts/tools/pin_actions.py --pin) (C-180).")
+            continue
+        recorded = registry.get(repo_l, {}).get(ref)
+        if recorded is None:
+            out.append(f"FLOATING-TOOLCHAIN: {rel} uses `{full}`, a SHA not recorded "
+                       f"in {PIN_REGISTRY} (C-180).")
+            continue
+        if comment != recorded:
+            out.append(f"FLOATING-TOOLCHAIN: {rel} uses `{full}` with comment "
+                       f"`# {comment}`, but {PIN_REGISTRY} records that SHA as "
+                       f"`{recorded}` (C-180).")
+            continue
+        if action_l.split("/")[:2] == ["actions", "cache"] and not cache_version_ok(recorded):
+            out.append(
+                f"LEGACY-CACHE: {rel} uses `{action}@{ref} # {recorded}`, which "
+                f"talks to GitHub's retired legacy cache service: every restore "
+                f"and save fails with only a WARNING, so the job stays green with "
+                f"no cache (C-176). Use actions/cache >= v4.2.0 (or >= v3.4.0).")
+        matrix = None
+        if jid is not None:
+            matrix = ((doc.get("jobs") or {}).get(jid, {}).get("strategy") or {}).get("matrix")
+        for k, v in (st.get("with") or {}).items():
+            if not VERSION_INPUT.match(str(k)):
+                continue
+            vals = [str(v)] if not EXPR.search(str(v)) else resolve_matrix(str(v).strip(), matrix)
+            if vals is None:
+                out.append(f"FLOATING-TOOLCHAIN: {rel}: `{action}` input `{k}: {v}` "
+                           f"is an expression this gate cannot resolve (C-180).")
+                continue
+            for x in vals:
+                if not EXACT_VERSION.match(x.strip()):
+                    out.append(
+                        f"FLOATING-TOOLCHAIN: {rel}: `{action}` input `{k}: {x}` "
+                        f"is not an exact version (stable/nightly/latest, a bare "
+                        f"major or a minor all resolve at run time) (C-180).")
     return n, out
 
 
-def opam_pin_findings(repo: Path) -> list[str]:
-    """Mode 8: the opam installer names one exact, checksummed version."""
-    path = repo / OPAM_INSTALLER
-    if not path.is_file():
+def opam_findings(repo: Path, docs: dict[str, dict]) -> list[str]:
+    """Mode 9: opam is installed only by setup-ocaml-env's pinned step, whose
+    structure is exactly the canonical one."""
+    out: list[str] = []
+    key = str(OPAM_INSTALLER)
+    doc = docs.get(key)
+    if doc is None:
         return [f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} not found; nothing pins opam"]
-    text = path.read_text()
-    out = []
-    pins = OPAM_PIN.findall(text)
-    sums = dict(OPAM_SUMS.findall(text))
-    if len(pins) != 1:
-        out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} must set exactly one "
-                   f'`OPAM_VERSION: "X.Y.Z"`, found {len(pins)} (C-179)')
-    if set(sums) != {"X64", "ARM64"}:
-        out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} must carry a sha256 for "
-                   f"both X64 and ARM64 opam binaries, found {sorted(sums)} (C-179)")
-    if "sha256sum -c" not in text:
-        out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} never checks the opam "
-                   f"binary's sha256 (`sha256sum -c`) (C-179)")
+    steps = {st.get("name"): st for st in (doc.get("runs") or {}).get("steps") or []
+             if isinstance(st, dict)}
+    for name, body in CANON.items():
+        st = steps.get(name)
+        if st is None:
+            out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} has no step `{name}` (C-179)")
+            continue
+        if canon(str(st.get("run", ""))) != canon(body):
+            out.append(
+                f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} step `{name}` differs from "
+                f"the canonical pinned text in check_workflow_triggers.py (exact "
+                f"download URL, a checksum that fails the step before the binary "
+                f"is touched, the switch built from LP_OCAML_VERSION); if the edit "
+                f"is intended, update CANON there (C-179/C-180).")
+    st = steps.get(OPAM_STEP)
+    if st is not None:
+        if str(st.get("if", "")).strip() != OPAM_STEP_IF:
+            out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} step `{OPAM_STEP}` "
+                       f"must be guarded by `if: {OPAM_STEP_IF}`")
+        env = st.get("env") or {}
+        if set(env) != set(OPAM_ENV) or any(not OPAM_ENV[k].match(str(env[k])) for k in OPAM_ENV if k in env):
+            out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} step `{OPAM_STEP}` must "
+                       f"set exactly {sorted(OPAM_ENV)}, each exact (an X.Y.Z "
+                       f"version, a 64-hex sha256); found "
+                       f"{ {k: str(v) for k, v in env.items()} } (C-179)")
+    # The compiler/opam version is spelled ONCE (the opam step's env); any
+    # other step value naming an X.Y.Z would be a second, unsynchronised copy.
+    for st in (doc.get("runs") or {}).get("steps") or []:
+        if not isinstance(st, dict):
+            continue
+        vals = [str(st.get("run", ""))] + [str(v) for v in (st.get("with") or {}).values()]
+        if st.get("name") != OPAM_STEP:
+            vals += [str(v) for v in (st.get("env") or {}).values()]
+        for v in vals:
+            for ln in v.splitlines():
+                if re.search(r"\b\d+\.\d+\.\d+\b", strip_comment(ln)):
+                    out.append(f"FLOATING-TOOLCHAIN: {OPAM_INSTALLER} step "
+                               f"`{st.get('name')}` spells a version number "
+                               f"(`{ln.strip()[:80]}`); derive it from OCAML_VERSION "
+                               f"/ OPAM_VERSION (C-180)")
+    for rel, d in docs.items():
+        for label, run_text in iter_run_blocks(d, rel):
+            if rel == key and label == f"{rel} :: {OPAM_STEP}":
+                continue
+            for ln in run_text.splitlines():
+                if OPAM_ELSEWHERE.search(strip_comment(ln)):
+                    out.append(f"FLOATING-TOOLCHAIN: {label} installs opam outside "
+                               f"{OPAM_INSTALLER}'s pinned step: `{ln.strip()[:100]}` (C-180)")
     return out
-
-
-EXPR = re.compile(r"\$\{\{")
-MATRIX_REF = re.compile(r"^\$\{\{\s*matrix\.([\w-]+)\s*\}\}$")
 
 
 def iter_runs_on(doc: dict):
     """(job id, label, resolved) for every runner label.
 
     Fail closed: a label that is an expression is resolved only when it is a
-    bare `${{ matrix.KEY }}` over a literal list (plus `include:` literals);
+    bare `${{ matrix.KEY }}` over literal values (plus `include:` literals);
     anything else (matrix.cfg.os, inputs.os, fromJSON(...)) is yielded
     unresolved, and the caller refuses it.
     """
@@ -411,28 +618,34 @@ def iter_runs_on(doc: dict):
             if not EXPR.search(lab):
                 yield jid, lab, True
                 continue
-            m = MATRIX_REF.match(lab)
-            if not (m and isinstance(matrix, dict)):
-                yield jid, lab, False
-                continue
-            key = m.group(1)
-            vals = matrix.get(key)
-            vals = [] if vals is None else vals
-            if not isinstance(vals, list):
-                yield jid, lab, False
-                continue
-            vals = list(vals)
-            for inc in matrix.get("include") or []:
-                if isinstance(inc, dict) and key in inc:
-                    vals.append(inc[key])
-            if not vals:
+            vals = resolve_matrix(lab, matrix)
+            if vals is None:
                 yield jid, lab, False
                 continue
             for v in vals:
-                if isinstance(v, (str, int, float)) and not EXPR.search(str(v)):
-                    yield jid, str(v), True
-                else:
-                    yield jid, f"{lab} = {v!r}", False
+                yield jid, v, True
+
+
+PRUNE = {".git", "_build", "_opam", "node_modules", "target", ".claude", "__pycache__"}
+
+
+def composite_actions(repo: Path) -> list[Path]:
+    """Every action.yml / action.yaml in the repo (tracked files when git is
+    available; otherwise a pruned walk), not only under .github/actions."""
+    out = subprocess.run(["git", "-C", str(repo), "ls-files", "-z", "--",
+                          "*action.yml", "*action.yaml"],
+                         capture_output=True, text=True)
+    if out.returncode == 0 and (repo / ".git").exists():
+        names = [n for n in out.stdout.split("\0") if n]
+        return sorted(repo / n for n in names
+                      if Path(n).name in ("action.yml", "action.yaml"))
+    found = []
+    for root, dirs, files in os.walk(repo):
+        dirs[:] = [d for d in dirs if d not in PRUNE]
+        for f in files:
+            if f in ("action.yml", "action.yaml"):
+                found.append(Path(root) / f)
+    return sorted(found)
 
 
 def main() -> int:
@@ -488,8 +701,15 @@ def main() -> int:
     # Composite actions were previously invisible to this gate, which is
     # exactly where the worst instance lived (setup-ocaml-env is used by 28
     # workflows, so one silent success there is 28 silent successes).
-    scanned = list(workflows) + sorted([*(repo / ACTION_DIR).rglob("action.yml"),
-                                        *(repo / ACTION_DIR).rglob("action.yaml")])
+    scanned = list(workflows) + composite_actions(repo)
+    reg_path = repo / PIN_REGISTRY
+    try:
+        registry = {k.lower(): v for k, v in json.loads(reg_path.read_text()).items()}
+    except (OSError, ValueError) as exc:
+        print(f"FAIL: {PIN_REGISTRY} unreadable ({exc}); every SHA pin would be "
+              f"unverifiable", file=sys.stderr)
+        return 1
+    docs: dict[str, dict] = {}
     loops_checked = 0
     uses_checked = 0
     runners_checked = 0
@@ -500,6 +720,7 @@ def main() -> int:
         except yaml.YAMLError as exc:
             findings.append(f"{rel} is not valid YAML: {exc}")
             continue
+        docs[rel] = doc
         for label, run_text in iter_run_blocks(doc, rel):
             loops_checked += 1
             for lineno in unguarded_retry_loops(run_text):
@@ -511,15 +732,9 @@ def main() -> int:
                     f"with the thing it was waiting for never ready. Track "
                     f"success in a flag and `exit 1` after `done`.")
         findings.extend(drifted_retry_pairs(doc, rel))
-        n_uses, uf = uses_findings(path.read_text(), rel)
+        n_uses, uf = uses_findings(doc, path.read_text(), rel, registry)
         uses_checked += n_uses
         findings.extend(uf)
-        n_yaml = yaml_uses_count(doc)
-        if n_uses != n_yaml:
-            findings.append(
-                f"UNSCANNED-USES: {rel} has {n_yaml} `uses:` value(s) in its "
-                f"YAML but the line scan matched {n_uses}; modes 6 and 8 would "
-                f"skip the difference. Write each `uses:` on its own line.")
         for jid, lab, resolved in iter_runs_on(doc):
             runners_checked += 1
             if not resolved:
@@ -528,14 +743,15 @@ def main() -> int:
                     f"expression this gate cannot resolve to a fixed image; spell "
                     f"the label out, or use `${{{{ matrix.KEY }}}}` over literal "
                     f"values (C-177).")
-            elif FLOATING_RUNNERS.search(lab):
+            elif not FIXED_RUNNER.match(lab.lower()):
                 findings.append(
-                    f"FLOATING-RUNNER: {rel} job '{jid}' runs on `{lab}`, a "
-                    f"label GitHub re-points to a new OS without a commit "
-                    f"(ubuntu-latest became 26.04 from 2026-10-19). Pin a fixed "
-                    f"image, e.g. ubuntu-24.04 (C-177).")
+                    f"FLOATING-RUNNER: {rel} job '{jid}' runs on `{lab}`, which is "
+                    f"not a fixed image label (ubuntu-NN.NN[-arm], macos-NN[...], "
+                    f"windows-NNNN; compared case-insensitively). `*-latest` and "
+                    f"`ubuntu-slim` are re-pointed without a commit (ubuntu-latest "
+                    f"became 26.04 from 2026-10-19) (C-177).")
 
-    findings.extend(opam_pin_findings(repo))
+    findings.extend(opam_findings(repo, docs))
 
     if not loops_checked:
         print("FAIL: scanned zero `run:` blocks -- the mode-4 scan is vacuous",
@@ -582,9 +798,9 @@ def main() -> int:
           f"resolve to exactly one job, none with an unfiltered push trigger; "
           f"{loops_checked} `run:` block(s) across {len(scanned)} workflow/action "
           f"file(s) carry no unguarded retry loop and no drifted retry pair; "
-          f"{uses_checked} `uses:` ref(s) name no legacy-cache client and no "
-          f"floating ref; {runners_checked} runner label(s) are all pinned; "
-          f"opam is pinned exactly and checksummed")
+          f"{uses_checked} `uses:` ref(s) are SHA-pinned and registered with no "
+          f"legacy-cache client; {runners_checked} runner label(s) are fixed "
+          f"images; opam comes only from the canonical pinned step")
     return 0
 
 

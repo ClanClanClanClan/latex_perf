@@ -6,6 +6,8 @@ on:
   # required-context name. Full rationale in .github/workflows/unit-tests.yml.
   push:
     branches: [main]
+  # Dispatchable so a toolchain change can be run on a branch before its PR (C-180).
+  workflow_dispatch:
   pull_request:
 
 
@@ -19,7 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - uses: ./.github/actions/setup-ocaml-env
 
@@ -71,7 +73,7 @@ jobs:
 
       - name: Upload measured latency numbers (for --adopt)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: keystroke-budget-measured
           path: keystroke_budget_measured.json
@@ -100,7 +102,7 @@ jobs:
       - name: Email notify on failure
         if: failure()
         continue-on-error: true
-        uses: dawidd6/action-send-mail@v4
+        uses: dawidd6/action-send-mail@611879133a9569642c41be66f4a323286e9b8a3b # v4
         with:
           server_address: ${{ secrets.SMTP_HOST }}
           server_port: ${{ secrets.SMTP_PORT }}
